@@ -15,10 +15,7 @@ on:
 jobs:
   bootcamp-ci:
     name: CI-SwissTravel
-    # Execute the CI on the course's runners
-    runs-on:
-      group: runners_v1
-
+    runs-on: ubuntu-latest
     env:
       app_name: SwissTravelDebug
 
