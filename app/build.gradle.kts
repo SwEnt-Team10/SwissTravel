@@ -3,11 +3,13 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
     alias(libs.plugins.sonar)
+    alias(libs.plugins.gms)
+
     id("jacoco")
 }
 
 android {
-    namespace = "com.android.sample"
+    namespace = "com.github.swent.swisstravel"
     compileSdk = 34
 
     defaultConfig {
@@ -118,6 +120,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(platform(libs.compose.bom))
+    implementation(libs.firebase.firestore.ktx)
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
@@ -148,6 +151,11 @@ dependencies {
 
     // ----------       Robolectric     ------------
     testImplementation(libs.robolectric)
+
+    // -----------   Firebase   --------------------
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
 }
 
 tasks.withType<Test> {

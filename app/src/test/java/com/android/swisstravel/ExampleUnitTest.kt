@@ -1,4 +1,4 @@
-package com.android.sample
+package com.android.swisstravel
 
 import org.junit.Assert.*
 import org.junit.Test

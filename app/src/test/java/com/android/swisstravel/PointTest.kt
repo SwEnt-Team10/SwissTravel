@@ -1,5 +1,6 @@
-package com.android.sample
+package com.android.swisstravel
 
+import com.github.swent.swisstravel.Point
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
