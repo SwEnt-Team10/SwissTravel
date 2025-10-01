@@ -70,7 +70,7 @@ jobs:
 
       # Load google-services.json and local.properties from the secrets
       - name: Decode secrets
-         env:
+        env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
         run: |
