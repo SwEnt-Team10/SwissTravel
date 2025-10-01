@@ -26,10 +26,10 @@ jobs:
     steps:
       # First step : Checkout the repository on the runner
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of Sonar analysis (if we use Sonar Later)
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
 
       # This step removes the current gradle cache to avoid any caching issues
       - name: Remove current gradle cache
@@ -42,24 +42,31 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
-      - name: Setup JDK
-        uses: actions/setup-java@v3
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
 
+      - name: Cache SonarQube packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: ${{ runner.os }}-sonar
 
       # Caching is a very useful part of a CI, as a workflow is executed in a clean environement every time,
       # this means that one would need to re-download and re-process gradle files for every run. Which is very time consuming.
       #
       # To avoid that, we cache the the gradle folder to reuse it later.
       - name: Retrieve gradle cache
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
           key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: ${{ runner.os }}-gradle
 
       # Load google-services.json and local.properties from the secrets
       # - name: Decode secrets
@@ -136,6 +143,11 @@ jobs:
       - name: Generate coverage
         run: |
           ./gradlew jacocoTestReport
+
+      - name: Build and analyze with SonarQube
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew build sonar --info
 
       - name: Upload coverage
         uses: actions/upload-artifact@v4
