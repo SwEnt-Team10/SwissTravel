@@ -20,3 +20,7 @@ Do you struggle navigating a city you’ve never been to? We’ll make sure to g
 - Change of plans: find another spot to visit if the trip becomes too stressful  
 
 ---
+
+## 📚 Resources
+
+- [Figma Design File](https://www.figma.com/design/0RQw690x6tWNhUetN93N2F/SwissTravel-v1?node-id=0-1&t=lu0Hw7SuTYEYTrBg-1)
