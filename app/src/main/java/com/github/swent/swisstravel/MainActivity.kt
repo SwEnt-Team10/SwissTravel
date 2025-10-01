@@ -35,7 +35,7 @@ class MainActivity : ComponentActivity() {
   }
 
   private fun useEmulator(isOnline: Boolean = false) {
-    if(isOnline) {
+    if (isOnline) {
       Firebase.firestore.useEmulator("10.0.2.2", 8080)
       Firebase.auth.useEmulator("10.0.2.2", 9099)
     }
