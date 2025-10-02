@@ -14,14 +14,10 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import com.github.swent.swisstravel.resources.C
 import com.github.swent.swisstravel.theme.SampleAppTheme
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    useEmulator()
     setContent {
       SampleAppTheme {
         // A surface container using the 'background' color from the theme
@@ -31,13 +27,6 @@ class MainActivity : ComponentActivity() {
               Greeting("Android")
             }
       }
-    }
-  }
-
-  private fun useEmulator(isOnline: Boolean = false) {
-    if (!isOnline) {
-      Firebase.firestore.useEmulator("10.0.2.2", 8080)
-      Firebase.auth.useEmulator("10.0.2.2", 9099)
     }
   }
 }

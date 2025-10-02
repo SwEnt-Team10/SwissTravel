@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.github.swent.swisstravel">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application
         android:allowBackup="true"
@@ -14,11 +13,6 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SampleApp"
         tools:targetApi="31">
-        <activity
-            android:name=".SecondActivity"
-            android:exported="false"
-            android:label="@string/title_activity_second"
-            android:theme="@style/Theme.SampleApp" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
