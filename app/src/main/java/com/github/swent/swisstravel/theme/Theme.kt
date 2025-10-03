@@ -1,4 +1,4 @@
-package com.android.sample.ui.theme
+package com.github.swent.swisstravel.theme
 
 import android.app.Activity
 import android.os.Build
