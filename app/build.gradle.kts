@@ -134,6 +134,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     // Material Design 3
     implementation(libs.compose.material3)
+    implementation("io.coil-kt:coil-compose:2.4.0")
     // Integration with activities
     implementation(libs.compose.activity)
     // Integration with ViewModels
