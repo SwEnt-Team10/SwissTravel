@@ -1,5 +1,8 @@
 <resources>
-    <string name="app_name">SampleApp</string>
+    <string name="app_name">SwissTravel</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
+
+    <!-- Client ID for Google Sign-In -->
+    <string name="default_web_client_id">188461068405-bd2f3li3vhnsmphl3tuj8kkgb5lnvo5f.apps.googleusercontent.com</string>
 </resources>
