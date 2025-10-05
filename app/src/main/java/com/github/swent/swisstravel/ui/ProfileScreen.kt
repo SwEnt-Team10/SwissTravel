@@ -1,8 +1,12 @@
 package com.github.swent.swisstravel.ui
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -13,6 +17,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +26,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
@@ -30,13 +36,30 @@ import coil.compose.AsyncImage
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = ProfileScreenViewModel()
 ) {
+    val context = LocalContext.current
     val uiState = profileScreenViewModel.uiState.collectAsState().value
+
+    LaunchedEffect(uiState.errorMsg) {
+        val msg = uiState.errorMsg
+        if (!msg.isNullOrBlank()) {
+            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+            profileScreenViewModel.clearErrorMsg()
+        }
+    }
+
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+
+        Text(
+            text = "My Profile",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.padding(bottom = 16.dp)
+        )
+
         AsyncImage(
             model = uiState.profilePicUrl,
             contentDescription = "Profile picture",
@@ -50,21 +73,31 @@ fun ProfileScreen(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(top = 16.dp))
 
+        Spacer(modifier = Modifier.height(24.dp))
+
         Text(
             text = "Travel Preferences",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(top = 8.dp))
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(8.dp))
 
         MultiSelectDropdown(
             allPreferences = profileScreenViewModel.allPreferences,
             selectedPreferences = uiState.selectedPreferences,
-            onSelectionChanged = { newSelection -> uiState.selectedPreferences = newSelection }
+            onSelectionChanged = { newSelection -> profileScreenViewModel.savePreferences(newSelection) }
         )
+
+        Spacer(Modifier.height(24.dp))
 
         Text(
             text = "Personal Informations",
-            style = MaterialTheme.typography.bodyMedium,
-            modifier = Modifier.padding(top = 8.dp))
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(8.dp))
 
 
 
@@ -89,7 +122,6 @@ fun MultiSelectDropdown(
             onDismissRequest = { expanded = false }
         ) {
             allPreferences.forEach { pref ->
-                // Is this preference already selected?
                 val isSelected = selectedPreferences.contains(pref)
 
                 DropdownMenuItem(
@@ -97,7 +129,7 @@ fun MultiSelectDropdown(
                         Row {
                             Checkbox(
                                 checked = isSelected,
-                                onCheckedChange = null // handled in onClick below
+                                onCheckedChange = null
                             )
                             Text(pref)
                         }
