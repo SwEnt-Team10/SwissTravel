@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui
 
 import androidx.lifecycle.ViewModel
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserPreference
 import com.github.swent.swisstravel.model.user.displayString
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseUser
@@ -15,7 +16,7 @@ data class ProfileScreenUIState(
     val profilePicUrl: String = "",
     val name: String = "",
     val email: String = "",
-    val preferences: List<String> = emptyList()
+    var selectedPreferences: List<String> = emptyList()
 )
 
 class ProfileScreenViewModel(
@@ -25,6 +26,9 @@ class ProfileScreenViewModel(
 
         private val _uiState = MutableStateFlow(ProfileScreenUIState())
         val uiState: StateFlow<ProfileScreenUIState> = _uiState.asStateFlow()
+
+        @OptIn(ExperimentalStdlibApi::class)
+        val allPreferences = UserPreference.entries.map{ it.displayString() }
 
         init {
             val loggedIn = fetchUser()
@@ -46,7 +50,7 @@ class ProfileScreenViewModel(
             profilePicUrl = loggedIn.profilePicUrl,
             name = loggedIn.name,
             email = loggedIn.email,
-            preferences = loggedIn.preferences.map { it.displayString() }
+            selectedPreferences = loggedIn.preferences.map { it.displayString() }
         )
     }
 }
