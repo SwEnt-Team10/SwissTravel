@@ -27,10 +27,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+
+object ProfileScreenTestTags {
+    const val PROFILE_PIC = "profilePic"
+    const val DROPDOWN_PREFERENCES = "dropdownMenu"
+    const val DISPLAY_NAME = "displayName"
+    const val EMAIL = "email"
+    const val GREETING = "greeting"
+}
 
 @Composable
 fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = ProfileScreenViewModel()) {
@@ -56,12 +65,12 @@ fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = ProfileScreen
         AsyncImage(
             model = uiState.profilePicUrl,
             contentDescription = "Profile picture",
-            modifier = Modifier.size(120.dp).clip(CircleShape))
+            modifier = Modifier.size(120.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
 
         Text(
-            text = "Hello, ${uiState.name.ifBlank { "User" }}!",
+            text = "Hello, ${uiState.name}!",
             style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(top = 24.dp))
+            modifier = Modifier.padding(top = 24.dp).testTag(ProfileScreenTestTags.GREETING))
 
         Spacer(modifier = Modifier.height(36.dp))
 
@@ -84,14 +93,16 @@ fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = ProfileScreen
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
             modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp))
 
-        InfoItem(label = "Display Name", value = uiState.name)
-        InfoItem(label = "E-Mail", value = uiState.email)
+        InfoItem(label = "Display Name", value = uiState.name, modifier = Modifier.testTag(
+            ProfileScreenTestTags.DISPLAY_NAME))
+        InfoItem(label = "E-Mail", value = uiState.email, modifier = Modifier.testTag(
+            ProfileScreenTestTags.EMAIL))
       }
 }
 
 @Composable
-fun InfoItem(label: String, value: String) {
-  Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+fun InfoItem(label: String, value: String, modifier: Modifier) {
+  Column(modifier = modifier.fillMaxWidth().padding(bottom = 12.dp)) {
     Text(
         text = label,
         style =
@@ -111,7 +122,7 @@ fun MultiSelectDropdown(
   var expanded by remember { mutableStateOf(false) }
 
   Column {
-    Button(onClick = { expanded = !expanded }) { Text("Select Preferences") }
+    Button(onClick = { expanded = !expanded }, modifier = Modifier.testTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)) { Text("Select Preferences") }
 
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       allPreferences.forEach { pref ->
