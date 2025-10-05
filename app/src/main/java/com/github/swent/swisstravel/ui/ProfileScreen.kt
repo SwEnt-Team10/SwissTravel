@@ -27,81 +27,79 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 
-
 @Composable
-fun ProfileScreen(
-    profileScreenViewModel: ProfileScreenViewModel = ProfileScreenViewModel()
-) {
-    val context = LocalContext.current
-    val uiState = profileScreenViewModel.uiState.collectAsState().value
+fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = ProfileScreenViewModel()) {
+  val context = LocalContext.current
+  val uiState = profileScreenViewModel.uiState.collectAsState().value
 
-    LaunchedEffect(uiState.errorMsg) {
-        val msg = uiState.errorMsg
-        if (!msg.isNullOrBlank()) {
-            Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-            profileScreenViewModel.clearErrorMsg()
-        }
+  LaunchedEffect(uiState.errorMsg) {
+    val msg = uiState.errorMsg
+    if (!msg.isNullOrBlank()) {
+      Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+      profileScreenViewModel.clearErrorMsg()
     }
+  }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-
+  Column(
+      modifier = Modifier.fillMaxSize().padding(20.dp),
+      horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "My Profile",
             style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+            modifier = Modifier.padding(bottom = 16.dp))
 
         AsyncImage(
             model = uiState.profilePicUrl,
             contentDescription = "Profile picture",
-            modifier = Modifier
-                .size(120.dp)
-                .clip(CircleShape)
-        )
+            modifier = Modifier.size(120.dp).clip(CircleShape))
 
         Text(
-            text = "Hello, ${uiState.name}!",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(top = 16.dp))
+            text = "Hello, ${uiState.name.ifBlank { "User" }}!",
+            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(top = 24.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(36.dp))
 
         Text(
             text = "Travel Preferences",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(Modifier.height(8.dp))
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
 
         MultiSelectDropdown(
             allPreferences = profileScreenViewModel.allPreferences,
             selectedPreferences = uiState.selectedPreferences,
-            onSelectionChanged = { newSelection -> profileScreenViewModel.savePreferences(newSelection) }
-        )
+            onSelectionChanged = { newSelection ->
+              profileScreenViewModel.savePreferences(newSelection)
+            })
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(36.dp))
 
         Text(
-            text = "Personal Informations",
-            style = MaterialTheme.typography.titleMedium,
-            modifier = Modifier.fillMaxWidth()
-        )
+            text = "Personal Information",
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp))
 
-        Spacer(Modifier.height(8.dp))
+        InfoItem(label = "Display Name", value = uiState.name)
+        InfoItem(label = "E-Mail", value = uiState.email)
+      }
+}
 
-
-
-    }
+@Composable
+fun InfoItem(label: String, value: String) {
+  Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+    Text(
+        text = label,
+        style =
+            MaterialTheme.typography.titleSmall.copy(
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)))
+    Text(text = value.ifBlank { "-" }, style = MaterialTheme.typography.bodyLarge)
+  }
 }
 
 @Composable
@@ -110,47 +108,38 @@ fun MultiSelectDropdown(
     selectedPreferences: List<String>,
     onSelectionChanged: (List<String>) -> Unit
 ) {
-    var expanded by remember { mutableStateOf(false) }
+  var expanded by remember { mutableStateOf(false) }
 
-    Column {
-        Button(onClick = { expanded = !expanded }) {
-            Text("Select Preferences")
-        }
+  Column {
+    Button(onClick = { expanded = !expanded }) { Text("Select Preferences") }
 
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
-        ) {
-            allPreferences.forEach { pref ->
-                val isSelected = selectedPreferences.contains(pref)
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+      allPreferences.forEach { pref ->
+        val isSelected = selectedPreferences.contains(pref)
 
-                DropdownMenuItem(
-                    text = {
-                        Row {
-                            Checkbox(
-                                checked = isSelected,
-                                onCheckedChange = null
-                            )
-                            Text(pref)
-                        }
-                    },
-                    onClick = {
-                        val newSelection = if (isSelected) {
-                            selectedPreferences - pref
-                        } else {
-                            selectedPreferences + pref
-                        }
-                        onSelectionChanged(newSelection)
-                    }
-                )
-            }
-        }
+        DropdownMenuItem(
+            text = {
+              Row {
+                Checkbox(checked = isSelected, onCheckedChange = null)
+                Text(pref)
+              }
+            },
+            onClick = {
+              val newSelection =
+                  if (isSelected) {
+                    selectedPreferences - pref
+                  } else {
+                    selectedPreferences + pref
+                  }
+              onSelectionChanged(newSelection)
+            })
+      }
     }
+  }
 }
-
 
 @Preview
 @Composable
 fun ProfileScreenPreview() {
-    ProfileScreen()
+  ProfileScreen()
 }
