@@ -1,7 +1,6 @@
 package com.android.swisstravel.ui
 
 import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -10,7 +9,6 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.ui.MultiSelectDropdown
 import com.github.swent.swisstravel.ui.ProfileScreen
 import com.github.swent.swisstravel.ui.ProfileScreenTestTags
-import org.hamcrest.MatcherAssert.assertThat
 import org.junit.Rule
 import org.junit.Test
 
@@ -75,10 +73,9 @@ class ProfileScreenUITest {
       var selected = remember { mutableStateOf(listOf("Museums")) }
       Column {
         MultiSelectDropdown(
-          allPreferences = listOf("Hiking & Outdoor", "Museums"),
-          selectedPreferences = selected.value,
-          onSelectionChanged = { selected.value = it }
-        )
+            allPreferences = listOf("Hiking & Outdoor", "Museums"),
+            selectedPreferences = selected.value,
+            onSelectionChanged = { selected.value = it })
         // Helper text to assert on
         Text("Selected: " + selected.value.joinToString())
       }
@@ -96,6 +93,4 @@ class ProfileScreenUITest {
     composeTestRule.onNodeWithText("Museums", useUnmergedTree = true).performClick()
     composeTestRule.onNodeWithText("Selected: Hiking & Outdoor").assertExists()
   }
-
-
 }
