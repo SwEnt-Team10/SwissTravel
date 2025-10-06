@@ -1,6 +1,5 @@
 package com.android.swisstravel.model.user
 
-import android.util.Log
 import com.android.swisstravel.utils.FakeJwtGenerator
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
@@ -16,84 +15,84 @@ import kotlinx.coroutines.tasks.await
 import org.junit.Before
 import org.junit.Test
 
-class UserRepositoryEmulatorTest: SwissTravelTest() {
-    private lateinit var repository: UserRepository
+class UserRepositoryEmulatorTest : SwissTravelTest() {
+  private lateinit var repository: UserRepository
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-        FirebaseEmulator.clearFirestoreEmulator()
-        repository = UserRepository(Firebase.auth, Firebase.firestore)
-    }
+  @Before
+  override fun setUp() {
+    super.setUp()
+    FirebaseEmulator.clearFirestoreEmulator()
+    repository = UserRepository(Firebase.auth, Firebase.firestore)
+  }
 
-    @Test
-    fun getCurrentUser_createsNewUserIfNotExists() = runBlocking {
-        // Arrange
-        val email = "lionel@example.com"
-        val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Lionel", email)
-        FirebaseEmulator.createGoogleUser(fakeIdToken)
+  @Test
+  fun getCurrentUser_createsNewUserIfNotExists() = runBlocking {
+    // Arrange
+    val email = "lionel@example.com"
+    val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Lionel", email)
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
 
-        val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
-        val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
-        val firebaseUser = authResult.user!!
-        val uid = firebaseUser.uid
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
+    val firebaseUser = authResult.user!!
+    val uid = firebaseUser.uid
 
-        // Act
-        val user = repository.getCurrentUser()
+    // Act
+    val user = repository.getCurrentUser()
 
-        // Assert
-        assertEquals(uid, user.uid)
-        assertEquals(email, user.email)
-        assertTrue(user.preferences.isEmpty())
+    // Assert
+    assertEquals(uid, user.uid)
+    assertEquals(email, user.email)
+    assertTrue(user.preferences.isEmpty())
 
-        // Verify Firestore document now exists
-        val doc = Firebase.firestore.collection("users").document(uid).get().await()
-        assertTrue(doc.exists())
-    }
+    // Verify Firestore document now exists
+    val doc = Firebase.firestore.collection("users").document(uid).get().await()
+    assertTrue(doc.exists())
+  }
 
+  @Test
+  fun getCurrentUser_returnsExistingUserIfExists() = runBlocking {
+    // Arrange
+    val fakeIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("Existing User", "existing@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    FirebaseEmulator.auth.signInAnonymously().await()
 
-    @Test
-    fun getCurrentUser_returnsExistingUserIfExists() = runBlocking {
-        // Arrange
-        val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Existing User", "existing@example.com")
-        FirebaseEmulator.createGoogleUser(fakeIdToken)
-        FirebaseEmulator.auth.signInAnonymously().await()
-
-        val uid = Firebase.auth.currentUser!!.uid
-        val existingData = mapOf(
+    val uid = Firebase.auth.currentUser!!.uid
+    val existingData =
+        mapOf(
             "name" to "Saved User",
             "email" to "existing@example.com",
             "profilePicUrl" to "http://example.com/avatar.png",
-            "preferences" to listOf("Hiking & Outdoor", "Skiing & Snow Sports")
-        )
-        Firebase.firestore.collection("users").document(uid).set(existingData).await()
+            "preferences" to listOf("Hiking & Outdoor", "Skiing & Snow Sports"))
+    Firebase.firestore.collection("users").document(uid).set(existingData).await()
 
-        // Act
-        val user = repository.getCurrentUser()
+    // Act
+    val user = repository.getCurrentUser()
 
-        // Assert
-        assertEquals("Saved User", user.name)
-        assertEquals("existing@example.com", user.email)
-        assertEquals(2, user.preferences.size)
-    }
+    // Assert
+    assertEquals("Saved User", user.name)
+    assertEquals("existing@example.com", user.email)
+    assertEquals(2, user.preferences.size)
+  }
 
-    @Test
-    fun updateUserPreferences_updatesFirestoreDocument() = runBlocking {
-        // Arrange
-        val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Update User", "update@example.com")
-        FirebaseEmulator.createGoogleUser(fakeIdToken)
-        FirebaseEmulator.auth.signInAnonymously().await()
-        val uid = Firebase.auth.currentUser!!.uid
+  @Test
+  fun updateUserPreferences_updatesFirestoreDocument() = runBlocking {
+    // Arrange
+    val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Update User", "update@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    FirebaseEmulator.auth.signInAnonymously().await()
+    val uid = Firebase.auth.currentUser!!.uid
 
-        val initialUser = repository.getCurrentUser()
+    val initialUser = repository.getCurrentUser()
 
-        // Act
-        val newPrefs = listOf("City", "Nature", "Adventure")
-        repository.updateUserPreferences(uid, newPrefs)
+    // Act
+    val newPrefs = listOf("City", "Nature", "Adventure")
+    repository.updateUserPreferences(uid, newPrefs)
 
-        // Assert
-        val doc = Firebase.firestore.collection("users").document(uid).get().await()
-        val storedPrefs = doc.get("preferences") as List<*>
-        assertEquals(newPrefs, storedPrefs)
-    }
+    // Assert
+    val doc = Firebase.firestore.collection("users").document(uid).get().await()
+    val storedPrefs = doc.get("preferences") as List<*>
+    assertEquals(newPrefs, storedPrefs)
+  }
 }

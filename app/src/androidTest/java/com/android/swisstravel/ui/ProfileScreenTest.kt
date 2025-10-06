@@ -9,66 +9,55 @@ import org.junit.Test
 
 class ProfileScreenUITest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun allKeyUIElementsAreDisplayed() {
-        composeTestRule.setContent {
-            ProfileScreen()
-        }
+  @Test
+  fun allKeyUIElementsAreDisplayed() {
+    composeTestRule.setContent { ProfileScreen() }
 
-        composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
+  }
+
+  @Test
+  fun dropdown_opensWhenClicked() {
+    composeTestRule.setContent { ProfileScreen() }
+
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).performClick()
+
+    composeTestRule.onAllNodesWithText("Hiking & Outdoor").fetchSemanticsNodes().let {
+      assert(it.isNotEmpty())
     }
+  }
 
-    @Test
-    fun dropdown_opensWhenClicked() {
-        composeTestRule.setContent {
-            ProfileScreen()
-        }
+  @Test
+  fun dropdown_closesWhenClickedAgain() {
+    composeTestRule.setContent { ProfileScreen() }
 
-        composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
-            .performClick()
+    val dropdown = composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
 
-        composeTestRule.onAllNodesWithText("Hiking & Outdoor").fetchSemanticsNodes().let {
-            assert(it.isNotEmpty())
-        }
-    }
+    dropdown.performClick()
+    composeTestRule.waitForIdle()
+    dropdown.performClick()
+    composeTestRule.waitForIdle()
 
-    @Test
-    fun dropdown_closesWhenClickedAgain() {
-        composeTestRule.setContent {
-            ProfileScreen()
-        }
+    composeTestRule.onAllNodesWithText("Museums").assertCountEquals(0)
+  }
 
-        val dropdown = composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
+  @Test
+  fun profileDisplaysFallbackValuesWhenEmpty() {
+    composeTestRule.setContent { ProfileScreen() }
 
-        dropdown.performClick()
-        composeTestRule.waitForIdle()
-        dropdown.performClick()
-        composeTestRule.waitForIdle()
+    composeTestRule
+        .onNode(
+            hasTestTag(ProfileScreenTestTags.DISPLAY_NAME) and hasText("-"), useUnmergedTree = true)
+        .assertExists()
 
-        composeTestRule.onAllNodesWithText("Museums").assertCountEquals(0)
-    }
-
-    @Test
-    fun profileDisplaysFallbackValuesWhenEmpty() {
-        composeTestRule.setContent {
-            ProfileScreen()
-        }
-
-        composeTestRule.onNode(
-            hasTestTag(ProfileScreenTestTags.DISPLAY_NAME) and hasText("-"),
-            useUnmergedTree = true
-        ).assertExists()
-
-        composeTestRule.onNode(
-            hasTestTag(ProfileScreenTestTags.EMAIL) and hasText("-"),
-            useUnmergedTree = true
-        ).assertExists()
-    }
+    composeTestRule
+        .onNode(hasTestTag(ProfileScreenTestTags.EMAIL) and hasText("-"), useUnmergedTree = true)
+        .assertExists()
+  }
 }
