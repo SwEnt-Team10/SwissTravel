@@ -160,9 +160,3 @@ fun MultiSelectDropdown(
     }
   }
 }
-
-@Preview
-@Composable
-fun ProfileScreenPreview() {
-  ProfileScreen()
-}
