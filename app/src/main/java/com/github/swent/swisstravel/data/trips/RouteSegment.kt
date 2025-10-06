@@ -21,7 +21,7 @@ data class RouteSegment(
   /** Returns the distance in km with two decimals. */
   fun getDistanceKm(): Double {
     val distance = distanceMeter / 1000.0
-    val roundedDuration = (distance * 100).roundToInt() / 100.0
-    return roundedDuration
+    val roundedDistance = (distance * 100).roundToInt() / 100.0
+    return roundedDistance
   }
 }

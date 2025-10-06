@@ -7,8 +7,9 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-data class Coordinate(val latitude: Double, val longitude: Double) {
+private const val R = 6371.0 // Radius of the earth in km
 
+data class Coordinate(val latitude: Double, val longitude: Double) {
   /**
    * Computes the distance between two coordinates in km using the Haversine formula.
    *
@@ -18,7 +19,6 @@ data class Coordinate(val latitude: Double, val longitude: Double) {
    *   https://www.movable-type.co.uk/scripts/latlong.html
    */
   fun haversineDistanceTo(c: Coordinate): Double {
-    val R = 6371.0 // Radius of the earth in km
     val dLat = Math.toRadians(latitude - c.latitude) // Distance between latitudes
     val dLon = Math.toRadians(longitude - c.longitude) // Distance between longitudes
 
