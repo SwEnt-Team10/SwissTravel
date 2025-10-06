@@ -34,4 +34,4 @@ base64_google_services.txt
 *.hprof
 
 # Firebase
-.firebaserc
+firebase
