@@ -107,7 +107,7 @@ fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = ProfileScreen
 
 @Composable
 fun InfoItem(label: String, value: String, modifier: Modifier) {
-  Column(modifier = modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+  Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
     Text(
         text = label,
         style =
