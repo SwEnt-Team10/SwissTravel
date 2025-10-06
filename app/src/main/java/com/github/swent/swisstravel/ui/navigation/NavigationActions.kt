@@ -7,7 +7,7 @@ sealed class Screen(
 ) {
   object Auth : Screen(route = "auth", name = "Authentication")
 
-  object Profile : Screen(route = "profile", name = "Profile")
+  object Profile : Screen(route = "profile", name = "Profile", isTopLevelDestination = true)
 
   object MyTrips : Screen(route = "my_trips", name = "My trips", isTopLevelDestination = true)
 
