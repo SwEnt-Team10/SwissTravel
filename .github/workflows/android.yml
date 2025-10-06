@@ -117,15 +117,15 @@ jobs:
           ./gradlew check --parallel --build-cache
 
       # Start Firebase emulators for instrumentation tests
-      #- name: Start Firebase emulators
-      #  run: |
-      #    if [ -e "firebase.json" ] && jq -e '.emulators' firebase.json >/dev/null; then
-      #      echo "Starting Firebase emulators for instrumentation tests..."
-      #      firebase emulators:start --only auth,firestore --project demo-project &
-      #      echo "Firebase emulators started"
-      #    else
-      #      echo "Firebase emulators not configured, skipping emulator startup..."
-      #    fi
+      - name: Start Firebase emulators
+        run: |
+          if [ -e "firebase.json" ] && jq -e '.emulators' firebase.json >/dev/null; then
+            echo "Starting Firebase emulators for instrumentation tests..."
+            firebase emulators:start --only auth,firestore --project demo-project &
+            echo "Firebase emulators started"
+          else
+            echo "Firebase emulators not configured, skipping emulator startup..."
+          fi
 
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
