@@ -3,32 +3,80 @@ agp = "8.3.0"
 kotlin = "1.8.10"
 coreKtx = "1.12.0"
 ktfmt = "0.17.0"
-junit = "4.13.2"
-junitVersion = "1.1.5"
-espressoCore = "3.5.1"
 appcompat = "1.6.1"
 material = "1.11.0"
 composeBom = "2024.02.02"
 composeActivity = "1.8.2"
 composeViewModel = "2.7.0"
 lifecycleRuntimeKtx = "2.7.0"
-kaspresso = "1.5.5"
-robolectric = "4.11.1"
 sonar = "4.4.1.3373"
-firebaseFirestoreKtx = "25.0.0"
+
+# UI Compose
+mockitoAndroid = "5.13.0"
+ui = "1.6.8"
+uiTestJunit4 = "1.6.8"
+uiTestManifest = "1.6.8"
+uiTooling = "1.6.8"
+constraintlayout = "2.1.4"
+material3 = "1.3.2"
+materialVersion = "1.12.0"
+materialIconsExtended = "1.6.8"
+
+#Firebase
+firebaseFirestoreKtx = "25.1.0"
 firebaseAuth = "23.0.0"
 firebaseAuthKtx = "23.0.0"
 firebaseFirestore = "25.1.0"
 
+# Credentials
+credentials = "1.3.0"
+googleid = "1.1.1"
+
+# Networking
+okhttp = "4.12.0"
+
+#Google Service
+playServicesAuth = "21.2.0"
+
+# Plugins
+json = "20240303"
+
+# Testing Unit
+junit = "4.13.2"
+mockitoCore = "5.13.0"
+mockitoKotlin = "5.4.0"
+mockk = "1.13.7"
+
+# Testing UI
+espressoCore = "3.6.1"
+junitVersion = "1.2.1"
+kaspresso = "1.5.5"
+kaspressoAllureSupport = "1.4.3"
+kaspressoComposeSupport = "1.5.5"
+mockkAgent = "1.13.7"
+mockkAndroid = "1.13.7"
+navigationCompose = "2.7.7"
+robolectric = "4.11.1"
+
 [libraries]
+# Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
-androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
-androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
 
+# UI tools
+androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
+androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
+androidx-ui-test-junit4 = { module = "androidx.compose.ui:ui-test-junit4", version.ref = "uiTestJunit4" }
+androidx-ui-test-manifest = { module = "androidx.compose.ui:ui-test-manifest", version.ref = "uiTestManifest" }
+androidx-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "uiTooling" }
+androidx-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "ui" }
+androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "composeBom" }
+mockito-android = { module = "org.mockito:mockito-android", version.ref = "mockitoAndroid" }
+
+# UI Compose
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-ui = { group = "androidx.compose.ui", name = "ui" }
@@ -40,16 +88,48 @@ compose-viewmodel = { group = "androidx.lifecycle", name = "lifecycle-viewmodel-
 compose-test-junit = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 compose-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 
-kaspresso = { group = "com.kaspersky.android-components", name = "kaspresso", version.ref = "kaspresso" }
-kaspresso-compose = { group = "com.kaspersky.android-components", name = "kaspresso-compose-support", version.ref = "kaspresso" }
+# Plugins
+json = { module = "org.json:json", version.ref = "json" }
 
-robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-##Firebase BoM
+
+## Firebase BoM
 firebaseBom = { module = "com.google.firebase:firebase-bom", version = "34.3.0"}
 firebase-firestore-ktx = { group = "com.google.firebase", name = "firebase-firestore-ktx", version.ref = "firebaseFirestoreKtx" }
 firebase-auth = { module = "com.google.firebase:firebase-auth", version.ref = "firebaseAuth" }
 firebase-auth-ktx = { module = "com.google.firebase:firebase-auth-ktx", version.ref = "firebaseAuthKtx" }
 firebase-firestore = { module = "com.google.firebase:firebase-firestore", version.ref = "firebaseFirestore" }
+
+## Credentials Manager
+credentials = { module = "androidx.credentials:credentials", version.ref = "credentials" }
+credentials-play-services-auth = { module = "androidx.credentials:credentials-play-services-auth", version.ref = "credentials" }
+googleid = { module = "com.google.android.libraries.identity.googleid:googleid", version.ref = "googleid" }
+
+## Google Services
+play-services-auth = { module = "com.google.android.gms:play-services-auth", version.ref = "playServicesAuth" }
+
+## OkHTTP packages
+okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+
+## Testing Unit
+mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
+mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin" , version.ref="mockitoKotlin"}
+
+## Testing UI
+androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
+androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
+kaspresso = { module = "com.kaspersky.android-components:kaspresso", version.ref = "kaspresso" }
+kaspresso-allure-support = { module = "com.kaspersky.android-components:kaspresso-allure-support", version.ref = "kaspressoAllureSupport" }
+kaspresso-compose-support = { module = "com.kaspersky.android-components:kaspresso-compose-support", version.ref = "kaspressoComposeSupport" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
+androidx-navigation-fragment-ktx = { module = "androidx.navigation:navigation-fragment-ktx", version.ref = "navigationCompose" }
+androidx-navigation-ui-ktx = { module = "androidx.navigation:navigation-ui-ktx", version.ref = "navigationCompose" }
+androidx-espresso-intents = { module = "androidx.test.espresso:espresso-intents", version.ref = "espressoCore" }
+mockk = { module = "io.mockk:mockk", version.ref = "mockk" }
+mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockkAgent" }
+mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockkAndroid" }
+kaspresso-compose = { group = "com.kaspersky.android-components", name = "kaspresso-compose-support", version.ref = "kaspresso" }
+robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
+
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
 jetbrainsKotlinAndroid = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
@@ -57,3 +137,4 @@ ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
 sonar = { id = "org.sonarqube", version.ref = "sonar" }
 ## Google Services and Firebase setup
 gms = {id = "com.google.gms.google-services", version= "4.4.3"}
+
