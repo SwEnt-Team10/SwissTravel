@@ -95,6 +95,14 @@ android {
     }
 }
 
+//This was added to make instrumentation tests pass.
+configurations.all {
+    resolutionStrategy {
+        force("com.google.protobuf:protobuf-javalite:3.25.1")
+    }
+    exclude(group = "com.google.protobuf", module = "protobuf-lite")
+}
+
 sonar {
     properties {
         property("sonar.projectKey", "SwEnt-Team10_SwissTravel")
