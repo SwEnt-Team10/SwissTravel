@@ -32,3 +32,13 @@ google-services.json
 base64_google_services.txt
 # Android Profiling
 *.hprof
+
+# Firebase
+firebase-debug.log*
+firebase-debug.*.log*
+#Following line is now commented so that all teammates can push to the same project without
+#having to create a project of their own -> we all work on the same project !
+#.firebaserc
+
+# Firebase cache
+.firebase/

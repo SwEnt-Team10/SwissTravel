@@ -14,7 +14,11 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import com.github.swent.swisstravel.resources.C
 import com.github.swent.swisstravel.theme.SampleAppTheme
-import com.github.swent.swisstravel.ui.ProfileScreen
+import okhttp3.OkHttpClient
+
+object HttpClientProvider {
+  var client: OkHttpClient = OkHttpClient()
+}
 
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -25,7 +29,7 @@ class MainActivity : ComponentActivity() {
         Surface(
             modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
             color = MaterialTheme.colorScheme.background) {
-              ProfileScreen()
+              Greeting("Android")
             }
       }
     }
