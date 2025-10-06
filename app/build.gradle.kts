@@ -40,8 +40,12 @@ android {
         }
     }
 
-    testCoverage {
-        jacocoVersion = "0.8.11"
+    tasks.withType<Test> {
+        // Configure Jacoco for each tests
+        configure<JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+            }
     }
 
     buildFeatures {
