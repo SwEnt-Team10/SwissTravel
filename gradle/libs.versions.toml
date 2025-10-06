@@ -23,7 +23,7 @@ materialVersion = "1.12.0"
 materialIconsExtended = "1.6.8"
 
 #Firebase
-firebaseFirestoreKtx = "25.0.0"
+firebaseFirestoreKtx = "25.1.0"
 firebaseAuth = "23.0.0"
 firebaseAuthKtx = "23.0.0"
 firebaseFirestore = "25.1.0"

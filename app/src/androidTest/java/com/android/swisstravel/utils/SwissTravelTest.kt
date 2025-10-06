@@ -13,15 +13,14 @@ import org.junit.After
 import org.junit.Before
 
 /**
- * Base class for all Bootcamp tests, providing common setup and utility functions.
+ * Base class for all SwissTravel tests, providing common setup and utility functions.
  *
- * It also handles gracefully automatic sign-in when required by the milestone.
+ * It also handles automatic sign-in when required, which should be at all time.
  *
- * For the B1 tests, it is quite tricky. During the first week, emulators are not set up, so we
- * can't simply sign-in anonymously. However, during week 3, B1 tests won't pass if we do not
- * sign-in automatically. Hence, to detect that we are running B1 tests during the first week, we
- * check if the Firebase emulators are running. If they are not running *by mistake*, B2 and B3
- * tests will fail, notifying the user that they need to start the emulators.
+ * You should always make sure that the emulator is running before the tests, otherwise the tests
+ * will fail.
+ *
+ * This test is mainly taken from the swent-EPFl repo.
  */
 abstract class SwissTravelTest {
 
@@ -48,8 +47,8 @@ abstract class SwissTravelTest {
   }
 
   @Before
+  // TODO : Set up repository when it is implemented
   open fun setUp() {
-    // uncomment this line when repository is set up
     // SwissTravelRepository.repository = createInitializedRepository()
     HttpClientProvider.client = initializeHTTPClient()
     if (shouldSignInAnonymously) {

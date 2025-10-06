@@ -49,7 +49,7 @@ class FakeCredentialManager private constructor(private val context: Context) :
   companion object {
     // Creates a mock CredentialManager that always returns a CustomCredential
     // containing the given fakeUserIdToken when getCredential() is called.
-    fun create(fakeUserIdToken: String): CredentialManager {
+    fun fake(fakeUserIdToken: String): CredentialManager {
       mockkObject(GoogleIdTokenCredential)
       val googleIdTokenCredential = mockk<GoogleIdTokenCredential>()
       every { googleIdTokenCredential.idToken } returns fakeUserIdToken

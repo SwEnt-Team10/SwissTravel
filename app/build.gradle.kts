@@ -65,6 +65,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += setOf("META-INF/LICENSE.md", "META-INF/LICENSE-notice.md")
         }
     }
 
@@ -161,6 +162,7 @@ dependencies {
     implementation(libs.credentials)
     implementation(libs.credentials.play.services.auth)
     implementation(libs.googleid)
+
     //---------    Networking with OkHttp   --------
     implementation(libs.okhttp)
 
