@@ -158,7 +158,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jacocoTestReport
-          path: build/reports/jacoco/jacocoTestReport/
+          path: app/build/reports/jacoco/jacocoTestReport/
 
 
       # Upload the various reports to sonar
