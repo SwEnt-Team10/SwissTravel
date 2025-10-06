@@ -25,60 +25,57 @@ import org.junit.Before
  */
 abstract class SwissTravelTest {
 
-    //TODO : Implement the repository here
-    //abstract fun createInitializedRepository(): SwissTravelRepository
+  // TODO : Implement the repository here
+  // abstract fun createInitializedRepository(): SwissTravelRepository
 
-    open fun initializeHTTPClient(): OkHttpClient = FakeHttpClient.getClient()
+  open fun initializeHTTPClient(): OkHttpClient = FakeHttpClient.getClient()
 
-//    val repository: ToDosRepository
-//        get() = SwissTravelRepository.repository
+  //    val repository: ToDosRepository
+  //        get() = SwissTravelRepository.repository
 
-    val httpClient
-        get() = HttpClientProvider.client
+  val httpClient
+    get() = HttpClientProvider.client
 
-    val shouldSignInAnonymously: Boolean = FirebaseEmulator.isRunning
+  val shouldSignInAnonymously: Boolean = FirebaseEmulator.isRunning
 
-
-    val currentUser: FirebaseUser
-        get() {
-            return FirebaseEmulator.auth.currentUser!!
-        }
-
-    init {
-        assert(FirebaseEmulator.isRunning) {
-            "FirebaseEmulator must be running when running the tests"
-        }
+  val currentUser: FirebaseUser
+    get() {
+      return FirebaseEmulator.auth.currentUser!!
     }
 
-    @Before
-    open fun setUp() {
-        //uncomment this line when repository is set up
-        //SwissTravelRepository.repository = createInitializedRepository()
-        HttpClientProvider.client = initializeHTTPClient()
-        if (shouldSignInAnonymously) {
-            runTest { FirebaseEmulator.auth.signInAnonymously().await() }
-        }
+  init {
+    assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running the tests" }
+  }
+
+  @Before
+  open fun setUp() {
+    // uncomment this line when repository is set up
+    // SwissTravelRepository.repository = createInitializedRepository()
+    HttpClientProvider.client = initializeHTTPClient()
+    if (shouldSignInAnonymously) {
+      runTest { FirebaseEmulator.auth.signInAnonymously().await() }
     }
+  }
 
-        @After
-        open fun tearDown() {
-            if (FirebaseEmulator.isRunning) {
-                FirebaseEmulator.auth.signOut()
-                FirebaseEmulator.clearAuthEmulator()
-            }
-        }
+  @After
+  open fun tearDown() {
+    if (FirebaseEmulator.isRunning) {
+      FirebaseEmulator.auth.signOut()
+      FirebaseEmulator.clearAuthEmulator()
+    }
+  }
 
-        //TODO : Declare ComposeTestRules here
+  // TODO : Declare ComposeTestRules here
 
-        fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
-                .checkActivityStateOnPressBack(shouldFinish: Boolean) {
-            activityRule.scenario.onActivity { activity ->
-                activity.onBackPressedDispatcher.onBackPressed()
-            }
-            waitUntil { activity.isFinishing == shouldFinish }
-            assertEquals(shouldFinish, activity.isFinishing)
-        }
+  fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
+      .checkActivityStateOnPressBack(shouldFinish: Boolean) {
+    activityRule.scenario.onActivity { activity ->
+      activity.onBackPressedDispatcher.onBackPressed()
+    }
+    waitUntil { activity.isFinishing == shouldFinish }
+    assertEquals(shouldFinish, activity.isFinishing)
+  }
 
-        //TODO : Create helper/companions functions here
+  // TODO : Create helper/companions functions here
 
 }

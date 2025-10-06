@@ -17,8 +17,9 @@ import com.github.swent.swisstravel.theme.SampleAppTheme
 import okhttp3.OkHttpClient
 
 object HttpClientProvider {
-    var client: OkHttpClient = OkHttpClient()
+  var client: OkHttpClient = OkHttpClient()
 }
+
 class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
