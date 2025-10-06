@@ -139,18 +139,31 @@ jobs:
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
+      # Upload the test results to the artifacts
+      - name: Upload Test Results
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+            name: test-results
+            path: app/build/reports/androidTests/connected/debug/
+            retention-days: 1
+
       # This step generates the coverage report which will be used later in the semster for monitoring purposes
-      - name: Generate coverage
+      - name: Generate Coverage Report
         run: |
           ./gradlew jacocoTestReport
 
-      - name: Build and analyze with SonarQube
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew build sonar --info
-
-      - name: Upload coverage
+      # Upload the coverage report to the artifacts
+      - name: Upload Jacoco Test Report
         uses: actions/upload-artifact@v4
         with:
-          name: Coverage report
-          path: app/build/reports/jacoco/jacocoTestReport
+          name: jacocoTestReport
+          path: build/reports/jacoco/jacocoTestReport/
+
+
+      # Upload the various reports to sonar
+      - name: Upload report to SonarCloud
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar --parallel --build-cache
