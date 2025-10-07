@@ -105,7 +105,7 @@ class ProfileScreenUITest {
   fun multiSelectDropdown_togglesSelection_addsAndRemoves() {
     composeTestRule.setContent {
       // Start with "Museums" selected so we can hit both branches
-      var selected = remember { mutableStateOf(listOf("Museums")) }
+      val selected = remember { mutableStateOf(listOf("Museums")) }
       Column {
         MultiSelectDropdown(
             allPreferences = listOf("Hiking & Outdoor", "Museums"),

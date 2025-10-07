@@ -84,8 +84,6 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     FirebaseEmulator.auth.signInAnonymously().await()
     val uid = Firebase.auth.currentUser!!.uid
 
-    val initialUser = repository.getCurrentUser()
-
     // Act
     val newPrefs = listOf("City", "Nature", "Adventure")
     repository.updateUserPreferences(uid, newPrefs)
