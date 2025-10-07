@@ -4,7 +4,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Menu
+import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -16,11 +18,11 @@ import androidx.compose.ui.platform.testTag
 
 /** This class stores the bottom navigation tabs */
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-  object Profile : Tab("Profile", Icons.Outlined.AccountCircle, Screen.Profile)
+  object Profile : Tab("Profile", Icons.Outlined.Person, Screen.Profile)
 
-  object MyTrips : Tab("My trips", Icons.Outlined.Home, Screen.MyTrips)
+  object MyTrips : Tab("My trips", Icons.Outlined.Menu, Screen.MyTrips)
 
-  object CurrentTrip : Tab("Current trip", Icons.Outlined.Menu, Screen.CurrentTrip)
+  object CurrentTrip : Tab("Current trip", Icons.Outlined.LocationOn, Screen.CurrentTrip)
   // TODO Change this once there are new screens
   // TODO Add test tags each time a new tab is added
 }
