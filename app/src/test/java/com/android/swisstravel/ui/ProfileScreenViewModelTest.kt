@@ -15,7 +15,7 @@ import org.junit.Test
 class ProfileScreenViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var repository: UserRepository
+  private lateinit var repository: UserRepositoryFirebase
   private lateinit var viewModel: ProfileScreenViewModel
 
   private val fakeUser =

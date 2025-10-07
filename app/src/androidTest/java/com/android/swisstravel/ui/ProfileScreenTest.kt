@@ -6,19 +6,41 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.ui.MultiSelectDropdown
 import com.github.swent.swisstravel.ui.ProfileScreen
 import com.github.swent.swisstravel.ui.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.ProfileScreenViewModel
 import org.junit.Rule
 import org.junit.Test
+
+/** Fake UserRepository to avoid hitting Firebase or triggering Toasts. */
+class FakeUserRepository : UserRepository {
+  override suspend fun getCurrentUser(): User {
+    return User(
+        uid = "fakeUid123",
+        name = "Test User",
+        email = "test@example.com",
+        profilePicUrl = "",
+        preferences = listOf(UserPreference.MUSEUMS))
+  }
+
+  override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {
+    // No-op for tests — we just simulate the call.
+  }
+}
 
 class ProfileScreenUITest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
+  private val fakeRepo = FakeUserRepository()
+
   @Test
   fun allKeyUIElementsAreDisplayed() {
-    composeTestRule.setContent { ProfileScreen() }
+    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
 
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
@@ -29,7 +51,7 @@ class ProfileScreenUITest {
 
   @Test
   fun dropdown_opensWhenClicked() {
-    composeTestRule.setContent { ProfileScreen() }
+    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(FakeUserRepository())) }
 
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).performClick()
 
@@ -40,7 +62,7 @@ class ProfileScreenUITest {
 
   @Test
   fun dropdown_closesWhenClickedAgain() {
-    composeTestRule.setContent { ProfileScreen() }
+    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
 
     val dropdown = composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
 
@@ -54,7 +76,20 @@ class ProfileScreenUITest {
 
   @Test
   fun profileDisplaysFallbackValuesWhenEmpty() {
-    composeTestRule.setContent { ProfileScreen() }
+    // Create a ViewModel with no user data (simulates logged-out or empty user)
+    val emptyRepo =
+        object : UserRepository {
+          override suspend fun getCurrentUser(): User {
+            return User(
+                uid = "0", name = "", email = "", profilePicUrl = "", preferences = emptyList())
+          }
+
+          override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {
+            // No-op for tests — we just simulate the call.
+          }
+        }
+
+    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(emptyRepo)) }
 
     composeTestRule
         .onNode(
@@ -88,8 +123,7 @@ class ProfileScreenUITest {
     composeTestRule.onNodeWithText("Hiking & Outdoor", useUnmergedTree = true).performClick()
     composeTestRule.onNodeWithText("Selected: Museums, Hiking & Outdoor").assertExists()
 
-    // Open again
-    // Click a selected item -> covers the "if" branch (remove)
+    // Open again and click a selected item -> covers the "if" branch (remove)
     composeTestRule.onNodeWithText("Museums", useUnmergedTree = true).performClick()
     composeTestRule.onNodeWithText("Selected: Hiking & Outdoor").assertExists()
   }

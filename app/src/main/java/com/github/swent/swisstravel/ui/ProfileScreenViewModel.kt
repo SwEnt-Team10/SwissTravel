@@ -20,10 +20,10 @@ data class ProfileScreenUIState(
     var errorMsg: String? = null
 )
 
-class ProfileScreenViewModel(private val userRepository: UserRepository = UserRepository()) :
-    ViewModel() {
+class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileScreenUIState())
+  private var currentUser: User? = null
   val uiState: StateFlow<ProfileScreenUIState> = _uiState.asStateFlow()
   val allPreferences = enumValues<UserPreference>().map { it.displayString() }
 
@@ -31,6 +31,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository = UserRe
     viewModelScope.launch {
       try {
         val user = userRepository.getCurrentUser()
+        currentUser = user
         autoFill(user)
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data: ${e.message}")
@@ -54,7 +55,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository = UserRe
   fun savePreferences(selected: List<String>) {
     viewModelScope.launch {
       try {
-        val uid = userRepository.getCurrentUser().uid
+        val uid = currentUser?.uid!!
         userRepository.updateUserPreferences(uid, selected)
         _uiState.update { it.copy(selectedPreferences = selected) }
       } catch (e: Exception) {

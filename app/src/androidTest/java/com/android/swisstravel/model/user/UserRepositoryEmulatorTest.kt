@@ -3,7 +3,7 @@ package com.android.swisstravel.model.user
 import com.android.swisstravel.utils.FakeJwtGenerator
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
-import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
@@ -16,13 +16,13 @@ import org.junit.Before
 import org.junit.Test
 
 class UserRepositoryEmulatorTest : SwissTravelTest() {
-  private lateinit var repository: UserRepository
+  private lateinit var repository: UserRepositoryFirebase
 
   @Before
   override fun setUp() {
     super.setUp()
     FirebaseEmulator.clearFirestoreEmulator()
-    repository = UserRepository(Firebase.auth, Firebase.firestore)
+    repository = UserRepositoryFirebase(Firebase.auth, Firebase.firestore)
   }
 
   @Test

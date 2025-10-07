@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 
 object ProfileScreenTestTags {
@@ -41,7 +42,7 @@ object ProfileScreenTestTags {
 }
 
 @Composable
-fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = ProfileScreenViewModel()) {
+fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = viewModel()) {
   val context = LocalContext.current
   val uiState = profileScreenViewModel.uiState.collectAsState().value
 
