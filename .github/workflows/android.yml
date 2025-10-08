@@ -73,7 +73,7 @@ jobs:
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
-          MAP_BOX_ACCESS_TOKEN: ${{ secrets.MAP_BOX_SECRET }}
+          MAP_BOX_SECRET: ${{ secrets.MAP_BOX_SECRET }}
         run: |
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json

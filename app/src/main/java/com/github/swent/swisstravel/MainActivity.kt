@@ -14,17 +14,17 @@ public class MainActivity : ComponentActivity() {
     super.onCreate(savedInstanceState)
     setContent {
       MapboxMap(
-        Modifier.fillMaxSize(),
-        mapViewportState = rememberMapViewportState {
-          setCameraOptions {
-            zoom(2.0)
-            center(Point.fromLngLat(-98.0, 39.5))
-            pitch(0.0)
-            bearing(0.0)
-          }
-        },
+          Modifier.fillMaxSize(),
+          mapViewportState =
+              rememberMapViewportState {
+                setCameraOptions {
+                  zoom(2.0)
+                  center(Point.fromLngLat(-98.0, 39.5))
+                  pitch(0.0)
+                  bearing(0.0)
+                }
+              },
       )
     }
   }
 }
-
