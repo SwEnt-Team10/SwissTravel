@@ -1,4 +1,3 @@
-
 package com.github.swent.swisstravel.ui.authentication
 
 import android.content.Context
@@ -27,89 +26,99 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class SignInViewModelTest {
 
-    private lateinit var viewModel: SignInViewModel
-    private lateinit var mockAuthRepository: AuthRepository
-    private lateinit var mockCredentialManager: CredentialManager
-    private lateinit var mockContext: Context
+  private lateinit var viewModel: SignInViewModel
+  private lateinit var mockAuthRepository: AuthRepository
+  private lateinit var mockCredentialManager: CredentialManager
+  private lateinit var mockContext: Context
 
-    private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = StandardTestDispatcher()
 
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-        mockAuthRepository = mockk()
-        mockCredentialManager = mockk()
-        mockContext = mockk(relaxed = true)
+  @Before
+  fun setUp() {
+    Dispatchers.setMain(testDispatcher)
+    mockAuthRepository = mockk()
+    mockCredentialManager = mockk()
+    mockContext = mockk(relaxed = true)
 
-        every { mockContext.getString(any()) } returns "fake-client-id"
+    every { mockContext.getString(any()) } returns "fake-client-id"
 
-        viewModel = SignInViewModel(mockAuthRepository)
-    }
+    viewModel = SignInViewModel(mockAuthRepository)
+  }
 
-    @Test
-    fun `signIn success updates uiState correctly`() = runTest {
-        val mockUser = mockk<FirebaseUser>()
-        coEvery { mockAuthRepository.signInWithGoogle(any()) } returns Result.success(mockUser)
-        coEvery { mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>()) } returns mockk(relaxed = true)
+  @Test
+  fun `signIn success updates uiState correctly`() = runTest {
+    val mockUser = mockk<FirebaseUser>()
+    coEvery { mockAuthRepository.signInWithGoogle(any()) } returns Result.success(mockUser)
+    coEvery {
+      mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
+    } returns mockk(relaxed = true)
 
-        viewModel.signIn(mockContext, mockCredentialManager)
-        testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.signIn(mockContext, mockCredentialManager)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        val uiState = viewModel.uiState.value
-        assertFalse(uiState.isLoading)
-        assertEquals(mockUser, uiState.user)
-        assertNull(uiState.errorMsg)
-        assertFalse(uiState.signedOut)
-    }
+    val uiState = viewModel.uiState.value
+    assertFalse(uiState.isLoading)
+    assertEquals(mockUser, uiState.user)
+    assertNull(uiState.errorMsg)
+    assertFalse(uiState.signedOut)
+  }
 
-    @Test
-    fun `signIn failure updates uiState correctly`() = runTest {
-        val errorMessage = "Sign-in failed"
-        coEvery { mockAuthRepository.signInWithGoogle(any()) } returns Result.failure(Exception(errorMessage))
-        coEvery { mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>()) } returns mockk(relaxed = true)
+  @Test
+  fun `signIn failure updates uiState correctly`() = runTest {
+    val errorMessage = "Sign-in failed"
+    coEvery { mockAuthRepository.signInWithGoogle(any()) } returns
+        Result.failure(Exception(errorMessage))
+    coEvery {
+      mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
+    } returns mockk(relaxed = true)
 
-        viewModel.signIn(mockContext, mockCredentialManager)
-        testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.signIn(mockContext, mockCredentialManager)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        val uiState = viewModel.uiState.value
-        assertFalse(uiState.isLoading)
-        assertNull(uiState.user)
-        assertEquals(errorMessage, uiState.errorMsg)
-        assertTrue(uiState.signedOut)
-    }
+    val uiState = viewModel.uiState.value
+    assertFalse(uiState.isLoading)
+    assertNull(uiState.user)
+    assertEquals(errorMessage, uiState.errorMsg)
+    assertTrue(uiState.signedOut)
+  }
 
-    @Test
-    fun `signIn cancellation updates uiState correctly`() = runTest {
-        coEvery { mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>()) } throws GetCredentialCancellationException()
+  @Test
+  fun `signIn cancellation updates uiState correctly`() = runTest {
+    coEvery {
+      mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
+    } throws GetCredentialCancellationException()
 
-        viewModel.signIn(mockContext, mockCredentialManager)
-        testDispatcher.scheduler.advanceUntilIdle()
+    viewModel.signIn(mockContext, mockCredentialManager)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        val uiState = viewModel.uiState.value
-        assertFalse(uiState.isLoading)
-        assertNull(uiState.user)
-        assertEquals("Sign-in cancelled", uiState.errorMsg)
-        assertTrue(uiState.signedOut)
-    }
+    val uiState = viewModel.uiState.value
+    assertFalse(uiState.isLoading)
+    assertNull(uiState.user)
+    assertEquals("Sign-in cancelled", uiState.errorMsg)
+    assertTrue(uiState.signedOut)
+  }
 
-    @Test
-    fun `clearErrorMsg clears error message`() = runTest {
-        // Given
-        val errorMessage = "An error occurred"
-        coEvery { mockAuthRepository.signInWithGoogle(any()) } returns Result.failure(Exception(errorMessage))
-        coEvery { mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>()) } returns mockk(relaxed = true)
-        viewModel.signIn(mockContext, mockCredentialManager)
-        testDispatcher.scheduler.advanceUntilIdle()
+  @Test
+  fun `clearErrorMsg clears error message`() = runTest {
+    // Given
+    val errorMessage = "An error occurred"
+    coEvery { mockAuthRepository.signInWithGoogle(any()) } returns
+        Result.failure(Exception(errorMessage))
+    coEvery {
+      mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
+    } returns mockk(relaxed = true)
+    viewModel.signIn(mockContext, mockCredentialManager)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        // When
-        viewModel.clearErrorMsg()
+    // When
+    viewModel.clearErrorMsg()
 
-        // Then
-        assertNull(viewModel.uiState.value.errorMsg)
-    }
+    // Then
+    assertNull(viewModel.uiState.value.errorMsg)
+  }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain() // Reset the main dispatcher to the original one
-    }
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain() // Reset the main dispatcher to the original one
+  }
 }

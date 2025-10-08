@@ -22,37 +22,35 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AuthenticationTest : FirestoreSwissTravelTest() {
 
-    @get:Rule val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-        FirebaseEmulator.auth.signOut()
-    }
+  @Before
+  override fun setUp() {
+    super.setUp()
+    FirebaseEmulator.auth.signOut()
+  }
 
-    @Test
-    fun testSignInScreenDisplaysCorrectly() {
-        composeTestRule.setContent {
-            SignInScreen()
-        }
+  @Test
+  fun testSignInScreenDisplaysCorrectly() {
+    composeTestRule.setContent { SignInScreen() }
 
-        composeTestRule.onNodeWithTag(APP_LOGO).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(LOGIN_TITLE).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed()
-    }
+    composeTestRule.onNodeWithTag(APP_LOGO).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LOGIN_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed()
+  }
 
-    @Test
-    fun google_sign_in_is_configured() {
-        val context = ApplicationProvider.getApplicationContext<Context>()
+  @Test
+  fun google_sign_in_is_configured() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
 
-        val resourceId =
-            context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+    val resourceId =
+        context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
 
-        // Skip test if resource doesn't exist (useful for CI environments)
-        assumeTrue("Google Sign-In not configured - skipping test", resourceId != 0)
+    // Skip test if resource doesn't exist (useful for CI environments)
+    assumeTrue("Google Sign-In not configured - skipping test", resourceId != 0)
 
-        val clientId = context.getString(resourceId)
-        assertTrue(
-            "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
-    }
+    val clientId = context.getString(resourceId)
+    assertTrue(
+        "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
+  }
 }

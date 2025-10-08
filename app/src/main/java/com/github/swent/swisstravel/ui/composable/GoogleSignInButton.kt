@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.ui.composable
 
 /** This file is largely adapted from the bootcamp solution. */
-
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
@@ -29,36 +28,29 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 
 @Composable
 fun GoogleSignInButton(onSignInClick: () -> Unit) {
-    Button(
-        onClick = onSignInClick,
-        colors = ButtonDefaults.buttonColors(contentColor = Color.White),
-        shape = RoundedCornerShape(50),
-        border = BorderStroke(1.dp, Color.LightGray),
-        modifier = Modifier
-            .padding(8.dp)
-            .height(48.dp)
-            .testTag(SignInScreenTestTags.LOGIN_BUTTON)
-    ) {
+  Button(
+      onClick = onSignInClick,
+      colors = ButtonDefaults.buttonColors(contentColor = Color.White),
+      shape = RoundedCornerShape(50),
+      border = BorderStroke(1.dp, Color.LightGray),
+      modifier = Modifier.padding(8.dp).height(48.dp).testTag(SignInScreenTestTags.LOGIN_BUTTON)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            // Load the 'Google logo' from resources
-            Image(
-                painter =
-                    painterResource(id = com.github.swent.swisstravel.R.drawable.google_logo),
-                contentDescription = "Google Logo",
-                modifier = Modifier.size(30.dp).padding(end = 8.dp)
-            )
+            modifier = Modifier.fillMaxWidth()) {
+              // Load the 'Google logo' from resources
+              Image(
+                  painter =
+                      painterResource(id = com.github.swent.swisstravel.R.drawable.google_logo),
+                  contentDescription = "Google Logo",
+                  modifier = Modifier.size(30.dp).padding(end = 8.dp))
 
-            // Text for the button
-            Text(
-                text = stringResource(string.google_sign_in),
-                color = Color.Gray,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium
-            )
-        }
-    }
+              // Text for the button
+              Text(
+                  text = stringResource(string.google_sign_in),
+                  color = Color.Gray,
+                  fontSize = 16.sp,
+                  fontWeight = FontWeight.Medium)
+            }
+      }
 }

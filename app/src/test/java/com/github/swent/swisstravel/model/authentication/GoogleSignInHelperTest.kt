@@ -13,24 +13,24 @@ import org.junit.Test
 
 class DefaultGoogleSignInHelperTest {
 
-    private lateinit var googleSignInHelper: DefaultGoogleSignInHelper
-    private val mockAuthCredential: AuthCredential = mockk()
+  private lateinit var googleSignInHelper: DefaultGoogleSignInHelper
+  private val mockAuthCredential: AuthCredential = mockk()
 
-    @Before
-    fun setUp() {
-        googleSignInHelper = DefaultGoogleSignInHelper()
-        mockkStatic(GoogleIdTokenCredential::class)
-        mockkStatic(GoogleAuthProvider::class)
-    }
+  @Before
+  fun setUp() {
+    googleSignInHelper = DefaultGoogleSignInHelper()
+    mockkStatic(GoogleIdTokenCredential::class)
+    mockkStatic(GoogleAuthProvider::class)
+  }
 
-    @Test
-    fun toFirebaseCredential_callsCorrectMethod() {
-        val idToken = "test_id_token"
-        every { GoogleAuthProvider.getCredential(idToken, null) } returns mockAuthCredential
+  @Test
+  fun toFirebaseCredential_callsCorrectMethod() {
+    val idToken = "test_id_token"
+    every { GoogleAuthProvider.getCredential(idToken, null) } returns mockAuthCredential
 
-        val result = googleSignInHelper.toFirebaseCredential(idToken)
+    val result = googleSignInHelper.toFirebaseCredential(idToken)
 
-        assertEquals(mockAuthCredential, result)
-        verify { GoogleAuthProvider.getCredential(idToken, null) }
-    }
+    assertEquals(mockAuthCredential, result)
+    verify { GoogleAuthProvider.getCredential(idToken, null) }
+  }
 }

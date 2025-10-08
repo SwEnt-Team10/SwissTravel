@@ -5,8 +5,6 @@ package com.github.swent.swisstravel.ui.authentication
  *
  * This file is largely adapted from the bootcamp solution.
  */
-
-
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -44,87 +42,81 @@ data class AuthUiState(
  * @property repository The repository used to perform authentication operations.
  */
 class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFirebase()) :
-        ViewModel() {
-    private val _uiState = MutableStateFlow(AuthUiState())
-    val uiState: StateFlow<AuthUiState> = _uiState
+    ViewModel() {
+  private val _uiState = MutableStateFlow(AuthUiState())
+  val uiState: StateFlow<AuthUiState> = _uiState
 
+  /** Clears the error message in the UI state. */
+  fun clearErrorMsg() {
+    _uiState.update { it.copy(errorMsg = null) }
+  }
 
-    /** Clears the error message in the UI state. */
-    fun clearErrorMsg() {
-        _uiState.update { it.copy(errorMsg = null) }
-    }
+  private fun getSignInOptions(context: Context) =
+      GetSignInWithGoogleOption.Builder(
+              serverClientId = context.getString(string.default_web_client_id))
+          .build()
 
-    private fun getSignInOptions(context: Context) =
-        GetSignInWithGoogleOption.Builder(
-            serverClientId =
-                context.getString(string.default_web_client_id))
-            .build()
+  private fun signInRequest(signInOptions: GetSignInWithGoogleOption) =
+      GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
 
-    private fun signInRequest(signInOptions: GetSignInWithGoogleOption) =
-        GetCredentialRequest.Builder().addCredentialOption(signInOptions).build()
+  private suspend fun getCredential(
+      context: Context,
+      request: GetCredentialRequest,
+      credentialManager: CredentialManager
+  ) = credentialManager.getCredential(context, request).credential
 
-    private suspend fun getCredential(
-        context: Context,
-        request: GetCredentialRequest,
-        credentialManager: CredentialManager
-    ) = credentialManager.getCredential(context, request).credential
+  /** Initiates the Google sign-in flow and updates the UI state on success or failure. */
+  fun signIn(context: Context, credentialManager: CredentialManager) {
+    if (_uiState.value.isLoading) return
 
-    /** Initiates the Google sign-in flow and updates the UI state on success or failure. */
-    fun signIn(context: Context, credentialManager: CredentialManager) {
-        if (_uiState.value.isLoading) return
+    viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true, errorMsg = null) }
 
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMsg = null) }
+      val signInOptions = getSignInOptions(context)
+      val signInRequest = signInRequest(signInOptions)
 
-            val signInOptions = getSignInOptions(context)
-            val signInRequest = signInRequest(signInOptions)
+      try {
+        // Launch Credential Manager UI safely
+        val credential = getCredential(context, signInRequest, credentialManager)
 
-            try {
-                // Launch Credential Manager UI safely
-                val credential = getCredential(context, signInRequest, credentialManager)
-
-                // Pass the credential to the repository
-                repository.signInWithGoogle(credential).fold({ user ->
-                    _uiState.update {
-                        it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
-                    }
-                }) { failure ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            errorMsg = failure.localizedMessage,
-                            signedOut = true,
-                            user = null)
-                    }
-                }
-            } catch (e: GetCredentialCancellationException) {
-                // User cancelled the sign-in flow
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMsg = "Sign-in cancelled",
-                        signedOut = true,
-                        user = null)
-                }
-            } catch (e: androidx.credentials.exceptions.GetCredentialException) {
-                // Other credential errors
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMsg = "Failed to get credentials: ${e.localizedMessage}",
-                        signedOut = true,
-                        user = null)
-                }
-            } catch (e: Exception) {
-                // Unexpected errors
-                _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMsg = "Unexpected error: ${e.localizedMessage}",
-                        signedOut = true,
-                        user = null)
-                }
-            }
+        // Pass the credential to the repository
+        repository.signInWithGoogle(credential).fold({ user ->
+          _uiState.update {
+            it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
+          }
+        }) { failure ->
+          _uiState.update {
+            it.copy(
+                isLoading = false,
+                errorMsg = failure.localizedMessage,
+                signedOut = true,
+                user = null)
+          }
         }
+      } catch (e: GetCredentialCancellationException) {
+        // User cancelled the sign-in flow
+        _uiState.update {
+          it.copy(isLoading = false, errorMsg = "Sign-in cancelled", signedOut = true, user = null)
+        }
+      } catch (e: androidx.credentials.exceptions.GetCredentialException) {
+        // Other credential errors
+        _uiState.update {
+          it.copy(
+              isLoading = false,
+              errorMsg = "Failed to get credentials: ${e.localizedMessage}",
+              signedOut = true,
+              user = null)
+        }
+      } catch (e: Exception) {
+        // Unexpected errors
+        _uiState.update {
+          it.copy(
+              isLoading = false,
+              errorMsg = "Unexpected error: ${e.localizedMessage}",
+              signedOut = true,
+              user = null)
+        }
+      }
     }
+  }
 }

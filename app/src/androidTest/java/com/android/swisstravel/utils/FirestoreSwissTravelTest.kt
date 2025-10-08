@@ -5,14 +5,14 @@ import org.junit.Before
 
 open class FirestoreSwissTravelTest : SwissTravelTest() {
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-    }
+  @Before
+  override fun setUp() {
+    super.setUp()
+  }
 
-    @After
-    override fun tearDown() {
-        FirebaseEmulator.clearFirestoreEmulator()
-        super.tearDown()
-    }
+  @After
+  override fun tearDown() {
+    FirebaseEmulator.clearFirestoreEmulator()
+    super.tearDown()
+  }
 }

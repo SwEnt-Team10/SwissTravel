@@ -10,22 +10,19 @@ import org.mockito.Mockito
 
 class GoogleSignInButtonTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun googleSignInButton_displaysCorrectly_and_isClickable() {
-        // Given
-        val onSignInClick: () -> Unit = Mockito.mock(Function0::class.java) as () -> Unit
+  @Test
+  fun googleSignInButton_displaysCorrectly_and_isClickable() {
+    // Given
+    val onSignInClick: () -> Unit = Mockito.mock(Function0::class.java) as () -> Unit
 
-        // When
-        composeTestRule.setContent {
-            GoogleSignInButton(onSignInClick = onSignInClick)
-        }
+    // When
+    composeTestRule.setContent { GoogleSignInButton(onSignInClick = onSignInClick) }
 
-        // Then
-        composeTestRule.onNodeWithText("Sign in with Google").assertExists()
-        composeTestRule.onNodeWithText("Sign in with Google").performClick()
-        Mockito.verify(onSignInClick).invoke()
-    }
+    // Then
+    composeTestRule.onNodeWithText("Sign in with Google").assertExists()
+    composeTestRule.onNodeWithText("Sign in with Google").performClick()
+    Mockito.verify(onSignInClick).invoke()
+  }
 }
