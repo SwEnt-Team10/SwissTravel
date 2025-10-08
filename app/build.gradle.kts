@@ -8,6 +8,19 @@ plugins {
     id("jacoco")
 }
 
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jacoco" && requested.name == "org.jacoco.agent") {
+            useVersion("0.8.11")
+            because("JaCoCo 0.8.8 breaks on Java 21 (major version 65)")
+        }
+    }
+}
+
 android {
     namespace = "com.github.swent.swisstravel"
     compileSdk = 34
@@ -36,7 +49,6 @@ android {
 
         debug {
             enableUnitTestCoverage = true
-            enableAndroidTestCoverage = true
         }
     }
 
@@ -45,7 +57,8 @@ android {
         configure<JacocoTaskExtension> {
             isIncludeNoLocationClasses = true
             excludes = listOf("jdk.internal.*")
-            }
+        }
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
     }
 
     buildFeatures {
@@ -208,7 +221,7 @@ tasks.withType<Test> {
     // Configure Jacoco for each tests
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
-        excludes = listOf("jdk.internal.*")
+        excludes = listOf("jdk.internal.*", "jdk.proxy2.*", "sun.*")
     }
 }
 
@@ -245,7 +258,7 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         val reportFile = reports.xml.outputLocation.asFile.get()
         val newContent = reportFile.readText().replace("<line[^>]+nr=\"65535\"[^>]*>".toRegex(), "")
         reportFile.writeText(newContent)
-    
+
         logger.quiet("✅ Sanitized Jacoco XML: removed invalid line entries at ${reportFile.absolutePath}")
     }
 }
