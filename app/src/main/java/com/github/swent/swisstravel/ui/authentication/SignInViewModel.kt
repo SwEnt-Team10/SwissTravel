@@ -98,15 +98,6 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
         _uiState.update {
           it.copy(isLoading = false, errorMsg = "Sign-in cancelled", signedOut = true, user = null)
         }
-      } catch (e: androidx.credentials.exceptions.GetCredentialException) {
-        // Other credential errors
-        _uiState.update {
-          it.copy(
-              isLoading = false,
-              errorMsg = "Failed to get credentials: ${e.localizedMessage}",
-              signedOut = true,
-              user = null)
-        }
       } catch (e: Exception) {
         // Unexpected errors
         _uiState.update {
