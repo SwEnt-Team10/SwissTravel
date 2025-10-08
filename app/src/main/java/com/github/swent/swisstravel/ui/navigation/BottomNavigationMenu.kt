@@ -2,8 +2,9 @@ package com.github.swent.swisstravel.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AccountCircle
-import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
@@ -16,19 +17,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 
+/** Heavily inspired from the B3 of the SwEnt course at EPFL */
+
 /** This class stores the bottom navigation tabs */
-sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-  object Profile : Tab("Profile", Icons.Outlined.Person, Screen.Profile)
+sealed class Tab(
+    val name: String,
+    val destination: Screen,
+    val iconSelected: ImageVector,
+    val iconNotSelected: ImageVector
+) {
 
-  object MyTrips : Tab("My trips", Icons.Outlined.Menu, Screen.MyTrips)
+  object MyTrips : Tab("My trips", Screen.MyTrips, Icons.Filled.Menu, Icons.Outlined.Menu)
 
-  object CurrentTrip : Tab("Current trip", Icons.Outlined.LocationOn, Screen.CurrentTrip)
+  object CurrentTrip :
+      Tab("Current trip", Screen.CurrentTrip, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
+
+  object Profile : Tab("Profile", Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person)
   // TODO Change this once there are new screens
   // TODO Add test tags each time a new tab is added
 }
 
 /* List of all the tabs in the bottom bar */
-private val tabs = listOf(Tab.Profile, Tab.MyTrips, Tab.CurrentTrip)
+private val tabs = listOf(Tab.MyTrips, Tab.CurrentTrip, Tab.Profile)
 
 /**
  * Composable setting up the bottom navigation bar
@@ -50,9 +60,15 @@ fun BottomNavigationMenu(
               modifier = Modifier.testTag(NavigationTestTags.getTestTag(tab)),
               selected = (tab == selectedTab),
               onClick = { onTabSelected(tab) },
-              icon = { Icon(imageVector = tab.icon, contentDescription = tab.name) },
+              icon = {
+                if (tab == selectedTab) {
+                  Icon(imageVector = tab.iconSelected, contentDescription = tab.name)
+                } else {
+                  Icon(imageVector = tab.iconNotSelected, contentDescription = tab.name)
+                }
+              },
               label = { Text(tab.name) },
-              alwaysShowLabel = false)
+              alwaysShowLabel = true)
         }
       }
 }

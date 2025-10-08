@@ -1,5 +1,16 @@
 package com.github.swent.swisstravel.ui.navigation
 
+import androidx.navigation.NavHostController
+
+/** Heavily inspired from the B3 of the SwEnt course at EPFL */
+
+/**
+ * This class stores all the screens in the app
+ *
+ * @param route the route of the screen
+ * @param name the name of the screen
+ * @param isTopLevelDestination whether the screen is a top level destination or not
+ */
 sealed class Screen(
     val route: String,
     val name: String,
@@ -17,4 +28,49 @@ sealed class Screen(
   // TODO change isTopLevelDestination
 }
 
-class NavigationActions {}
+/**
+ * Class that manages the different navigation actions in the app
+ *
+ * @param navController the navigation controller
+ */
+class NavigationActions(
+    private val navController: NavHostController,
+) {
+  /**
+   * Navigate to the given destination
+   *
+   * @param destination the destination to navigate to
+   */
+  open fun navigateTo(destination: Screen) {
+    /* if the destination is the same as the current route, do nothing */
+    if (destination.isTopLevelDestination && currentRoute() == destination.route) {
+      return
+    }
+
+    navController.navigate(destination.route) {
+      if (destination.isTopLevelDestination) {
+        // ChatGpt
+        /* Pop up to the start of the graph to avoid large stacks */
+        popUpTo(navController.graph.startDestinationId) {
+          saveState = true // Save state of popped destinations
+        }
+
+        /* Restore previous state when reselecting a tab */
+        restoreState = true
+      }
+      if (destination !is Screen.Auth) {
+        restoreState = true
+      }
+    }
+  }
+
+  /** Navigate to the previous screen */
+  open fun goBack() {
+    navController.popBackStack()
+  }
+
+  /** Get the current route */
+  open fun currentRoute(): String {
+    return navController.currentDestination?.route ?: ""
+  }
+}

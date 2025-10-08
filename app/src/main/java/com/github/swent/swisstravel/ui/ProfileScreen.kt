@@ -15,6 +15,7 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,6 +33,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Tab
 
 object ProfileScreenTestTags {
   const val PROFILE_PIC = "profilePic"
@@ -42,7 +47,10 @@ object ProfileScreenTestTags {
 }
 
 @Composable
-fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = viewModel()) {
+fun ProfileScreen(
+    profileScreenViewModel: ProfileScreenViewModel = viewModel(),
+    navigationActions: NavigationActions? = null
+) {
   val context = LocalContext.current
   val uiState = profileScreenViewModel.uiState.collectAsState().value
 
@@ -54,8 +62,29 @@ fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = viewModel()) 
     }
   }
 
+  Scaffold(
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Profile,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
+      content = { pd ->
+        ProfileScreenContent(
+            uiState = uiState,
+            profileScreenViewModel = profileScreenViewModel,
+            modifier = Modifier.padding(pd))
+      })
+}
+
+@Composable
+private fun ProfileScreenContent(
+    uiState: ProfileScreenUIState,
+    profileScreenViewModel: ProfileScreenViewModel,
+    modifier: Modifier
+) {
   Column(
-      modifier = Modifier.fillMaxSize().padding(20.dp),
+      modifier = modifier.fillMaxSize().padding(20.dp), // TODO padding20 ?
       horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = "My Profile",
