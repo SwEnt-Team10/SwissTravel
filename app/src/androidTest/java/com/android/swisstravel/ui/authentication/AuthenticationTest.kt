@@ -4,8 +4,11 @@ import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.swisstravel.utils.FakeCredentialManager
+import com.android.swisstravel.utils.FakeJwtGenerator
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.FirestoreSwissTravelTest
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
@@ -52,5 +55,16 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
     val clientId = context.getString(resourceId)
     assertTrue(
         "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
+  }
+
+  @Test
+  fun canSignInWithGoogle() {
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+
+    val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
+
+    composeTestRule.setContent { SignInScreen(credentialManager = fakeCredentialManager) }
+    composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed().performClick()
   }
 }
