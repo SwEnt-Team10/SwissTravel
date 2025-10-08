@@ -40,8 +40,12 @@ android {
         }
     }
 
-    testCoverage {
-        jacocoVersion = "0.8.8"
+    tasks.withType<Test> {
+        // Configure Jacoco for each tests
+        configure<JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+            }
     }
 
     buildFeatures {
@@ -65,6 +69,7 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += setOf("META-INF/LICENSE.md", "META-INF/LICENSE-notice.md")
         }
     }
 
@@ -92,6 +97,14 @@ android {
         res.setSrcDirs(emptyList<File>())
         resources.setSrcDirs(emptyList<File>())
     }
+}
+
+//This was added to make instrumentation tests pass.
+configurations.all {
+    resolutionStrategy {
+        force("com.google.protobuf:protobuf-javalite:3.25.1")
+    }
+    exclude(group = "com.google.protobuf", module = "protobuf-lite")
 }
 
 sonar {
@@ -134,6 +147,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     // Material Design 3
     implementation(libs.compose.material3)
+    implementation("io.coil-kt:coil-compose:2.4.0")
     // Integration with activities
     implementation(libs.compose.activity)
     // Integration with ViewModels
@@ -156,6 +170,38 @@ dependencies {
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
+
+    //------------   Credentials   -----------------
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
+
+    //---------    Networking with OkHttp   --------
+    implementation(libs.okhttp)
+
+    //----- Test units ----------------
+    // Testing Unit
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.mockk)
+    androidTestImplementation(libs.mockk.android)
+    androidTestImplementation(libs.mockk.agent)
+    testImplementation(libs.mockk)
+    testImplementation(libs.json)
+
+    //----------   Test UI   --------------------
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.espresso.intents)
+    androidTestImplementation(libs.androidx.ui.test.junit4)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.mockito.core)
+    testImplementation(libs.mockito.kotlin)
+    androidTestImplementation(libs.mockito.android)
+    androidTestImplementation(libs.mockito.kotlin)
+    testImplementation(libs.robolectric)
+    androidTestImplementation(libs.kaspresso)
+    androidTestImplementation(libs.kaspresso.allure.support)
+    androidTestImplementation(libs.kaspresso.compose.support)
 }
 
 tasks.withType<Test> {
@@ -194,4 +240,12 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
         include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
     })
+
+    doLast {
+        val reportFile = reports.xml.outputLocation.asFile.get()
+        val newContent = reportFile.readText().replace("<line[^>]+nr=\"65535\"[^>]*>".toRegex(), "")
+        reportFile.writeText(newContent)
+    
+        logger.quiet("✅ Sanitized Jacoco XML: removed invalid line entries at ${reportFile.absolutePath}")
+    }
 }
