@@ -15,6 +15,14 @@ import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Tab
 
+object CurrentTripScreenTestTags {
+    // TODO remove when done implementing this screen and change the tests in NavigationTest accordingly
+    const val TEMPORARY_TEST_TAG = "temporaryTestTag"
+
+     /* Real test tags */
+
+}
+
 @Composable
 fun CurrentTripScreen(navigationActions: NavigationActions? = null) {
 
@@ -27,7 +35,10 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null) {
       },
       content = { pd ->
         Box(modifier = Modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
-          Text("currentTrip", fontSize = 24.sp)
+          Text(
+              modifier = Modifier.testTag(CurrentTripScreenTestTags.TEMPORARY_TEST_TAG),
+              text = "Current Trip",
+              fontSize = 24.sp)
         }
       })
 }
