@@ -8,6 +8,19 @@ plugins {
     id("jacoco")
 }
 
+jacoco {
+    toolVersion = "0.8.11"
+}
+
+configurations.all {
+    resolutionStrategy.eachDependency {
+        if (requested.group == "org.jacoco" && requested.name == "org.jacoco.agent") {
+            useVersion("0.8.11")
+            because("JaCoCo 0.8.8 breaks on Java 21 (major version 65)")
+        }
+    }
+}
+
 android {
     namespace = "com.github.swent.swisstravel"
     compileSdk = 34
@@ -36,12 +49,16 @@ android {
 
         debug {
             enableUnitTestCoverage = true
-            enableAndroidTestCoverage = true
         }
     }
 
-    testCoverage {
-        jacocoVersion = "0.8.8"
+    tasks.withType<Test> {
+        // Configure Jacoco for each tests
+        configure<JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+        }
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
     }
 
     buildFeatures {
@@ -95,6 +112,14 @@ android {
     }
 }
 
+//This was added to make instrumentation tests pass.
+configurations.all {
+    resolutionStrategy {
+        force("com.google.protobuf:protobuf-javalite:3.25.1")
+    }
+    exclude(group = "com.google.protobuf", module = "protobuf-lite")
+}
+
 sonar {
     properties {
         property("sonar.projectKey", "SwEnt-Team10_SwissTravel")
@@ -124,8 +149,6 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation("com.mapbox.maps:android-ndk27:11.15.2")
     implementation("com.mapbox.extension:maps-compose-ndk27:11.15.2")
-    implementation("com.mapbox.navigationcore:android-ndk27:3.16.0-beta.1")
-
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
@@ -139,6 +162,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     // Material Design 3
     implementation(libs.compose.material3)
+    implementation("io.coil-kt:coil-compose:2.4.0")
     // Integration with activities
     implementation(libs.compose.activity)
     // Integration with ViewModels
@@ -199,7 +223,7 @@ tasks.withType<Test> {
     // Configure Jacoco for each tests
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
-        excludes = listOf("jdk.internal.*")
+        excludes = listOf("jdk.internal.*", "jdk.proxy2.*", "sun.*")
     }
 }
 
@@ -231,4 +255,12 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
         include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
     })
+
+    doLast {
+        val reportFile = reports.xml.outputLocation.asFile.get()
+        val newContent = reportFile.readText().replace("<line[^>]+nr=\"65535\"[^>]*>".toRegex(), "")
+        reportFile.writeText(newContent)
+
+        logger.quiet("✅ Sanitized Jacoco XML: removed invalid line entries at ${reportFile.absolutePath}")
+    }
 }
