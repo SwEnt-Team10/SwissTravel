@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui
+package com.github.swent.swisstravel.ui.profile
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Column

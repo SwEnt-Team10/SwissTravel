@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui
+package com.github.swent.swisstravel.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
