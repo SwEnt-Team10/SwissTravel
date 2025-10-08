@@ -15,6 +15,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.github.swent.swisstravel.resources.C
 import com.github.swent.swisstravel.theme.SampleAppTheme
 import okhttp3.OkHttpClient
+import com.github.swent.swisstravel.ui.map.MapboxComposeApp
+import com.mapbox.geojson.Point
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 
 object HttpClientProvider {
   var client: OkHttpClient = OkHttpClient()
@@ -24,25 +28,13 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      SampleAppTheme {
-        // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
-            color = MaterialTheme.colorScheme.background) {
-              Greeting("Android")
-            }
-      }
+      SwissTravel()
     }
   }
 }
 
+@Preview
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(text = "Hello $name!", modifier = modifier.semantics { testTag = C.Tag.greeting })
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-  SampleAppTheme { Greeting("Android") }
+fun SwissTravel() {
+    MapboxComposeApp()
 }
