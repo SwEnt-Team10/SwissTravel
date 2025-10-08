@@ -15,11 +15,11 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.theme.SampleAppTheme
 import com.github.swent.swisstravel.ui.DummyScreen
-import com.github.swent.swisstravel.ui.ProfileScreen
-import com.github.swent.swisstravel.ui.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.profile.ProfileScreen
+import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import okhttp3.OkHttpClient
 
 object HttpClientProvider {
