@@ -7,10 +7,13 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.spyk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -116,6 +119,20 @@ class SignInViewModelTest {
     // Then
     assertNull(viewModel.uiState.value.errorMsg)
   }
+
+  @Test
+  fun `signIn should not proceed if already loading`() =
+      runTest(testDispatcher) {
+        val viewModelSpy = spyk(viewModel, recordPrivateCalls = true)
+
+        val loadingState = AuthUiState(isLoading = true)
+        every { viewModelSpy.uiState } returns MutableStateFlow(loadingState)
+
+        viewModelSpy.signIn(mockContext, mockCredentialManager)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        coVerify(exactly = 0) { mockAuthRepository.signInWithGoogle(any()) }
+      }
 
   @After
   fun tearDown() {
