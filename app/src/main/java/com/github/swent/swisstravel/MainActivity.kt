@@ -3,9 +3,6 @@ package com.github.swent.swisstravel
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -14,6 +11,7 @@ import androidx.compose.ui.semantics.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import com.github.swent.swisstravel.resources.C
 import com.github.swent.swisstravel.theme.SampleAppTheme
+import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import okhttp3.OkHttpClient
 
 object HttpClientProvider {
@@ -24,7 +22,7 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-        MapLocationScreen()
+      MapLocationScreen()
     }
   }
 }
