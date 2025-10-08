@@ -8,8 +8,9 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
-import com.github.swent.swisstravel.ui.CurrentTripScreenTestTags
+import com.github.swent.swisstravel.ui.DummyScreenTestTags
 import com.github.swent.swisstravel.ui.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.google.firebase.auth.FirebaseUser
 import junit.framework.TestCase.assertEquals
@@ -96,6 +97,16 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkCurrentTripScreenIsNotDisplayed() {
     onNodeWithTag(CurrentTripScreenTestTags.TEMPORARY_TEST_TAG).assertDoesNotExist()
     // TODO Change this
+  }
+
+  fun ComposeTestRule.checkDummyScreenIsDisplayed() {
+    onNodeWithTag(DummyScreenTestTags.TEMPORARY_TEST_TAG).assertIsDisplayed()
+    // TODO delete this when My trips implemented
+  }
+
+  fun ComposeTestRule.checkDummyScreenIsNotDisplayed() {
+    onNodeWithTag(DummyScreenTestTags.TEMPORARY_TEST_TAG).assertDoesNotExist()
+    // TODO delete this when My trips implemented
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {

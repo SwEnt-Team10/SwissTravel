@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui
+package com.github.swent.swisstravel.ui.currenttrip
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize

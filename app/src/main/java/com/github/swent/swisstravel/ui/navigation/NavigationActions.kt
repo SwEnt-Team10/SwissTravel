@@ -25,7 +25,6 @@ sealed class Screen(
   object CurrentTrip :
       Screen(route = "current_trip", name = "Current trip", isTopLevelDestination = true)
   // TODO change this when there is a new screen
-  // TODO change isTopLevelDestination
 }
 
 /**
@@ -49,14 +48,10 @@ class NavigationActions(
 
     navController.navigate(destination.route) {
       if (destination.isTopLevelDestination) {
-        // ChatGpt
         /* Pop up to the start of the graph to avoid large stacks */
-        popUpTo(navController.graph.startDestinationId) {
-          saveState = true // Save state of popped destinations
+        popUpTo(destination.route) {
+          inclusive = true // Save state of popped destinations
         }
-
-        /* Restore previous state when reselecting a tab */
-        restoreState = true
       }
       if (destination !is Screen.Auth) {
         restoreState = true

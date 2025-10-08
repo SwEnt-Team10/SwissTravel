@@ -14,9 +14,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.theme.SampleAppTheme
-import com.github.swent.swisstravel.ui.CurrentTripScreen
+import com.github.swent.swisstravel.ui.DummyScreen
 import com.github.swent.swisstravel.ui.ProfileScreen
 import com.github.swent.swisstravel.ui.ProfileScreenViewModel
+import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import okhttp3.OkHttpClient
@@ -63,6 +64,15 @@ fun SwissTravelApp() {
     ) {
       composable(Screen.CurrentTrip.route) {
         CurrentTripScreen(navigationActions = navigationActions)
+      }
+    }
+
+    navigation(
+        startDestination = Screen.MyTrips.route,
+        route = Screen.MyTrips.name,
+    ) {
+      composable(Screen.MyTrips.route) {
+        DummyScreen(navigationActions = navigationActions) // TODO change this
       }
     }
   }
