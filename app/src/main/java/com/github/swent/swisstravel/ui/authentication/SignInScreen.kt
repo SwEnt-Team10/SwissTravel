@@ -37,6 +37,7 @@ object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
   const val LOGIN_TITLE = "loginTitle"
   const val LOGIN_BUTTON = "loginButton"
+  const val LOADING_INDICATOR = "loadingIndicator"
 }
 
 @Composable
@@ -95,7 +96,7 @@ fun SignInScreen(
 
           // Authenticate With Google Button
           if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.size(48.dp))
+            CircularProgressIndicator(modifier = Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
           } else {
             GoogleSignInButton(onSignInClick = { authViewModel.signIn(context, credentialManager) })
           }
