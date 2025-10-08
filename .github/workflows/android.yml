@@ -73,6 +73,7 @@ jobs:
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
+          MAP_BOX_ACCESS_TOKEN: ${{ secrets.MAP_BOX_SECRET }}
         run: |
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
@@ -84,6 +85,12 @@ jobs:
             echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
           else
             echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
+          fi
+          
+          if [ -n "$MAP_BOX_SECRET" ]; then
+            echo "$MAP_BOX_SECRET" | base64 --decode > ./app/src/main/res/values/developer-config.xml
+          else
+            echo "::warning::MAP_BOX_SECRET secret is not set. developper-config.xml will not be created."
           fi
 
       - name: Grant execute permission for gradlew
