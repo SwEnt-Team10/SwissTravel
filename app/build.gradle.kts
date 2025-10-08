@@ -40,8 +40,12 @@ android {
         }
     }
 
-    testCoverage {
-        jacocoVersion = "0.8.8"
+    tasks.withType<Test> {
+        // Configure Jacoco for each tests
+        configure<JacocoTaskExtension> {
+            isIncludeNoLocationClasses = true
+            excludes = listOf("jdk.internal.*")
+            }
     }
 
     buildFeatures {
@@ -95,6 +99,14 @@ android {
     }
 }
 
+//This was added to make instrumentation tests pass.
+configurations.all {
+    resolutionStrategy {
+        force("com.google.protobuf:protobuf-javalite:3.25.1")
+    }
+    exclude(group = "com.google.protobuf", module = "protobuf-lite")
+}
+
 sonar {
     properties {
         property("sonar.projectKey", "SwEnt-Team10_SwissTravel")
@@ -135,6 +147,7 @@ dependencies {
     implementation(libs.compose.ui.graphics)
     // Material Design 3
     implementation(libs.compose.material3)
+    implementation("io.coil-kt:coil-compose:2.4.0")
     // Integration with activities
     implementation(libs.compose.activity)
     // Integration with ViewModels
@@ -227,4 +240,12 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
         include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
     })
+
+    doLast {
+        val reportFile = reports.xml.outputLocation.asFile.get()
+        val newContent = reportFile.readText().replace("<line[^>]+nr=\"65535\"[^>]*>".toRegex(), "")
+        reportFile.writeText(newContent)
+    
+        logger.quiet("✅ Sanitized Jacoco XML: removed invalid line entries at ${reportFile.absolutePath}")
+    }
 }
