@@ -1,7 +1,7 @@
 package com.android.swisstravel.ui
 
 import com.github.swent.swisstravel.model.user.*
-import com.github.swent.swisstravel.ui.ProfileScreenViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
