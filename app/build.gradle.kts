@@ -175,6 +175,11 @@ dependencies {
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.mockk)
     testImplementation(libs.json)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation(libs.credentials)
+    testImplementation(libs.credentials.play.services.auth)
+    testImplementation(libs.googleid)
+    testImplementation(libs.firebase.auth.ktx)
 
     //----------   Test UI   --------------------
     androidTestImplementation(libs.androidx.junit)
