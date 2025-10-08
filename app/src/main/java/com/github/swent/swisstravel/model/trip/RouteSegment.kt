@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.data.trips
+package com.github.swent.swisstravel.model.trip
 
 import kotlin.math.roundToInt
 

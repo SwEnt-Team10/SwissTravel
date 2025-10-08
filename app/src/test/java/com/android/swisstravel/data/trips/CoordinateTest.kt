@@ -1,6 +1,6 @@
 package com.android.swisstravel.data.trips
 
-import com.github.swent.swisstravel.data.trips.Coordinate
+import com.github.swent.swisstravel.model.trip.Coordinate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
