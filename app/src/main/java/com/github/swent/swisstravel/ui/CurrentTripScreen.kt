@@ -16,10 +16,11 @@ import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 object CurrentTripScreenTestTags {
-    // TODO remove when done implementing this screen and change the tests in NavigationTest accordingly
-    const val TEMPORARY_TEST_TAG = "temporaryTestTag"
+  // TODO remove when done implementing this screen and change the tests in NavigationTest
+  // accordingly
+  const val TEMPORARY_TEST_TAG = "temporaryTestTag"
 
-     /* Real test tags */
+  /* Real test tags */
 
 }
 

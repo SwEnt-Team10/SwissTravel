@@ -8,7 +8,6 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
-import com.github.swent.swisstravel.ui.CurrentTripScreen
 import com.github.swent.swisstravel.ui.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -75,56 +74,46 @@ abstract class SwissTravelTest {
   // TODO : Declare ComposeTestRules here
 
   fun ComposeTestRule.checkMyTripsScreenIsDisplayed() {
-//    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-//      .assertIsDisplayed()
-//     .assertTextContains("My Trips", substring = false, ignoreCase = true)
-//    // TODO what defines the MyTripScreen that is different from others like the top bar
+    //    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+    //      .assertIsDisplayed()
+    //     .assertTextContains("My Trips", substring = false, ignoreCase = true)
+    //    // TODO what defines the MyTripScreen that is different from others like the top bar
   }
 
   fun ComposeTestRule.checkMyTripsScreenIsNotDisplayed() {
-//    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
-//      .assertDoesNotExist()
-  // TODO
+    //    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
+    //      .assertDoesNotExist()
+    // TODO
   }
 
   fun ComposeTestRule.checkCurrentTripScreenIsDisplayed() {
     onNodeWithTag(CurrentTripScreenTestTags.TEMPORARY_TEST_TAG)
-      .assertIsDisplayed()
-      .assertTextContains("Current Trip", substring = false, ignoreCase = true)
+        .assertIsDisplayed()
+        .assertTextContains("Current Trip", substring = false, ignoreCase = true)
     // TODO what defines the CurrentTrip that is different from others like the top bar
   }
 
   fun ComposeTestRule.checkCurrentTripScreenIsNotDisplayed() {
-    onNodeWithTag(CurrentTripScreenTestTags.TEMPORARY_TEST_TAG)
-      .assertDoesNotExist()
+    onNodeWithTag(CurrentTripScreenTestTags.TEMPORARY_TEST_TAG).assertDoesNotExist()
     // TODO Change this
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
-    onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME)
-      .assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
-      .assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.EMAIL)
-      .assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.GREETING)
-      .assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkProfileScreenIsNotDisplayed() {
-    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
-      .assertDoesNotExist()
-    onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME)
-      .assertDoesNotExist()
-    onNodeWithTag(ProfileScreenTestTags.EMAIL)
-      .assertDoesNotExist()
-    onNodeWithTag(ProfileScreenTestTags.GREETING)
-      .assertDoesNotExist()
+    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).assertDoesNotExist()
+    onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertDoesNotExist()
+    onNodeWithTag(ProfileScreenTestTags.EMAIL).assertDoesNotExist()
+    onNodeWithTag(ProfileScreenTestTags.GREETING).assertDoesNotExist()
   }
 
   fun ComposeTestRule.checkNavigationMenuIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-      .assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
   }
 
   fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>

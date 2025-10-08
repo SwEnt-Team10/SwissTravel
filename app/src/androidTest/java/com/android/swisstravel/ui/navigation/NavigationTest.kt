@@ -8,97 +8,98 @@ import androidx.compose.ui.test.performClick
 import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import junit.framework.TestCase.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import junit.framework.TestCase.assertEquals
 
 /** Inspired from the B3 of the SwEnt course at EPFL */
+class NavigationTest : SwissTravelTest() {
+  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-class NavigationTest: SwissTravelTest() {
-    @get:Rule
-    val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+  @Before
+  override fun setUp() {
+    super.setUp()
+    composeTestRule.setContent { SwissTravelApp() }
+  }
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-        composeTestRule.setContent { SwissTravelApp() }
+  @Test
+  fun testTagsAreCorrectlySet() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
+    // composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).assertIsDisplayed()
+  }
+
+  @Test
+  fun bottomNavigationIsDisplayedForCurrentTrip() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+  }
+
+  // TODO Uncomment this when My trips has been implemented
+  //    @Test
+  //    fun bottomNavigationIsDisplayedForMyTrips() {
+  //        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+  //
+  // composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+  //    }
+
+  @Test
+  fun bottomNavigationIsDisplayedForProfile() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+  }
+
+  @Test
+  fun tabsAreClickable() {
+    //        composeTestRule // TODO Uncomment this when My trips has been implemented
+    //            .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB)
+    //            .assertIsDisplayed()
+    //            .performClick()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
+  }
+
+  @Test
+  fun navigationBetweenTabsWorks() {
+    //        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
+    //        composeTestRule.checkCurrentTripScreenIsDisplayed()
+    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
+    //        composeTestRule.checkProfileScreenIsNotDisplayed()
+    //        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    //        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+    //        composeTestRule.checkMyTripsScreenIsDisplayed()
+    //        composeTestRule.checkProfileScreenIsNotDisplayed()
+    //        composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    //        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
+    //        composeTestRule.checkProfileScreenIsDisplayed()
+    //        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
+    //        composeTestRule.checkCurrentTripScreenIsDisplayed()
+    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
+    //        composeTestRule.checkProfileScreenIsNotDisplayed()
+  }
+
+  @Test
+  fun canNavigateBackToMapAndBackToOverviewUsingSystemBack() {
+    //        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    //        composeTestRule.checkMyTripsScreenIsDisplayed()
+    //        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+    //        composeTestRule.checkProfileScreenIsNotDisplayed()
+    //        pressBack(shouldFinish = false)
+    //        composeTestRule.checkCurrentTripScreenIsDisplayed()
+    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
+    //        composeTestRule.checkProfileScreenIsNotDisplayed()
+  }
+
+  private fun pressBack(shouldFinish: Boolean) {
+    composeTestRule.activityRule.scenario.onActivity { activity ->
+      activity.onBackPressedDispatcher.onBackPressed()
     }
-
-    @Test
-    fun testTagsAreCorrectlySet() {
-        composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
-        // composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).assertIsDisplayed()
-    }
-
-    @Test
-    fun bottomNavigationIsDisplayedForCurrentTrip() {
-        composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
-    }
-
-    // TODO Uncomment this when My trips has been implemented
-//    @Test
-//    fun bottomNavigationIsDisplayedForMyTrips() {
-//        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-//        composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
-//    }
-
-    @Test
-    fun bottomNavigationIsDisplayedForProfile() {
-        composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-        composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
-    }
-
-    @Test
-    fun tabsAreClickable() {
-//        composeTestRule // TODO Uncomment this when My trips has been implemented
-//            .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB)
-//            .assertIsDisplayed()
-//            .performClick()
-        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).assertIsDisplayed().performClick()
-        composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
-    }
-
-    @Test
-    fun navigationBetweenTabsWorks(){
-//        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-//        composeTestRule.checkCurrentTripScreenIsDisplayed()
-//        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-//        composeTestRule.checkProfileScreenIsNotDisplayed()
-//        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-//        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-//        composeTestRule.checkMyTripsScreenIsDisplayed()
-//        composeTestRule.checkProfileScreenIsNotDisplayed()
-//        composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-//        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-//        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-//        composeTestRule.checkProfileScreenIsDisplayed()
-//        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-//        composeTestRule.checkCurrentTripScreenIsDisplayed()
-//        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-//        composeTestRule.checkProfileScreenIsNotDisplayed()
-    }
-
-    @Test
-    fun canNavigateBackToMapAndBackToOverviewUsingSystemBack() {
-//        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-//        composeTestRule.checkMyTripsScreenIsDisplayed()
-//        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-//        composeTestRule.checkProfileScreenIsNotDisplayed()
-//        pressBack(shouldFinish = false)
-//        composeTestRule.checkCurrentTripScreenIsDisplayed()
-//        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-//        composeTestRule.checkProfileScreenIsNotDisplayed()
-    }
-
-
-    private fun pressBack(shouldFinish: Boolean) {
-        composeTestRule.activityRule.scenario.onActivity { activity ->
-            activity.onBackPressedDispatcher.onBackPressed()
-        }
-        composeTestRule.waitUntil { composeTestRule.activity.isFinishing == shouldFinish }
-        assertEquals(shouldFinish, composeTestRule.activity.isFinishing)
-    }
+    composeTestRule.waitUntil { composeTestRule.activity.isFinishing == shouldFinish }
+    assertEquals(shouldFinish, composeTestRule.activity.isFinishing)
+  }
 }
