@@ -20,9 +20,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.github.swent.swisstravel.R.string
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 
 @Composable
@@ -46,13 +48,13 @@ fun GoogleSignInButton(onSignInClick: () -> Unit) {
             Image(
                 painter =
                     painterResource(id = com.github.swent.swisstravel.R.drawable.google_logo),
-                contentDescription = "Google Logo", // todo use string resource
+                contentDescription = "Google Logo",
                 modifier = Modifier.size(30.dp).padding(end = 8.dp)
             )
 
             // Text for the button
             Text(
-                text = "Sign in with Google", // todo use string resource
+                text = stringResource(string.google_sign_in),
                 color = Color.Gray,
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium

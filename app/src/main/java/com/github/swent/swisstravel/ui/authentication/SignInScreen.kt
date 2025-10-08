@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,7 +61,7 @@ fun SignInScreen(
     // Navigate to overview screen on successful login
     LaunchedEffect(uiState.user) {
         uiState.user?.let {
-            Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show() // todo use string resource
+            Toast.makeText(context, R.string.login_success, Toast.LENGTH_SHORT).show()
             onSignedIn()
         }
     }
@@ -87,7 +88,7 @@ fun SignInScreen(
                 // Welcome Text
                 Text(
                     modifier = Modifier.testTag(SignInScreenTestTags.LOGIN_TITLE),
-                    text = "Welcome to SwissTravel", // todo use string resource
+                    text = stringResource(R.string.welcome_msg),
                     style = MaterialTheme
                         .typography.headlineLarge.copy(fontSize = 57.sp, lineHeight = 64.sp),
                     fontWeight = FontWeight.Bold,

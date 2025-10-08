@@ -13,6 +13,7 @@ import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.R.string
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -56,7 +57,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
     private fun getSignInOptions(context: Context) =
         GetSignInWithGoogleOption.Builder(
             serverClientId =
-                context.getString(com.github.swent.swisstravel.R.string.default_web_client_id))
+                context.getString(string.default_web_client_id))
             .build()
 
     private fun signInRequest(signInOptions: GetSignInWithGoogleOption) =
@@ -101,7 +102,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMsg = "Sign-in cancelled", // todo use string resource
+                        errorMsg = "Sign-in cancelled",
                         signedOut = true,
                         user = null)
                 }
@@ -110,7 +111,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMsg = "Failed to get credentials: ${e.localizedMessage}", // todo use string resource
+                        errorMsg = "Failed to get credentials: ${e.localizedMessage}",
                         signedOut = true,
                         user = null)
                 }
@@ -119,7 +120,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMsg = "Unexpected error: ${e.localizedMessage}", // todo use string resource
+                        errorMsg = "Unexpected error: ${e.localizedMessage}",
                         signedOut = true,
                         user = null)
                 }

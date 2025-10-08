@@ -40,15 +40,15 @@ class AuthRepositoryFirebase(
                 val user =
                     auth.signInWithCredential(firebaseCred).await().user
                         ?: return Result.failure(
-                            IllegalStateException("Login failed: Could not retrieve user information")) // todo use string resource
+                            IllegalStateException("Login failed: Could not retrieve user information"))
                 return Result.success(user)
             } else {
                 return Result.failure(
-                    IllegalStateException("Login failed: Credential is not of type Google ID")) // todo use string resource
+                    IllegalStateException("Login failed: Credential is not of type Google ID"))
             }
         } catch (e: Exception) {
             Result.failure(
-                IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}")) // todo use string resource
+                IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
         }
     }
 
@@ -60,7 +60,7 @@ class AuthRepositoryFirebase(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(
-                IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}")) // todo use string resource
+                IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}"))
         }
     }
 }
