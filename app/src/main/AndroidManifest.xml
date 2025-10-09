@@ -12,13 +12,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:usesCleartextTraffic="true"
         android:supportsRtl="true"
-        android:theme="@style/Theme.SampleApp"
+        android:theme="@style/Theme.SwissTravel"
         tools:targetApi="31">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/title_activity_main"
-            android:theme="@style/Theme.SampleApp">
+            android:theme="@style/Theme.SwissTravel">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
