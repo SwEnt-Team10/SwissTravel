@@ -8,6 +8,5 @@
 
     <!-- Authentication resources -->
     <string name="login_success">Login successful!</string>
-    <string name="welcome_msg">Welcome to SwissTravel</string>
     <string name="google_sign_in">Sign in with Google</string>
 </resources>

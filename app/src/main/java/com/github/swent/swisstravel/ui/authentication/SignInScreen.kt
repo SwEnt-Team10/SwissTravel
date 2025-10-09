@@ -11,9 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -23,11 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+//import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
@@ -35,7 +30,6 @@ import com.github.swent.swisstravel.ui.composable.GoogleSignInButton
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
-  const val LOGIN_TITLE = "loginTitle"
   const val LOGIN_BUTTON = "loginButton"
   const val LOADING_INDICATOR = "loadingIndicator"
 }
@@ -81,17 +75,6 @@ fun SignInScreen(
               contentDescription = "App Logo",
               modifier = Modifier.size(250.dp).testTag(SignInScreenTestTags.APP_LOGO))
 
-          Spacer(modifier = Modifier.height(16.dp))
-
-          // Welcome Text
-          Text(
-              modifier = Modifier.testTag(SignInScreenTestTags.LOGIN_TITLE),
-              text = stringResource(R.string.welcome_msg),
-              style =
-                  MaterialTheme.typography.headlineLarge.copy(fontSize = 57.sp, lineHeight = 64.sp),
-              fontWeight = FontWeight.Bold,
-              textAlign = TextAlign.Center)
-
           Spacer(modifier = Modifier.height(48.dp))
 
           // Authenticate With Google Button
@@ -104,3 +87,14 @@ fun SignInScreen(
         }
       })
 }
+
+/** Preview function for the SignInScreen, commented out to avoid unchecked coverage.
+ *
+ *  Do not forget to uncomment 'import androidx.compose.ui.tooling.preview.Preview'
+ *  at the beginning of this file
+ */
+//@Preview
+//@Composable
+//fun SignInScreenPreview() {
+//    SignInScreen()
+//}
