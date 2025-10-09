@@ -149,6 +149,9 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
     implementation("com.mapbox.maps:android-ndk27:11.15.2")
     implementation("com.mapbox.extension:maps-compose-ndk27:11.15.2")
+    implementation("com.mapbox.navigationcore:android-ndk27:3.16.0-beta.1")  // Adds core Navigation SDK functionality
+    // if your app does not require 16 KB page size support, the default dependency without -ndk27 can be used
+    // implementation("com.mapbox.navigationcore:android:3.16.0-beta.1")
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
