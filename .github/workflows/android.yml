@@ -171,5 +171,6 @@ jobs:
       # Upload the various reports to sonar
       - name: Upload report to SonarCloud
         env:
-          {{ gradlew sonar --parallel --build-cache -Dsonar.coverage.exclusionsOnCoverageTypeKEN }}
-        run: ./gradlew sonar --parallel --build-cache -Dsonar.coverage.exclusionsOnCoverageType=branch
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: ./gradlew sonar --parallel --build-cache -Dsonar.coverage.exclusionsOnCoverageType=branch ⁠
