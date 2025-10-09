@@ -2,8 +2,7 @@ package com.github.swent.swisstravel.ui.authentication
 
 /** This file is largely adapted from the bootcamp solution. */
 
-// import androidx.compose.ui.tooling.preview.Preview    // <-- Uncomment this line to enable
-// preview
+// import androidx.compose.ui.tooling.preview.Preview // <-- Uncomment this line to enable preview
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -115,7 +113,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.Companion.fillMaxWidth()) {
+            modifier = Modifier.Companion) {
               // Load the 'Google logo' from resources
               Image(
                   painter = painterResource(id = R.drawable.google_logo),
