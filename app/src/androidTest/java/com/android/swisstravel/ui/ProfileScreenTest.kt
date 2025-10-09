@@ -9,10 +9,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserPreference
 import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.ui.MultiSelectDropdown
-import com.github.swent.swisstravel.ui.ProfileScreen
-import com.github.swent.swisstravel.ui.ProfileScreenTestTags
-import com.github.swent.swisstravel.ui.ProfileScreenViewModel
+import com.github.swent.swisstravel.ui.profile.MultiSelectDropdown
+import com.github.swent.swisstravel.ui.profile.ProfileScreen
+import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import org.junit.Rule
 import org.junit.Test
 
