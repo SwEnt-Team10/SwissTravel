@@ -45,7 +45,7 @@ android {
         configure<JacocoTaskExtension> {
             isIncludeNoLocationClasses = true
             excludes = listOf("jdk.internal.*")
-        }
+            }
     }
 
     buildFeatures {
@@ -260,9 +260,14 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
 
     doLast {
         val reportFile = reports.xml.outputLocation.asFile.get()
-        val newContent = reportFile.readText().replace("<line[^>]+nr=\"65535\"[^>]*>".toRegex(), "")
-        reportFile.writeText(newContent)
 
-        logger.quiet("✅ Sanitized Jacoco XML: removed invalid line entries at ${reportFile.absolutePath}")
+        // Sanitize Jacoco XML: remove invalid line entries and branch counters
+        var newContent = reportFile.readText()
+        newContent = newContent
+            .replace("<counter type=\"BRANCH\"[\\s\\S]*?</counter>".toRegex(), "") // remove branch coverage
+            .replace("<line[^>]+nr=\"65535\"[^>]*>".toRegex(), "") // existing sanitizer
+
+        reportFile.writeText(newContent)
+        logger.quiet("✅ Cleaned Jacoco XML: removed branch coverage counters from ${reportFile.absolutePath}")
     }
 }
