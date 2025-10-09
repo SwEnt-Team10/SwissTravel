@@ -1,4 +1,5 @@
 package com.github.swent.swisstravel.ui.theme
+
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFFB50303)
@@ -216,10 +217,3 @@ val surfaceContainerLowDarkHighContrast = Color(0xFF271D1C)
 val surfaceContainerDarkHighContrast = Color(0xFF392E2C)
 val surfaceContainerHighDarkHighContrast = Color(0xFF443937)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF504442)
-
-
-
-
-
-
-
