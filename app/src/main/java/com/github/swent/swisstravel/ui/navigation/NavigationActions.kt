@@ -40,7 +40,7 @@ class NavigationActions(
    *
    * @param destination the destination to navigate to
    */
-  open fun navigateTo(destination: Screen) {
+  fun navigateTo(destination: Screen) {
     /* if the destination is the same as the current route, do nothing */
     if (destination.isTopLevelDestination && currentRoute() == destination.route) {
       return
@@ -60,12 +60,12 @@ class NavigationActions(
   }
 
   /** Navigate to the previous screen */
-  open fun goBack() {
+  fun goBack() {
     navController.popBackStack()
   }
 
   /** Get the current route */
-  open fun currentRoute(): String {
+  fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
   }
 }
