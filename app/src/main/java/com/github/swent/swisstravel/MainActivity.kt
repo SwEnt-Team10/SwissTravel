@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
 fun SwissTravelApp() {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
-  val startDestination = Screen.Profile.route // TODO Change this
+  val startDestination = Screen.Profile.route
   NavHost(navController = navController, startDestination = startDestination) {
     navigation(
         startDestination = Screen.Profile.route,
