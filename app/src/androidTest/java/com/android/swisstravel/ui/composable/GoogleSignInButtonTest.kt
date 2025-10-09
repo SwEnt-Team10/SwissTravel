@@ -3,7 +3,7 @@ package com.android.swisstravel.ui.composable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import com.github.swent.swisstravel.ui.composable.GoogleSignInButton
+import com.github.swent.swisstravel.ui.authentication.GoogleSignInButton
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
