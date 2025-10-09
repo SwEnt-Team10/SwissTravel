@@ -21,10 +21,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,7 +35,8 @@ import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Tab
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.TopAppBar
+import com.github.swent.swisstravel.ui.theme.onSecondaryContainerLight
+import com.github.swent.swisstravel.ui.theme.secondaryContainerLight
 
 object ProfileScreenTestTags {
     const val PROFILE_PIC = "profilePic"
@@ -157,12 +154,13 @@ fun InfoSection(
             .fillMaxWidth()
             .padding(vertical = 8.dp)
             .clip(MaterialTheme.shapes.medium)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .background(secondaryContainerLight)
             .padding(16.dp)
     ) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+            color = onSecondaryContainerLight,
             modifier = Modifier.padding(bottom = 12.dp)
         )
         content()
