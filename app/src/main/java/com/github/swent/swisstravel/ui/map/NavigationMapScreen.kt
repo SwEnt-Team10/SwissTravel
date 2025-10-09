@@ -1,19 +1,19 @@
 package com.github.swent.swisstravel.ui.map
 
-
-// the Navigation SDK for Android is not natively built for Jetpack Compose,
-// but you can still use it in a Compose project by embedding a MapView inside an AndroidView container.
-
-
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.gestures.Orientation
+import androidx.compose.foundation.gestures.rememberScrollableState
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.common.location.Location
 import com.mapbox.geojson.Point
@@ -52,8 +53,26 @@ import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 
 
+
+
 @Composable
-fun MapboxComposeApp() {
+fun MenuExample(navController: NavController) {
+    Scaffold {
+            paddingValues -> Box(
+        modifier = Modifier.padding(paddingValues)
+    ) {
+        Button(
+            onClick = {
+                navController.navigate("nav-map")
+            }
+        ) {Text("Enter Navigation") }
+    }
+    }
+}
+
+
+@Composable
+fun MapboxComposeApp(navController: NavController) {
     val context = LocalContext.current
     var hasPermission by remember {
         mutableStateOf(
@@ -83,7 +102,7 @@ fun MapboxComposeApp() {
     }
 
     if (hasPermission) {
-        NavigationMapScreen()
+        NavigationMapScreen(navController = navController)
     } else {
         Box(Modifier.fillMaxSize()) {
             Button(onClick = {
@@ -95,7 +114,7 @@ fun MapboxComposeApp() {
 
 @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 @Composable
-fun NavigationMapScreen() {
+fun NavigationMapScreen(navController: NavController) {
     val context = LocalContext.current
     val density = LocalDensity.current
 
@@ -163,37 +182,51 @@ fun NavigationMapScreen() {
     }
 
     // Build the MapView inside Compose
-    AndroidView(
-        modifier = Modifier.fillMaxSize(),
-        factory = { ctx ->
-            MapView(ctx).apply {
-                mapboxMap.setCamera(
-                    CameraOptions.Builder()
-                        .center(Point.fromLngLat(-122.43539772352648, 37.77440680146262))
-                        .zoom(14.0)
-                        .build()
-                )
-                // Enable location puck using NavigationLocationProvider
-                location.apply {
-                    setLocationProvider(navigationLocationProvider)
-                    locationPuck = LocationPuck2D() // replaced later with default 2D puck as well
-                    enabled = true
-                }
-                mapViewState.value = this
+    Box(
+        Modifier
+            .fillMaxSize()
+            .scrollable(rememberScrollableState {
+                // view world deltas should be reflected in compose world
+                // components that participate in nested scrolling
+                it
+            }, Orientation.Vertical)
+    ) {
+        AndroidView(
+            modifier = Modifier.fillMaxSize(),
+            factory = { ctx ->
+                MapView(ctx).apply {
+                    mapboxMap.setCamera(
+                        CameraOptions.Builder()
+                            .center(Point.fromLngLat(-122.43539772352648, 37.77440680146262))
+                            .zoom(14.0)
+                            .build()
+                    )
+                    // Enable location puck using NavigationLocationProvider
+                    location.apply {
+                        setLocationProvider(navigationLocationProvider)
+                        locationPuck = LocationPuck2D() // replaced later with default 2D puck as well
+                        enabled = true
+                    }
+                    mapViewState.value = this
 
-                // Viewport, padding, and camera
-                viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap).also { vds ->
-                    val top = with(density) { 180.dp.toPx().toDouble() }
-                    val left = with(density) { 40.dp.toPx().toDouble() }
-                    val bottom = with(density) { 150.dp.toPx().toDouble() }
-                    val right = with(density) { 40.dp.toPx().toDouble() }
-                    vds.followingPadding = EdgeInsets(top, left, bottom, right)
+                    // Viewport, padding, and camera
+                    viewportDataSource = MapboxNavigationViewportDataSource(mapboxMap).also { vds ->
+                        val top = with(density) { 180.dp.toPx().toDouble() }
+                        val left = with(density) { 40.dp.toPx().toDouble() }
+                        val bottom = with(density) { 150.dp.toPx().toDouble() }
+                        val right = with(density) { 40.dp.toPx().toDouble() }
+                        vds.followingPadding = EdgeInsets(top, left, bottom, right)
+                    }
+                    navigationCamera = NavigationCamera(mapboxMap, camera, viewportDataSource!!)
                 }
-                navigationCamera = NavigationCamera(mapboxMap, camera, viewportDataSource!!)
-            }
-        },
-        update = { /* no-op */ }
-    )
+            },
+            update = { /* no-op */ },
+
+            )
+        Button(onClick = {
+            navController.navigate("menu-example")
+        }) {Text("Exit Navigation")  }
+    }
 
     // Wire up Navigation lifecycle with Compose
     DisposableEffect(Unit) {
