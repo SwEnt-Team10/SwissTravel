@@ -153,6 +153,10 @@ dependencies {
 
     implementation(libs.compose.ui)
     implementation(libs.compose.ui.graphics)
+    // Navigation
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.fragment.ktx)
+    implementation(libs.androidx.navigation.ui.ktx)
     // Material Design 3
     implementation(libs.compose.material3)
     implementation("io.coil-kt:coil-compose:2.4.0")
