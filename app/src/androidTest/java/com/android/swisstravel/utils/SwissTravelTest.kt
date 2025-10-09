@@ -113,13 +113,13 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
     onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST).assertIsDisplayed()
     onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
     onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkProfileScreenIsNotDisplayed() {
-    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).assertDoesNotExist()
+    onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST).assertDoesNotExist()
     onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertDoesNotExist()
     onNodeWithTag(ProfileScreenTestTags.EMAIL).assertDoesNotExist()
     onNodeWithTag(ProfileScreenTestTags.GREETING).assertDoesNotExist()
