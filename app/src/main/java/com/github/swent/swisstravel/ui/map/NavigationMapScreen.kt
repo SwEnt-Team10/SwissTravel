@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
@@ -61,11 +62,21 @@ import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 import org.w3c.dom.Text
 
+
+object NavigationMapScreenTestTags {
+  const val PERMISSION_BUTTON = "permissionButton"
+  const val BOTTOM_SHEET = "bottomSheet"
+    const val ENTER_BUTTON = "enterButton"
+  const val EXIT_BUTTON = "exitButton"
+}
+
+
 @Composable
 fun SampleMenu(navController: NavController) {
   Scaffold { paddingValues ->
     Box(modifier = Modifier.padding(paddingValues)) {
-      Button(onClick = { navController.navigate("nav-map") }) { Text("Enter Navigation") }
+      Button(onClick = { navController.navigate("nav-map") }, modifier = Modifier.testTag(
+          NavigationMapScreenTestTags.ENTER_BUTTON)) { Text("Enter Navigation") }
     }
   }
 }
@@ -105,7 +116,8 @@ fun MapScreen(navController: NavController) {
       Button(
           onClick = {
             permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-          }) {
+          },
+          modifier = Modifier.testTag(NavigationMapScreenTestTags.PERMISSION_BUTTON)) {
             Text("Grant location permission")
           }
     }
@@ -121,11 +133,11 @@ fun BottomSheet(navController: NavController) {
       scaffoldState = sheetState,
       sheetContent = {
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().height(300.dp) // maximum height of the bottom sheet
+            modifier = Modifier.fillMaxWidth().height(300.dp).testTag(NavigationMapScreenTestTags.BOTTOM_SHEET) // maximum height of the bottom sheet
             ) { // sample items list
               item {
                 OutlinedTextField(
-                    value = "Start longitude",
+                    value = "TODO: select location",
                     onValueChange = {},
                     modifier = Modifier.padding(16.dp))
               }
@@ -246,7 +258,7 @@ fun NavigationMapScreen(navController: NavController) {
         )
         Button(
             onClick = { navController.navigate("menu-example") },
-            modifier = Modifier.align(Alignment.TopEnd)) {
+            modifier = Modifier.align(Alignment.TopEnd).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
               Text("Exit Navigation")
             }
       }
