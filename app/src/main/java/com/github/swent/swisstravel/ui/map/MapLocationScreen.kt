@@ -1,16 +1,22 @@
 package com.github.swent.swisstravel.ui.map
 
-import android.app.Activity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.Tab
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -18,36 +24,85 @@ import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
 
+object MapLocationScreenTags {
+  const val ERROR_TEXT = "errorText"
+  const val PERMISSION_TEXT = "permissionText"
+  const val PERMISSION_BUTTON = "permissionButton"
+  const val MAP = "map"
+}
+
+/** Screen that displays a map with the user's current location.
+ *
+ * Requests location permission if not already granted.
+ *
+ * @param viewModel ViewModel to manage location permission state.
+ * @param isActivityNull True if the activity context is null, false otherwise.
+ * @param navigationActions Navigation actions for navigating between screens.
+ */
 @Composable
-fun MapLocationScreen() {
-  val context = LocalContext.current
-  val activity = context as? Activity
-  val viewModel = remember { MapLocationViewModel(activity) }
+fun MapLocationScreen(
+  viewModel: MapLocationViewModel = viewModel(),
+  isActivityNull: Boolean = false,
+  navigationActions: NavigationActions? = null
+) {
   val permissionGranted by viewModel.permissionGranted.collectAsState()
   val mapViewportState = rememberMapViewportState()
 
-  when {
-    viewModel.isActivityNull() -> {
-      Text("Erreur : impossible d’accéder à l’activité.")
+  val launcher = rememberLauncherForActivityResult(
+    contract = ActivityResultContracts.RequestPermission()
+  ) { isGranted ->
+    viewModel.setPermissionGranted(isGranted)
+  }
+
+  Scaffold(
+    bottomBar = {
+      BottomNavigationMenu(
+        selectedTab = Tab.Map,
+        onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+        modifier = Modifier.testTag(com.github.swent.swisstravel.ui.navigation.NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+      )
     }
-    !permissionGranted -> {
-      Column {
-        Text("La localisation est nécessaire pour afficher votre position sur la carte.")
-        Button(onClick = { viewModel.requestPermission(1001) }) {
-          Text("Autoriser la localisation")
+  ) { contentPadding ->
+    when {
+      isActivityNull -> {
+        Text(
+          "Erreur : impossible d’accéder à l’activité.",
+          modifier = Modifier
+            .padding(contentPadding)
+            .testTag(MapLocationScreenTags.ERROR_TEXT)
+        )
+      }
+      !permissionGranted -> {
+        Column(modifier = Modifier.padding(contentPadding)) {
+          Text(
+            "La localisation est nécessaire pour afficher votre position sur la carte.",
+            modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_TEXT)
+          )
+          Button(
+            onClick = { launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
+            modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_BUTTON)
+          ) {
+            Text("Autoriser la localisation")
+          }
         }
       }
-    }
-    else -> {
-      MapboxMap(modifier = Modifier.fillMaxSize(), mapViewportState = mapViewportState) {
-        MapEffect(Unit) { mapView ->
-          mapView.location.updateSettings {
-            locationPuck = createDefault2DPuck(withBearing = true)
-            enabled = true
-            puckBearing = PuckBearing.COURSE
-            puckBearingEnabled = true
+      else -> {
+        MapboxMap(
+          modifier = Modifier
+            .fillMaxSize()
+            .padding(contentPadding)
+            .testTag(MapLocationScreenTags.MAP),
+          mapViewportState = mapViewportState
+        ) {
+          MapEffect(Unit) { mapView ->
+            mapView.location.updateSettings {
+              locationPuck = createDefault2DPuck(withBearing = true)
+              enabled = true
+              puckBearing = PuckBearing.COURSE
+              puckBearingEnabled = true
+            }
+            mapViewportState.transitionToFollowPuckState()
           }
-          mapViewportState.transitionToFollowPuckState()
         }
       }
     }

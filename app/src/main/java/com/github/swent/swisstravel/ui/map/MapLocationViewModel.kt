@@ -1,29 +1,19 @@
 package com.github.swent.swisstravel.ui.map
 
-import android.app.Activity
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.github.swent.swisstravel.model.map.PermissionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.launch
 
-class MapLocationViewModel(activity: Activity?) : ViewModel() {
-  private val permissionHandler = activity?.let { PermissionHandler(it) }
-
-  private val _permissionGranted =
-      MutableStateFlow(permissionHandler?.arePermissionsGranted() ?: false)
+/** ViewModel to manage location permission state for the map screen. */
+class MapLocationViewModel : ViewModel() {
+  private val _permissionGranted = MutableStateFlow(false)
   val permissionGranted: StateFlow<Boolean> = _permissionGranted
 
-  fun requestPermission(requestCode: Int) {
-    permissionHandler?.requestPermission(requestCode)
-    viewModelScope.launch {
-      while (permissionHandler?.arePermissionsGranted() != true) {
-        kotlinx.coroutines.delay(200)
-      }
-      _permissionGranted.value = true
-    }
+  /** Update the permission state.
+   *
+   * @param granted True if location permission is granted, false otherwise.
+   */
+  fun setPermissionGranted(granted: Boolean) {
+    _permissionGranted.value = granted
   }
-
-  fun isActivityNull() = permissionHandler == null
 }
