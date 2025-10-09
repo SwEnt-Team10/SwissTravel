@@ -20,6 +20,11 @@ import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTag
+import androidx.compose.ui.tooling.preview.Preview
+import com.github.swent.swisstravel.resources.C
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import okhttp3.OkHttpClient
 
 object HttpClientProvider {
@@ -30,7 +35,7 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      SampleAppTheme {
+      SwissTravelTheme {
         // A surface container using the 'background' color from the theme
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
           SwissTravelApp()
@@ -76,4 +81,8 @@ fun SwissTravelApp() {
       }
     }
   }
+@Preview(showBackground = true)
+@Composable
+fun GreetingPreview() {
+  SwissTravelTheme { Greeting("Android") }
 }
