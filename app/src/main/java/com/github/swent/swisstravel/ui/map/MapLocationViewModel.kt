@@ -9,7 +9,8 @@ class MapLocationViewModel : ViewModel() {
   private val _permissionGranted = MutableStateFlow(false)
   val permissionGranted: StateFlow<Boolean> = _permissionGranted
 
-  /** Update the permission state.
+  /**
+   * Update the permission state.
    *
    * @param granted True if location permission is granted, false otherwise.
    */

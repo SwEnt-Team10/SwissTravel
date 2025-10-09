@@ -31,7 +31,8 @@ object MapLocationScreenTags {
   const val MAP = "map"
 }
 
-/** Screen that displays a map with the user's current location.
+/**
+ * Screen that displays a map with the user's current location.
  *
  * Requests location permission if not already granted.
  *
@@ -41,70 +42,66 @@ object MapLocationScreenTags {
  */
 @Composable
 fun MapLocationScreen(
-  viewModel: MapLocationViewModel = viewModel(),
-  isActivityNull: Boolean = false,
-  navigationActions: NavigationActions? = null
+    viewModel: MapLocationViewModel = viewModel(),
+    isActivityNull: Boolean = false,
+    navigationActions: NavigationActions? = null
 ) {
   val permissionGranted by viewModel.permissionGranted.collectAsState()
   val mapViewportState = rememberMapViewportState()
 
-  val launcher = rememberLauncherForActivityResult(
-    contract = ActivityResultContracts.RequestPermission()
-  ) { isGranted ->
-    viewModel.setPermissionGranted(isGranted)
-  }
+  val launcher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.RequestPermission()) {
+          isGranted ->
+        viewModel.setPermissionGranted(isGranted)
+      }
 
   Scaffold(
-    bottomBar = {
-      BottomNavigationMenu(
-        selectedTab = Tab.Map,
-        onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-        modifier = Modifier.testTag(com.github.swent.swisstravel.ui.navigation.NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-      )
-    }
-  ) { contentPadding ->
-    when {
-      isActivityNull -> {
-        Text(
-          "Erreur : impossible d’accéder à l’activité.",
-          modifier = Modifier
-            .padding(contentPadding)
-            .testTag(MapLocationScreenTags.ERROR_TEXT)
-        )
-      }
-      !permissionGranted -> {
-        Column(modifier = Modifier.padding(contentPadding)) {
-          Text(
-            "La localisation est nécessaire pour afficher votre position sur la carte.",
-            modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_TEXT)
-          )
-          Button(
-            onClick = { launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
-            modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_BUTTON)
-          ) {
-            Text("Autoriser la localisation")
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Map,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier =
+                Modifier.testTag(
+                    com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+                        .BOTTOM_NAVIGATION_MENU))
+      }) { contentPadding ->
+        when {
+          isActivityNull -> {
+            Text(
+                "Erreur : impossible d’accéder à l’activité.",
+                modifier =
+                    Modifier.padding(contentPadding).testTag(MapLocationScreenTags.ERROR_TEXT))
           }
-        }
-      }
-      else -> {
-        MapboxMap(
-          modifier = Modifier
-            .fillMaxSize()
-            .padding(contentPadding)
-            .testTag(MapLocationScreenTags.MAP),
-          mapViewportState = mapViewportState
-        ) {
-          MapEffect(Unit) { mapView ->
-            mapView.location.updateSettings {
-              locationPuck = createDefault2DPuck(withBearing = true)
-              enabled = true
-              puckBearing = PuckBearing.COURSE
-              puckBearingEnabled = true
+          !permissionGranted -> {
+            Column(modifier = Modifier.padding(contentPadding)) {
+              Text(
+                  "La localisation est nécessaire pour afficher votre position sur la carte.",
+                  modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_TEXT))
+              Button(
+                  onClick = { launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
+                  modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_BUTTON)) {
+                    Text("Autoriser la localisation")
+                  }
             }
-            mapViewportState.transitionToFollowPuckState()
+          }
+          else -> {
+            MapboxMap(
+                modifier =
+                    Modifier.fillMaxSize()
+                        .padding(contentPadding)
+                        .testTag(MapLocationScreenTags.MAP),
+                mapViewportState = mapViewportState) {
+                  MapEffect(Unit) { mapView ->
+                    mapView.location.updateSettings {
+                      locationPuck = createDefault2DPuck(withBearing = true)
+                      enabled = true
+                      puckBearing = PuckBearing.COURSE
+                      puckBearingEnabled = true
+                    }
+                    mapViewportState.transitionToFollowPuckState()
+                  }
+                }
           }
         }
       }
-    }
-  }
 }

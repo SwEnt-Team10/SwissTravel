@@ -1,20 +1,46 @@
 package com.android.swisstravel.ui.map
 
-
-
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreenTags
 import com.github.swent.swisstravel.ui.map.MapLocationViewModel
-import io.mockk.every
-import io.mockk.mockk
-import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
-import org.junit.runner.RunWith
-
 
 class MapLocationScreenTest {
+  @get:Rule val composeTestRule = createComposeRule()
+
+  @Test
+  fun showsMapIfPermissionGranted() = runTest {
+    val viewModel = MapLocationViewModel()
+    viewModel.setPermissionGranted(true)
+
+    composeTestRule.setContent { MapLocationScreen(viewModel = viewModel) }
+    composeTestRule.onNodeWithTag(MapLocationScreenTags.MAP).assertIsDisplayed()
+  }
+
+  @Test
+  fun doesNotShowMapIfPermissionNotGranted() = runTest {
+    val viewModel = MapLocationViewModel()
+    viewModel.setPermissionGranted(false)
+
+    composeTestRule.setContent { MapLocationScreen(viewModel = viewModel) }
+    composeTestRule.onNodeWithTag(MapLocationScreenTags.MAP).assertDoesNotExist()
+  }
+
+  @Test
+  fun showsMapWhenPermissionBecomesGranted() = runTest {
+    val viewModel = MapLocationViewModel()
+    viewModel.setPermissionGranted(false)
+
+    composeTestRule.setContent { MapLocationScreen(viewModel = viewModel) }
+    composeTestRule.onNodeWithTag(MapLocationScreenTags.MAP).assertDoesNotExist()
+
+    viewModel.setPermissionGranted(true)
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(MapLocationScreenTags.MAP).assertIsDisplayed()
+  }
 }

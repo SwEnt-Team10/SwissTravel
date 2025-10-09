@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel
 
-import android.Manifest
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -10,9 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -21,7 +18,6 @@ import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.DummyScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
-import com.github.swent.swisstravel.ui.map.MapLocationViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -34,17 +30,17 @@ object HttpClientProvider {
 }
 
 class MainActivity : ComponentActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContent {
-            SwissTravelTheme {
-                // A surface container using the 'background' color from the theme
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    SwissTravelApp()
-                }
-            }
+  override fun onCreate(savedInstanceState: Bundle?) {
+    super.onCreate(savedInstanceState)
+    setContent {
+      SwissTravelTheme {
+        // A surface container using the 'background' color from the theme
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+          SwissTravelApp()
         }
+      }
     }
+  }
 }
 
 @Composable
@@ -82,20 +78,18 @@ fun SwissTravelApp() {
         DummyScreen(navigationActions = navigationActions) // TODO change this
       }
     }
-      navigation(
-          startDestination = Screen.Map.route,
-          route = Screen.Map.name,
-      ) {
-          composable(Screen.Map.route) {
-              val launcher = rememberLauncherForActivityResult(
-                  contract = ActivityResultContracts.RequestPermission()
-              ) { isGranted ->
+    navigation(
+        startDestination = Screen.Map.route,
+        route = Screen.Map.name,
+    ) {
+      composable(Screen.Map.route) {
+        val launcher =
+            rememberLauncherForActivityResult(
+                contract = ActivityResultContracts.RequestPermission()) { isGranted ->
                   // Gère le résultat ici (ex : mettre à jour un ViewModel si besoin)
-              }
-              MapLocationScreen(
-                  navigationActions = navigationActions
-              )
-          }
+                }
+        MapLocationScreen(navigationActions = navigationActions)
       }
+    }
   }
 }

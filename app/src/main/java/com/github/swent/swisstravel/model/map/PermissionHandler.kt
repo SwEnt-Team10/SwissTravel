@@ -16,11 +16,11 @@ import androidx.core.content.ContextCompat
  * @param activity The activity context used to check and request permissions.
  */
 class PermissionHandler(private val activity: Activity) {
-    /**
-     * Checks if the ACCESS_FINE_LOCATION permission is granted.
-     *
-     * @return `true` if the permission is granted, `false` otherwise.
-     */
+  /**
+   * Checks if the ACCESS_FINE_LOCATION permission is granted.
+   *
+   * @return `true` if the permission is granted, `false` otherwise.
+   */
   fun arePermissionsGranted(): Boolean {
     return ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) ==
         PackageManager.PERMISSION_GRANTED

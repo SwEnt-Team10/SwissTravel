@@ -36,7 +36,7 @@ sealed class Tab(
   // TODO Change this once there are new screens
   // TODO Add test tags each time a new tab is added
 
-    object Map: Tab("Map", Screen.Map, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
+  object Map : Tab("Map", Screen.Map, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
 }
 
 /* List of all the tabs in the bottom bar */
