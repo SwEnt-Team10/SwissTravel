@@ -62,21 +62,22 @@ import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 import org.w3c.dom.Text
 
-
 object NavigationMapScreenTestTags {
   const val PERMISSION_BUTTON = "permissionButton"
   const val BOTTOM_SHEET = "bottomSheet"
-    const val ENTER_BUTTON = "enterButton"
+  const val ENTER_BUTTON = "enterButton"
   const val EXIT_BUTTON = "exitButton"
 }
-
 
 @Composable
 fun SampleMenu(navController: NavController) {
   Scaffold { paddingValues ->
     Box(modifier = Modifier.padding(paddingValues)) {
-      Button(onClick = { navController.navigate("nav-map") }, modifier = Modifier.testTag(
-          NavigationMapScreenTestTags.ENTER_BUTTON)) { Text("Enter Navigation") }
+      Button(
+          onClick = { navController.navigate("nav-map") },
+          modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_BUTTON)) {
+            Text("Enter Navigation")
+          }
     }
   }
 }
@@ -133,7 +134,12 @@ fun BottomSheet(navController: NavController) {
       scaffoldState = sheetState,
       sheetContent = {
         LazyColumn(
-            modifier = Modifier.fillMaxWidth().height(300.dp).testTag(NavigationMapScreenTestTags.BOTTOM_SHEET) // maximum height of the bottom sheet
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(300.dp)
+                    .testTag(
+                        NavigationMapScreenTestTags
+                            .BOTTOM_SHEET) // maximum height of the bottom sheet
             ) { // sample items list
               item {
                 OutlinedTextField(
@@ -258,7 +264,8 @@ fun NavigationMapScreen(navController: NavController) {
         )
         Button(
             onClick = { navController.navigate("menu-example") },
-            modifier = Modifier.align(Alignment.TopEnd).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
+            modifier =
+                Modifier.align(Alignment.TopEnd).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
               Text("Exit Navigation")
             }
       }
