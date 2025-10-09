@@ -1,15 +1,15 @@
-package com.android.swisstravel.ui
+package com.android.swisstravel.ui.profile
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Text
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserPreference
 import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.ui.profile.MultiSelectDropdown
+import com.github.swent.swisstravel.ui.profile.InfoItem
+import com.github.swent.swisstravel.ui.profile.InfoSection
+import com.github.swent.swisstravel.ui.profile.PreferenceToggle
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
@@ -44,34 +44,15 @@ class ProfileScreenUITest {
 
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
-  }
 
-  @Test
-  fun dropdown_opensWhenClicked() {
-    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(FakeUserRepository())) }
+    val expectedPreferenceCount = UserPreference.values().size
 
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).performClick()
-
-    composeTestRule.onAllNodesWithText("Hiking & Outdoor").fetchSemanticsNodes().let {
-      assert(it.isNotEmpty())
-    }
-  }
-
-  @Test
-  fun dropdown_closesWhenClickedAgain() {
-    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
-
-    val dropdown = composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
-
-    dropdown.performClick()
-    composeTestRule.waitForIdle()
-    dropdown.performClick()
-    composeTestRule.waitForIdle()
-
-    composeTestRule.onAllNodesWithText("Museums").assertCountEquals(0)
+    composeTestRule
+        .onAllNodesWithTag(ProfileScreenTestTags.PREFERENCES)
+        .assertCountEquals(expectedPreferenceCount)
   }
 
   @Test
@@ -102,29 +83,51 @@ class ProfileScreenUITest {
   }
 
   @Test
-  fun multiSelectDropdown_togglesSelection_addsAndRemoves() {
+  fun toggleSwitch_changesStateWhenClicked() {
+    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
+
+    // Ensure the preference switch is visible
+    val hikingToggle = composeTestRule.onNodeWithText("Hiking & Outdoor")
+    hikingToggle.assertIsDisplayed()
+
+    // Click the toggle to change state
+    hikingToggle.performClick()
+    composeTestRule.waitForIdle()
+
+    // Click again to revert
+    hikingToggle.performClick()
+    composeTestRule.waitForIdle()
+  }
+
+  /** Directly tests InfoSection and InfoItem composables for coverage. */
+  @Test
+  fun infoSection_and_InfoItem_renderTextProperly() {
     composeTestRule.setContent {
-      // Start with "Museums" selected so we can hit both branches
-      val selected = remember { mutableStateOf(listOf("Museums")) }
-      Column {
-        MultiSelectDropdown(
-            allPreferences = listOf("Hiking & Outdoor", "Museums"),
-            selectedPreferences = selected.value,
-            onSelectionChanged = { selected.value = it })
-        // Helper text to assert on
-        Text("Selected: " + selected.value.joinToString())
+      InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
+        InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
       }
     }
 
-    // Open the dropdown
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES).performClick()
+    composeTestRule.onNodeWithText("Section Title").assertExists()
+    composeTestRule.onNodeWithText("Label").assertExists()
+    composeTestRule.onNodeWithText("Value").assertExists()
+  }
 
-    // Click an unselected item -> covers the "else" branch (add)
-    composeTestRule.onNodeWithText("Hiking & Outdoor", useUnmergedTree = true).performClick()
-    composeTestRule.onNodeWithText("Selected: Museums, Hiking & Outdoor").assertExists()
+  /** Tests PreferenceToggle composable directly (checked/un-checked behavior). */
+  @Test
+  fun preferenceToggle_changesState() {
+    var toggled = false
+    composeTestRule.setContent {
+      PreferenceToggle(
+          title = "My Toggle",
+          checked = toggled,
+          onCheckedChange = { toggled = !toggled },
+          modifier = Modifier.testTag("toggle"))
+    }
 
-    // Open again and click a selected item -> covers the "if" branch (remove)
-    composeTestRule.onNodeWithText("Museums", useUnmergedTree = true).performClick()
-    composeTestRule.onNodeWithText("Selected: Hiking & Outdoor").assertExists()
+    val toggleNode = composeTestRule.onNodeWithText("My Toggle", useUnmergedTree = true)
+    toggleNode.assertExists()
+    toggleNode.performClick()
+    toggleNode.performClick()
   }
 }
