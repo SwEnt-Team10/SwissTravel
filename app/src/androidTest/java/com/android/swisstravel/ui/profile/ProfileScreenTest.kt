@@ -1,12 +1,6 @@
 package com.android.swisstravel.ui.profile
 
-import android.widget.Toast
-import androidx.compose.foundation.layout.Column
-import androidx.compose.material3.Text
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -54,11 +48,11 @@ class ProfileScreenUITest {
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
 
-      val expectedPreferenceCount = UserPreference.values().size
+    val expectedPreferenceCount = UserPreference.values().size
 
-      composeTestRule
-          .onAllNodesWithTag(ProfileScreenTestTags.PREFERENCES)
-          .assertCountEquals(expectedPreferenceCount)
+    composeTestRule
+        .onAllNodesWithTag(ProfileScreenTestTags.PREFERENCES)
+        .assertCountEquals(expectedPreferenceCount)
   }
 
   @Test
@@ -88,54 +82,52 @@ class ProfileScreenUITest {
         .assertExists()
   }
 
-    @Test
-    fun toggleSwitch_changesStateWhenClicked() {
-        composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
+  @Test
+  fun toggleSwitch_changesStateWhenClicked() {
+    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
 
-        // Ensure the preference switch is visible
-        val hikingToggle = composeTestRule.onNodeWithText("Hiking & Outdoor")
-        hikingToggle.assertIsDisplayed()
+    // Ensure the preference switch is visible
+    val hikingToggle = composeTestRule.onNodeWithText("Hiking & Outdoor")
+    hikingToggle.assertIsDisplayed()
 
-        // Click the toggle to change state
-        hikingToggle.performClick()
-        composeTestRule.waitForIdle()
+    // Click the toggle to change state
+    hikingToggle.performClick()
+    composeTestRule.waitForIdle()
 
-        // Click again to revert
-        hikingToggle.performClick()
-        composeTestRule.waitForIdle()
+    // Click again to revert
+    hikingToggle.performClick()
+    composeTestRule.waitForIdle()
+  }
+
+  /** Directly tests InfoSection and InfoItem composables for coverage. */
+  @Test
+  fun infoSection_and_InfoItem_renderTextProperly() {
+    composeTestRule.setContent {
+      InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
+        InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
+      }
     }
 
-    /** Directly tests InfoSection and InfoItem composables for coverage. */
-    @Test
-    fun infoSection_and_InfoItem_renderTextProperly() {
-        composeTestRule.setContent {
-            InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
-                InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
-            }
-        }
+    composeTestRule.onNodeWithText("Section Title").assertExists()
+    composeTestRule.onNodeWithText("Label").assertExists()
+    composeTestRule.onNodeWithText("Value").assertExists()
+  }
 
-        composeTestRule.onNodeWithText("Section Title").assertExists()
-        composeTestRule.onNodeWithText("Label").assertExists()
-        composeTestRule.onNodeWithText("Value").assertExists()
+  /** Tests PreferenceToggle composable directly (checked/un-checked behavior). */
+  @Test
+  fun preferenceToggle_changesState() {
+    var toggled = false
+    composeTestRule.setContent {
+      PreferenceToggle(
+          title = "My Toggle",
+          checked = toggled,
+          onCheckedChange = { toggled = !toggled },
+          modifier = Modifier.testTag("toggle"))
     }
 
-    /** Tests PreferenceToggle composable directly (checked/un-checked behavior). */
-    @Test
-    fun preferenceToggle_changesState() {
-        var toggled = false
-        composeTestRule.setContent {
-            PreferenceToggle(
-                title = "My Toggle",
-                checked = toggled,
-                onCheckedChange = { toggled = !toggled },
-                modifier = Modifier.testTag("toggle")
-            )
-        }
-
-        val toggleNode = composeTestRule.onNodeWithText("My Toggle", useUnmergedTree = true)
-        toggleNode.assertExists()
-        toggleNode.performClick()
-        toggleNode.performClick()
-    }
-
+    val toggleNode = composeTestRule.onNodeWithText("My Toggle", useUnmergedTree = true)
+    toggleNode.assertExists()
+    toggleNode.performClick()
+    toggleNode.performClick()
+  }
 }
