@@ -52,10 +52,10 @@ class NavigationTest : SwissTravelTest() {
 
   @Test
   fun tabsAreClickable() {
-    //        composeTestRule // TODO Uncomment this when My trips has been implemented
-    //            .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB)
-    //            .assertIsDisplayed()
-    //            .performClick()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule
         .onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB)
         .assertIsDisplayed()
@@ -63,6 +63,7 @@ class NavigationTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
   }
 
+  @Test
   @Test
   fun navigationBetweenTabsWorks() {
     //        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
