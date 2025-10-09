@@ -8,19 +8,6 @@ plugins {
     id("jacoco")
 }
 
-jacoco {
-    toolVersion = "0.8.11"
-}
-
-configurations.all {
-    resolutionStrategy.eachDependency {
-        if (requested.group == "org.jacoco" && requested.name == "org.jacoco.agent") {
-            useVersion("0.8.11")
-            because("JaCoCo 0.8.8 breaks on Java 21 (major version 65)")
-        }
-    }
-}
-
 android {
     namespace = "com.github.swent.swisstravel"
     compileSdk = 34
@@ -49,6 +36,7 @@ android {
 
         debug {
             enableUnitTestCoverage = true
+            enableAndroidTestCoverage = true
         }
     }
 
@@ -58,7 +46,6 @@ android {
             isIncludeNoLocationClasses = true
             excludes = listOf("jdk.internal.*")
         }
-        jvmArgs("-XX:+EnableDynamicAgentLoading")
     }
 
     buildFeatures {
@@ -90,6 +77,11 @@ android {
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
+        }
+        packagingOptions {
+            jniLibs {
+                useLegacyPackaging = true
+            }
         }
     }
 
@@ -147,6 +139,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(platform(libs.compose.bom))
     implementation(libs.firebase.firestore.ktx)
+    implementation(libs.googleid)
     implementation("com.mapbox.maps:android-ndk27:11.15.2")
     implementation("com.mapbox.extension:maps-compose-ndk27:11.15.2")
     testImplementation(libs.junit)
@@ -206,6 +199,11 @@ dependencies {
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.mockk)
     testImplementation(libs.json)
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation(libs.credentials)
+    testImplementation(libs.credentials.play.services.auth)
+    testImplementation(libs.googleid)
+    testImplementation(libs.firebase.auth.ktx)
 
     //----------   Test UI   --------------------
     androidTestImplementation(libs.androidx.junit)
@@ -227,7 +225,7 @@ tasks.withType<Test> {
     // Configure Jacoco for each tests
     configure<JacocoTaskExtension> {
         isIncludeNoLocationClasses = true
-        excludes = listOf("jdk.internal.*", "jdk.proxy2.*", "sun.*")
+        excludes = listOf("jdk.internal.*")
     }
 }
 
