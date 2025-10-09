@@ -2,6 +2,8 @@ package com.github.swent.swisstravel.ui.authentication
 
 /** This file is largely adapted from the bootcamp solution. */
 
+// import androidx.compose.ui.tooling.preview.Preview    // <-- Uncomment this line to enable
+// preview
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -33,7 +35,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-//import androidx.compose.ui.tooling.preview.Preview    // <-- Uncomment this line to enable preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
@@ -104,9 +105,10 @@ fun SignInScreen(
 fun GoogleSignInButton(onSignInClick: () -> Unit) {
   Button(
       onClick = onSignInClick,
-      colors = ButtonDefaults.buttonColors(
-          containerColor = MaterialTheme.colorScheme.surfaceVariant,
-          contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+      colors =
+          ButtonDefaults.buttonColors(
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(50),
       border = BorderStroke(1.dp, Color.Companion.LightGray),
       modifier = Modifier.padding(8.dp).height(48.dp).testTag(SignInScreenTestTags.LOGIN_BUTTON)) {
@@ -136,8 +138,8 @@ fun GoogleSignInButton(onSignInClick: () -> Unit) {
  * Do not forget to uncomment 'import androidx.compose.ui.tooling.preview.Preview' at the beginning
  * of this file
  */
-//@Preview
-//@Composable
-//fun SignInScreenPreview() {
+// @Preview
+// @Composable
+// fun SignInScreenPreview() {
 //  SignInScreen()
-//}
+// }
