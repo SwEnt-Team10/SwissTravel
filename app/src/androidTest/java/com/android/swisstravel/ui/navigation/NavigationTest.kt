@@ -62,8 +62,7 @@ class NavigationTest : SwissTravelTest() {
         .performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
   }
-
-  @Test
+  
   @Test
   fun navigationBetweenTabsWorks() {
     //        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
