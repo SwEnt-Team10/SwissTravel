@@ -38,6 +38,8 @@ import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.Screen
 
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
@@ -49,7 +51,7 @@ object SignInScreenTestTags {
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedIn: () -> Unit = {}
+    navigationActions: NavigationActions
 ) {
   val context = LocalContext.current
   val uiState by authViewModel.uiState.collectAsState()
@@ -66,10 +68,9 @@ fun SignInScreen(
   LaunchedEffect(uiState.user) {
     uiState.user?.let {
       Toast.makeText(context, R.string.login_success, Toast.LENGTH_SHORT).show()
-      onSignedIn()
+      navigationActions.navigateTo(Screen.CurrentTrip)
     }
   }
-
   // The main container for the screen
   // A surface container using the 'background' color from the theme
   Scaffold(
