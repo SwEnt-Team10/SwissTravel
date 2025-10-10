@@ -61,9 +61,7 @@ fun MapLocationScreen(
         BottomNavigationMenu(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier =
-                Modifier.testTag(
-                    NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       }) { contentPadding ->
         when {
           isActivityNull -> {
