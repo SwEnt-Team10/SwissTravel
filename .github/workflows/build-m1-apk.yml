@@ -1,5 +1,6 @@
 name: Build M1 APK
-
+# ChatGPT
+# Trigger workflow on push to M1 or manual dispatch
 on:
   push:
     branches:
@@ -11,19 +12,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - uses: actions/checkout@v3
 
+      # Set up Java
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Decode keystore
+      # Decode the release keystore
+      - name: Decode Keystore
         run: echo "$KEYSTORE_BASE64" | base64 --decode > release-key.jks
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
+      # Decode google-services.json
+      - name: Decode Google Services JSON
+        run: echo "$GOOGLE_SERVICES" | base64 --decode > app/google-services.json
+        env:
+          GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
+
+      # Build the release APK
       - name: Build Release APK
         run: ./gradlew assembleRelease
         env:
@@ -31,6 +42,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      # Upload the signed APK as artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
