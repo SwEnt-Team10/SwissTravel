@@ -7,13 +7,13 @@ object NavigationTestTags {
   const val PROFILE_TAB = "ProfileTab"
   const val MY_TRIPS_TAB = "MyTripsTab"
   const val CURRENT_TRIP_TAB = "CurrentTripTab"
-  const val MAP = "MapTab"
+  const val MAP_TAB = "MapTab"
 
   fun getTestTag(tab: Tab): String =
       when (tab) {
         Tab.Profile -> PROFILE_TAB
         Tab.MyTrips -> MY_TRIPS_TAB
         Tab.CurrentTrip -> CURRENT_TRIP_TAB
-        Tab.Map -> MAP
+        Tab.Map -> MAP_TAB
       }
 }

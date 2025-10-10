@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Tab
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -62,25 +63,24 @@ fun MapLocationScreen(
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier =
                 Modifier.testTag(
-                    com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-                        .BOTTOM_NAVIGATION_MENU))
+                    NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       }) { contentPadding ->
         when {
           isActivityNull -> {
             Text(
-                "Erreur : impossible d’accéder à l’activité.",
+                "Error: unable to access the activity.",
                 modifier =
                     Modifier.padding(contentPadding).testTag(MapLocationScreenTags.ERROR_TEXT))
           }
           !permissionGranted -> {
             Column(modifier = Modifier.padding(contentPadding)) {
               Text(
-                  "La localisation est nécessaire pour afficher votre position sur la carte.",
+                  "Location is required to display your position on the map.",
                   modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_TEXT))
               Button(
                   onClick = { launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
                   modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_BUTTON)) {
-                    Text("Autoriser la localisation")
+                    Text("Allow location")
                   }
             }
           }
