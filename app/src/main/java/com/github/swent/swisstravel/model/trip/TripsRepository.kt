@@ -16,11 +16,11 @@ interface TripsRepository {
   /**
    * Retrieves a specific Trip by its unique identifier.
    *
-   * @param tripID The unique identifier of the Trip to retrieve.
+   * @param tripId The unique identifier of the Trip to retrieve.
    * @return The Trip with the specified identifier.
    * @throws Exception if the Trip is not found.
    */
-  suspend fun getTrip(tripID: String): Trip
+  suspend fun getTrip(tripId: String): Trip
 
   /**
    * Adds a new Trip to the repository.
@@ -32,8 +32,8 @@ interface TripsRepository {
   /**
    * Deletes a Trip from the repository.
    *
-   * @param tripID The unique identifier of the Trip to delete.
+   * @param tripId The unique identifier of the Trip to delete.
    * @throws Exception if the Trip is not found.
    */
-  suspend fun deleteTrip(tripID: String)
+  suspend fun deleteTrip(tripId: String)
 }
