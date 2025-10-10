@@ -4,6 +4,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.FirebaseFirestoreSettings
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 
 class UserRepositoryFirebase(
@@ -11,16 +13,45 @@ class UserRepositoryFirebase(
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
 ) : UserRepository {
 
+  init {
+    db.firestoreSettings = FirebaseFirestoreSettings.Builder().setPersistenceEnabled(true).build()
+  }
+
   override suspend fun getCurrentUser(): User {
-    val firebaseUser = auth.currentUser ?: throw IllegalStateException("User is not logged in")
+    val firebaseUser = auth.currentUser
+
+    if (firebaseUser == null) {
+      return User(
+          uid = "guest",
+          name = "Guest",
+          email = "Not signed in",
+          profilePicUrl = "",
+          preferences = emptyList())
+    }
+
     val uid = firebaseUser.uid
-
-    val doc = db.collection("users").document(uid).get().await()
-
-    if (doc.exists()) {
-      return createUser(doc, uid)
-    } else {
-      return retrieveUser(firebaseUser, uid)
+    return try {
+      val doc = db.collection("users").document(uid).get(Source.SERVER).await()
+      if (doc.exists()) createUser(doc, uid) else retrieveUser(firebaseUser, uid)
+    } catch (e: Exception) {
+      val cachedDoc = db.collection("users").document(uid).get(Source.CACHE).await()
+      if (cachedDoc.exists()) {
+        createUser(cachedDoc, uid)
+      } else {
+        User(
+            uid = uid,
+            name = firebaseUser.displayName ?: "Guest",
+            email = firebaseUser.email ?: "Unknown",
+            profilePicUrl = "",
+            preferences = emptyList())
+      }
+    } catch (_: Exception) {
+      User(
+          uid = uid,
+          name = firebaseUser.displayName ?: "Guest",
+          email = firebaseUser.email ?: "Unknown",
+          profilePicUrl = "",
+          preferences = emptyList())
     }
   }
 
@@ -49,6 +80,8 @@ class UserRepositoryFirebase(
   }
 
   override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {
+    if (uid == "guest") return
+
     val userDoc = db.collection("users").document(uid).get().await()
     if (userDoc.exists()) {
       db.collection("users").document(uid).update("preferences", preferences).await()

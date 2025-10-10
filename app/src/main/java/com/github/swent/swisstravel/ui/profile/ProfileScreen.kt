@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -97,7 +98,7 @@ private fun ProfileScreenContent(
       modifier = modifier.fillMaxSize().padding(20.dp).verticalScroll(scrollState),
       horizontalAlignment = Alignment.CenterHorizontally) {
         AsyncImage(
-            model = uiState.profilePicUrl,
+            model = uiState.profilePicUrl.ifBlank { R.drawable.default_profile_pic },
             contentDescription = "Profile picture",
             modifier =
                 Modifier.size(100.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))

@@ -54,9 +54,15 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
 
   fun savePreferences(selected: List<String>) {
     viewModelScope.launch {
+      val user = currentUser
+
+      if (user == null || user.uid == "guest") {
+        _uiState.update { it.copy(errorMsg = "You must be signed in to save preferences.") }
+        return@launch
+      }
+
       try {
-        val uid = currentUser?.uid!!
-        userRepository.updateUserPreferences(uid, selected)
+        userRepository.updateUserPreferences(user.uid, selected)
         _uiState.update { it.copy(selectedPreferences = selected) }
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error saving preferences: ${e.message}")
