@@ -6,14 +6,21 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.testTag
-import androidx.compose.ui.tooling.preview.Preview
-import com.github.swent.swisstravel.resources.C
-import com.github.swent.swisstravel.theme.SampleAppTheme
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.ui.DummyScreen
+import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.map.MapLocationScreen
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.profile.ProfileScreen
+import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import okhttp3.OkHttpClient
 
 object HttpClientProvider {
@@ -24,25 +31,56 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      SampleAppTheme {
+      SwissTravelTheme {
         // A surface container using the 'background' color from the theme
-        Surface(
-            modifier = Modifier.fillMaxSize().semantics { testTag = C.Tag.main_screen_container },
-            color = MaterialTheme.colorScheme.background) {
-              Greeting("Android")
-            }
+        Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+          SwissTravelApp()
+        }
       }
     }
   }
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-  Text(text = "Hello $name!", modifier = modifier.semantics { testTag = C.Tag.greeting })
-}
+fun SwissTravelApp() {
+  val navController = rememberNavController()
+  val navigationActions = NavigationActions(navController)
+  val startDestination = Screen.Profile.route
+  NavHost(navController = navController, startDestination = startDestination) {
+    navigation(
+        startDestination = Screen.Profile.route,
+        route = Screen.Profile.name,
+    ) {
+      composable(Screen.Profile.route) {
+        ProfileScreen(
+            profileScreenViewModel =
+                ProfileScreenViewModel(userRepository = UserRepositoryFirebase()),
+            navigationActions = navigationActions)
+      }
+    }
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-  SampleAppTheme { Greeting("Android") }
+    navigation(
+        startDestination = Screen.CurrentTrip.route,
+        route = Screen.CurrentTrip.name,
+    ) {
+      composable(Screen.CurrentTrip.route) {
+        CurrentTripScreen(navigationActions = navigationActions)
+      }
+    }
+
+    navigation(
+        startDestination = Screen.MyTrips.route,
+        route = Screen.MyTrips.name,
+    ) {
+      composable(Screen.MyTrips.route) {
+        DummyScreen(navigationActions = navigationActions) // TODO change this
+      }
+    }
+    navigation(
+        startDestination = Screen.Map.route,
+        route = Screen.Map.name,
+    ) {
+      composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
+    }
+  }
 }

@@ -1,7 +1,10 @@
 package com.github.swent.swisstravel.ui.profile
 
 import android.widget.Toast
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,20 +12,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,17 +31,28 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Tab
+import com.github.swent.swisstravel.ui.theme.onSecondaryContainerLight
+import com.github.swent.swisstravel.ui.theme.secondaryContainerLight
 
 object ProfileScreenTestTags {
   const val PROFILE_PIC = "profilePic"
-  const val DROPDOWN_PREFERENCES = "dropdownMenu"
+  const val PREFERENCES_LIST = "preferencesList"
   const val DISPLAY_NAME = "displayName"
   const val EMAIL = "email"
   const val GREETING = "greeting"
+  const val PERSONAL_INFO = "personalInfo"
+  const val PREFERENCES = "preferences"
 }
 
 @Composable
-fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = viewModel()) {
+fun ProfileScreen(
+    profileScreenViewModel: ProfileScreenViewModel = viewModel(),
+    navigationActions: NavigationActions? = null
+) {
   val context = LocalContext.current
   val uiState = profileScreenViewModel.uiState.collectAsState().value
 
@@ -54,54 +64,108 @@ fun ProfileScreen(profileScreenViewModel: ProfileScreenViewModel = viewModel()) 
     }
   }
 
-  Column(
-      modifier = Modifier.fillMaxSize().padding(20.dp),
-      horizontalAlignment = Alignment.CenterHorizontally) {
+  Scaffold(
+      topBar = {
         Text(
             text = "My Profile",
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp))
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Profile,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
+      content = { pd ->
+        ProfileScreenContent(
+            uiState = uiState,
+            profileScreenViewModel = profileScreenViewModel,
+            modifier = Modifier.padding(pd))
+      })
+}
 
+@Composable
+private fun ProfileScreenContent(
+    uiState: ProfileScreenUIState,
+    profileScreenViewModel: ProfileScreenViewModel,
+    modifier: Modifier
+) {
+  val scrollState = rememberScrollState()
+
+  Column(
+      modifier = modifier.fillMaxSize().padding(20.dp).verticalScroll(scrollState),
+      horizontalAlignment = Alignment.CenterHorizontally) {
         AsyncImage(
             model = uiState.profilePicUrl,
             contentDescription = "Profile picture",
             modifier =
-                Modifier.size(120.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
+                Modifier.size(100.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
 
         Text(
-            text = "Hello, ${uiState.name}!",
-            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(top = 24.dp).testTag(ProfileScreenTestTags.GREETING))
+            text = "Hi, ${uiState.name.ifBlank { "User" }}!",
+            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+            modifier = Modifier.padding(top = 12.dp).testTag(ProfileScreenTestTags.GREETING))
 
-        Spacer(modifier = Modifier.height(36.dp))
+        Spacer(modifier = Modifier.height(24.dp))
 
+        // Personal Info Section
+        InfoSection(
+            title = "Personal Information",
+            modifier = Modifier.testTag(ProfileScreenTestTags.PERSONAL_INFO)) {
+              InfoItem(
+                  label = "Name",
+                  value = uiState.name,
+                  modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
+              InfoItem(
+                  label = "Email",
+                  value = uiState.email,
+                  modifier = Modifier.testTag(ProfileScreenTestTags.EMAIL))
+            }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Travel Preferences Section
+        InfoSection(
+            title = "Travel Preferences",
+            modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
+              profileScreenViewModel.allPreferences.forEach { pref ->
+                val isSelected = uiState.selectedPreferences.contains(pref)
+                PreferenceToggle(
+                    title = pref,
+                    checked = isSelected,
+                    onCheckedChange = { checked ->
+                      val newSelection =
+                          if (checked) uiState.selectedPreferences + pref
+                          else uiState.selectedPreferences - pref
+                      profileScreenViewModel.savePreferences(newSelection)
+                    },
+                    modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES))
+              }
+            }
+      }
+}
+
+@Composable
+fun InfoSection(
+    title: String,
+    modifier: Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+  Column(
+      modifier =
+          modifier
+              .fillMaxWidth()
+              .padding(vertical = 8.dp)
+              .clip(MaterialTheme.shapes.medium)
+              .background(secondaryContainerLight)
+              .padding(16.dp)) {
         Text(
-            text = "Travel Preferences",
+            text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp))
-
-        MultiSelectDropdown(
-            allPreferences = profileScreenViewModel.allPreferences,
-            selectedPreferences = uiState.selectedPreferences,
-            onSelectionChanged = { newSelection ->
-              profileScreenViewModel.savePreferences(newSelection)
-            })
-
-        Spacer(modifier = Modifier.height(36.dp))
-
-        Text(
-            text = "Personal Information",
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp))
-
-        InfoItem(
-            label = "Display Name",
-            value = uiState.name,
-            modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
-        InfoItem(
-            label = "E-Mail",
-            value = uiState.email,
-            modifier = Modifier.testTag(ProfileScreenTestTags.EMAIL))
+            color = onSecondaryContainerLight,
+            modifier = Modifier.padding(bottom = 12.dp))
+        content()
       }
 }
 
@@ -122,41 +186,21 @@ fun InfoItem(label: String, value: String, modifier: Modifier) {
 }
 
 @Composable
-fun MultiSelectDropdown(
-    allPreferences: List<String>,
-    selectedPreferences: List<String>,
-    onSelectionChanged: (List<String>) -> Unit
+fun PreferenceToggle(
+    title: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    modifier: Modifier
 ) {
-  var expanded by remember { mutableStateOf(false) }
-
-  Column {
-    Button(
-        onClick = { expanded = !expanded },
-        modifier = Modifier.testTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)) {
-          Text("Select Preferences")
-        }
-
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-      allPreferences.forEach { pref ->
-        val isSelected = selectedPreferences.contains(pref)
-
-        DropdownMenuItem(
-            text = {
-              Row {
-                Checkbox(checked = isSelected, onCheckedChange = null)
-                Text(pref)
-              }
-            },
-            onClick = {
-              val newSelection =
-                  if (isSelected) {
-                    selectedPreferences - pref
-                  } else {
-                    selectedPreferences + pref
-                  }
-              onSelectionChanged(newSelection)
-            })
+  Row(
+      modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween) {
+        Text(
+            text = title,
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface))
+        Switch(checked = checked, onCheckedChange = onCheckedChange)
       }
-    }
-  }
 }
