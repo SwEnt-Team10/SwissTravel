@@ -54,15 +54,17 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.route
-      else Screen.Profile.route
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
+      else Screen.CurrentTrip.name
   NavHost(navController = navController, startDestination = startDestination) {
     navigation(
         startDestination = Screen.Auth.route,
         route = Screen.Auth.name,
     ) {
       composable(Screen.Auth.route) {
-        SignInScreen(credentialManager = credentialManager, navigationActions = navigationActions)
+        SignInScreen(
+            credentialManager = credentialManager,
+            onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
       }
     }
 
