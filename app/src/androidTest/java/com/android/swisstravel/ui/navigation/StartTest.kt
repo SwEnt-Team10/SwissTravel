@@ -10,6 +10,7 @@ import com.android.swisstravel.utils.FakeCredentialManager
 import com.android.swisstravel.utils.FakeJwtGenerator
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.FirestoreSwissTravelTest
+import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
@@ -41,6 +42,7 @@ class StartTest : FirestoreSwissTravelTest() {
 
     composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) { FirebaseEmulator.auth.currentUser != null }
 
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
   }
@@ -49,6 +51,8 @@ class StartTest : FirestoreSwissTravelTest() {
   fun testStartScreenDisplaysCorrectlyWhenLoggedIn() {
 
     FirebaseAuth.getInstance().signInAnonymously()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) { FirebaseEmulator.auth.currentUser != null }
     composeTestRule.setContent { SwissTravelApp() }
 
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsNotDisplayed()
