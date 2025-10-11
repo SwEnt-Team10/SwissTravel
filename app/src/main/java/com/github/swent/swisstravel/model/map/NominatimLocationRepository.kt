@@ -35,6 +35,7 @@ class NominatimLocationRepository(private val client: OkHttpClient) : LocationRe
                     .addPathSegment("search")
                     .addQueryParameter("q", query)
                     .addQueryParameter("format", "json")
+                    .addQueryParameter("countrycodes", "ch")
                     .build()
 
             // Create the request with a custom User-Agent and optional Referer
