@@ -55,7 +55,7 @@ fun SwissTravelApp(
   val navigationActions = NavigationActions(navController)
   val startDestination =
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.route
-      else Screen.CurrentTrip.route
+      else Screen.Profile.route
   NavHost(navController = navController, startDestination = startDestination) {
     navigation(
         startDestination = Screen.Auth.route,
