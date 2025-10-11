@@ -2,6 +2,7 @@ package com.android.swisstravel.ui.navigation
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -42,9 +43,9 @@ class StartTest : FirestoreSwissTravelTest() {
 
     composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed().performClick()
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) { FirebaseEmulator.auth.currentUser != null }
-
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).isDisplayed()
+    }
   }
 
   @Test
