@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.google.firebase.auth.FirebaseAuth
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -20,6 +21,7 @@ class NavigationTest : SwissTravelTest() {
   @Before
   override fun setUp() {
     super.setUp()
+    FirebaseAuth.getInstance().signInAnonymously()
     composeTestRule.setContent { SwissTravelApp() }
   }
 
@@ -112,9 +114,9 @@ class NavigationTest : SwissTravelTest() {
     composeTestRule.checkCurrentTripScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
     pressBack(shouldFinish = false)
-    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+    composeTestRule.checkCurrentTripScreenIsDisplayed()
     composeTestRule.checkDummyScreenIsNotDisplayed()
-    composeTestRule.checkProfileScreenIsDisplayed()
+    composeTestRule.checkProfileScreenIsNotDisplayed()
   }
 
   @Test
