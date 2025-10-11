@@ -1,11 +1,15 @@
 package com.github.swent.swisstravel.ui
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -20,7 +24,11 @@ object DummyScreenTestTags {
 }
 
 @Composable
-fun DummyScreen(navigationActions: NavigationActions? = null) {
+fun DummyScreen(
+    navigationActions: NavigationActions? = null,
+    viewModel: DummyScreenViewModel = DummyScreenViewModel()
+) {
+  val trip by viewModel.trip.collectAsState()
 
   Scaffold(
       bottomBar = {
@@ -31,10 +39,28 @@ fun DummyScreen(navigationActions: NavigationActions? = null) {
       },
       content = { pd ->
         Box(modifier = Modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
-          Text(
-              modifier = Modifier.testTag(DummyScreenTestTags.TEMPORARY_TEST_TAG),
-              text = "Dummy Screen",
-              fontSize = 24.sp)
+          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                modifier = Modifier.testTag(DummyScreenTestTags.TEMPORARY_TEST_TAG),
+                text = "Dummy Screen",
+                fontSize = 24.sp)
+            Button(
+                onClick = { viewModel.addTripModel() },
+            ) {
+              Text("Testing adding a trip")
+            }
+            Button(
+                onClick = { viewModel.getTripModel("testID") },
+            ) {
+              Text("Testing getting a trip")
+            }
+            trip?.let {
+              Text("Trip UID: ${it.uid}")
+              Text("Trip Name: ${it.name}")
+              Text("Trip Owner ID: ${it.ownerId}")
+              Text("Trip Start Date: ${it.startDate}")
+            }
+          }
         }
       })
 }
