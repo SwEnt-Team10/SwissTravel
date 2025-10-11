@@ -50,6 +50,7 @@ class StartTest : FirestoreSwissTravelTest() {
 
     FirebaseAuth.getInstance().signInAnonymously()
     composeTestRule.setContent { SwissTravelApp() }
+
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsNotDisplayed()
   }
 }
