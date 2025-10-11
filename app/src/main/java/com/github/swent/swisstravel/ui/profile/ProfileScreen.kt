@@ -159,12 +159,12 @@ fun InfoSection(
               .fillMaxWidth()
               .padding(vertical = 8.dp)
               .clip(MaterialTheme.shapes.medium)
-              .background(secondaryContainerLight)
+              .background(MaterialTheme.colorScheme.secondaryContainer)
               .padding(16.dp)) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = onSecondaryContainerLight,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(bottom = 12.dp))
         content()
       }
