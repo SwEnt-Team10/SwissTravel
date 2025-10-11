@@ -35,10 +35,12 @@ sealed class Tab(
   object Profile : Tab("Profile", Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person)
   // TODO Change this once there are new screens
   // TODO Add test tags each time a new tab is added
+
+  object Map : Tab("Map", Screen.Map, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
 }
 
 /* List of all the tabs in the bottom bar */
-private val tabs = listOf(Tab.MyTrips, Tab.CurrentTrip, Tab.Profile)
+private val tabs = listOf(Tab.MyTrips, Tab.CurrentTrip, Tab.Profile, Tab.Map)
 
 /**
  * Composable setting up the bottom navigation bar

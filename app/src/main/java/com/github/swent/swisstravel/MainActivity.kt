@@ -14,10 +14,12 @@ import androidx.credentials.CredentialManager
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.DummyScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -55,20 +57,49 @@ fun SwissTravelApp(
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.route
       else Screen.CurrentTrip.route
   NavHost(navController = navController, startDestination = startDestination) {
-    composable(Screen.Auth.route) {
-      SignInScreen(credentialManager = credentialManager, navigationActions = navigationActions)
+    navigation(
+        startDestination = Screen.Auth.route,
+        route = Screen.Auth.name,
+    ) {
+      composable(Screen.Auth.route) {
+        SignInScreen(credentialManager = credentialManager, navigationActions = navigationActions)
+      }
     }
-    composable(Screen.Profile.route) {
-      ProfileScreen(
-          profileScreenViewModel =
-              ProfileScreenViewModel(userRepository = UserRepositoryFirebase()),
-          navigationActions = navigationActions)
+
+    navigation(
+        startDestination = Screen.Profile.route,
+        route = Screen.Profile.name,
+    ) {
+      composable(Screen.Profile.route) {
+        ProfileScreen(
+            profileScreenViewModel =
+                ProfileScreenViewModel(userRepository = UserRepositoryFirebase()),
+            navigationActions = navigationActions)
+      }
     }
-    composable(Screen.CurrentTrip.route) {
-      CurrentTripScreen(navigationActions = navigationActions)
+
+    navigation(
+        startDestination = Screen.CurrentTrip.route,
+        route = Screen.CurrentTrip.name,
+    ) {
+      composable(Screen.CurrentTrip.route) {
+        CurrentTripScreen(navigationActions = navigationActions)
+      }
     }
-    composable(Screen.MyTrips.route) {
-      DummyScreen(navigationActions = navigationActions) // TODO change this
+
+    navigation(
+        startDestination = Screen.MyTrips.route,
+        route = Screen.MyTrips.name,
+    ) {
+      composable(Screen.MyTrips.route) {
+        DummyScreen(navigationActions = navigationActions) // TODO change this
+      }
+    }
+    navigation(
+        startDestination = Screen.Map.route,
+        route = Screen.Map.name,
+    ) {
+      composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
     }
   }
 }
