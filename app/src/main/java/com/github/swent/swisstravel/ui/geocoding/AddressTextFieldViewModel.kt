@@ -4,9 +4,9 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.HttpClientProvider
-import com.github.swent.swisstravel.model.map.Location
 import com.github.swent.swisstravel.model.map.LocationRepository
 import com.github.swent.swisstravel.model.map.NominatimLocationRepository
+import com.github.swent.swisstravel.model.trip.Location
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

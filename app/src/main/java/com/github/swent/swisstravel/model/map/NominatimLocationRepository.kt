@@ -1,6 +1,8 @@
 package com.github.swent.swisstravel.model.map
 
 import android.util.Log
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import kotlinx.coroutines.Dispatchers
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -19,7 +21,7 @@ class NominatimLocationRepository(private val client: OkHttpClient) : LocationRe
             val lat = jsonObject.getDouble("lat")
             val lon = jsonObject.getDouble("lon")
             val name = jsonObject.getString("display_name")
-            Location(lat, lon, name)
+            Location(Coordinate(lat, lon), name)
         }
     }
 
