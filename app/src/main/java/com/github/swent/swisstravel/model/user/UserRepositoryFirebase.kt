@@ -17,6 +17,11 @@ class UserRepositoryFirebase(
     db.firestoreSettings = FirebaseFirestoreSettings.Builder().setPersistenceEnabled(true).build()
   }
 
+  /**
+   * Retrieves the current user from Firebase Authentication. If the user is not signed in, a guest
+   * user is returned. If the user is signed in, their information is retrieved from Firestore. If
+   * the user's information is not found in Firestore, a new user is created.
+   */
   override suspend fun getCurrentUser(): User {
     val firebaseUser = auth.currentUser
 
