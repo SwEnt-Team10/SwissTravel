@@ -9,4 +9,28 @@
     <!-- Authentication resources -->
     <string name="login_success">Login successful!</string>
     <string name="google_sign_in">Sign in with Google</string>
+
+    <!-- General options -->
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="done">Done</string>
+    <string name="next">Next</string>
+
+    <!-- Trip preferences -->
+    <string name="travellingPreferences">What are your travelling preferences?</string>
+    <string name="quickTraveler">Are you a quick traveler?</string>
+    <string name="sportyTrip">How sporty should your trip be?</string>
+    <string name="foodyTrip">Are you a foody?</string>
+    <string name="museumsLiker">How much do you like museums?</string>
+    <string name="handicappedTraveler">Are you or one of your travelers physically handicapped?</string>
+
+    <!-- Trip travelers -->
+    <string name="nbTravelers">How many travelers will there be?</string>
+    <string name="nbAdults">How many adults?</string>
+    <string name="nbChildren">How many children?</string>
+
+    <!-- Trip dates -->
+    <string name="tripDates">When will you be travelling?</string>
+    <string name="startDate">Start date</string>
+    <string name="endDate">End date</string>
 </resources>

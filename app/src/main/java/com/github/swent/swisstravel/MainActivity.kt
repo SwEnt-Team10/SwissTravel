@@ -25,6 +25,9 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.tripSettings.TripDateScreen
+import com.github.swent.swisstravel.ui.tripSettings.TripPreferencesScreen
+import com.github.swent.swisstravel.ui.tripSettings.TripTravelersScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
@@ -102,6 +105,30 @@ fun SwissTravelApp(
         route = Screen.Map.name,
     ) {
       composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
+    }
+    navigation(
+        startDestination = Screen.TripSettings1.route,
+        route = Screen.TripSettings1.name,
+    ) {
+      composable(Screen.TripSettings1.route) {
+        TripDateScreen(onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
+      }
+    }
+    navigation(
+        startDestination = Screen.TripSettings2.route,
+        route = Screen.TripSettings2.name,
+    ) {
+      composable(Screen.TripSettings2.route) {
+        TripTravelersScreen(onNext = { navigationActions.navigateTo(Screen.TripSettings3) })
+      }
+    }
+    navigation(
+        startDestination = Screen.TripSettings3.route,
+        route = Screen.TripSettings3.name,
+    ) {
+      composable(Screen.TripSettings3.route) {
+        TripPreferencesScreen(onDone = { navigationActions.navigateTo(Screen.MyTrips) })
+      }
     }
   }
 }

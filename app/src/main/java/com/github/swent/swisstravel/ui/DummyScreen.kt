@@ -1,8 +1,9 @@
 package com.github.swent.swisstravel.ui
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.sp
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 object DummyScreenTestTags {
@@ -30,11 +32,18 @@ fun DummyScreen(navigationActions: NavigationActions? = null) {
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { pd ->
-        Box(modifier = Modifier.fillMaxSize().padding(pd), contentAlignment = Alignment.Center) {
-          Text(
-              modifier = Modifier.testTag(DummyScreenTestTags.TEMPORARY_TEST_TAG),
-              text = "Dummy Screen",
-              fontSize = 24.sp)
-        }
+        Column(
+            modifier = Modifier.fillMaxSize().padding(pd),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center) {
+              Text(
+                  modifier = Modifier.testTag(DummyScreenTestTags.TEMPORARY_TEST_TAG),
+                  text = "Dummy Screen",
+                  fontSize = 24.sp)
+
+              Button(onClick = { navigationActions?.navigateTo(Screen.TripSettings1) }) {
+                Text("Create trip")
+              }
+            }
       })
 }
