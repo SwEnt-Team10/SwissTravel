@@ -2,20 +2,23 @@ package com.github.swent.swisstravel.ui.navigation
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import com.github.swent.swisstravel.ui.theme.navBarItemBackground
 
 /** Heavily inspired from the B3 of the SwEnt course at EPFL */
 
@@ -27,7 +30,12 @@ sealed class Tab(
     val iconNotSelected: ImageVector
 ) {
 
-  object MyTrips : Tab("My trips", Screen.MyTrips, Icons.Filled.Menu, Icons.Outlined.Menu)
+  object MyTrips :
+      Tab(
+          "My trips",
+          Screen.MyTrips,
+          Icons.AutoMirrored.Filled.MenuOpen,
+          Icons.AutoMirrored.Filled.MenuOpen)
 
   object CurrentTrip :
       Tab("Current trip", Screen.CurrentTrip, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
@@ -56,21 +64,31 @@ fun BottomNavigationMenu(
     modifier: Modifier = Modifier,
 ) {
   NavigationBar(
-      modifier = modifier.fillMaxWidth().testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)) {
-        tabs.forEach { tab ->
-          NavigationBarItem(
-              modifier = Modifier.testTag(NavigationTestTags.getTestTag(tab)),
-              selected = (tab == selectedTab),
-              onClick = { onTabSelected(tab) },
-              icon = {
-                if (tab == selectedTab) {
-                  Icon(imageVector = tab.iconSelected, contentDescription = tab.name)
-                } else {
-                  Icon(imageVector = tab.iconNotSelected, contentDescription = tab.name)
-                }
-              },
-              label = { Text(tab.name) },
-              alwaysShowLabel = true)
-        }
-      }
+      modifier = modifier.fillMaxWidth().testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
+      containerColor = MaterialTheme.colorScheme.primary,
+  ) {
+    tabs.forEach { tab ->
+      NavigationBarItem(
+          modifier = Modifier.testTag(NavigationTestTags.getTestTag(tab)),
+          selected = (tab == selectedTab),
+          onClick = { onTabSelected(tab) },
+          colors =
+              NavigationBarItemDefaults.colors(
+                  indicatorColor = navBarItemBackground,
+              ),
+          icon = {
+            if (tab == selectedTab) {
+              Icon(
+                  imageVector = tab.iconSelected, contentDescription = tab.name, tint = Color.White)
+            } else {
+              Icon(
+                  imageVector = tab.iconNotSelected,
+                  contentDescription = tab.name,
+                  tint = Color.White)
+            }
+          },
+          label = { Text(tab.name, color = Color.White) },
+          alwaysShowLabel = true)
+    }
+  }
 }
