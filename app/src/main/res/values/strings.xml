@@ -18,10 +18,10 @@
 
     <!-- Trip preferences -->
     <string name="travellingPreferences">What are your travelling preferences?</string>
-    <string name="quickTraveler">Are you a quick traveler?</string>
-    <string name="sportyTrip">How sporty should your trip be?</string>
-    <string name="foodyTrip">Are you a foody?</string>
-    <string name="museumsLiker">How much do you like museums?</string>
+    <string name="quickTraveler">I want to see as much as possible.</string>
+    <string name="sportyTrip">I\'d like to do some exercise.</string>
+    <string name="foodyTrip">I want to eat some local specialities.</string>
+    <string name="museumsLiker">I\'d like to see some museums.</string>
     <string name="handicappedTraveler">Are you or one of your travelers physically handicapped?</string>
 
     <!-- Trip travelers -->
