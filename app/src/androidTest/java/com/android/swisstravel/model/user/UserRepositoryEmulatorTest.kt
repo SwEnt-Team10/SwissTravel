@@ -151,7 +151,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
         FakeJwtGenerator.createFakeGoogleIdToken("Missing User", "missing@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     FirebaseEmulator.auth.signInAnonymously().await()
-    val uid = Firebase.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     // Act — no Firestore doc created yet
     repository.updateUserPreferences(uid, listOf("Museums"))

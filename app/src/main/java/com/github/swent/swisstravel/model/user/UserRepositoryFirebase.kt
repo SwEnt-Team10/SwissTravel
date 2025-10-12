@@ -45,13 +45,6 @@ class UserRepositoryFirebase(
             profilePicUrl = "",
             preferences = emptyList())
       }
-    } catch (_: Exception) {
-      User(
-          uid = uid,
-          name = firebaseUser.displayName ?: "Guest",
-          email = firebaseUser.email ?: "Unknown",
-          profilePicUrl = "",
-          preferences = emptyList())
     }
   }
 
