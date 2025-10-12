@@ -14,6 +14,7 @@ import com.android.swisstravel.utils.FirestoreSwissTravelTest
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.APP_LOGO
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
+import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.NAME
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -38,6 +39,7 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
 
     composeTestRule.onNodeWithTag(APP_LOGO).assertIsDisplayed()
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NAME).assertIsDisplayed()
   }
 
   @Test
