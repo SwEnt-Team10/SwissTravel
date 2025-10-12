@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.*
 import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.*
@@ -32,12 +31,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavController
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.common.location.Location
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
+import com.mapbox.maps.extension.style.expressions.dsl.generated.mod
 import com.mapbox.maps.plugin.LocationPuck2D
 import com.mapbox.maps.plugin.animation.camera
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
@@ -70,20 +72,20 @@ object NavigationMapScreenTestTags {
 }
 
 @Composable
-fun SampleMenu(navController: NavController) {
-  Scaffold { paddingValues ->
-    Box(modifier = Modifier.padding(paddingValues)) {
-      Button(
-          onClick = { navController.navigate("nav-map") },
-          modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_BUTTON)) {
-            Text("Enter Navigation")
-          }
-    }
+fun EnterMapButton(navigationActions: NavigationActions?) {
+  Box(contentAlignment = Alignment.TopCenter) {
+    Button(
+        onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
+        modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_BUTTON)) {
+          // this will be modified to an "extend" icon, when a preview of the map will be
+          // implemented
+          Text("Enter Map")
+        }
   }
 }
 
 @Composable
-fun MapScreen(navController: NavController) {
+fun NavigationMapScreen(navigationActions: NavigationActions) {
   val context = LocalContext.current
   var hasPermission by remember {
     mutableStateOf(
@@ -111,7 +113,7 @@ fun MapScreen(navController: NavController) {
   }
 
   if (hasPermission) {
-    BottomSheet(navController = navController)
+    NavigationMap(navigationActions = navigationActions)
   } else {
     Box(Modifier.fillMaxSize()) {
       Button(
@@ -127,7 +129,7 @@ fun MapScreen(navController: NavController) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun BottomSheet(navController: NavController) {
+fun BottomSheet(navigationActions: NavigationActions) {
   val sheetState = rememberBottomSheetScaffoldState()
 
   BottomSheetScaffold(
@@ -153,14 +155,14 @@ fun BottomSheet(navController: NavController) {
       sheetPeekHeight = 64.dp) {
         // main content of the screen
         Box(modifier = Modifier.fillMaxSize()) {
-          NavigationMapScreen(navController = navController)
+          NavigationMap(navigationActions = navigationActions)
         }
       }
 }
 
 @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 @Composable
-fun NavigationMapScreen(navController: NavController) {
+fun NavigationMap(navigationActions: NavigationActions) {
   val context = LocalContext.current
   val density = LocalDensity.current
 
@@ -263,7 +265,7 @@ fun NavigationMapScreen(navController: NavController) {
             update = { /* no-op */},
         )
         Button(
-            onClick = { navController.navigate("menu-example") },
+            onClick = { navigationActions.navigateTo(Screen.CurrentTrip)},
             modifier =
                 Modifier.align(Alignment.TopEnd).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
               Text("Exit Navigation")

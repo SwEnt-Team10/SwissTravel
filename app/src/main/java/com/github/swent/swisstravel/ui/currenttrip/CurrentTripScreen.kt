@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.sp
+import com.github.swent.swisstravel.ui.map.EnterMapButton
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -41,5 +42,6 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null) {
               text = "Current Trip",
               fontSize = 24.sp)
         }
+        EnterMapButton(navigationActions)
       })
 }

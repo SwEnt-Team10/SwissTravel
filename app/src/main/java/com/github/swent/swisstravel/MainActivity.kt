@@ -20,6 +20,7 @@ import com.github.swent.swisstravel.ui.DummyScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
+import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -103,5 +104,13 @@ fun SwissTravelApp(
     ) {
       composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
     }
+      navigation(
+          startDestination = Screen.SelectedTripMap.route,
+          route = Screen.SelectedTripMap.name,
+      ) {
+        composable(Screen.SelectedTripMap.route) {
+            NavigationMapScreen(navigationActions = navigationActions)
+        }
+      }
   }
 }
