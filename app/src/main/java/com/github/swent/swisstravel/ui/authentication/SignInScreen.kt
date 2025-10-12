@@ -27,24 +27,35 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 
+/** Test tags for integration and UI tests */
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
   const val LOGIN_BUTTON = "loginButton"
   const val LOADING_INDICATOR = "loadingIndicator"
+  const val NAME = "name"
 }
 
+/**
+ * The Authentication screen.
+ *
+ * @param authViewModel ViewModel to handle the authentication logic.
+ * @param credentialManager The Credential Manager instance to use for authentication.
+ * @param onSignedIn Callback to be invoked when the user has successfully signed in.
+ */
 @Composable
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
@@ -82,9 +93,23 @@ fun SignInScreen(
         ) {
           // App Logo Image
           Image(
-              painter = painterResource(id = R.drawable.swisstravel_logo),
+              painter = painterResource(id = R.drawable.swisstravel),
               contentDescription = "App Logo",
-              modifier = Modifier.size(250.dp).testTag(SignInScreenTestTags.APP_LOGO))
+              modifier =
+                  Modifier.size(250.dp)
+                      .clip(RoundedCornerShape(16.dp))
+                      .testTag(SignInScreenTestTags.APP_LOGO))
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          // App Name
+          Text(
+              modifier = Modifier.testTag(SignInScreenTestTags.NAME),
+              text = "swisstravel",
+              style =
+                  MaterialTheme.typography.headlineLarge.copy(fontSize = 57.sp, lineHeight = 64.sp),
+              fontWeight = FontWeight.Bold,
+              textAlign = TextAlign.Center)
 
           Spacer(modifier = Modifier.height(48.dp))
 
@@ -99,6 +124,11 @@ fun SignInScreen(
       })
 }
 
+/**
+ * The google button used to sign-in.
+ *
+ * @param Callback to be invoked when the user click on the button.
+ */
 @Composable
 fun GoogleSignInButton(onSignInClick: () -> Unit) {
   Button(
