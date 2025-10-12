@@ -41,7 +41,8 @@ class TripHelpersTest {
             endDate = tsFromInstant(end),
             ownerId = "testOwner",
             locations = emptyList(),
-            routeSegments = emptyList())
+            routeSegments = emptyList(),
+            activities = emptyList())
 
     assertTrue(trip.isUpcoming())
     assertFalse(trip.isCurrent())
@@ -60,7 +61,8 @@ class TripHelpersTest {
             endDate = tsFromInstant(end),
             ownerId = "testOwner",
             locations = emptyList(),
-            routeSegments = emptyList())
+            routeSegments = emptyList(),
+            activities = emptyList())
 
     assertTrue(trip.isCurrent())
     assertFalse(trip.isUpcoming())
@@ -79,7 +81,8 @@ class TripHelpersTest {
             endDate = tsFromInstant(end),
             ownerId = "testOwner",
             locations = emptyList(),
-            routeSegments = emptyList())
+            routeSegments = emptyList(),
+            activities = emptyList())
 
     assertTrue(trip.isPast())
     assertFalse(trip.isCurrent())

@@ -4,6 +4,7 @@ import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TransportMode
+import com.google.firebase.Timestamp
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -27,7 +28,9 @@ class RouteSegmentTest {
           distanceMeter = 1500.0,
           durationMinutes = 30.0,
           path = path,
-          transportMode = mode)
+          transportMode = mode,
+          startDate = Timestamp.now(),
+          endDate = Timestamp.now())
     }
 
     val segment =
@@ -37,7 +40,9 @@ class RouteSegmentTest {
             distanceMeter = 1500.0,
             durationMinutes = 30.0,
             path = path,
-            transportMode = TransportMode.UNKNOWN)
+            transportMode = TransportMode.UNKNOWN,
+            startDate = Timestamp.now(),
+            endDate = Timestamp.now())
 
     assertEquals(1.5, segment.getDistanceKm(), 0.0)
     assertEquals(0.5, segment.getDurationHours(), 0.0)
