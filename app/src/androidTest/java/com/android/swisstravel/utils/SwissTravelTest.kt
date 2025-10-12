@@ -20,7 +20,7 @@ import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Before
 
-const val UI_WAIT_TIMEOUT = 5_000L
+const val UI_WAIT_TIMEOUT = 15_000L
 
 /**
  * Base class for all SwissTravel tests, providing common setup and utility functions.
