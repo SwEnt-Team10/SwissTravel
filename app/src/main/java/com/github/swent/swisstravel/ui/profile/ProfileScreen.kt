@@ -16,7 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -34,12 +40,13 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.authentication.AuthRepository
+import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
-import com.github.swent.swisstravel.ui.theme.onSecondaryContainerLight
-import com.github.swent.swisstravel.ui.theme.secondaryContainerLight
 
 object ProfileScreenTestTags {
   const val PROFILE_PIC = "profilePic"
@@ -54,7 +61,7 @@ object ProfileScreenTestTags {
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
-    navigationActions: NavigationActions? = null
+    navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
   val uiState = profileScreenViewModel.uiState.collectAsState().value
@@ -81,19 +88,17 @@ fun ProfileScreen(
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { pd ->
-          if (uiState.isLoading) {
-              Box(
-                  modifier = Modifier.fillMaxSize(),
-                  contentAlignment = Alignment.Center
-              ) {
-                  CircularProgressIndicator()
-              }
-          }else{
-              ProfileScreenContent(
-                  uiState = uiState,
-                  profileScreenViewModel = profileScreenViewModel,
-                  modifier = Modifier.padding(pd))
+        if (uiState.isLoading) {
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
           }
+        } else {
+          ProfileScreenContent(
+              uiState = uiState,
+              profileScreenViewModel = profileScreenViewModel,
+              modifier = Modifier.padding(pd),
+              navigationActions = navigationActions)
+        }
       })
 }
 
@@ -101,7 +106,9 @@ fun ProfileScreen(
 private fun ProfileScreenContent(
     uiState: ProfileScreenUIState,
     profileScreenViewModel: ProfileScreenViewModel,
-    modifier: Modifier
+    modifier: Modifier,
+    authRepository: AuthRepository = AuthRepositoryFirebase(),
+    navigationActions: NavigationActions? = null
 ) {
   val scrollState = rememberScrollState()
 
@@ -154,6 +161,24 @@ private fun ProfileScreenContent(
                     },
                     modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES))
               }
+            }
+        Button(
+            onClick = {
+              authRepository.signOut()
+              navigationActions?.navigateTo(Screen.Auth)
+            },
+            modifier = Modifier.fillMaxWidth(0.5f).height(50.dp),
+            shape = CircleShape,
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                )) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.Logout,
+                  contentDescription = "Sign Out",
+                  modifier = Modifier.padding(end = 8.dp))
+              Text("Sign Out")
             }
       }
 }

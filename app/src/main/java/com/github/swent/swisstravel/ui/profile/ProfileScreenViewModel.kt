@@ -37,7 +37,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data: ${e.message}")
       } finally {
-          _uiState.update { it.copy(isLoading = false) }
+        _uiState.update { it.copy(isLoading = false) }
       }
     }
   }
@@ -59,11 +59,12 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
     viewModelScope.launch {
       val user = currentUser
 
-        _uiState.update { it.copy(selectedPreferences = selected) }
       if (user == null || user.uid == "guest") {
         _uiState.update { it.copy(errorMsg = "You must be signed in to save preferences.") }
         return@launch
       }
+
+      _uiState.update { it.copy(selectedPreferences = selected) }
 
       try {
         userRepository.updateUserPreferences(user.uid, selected)

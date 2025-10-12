@@ -4,11 +4,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MenuOpen
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.LocationOn
-import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -33,7 +31,12 @@ sealed class Tab(
     val iconNotSelected: ImageVector
 ) {
 
-  object MyTrips : Tab("My trips", Screen.MyTrips, Icons.AutoMirrored.Filled.MenuOpen, Icons.AutoMirrored.Filled.MenuOpen)
+  object MyTrips :
+      Tab(
+          "My trips",
+          Screen.MyTrips,
+          Icons.AutoMirrored.Filled.MenuOpen,
+          Icons.AutoMirrored.Filled.MenuOpen)
 
   object CurrentTrip :
       Tab("Current trip", Screen.CurrentTrip, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
@@ -63,24 +66,30 @@ fun BottomNavigationMenu(
 ) {
   NavigationBar(
       modifier = modifier.fillMaxWidth().testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
-      containerColor = MaterialTheme.colorScheme.primary,) {
-        tabs.forEach { tab ->
-          NavigationBarItem(
-              modifier = Modifier.testTag(NavigationTestTags.getTestTag(tab)),
-              selected = (tab == selectedTab),
-              onClick = { onTabSelected(tab) },
-              colors = NavigationBarItemDefaults.colors(
+      containerColor = MaterialTheme.colorScheme.primary,
+  ) {
+    tabs.forEach { tab ->
+      NavigationBarItem(
+          modifier = Modifier.testTag(NavigationTestTags.getTestTag(tab)),
+          selected = (tab == selectedTab),
+          onClick = { onTabSelected(tab) },
+          colors =
+              NavigationBarItemDefaults.colors(
                   indicatorColor = navBarItemBackground,
               ),
-              icon = {
-                if (tab == selectedTab) {
-                  Icon(imageVector = tab.iconSelected, contentDescription = tab.name, tint=Color.White)
-                } else {
-                  Icon(imageVector = tab.iconNotSelected, contentDescription = tab.name, tint= Color.White)
-                }
-              },
-              label = { Text(tab.name, color = Color.White) },
-              alwaysShowLabel = true)
-        }
-      }
+          icon = {
+            if (tab == selectedTab) {
+              Icon(
+                  imageVector = tab.iconSelected, contentDescription = tab.name, tint = Color.White)
+            } else {
+              Icon(
+                  imageVector = tab.iconNotSelected,
+                  contentDescription = tab.name,
+                  tint = Color.White)
+            }
+          },
+          label = { Text(tab.name, color = Color.White) },
+          alwaysShowLabel = true)
+    }
+  }
 }
