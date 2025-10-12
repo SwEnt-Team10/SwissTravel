@@ -104,13 +104,13 @@ fun SwissTravelApp(
     ) {
       composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
     }
-      navigation(
-          startDestination = Screen.SelectedTripMap.route,
-          route = Screen.SelectedTripMap.name,
-      ) {
-        composable(Screen.SelectedTripMap.route) {
-            NavigationMapScreen(navigationActions = navigationActions)
-        }
+    navigation(
+        startDestination = Screen.SelectedTripMap.route,
+        route = Screen.SelectedTripMap.name,
+    ) {
+      composable(Screen.SelectedTripMap.route) {
+        NavigationMapScreen(navigationActions = navigationActions)
       }
+    }
   }
 }

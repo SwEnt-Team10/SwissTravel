@@ -30,7 +30,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
-import androidx.navigation.NavController
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
@@ -265,9 +264,9 @@ fun NavigationMap(navigationActions: NavigationActions) {
             update = { /* no-op */},
         )
         Button(
-            onClick = { navigationActions.navigateTo(Screen.CurrentTrip)},
+            onClick = { navigationActions.navigateTo(Screen.CurrentTrip) },
             modifier =
-                Modifier.align(Alignment.TopEnd).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
+                Modifier.align(Alignment.TopStart).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
               Text("Exit Navigation")
             }
       }
