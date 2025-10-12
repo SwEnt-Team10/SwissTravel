@@ -102,4 +102,10 @@ class TripTest {
     val tripCropped = trip.getUpcomingTripElements(Timestamp(1734018400, 0))
     assertEquals(tripCropped, orderedTripElements.subList(3, orderedTripElements.size))
   }
+
+  @Test
+  fun testGetTotalTime() {
+    val totalTime = trip.getTotalTime()
+    assertEquals(totalTime, 9)
+  }
 }

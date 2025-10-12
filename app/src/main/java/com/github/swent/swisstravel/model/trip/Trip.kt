@@ -36,7 +36,6 @@ data class Trip(
     val routeSegments: List<RouteSegment>,
     val activities: List<Activity>
 ) {
-  // TODO add more parameters
   /**
    * Returns all trip elements ordered by start date.
    *
@@ -67,5 +66,10 @@ data class Trip(
 
     /* Return all upcoming events */
     return allElements.subList(firstUpcomingIndex, allElements.size)
+  }
+
+  /** Returns the total time of the trip in hours. */
+  fun getTotalTime(): Long {
+    return (endDate.seconds - startDate.seconds) / 60 / 60
   }
 }
