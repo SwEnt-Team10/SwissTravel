@@ -10,8 +10,13 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+
+object SliderTestTags {
+  const val SLIDER = "slider"
+}
 
 /**
  * A reusable component for a preference slider with a label.
@@ -24,22 +29,27 @@ import androidx.compose.ui.unit.dp
  */
 @Composable
 fun PreferenceSlider(label: String, value: Int, onValueChange: (Int) -> Unit) {
-  Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-    Text(
-        text = label,
-        style =
-            MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium))
-    HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
-    Slider(
-        value = value.toFloat(),
-        onValueChange = { onValueChange(it.toInt()) },
-        valueRange = 1f..5f,
-        steps = 3,
-        colors =
-            SliderDefaults.colors(
-                thumbColor = MaterialTheme.colorScheme.primary,
-                activeTrackColor = MaterialTheme.colorScheme.primary,
-                inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant))
-  }
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = 12.dp)
+              .testTag(label + SliderTestTags.SLIDER)) {
+        Text(
+            text = label,
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium))
+        HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.toInt()) },
+            valueRange = 1f..5f,
+            steps = 3,
+            modifier = Modifier.testTag(SliderTestTags.SLIDER),
+            colors =
+                SliderDefaults.colors(
+                    thumbColor = MaterialTheme.colorScheme.primary,
+                    activeTrackColor = MaterialTheme.colorScheme.primary,
+                    inactiveTrackColor = MaterialTheme.colorScheme.surfaceVariant))
+      }
 }

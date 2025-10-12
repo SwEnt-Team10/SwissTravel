@@ -11,11 +11,24 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
+object DateSelectorTestTags {
+  const val DATE_SELECTOR = "datSelectore"
+  const val DATE = "date"
+}
+
+/**
+ * A reusable component for a date selector with a label.
+ *
+ * @param label The text label for the date selector.
+ * @param dateText The text to display the selected date.
+ * @param onClick Callback to be invoked when the date selector is clicked.
+ */
 @Composable
 fun DateSelectorRow(label: String, dateText: String, onClick: () -> Unit) {
-  Column(modifier = Modifier.fillMaxWidth()) {
+  Column(modifier = Modifier.fillMaxWidth().testTag(label + DateSelectorTestTags.DATE_SELECTOR)) {
     Text(
         text = label,
         style =
@@ -24,7 +37,7 @@ fun DateSelectorRow(label: String, dateText: String, onClick: () -> Unit) {
     Spacer(modifier = Modifier.height(8.dp))
     OutlinedButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(56.dp),
+        modifier = Modifier.fillMaxWidth().height(56.dp).testTag(DateSelectorTestTags.DATE),
         shape = RoundedCornerShape(16.dp),
         border = ButtonDefaults.outlinedButtonBorder,
         colors =

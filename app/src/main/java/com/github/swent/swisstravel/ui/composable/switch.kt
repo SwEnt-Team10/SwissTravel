@@ -11,8 +11,13 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+
+object SwitchTestTags {
+  const val SWITCH = "switch"
+}
 
 /**
  * A reusable component for a preference switch with a label.
@@ -24,7 +29,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun PreferenceSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
   Row(
-      Modifier.fillMaxWidth().padding(vertical = 8.dp),
+      Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag(label + SwitchTestTags.SWITCH),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Text(
@@ -35,6 +40,7 @@ fun PreferenceSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean)
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            modifier = Modifier.testTag(SwitchTestTags.SWITCH),
             colors =
                 SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.primary,

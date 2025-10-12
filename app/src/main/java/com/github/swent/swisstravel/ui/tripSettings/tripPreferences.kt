@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +33,11 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+
+object TripPreferencesTestTags {
+  const val DONE = "done"
+  const val TRIP_PREFERENCES_SCREEN = "tripPreferencesScreen"
+}
 
 /**
  * Screen where users can set their trip preferences.
@@ -47,61 +53,64 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
   LaunchedEffect(tripSettings.preferences) { prefs = tripSettings.preferences }
 
   // Light beige-like background as in Figma
-  Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = stringResource(R.string.travellingPreferences),
-                textAlign = TextAlign.Center,
-                style =
-                    MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                    ))
-
-            Spacer(modifier = Modifier.height(32.dp))
-
-            PreferenceSwitch(stringResource(R.string.quickTraveler), prefs.quickTraveler) {
-              prefs = prefs.copy(quickTraveler = it)
-            }
-
-            PreferenceSwitch(stringResource(R.string.sportyTrip), prefs.sportyLevel) {
-              prefs = prefs.copy(sportyLevel = it)
-            }
-
-            PreferenceSwitch(stringResource(R.string.foodyTrip), prefs.foodyLevel) {
-              prefs = prefs.copy(foodyLevel = it)
-            }
-
-            PreferenceSwitch(stringResource(R.string.museumsLiker), prefs.museumInterest) {
-              prefs = prefs.copy(museumInterest = it)
-            }
-
-            PreferenceToggle(stringResource(R.string.handicappedTraveler), prefs.hasHandicap) {
-              prefs = prefs.copy(hasHandicap = it)
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-          }
-
-          Button(
-              onClick = {
-                viewModel.updatePreferences(prefs)
-                onDone()
-              },
-              colors =
-                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-              shape = RoundedCornerShape(24.dp),
-              modifier = Modifier.height(56.dp)) {
+  Surface(
+      modifier = Modifier.fillMaxSize().testTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN),
+      color = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween) {
+              Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    stringResource(R.string.done),
-                    color = Color.White,
-                    style = MaterialTheme.typography.titleMedium)
+                    text = stringResource(R.string.travellingPreferences),
+                    textAlign = TextAlign.Center,
+                    style =
+                        MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                        ))
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                PreferenceSwitch(stringResource(R.string.quickTraveler), prefs.quickTraveler) {
+                  prefs = prefs.copy(quickTraveler = it)
+                }
+
+                PreferenceSwitch(stringResource(R.string.sportyTrip), prefs.sportyLevel) {
+                  prefs = prefs.copy(sportyLevel = it)
+                }
+
+                PreferenceSwitch(stringResource(R.string.foodyTrip), prefs.foodyLevel) {
+                  prefs = prefs.copy(foodyLevel = it)
+                }
+
+                PreferenceSwitch(stringResource(R.string.museumsLiker), prefs.museumInterest) {
+                  prefs = prefs.copy(museumInterest = it)
+                }
+
+                PreferenceToggle(stringResource(R.string.handicappedTraveler), prefs.hasHandicap) {
+                  prefs = prefs.copy(hasHandicap = it)
+                }
+
+                Spacer(modifier = Modifier.height(24.dp))
               }
-        }
-  }
+
+              Button(
+                  onClick = {
+                    viewModel.updatePreferences(prefs)
+                    onDone()
+                  },
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = MaterialTheme.colorScheme.primary),
+                  shape = RoundedCornerShape(24.dp),
+                  modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
+                    Text(
+                        stringResource(R.string.done),
+                        color = Color.White,
+                        style = MaterialTheme.typography.titleMedium)
+                  }
+            }
+      }
 }
 
 @Preview

@@ -17,11 +17,20 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
+
+object ToggleTestTags {
+  const val TOGGLE = "toggle"
+  const val RADIO_BUTTON = "radioButton"
+  const val LABEL = "label"
+  const val YES = "yes"
+  const val NO = "no"
+}
 
 /**
  * A reusable component for a preference toggle with a label.
@@ -32,34 +41,40 @@ import com.github.swent.swisstravel.R
  */
 @Composable
 fun PreferenceToggle(label: String, value: Boolean, onValueChange: (Boolean) -> Unit) {
-  Column(modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp)) {
-    Text(
-        text = label,
-        style =
-            MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium))
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = 12.dp)
+              .testTag(label + ToggleTestTags.TOGGLE)) {
+        Text(
+            text = label,
+            style =
+                MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium))
 
-    HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
 
-    Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(8.dp))
 
-    Row(
-        modifier = Modifier.selectableGroup().fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically) {
-          RadioOption(
-              text = stringResource(R.string.yes),
-              selected = value,
-              onClick = { onValueChange(true) })
+        Row(
+            modifier = Modifier.selectableGroup().fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+            verticalAlignment = Alignment.CenterVertically) {
+              RadioOption(
+                  text = stringResource(R.string.yes),
+                  selected = value,
+                  onClick = { onValueChange(true) },
+                  testTag = ToggleTestTags.YES)
 
-          Spacer(modifier = Modifier.width(24.dp))
+              Spacer(modifier = Modifier.width(24.dp))
 
-          RadioOption(
-              text = stringResource(R.string.no),
-              selected = !value,
-              onClick = { onValueChange(false) })
-        }
-  }
+              RadioOption(
+                  text = stringResource(R.string.no),
+                  selected = !value,
+                  onClick = { onValueChange(false) },
+                  testTag = ToggleTestTags.NO)
+            }
+      }
 }
 
 /**
@@ -70,15 +85,17 @@ fun PreferenceToggle(label: String, value: Boolean, onValueChange: (Boolean) -> 
  * @param onClick Callback to be invoked when the option is clicked.
  */
 @Composable
-fun RadioOption(text: String, selected: Boolean, onClick: () -> Unit) {
+fun RadioOption(text: String, selected: Boolean, onClick: () -> Unit, testTag: String) {
   Row(
       modifier =
           Modifier.selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
-              .padding(horizontal = 8.dp),
+              .padding(horizontal = 8.dp)
+              .testTag(testTag),
       verticalAlignment = Alignment.CenterVertically) {
         RadioButton(
             selected = selected,
             onClick = onClick,
+            modifier = Modifier.testTag(ToggleTestTags.RADIO_BUTTON),
             colors =
                 androidx.compose.material3.RadioButtonDefaults.colors(
                     selectedColor = MaterialTheme.colorScheme.primary,
@@ -88,6 +105,6 @@ fun RadioOption(text: String, selected: Boolean, onClick: () -> Unit) {
             style =
                 MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onBackground),
-            modifier = Modifier.padding(start = 8.dp))
+            modifier = Modifier.padding(start = 8.dp).testTag(ToggleTestTags.LABEL))
       }
 }
