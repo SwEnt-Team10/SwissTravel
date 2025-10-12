@@ -123,10 +123,10 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
 
       // Create and cache a user document
       val cachedData =
-        mapOf(
-          "name" to "Cached User",
-          "email" to "cache@example.com",
-          "preferences" to listOf("Museums"))
+          mapOf(
+              "name" to "Cached User",
+              "email" to "cache@example.com",
+              "preferences" to listOf("Museums"))
       Firebase.firestore.collection("users").document(uid).set(cachedData).await()
 
       // Build repo using same Firestore but simulate network/server failure
@@ -144,12 +144,11 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     }
   }
 
-
   @Test(expected = IllegalStateException::class)
   fun updateUserPreferences_throwsIfUserDocDoesNotExist() = runBlocking {
     // Arrange
     val fakeIdToken =
-      FakeJwtGenerator.createFakeGoogleIdToken("Missing User", "missing@example.com")
+        FakeJwtGenerator.createFakeGoogleIdToken("Missing User", "missing@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     FirebaseEmulator.auth.signInAnonymously().await()
     val uid = Firebase.auth.currentUser!!.uid
@@ -165,5 +164,4 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     // Assert — should not throw
     assertTrue(true)
   }
-
 }

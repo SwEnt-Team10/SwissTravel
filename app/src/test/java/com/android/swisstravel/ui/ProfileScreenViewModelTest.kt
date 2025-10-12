@@ -138,12 +138,12 @@ class ProfileScreenViewModelTest {
   fun savePreferences_showsErrorWhenUserIsGuest() = runTest {
     // Arrange — simulate guest user
     val guestUser =
-      User(
-        uid = "guest",
-        name = "Guest",
-        email = "Not signed in",
-        profilePicUrl = "",
-        preferences = emptyList())
+        User(
+            uid = "guest",
+            name = "Guest",
+            email = "Not signed in",
+            profilePicUrl = "",
+            preferences = emptyList())
     coEvery { repository.getCurrentUser() } returns guestUser
 
     viewModel = ProfileScreenViewModel(repository)
@@ -157,5 +157,4 @@ class ProfileScreenViewModelTest {
     val state = viewModel.uiState.value
     assertEquals("You must be signed in to save preferences.", state.errorMsg)
   }
-
 }

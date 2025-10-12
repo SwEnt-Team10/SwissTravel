@@ -33,22 +33,22 @@ class StartTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signOut()
   }
 
-    @Test
-    fun testStartScreenDisplaysCorrectlyWhenLoggedOut() {
-      assert(FirebaseEmulator.auth.currentUser == null)
+  @Test
+  fun testStartScreenDisplaysCorrectlyWhenLoggedOut() {
+    assert(FirebaseEmulator.auth.currentUser == null)
 
-      val fakeGoogleIdToken =
-          FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
 
-      val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
+    val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
 
-      composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
-      composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed().performClick()
-      composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-        composeTestRule.onNodeWithTag(LOGIN_BUTTON).isNotDisplayed()
-      }
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).isDisplayed()
+    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
+    composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule.onNodeWithTag(LOGIN_BUTTON).isNotDisplayed()
     }
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).isDisplayed()
+  }
 
   @Test
   fun testStartScreenDisplaysCorrectlyWhenLoggedIn() {
