@@ -41,6 +41,9 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 
+/**
+ * Test tags for integration and UI tests
+*/
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
   const val LOGIN_BUTTON = "loginButton"
@@ -48,6 +51,13 @@ object SignInScreenTestTags {
   const val NAME = "name"
 }
 
+/**
+ * The Authentication screen.
+ *
+ * @param authViewModel ViewModel to handle the authentication logic.
+ * @param credentialManager The Credential Manager instance to use for authentication.
+ * @param onSignedIn Callback to be invoked when the user has successfully signed in.
+ */
 @Composable
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
@@ -116,6 +126,11 @@ fun SignInScreen(
       })
 }
 
+/**
+ * The google button used to sign-in.
+ *
+ * @param Callback to be invoked when the user click on the button.
+ */
 @Composable
 fun GoogleSignInButton(onSignInClick: () -> Unit) {
   Button(
