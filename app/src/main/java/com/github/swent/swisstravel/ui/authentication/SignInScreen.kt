@@ -41,9 +41,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 
-/**
- * Test tags for integration and UI tests
-*/
+/** Test tags for integration and UI tests */
 object SignInScreenTestTags {
   const val APP_LOGO = "appLogo"
   const val LOGIN_BUTTON = "loginButton"
