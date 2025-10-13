@@ -82,6 +82,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
           val location = Location(coordinate, name)
 
           // Dummy start/end times for now
+          // NOTE STILL TODO
           val start = Timestamp.now()
           val end = Timestamp(start.seconds + 3600, 0)
 
@@ -104,12 +105,12 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       limit: Int
   ): List<Activity> {
     val url = "$baseUrl&hitsPerPage=$limit&geo.dist=$coordinate.lat,$coordinate.lon,$radiusMeters"
-    return emptyList()
+    return fetchActivitiesFromUrl(url)
   }
 
   override suspend fun getActivitiesByCategory(category: String, limit: Int): List<Activity> {
     // NOTE: This is not final. This will be better implemented using User preferences.
     val url = "$baseUrl&hitsPerPage=$limit&facets=$category"
-    return emptyList()
+    return fetchActivitiesFromUrl(url)
   }
 }
