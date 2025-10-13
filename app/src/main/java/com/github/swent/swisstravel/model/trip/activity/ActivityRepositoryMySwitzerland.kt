@@ -2,6 +2,9 @@ package com.github.swent.swisstravel.model.trip.activity
 
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.toSwissTourismFacet
+import com.github.swent.swisstravel.model.user.toSwissTourismFacetFilter
 import com.google.firebase.Timestamp
 import java.io.IOException
 import java.lang.Exception
@@ -108,9 +111,18 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
     return fetchActivitiesFromUrl(url)
   }
 
-  override suspend fun getActivitiesByCategory(category: String, limit: Int): List<Activity> {
-    // NOTE: This is not final. This will be better implemented using User preferences.
-    val url = "$baseUrl&hitsPerPage=$limit&facets=$category"
+  override suspend fun getActivitiesByPreferences(
+      preferences: List<UserPreference>,
+      limit: Int
+  ): List<Activity> {
+    var url =
+        "$baseUrl&hitsPerPage=$limit&facets=${preferences.joinToString(",") { it.toSwissTourismFacet() }}"
+    var facetFilterString = "&facet.filter="
+    for (preference in preferences) {
+      facetFilterString +=
+          "${preference.toSwissTourismFacet()}:${preference.toSwissTourismFacetFilter()},"
+    }
+    url += facetFilterString
     return fetchActivitiesFromUrl(url)
   }
 }

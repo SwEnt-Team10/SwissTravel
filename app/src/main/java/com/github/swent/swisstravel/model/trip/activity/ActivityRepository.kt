@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.model.trip.activity
 
 import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.user.UserPreference
 
 interface ActivityRepository {
 
@@ -33,5 +34,8 @@ interface ActivityRepository {
    * @param limit Maximum number of activities to return.
    * @return List of activities (could be empty if none found or request fails).
    */
-  suspend fun getActivitiesByCategory(category: String, limit: Int = 5): List<Activity>
+  suspend fun getActivitiesByPreferences(
+      preferences: List<UserPreference>,
+      limit: Int = 5
+  ): List<Activity>
 }
