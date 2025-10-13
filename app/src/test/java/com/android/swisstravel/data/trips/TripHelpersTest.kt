@@ -1,6 +1,7 @@
 package com.android.swisstravel.data.trips
 
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.isCurrent
 import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.model.trip.isUpcoming
@@ -33,16 +34,21 @@ class TripHelpersTest {
   fun `isUpcoming returns true when startDate is in the future`() {
     val start = Instant.now().plus(1, ChronoUnit.DAYS)
     val end = start.plus(1, ChronoUnit.DAYS)
+    val tripProfile =
+        TripProfile(
+            startDate = tsFromInstant(start),
+            endDate = tsFromInstant(end),
+            preferredLocations = emptyList(),
+            preferences = emptyList())
     val trip =
         Trip(
             uid = "testUid",
             name = "testName",
-            startDate = tsFromInstant(start),
-            endDate = tsFromInstant(end),
             ownerId = "testOwner",
             locations = emptyList(),
             routeSegments = emptyList(),
-            activities = emptyList())
+            activities = emptyList(),
+            tripProfile = tripProfile)
 
     assertTrue(trip.isUpcoming())
     assertFalse(trip.isCurrent())
@@ -53,16 +59,21 @@ class TripHelpersTest {
   fun `isCurrent returns true when now is between start and end inclusive`() {
     val start = Instant.now().minus(1, ChronoUnit.DAYS)
     val end = Instant.now().plus(1, ChronoUnit.DAYS)
+    val tripProfile =
+        TripProfile(
+            startDate = tsFromInstant(start),
+            endDate = tsFromInstant(end),
+            preferredLocations = emptyList(),
+            preferences = emptyList())
     val trip =
         Trip(
             uid = "testUid",
             name = "testName",
-            startDate = tsFromInstant(start),
-            endDate = tsFromInstant(end),
             ownerId = "testOwner",
             locations = emptyList(),
             routeSegments = emptyList(),
-            activities = emptyList())
+            activities = emptyList(),
+            tripProfile = tripProfile)
 
     assertTrue(trip.isCurrent())
     assertFalse(trip.isUpcoming())
@@ -73,16 +84,21 @@ class TripHelpersTest {
   fun `isPast returns true when endDate is before now`() {
     val end = Instant.now().minus(1, ChronoUnit.DAYS)
     val start = end.minus(2, ChronoUnit.DAYS)
+    val tripProfile =
+        TripProfile(
+            startDate = tsFromInstant(start),
+            endDate = tsFromInstant(end),
+            preferredLocations = emptyList(),
+            preferences = emptyList())
     val trip =
         Trip(
             uid = "testUid",
             name = "testName",
-            startDate = tsFromInstant(start),
-            endDate = tsFromInstant(end),
             ownerId = "testOwner",
             locations = emptyList(),
             routeSegments = emptyList(),
-            activities = emptyList())
+            activities = emptyList(),
+            tripProfile = tripProfile)
 
     assertTrue(trip.isPast())
     assertFalse(trip.isCurrent())
