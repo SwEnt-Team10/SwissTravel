@@ -1,5 +1,7 @@
-package com.github.swent.swisstravel.ui.tripSettings
+package com.android.swisstravel.ui.tripSettings
 
+import com.github.swent.swisstravel.ui.tripSettings.TripPreferences
+import com.github.swent.swisstravel.ui.tripSettings.TripSettingsViewModel
 import java.time.LocalDate
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
