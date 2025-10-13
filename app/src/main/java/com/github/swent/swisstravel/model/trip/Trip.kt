@@ -30,12 +30,11 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
 data class Trip(
     val uid: String,
     val name: String,
-    val startDate: Timestamp,
-    val endDate: Timestamp,
     val ownerId: String,
     val locations: List<Location>,
     val routeSegments: List<RouteSegment>,
-    val activities: List<Activity>
+    val activities: List<Activity>,
+    val tripProfile: TripProfile
 ) {
   /**
    * Returns all trip elements ordered by start date.
@@ -79,7 +78,7 @@ data class Trip(
   }
 
   /** Returns the total time of the trip in hours. */
-  fun getTotalTime(): Long {
-    return (endDate.seconds - startDate.seconds) / 60 / 60
+  fun getTotalTime(): Double {
+    return tripProfile.getTotalTime()
   }
 }

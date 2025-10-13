@@ -24,7 +24,7 @@ fun Timestamp.toZonedDateTime(): ZonedDateTime =
  */
 fun Trip.isUpcoming(): Boolean {
   val now = ZonedDateTime.now()
-  return startDate.toZonedDateTime().isAfter(now)
+  return tripProfile.startDate.toZonedDateTime().isAfter(now)
 }
 
 /**
@@ -38,8 +38,8 @@ fun Trip.isUpcoming(): Boolean {
  */
 fun Trip.isCurrent(): Boolean {
   val now = ZonedDateTime.now()
-  val start = startDate.toZonedDateTime()
-  val end = endDate.toZonedDateTime()
+  val start = tripProfile.startDate.toZonedDateTime()
+  val end = tripProfile.endDate.toZonedDateTime()
   return !start.isAfter(now) && !end.isBefore(now)
 }
 
@@ -54,5 +54,5 @@ fun Trip.isCurrent(): Boolean {
  */
 fun Trip.isPast(): Boolean {
   val now = ZonedDateTime.now()
-  return endDate.toZonedDateTime().isBefore(now)
+  return tripProfile.endDate.toZonedDateTime().isBefore(now)
 }
