@@ -33,4 +33,5 @@
     <string name="tripDates">When will you be travelling?</string>
     <string name="startDate">Start date</string>
     <string name="endDate">End date</string>
+    <string name="endDateError">End date must be on or after start date.</string>
 </resources>

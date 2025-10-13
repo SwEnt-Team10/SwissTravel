@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.tripSettings
 
 import android.app.DatePickerDialog
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -99,7 +100,13 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
 
               // --- Done button ---
               Button(
-                  onClick = onNext,
+                  onClick = {
+                    if (endDate.isBefore(startDate)) {
+                      Toast.makeText(context, R.string.endDateError, Toast.LENGTH_SHORT).show()
+                    } else {
+                      onNext()
+                    }
+                  },
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.primary),
