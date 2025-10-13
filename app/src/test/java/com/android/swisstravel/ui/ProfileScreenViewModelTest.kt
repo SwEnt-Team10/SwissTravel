@@ -125,7 +125,7 @@ class ProfileScreenViewModelTest {
     viewModel = ProfileScreenViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    // Act — try saving preferences with no user
+    // TripActivity — try saving preferences with no user
     viewModel.savePreferences(listOf("Nature"))
     testDispatcher.scheduler.advanceUntilIdle()
 
@@ -149,7 +149,7 @@ class ProfileScreenViewModelTest {
     viewModel = ProfileScreenViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    // Act
+    // TripActivity
     viewModel.savePreferences(listOf("Hiking"))
     testDispatcher.scheduler.advanceUntilIdle()
 
