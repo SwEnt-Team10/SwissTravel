@@ -23,12 +23,21 @@ data class User(
  * Add more preferences as needed.
  */
 enum class UserPreference {
-  HANDICAP,
-  HIKING,
+  SCENIC_VIEWS,
+  SPORTS,
   MUSEUMS,
-  SKIING,
-  FOODIE
-  // Add more preferences as needed
+  NATURE,
+    CHILDREN_FRIENDLY,
+    NIGHTLIFE,
+    SHOPPING,
+    WELLNESS,
+  FOODIE,
+    URBAN,
+    GROUP,
+    INDIVIDUAL,
+    COUPLE,
+    WHEELCHAIR_ACCESSIBLE,
+    PUBLIC_TRANSPORT
 }
 
 /**
@@ -38,11 +47,20 @@ enum class UserPreference {
  */
 fun UserPreference.displayString(): String {
   return when (this) {
-    UserPreference.HANDICAP -> "Handicap Accessible"
-    UserPreference.HIKING -> "Hiking & Outdoor"
+    UserPreference.SCENIC_VIEWS -> "Scenic Views"
+    UserPreference.SPORTS -> "Sports"
     UserPreference.MUSEUMS -> "Museums"
-    UserPreference.SKIING -> "Skiing & Snow Sports"
-    UserPreference.FOODIE -> "Food & Culinary Experiences"
-  // Add more cases as needed
+    UserPreference.NATURE -> "Nature Sightseeing"
+    UserPreference.CHILDREN_FRIENDLY -> "Children Friendly"
+    UserPreference.NIGHTLIFE -> "Nightlife & Party"
+    UserPreference.SHOPPING -> "Shopping"
+    UserPreference.WELLNESS -> "Wellness"
+      UserPreference.FOODIE -> "Food & Culinary Experiences"
+      UserPreference.URBAN -> "Urban Sightseeing"
+      UserPreference.GROUP -> "Group Friendly"
+      UserPreference.INDIVIDUAL -> "Solo Traveler Friendly"
+      UserPreference.COUPLE -> "Couple Friendly"
+      UserPreference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
+      UserPreference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
   }
 }
