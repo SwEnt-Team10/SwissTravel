@@ -6,9 +6,9 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
-import kotlinx.coroutines.tasks.await
 import kotlin.text.get
 import kotlin.text.set
+import kotlinx.coroutines.tasks.await
 
 class UserRepositoryFirebase(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -41,22 +41,21 @@ class UserRepositoryFirebase(
       val doc = db.collection("users").document(uid).get(Source.SERVER).await()
       if (doc.exists()) createUser(doc, uid) else retrieveUser(firebaseUser, uid)
     } catch (e: Exception) {
-        try {
-            val cachedDoc = db.collection("users").document(uid).get(Source.CACHE).await()
-            if (cachedDoc.exists()) {
-                createUser(cachedDoc, uid)
-            } else {
-                User(
-                    uid = uid,
-                    name = firebaseUser.displayName ?: "Guest",
-                    email = firebaseUser.email ?: "Unknown",
-                    profilePicUrl = "",
-                    preferences = emptyList()
-                )
-            }
-        }catch (cacheException : Exception){
-            retrieveUser(firebaseUser, uid)
+      try {
+        val cachedDoc = db.collection("users").document(uid).get(Source.CACHE).await()
+        if (cachedDoc.exists()) {
+          createUser(cachedDoc, uid)
+        } else {
+          User(
+              uid = uid,
+              name = firebaseUser.displayName ?: "Guest",
+              email = firebaseUser.email ?: "Unknown",
+              profilePicUrl = "",
+              preferences = emptyList())
         }
+      } catch (cacheException: Exception) {
+        retrieveUser(firebaseUser, uid)
+      }
     }
   }
 
@@ -79,20 +78,19 @@ class UserRepositoryFirebase(
             name = firebaseUser.displayName.orEmpty(),
             email = firebaseUser.email.orEmpty(),
             profilePicUrl = firebaseUser.photoUrl?.toString().orEmpty(),
-            preferences = emptyList()
-        )
-      db.collection("users").document(uid).set(newUser).await()
-      return newUser
+            preferences = emptyList())
+    db.collection("users").document(uid).set(newUser).await()
+    return newUser
   }
 
   override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {
-      if (uid == "guest") return
+    if (uid == "guest") return
 
-      val userDoc = db.collection("users").document(uid).get().await()
-      if (userDoc.exists()) {
-          db.collection("users").document(uid).update("preferences", preferences).await()
-      } else {
-          throw IllegalStateException("User document does not exist for uid: $uid")
-      }
+    val userDoc = db.collection("users").document(uid).get().await()
+    if (userDoc.exists()) {
+      db.collection("users").document(uid).update("preferences", preferences).await()
+    } else {
+      throw IllegalStateException("User document does not exist for uid: $uid")
+    }
   }
 }
