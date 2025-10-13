@@ -57,7 +57,8 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     val fakeIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken("Existing User", "existing@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
-    FirebaseEmulator.auth.signInAnonymously().await()
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
 
     val uid = Firebase.auth.currentUser!!.uid
     val existingData =
@@ -83,7 +84,8 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     // Arrange
     val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Update User", "update@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
-    FirebaseEmulator.auth.signInAnonymously().await()
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
     val uid = Firebase.auth.currentUser!!.uid
 
     val createUser = repository.getCurrentUser()
