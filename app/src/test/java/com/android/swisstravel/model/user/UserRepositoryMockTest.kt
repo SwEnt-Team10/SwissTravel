@@ -35,7 +35,7 @@ class UserRepositoryMockTest {
     every { user.displayName } returns "Cacheless User"
     every { user.email } returns "cacheless@example.com"
     // Make sure the user is not anonymous
-    every {user.isAnonymous} returns false
+    every { user.isAnonymous } returns false
     every { db.collection("users").document("uid123") } returns docRef
 
     // Simulate server failure, then cache hit with a doc that does NOT exist
