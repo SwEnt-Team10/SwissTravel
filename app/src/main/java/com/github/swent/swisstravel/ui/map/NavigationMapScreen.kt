@@ -16,10 +16,10 @@ import androidx.compose.ui.platform.testTag
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.maps.extension.style.expressions.dsl.generated.mod
 import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -62,7 +62,7 @@ fun NavigationMapScreen(navigationActions: NavigationActions) {
       modifier = Modifier.testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
         Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Exit Map Icon")
       }
-  NavigationMap(navigationActions)
+  NavigationMap()
 }
 
 /* TODO : delete if we choose to implement view A (see Figma)
@@ -101,7 +101,7 @@ fun BottomSheet(navigationActions: NavigationActions) {
 
 @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 @Composable
-fun NavigationMap(navigationActions: NavigationActions) {
+fun NavigationMap() {
   val context = LocalContext.current
 
   // get a route line object (to access methods for data)
@@ -118,14 +118,25 @@ fun NavigationMap(navigationActions: NavigationActions) {
   }
 
   // TODO : change these hardcoded points to variables
-  val origin = com.mapbox.geojson.Point.fromLngLat(-122.43539772352648, 37.77440680146262)
-  val destination = com.mapbox.geojson.Point.fromLngLat(-122.42409811526268, 37.76556957793795)
+
+  // Hardcoded points for testing
+  val EPFL_IC = com.mapbox.geojson.Point.fromLngLat(6.563349085567107, 46.51823826885176)
+  val ZERMATT = com.mapbox.geojson.Point.fromLngLat(7.747, 46.019)
+  val OLYMPIC_MUSEUM = com.mapbox.geojson.Point.fromLngLat(6.6339, 46.5086)
+  val CHUV = com.mapbox.geojson.Point.fromLngLat(6.6209, 46.5197)
+  // ================================
+
+  // Hardcoded trips for testing
+  val EPFL_ZERMATT = listOf(EPFL_IC, ZERMATT)
+  val EPFL_OLYMPIC = listOf(EPFL_IC, OLYMPIC_MUSEUM)
+  val EPFL_CHUV_OLYMPIC = listOf(EPFL_IC, CHUV, OLYMPIC_MUSEUM)
+  // ================================
 
   // get the possible routes from origin to destination
   val routeOptions =
       RouteOptions.builder()
           .applyDefaultNavigationOptions()
-          .coordinatesList(listOf(origin, destination)) // can add intermediary points here
+          .coordinatesList(EPFL_OLYMPIC) // can add intermediary points here
           .build()
 
   val callback =
@@ -139,12 +150,14 @@ fun NavigationMap(navigationActions: NavigationActions) {
         }
       }
 
-  LaunchedEffect(Unit) { mapboxNavigation.requestRoutes(routeOptions, callback) }
-
   // create a map
   val mapViewportState = rememberMapViewportState()
   MapboxMap(modifier = Modifier.fillMaxSize(), mapViewportState = mapViewportState) {
     MapEffect(Unit) { mapView ->
+
+      // set the initial location of the map
+      val initialLocation = CameraOptions.Builder().center(EPFL_IC).zoom(14.0).build()
+      mapView.mapboxMap.setCamera(initialLocation)
 
       // observer to update the route on the map when routes change
       val routesObserver =
@@ -165,6 +178,8 @@ fun NavigationMap(navigationActions: NavigationActions) {
       mapboxNavigation.registerRoutesObserver(routesObserver)
     }
   }
+
+  mapboxNavigation.requestRoutes(routeOptions, callback)
 
   // create a manageable lifecycle
   DisposableEffect(Unit) { onDispose { MapboxNavigationProvider.destroy() } }
