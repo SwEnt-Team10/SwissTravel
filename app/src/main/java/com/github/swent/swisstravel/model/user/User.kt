@@ -26,7 +26,7 @@ enum class UserPreference {
   SCENIC_VIEWS,
   SPORTS,
   MUSEUMS,
-  NATURE,
+  HIKE,
   CHILDREN_FRIENDLY,
   NIGHTLIFE,
   SHOPPING,
@@ -50,7 +50,7 @@ fun UserPreference.displayString(): String {
     UserPreference.SCENIC_VIEWS -> "Scenic Views"
     UserPreference.SPORTS -> "Sports"
     UserPreference.MUSEUMS -> "Museums"
-    UserPreference.NATURE -> "Nature Sightseeing"
+    UserPreference.HIKE -> "Hiking"
     UserPreference.CHILDREN_FRIENDLY -> "Children Friendly"
     UserPreference.NIGHTLIFE -> "Nightlife & Party"
     UserPreference.SHOPPING -> "Shopping"
@@ -70,7 +70,7 @@ fun UserPreference.toSwissTourismFacet(): String {
     UserPreference.SCENIC_VIEWS -> "views"
     UserPreference.SPORTS -> "sporttype"
     UserPreference.MUSEUMS -> "museumtype"
-    UserPreference.NATURE -> "naturetype"
+    UserPreference.HIKE -> "sporttype"
     UserPreference.CHILDREN_FRIENDLY -> "suitablefortype"
     UserPreference.NIGHTLIFE -> "outgoingtype"
     UserPreference.SHOPPING -> "shoppingtype"
@@ -90,7 +90,7 @@ fun UserPreference.toSwissTourismFacetFilter(): String {
     UserPreference.SCENIC_VIEWS -> "*"
     UserPreference.SPORTS -> "*"
     UserPreference.MUSEUMS -> "*"
-    UserPreference.NATURE -> "*"
+    UserPreference.HIKE -> "hike"
     UserPreference.CHILDREN_FRIENDLY -> "family"
     UserPreference.NIGHTLIFE -> "*"
     UserPreference.SHOPPING -> "*"
