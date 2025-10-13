@@ -7,6 +7,7 @@ import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.google.firebase.Timestamp
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -81,16 +82,22 @@ class TripTest {
           TripElement.TripActivity(listActivities[2]) // Lucerne activity
           )
 
+  private val tripProfile =
+      TripProfile(
+          startDate = Timestamp(1734000000, 0),
+          endDate = Timestamp(1734032400, 0),
+          preferredLocations = emptyList(),
+          preferences = emptyList())
+
   private val trip =
       Trip(
           uid = "testUid",
           name = "testName",
-          startDate = Timestamp(1734000000, 0),
-          endDate = Timestamp(1734032400, 0),
           ownerId = "testOwner",
           locations = emptyList(),
           routeSegments = listRouteSegments,
-          activities = listActivities)
+          activities = listActivities,
+          tripProfile = tripProfile)
 
   @Test
   fun testGetAllTripElementsOrdered() {
@@ -118,6 +125,6 @@ class TripTest {
   @Test
   fun testGetTotalTime() {
     val totalTime = trip.getTotalTime()
-    assertEquals(totalTime, 9)
+    assertEquals(totalTime, 9.0, 0.01)
   }
 }
