@@ -6,8 +6,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
-import kotlin.text.get
-import kotlin.text.set
 import kotlinx.coroutines.tasks.await
 
 class UserRepositoryFirebase(
