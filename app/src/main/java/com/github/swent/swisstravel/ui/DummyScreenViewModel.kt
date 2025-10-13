@@ -7,6 +7,7 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.google.firebase.Timestamp
@@ -30,36 +31,41 @@ class DummyScreenViewModel(
           RouteSegment(
               Location(Coordinate(46.52, 6.57), "EPFL"),
               Location(Coordinate(35.1449, 136.9007), "Nagoya temple"),
-              1000000.0,
-              500.0,
+              1000000,
+              500,
               listOf(
                   Coordinate(46.52, 6.57),
                   Coordinate(47.37, 8.54),
                   Coordinate(46.94, 7.44),
                   Coordinate(46.02, 7.74),
                   Coordinate(35.1449, 136.9007)),
-              TransportMode.TRAIN)
+              TransportMode.TRAIN,
+              startDate = Timestamp(date),
+              endDate = Timestamp(date),
+          )
       val routeSegment2 =
           RouteSegment(
               Location(Coordinate(0.0, 0.0), "test"),
               Location(Coordinate(1.0, 1.0), "test destination"),
-              150.0,
-              5.0,
+              150,
+              5,
               listOf(Coordinate(0.0, 0.0), Coordinate(0.0, 1.0), Coordinate(1.0, 1.0)),
-              TransportMode.UNKNOWN)
+              TransportMode.UNKNOWN,
+              startDate = Timestamp(date),
+              endDate = Timestamp(date))
 
       val trip =
           Trip(
               uid = "testID",
               name = "testName",
-              startDate = Timestamp(date),
-              endDate = Timestamp(date),
               ownerId = "testOwner",
               locations =
                   listOf(
                       Location(Coordinate(46.52, 6.57), "EPFL"),
                       Location(Coordinate(35.1449, 136.9007), "Nagoya temple")),
-              routeSegments = listOf(routeSegment, routeSegment2))
+              routeSegments = listOf(routeSegment, routeSegment2),
+              activities = emptyList(),
+              tripProfile = TripProfile(Timestamp(date), Timestamp(date), emptyList(), emptyList()))
       repository.addTrip(trip)
     }
   }

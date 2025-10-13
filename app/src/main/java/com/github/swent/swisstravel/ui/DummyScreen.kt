@@ -58,7 +58,6 @@ fun DummyScreen(
               Text("Trip UID: ${it.uid}")
               Text("Trip Name: ${it.name}")
               Text("Trip Owner ID: ${it.ownerId}")
-              Text("Trip Start Date: ${it.startDate}")
             }
           }
         }
