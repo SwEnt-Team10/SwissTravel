@@ -19,7 +19,7 @@ import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 
 object TripTravelersTestTags {
   const val NEXT = "next"
-  const val TRIP_TRAVELERS_SCREEN = "tripTravele"
+  const val TRIP_TRAVELERS_SCREEN = "tripTravelersScreen"
 }
 
 @Composable

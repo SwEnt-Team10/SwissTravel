@@ -61,6 +61,8 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween) {
               Column(horizontalAlignment = Alignment.CenterHorizontally) {
+
+                // --- Title ---
                 Text(
                     text = stringResource(R.string.travellingPreferences),
                     textAlign = TextAlign.Center,
@@ -71,6 +73,7 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
 
                 Spacer(modifier = Modifier.height(32.dp))
 
+                // --- Preferences ---
                 PreferenceSwitch(stringResource(R.string.quickTraveler), prefs.quickTraveler) {
                   prefs = prefs.copy(quickTraveler = it)
                 }
@@ -94,6 +97,7 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                 Spacer(modifier = Modifier.height(24.dp))
               }
 
+              // --- Done button ---
               Button(
                   onClick = {
                     viewModel.updatePreferences(prefs)
