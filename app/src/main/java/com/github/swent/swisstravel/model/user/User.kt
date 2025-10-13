@@ -27,17 +27,17 @@ enum class UserPreference {
   SPORTS,
   MUSEUMS,
   NATURE,
-    CHILDREN_FRIENDLY,
-    NIGHTLIFE,
-    SHOPPING,
-    WELLNESS,
+  CHILDREN_FRIENDLY,
+  NIGHTLIFE,
+  SHOPPING,
+  WELLNESS,
   FOODIE,
-    URBAN,
-    GROUP,
-    INDIVIDUAL,
-    COUPLE,
-    WHEELCHAIR_ACCESSIBLE,
-    PUBLIC_TRANSPORT
+  URBAN,
+  GROUP,
+  INDIVIDUAL,
+  COUPLE,
+  WHEELCHAIR_ACCESSIBLE,
+  PUBLIC_TRANSPORT
 }
 
 /**
@@ -55,12 +55,12 @@ fun UserPreference.displayString(): String {
     UserPreference.NIGHTLIFE -> "Nightlife & Party"
     UserPreference.SHOPPING -> "Shopping"
     UserPreference.WELLNESS -> "Wellness"
-      UserPreference.FOODIE -> "Food & Culinary Experiences"
-      UserPreference.URBAN -> "Urban Sightseeing"
-      UserPreference.GROUP -> "Group Friendly"
-      UserPreference.INDIVIDUAL -> "Solo Traveler Friendly"
-      UserPreference.COUPLE -> "Couple Friendly"
-      UserPreference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
-      UserPreference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
+    UserPreference.FOODIE -> "Food & Culinary Experiences"
+    UserPreference.URBAN -> "Urban Sightseeing"
+    UserPreference.GROUP -> "Group Friendly"
+    UserPreference.INDIVIDUAL -> "Solo Traveler Friendly"
+    UserPreference.COUPLE -> "Couple Friendly"
+    UserPreference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
+    UserPreference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
   }
 }
