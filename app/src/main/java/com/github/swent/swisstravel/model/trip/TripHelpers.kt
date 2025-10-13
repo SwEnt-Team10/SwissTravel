@@ -95,5 +95,9 @@ fun Trip.getUpcomingTripElements(
   else allElements.subList(firstUpcomingIndex, allElements.size)
 }
 
-/** Returns the total time of the trip in hours. */
+/**
+ * Returns the total time of the trip in hours.
+ *
+ * @return The total time of the trip in hours
+ */
 fun Trip.getTotalTime(): Double = tripProfile.getTotalTime()

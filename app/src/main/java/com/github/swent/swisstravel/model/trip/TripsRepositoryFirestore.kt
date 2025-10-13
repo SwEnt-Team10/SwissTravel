@@ -75,7 +75,12 @@ class TripsRepositoryFirestore(
           } ?: emptyList()
 
       val tripProfile =
-          (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
+          (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) }
+              ?: TripProfile(
+                  startDate = Timestamp.now(),
+                  endDate = Timestamp.now(),
+                  preferredLocations = emptyList(),
+                  preferences = emptyList())
 
       Trip(
           uid = uid,
@@ -91,6 +96,12 @@ class TripsRepositoryFirestore(
     }
   }
 
+  /**
+   * Converts a Firestore map into a [Location] object.
+   *
+   * @param map The Firestore map expected to contain "name" and "coordinate" keys.
+   * @return A [Location] if valid data is found, or `null` if data is incomplete or invalid.
+   */
   private fun mapToLocation(map: Map<*, *>): Location? {
     val name = map["name"] as? String ?: return null
     val coordMap = map["coordinate"] as? Map<*, *> ?: return null
@@ -98,12 +109,24 @@ class TripsRepositoryFirestore(
     return Location(coordinate, name)
   }
 
+  /**
+   * Converts a Firestore map into a [Coordinate] object.
+   *
+   * @param map The Firestore map expected to contain "latitude" and "longitude" keys.
+   * @return A [Coordinate] if valid numeric values are found, or `null` if data is invalid.
+   */
   private fun mapToCoordinate(map: Map<*, *>): Coordinate? {
     val lat = (map["latitude"] as? Number)?.toDouble() ?: return null
     val lon = (map["longitude"] as? Number)?.toDouble() ?: return null
     return Coordinate(lat, lon)
   }
 
+  /**
+   * Converts a Firestore map into an [Activity] object.
+   *
+   * @param map The Firestore map expected to contain "startDate", "endDate", and "location".
+   * @return An [Activity] if all required fields are valid, or `null` otherwise.
+   */
   private fun mapToActivity(map: Map<*, *>): Activity? {
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
@@ -112,6 +135,13 @@ class TripsRepositoryFirestore(
     return Activity(startDate, endDate, location)
   }
 
+  /**
+   * Converts a Firestore map into a [RouteSegment] object.
+   *
+   * @param map The Firestore map expected to contain route data including: "from", "to",
+   *   "distanceMeter", "durationMinutes", "path", "transportMode", "startDate", and "endDate".
+   * @return A [RouteSegment] if all required fields are valid, or `null` otherwise.
+   */
   private fun mapToRouteSegment(map: Map<*, *>): RouteSegment? {
     val fromMap = map["from"] as? Map<*, *> ?: return null
     val toMap = map["to"] as? Map<*, *> ?: return null
@@ -134,6 +164,13 @@ class TripsRepositoryFirestore(
         from, to, distanceMeter, durationMinutes, pathList, transportMode, startDate, endDate)
   }
 
+  /**
+   * Converts a Firestore map into a [TripProfile] object.
+   *
+   * @param map The Firestore map expected to contain: "startDate", "endDate", "preferredLocations",
+   *   and "preferences".
+   * @return A [TripProfile] if all required fields are valid, or `null` otherwise.
+   */
   private fun mapToTripProfile(map: Map<*, *>): TripProfile? {
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
@@ -149,6 +186,13 @@ class TripsRepositoryFirestore(
     return TripProfile(startDate, endDate, preferredLocations, preferences)
   }
 
+  /**
+   * Converts a Firestore map into a [RatedPreferences] object.
+   *
+   * @param map The Firestore map expected to contain "preference" (enum name) and "rating"
+   *   (number).
+   * @return A [RatedPreferences] if valid data is provided, or `null` if conversion fails.
+   */
   private fun mapToRatedPreferences(map: Map<*, *>): RatedPreferences? {
     val rating = (map["rating"] as? Number)?.toInt() ?: return null
     val preferenceStr = map["preference"] as? String ?: return null

@@ -4,8 +4,8 @@ import com.github.swent.swisstravel.model.user.UserPreference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.*
-import com.google.firebase.ktx.Firebase
 import io.mockk.*
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*
@@ -21,7 +21,6 @@ class TripsRepositoryFirestoreTest {
 
   @Before
   fun setup() {
-    mockkStatic(Firebase::class)
     mockDb = mockk()
     mockCollection = mockk()
     mockDocumentRef = mockk()
@@ -101,7 +100,7 @@ class TripsRepositoryFirestoreTest {
     assertNotNull(trip.tripProfile)
   }
 
-  @Test(expected = Exception::class)
+  @Test
   fun `getTrip throws when document cannot be converted`() = runTest {
     val doc = mockk<DocumentSnapshot>()
     every { mockDb.collection(TRIPS_COLLECTION_PATH).document("bad").get() } returns
@@ -109,7 +108,8 @@ class TripsRepositoryFirestoreTest {
     every { doc.id } returns "bad"
     every { doc.getString("name") } returns
         null // missing required field triggers conversion failure
-    repo.getTrip("bad")
+
+    assertFailsWith<Exception> { repo.getTrip("bad") }
   }
 
   @Test
@@ -126,7 +126,7 @@ class TripsRepositoryFirestoreTest {
 
     val mockDocRefForId = mockk<DocumentReference>()
     every { mockCollection.document(trip.uid) } returns mockDocRefForId
-    every { mockDocRefForId.set(trip) } returns Tasks.forResult<Void>(null)
+    every { mockDocRefForId.set(trip) } returns Tasks.forResult(null)
 
     repo.addTrip(trip)
 
@@ -137,7 +137,7 @@ class TripsRepositoryFirestoreTest {
   fun `deleteTrip calls delete on document reference and completes`() = runTest {
     val mockDocRefForId = mockk<DocumentReference>()
     every { mockCollection.document("todel") } returns mockDocRefForId
-    every { mockDocRefForId.delete() } returns Tasks.forResult<Void>(null)
+    every { mockDocRefForId.delete() } returns Tasks.forResult(null)
 
     repo.deleteTrip("todel")
 

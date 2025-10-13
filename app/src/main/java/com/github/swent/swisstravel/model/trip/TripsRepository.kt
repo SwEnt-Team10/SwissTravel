@@ -3,7 +3,11 @@ package com.github.swent.swisstravel.model.trip
 /** Inspired by the SwEnt Bootcamp solution. Represents a repository that manages Trips. */
 interface TripsRepository {
 
-  /** Generates and returns a new unique identifier for a Trip. */
+  /**
+   * Generates and returns a new unique identifier for a Trip.
+   *
+   * @return A new unique identifier.
+   */
   fun getNewUid(): String
 
   /**
