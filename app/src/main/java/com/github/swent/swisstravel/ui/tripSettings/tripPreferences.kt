@@ -26,13 +26,11 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 
 object TripPreferencesTestTags {
   const val DONE = "done"
@@ -115,10 +113,4 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                   }
             }
       }
-}
-
-@Preview
-@Composable
-fun TripPreferencesScreenPreview() {
-  SwissTravelTheme { TripPreferencesScreen() }
 }
