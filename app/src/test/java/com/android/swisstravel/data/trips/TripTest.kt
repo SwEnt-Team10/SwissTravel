@@ -110,6 +110,12 @@ class TripTest {
   }
 
   @Test
+  fun testGetUpcomingTripElementsReturnEmptyList() {
+    val tripCropped = trip.getUpcomingTripElements()
+    assertEquals(emptyList<TripElement>(), tripCropped)
+  }
+
+  @Test
   fun testGetTotalTime() {
     val totalTime = trip.getTotalTime()
     assertEquals(totalTime, 9)
