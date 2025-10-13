@@ -266,7 +266,8 @@ fun NavigationMap(navigationActions: NavigationActions) {
         Button(
             onClick = { navigationActions.navigateTo(Screen.CurrentTrip) },
             modifier =
-                Modifier.align(Alignment.TopStart).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
+                Modifier.align(Alignment.TopStart)
+                    .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
               Text("Exit Navigation")
             }
       }
