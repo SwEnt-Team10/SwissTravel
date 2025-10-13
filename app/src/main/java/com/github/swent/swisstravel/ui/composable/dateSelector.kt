@@ -15,7 +15,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 object DateSelectorTestTags {
-  const val DATE_SELECTOR = "datSelectore"
+  const val DATE_SELECTOR = "dateSelector"
   const val DATE = "date"
 }
 

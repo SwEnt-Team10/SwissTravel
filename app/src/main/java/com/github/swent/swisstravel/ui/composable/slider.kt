@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 
 object SliderTestTags {
   const val SLIDER = "slider"
+  const val SLIDER_ELEMENT = "sliderElement"
 }
 
 /**
@@ -45,7 +46,7 @@ fun PreferenceSlider(label: String, value: Int, onValueChange: (Int) -> Unit) {
             onValueChange = { onValueChange(it.toInt()) },
             valueRange = 1f..5f,
             steps = 3,
-            modifier = Modifier.testTag(SliderTestTags.SLIDER),
+            modifier = Modifier.testTag(SliderTestTags.SLIDER_ELEMENT),
             colors =
                 SliderDefaults.colors(
                     thumbColor = MaterialTheme.colorScheme.primary,

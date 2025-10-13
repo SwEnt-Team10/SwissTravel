@@ -16,6 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 object SwitchTestTags {
+  const val SWITCH_CONTAINER = "switchContainer"
   const val SWITCH = "switch"
 }
 
@@ -29,7 +30,9 @@ object SwitchTestTags {
 @Composable
 fun PreferenceSwitch(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
   Row(
-      Modifier.fillMaxWidth().padding(vertical = 8.dp).testTag(label + SwitchTestTags.SWITCH),
+      Modifier.fillMaxWidth()
+          .padding(vertical = 8.dp)
+          .testTag(label + SwitchTestTags.SWITCH_CONTAINER),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Text(
