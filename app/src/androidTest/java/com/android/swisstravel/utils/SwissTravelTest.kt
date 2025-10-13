@@ -39,7 +39,7 @@ abstract class SwissTravelTest {
 
   open fun initializeHTTPClient(): OkHttpClient = FakeHttpClient.getClient()
 
-  //    val repository: ToDosRepository
+  //    val repository: SwissTravelRepository
   //        get() = SwissTravelRepository.repository
 
   val httpClient
