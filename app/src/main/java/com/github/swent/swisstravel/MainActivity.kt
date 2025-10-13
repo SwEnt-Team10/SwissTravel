@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,12 +9,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.credentials.CredentialManager
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.DummyScreen
+import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
@@ -21,6 +25,7 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
 object HttpClientProvider {
@@ -42,11 +47,27 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun SwissTravelApp() {
+fun SwissTravelApp(
+    context: Context = LocalContext.current,
+    credentialManager: CredentialManager = CredentialManager.create(context)
+) {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
-  val startDestination = Screen.Profile.route
+  val startDestination =
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
+      else Screen.CurrentTrip.name
   NavHost(navController = navController, startDestination = startDestination) {
+    navigation(
+        startDestination = Screen.Auth.route,
+        route = Screen.Auth.name,
+    ) {
+      composable(Screen.Auth.route) {
+        SignInScreen(
+            credentialManager = credentialManager,
+            onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
+      }
+    }
+
     navigation(
         startDestination = Screen.Profile.route,
         route = Screen.Profile.name,

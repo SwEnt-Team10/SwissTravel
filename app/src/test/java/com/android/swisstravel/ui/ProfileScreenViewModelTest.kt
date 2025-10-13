@@ -116,4 +116,45 @@ class ProfileScreenViewModelTest {
     val state = viewModel.uiState.value
     assertTrue(state.errorMsg!!.contains("Firestore error"))
   }
+
+  @Test
+  fun savePreferences_showsErrorWhenUserIsNull() = runTest {
+    // Arrange — repository throws so currentUser remains null
+    coEvery { repository.getCurrentUser() } throws Exception("No user")
+
+    viewModel = ProfileScreenViewModel(repository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // TripActivity — try saving preferences with no user
+    viewModel.savePreferences(listOf("Nature"))
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Assert
+    val state = viewModel.uiState.value
+    assertEquals("You must be signed in to save preferences.", state.errorMsg)
+  }
+
+  @Test
+  fun savePreferences_showsErrorWhenUserIsGuest() = runTest {
+    // Arrange — simulate guest user
+    val guestUser =
+        User(
+            uid = "guest",
+            name = "Guest",
+            email = "Not signed in",
+            profilePicUrl = "",
+            preferences = emptyList())
+    coEvery { repository.getCurrentUser() } returns guestUser
+
+    viewModel = ProfileScreenViewModel(repository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // TripActivity
+    viewModel.savePreferences(listOf("Hiking"))
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Assert
+    val state = viewModel.uiState.value
+    assertEquals("You must be signed in to save preferences.", state.errorMsg)
+  }
 }
