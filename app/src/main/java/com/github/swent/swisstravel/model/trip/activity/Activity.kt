@@ -14,6 +14,7 @@ data class Activity(
     val startDate: Timestamp,
     val endDate: Timestamp,
     val location: Location,
+    val description: String,
 ) {
   /** Gets the name of the activity */
   fun getName(): String {

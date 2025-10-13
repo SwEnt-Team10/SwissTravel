@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip.activity
 
+import com.github.swent.swisstravel.BuildConfig
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.user.UserPreference
@@ -7,7 +8,7 @@ import com.github.swent.swisstravel.model.user.toSwissTourismFacet
 import com.github.swent.swisstravel.model.user.toSwissTourismFacetFilter
 import com.google.firebase.Timestamp
 import java.io.IOException
-import java.lang.Exception
+import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
 import kotlinx.coroutines.Dispatchers
@@ -19,10 +20,9 @@ import org.json.JSONObject
 
 class ActivityRepositoryMySwitzerland : ActivityRepository {
 
-  private val API_KEY = java.util.Properties().getProperty("MY_SWITZERLAND_API_KEY") ?: ""
-
+  private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseUrl =
-      "https://opendata.myswitzerland.io/v1/attractions/?lang=en&page=0&striphtml=true"
+      "https://opendata.myswitzerland.io/v1/attractions/?lang=en&page=0&striphtml=true&expand=true"
 
   private val client: OkHttpClient by lazy {
     OkHttpClient.Builder()
@@ -32,8 +32,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
   }
 
   private suspend fun fetchActivitiesFromUrl(url: String): List<Activity> {
-    assert(API_KEY.isNotEmpty()) { "API Key for MySwitzerland is not set." }
-    withContext(Dispatchers.IO) {
+    return withContext(Dispatchers.IO) {
       val request =
           Request.Builder()
               .url(url)
@@ -42,24 +41,23 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
               .build()
 
       try {
-        val response = client.newCall(request).execute()
-        response.use {
+        client.newCall(request).execute().use { response ->
           if (!response.isSuccessful) {
-            throw Exception("Unexpected code $response")
+            throw IOException("Unexpected HTTP code ${response.code}")
           }
 
           val body = response.body?.string()
           if (body != null) {
-            return@withContext parseActivitiesFromJson(body)
+            parseActivitiesFromJson(body)
           } else {
-            return@withContext emptyList()
+            emptyList()
           }
         }
       } catch (e: IOException) {
-        throw e
+        e.printStackTrace()
+        emptyList()
       }
     }
-    return emptyList()
   }
 
   private fun parseActivitiesFromJson(json: String): List<Activity> {
@@ -73,6 +71,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
 
       // Extract the name (title)
       val name = item.optString("name", "Unknown Activity")
+      val description = item.optString("description", "No description")
 
       // Extract the geo info
       val geo = item.optJSONObject("geo")
@@ -89,7 +88,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
           val start = Timestamp.now()
           val end = Timestamp(start.seconds + 3600, 0)
 
-          activities.add(Activity(start, end, location))
+          activities.add(Activity(start, end, location, description))
         }
       }
     }
@@ -115,14 +114,20 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       preferences: List<UserPreference>,
       limit: Int
   ): List<Activity> {
-    var url =
-        "$baseUrl&hitsPerPage=$limit&facets=${preferences.joinToString(",") { it.toSwissTourismFacet() }}"
-    var facetFilterString = "&facet.filter="
-    for (preference in preferences) {
-      facetFilterString +=
-          "${preference.toSwissTourismFacet()}:${preference.toSwissTourismFacetFilter()},"
-    }
-    url += facetFilterString
+
+    val facetsParam = preferences.joinToString(",") { it.toSwissTourismFacet() }
+
+    val facetFilters =
+        preferences.joinToString(",") {
+          "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
+        }
+
+    val encodedFilters =
+        URLEncoder.encode(facetFilters, "UTF-8")
+            .replace("%252A", "%2A") // fix potential double-encoding of '*'
+
+    val url = "$baseUrl&hitsPerPage=$limit&facets=$facetsParam&facet.filter=$encodedFilters"
+
     return fetchActivitiesFromUrl(url)
   }
 }

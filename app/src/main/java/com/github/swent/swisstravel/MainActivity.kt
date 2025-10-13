@@ -16,12 +16,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
-import com.github.swent.swisstravel.ui.DummyScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.profile.ApiPlaygroundSimpleScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -93,9 +93,7 @@ fun SwissTravelApp(
         startDestination = Screen.MyTrips.route,
         route = Screen.MyTrips.name,
     ) {
-      composable(Screen.MyTrips.route) {
-        DummyScreen(navigationActions = navigationActions) // TODO change this
-      }
+      composable(Screen.MyTrips.route) { ApiPlaygroundSimpleScreen() }
     }
     navigation(
         startDestination = Screen.Map.route,

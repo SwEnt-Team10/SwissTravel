@@ -87,20 +87,20 @@ fun UserPreference.toSwissTourismFacet(): String {
 
 fun UserPreference.toSwissTourismFacetFilter(): String {
   return when (this) {
-    UserPreference.SCENIC_VIEWS -> "*"
-    UserPreference.SPORTS -> "*"
-    UserPreference.MUSEUMS -> "*"
+    UserPreference.SCENIC_VIEWS -> "%2A"
+    UserPreference.SPORTS -> "%2A"
+    UserPreference.MUSEUMS -> "%2A"
     UserPreference.HIKE -> "hike"
     UserPreference.CHILDREN_FRIENDLY -> "family"
-    UserPreference.NIGHTLIFE -> "*"
-    UserPreference.SHOPPING -> "*"
-    UserPreference.WELLNESS -> "*"
+    UserPreference.NIGHTLIFE -> "%2A"
+    UserPreference.SHOPPING -> "%2A"
+    UserPreference.WELLNESS -> "%2A"
     UserPreference.FOODIE -> "culinary"
     UserPreference.URBAN -> "urban"
     UserPreference.GROUP -> "group"
     UserPreference.INDIVIDUAL -> "individual"
     UserPreference.COUPLE -> "couples"
-    UserPreference.WHEELCHAIR_ACCESSIBLE -> "*"
+    UserPreference.WHEELCHAIR_ACCESSIBLE -> "%2A"
     UserPreference.PUBLIC_TRANSPORT -> "closetopublictransport"
   }
 }

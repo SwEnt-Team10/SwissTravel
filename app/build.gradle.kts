@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsKotlinAndroid)
@@ -23,6 +25,12 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+
+        val props = Properties()
+        val lp = rootProject.file("local.properties")
+        if (lp.exists()) props.load(lp.inputStream())
+        val apiKey = props.getProperty("MYSWITZERLAND_API_KEY") ?: ""
+        buildConfigField("String", "MYSWITZERLAND_API_KEY", "\"$apiKey\"")
     }
 
     buildTypes {
