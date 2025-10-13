@@ -1,6 +1,10 @@
 package com.github.swent.swisstravel.model.trip
 
+import android.util.Log
+import com.github.swent.swisstravel.model.user.RatedPreferences
+import com.github.swent.swisstravel.model.user.UserPreference
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -42,6 +46,7 @@ class TripsRepositoryFirestore(
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
   }
 
+  // The following code was made with the help of AI
   /**
    * Converts a Firestore document to a Trip object.
    *
@@ -49,61 +54,106 @@ class TripsRepositoryFirestore(
    * @return The Trip object.
    */
   private fun documentToTrip(document: DocumentSnapshot): Trip? {
-    val uid =
-        document.getString("uid")
-            ?: return null // TODO What do we want to do if a field is missing?
-    val name = document.getString("name") ?: return null
-    val startDate = document.getTimestamp("startDate") ?: return null
-    val endDate = document.getTimestamp("endDate") ?: return null
-    val ownerId = document.getString("ownerId") ?: return null
-    val locationMaps = document.get("locations") as? List<Map<String, Any>> ?: return null
-    val locations =
-        locationMaps.mapNotNull { map ->
-          mapToLocation(map["name"] as? Map<String, Any>) ?: return@mapNotNull null
-        }
-    // ChatGPT helped me with this part
-    val routeSegmentMaps = document.get("routeSegments") as? List<Map<String, Any>> ?: return null
-    val routeSegments =
-        routeSegmentMaps.mapNotNull { map ->
-          try {
-            RouteSegment(
-                from = mapToLocation(map["from"] as? Map<String, Any>) ?: return@mapNotNull null,
-                to = mapToLocation(map["to"] as? Map<String, Any>) ?: return@mapNotNull null,
-                distanceMeter =
-                    (map["distanceMeter"] as? Number)?.toDouble() ?: return@mapNotNull null,
-                durationMinutes =
-                    (map["durationMinutes"] as? Number)?.toDouble() ?: return@mapNotNull null,
-                path =
-                    (map["path"] as? List<Map<String, Double>>)?.mapNotNull { coord ->
-                      val lat = coord["latitude"] ?: return@mapNotNull null
-                      val lon = coord["longitude"] ?: return@mapNotNull null
-                      Coordinate(lat, lon)
-                    } ?: emptyList(),
-                transportMode = TransportMode.valueOf(map["transportMode"] as? String ?: "UNKNOWN"))
-          } catch (e: Exception) {
-            null
-          }
-        }
-
-    return Trip(uid, name, startDate, endDate, ownerId, locations, routeSegments)
-  }
-
-  /**
-   * Converts a map to a Location object.
-   *
-   * @param map The map to convert.
-   * @return The Location object.
-   */
-  private fun mapToLocation(map: Map<String, Any>?): Location? {
-    if (map == null) return null
     return try {
-      val name = map["name"] as? String ?: return null
-      val coordMap = map["coordinate"] as? Map<String, Double> ?: return null
-      val lat = coordMap["latitude"] ?: return null
-      val lon = coordMap["longitude"] ?: return null
-      Location(name = name, coordinate = Coordinate(lat, lon))
+      val uid = document.id
+      val name = document.getString("name") ?: return null
+      val ownerId = document.getString("ownerId") ?: return null
+
+      val locations =
+          (document.get("locations") as? List<*>)?.mapNotNull { it ->
+            (it as? Map<*, *>)?.let { mapToLocation(it) }
+          } ?: emptyList()
+
+      val routeSegments =
+          (document.get("routeSegments") as? List<*>)?.mapNotNull { it ->
+            (it as? Map<*, *>)?.let { mapToRouteSegment(it) }
+          } ?: emptyList()
+
+      val activities =
+          (document.get("activities") as? List<*>)?.mapNotNull { it ->
+            (it as? Map<*, *>)?.let { mapToActivity(it) }
+          } ?: emptyList()
+
+      val tripProfile =
+          (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
+
+      Trip(
+          uid = uid,
+          name = name,
+          ownerId = ownerId,
+          locations = locations,
+          routeSegments = routeSegments,
+          activities = activities,
+          tripProfile = tripProfile)
     } catch (e: Exception) {
+      Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null
     }
+  }
+
+  private fun mapToLocation(map: Map<*, *>): Location? {
+    val name = map["name"] as? String ?: return null
+    val coordMap = map["coordinate"] as? Map<*, *> ?: return null
+    val coordinate = mapToCoordinate(coordMap) ?: return null
+    return Location(coordinate, name)
+  }
+
+  private fun mapToCoordinate(map: Map<*, *>): Coordinate? {
+    val lat = (map["latitude"] as? Number)?.toDouble() ?: return null
+    val lon = (map["longitude"] as? Number)?.toDouble() ?: return null
+    return Coordinate(lat, lon)
+  }
+
+  private fun mapToActivity(map: Map<*, *>): Activity? {
+    val startDate = map["startDate"] as? Timestamp ?: return null
+    val endDate = map["endDate"] as? Timestamp ?: return null
+    val locationMap = map["location"] as? Map<*, *> ?: return null
+    val location = mapToLocation(locationMap) ?: return null
+    return Activity(startDate, endDate, location)
+  }
+
+  private fun mapToRouteSegment(map: Map<*, *>): RouteSegment? {
+    val fromMap = map["from"] as? Map<*, *> ?: return null
+    val toMap = map["to"] as? Map<*, *> ?: return null
+    val from = mapToLocation(fromMap) ?: return null
+    val to = mapToLocation(toMap) ?: return null
+
+    val distanceMeter = (map["distanceMeter"] as? Number)?.toInt() ?: return null
+    val durationMinutes = (map["durationMinutes"] as? Number)?.toInt() ?: return null
+
+    val pathList =
+        (map["path"] as? List<*>)?.mapNotNull { mapToCoordinate(it as Map<*, *>) } ?: emptyList()
+
+    val transportMode =
+        (map["transportMode"] as? String)?.let { TransportMode.valueOf(it) } ?: return null
+
+    val startDate = map["startDate"] as? Timestamp ?: return null
+    val endDate = map["endDate"] as? Timestamp ?: return null
+
+    return RouteSegment(
+        from, to, distanceMeter, durationMinutes, pathList, transportMode, startDate, endDate)
+  }
+
+  private fun mapToTripProfile(map: Map<*, *>): TripProfile? {
+    val startDate = map["startDate"] as? Timestamp ?: return null
+    val endDate = map["endDate"] as? Timestamp ?: return null
+
+    val preferredLocations =
+        (map["preferredLocations"] as? List<*>)?.mapNotNull { mapToLocation(it as Map<*, *>) }
+            ?: emptyList()
+
+    val preferences =
+        (map["preferences"] as? List<*>)?.mapNotNull { mapToRatedPreferences(it as Map<*, *>) }
+            ?: emptyList()
+
+    return TripProfile(startDate, endDate, preferredLocations, preferences)
+  }
+
+  private fun mapToRatedPreferences(map: Map<*, *>): RatedPreferences? {
+    val rating = (map["rating"] as? Number)?.toInt() ?: return null
+    val preferenceStr = map["preference"] as? String ?: return null
+    val userPreference = UserPreference.valueOf(preferenceStr)
+
+    return RatedPreferences(userPreference, rating)
   }
 }
