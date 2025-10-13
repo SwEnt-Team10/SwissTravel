@@ -15,9 +15,8 @@ data class User(
     val email: String,
     val profilePicUrl: String,
     val preferences:
-        List<
-            UserPreference> // TODO edit this when the user can change their preferences in the app
-                            // from 1 to 5
+        List<UserPreference> // TODO edit this when the user can change their preferences in the app
+    // from 1 to 5
 )
 
 /**
