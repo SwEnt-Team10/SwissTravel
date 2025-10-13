@@ -19,6 +19,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.DateSelectorRow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.flow.collectLatest
 
 object TripDateTestTags {
   const val NEXT = "next"
@@ -37,6 +38,18 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
 
   val context = LocalContext.current
   val formatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy") }
+
+  // --- Listen for validation events ---
+  LaunchedEffect(Unit) {
+    viewModel.validationEvents.collectLatest {
+      when (it) {
+        ValidationEvent.Proceed -> onNext()
+        ValidationEvent.EndDateIsBeforeStartDateError -> {
+          Toast.makeText(context, R.string.endDateError, Toast.LENGTH_SHORT).show()
+        }
+      }
+    }
+  }
 
   // --- Date picker dialogs ---
   val startDatePicker = remember {
@@ -100,13 +113,7 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
 
               // --- Done button ---
               Button(
-                  onClick = {
-                    if (endDate.isBefore(startDate)) {
-                      Toast.makeText(context, R.string.endDateError, Toast.LENGTH_SHORT).show()
-                    } else {
-                      onNext()
-                    }
-                  },
+                  onClick = { viewModel.onNextFromDateScreen() },
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.primary),
