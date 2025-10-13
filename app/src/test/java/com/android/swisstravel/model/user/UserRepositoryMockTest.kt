@@ -44,7 +44,7 @@ class UserRepositoryMockTest {
 
     val repo = UserRepositoryFirebase(auth, db)
 
-    // Act
+    // TripActivity
     val result: User = repo.getCurrentUser()
 
     // Assert -> falls back to default built from FirebaseUser (covers the else branch)
