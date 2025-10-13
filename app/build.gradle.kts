@@ -23,6 +23,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField("String", "MYSWITZERLAND_API_KEY", "\"${project.properties["MYSWITZERLAND_API_KEY"]}\"")
     }
 
     buildTypes {
