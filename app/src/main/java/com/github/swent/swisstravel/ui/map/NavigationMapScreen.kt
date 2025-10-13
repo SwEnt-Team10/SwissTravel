@@ -1,48 +1,25 @@
 package com.github.swent.swisstravel.ui.map
 
-import android.Manifest
-import android.annotation.SuppressLint
-import android.content.pm.PackageManager
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.gestures.Orientation
-import androidx.compose.foundation.gestures.rememberScrollableState
-import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.material3.BottomSheetScaffold
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
-import com.mapbox.common.location.Location
-import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraOptions
-import com.mapbox.maps.EdgeInsets
-import com.mapbox.maps.MapView
+import com.mapbox.maps.extension.compose.MapEffect
+import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.style.expressions.dsl.generated.mod
-import com.mapbox.maps.plugin.LocationPuck2D
-import com.mapbox.maps.plugin.animation.camera
-import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
-import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -50,13 +27,8 @@ import com.mapbox.navigation.base.route.NavigationRoute
 import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
 import com.mapbox.navigation.core.MapboxNavigationProvider
-import com.mapbox.navigation.core.replay.route.ReplayProgressObserver
-import com.mapbox.navigation.core.replay.route.ReplayRouteMapper
-import com.mapbox.navigation.core.trip.session.LocationMatcherResult
-import com.mapbox.navigation.core.trip.session.LocationObserver
-import com.mapbox.navigation.ui.maps.camera.NavigationCamera
-import com.mapbox.navigation.ui.maps.camera.data.MapboxNavigationViewportDataSource
-import com.mapbox.navigation.ui.maps.location.NavigationLocationProvider
+import com.mapbox.navigation.core.directions.session.RoutesObserver
+import com.mapbox.navigation.core.directions.session.RoutesUpdatedResult
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
@@ -68,6 +40,7 @@ object NavigationMapScreenTestTags {
   const val BOTTOM_SHEET = "bottomSheet"
   const val ENTER_BUTTON = "enterButton"
   const val EXIT_BUTTON = "exitButton"
+  const val MAP = "map"
 }
 
 @Composable
@@ -76,8 +49,7 @@ fun EnterMapButton(navigationActions: NavigationActions?) {
     Button(
         onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
         modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_BUTTON)) {
-          // this will be modified to an "extend" icon, when a preview of the map will be
-          // implemented
+          // TODO : modify this to an "extend" icon when the map preview is implemented
           Text("Enter Map")
         }
   }
@@ -85,47 +57,15 @@ fun EnterMapButton(navigationActions: NavigationActions?) {
 
 @Composable
 fun NavigationMapScreen(navigationActions: NavigationActions) {
-  val context = LocalContext.current
-  var hasPermission by remember {
-    mutableStateOf(
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED)
-  }
-
-  val permissionLauncher =
-      rememberLauncherForActivityResult(
-          contract = ActivityResultContracts.RequestMultiplePermissions()) { perms ->
-            hasPermission = perms[Manifest.permission.ACCESS_COARSE_LOCATION] == true
-            if (!hasPermission) {
-              Toast.makeText(
-                      context,
-                      "Location permission denied. Enable it in settings.",
-                      Toast.LENGTH_LONG)
-                  .show()
-            }
-          }
-
-  LaunchedEffect(Unit) {
-    if (!hasPermission) {
-      permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-    }
-  }
-
-  if (hasPermission) {
-    NavigationMap(navigationActions = navigationActions)
-  } else {
-    Box(Modifier.fillMaxSize()) {
-      Button(
-          onClick = {
-            permissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION))
-          },
-          modifier = Modifier.testTag(NavigationMapScreenTestTags.PERMISSION_BUTTON)) {
-            Text("Grant location permission")
-          }
-    }
-  }
+  Button(
+      onClick = { navigationActions.navigateTo(Screen.CurrentTrip) },
+      modifier = Modifier.testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
+        Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Exit Map Icon")
+      }
+  NavigationMap(navigationActions)
 }
 
+/* TODO : delete if we choose to implement view A (see Figma)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BottomSheet(navigationActions: NavigationActions) {
@@ -157,179 +97,75 @@ fun BottomSheet(navigationActions: NavigationActions) {
           NavigationMap(navigationActions = navigationActions)
         }
       }
-}
+} */
 
 @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 @Composable
 fun NavigationMap(navigationActions: NavigationActions) {
   val context = LocalContext.current
-  val density = LocalDensity.current
 
-  // Map + Navigation state holders
-  val mapViewState = remember { mutableStateOf<MapView?>(null) }
-  val navigationLocationProvider = remember { NavigationLocationProvider() }
-  val replayRouteMapper = remember { ReplayRouteMapper() }
+  // get a route line object (to access methods for data)
+  val routeLineApiOptions = MapboxRouteLineApiOptions.Builder().build()
+  val routeLineApi = MapboxRouteLineApi(routeLineApiOptions)
 
-  // Route line + camera state
-  var viewportDataSource by remember { mutableStateOf<MapboxNavigationViewportDataSource?>(null) }
-  var navigationCamera by remember { mutableStateOf<NavigationCamera?>(null) }
-  val routeLineApi by remember {
-    mutableStateOf(MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build()))
-  }
-  val routeLineView by remember {
-    mutableStateOf(MapboxRouteLineView(MapboxRouteLineViewOptions.Builder(context).build()))
-  }
+  // get a route line view object (to display the route)
+  val routeLineViewOptions = MapboxRouteLineViewOptions.Builder(context).build()
+  val routeLineView = MapboxRouteLineView(routeLineViewOptions)
 
-  // Start and End positions
-  val startPoint = Point.fromLngLat(-122.43539772352648, 37.77440680146262)
-  val endPoint = Point.fromLngLat(-122.42409811526268, 37.76556957793795)
-
-  // Create MapboxNavigation once for this screen
+  // create the main map component (a "mapboxNavigation" instance)
   val mapboxNavigation = remember {
     MapboxNavigationProvider.create(NavigationOptions.Builder(context).build())
   }
 
-  // Observers
-  val routesObserver = remember {
-    com.mapbox.navigation.core.directions.session.RoutesObserver { routeUpdate ->
-      val mv = mapViewState.value ?: return@RoutesObserver
-      if (routeUpdate.navigationRoutes.isNotEmpty()) {
-        // draw the route
-        routeLineApi.setNavigationRoutes(routeUpdate.navigationRoutes) { drawData ->
-          mv.mapboxMap.style?.let { style -> routeLineView.renderRouteDrawData(style, drawData) }
+  // TODO : change these hardcoded points to variables
+  val origin = com.mapbox.geojson.Point.fromLngLat(-122.43539772352648, 37.77440680146262)
+  val destination = com.mapbox.geojson.Point.fromLngLat(-122.42409811526268, 37.76556957793795)
+
+  // get the possible routes from origin to destination
+  val routeOptions =
+      RouteOptions.builder()
+          .applyDefaultNavigationOptions()
+          .coordinatesList(listOf(origin, destination)) // can add intermediary points here
+          .build()
+
+  val callback =
+      object : NavigationRouterCallback {
+        override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {}
+
+        override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {}
+
+        override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
+          mapboxNavigation.setNavigationRoutes(routes)
         }
-
-        // update viewport and go to overview
-        viewportDataSource?.onRouteChanged(routeUpdate.navigationRoutes.first())
-        viewportDataSource?.evaluate()
-        navigationCamera?.requestNavigationCameraToOverview()
       }
-    }
-  }
 
-  val locationObserver = remember {
-    object : LocationObserver {
-      override fun onNewRawLocation(rawLocation: Location) {}
+  LaunchedEffect(Unit) { mapboxNavigation.requestRoutes(routeOptions, callback) }
 
-      override fun onNewLocationMatcherResult(locationMatcherResult: LocationMatcherResult) {
-        val enhanced = locationMatcherResult.enhancedLocation
-        navigationLocationProvider.changePosition(
-            location = enhanced, keyPoints = locationMatcherResult.keyPoints)
-        viewportDataSource?.onLocationChanged(enhanced)
-        viewportDataSource?.evaluate()
-        navigationCamera?.requestNavigationCameraToFollowing()
-      }
-    }
-  }
+  // create a map
+  val mapViewportState = rememberMapViewportState()
+  MapboxMap(modifier = Modifier.fillMaxSize(), mapViewportState = mapViewportState) {
+    MapEffect(Unit) { mapView ->
 
-  // Build the MapView inside Compose
-  Box(
-      Modifier.fillMaxSize()
-          .scrollable(
-              rememberScrollableState {
-                // view world deltas should be reflected in compose world
-                // components that participate in nested scrolling
-                it
-              },
-              Orientation.Vertical)) {
-        AndroidView(
-            modifier = Modifier.fillMaxSize(),
-            factory = { ctx ->
-              MapView(ctx).apply {
-                mapboxMap.setCamera(
-                    CameraOptions.Builder()
-                        .center(Point.fromLngLat(-122.43539772352648, 37.77440680146262))
-                        .zoom(14.0)
-                        .build())
-                // Enable location puck using NavigationLocationProvider
-                location.apply {
-                  setLocationProvider(navigationLocationProvider)
-                  locationPuck = LocationPuck2D() // replaced later with default 2D puck as well
-                  enabled = true
+      // observer to update the route on the map when routes change
+      val routesObserver =
+          object : RoutesObserver {
+            override fun onRoutesChanged(result: RoutesUpdatedResult) {
+              val alternativesMetadata =
+                  mapboxNavigation.getAlternativeMetadataFor(result.navigationRoutes)
+              routeLineApi.setNavigationRoutes(result.navigationRoutes, alternativesMetadata) {
+                  routeDrawData ->
+                mapView.getMapboxMap().getStyle()?.let { style ->
+                  routeLineView.renderRouteDrawData(style, routeDrawData)
                 }
-                mapViewState.value = this
-
-                // Viewport, padding, and camera
-                viewportDataSource =
-                    MapboxNavigationViewportDataSource(mapboxMap).also { vds ->
-                      val top = with(density) { 180.dp.toPx().toDouble() }
-                      val left = with(density) { 40.dp.toPx().toDouble() }
-                      val bottom = with(density) { 150.dp.toPx().toDouble() }
-                      val right = with(density) { 40.dp.toPx().toDouble() }
-                      vds.followingPadding = EdgeInsets(top, left, bottom, right)
-                    }
-                navigationCamera = NavigationCamera(mapboxMap, camera, viewportDataSource!!)
               }
-            },
-            update = { /* no-op */},
-        )
-        Button(
-            onClick = { navigationActions.navigateTo(Screen.CurrentTrip) },
-            modifier =
-                Modifier.align(Alignment.TopStart)
-                    .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
-              Text("Exit Navigation")
             }
-      }
+          }
 
-  // Wire up Navigation lifecycle with Compose
-  DisposableEffect(Unit) {
-    // Register observers and kick off a replayed trip session
-    val mv = mapViewState.value
-    if (mv != null) {
-      // ensure the nice default puck
-      mv.location.apply {
-        setLocationProvider(navigationLocationProvider)
-        locationPuck = createDefault2DPuck()
-        enabled = true
-      }
-    }
-
-    val replayProgressObserver = ReplayProgressObserver(mapboxNavigation.mapboxReplayer)
-    mapboxNavigation.registerRoutesObserver(routesObserver)
-    mapboxNavigation.registerLocationObserver(locationObserver)
-    mapboxNavigation.registerRouteProgressObserver(replayProgressObserver)
-    mapboxNavigation.startReplayTripSession()
-
-    // Request a simple 2-point route and push replay events
-    val origin = Point.fromLngLat(-122.43539772352648, 37.77440680146262)
-    val destination = Point.fromLngLat(-122.42409811526268, 37.76556957793795)
-
-    @SuppressLint("MissingPermission")
-    fun requestRoute() {
-      mapboxNavigation.requestRoutes(
-          RouteOptions.builder()
-              .applyDefaultNavigationOptions()
-              .coordinatesList(listOf(origin, destination))
-              .layersList(listOf(mapboxNavigation.getZLevel(), null))
-              .build(),
-          object : NavigationRouterCallback {
-            override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {}
-
-            override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {}
-
-            override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
-              mapboxNavigation.setNavigationRoutes(routes)
-
-              // Simulate user movement along the route
-              val replayData =
-                  replayRouteMapper.mapDirectionsRouteGeometry(routes.first().directionsRoute)
-              mapboxNavigation.mapboxReplayer.pushEvents(replayData)
-              mapboxNavigation.mapboxReplayer.seekTo(replayData.first())
-              mapboxNavigation.mapboxReplayer.play()
-            }
-          })
-    }
-
-    requestRoute()
-
-    onDispose {
-      // Unregister and clean up
-      mapboxNavigation.unregisterRoutesObserver(routesObserver)
-      mapboxNavigation.unregisterLocationObserver(locationObserver)
-      mapboxNavigation.stopTripSession()
-      MapboxNavigationProvider.destroy() // releases the singleton instance
-      mapViewState.value = null
+      // add the route observer to the map component
+      mapboxNavigation.registerRoutesObserver(routesObserver)
     }
   }
+
+  // create a manageable lifecycle
+  DisposableEffect(Unit) { onDispose { MapboxNavigationProvider.destroy() } }
 }
