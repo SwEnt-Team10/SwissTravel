@@ -25,7 +25,7 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
   val tripSettings by viewModel.tripSettings.collectAsState()
   var travelers by remember { mutableStateOf(tripSettings.travelers) }
 
-  LaunchedEffect(tripSettings.travelers) { travelers = tripSettings.travelers }
+  LaunchedEffect(travelers) { viewModel.updateTravelers(travelers.adults, travelers.children) }
 
   Surface(
       modifier = Modifier.fillMaxSize().testTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN),
@@ -76,10 +76,7 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
 
               // --- Done button ---
               Button(
-                  onClick = {
-                    viewModel.updateTravelers(travelers.adults, travelers.children)
-                    onNext()
-                  },
+                  onClick = onNext,
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.primary),

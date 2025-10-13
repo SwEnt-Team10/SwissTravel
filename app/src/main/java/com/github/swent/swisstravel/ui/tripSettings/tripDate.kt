@@ -32,6 +32,8 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
     mutableStateOf(tripSettings.date.endDate ?: LocalDate.now().plusDays(1))
   }
 
+  LaunchedEffect(startDate, endDate) { viewModel.updateDates(startDate, endDate) }
+
   val context = LocalContext.current
   val formatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy") }
 
@@ -97,10 +99,7 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
 
               // --- Done button ---
               Button(
-                  onClick = {
-                    viewModel.updateDates(startDate, endDate)
-                    onNext()
-                  },
+                  onClick = onNext,
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.primary),

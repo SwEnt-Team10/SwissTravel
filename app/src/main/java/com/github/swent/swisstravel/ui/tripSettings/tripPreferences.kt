@@ -48,9 +48,8 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
   val tripSettings by viewModel.tripSettings.collectAsState()
   var prefs by remember { mutableStateOf(tripSettings.preferences) }
 
-  LaunchedEffect(tripSettings.preferences) { prefs = tripSettings.preferences }
+  LaunchedEffect(prefs) { viewModel.updatePreferences(prefs) }
 
-  // Light beige-like background as in Figma
   Surface(
       modifier = Modifier.fillMaxSize().testTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN),
       color = MaterialTheme.colorScheme.background) {
@@ -97,10 +96,7 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
 
               // --- Done button ---
               Button(
-                  onClick = {
-                    viewModel.updatePreferences(prefs)
-                    onDone()
-                  },
+                  onClick = onDone,
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.primary),
