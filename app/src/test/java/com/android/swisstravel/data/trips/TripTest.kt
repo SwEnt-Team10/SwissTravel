@@ -39,8 +39,8 @@ class TripTest {
           RouteSegment(
               from = listActivities[0].location,
               to = listActivities[1].location,
-              distanceMeter = 278000.0, // ~278 km
-              durationMinutes = 140.0,
+              distanceMeter = 278000, // ~278 km
+              durationMinutes = 140,
               path = listOf(Coordinate(46.2074, 6.1551), Coordinate(47.3850, 8.5736)),
               transportMode = TransportMode.TRAIN,
               startDate = Timestamp(1734005400, 0), // 10:30 (30 min after Geneva activity)
@@ -51,8 +51,8 @@ class TripTest {
           RouteSegment(
               from = listActivities[1].location,
               to = Location(name = "Lucerne Station", coordinate = Coordinate(47.0503, 8.3102)),
-              distanceMeter = 52000.0, // ~52 km
-              durationMinutes = 45.0,
+              distanceMeter = 52000, // ~52 km
+              durationMinutes = 45,
               path = listOf(Coordinate(47.3850, 8.5736), Coordinate(47.0503, 8.3102)),
               transportMode = TransportMode.TRAIN,
               startDate = Timestamp(1734017400, 0), // 14:30 (after Zurich activity + 20 min pause)
@@ -63,8 +63,8 @@ class TripTest {
           RouteSegment(
               from = Location(name = "Lucerne Station", coordinate = Coordinate(47.0503, 8.3102)),
               to = listActivities[2].location,
-              distanceMeter = 2200.0,
-              durationMinutes = 20.0,
+              distanceMeter = 2200,
+              durationMinutes = 20,
               path = listOf(Coordinate(47.0503, 8.3102), Coordinate(47.0502, 8.3103)),
               transportMode = TransportMode.BUS,
               startDate = Timestamp(1734021900, 0), // 15:45 (after 30-min pause)
@@ -73,12 +73,12 @@ class TripTest {
 
   private val orderedTripElements =
       listOf(
-          TripElement.Act(listActivities[0]), // Geneva activity
-          TripElement.Segment(listRouteSegments[0]), // Geneva → Zurich
-          TripElement.Act(listActivities[1]), // Zurich activity
-          TripElement.Segment(listRouteSegments[1]), // Zurich → Lucerne (part 1)
-          TripElement.Segment(listRouteSegments[2]), // Lucerne station → museum
-          TripElement.Act(listActivities[2]) // Lucerne activity
+          TripElement.TripActivity(listActivities[0]), // Geneva activity
+          TripElement.TripSegment(listRouteSegments[0]), // Geneva → Zurich
+          TripElement.TripActivity(listActivities[1]), // Zurich activity
+          TripElement.TripSegment(listRouteSegments[1]), // Zurich → Lucerne (part 1)
+          TripElement.TripSegment(listRouteSegments[2]), // Lucerne station → museum
+          TripElement.TripActivity(listActivities[2]) // Lucerne activity
           )
 
   private val trip =
@@ -99,8 +99,14 @@ class TripTest {
 
   @Test
   fun testGetAllTripElementsOrderedFromChosenTime() {
-    val tripCropped = trip.getUpcomingTripElements(Timestamp(1734018400, 0))
-    assertEquals(tripCropped, orderedTripElements.subList(3, orderedTripElements.size))
+    val tripCropped = trip.getUpcomingTripElements(Timestamp(1734018400, 0), true)
+    assertEquals(orderedTripElements.subList(3, orderedTripElements.size), tripCropped)
+  }
+
+  @Test
+  fun testGetAllTripElementsOrderedAfterChosenTime() {
+    val tripCropped = trip.getUpcomingTripElements(Timestamp(1734018400, 0), false)
+    assertEquals(orderedTripElements.subList(4, orderedTripElements.size), tripCropped)
   }
 
   @Test

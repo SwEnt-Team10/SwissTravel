@@ -18,8 +18,8 @@ import kotlin.math.roundToInt
 data class RouteSegment(
     val from: Location,
     val to: Location,
-    val distanceMeter: Double,
-    val durationMinutes: Double,
+    val distanceMeter: Int,
+    val durationMinutes: Int,
     val path: List<Coordinate>,
     val transportMode: TransportMode,
     val startDate: Timestamp,

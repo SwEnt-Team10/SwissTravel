@@ -24,7 +24,7 @@ data class Activity(
    *
    * @return The duration of the activity in minutes.
    */
-  fun estimatedTime(): Long {
-    return (endDate.seconds - startDate.seconds) / 60
+  fun estimatedTime(): Int {
+    return ((endDate.seconds - startDate.seconds) / 60).toInt()
   }
 }

@@ -25,8 +25,8 @@ class RouteSegmentTest {
       RouteSegment(
           from = from,
           to = to,
-          distanceMeter = 1500.0,
-          durationMinutes = 30.0,
+          distanceMeter = 1500,
+          durationMinutes = 30,
           path = path,
           transportMode = mode,
           startDate = Timestamp.now(),
@@ -37,8 +37,8 @@ class RouteSegmentTest {
         RouteSegment(
             from = from,
             to = to,
-            distanceMeter = 1500.0,
-            durationMinutes = 30.0,
+            distanceMeter = 1500,
+            durationMinutes = 30,
             path = path,
             transportMode = TransportMode.UNKNOWN,
             startDate = Timestamp.now(),
