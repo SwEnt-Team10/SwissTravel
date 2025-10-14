@@ -1,13 +1,23 @@
-package com.android.swisstravel.ui
+package com.github.swent.swisstravel.ui
 
-import com.github.swent.swisstravel.model.user.*
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.displayString
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.just
+import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.*
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.*
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -45,11 +55,11 @@ class ProfileScreenViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertEquals(fakeUser.name, state.name)
-    assertEquals(fakeUser.email, state.email)
-    assertEquals(fakeUser.profilePicUrl, state.profilePicUrl)
-    assertEquals(fakeUser.preferences.map { it.displayString() }, state.selectedPreferences)
-    assertNull(state.errorMsg)
+    Assert.assertEquals(fakeUser.name, state.name)
+    Assert.assertEquals(fakeUser.email, state.email)
+    Assert.assertEquals(fakeUser.profilePicUrl, state.profilePicUrl)
+    Assert.assertEquals(fakeUser.preferences.map { it.displayString() }, state.selectedPreferences)
+    Assert.assertNull(state.errorMsg)
   }
 
   @Test
@@ -60,7 +70,7 @@ class ProfileScreenViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertTrue(state.errorMsg!!.contains("Network error"))
+    Assert.assertTrue(state.errorMsg!!.contains("Network error"))
   }
 
   @Test
@@ -71,8 +81,8 @@ class ProfileScreenViewModelTest {
     viewModel.autoFill(fakeUser)
 
     val state = viewModel.uiState.value
-    assertEquals(fakeUser.email, state.email)
-    assertEquals(fakeUser.preferences.map { it.displayString() }, state.selectedPreferences)
+    Assert.assertEquals(fakeUser.email, state.email)
+    Assert.assertEquals(fakeUser.preferences.map { it.displayString() }, state.selectedPreferences)
   }
 
   @Test
@@ -81,9 +91,9 @@ class ProfileScreenViewModelTest {
     viewModel = ProfileScreenViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    assertNotNull(viewModel.uiState.value.errorMsg)
+    Assert.assertNotNull(viewModel.uiState.value.errorMsg)
     viewModel.clearErrorMsg()
-    assertNull(viewModel.uiState.value.errorMsg)
+    Assert.assertNull(viewModel.uiState.value.errorMsg)
   }
 
   @Test
@@ -98,7 +108,7 @@ class ProfileScreenViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertEquals(updatedPrefs, state.selectedPreferences)
+    Assert.assertEquals(updatedPrefs, state.selectedPreferences)
     coVerify(exactly = 1) { repository.updateUserPreferences(fakeUser.uid, updatedPrefs) }
   }
 
@@ -114,7 +124,7 @@ class ProfileScreenViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertTrue(state.errorMsg!!.contains("Firestore error"))
+    Assert.assertTrue(state.errorMsg!!.contains("Firestore error"))
   }
 
   @Test
@@ -131,7 +141,7 @@ class ProfileScreenViewModelTest {
 
     // Assert
     val state = viewModel.uiState.value
-    assertEquals("You must be signed in to save preferences.", state.errorMsg)
+    Assert.assertEquals("You must be signed in to save preferences.", state.errorMsg)
   }
 
   @Test
@@ -155,6 +165,6 @@ class ProfileScreenViewModelTest {
 
     // Assert
     val state = viewModel.uiState.value
-    assertEquals("You must be signed in to save preferences.", state.errorMsg)
+    Assert.assertEquals("You must be signed in to save preferences.", state.errorMsg)
   }
 }
