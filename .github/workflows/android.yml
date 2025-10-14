@@ -113,10 +113,8 @@ jobs:
           ./gradlew ktfmtCheck
 
       # Export Mapbox token for Gradle to download private mapbox artifacts
-      - name: Build with Gradle
-        env:
-          MAPBOX_ACCESS_TOKEN: ${{ secrets.MAP_BOX_SECRET }}
-        run: ./gradlew assembleDebug --info
+      - name: Set Mapbox token for Gradle
+        run: echo "MAPBOX_DOWNLOADS_TOKEN=${{ secrets.MAP_BOX_SECRET }}" >> $GITHUB_ENV
 
       # This step runs gradle commands to build the application
       - name: Assemble
