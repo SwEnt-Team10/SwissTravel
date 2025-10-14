@@ -37,7 +37,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     val firebaseUser = authResult.user!!
     val uid = firebaseUser.uid
 
-    // Act
+    // TripActivity
     val user = repository.getCurrentUser()
 
     // Assert
@@ -67,7 +67,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
             "preferences" to listOf("Hiking & Outdoor", "Skiing & Snow Sports"))
     Firebase.firestore.collection("users").document(uid).set(existingData).await()
 
-    // Act
+    // TripActivity
     val user = repository.getCurrentUser()
 
     // Assert
@@ -86,7 +86,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
 
     val createUser = repository.getCurrentUser()
 
-    // Act
+    // TripActivity
     val newPrefs = listOf("City", "Nature", "Adventure")
     repository.updateUserPreferences(uid, newPrefs)
 
@@ -101,7 +101,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     // Arrange: ensure no user is signed in
     FirebaseEmulator.auth.signOut()
 
-    // Act
+    // TripActivity
     val user = repository.getCurrentUser()
 
     // Assert
@@ -133,7 +133,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
       val repo = UserRepositoryFirebase(FirebaseEmulator.auth, Firebase.firestore)
       Firebase.firestore.disableNetwork().await()
 
-      // Act
+      // TripActivity
       val user = repo.getCurrentUser()
 
       // Assert
@@ -153,13 +153,13 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     FirebaseEmulator.auth.signInAnonymously().await()
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
-    // Act — no Firestore doc created yet
+    // TripActivity — no Firestore doc created yet
     repository.updateUserPreferences(uid, listOf("Museums"))
   }
 
   @Test
   fun updateUserPreferences_doesNothingForGuest() = runBlocking {
-    // Act
+    // TripActivity
     repository.updateUserPreferences("guest", listOf("Nature"))
     // Assert — should not throw
     assertTrue(true)
