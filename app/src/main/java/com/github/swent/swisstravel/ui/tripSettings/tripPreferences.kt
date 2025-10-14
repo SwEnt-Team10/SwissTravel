@@ -56,7 +56,6 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
       when (event) {
         is ValidationEvent.SaveSuccess -> {
           Toast.makeText(context, "Trip saved successfully!", Toast.LENGTH_SHORT).show()
-          onDone()
         }
         is ValidationEvent.SaveError -> {
           Toast.makeText(context, "Error: ${event.message}", Toast.LENGTH_LONG).show()
@@ -116,7 +115,10 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
 
               // --- Done button ---
               Button(
-                  onClick = { viewModel.saveTrip() },
+                  onClick = {
+                    viewModel.saveTrip()
+                    onDone() // always navigate back, even if saving fails
+                  },
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.primary),

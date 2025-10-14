@@ -70,6 +70,7 @@ class TripSettingsViewModel(
     _tripSettings.update { it.copy(preferences = prefs) }
   }
 
+  // Trip should be saved once an internet connection is available
   fun saveTrip() { // TODO test me
     viewModelScope.launch {
       try {
@@ -112,7 +113,7 @@ class TripSettingsViewModel(
 
   private fun mapToRatedPreferences(
       prefs: TripPreferences
-  ): List<RatedPreferences> { // TODO test me and check how do rating
+  ): List<RatedPreferences> { // TODO test me and check how do rating works
     val ratedPrefs = mutableListOf<RatedPreferences>()
     if (prefs.quickTraveler) ratedPrefs.add(RatedPreferences(UserPreference.QUICK, 5))
     if (prefs.sportyLevel) ratedPrefs.add(RatedPreferences(UserPreference.HIKING, 5))
