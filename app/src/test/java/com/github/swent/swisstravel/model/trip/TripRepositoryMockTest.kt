@@ -3,10 +3,13 @@ package com.github.swent.swisstravel.model.trip
 import com.github.swent.swisstravel.model.user.UserPreference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import io.mockk.*
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
+import org.bouncycastle.util.test.SimpleTest.runTest
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -17,6 +20,8 @@ class TripsRepositoryFirestoreTest {
   private lateinit var mockDb: FirebaseFirestore
   private lateinit var mockCollection: CollectionReference
   private lateinit var mockDocumentRef: DocumentReference
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
   private lateinit var repo: TripsRepositoryFirestore
 
   @Before
@@ -24,8 +29,11 @@ class TripsRepositoryFirestoreTest {
     mockDb = mockk()
     mockCollection = mockk()
     mockDocumentRef = mockk()
+    mockAuth = mockk()
+    mockUser = mockk()
+
     every { mockDb.collection(TRIPS_COLLECTION_PATH) } returns mockCollection
-    repo = TripsRepositoryFirestore(mockDb)
+    repo = TripsRepositoryFirestore(mockDb, mockAuth)
   }
 
   @After
@@ -33,6 +41,9 @@ class TripsRepositoryFirestoreTest {
     unmockkAll()
   }
 
+  // ---------------------------------------------------------------------------
+  // getNewUid
+  // ---------------------------------------------------------------------------
   @Test
   fun `getNewUid returns generated document id`() {
     every { mockCollection.document() } returns mockDocumentRef
@@ -43,6 +54,9 @@ class TripsRepositoryFirestoreTest {
     assertEquals("generated-uid-123", uid)
   }
 
+  // ---------------------------------------------------------------------------
+  // getTrip
+  // ---------------------------------------------------------------------------
   @Test
   fun `getTrip returns Trip when document contains valid data`() = runTest {
     val doc = mockk<DocumentSnapshot>()
@@ -106,41 +120,84 @@ class TripsRepositoryFirestoreTest {
     every { mockDb.collection(TRIPS_COLLECTION_PATH).document("bad").get() } returns
         Tasks.forResult(doc)
     every { doc.id } returns "bad"
-    every { doc.getString("name") } returns
-        null // missing required field triggers conversion failure
+    every { doc.getString("name") } returns null // Missing required field
 
     assertFailsWith<Exception> { repo.getTrip("bad") }
   }
 
+  // ---------------------------------------------------------------------------
+  // getAllTrips
+  // ---------------------------------------------------------------------------
+  @Test
+  fun `getAllTrips returns trips for current user`() = runTest {
+    val mockQuery = mockk<Query>()
+    val mockQuerySnapshot = mockk<QuerySnapshot>()
+    val doc = mockk<QueryDocumentSnapshot>()
+
+    every { mockAuth.currentUser } returns mockUser
+    every { mockUser.uid } returns "owner123"
+
+    every { mockDb.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", "owner123") } returns
+        mockQuery
+
+    every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
+    every { mockQuerySnapshot.documents } returns listOf(doc)
+    every { mockQuerySnapshot.iterator() } returns
+        listOf(doc).iterator() as MutableIterator<QueryDocumentSnapshot?>
+
+    every { doc.id } returns "tripX"
+    every { doc.getString("name") } returns "Trip X"
+    every { doc.getString("ownerId") } returns "owner123"
+    every { doc.get("locations") } returns emptyList<Map<String, Any>>()
+    every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("tripProfile") } returns null
+
+    val trips = repo.getAllTrips()
+
+    assertEquals(1, trips.size)
+    assertEquals("Trip X", trips.first().name)
+  }
+
+  @Test
+  fun `getAllTrips throws when user not logged in`() = runTest {
+    every { mockAuth.currentUser } returns null
+    assertFailsWith<Exception> { repo.getAllTrips() }
+  }
+
+  // ---------------------------------------------------------------------------
+  // addTrip
+  // ---------------------------------------------------------------------------
   @Test
   fun `addTrip calls set on document reference and completes`() = runTest {
     val trip =
         Trip(
             uid = "t1",
-            name = "Test",
+            name = "Test Trip",
             ownerId = "ownerX",
             locations = emptyList(),
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
 
-    val mockDocRefForId = mockk<DocumentReference>()
-    every { mockCollection.document(trip.uid) } returns mockDocRefForId
-    every { mockDocRefForId.set(trip) } returns Tasks.forResult(null)
+    every { mockCollection.document(trip.uid) } returns mockDocumentRef
+    every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
     repo.addTrip(trip)
 
-    verify { mockDocRefForId.set(trip) }
+    verify { mockDocumentRef.set(trip) }
   }
 
+  // ---------------------------------------------------------------------------
+  // deleteTrip
+  // ---------------------------------------------------------------------------
   @Test
   fun `deleteTrip calls delete on document reference and completes`() = runTest {
-    val mockDocRefForId = mockk<DocumentReference>()
-    every { mockCollection.document("todel") } returns mockDocRefForId
-    every { mockDocRefForId.delete() } returns Tasks.forResult(null)
+    every { mockCollection.document("todel") } returns mockDocumentRef
+    every { mockDocumentRef.delete() } returns Tasks.forResult(null)
 
     repo.deleteTrip("todel")
 
-    verify { mockDocRefForId.delete() }
+    verify { mockDocumentRef.delete() }
   }
 }

@@ -8,11 +8,8 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
-import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
 import junit.framework.Assert.assertEquals
 import junit.framework.Assert.assertTrue
 import kotlin.test.assertFailsWith
@@ -22,23 +19,28 @@ import org.junit.Before
 import org.junit.Test
 
 class TripsRepositoryEmulatorTest : SwissTravelTest() {
+
   private lateinit var repository: TripsRepositoryFirestore
 
   @Before
   override fun setUp() {
     super.setUp()
+    // Always clear the Firestore and Auth emulators before each test
     FirebaseEmulator.clearFirestoreEmulator()
-    repository = TripsRepositoryFirestore(Firebase.firestore)
+    FirebaseEmulator.clearAuthEmulator()
+
+    // Initialize repository using emulator Firestore + Auth
+    repository = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
   }
 
   @Test
   fun addTrip_and_getTrip_canBeRetrieved() = runBlocking {
-    // Arrange: create and sign in a fake Google user
+    // Arrange: create and sign in a fake Google user in emulator
     val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Tester", "tester@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
     FirebaseEmulator.auth.signInWithCredential(credential).await()
-    val uid = Firebase.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     // Build trip
     val tripId = repository.getNewUid()
@@ -65,12 +67,12 @@ class TripsRepositoryEmulatorTest : SwissTravelTest() {
 
   @Test
   fun getAllTrips_returnsTripsForCurrentUser() = runBlocking {
-    // Arrange: sign in user
+    // Arrange: sign in fake user in emulator
     val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("ListUser", "list@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
     FirebaseEmulator.auth.signInWithCredential(credential).await()
-    val uid = Firebase.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     val now = Timestamp.now()
     val trip1 =
@@ -105,32 +107,31 @@ class TripsRepositoryEmulatorTest : SwissTravelTest() {
   }
 
   @Test
-  fun deleteTrip_removesTrip() =
-      runBlocking<Unit> {
-        // Arrange: sign in user and add trip
-        val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("DelUser", "del@example.com")
-        FirebaseEmulator.createGoogleUser(fakeIdToken)
-        val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
-        FirebaseEmulator.auth.signInWithCredential(credential).await()
-        val uid = Firebase.auth.currentUser!!.uid
+  fun deleteTrip_removesTrip(): Unit = runBlocking {
+    // Arrange
+    val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("DelUser", "del@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
 
-        val now = Timestamp.now()
-        val trip =
-            Trip(
-                uid = repository.getNewUid(),
-                name = "To Delete",
-                ownerId = uid,
-                locations = listOf(Location(Coordinate(2.0, 2.0), "C")),
-                activities = emptyList(),
-                tripProfile = TripProfile(now, now, emptyList(), emptyList()),
-                routeSegments = emptyList())
+    val now = Timestamp.now()
+    val trip =
+        Trip(
+            uid = repository.getNewUid(),
+            name = "To Delete",
+            ownerId = uid,
+            locations = listOf(Location(Coordinate(2.0, 2.0), "C")),
+            activities = emptyList(),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList()),
+            routeSegments = emptyList())
 
-        repository.addTrip(trip)
+    repository.addTrip(trip)
 
-        // Act
-        repository.deleteTrip(trip.uid)
+    // Act
+    repository.deleteTrip(trip.uid)
 
-        // Assert: getTrip should fail — repository.getTrip throws when not found
-        assertFailsWith<Exception> { repository.getTrip(trip.uid) }
-      }
+    // Assert
+    assertFailsWith<Exception> { repository.getTrip(trip.uid) }
+  }
 }
