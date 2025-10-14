@@ -20,19 +20,19 @@ import org.junit.Test
 
 class CurrentTripScreenTest {
 
-  @get:Rule
-  val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setup() {
     composeTestRule.setContent {
       val navController = rememberNavController()
-      NavHost(
-        navController = navController,
-        startDestination = Screen.CurrentTrip.route
-      ) {
-        composable(Screen.CurrentTrip.route) { CurrentTripScreen(navigationActions = NavigationActions(navController)) }
-        composable(Screen.SelectedTripMap.route) { NavigationMapScreen(navigationActions = NavigationActions(navController)) }
+      NavHost(navController = navController, startDestination = Screen.CurrentTrip.route) {
+        composable(Screen.CurrentTrip.route) {
+          CurrentTripScreen(navigationActions = NavigationActions(navController))
+        }
+        composable(Screen.SelectedTripMap.route) {
+          NavigationMapScreen(navigationActions = NavigationActions(navController))
+        }
       }
     }
   }
@@ -52,7 +52,10 @@ class CurrentTripScreenTest {
   fun canEnterAndExitNavigationMap() = runTest {
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).performClick()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsNotDisplayed()
