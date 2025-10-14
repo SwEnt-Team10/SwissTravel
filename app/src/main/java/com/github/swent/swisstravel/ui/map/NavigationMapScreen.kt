@@ -40,11 +40,10 @@ object NavigationMapScreenTestTags {
 }
 
 object Locations {
-    val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
-    val ZERMATT = Point.fromLngLat(7.747, 46.019)
-    val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
-    val CHUV = Point.fromLngLat(6.6209, 46.5197)
-
+  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
+  val ZERMATT = Point.fromLngLat(7.747, 46.019)
+  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
+  val CHUV = Point.fromLngLat(6.6209, 46.5197)
 }
 
 @Composable
@@ -84,7 +83,9 @@ fun NavigationMap() {
   val routeOptions =
       RouteOptions.builder()
           .applyDefaultNavigationOptions()
-          .coordinatesList(listOf(Locations.EPFL_IC, Locations.OLYMPIC_MUSEUM)) // can add intermediary points here
+          .coordinatesList(
+              listOf(
+                  Locations.EPFL_IC, Locations.OLYMPIC_MUSEUM)) // can add intermediary points here
           .build()
 
   val callback =
