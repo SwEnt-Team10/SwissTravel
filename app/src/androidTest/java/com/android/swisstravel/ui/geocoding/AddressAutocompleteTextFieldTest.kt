@@ -11,13 +11,16 @@ class AddressAutocompleteTextFieldTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  @Test
-  fun testTextFieldAndSuggestionsDisplayed() {
-    val fakeViewModel = FakeAddressTextFieldViewModel()
-
+  private fun setContentWithFakeViewModel(fakeViewModel: FakeAddressTextFieldViewModel) {
     composeTestRule.setContent {
       AddressAutocompleteTextField(addressTextFieldViewModel = fakeViewModel)
     }
+  }
+
+  @Test
+  fun testTextFieldAndSuggestionsDisplayed() {
+    val fakeViewModel = FakeAddressTextFieldViewModel()
+    setContentWithFakeViewModel(fakeViewModel)
 
     composeTestRule
         .onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
@@ -27,5 +30,42 @@ class AddressAutocompleteTextFieldTest {
     composeTestRule
         .onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
         .assertAny(hasText("Lausanne"))
+  }
+
+  @Test
+  fun testSuggestionsDisappearAfterSelection() {
+    val fakeViewModel = FakeAddressTextFieldViewModel()
+    setContentWithFakeViewModel(fakeViewModel)
+
+    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION).performTextInput("Genève")
+
+    composeTestRule
+        .onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
+        .onFirst()
+        .performClick()
+
+    composeTestRule.onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION).assertCountEquals(0)
+
+    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
+  }
+
+  @Test
+  fun testClearTextField() {
+    val fakeViewModel = FakeAddressTextFieldViewModel()
+    setContentWithFakeViewModel(fakeViewModel)
+
+    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION).performTextReplacement("")
+
+    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
+  }
+
+  @Test
+  fun testEmptyInputShowsNoSuggestions() {
+    val fakeViewModel = FakeAddressTextFieldViewModel()
+    setContentWithFakeViewModel(fakeViewModel)
+
+    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION).performTextReplacement("")
+
+    composeTestRule.onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION).assertCountEquals(0)
   }
 }
