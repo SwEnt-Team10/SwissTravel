@@ -1,4 +1,4 @@
-package com.android.swisstravel.screen
+package com.github.swent.swisstravel.screen
 
 import androidx.compose.ui.test.SemanticsNodeInteractionsProvider
 import com.github.swent.swisstravel.resources.C
