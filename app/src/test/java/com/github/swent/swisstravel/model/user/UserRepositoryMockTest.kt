@@ -1,8 +1,5 @@
-package com.android.swisstravel.model.user
+package com.github.swent.swisstravel.model.user
 
-import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
-import com.github.swent.swisstravel.model.user.displayString
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -11,9 +8,12 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
-import io.mockk.*
+import io.mockk.Runs
+import io.mockk.every
+import io.mockk.just
+import io.mockk.mockk
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
+import org.junit.Assert
 import org.junit.Test
 
 class UserRepositoryMockTest {
@@ -49,9 +49,9 @@ class UserRepositoryMockTest {
     val result: User = repo.getCurrentUser()
 
     // Assert -> falls back to default built from FirebaseUser (covers the else branch)
-    assertEquals("uid123", result.uid)
-    assertEquals("Cacheless User", result.name)
-    assertEquals("cacheless@example.com", result.email)
-    assertEquals(emptyList<String>(), result.preferences.map { it.displayString() })
+    Assert.assertEquals("uid123", result.uid)
+    Assert.assertEquals("Cacheless User", result.name)
+    Assert.assertEquals("cacheless@example.com", result.email)
+    Assert.assertEquals(emptyList<String>(), result.preferences.map { it.displayString() })
   }
 }

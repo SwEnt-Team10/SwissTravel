@@ -220,6 +220,8 @@ dependencies {
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     androidTestImplementation(libs.kaspresso.compose.support)
+    testImplementation(kotlin("test"))
+    androidTestImplementation(kotlin("test"))
 }
 
 tasks.withType<Test> {
