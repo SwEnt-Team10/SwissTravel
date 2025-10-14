@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.testTag
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
+import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -36,6 +37,14 @@ object NavigationMapScreenTestTags {
   const val ENTER_MAP_BUTTON = "enterMapButton"
   const val EXIT_BUTTON = "exitButton"
   const val MAP = "map"
+}
+
+object Locations {
+    val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
+    val ZERMATT = Point.fromLngLat(7.747, 46.019)
+    val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
+    val CHUV = Point.fromLngLat(6.6209, 46.5197)
+
 }
 
 @Composable
@@ -71,26 +80,11 @@ fun NavigationMap() {
     MapboxNavigationProvider.create(NavigationOptions.Builder(context).build())
   }
 
-  // TODO : delete these hardcoded points when variables are introduced
-
-  // Hardcoded points for testing
-  val EPFL_IC = com.mapbox.geojson.Point.fromLngLat(6.563349085567107, 46.51823826885176)
-  val ZERMATT = com.mapbox.geojson.Point.fromLngLat(7.747, 46.019)
-  val OLYMPIC_MUSEUM = com.mapbox.geojson.Point.fromLngLat(6.6339, 46.5086)
-  val CHUV = com.mapbox.geojson.Point.fromLngLat(6.6209, 46.5197)
-  // ================================
-
-  // Hardcoded trips for testing
-  val EPFL_ZERMATT = listOf(EPFL_IC, ZERMATT)
-  val EPFL_OLYMPIC = listOf(EPFL_IC, OLYMPIC_MUSEUM)
-  val EPFL_CHUV_OLYMPIC = listOf(EPFL_IC, CHUV, OLYMPIC_MUSEUM)
-  // ================================
-
   // get the possible routes from origin to destination
   val routeOptions =
       RouteOptions.builder()
           .applyDefaultNavigationOptions()
-          .coordinatesList(EPFL_OLYMPIC) // can add intermediary points here
+          .coordinatesList(listOf(Locations.EPFL_IC, Locations.OLYMPIC_MUSEUM)) // can add intermediary points here
           .build()
 
   val callback =
@@ -112,7 +106,7 @@ fun NavigationMap() {
         MapEffect(Unit) { mapView ->
 
           // set the initial location of the map
-          val initialLocation = CameraOptions.Builder().center(EPFL_IC).zoom(14.0).build()
+          val initialLocation = CameraOptions.Builder().center(Locations.EPFL_IC).zoom(14.0).build()
           mapView.mapboxMap.setCamera(initialLocation)
 
           // observer to update the route on the map when routes change
