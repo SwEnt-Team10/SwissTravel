@@ -1,11 +1,5 @@
-package com.android.swisstravel.data.trips
+package com.github.swent.swisstravel.model.trip
 
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripProfile
-import com.github.swent.swisstravel.model.trip.isCurrent
-import com.github.swent.swisstravel.model.trip.isPast
-import com.github.swent.swisstravel.model.trip.isUpcoming
-import com.github.swent.swisstravel.model.trip.toZonedDateTime
 import com.google.firebase.Timestamp
 import java.time.Instant
 import java.time.temporal.ChronoUnit
