@@ -11,6 +11,7 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 class DummyScreenViewModel(
+    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val repository: TripsRepository = TripsRepositoryProvider.repository
 ) : ViewModel() {
   private val _trip = MutableStateFlow<Trip?>(null)
@@ -26,7 +28,13 @@ class DummyScreenViewModel(
 
   fun addTripModel() {
     viewModelScope.launch {
-      val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse("01/01/2025")!!
+      val firebaseUser = auth.currentUser
+      if (firebaseUser == null) {
+        throw IllegalStateException("not logged in")
+      }
+      val ownerId = firebaseUser.uid
+
+      val date = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse("01/01/2026")!!
       val routeSegment =
           RouteSegment(
               Location(Coordinate(46.52, 6.57), "EPFL"),
@@ -56,16 +64,16 @@ class DummyScreenViewModel(
 
       val trip =
           Trip(
-              uid = "testID",
+              uid = repository.getNewUid(),
               name = "testName",
-              ownerId = "testOwner",
+              ownerId = ownerId,
               locations =
                   listOf(
                       Location(Coordinate(46.52, 6.57), "EPFL"),
                       Location(Coordinate(35.1449, 136.9007), "Nagoya temple")),
               routeSegments = listOf(routeSegment, routeSegment2),
               activities = emptyList(),
-              tripProfile = TripProfile(Timestamp(date), Timestamp(date), emptyList(), emptyList()))
+              tripProfile = TripProfile(Timestamp.now(), Timestamp(date), emptyList(), emptyList()))
       repository.addTrip(trip)
     }
   }

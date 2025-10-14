@@ -3,6 +3,11 @@ package com.github.swent.swisstravel.ui.mytrips
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
+import com.github.swent.swisstravel.model.trip.isCurrent
+import com.github.swent.swisstravel.model.trip.isUpcoming
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -10,12 +15,13 @@ import kotlinx.coroutines.launch
 
 data class MyTripsUIState(
     val currentTrip: Trip? = null,
-    val upcomingTrips: List<Trips> = emptyList(),
+    val upcomingTrips: List<Trip> = emptyList(),
     val errorMsg: String? = null,
 )
 
-class MyTripsViewModel(private val tripsRepository: TripsRepository = TripsRepository.repository) :
-    ViewModel() {
+class MyTripsViewModel(
+    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
+) : ViewModel() {
 
   private val _uiState = MutableStateFlow(MyTripsUIState())
   val uiState: StateFlow<MyTripsUIState> = _uiState.asStateFlow()
