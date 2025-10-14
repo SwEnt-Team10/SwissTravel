@@ -25,7 +25,7 @@ data class User(
  * @property preference The user preference being rated.
  * @property rating The rating given by the user.
  */
-sealed class RatedPreferences(val preference: UserPreference, val rating: Int)
+data class RatedPreferences(val preference: UserPreference, val rating: Int)
 
 /**
  * Enum representing various user preferences.
