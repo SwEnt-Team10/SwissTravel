@@ -5,7 +5,6 @@ import com.github.swent.swisstravel.model.user.RatedPreferences
 import com.github.swent.swisstravel.model.user.UserPreference
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
