@@ -24,7 +24,7 @@ fun Timestamp.toZonedDateTime(): ZonedDateTime =
  */
 fun Trip.isUpcoming(): Boolean {
   val now = ZonedDateTime.now()
-  return startDate.toZonedDateTime().isAfter(now)
+  return tripProfile.startDate.toZonedDateTime().isAfter(now)
 }
 
 /**
@@ -38,8 +38,8 @@ fun Trip.isUpcoming(): Boolean {
  */
 fun Trip.isCurrent(): Boolean {
   val now = ZonedDateTime.now()
-  val start = startDate.toZonedDateTime()
-  val end = endDate.toZonedDateTime()
+  val start = tripProfile.startDate.toZonedDateTime()
+  val end = tripProfile.endDate.toZonedDateTime()
   return !start.isAfter(now) && !end.isBefore(now)
 }
 
@@ -54,5 +54,50 @@ fun Trip.isCurrent(): Boolean {
  */
 fun Trip.isPast(): Boolean {
   val now = ZonedDateTime.now()
-  return endDate.toZonedDateTime().isBefore(now)
+  return tripProfile.endDate.toZonedDateTime().isBefore(now)
 }
+
+/**
+ * Returns all trip elements ordered by start date.
+ *
+ * @return The list of trip elements.
+ */
+fun Trip.getAllTripElementsOrdered(): List<TripElement> {
+  val elements = mutableListOf<TripElement>()
+  elements.addAll(routeSegments.map { TripElement.TripSegment(it) })
+  elements.addAll(activities.map { TripElement.TripActivity(it) })
+  return elements.sortedBy { it.startDate.seconds }
+}
+
+/**
+ * Returns the upcoming trip elements.
+ *
+ * @param time The current time.
+ * @param getCurrent If true, returns the current trip element too, otherwise only the upcoming
+ * @return The list of upcoming trip elements.
+ */
+fun Trip.getUpcomingTripElements(
+    time: Timestamp = Timestamp.now(),
+    getCurrent: Boolean = false
+): List<TripElement> {
+  val allElements = getAllTripElementsOrdered()
+
+  val firstUpcomingIndex =
+      if (getCurrent) {
+        allElements.indexOfFirst { it.endDate.seconds > time.seconds }
+      } else {
+        allElements.indexOfFirst { it.startDate.seconds >= time.seconds }
+      }
+
+  /* There was no event during and after the current time */
+  return if (firstUpcomingIndex == -1) emptyList()
+  /* Return all upcoming events */
+  else allElements.subList(firstUpcomingIndex, allElements.size)
+}
+
+/**
+ * Returns the total time of the trip in hours.
+ *
+ * @return The total time of the trip in hours
+ */
+fun Trip.getTotalTime(): Double = tripProfile.getTotalTime()

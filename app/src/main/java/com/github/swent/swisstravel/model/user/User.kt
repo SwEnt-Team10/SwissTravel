@@ -14,8 +14,18 @@ data class User(
     val name: String,
     val email: String,
     val profilePicUrl: String,
-    val preferences: List<UserPreference>
+    val preferences:
+        List<UserPreference> // TODO edit this when the user can change their preferences in the app
+    // from 1 to 5
 )
+
+/**
+ * Represents a preference rating for a user.
+ *
+ * @property preference The user preference being rated.
+ * @property rating The rating given by the user.
+ */
+data class RatedPreferences(val preference: UserPreference, val rating: Int)
 
 /**
  * Enum representing various user preferences.

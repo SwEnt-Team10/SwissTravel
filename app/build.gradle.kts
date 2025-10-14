@@ -160,6 +160,7 @@ dependencies {
     // Material Design 3
     implementation(libs.compose.material3)
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation("androidx.compose.material:material-icons-extended:1.6.8")
     // Integration with activities
     implementation(libs.compose.activity)
     // Integration with ViewModels
@@ -219,6 +220,8 @@ dependencies {
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     androidTestImplementation(libs.kaspresso.compose.support)
+    testImplementation(kotlin("test"))
+    androidTestImplementation(kotlin("test"))
 }
 
 tasks.withType<Test> {
