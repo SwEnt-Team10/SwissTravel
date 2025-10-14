@@ -61,19 +61,16 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
   }
 
   private fun parseActivitiesFromJson(json: String): List<Activity> {
-    val root = JSONObject(json) // Top-level object
+    val root = JSONObject(json)
     val dataArray: JSONArray = root.optJSONArray("data") ?: return emptyList()
 
     val activities = mutableListOf<Activity>()
 
     for (i in 0 until dataArray.length()) {
       val item = dataArray.getJSONObject(i)
-
-      // Extract the name (title)
       val name = item.optString("name", "Unknown Activity")
-      val description = item.optString("description", "No description")
+      val description = item.optString("abstract", "No description")
 
-      // Extract the geo info
       val geo = item.optJSONObject("geo")
       if (geo != null) {
         val lat = geo.optDouble("latitude", Double.NaN)
@@ -82,18 +79,41 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
         if (!lat.isNaN() && !lon.isNaN()) {
           val coordinate = Coordinate(lat, lon)
           val location = Location(coordinate, name)
+          val imageArray = item.optJSONArray("image")
+          val imageUrls = mutableListOf<String>()
+          if (imageArray != null) {
+            for (j in 0 until imageArray.length()) {
+              val imgObj = imageArray.optJSONObject(j)
+              val url = imgObj?.optString("url")
+              if (!url.isNullOrBlank()) {
+                imageUrls.add(url)
+              }
+            }
+          }
 
           // Dummy start/end times for now
-          // NOTE STILL TODO
           val start = Timestamp.now()
           val end = Timestamp(start.seconds + 3600, 0)
 
-          activities.add(Activity(start, end, location, description))
+          activities.add(Activity(start, end, location, description, imageUrls))
         }
       }
     }
 
     return activities
+  }
+
+  private fun computeUrlWithPreferences(preferences: List<UserPreference>, limit: Int): String {
+    val facetsParam = preferences.joinToString(",") { it.toSwissTourismFacet() }
+
+    val facetFilters =
+        preferences.joinToString(",") {
+          "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
+        }
+
+    val encodedFilters = URLEncoder.encode(facetFilters, "UTF-8").replace("%252A", "%2A")
+
+    return "$baseUrl&hitsPerPage=$limit&facets=$facetsParam&facet.filter=$encodedFilters"
   }
 
   override suspend fun getMostPopularActivities(limit: Int): List<Activity> {
@@ -114,20 +134,6 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       preferences: List<UserPreference>,
       limit: Int
   ): List<Activity> {
-
-    val facetsParam = preferences.joinToString(",") { it.toSwissTourismFacet() }
-
-    val facetFilters =
-        preferences.joinToString(",") {
-          "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
-        }
-
-    val encodedFilters =
-        URLEncoder.encode(facetFilters, "UTF-8")
-            .replace("%252A", "%2A") // fix potential double-encoding of '*'
-
-    val url = "$baseUrl&hitsPerPage=$limit&facets=$facetsParam&facet.filter=$encodedFilters"
-
-    return fetchActivitiesFromUrl(url)
+    return fetchActivitiesFromUrl(computeUrlWithPreferences(preferences, limit))
   }
 }

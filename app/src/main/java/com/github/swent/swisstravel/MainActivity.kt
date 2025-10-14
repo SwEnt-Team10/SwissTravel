@@ -15,13 +15,13 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import com.github.swent.swisstravel.model.trip.activity.ApiPlaygroundSimpleScreen
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
-import com.github.swent.swisstravel.ui.profile.ApiPlaygroundSimpleScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme

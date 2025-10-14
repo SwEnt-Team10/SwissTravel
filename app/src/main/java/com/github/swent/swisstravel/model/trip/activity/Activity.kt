@@ -15,6 +15,7 @@ data class Activity(
     val endDate: Timestamp,
     val location: Location,
     val description: String,
+    val imageUrls: List<String> = emptyList(),
 ) {
   /** Gets the name of the activity */
   fun getName(): String {
