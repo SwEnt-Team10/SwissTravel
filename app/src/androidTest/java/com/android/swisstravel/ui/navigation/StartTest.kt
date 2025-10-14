@@ -13,7 +13,6 @@ import com.android.swisstravel.utils.FirestoreSwissTravelTest
 import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
-import com.google.firebase.auth.FirebaseAuth
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -51,7 +50,7 @@ class StartTest : FirestoreSwissTravelTest() {
   @Test
   fun testStartScreenDisplaysCorrectlyWhenLoggedIn() {
 
-    FirebaseAuth.getInstance().signInAnonymously()
+    FirebaseEmulator.auth.signInAnonymously()
 
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) { FirebaseEmulator.auth.currentUser != null }
     composeTestRule.setContent { SwissTravelApp() }
