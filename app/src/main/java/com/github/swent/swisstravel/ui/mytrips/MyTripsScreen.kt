@@ -61,7 +61,7 @@ fun MyTripsScreen(
   // Fetch trips when the screen is recomposed
   LaunchedEffect(Unit) { myTripsViewModel.refreshUIState() }
 
-  // Show error message if fetching todos fails
+  // Show error message if fetching Trips fails
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let { message ->
       Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
