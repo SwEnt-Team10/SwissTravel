@@ -108,10 +108,6 @@ android {
 configurations.all {
     resolutionStrategy {
         force("com.google.protobuf:protobuf-javalite:3.25.1")
-        force("org.jacoco:org.jacoco.agent:0.8.10")
-        force("org.jacoco:org.jacoco.core:0.8.10")
-        force("org.jacoco:org.jacoco.report:0.8.10")
-        force("org.jacoco:org.jacoco.ant:0.8.10")
     }
     exclude(group = "com.google.protobuf", module = "protobuf-lite")
 }
