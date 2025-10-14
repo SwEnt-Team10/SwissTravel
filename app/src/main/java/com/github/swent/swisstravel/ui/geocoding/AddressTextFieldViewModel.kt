@@ -13,9 +13,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 interface AddressTextFieldViewModelContract {
-    val addressState: StateFlow<AddressTextFieldState>
-    fun setLocation(location: Location)
-    fun setLocationQuery(query: String)
+  val addressState: StateFlow<AddressTextFieldState>
+
+  fun setLocation(location: Location)
+
+  fun setLocationQuery(query: String)
 }
 
 data class AddressTextFieldState(
@@ -29,34 +31,29 @@ class AddressTextFieldViewModel(
         NominatimLocationRepository(HttpClientProvider.client)
 ) : ViewModel(), AddressTextFieldViewModelContract {
 
-    private val _addressState = MutableStateFlow(AddressTextFieldState())
-    override val addressState: StateFlow<AddressTextFieldState> = _addressState.asStateFlow()
+  private val _addressState = MutableStateFlow(AddressTextFieldState())
+  override val addressState: StateFlow<AddressTextFieldState> = _addressState.asStateFlow()
 
-    override fun setLocation(location: Location) {
-        _addressState.value = _addressState.value.copy(
-            selectedLocation = location,
-            locationQuery = location.name
-        )
-    }
+  override fun setLocation(location: Location) {
+    _addressState.value =
+        _addressState.value.copy(selectedLocation = location, locationQuery = location.name)
+  }
 
-    override fun setLocationQuery(query: String) {
-        _addressState.value = _addressState.value.copy(locationQuery = query)
+  override fun setLocationQuery(query: String) {
+    _addressState.value = _addressState.value.copy(locationQuery = query)
 
-        if (query.isNotEmpty()) {
-            viewModelScope.launch {
-                try {
-                    val results = locationRepository.search(query)
-                    _addressState.value =
-                        _addressState.value.copy(locationSuggestions = results)
-                } catch (e: Exception) {
-                    Log.e("AddressTextFieldViewModel", "Error fetching location suggestions", e)
-                    _addressState.value =
-                        _addressState.value.copy(locationSuggestions = emptyList())
-                }
-            }
-        } else {
-            _addressState.value =
-                _addressState.value.copy(locationSuggestions = emptyList())
+    if (query.isNotEmpty()) {
+      viewModelScope.launch {
+        try {
+          val results = locationRepository.search(query)
+          _addressState.value = _addressState.value.copy(locationSuggestions = results)
+        } catch (e: Exception) {
+          Log.e("AddressTextFieldViewModel", "Error fetching location suggestions", e)
+          _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
         }
+      }
+    } else {
+      _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
     }
+  }
 }

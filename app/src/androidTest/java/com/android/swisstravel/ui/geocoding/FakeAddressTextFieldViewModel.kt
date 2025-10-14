@@ -9,24 +9,23 @@ import kotlinx.coroutines.flow.StateFlow
 
 class FakeAddressTextFieldViewModel : AddressTextFieldViewModelContract {
 
-    private val _state = MutableStateFlow(
-        AddressTextFieldState(
-            locationQuery = "",
-            locationSuggestions = listOf(
-                Location(Coordinate(46.5197, 6.6323), "Lausanne"),
-                Location(Coordinate(46.2044, 6.1432), "Genève"),
-                Location(Coordinate(47.3769, 8.5417), "Zurich")
-            )
-        )
-    )
+  private val _state =
+      MutableStateFlow(
+          AddressTextFieldState(
+              locationQuery = "",
+              locationSuggestions =
+                  listOf(
+                      Location(Coordinate(46.5197, 6.6323), "Lausanne"),
+                      Location(Coordinate(46.2044, 6.1432), "Genève"),
+                      Location(Coordinate(47.3769, 8.5417), "Zurich"))))
 
-    override val addressState: StateFlow<AddressTextFieldState> = _state
+  override val addressState: StateFlow<AddressTextFieldState> = _state
 
-    override fun setLocationQuery(query: String) {
-        _state.value = _state.value.copy(locationQuery = query)
-    }
+  override fun setLocationQuery(query: String) {
+    _state.value = _state.value.copy(locationQuery = query)
+  }
 
-    override fun setLocation(location: Location) {
-        _state.value = _state.value.copy(selectedLocation = location)
-    }
+  override fun setLocation(location: Location) {
+    _state.value = _state.value.copy(selectedLocation = location)
+  }
 }

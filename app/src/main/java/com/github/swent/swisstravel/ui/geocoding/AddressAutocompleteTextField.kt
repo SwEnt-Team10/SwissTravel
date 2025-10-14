@@ -16,47 +16,40 @@ import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 object AddressTextTestTags {
-    const val INPUT_LOCATION = "input_location"
-    const val LOCATION_SUGGESTION = "location_suggestion"
+  const val INPUT_LOCATION = "input_location"
+  const val LOCATION_SUGGESTION = "location_suggestion"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddressAutocompleteTextField(
-    addressTextFieldViewModel: AddressTextFieldViewModelContract = viewModel<AddressTextFieldViewModel>()
+    addressTextFieldViewModel: AddressTextFieldViewModelContract =
+        viewModel<AddressTextFieldViewModel>()
 ) {
-    val state = addressTextFieldViewModel.addressState.collectAsState().value
-    var expanded by remember { mutableStateOf(false) }
+  val state = addressTextFieldViewModel.addressState.collectAsState().value
+  var expanded by remember { mutableStateOf(false) }
 
-    ExposedDropdownMenuBox(
-        expanded = expanded,
-        onExpandedChange = { expanded = it }
-    ) {
-        TextField(
-            value = state.locationQuery,
-            onValueChange = {
-                addressTextFieldViewModel.setLocationQuery(it)
-                expanded = true
-            },
-            modifier = Modifier
-                .menuAnchor()
-                .testTag(AddressTextTestTags.INPUT_LOCATION),
-            label = { Text("Adresse") }
-        )
-        ExposedDropdownMenu(
-            expanded = expanded && state.locationSuggestions.isNotEmpty(),
-            onDismissRequest = { expanded = false }
-        ) {
-            state.locationSuggestions.take(3).forEach { location ->
-                DropdownMenuItem(
-                    text = { Text(location.name) },
-                    onClick = {
-                        addressTextFieldViewModel.setLocation(location)
-                        expanded = false
-                    },
-                    modifier = Modifier.testTag(AddressTextTestTags.LOCATION_SUGGESTION)
-                )
-            }
+  ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+    TextField(
+        value = state.locationQuery,
+        onValueChange = {
+          addressTextFieldViewModel.setLocationQuery(it)
+          expanded = true
+        },
+        modifier = Modifier.menuAnchor().testTag(AddressTextTestTags.INPUT_LOCATION),
+        label = { Text("Adresse") })
+    ExposedDropdownMenu(
+        expanded = expanded && state.locationSuggestions.isNotEmpty(),
+        onDismissRequest = { expanded = false }) {
+          state.locationSuggestions.take(3).forEach { location ->
+            DropdownMenuItem(
+                text = { Text(location.name) },
+                onClick = {
+                  addressTextFieldViewModel.setLocation(location)
+                  expanded = false
+                },
+                modifier = Modifier.testTag(AddressTextTestTags.LOCATION_SUGGESTION))
+          }
         }
-    }
+  }
 }

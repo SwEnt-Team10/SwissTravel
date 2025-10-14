@@ -9,22 +9,23 @@ import org.junit.Test
 
 class AddressAutocompleteTextFieldTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun testTextFieldAndSuggestionsDisplayed() {
-        val fakeViewModel = FakeAddressTextFieldViewModel()
+  @Test
+  fun testTextFieldAndSuggestionsDisplayed() {
+    val fakeViewModel = FakeAddressTextFieldViewModel()
 
-        composeTestRule.setContent {
-            AddressAutocompleteTextField(addressTextFieldViewModel = fakeViewModel)
-        }
-
-        composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
-            .assertIsDisplayed()
-            .performTextInput("Lausanne")
-
-        composeTestRule.onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
-            .assertAny(hasText("Lausanne"))
+    composeTestRule.setContent {
+      AddressAutocompleteTextField(addressTextFieldViewModel = fakeViewModel)
     }
+
+    composeTestRule
+        .onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
+        .assertIsDisplayed()
+        .performTextInput("Lausanne")
+
+    composeTestRule
+        .onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
+        .assertAny(hasText("Lausanne"))
+  }
 }

@@ -16,65 +16,66 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddressTextFieldViewModelTest {
 
-    private lateinit var viewModel: AddressTextFieldViewModel
-    private lateinit var repository: LocationRepository
+  private lateinit var viewModel: AddressTextFieldViewModel
+  private lateinit var repository: LocationRepository
 
-    private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = StandardTestDispatcher()
 
-    @Before
-    fun setUp() {
-        Dispatchers.setMain(testDispatcher)
-        repository = mockk()
-        viewModel = AddressTextFieldViewModel().apply {
-            val field = AddressTextFieldViewModel::class.java.getDeclaredField("locationRepository")
-            field.isAccessible = true
-            field.set(this, repository)
+  @Before
+  fun setUp() {
+    Dispatchers.setMain(testDispatcher)
+    repository = mockk()
+    viewModel =
+        AddressTextFieldViewModel().apply {
+          val field = AddressTextFieldViewModel::class.java.getDeclaredField("locationRepository")
+          field.isAccessible = true
+          field.set(this, repository)
         }
-    }
+  }
 
-    @After
-    fun tearDown() {
-        Dispatchers.resetMain()
-    }
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+  }
 
-    @Test
-    fun setLocationShouldUpdateSelectedLocationAndQuery() {
-        val location = Location(Coordinate(46.5197, 6.6323), "Lausanne")
-        viewModel.setLocation(location)
+  @Test
+  fun setLocationShouldUpdateSelectedLocationAndQuery() {
+    val location = Location(Coordinate(46.5197, 6.6323), "Lausanne")
+    viewModel.setLocation(location)
 
-        val state = viewModel.addressState.value
-        assertEquals(location, state.selectedLocation)
-        assertEquals("Lausanne", state.locationQuery)
-    }
+    val state = viewModel.addressState.value
+    assertEquals(location, state.selectedLocation)
+    assertEquals("Lausanne", state.locationQuery)
+  }
 
-    @Test
-    fun setLocationQueryShouldFetchSuggestionsFromRepository() = runTest {
-        val fakeResults = listOf(Location(Coordinate(46.2, 6.1), "Geneva"))
-        coEvery { repository.search("Gen") } returns fakeResults
+  @Test
+  fun setLocationQueryShouldFetchSuggestionsFromRepository() = runTest {
+    val fakeResults = listOf(Location(Coordinate(46.2, 6.1), "Geneva"))
+    coEvery { repository.search("Gen") } returns fakeResults
 
-        viewModel.setLocationQuery("Gen")
-        advanceUntilIdle()
+    viewModel.setLocationQuery("Gen")
+    advanceUntilIdle()
 
-        val state = viewModel.addressState.value
-        assertEquals(fakeResults, state.locationSuggestions)
-    }
+    val state = viewModel.addressState.value
+    assertEquals(fakeResults, state.locationSuggestions)
+  }
 
-    @Test
-    fun setLocationQueryShouldHandleEmptyQuery() = runTest {
-        viewModel.setLocationQuery("")
+  @Test
+  fun setLocationQueryShouldHandleEmptyQuery() = runTest {
+    viewModel.setLocationQuery("")
 
-        val state = viewModel.addressState.value
-        assertTrue(state.locationSuggestions.isEmpty())
-    }
+    val state = viewModel.addressState.value
+    assertTrue(state.locationSuggestions.isEmpty())
+  }
 
-    @Test
-    fun setLocationQueryShouldClearSuggestionsOnException() = runTest {
-        coEvery { repository.search("Paris") } throws RuntimeException("Network error")
+  @Test
+  fun setLocationQueryShouldClearSuggestionsOnException() = runTest {
+    coEvery { repository.search("Paris") } throws RuntimeException("Network error")
 
-        viewModel.setLocationQuery("Paris")
-        advanceUntilIdle()
+    viewModel.setLocationQuery("Paris")
+    advanceUntilIdle()
 
-        val state = viewModel.addressState.value
-        assertTrue(state.locationSuggestions.isEmpty())
-    }
+    val state = viewModel.addressState.value
+    assertTrue(state.locationSuggestions.isEmpty())
+  }
 }
