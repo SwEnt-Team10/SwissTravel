@@ -62,6 +62,5 @@ fun DummyScreen(
             }
           }
         }
-        AddressAutocompleteTextField()
       })
 }
