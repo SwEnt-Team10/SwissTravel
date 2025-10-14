@@ -5,10 +5,10 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.google.firebase.auth.FirebaseAuth
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -21,7 +21,8 @@ class NavigationTest : SwissTravelTest() {
   @Before
   override fun setUp() {
     super.setUp()
-    FirebaseAuth.getInstance().signInAnonymously()
+    FirebaseEmulator.clearAuthEmulator()
+    FirebaseEmulator.auth.signInAnonymously()
     composeTestRule.setContent { SwissTravelApp() }
   }
 

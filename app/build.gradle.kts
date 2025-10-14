@@ -140,9 +140,10 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.googleid)
-    implementation("com.mapbox.maps:android-ndk27:11.15.2")
-    implementation("com.mapbox.extension:maps-compose-ndk27:11.15.2")
-    implementation("com.mapbox.navigationcore:android-ndk27:3.16.0-beta.1")
+    implementation(libs.mapbox.maps)
+    implementation(libs.mapbox.maps.compose)
+
+    implementation(libs.mapbox.navigation.ui)
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
@@ -160,8 +161,8 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     // Material Design 3
     implementation(libs.compose.material3)
-    implementation("io.coil-kt:coil-compose:2.4.0")
-    implementation("androidx.compose.material:material-icons-extended:1.6.8")
+    implementation(libs.coil.compose)
+    implementation(libs.compose.design.material3)
     // Integration with activities
     implementation(libs.compose.activity)
     // Integration with ViewModels
@@ -201,7 +202,7 @@ dependencies {
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.mockk)
     testImplementation(libs.json)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation(libs.coroutines.kotlin)
     testImplementation(libs.credentials)
     testImplementation(libs.credentials.play.services.auth)
     testImplementation(libs.googleid)

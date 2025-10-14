@@ -1,13 +1,5 @@
-package com.android.swisstravel.data.trips
+package com.github.swent.swisstravel.model.trip
 
-import com.github.swent.swisstravel.model.trip.Activity
-import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.RouteSegment
-import com.github.swent.swisstravel.model.trip.TransportMode
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripElement
-import com.github.swent.swisstravel.model.trip.TripProfile
 import com.google.firebase.Timestamp
 import org.junit.Assert.assertEquals
 import org.junit.Test
