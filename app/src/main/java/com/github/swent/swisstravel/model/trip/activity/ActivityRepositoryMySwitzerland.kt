@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip.activity
 
+import android.util.Log
 import com.github.swent.swisstravel.BuildConfig
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
@@ -8,22 +9,30 @@ import com.github.swent.swisstravel.model.user.toSwissTourismFacet
 import com.github.swent.swisstravel.model.user.toSwissTourismFacetFilter
 import com.google.firebase.Timestamp
 import java.io.IOException
-import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 
+/** Implementation of a repository for activities. Uses the Swiss Tourism API. */
 class ActivityRepositoryMySwitzerland : ActivityRepository {
 
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
-  private val baseUrl =
-      "https://opendata.myswitzerland.io/v1/attractions/?lang=en&page=0&striphtml=true&expand=true"
-
+  private val baseHttpUrl: HttpUrl =
+      "https://opendata.myswitzerland.io/v1/attractions/"
+          .toHttpUrl()
+          .newBuilder()
+          .addQueryParameter("lang", "en")
+          .addQueryParameter("page", "0")
+          .addQueryParameter("striphtml", "true")
+          .addQueryParameter("expand", "true")
+          .build()
   private val client: OkHttpClient by lazy {
     OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
@@ -31,7 +40,14 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
         .build()
   }
 
-  private suspend fun fetchActivitiesFromUrl(url: String): List<Activity> {
+  /**
+   * Fetch activities from the given URL. Does a request to the Swiss Tourism API and parses the
+   * response.
+   *
+   * @param url The URL to fetch activities from.
+   * @return A list of activities.
+   */
+  private suspend fun fetchActivitiesFromUrl(url: HttpUrl): List<Activity> {
     return withContext(Dispatchers.IO) {
       val request =
           Request.Builder()
@@ -60,6 +76,12 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
     }
   }
 
+  /**
+   * Parse the JSON response from the Swiss Tourism API.
+   *
+   * @param json The JSON response.
+   * @return A list of activities.
+   */
   private fun parseActivitiesFromJson(json: String): List<Activity> {
     val root = JSONObject(json)
     val dataArray: JSONArray = root.optJSONArray("data") ?: return emptyList()
@@ -103,7 +125,16 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
     return activities
   }
 
-  private fun computeUrlWithPreferences(preferences: List<UserPreference>, limit: Int): String {
+  /**
+   * Compute the URL with the given preferences.
+   *
+   * @param preferences The preferences to use.
+   * @param limit The limit of the number of activities to return.
+   * @return The URL to fetch activities from.
+   */
+  private fun computeUrlWithPreferences(preferences: List<UserPreference>, limit: Int): HttpUrl {
+    if (preferences.isEmpty()) return baseHttpUrl
+
     val facetsParam = preferences.joinToString(",") { it.toSwissTourismFacet() }
 
     val facetFilters =
@@ -111,25 +142,69 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
           "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
         }
 
-    val encodedFilters = URLEncoder.encode(facetFilters, "UTF-8").replace("%252A", "%2A")
+    // Build manually – no encoding issues
+    val url =
+        StringBuilder()
+            .append(baseHttpUrl)
+            .append("&hitsPerPage=")
+            .append(limit)
+            .append("&facets=")
+            .append(facetsParam)
+            .append("&facet.filter=")
+            .append(facetFilters)
+            .toString()
 
-    return "$baseUrl&hitsPerPage=$limit&facets=$facetsParam&facet.filter=$encodedFilters"
+    Log.d("URL", "Final MySwitzerland URL: $url")
+    return url.toHttpUrl()
   }
 
+  /**
+   * Get the most popular activities.
+   *
+   * @param limit The limit of the number of activities to return.
+   * @return A list of the most popular activities.
+   */
   override suspend fun getMostPopularActivities(limit: Int): List<Activity> {
-    val url = "$baseUrl&hitsPerPage=$limit&top=true"
+    val url =
+        baseHttpUrl
+            .newBuilder()
+            .addQueryParameter("hitsPerPage", limit.toString())
+            .addQueryParameter("top", "true")
+            .build()
     return fetchActivitiesFromUrl(url)
   }
 
+  /**
+   * Get activities near the given coordinate.
+   *
+   * @param coordinate The coordinate to get activities near.
+   * @param radiusMeters The radius in meters to search for activities.
+   * @param limit The limit of the number of activities to return.
+   * @return A list of activities near the given coordinate.
+   */
   override suspend fun getActivitiesNear(
       coordinate: Coordinate,
       radiusMeters: Int,
       limit: Int
   ): List<Activity> {
-    val url = "$baseUrl&hitsPerPage=$limit&geo.dist=$coordinate.lat,$coordinate.lon,$radiusMeters"
+    val url =
+        baseHttpUrl
+            .newBuilder()
+            .addQueryParameter("hitsPerPage", limit.toString())
+            .addQueryParameter(
+                "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
+            .build()
+
     return fetchActivitiesFromUrl(url)
   }
 
+  /**
+   * Get activities by the given preferences.
+   *
+   * @param preferences The preferences to use.
+   * @param limit The limit of the number of activities to return.
+   * @return A list of activities by the given preferences.
+   */
   override suspend fun getActivitiesByPreferences(
       preferences: List<UserPreference>,
       limit: Int

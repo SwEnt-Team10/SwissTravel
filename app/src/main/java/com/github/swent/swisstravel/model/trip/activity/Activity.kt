@@ -9,6 +9,8 @@ import com.google.firebase.Timestamp
  * @property startDate The start date of the activity.
  * @property endDate The end date of the activity.
  * @property location The location of the activity.
+ * @property description The description of the activity.
+ * @property imageUrls The image URLs of the activity.
  */
 data class Activity(
     val startDate: Timestamp,
