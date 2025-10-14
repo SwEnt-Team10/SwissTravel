@@ -1,4 +1,5 @@
 package com.github.swent.swisstravel.ui.map
 
-class NavigationMapViewModel {
-}
+import androidx.lifecycle.ViewModel
+
+class NavigationMapViewModel : ViewModel() {}

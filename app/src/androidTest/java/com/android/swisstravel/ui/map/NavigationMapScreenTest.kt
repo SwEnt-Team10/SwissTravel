@@ -1,77 +1,60 @@
 package com.android.swisstravel.ui.map
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.navigation.NavController
-import com.github.swent.swisstravel.ui.map.BottomSheet
-import com.github.swent.swisstravel.ui.map.MapScreen
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
-import com.github.swent.swisstravel.ui.map.SampleMenu
-import com.mapbox.navigation.core.MapboxNavigationProvider
-import org.junit.After
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.Screen
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.*
 
-class NavigationMapScreenTest {
+class CurrentTripScreenTest {
 
-  @get:Rule val composeTestRule = createComposeRule()
-
-  private lateinit var mockNavController: NavController
+  @get:Rule
+  val composeTestRule = createComposeRule()
 
   @Before
-  fun setUp() {
-    mockNavController = mock(NavController::class.java)
-  }
-
-  @After
-  fun tearDown() {
-    // Reset singleton after each test
-    MapboxNavigationProvider.destroy()
+  fun setup() {
+    composeTestRule.setContent {
+      val navController = rememberNavController()
+      NavHost(
+        navController = navController,
+        startDestination = Screen.CurrentTrip.route
+      ) {
+        composable(Screen.CurrentTrip.route) { CurrentTripScreen(navigationActions = NavigationActions(navController)) }
+        composable(Screen.SelectedTripMap.route) { NavigationMapScreen(navigationActions = NavigationActions(navController)) }
+      }
+    }
   }
 
   @Test
-  fun mapScreen_showsPermissionButton_whenPermissionDenied() {
-    // Simulate permission denied
-    composeTestRule.setContent { MapScreen(navController = mockNavController) }
-
+  fun canEnterNavigationMapFromCurrentTrip() = runTest {
     composeTestRule
-        .onNodeWithTag(NavigationMapScreenTestTags.PERMISSION_BUTTON)
+        .onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)
         .assertIsDisplayed()
         .performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
   }
 
   @Test
-  fun mapScreen_showsBottomSheet_whenPermissionGranted() {
-
-    composeTestRule.setContent { MapScreen(navController = mockNavController) }
-
-    // We cannot easily simulate MapView in Compose test, but we can check BottomSheet exists
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.BOTTOM_SHEET).assertIsDisplayed()
-  }
-
-  @Test
-  fun bottomSheet_exitNavigationButton_navigatesBack() {
-    composeTestRule.setContent { BottomSheet(navController = mockNavController) }
-
-    composeTestRule
-        .onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON)
-        .assertIsDisplayed()
-        .performClick()
-
-    verify(mockNavController).navigate("menu-example")
-  }
-
-  @Test
-  fun sampleMenu_buttonNavigatesToMap() {
-    composeTestRule.setContent { SampleMenu(navController = mockNavController) }
-
-    composeTestRule
-        .onNodeWithText(NavigationMapScreenTestTags.ENTER_BUTTON)
-        .assertIsDisplayed()
-        .performClick()
-
-    verify(mockNavController).navigate("nav-map")
+  fun canEnterAndExitNavigationMap() = runTest {
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsNotDisplayed()
   }
 }

@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.currenttrip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -10,10 +11,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.sp
-import com.github.swent.swisstravel.ui.map.EnterMapButton
+import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 object CurrentTripScreenTestTags {
@@ -42,6 +44,13 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null) {
               text = "Current Trip",
               fontSize = 24.sp)
         }
-        EnterMapButton(navigationActions)
+        Box(contentAlignment = Alignment.TopCenter) {
+          Button(
+              onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
+              modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
+                // TODO : modify this to an "extend" icon when the map preview is implemented
+                Text("Enter Map")
+              }
+        }
       })
 }
