@@ -37,7 +37,8 @@ enum class UserPreference {
   HIKING,
   MUSEUMS,
   SKIING,
-  FOODIE
+  FOODIE,
+  QUICK
   // Add more preferences as needed
 }
 
@@ -53,6 +54,7 @@ fun UserPreference.displayString(): String {
     UserPreference.MUSEUMS -> "Museums"
     UserPreference.SKIING -> "Skiing & Snow Sports"
     UserPreference.FOODIE -> "Food & Culinary Experiences"
+    UserPreference.QUICK -> "Quick Traveler"
   // Add more cases as needed
   }
 }

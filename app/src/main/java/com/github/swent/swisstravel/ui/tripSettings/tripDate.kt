@@ -47,6 +47,9 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
         ValidationEvent.EndDateIsBeforeStartDateError -> {
           Toast.makeText(context, R.string.endDateError, Toast.LENGTH_SHORT).show()
         }
+        else -> {
+          /* Ignore other events */
+        }
       }
     }
   }

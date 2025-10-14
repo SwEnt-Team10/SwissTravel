@@ -1,12 +1,12 @@
 package com.github.swent.swisstravel.ui.tripSettings
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -22,6 +22,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -31,6 +32,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
+import kotlinx.coroutines.flow.collectLatest
 
 object TripPreferencesTestTags {
   const val DONE = "done"
@@ -47,6 +49,24 @@ object TripPreferencesTestTags {
 fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone: () -> Unit = {}) {
   val tripSettings by viewModel.tripSettings.collectAsState()
   var prefs by remember { mutableStateOf(tripSettings.preferences) }
+  val context = LocalContext.current
+
+  LaunchedEffect(Unit) {
+    viewModel.validationEvents.collectLatest { event ->
+      when (event) {
+        is ValidationEvent.SaveSuccess -> {
+          Toast.makeText(context, "Trip saved successfully!", Toast.LENGTH_SHORT).show()
+          onDone()
+        }
+        is ValidationEvent.SaveError -> {
+          Toast.makeText(context, "Error: ${event.message}", Toast.LENGTH_LONG).show()
+        }
+        else -> {
+          // Other events are not handled here
+        }
+      }
+    }
+  }
 
   LaunchedEffect(prefs) { viewModel.updatePreferences(prefs) }
 
@@ -96,11 +116,10 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
 
               // --- Done button ---
               Button(
-                  onClick = onDone,
+                  onClick = { viewModel.saveTrip() },
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.primary),
-                  shape = RoundedCornerShape(24.dp),
                   modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
                     Text(
                         stringResource(R.string.done),
