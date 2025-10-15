@@ -14,7 +14,7 @@ data class User(
     val name: String,
     val email: String,
     val profilePicUrl: String,
-    val preferences: List<UserPreference>
+    val preferences: List<Preference>
 )
 
 /**
@@ -22,12 +22,13 @@ data class User(
  *
  * Add more preferences as needed.
  */
-enum class UserPreference {
+enum class Preference {
   HANDICAP,
   HIKING,
   MUSEUMS,
-  SKIING,
-  FOODIE
+  SPORTY,
+  FOODIE,
+  QUICK
   // Add more preferences as needed
 }
 
@@ -36,13 +37,14 @@ enum class UserPreference {
  *
  * @return A UI-friendly string representation of the preference.
  */
-fun UserPreference.displayString(): String {
+fun Preference.displayString(): String {
   return when (this) {
-    UserPreference.HANDICAP -> "Handicap Accessible"
-    UserPreference.HIKING -> "Hiking & Outdoor"
-    UserPreference.MUSEUMS -> "Museums"
-    UserPreference.SKIING -> "Skiing & Snow Sports"
-    UserPreference.FOODIE -> "Food & Culinary Experiences"
+    Preference.HANDICAP -> "Handicap Accessible"
+    Preference.HIKING -> "Hiking & Outdoor"
+    Preference.MUSEUMS -> "Museums"
+    Preference.SPORTY -> "Sporty"
+    Preference.FOODIE -> "Food & Culinary Experiences"
+    Preference.QUICK -> "Quick Traveler"
   // Add more cases as needed
   }
 }

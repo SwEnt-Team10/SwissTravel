@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.profile
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
@@ -31,12 +38,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.authentication.AuthRepository
+import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
-import com.github.swent.swisstravel.ui.theme.onSecondaryContainerLight
-import com.github.swent.swisstravel.ui.theme.secondaryContainerLight
 
 object ProfileScreenTestTags {
   const val PROFILE_PIC = "profilePic"
@@ -46,12 +55,14 @@ object ProfileScreenTestTags {
   const val GREETING = "greeting"
   const val PERSONAL_INFO = "personalInfo"
   const val PREFERENCES = "preferences"
+
+  fun preferenceSwitchTag(title: String): String = "preferenceSwitch:$title"
 }
 
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
-    navigationActions: NavigationActions? = null
+    navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
   val uiState = profileScreenViewModel.uiState.collectAsState().value
@@ -78,10 +89,17 @@ fun ProfileScreen(
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { pd ->
-        ProfileScreenContent(
-            uiState = uiState,
-            profileScreenViewModel = profileScreenViewModel,
-            modifier = Modifier.padding(pd))
+        if (uiState.isLoading) {
+          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator()
+          }
+        } else {
+          ProfileScreenContent(
+              uiState = uiState,
+              profileScreenViewModel = profileScreenViewModel,
+              modifier = Modifier.padding(pd),
+              navigationActions = navigationActions)
+        }
       })
 }
 
@@ -89,7 +107,9 @@ fun ProfileScreen(
 private fun ProfileScreenContent(
     uiState: ProfileScreenUIState,
     profileScreenViewModel: ProfileScreenViewModel,
-    modifier: Modifier
+    modifier: Modifier,
+    authRepository: AuthRepository = AuthRepositoryFirebase(),
+    navigationActions: NavigationActions? = null
 ) {
   val scrollState = rememberScrollState()
 
@@ -97,7 +117,7 @@ private fun ProfileScreenContent(
       modifier = modifier.fillMaxSize().padding(20.dp).verticalScroll(scrollState),
       horizontalAlignment = Alignment.CenterHorizontally) {
         AsyncImage(
-            model = uiState.profilePicUrl,
+            model = uiState.profilePicUrl.ifBlank { R.drawable.default_profile_pic },
             contentDescription = "Profile picture",
             modifier =
                 Modifier.size(100.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
@@ -129,6 +149,13 @@ private fun ProfileScreenContent(
         InfoSection(
             title = "Travel Preferences",
             modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
+              Text(
+                  text = "These preferences will be selected by default when creating a new trip.",
+                  style =
+                      MaterialTheme.typography.bodyMedium.copy(
+                          color = MaterialTheme.colorScheme.onSurfaceVariant),
+                  modifier = Modifier.padding(bottom = 12.dp))
+
               profileScreenViewModel.allPreferences.forEach { pref ->
                 val isSelected = uiState.selectedPreferences.contains(pref)
                 PreferenceToggle(
@@ -142,6 +169,24 @@ private fun ProfileScreenContent(
                     },
                     modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES))
               }
+            }
+        Button(
+            onClick = {
+              authRepository.signOut()
+              navigationActions?.navigateTo(Screen.Auth)
+            },
+            modifier = Modifier.fillMaxWidth(0.5f).height(50.dp),
+            shape = CircleShape,
+            colors =
+                ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                )) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.Logout,
+                  contentDescription = "Sign Out",
+                  modifier = Modifier.padding(end = 8.dp))
+              Text("Sign Out")
             }
       }
 }
@@ -158,12 +203,12 @@ fun InfoSection(
               .fillMaxWidth()
               .padding(vertical = 8.dp)
               .clip(MaterialTheme.shapes.medium)
-              .background(secondaryContainerLight)
+              .background(MaterialTheme.colorScheme.secondaryContainer)
               .padding(16.dp)) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = onSecondaryContainerLight,
+            color = MaterialTheme.colorScheme.onSecondaryContainer,
             modifier = Modifier.padding(bottom = 12.dp))
         content()
       }
@@ -201,6 +246,9 @@ fun PreferenceToggle(
             style =
                 MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.testTag(ProfileScreenTestTags.preferenceSwitchTag(title)))
       }
 }

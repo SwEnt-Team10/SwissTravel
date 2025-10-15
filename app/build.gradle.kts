@@ -150,8 +150,8 @@ dependencies {
     implementation(platform(libs.compose.bom))
     implementation(libs.firebase.firestore.ktx)
     implementation(libs.googleid)
-    implementation("com.mapbox.maps:android-ndk27:11.15.2")
-    implementation("com.mapbox.extension:maps-compose-ndk27:11.15.2")
+    implementation(libs.mapbox.maps)
+    implementation(libs.mapbox.maps.compose)
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
@@ -169,7 +169,8 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
     // Material Design 3
     implementation(libs.compose.material3)
-    implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation(libs.coil.compose)
+    implementation(libs.compose.design.material3)
     // Integration with activities
     implementation(libs.compose.activity)
     // Integration with ViewModels
@@ -209,7 +210,7 @@ dependencies {
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.mockk)
     testImplementation(libs.json)
-    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation(libs.coroutines.kotlin)
     testImplementation(libs.credentials)
     testImplementation(libs.credentials.play.services.auth)
     testImplementation(libs.googleid)
@@ -218,6 +219,7 @@ dependencies {
     //----------   Test UI   --------------------
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.espresso.contrib)
     androidTestImplementation(libs.androidx.espresso.intents)
     androidTestImplementation(libs.androidx.ui.test.junit4)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -229,6 +231,8 @@ dependencies {
     androidTestImplementation(libs.kaspresso)
     androidTestImplementation(libs.kaspresso.allure.support)
     androidTestImplementation(libs.kaspresso.compose.support)
+    testImplementation(kotlin("test"))
+    androidTestImplementation(kotlin("test"))
 }
 
 tasks.withType<Test> {
