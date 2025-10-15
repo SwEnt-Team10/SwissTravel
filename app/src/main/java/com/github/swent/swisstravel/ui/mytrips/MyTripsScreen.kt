@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,6 +32,7 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 object MyTripsScreenTestTags {
@@ -40,6 +42,7 @@ object MyTripsScreenTestTags {
   const val UPCOMING_TRIPS_TITLE = "upcomingTripsTitle"
   const val UPCOMING_TRIPS = "upcomingTrips"
   const val EMPTY_UPCOMING_TRIPS_MSG = "emptyUpcomingTrips"
+  const val CREATE_TRIP_BUTTON = "createTripButton"
 
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
@@ -122,6 +125,15 @@ fun MyTripsScreen(
                 modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG))
           }
 
+          // Create a new trip
+          Spacer(modifier = Modifier.height(16.dp))
+
+          Button(
+              onClick = { navigationActions?.navigateTo(Screen.TripSettings1) },
+              modifier =
+                  Modifier.fillMaxWidth().testTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)) {
+                Text("Create trip")
+              }
           // Upcoming Trip section
           Text(
               text = "Upcoming Trip",

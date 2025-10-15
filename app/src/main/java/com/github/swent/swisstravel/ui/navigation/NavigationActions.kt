@@ -30,6 +30,13 @@ sealed class Screen(
 
   object CurrentTrip :
       Screen(route = "current_trip", name = "Current trip", isTopLevelDestination = true)
+
+  object TripSettings1 : Screen(route = "trip_settings_1", name = "Trip Settings 1")
+
+  object TripSettings2 : Screen(route = "trip_settings_2", name = "Trip Settings 2")
+
+  object TripSettings3 : Screen(route = "trip_settings_3", name = "Trip Settings 3")
+
   // TODO change this when there is a new screen
 }
 
