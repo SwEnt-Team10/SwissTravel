@@ -3,8 +3,8 @@ package com.android.swisstravel.ui.tripSettings
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.model.user.RatedPreferences
-import com.github.swent.swisstravel.ui.tripSettings.TripPreferences
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.ui.tripSettings.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripSettings.ValidationEvent
 import java.time.LocalDate
@@ -26,6 +26,7 @@ class TripSettingsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
   private lateinit var fakeRepo: FakeTripsRepository
+  private lateinit var fakeUserRepo: FakeUserRepository
   private lateinit var viewModel: TripSettingsViewModel
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,7 +34,8 @@ class TripSettingsViewModelTest {
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
     fakeRepo = FakeTripsRepository()
-    viewModel = TripSettingsViewModel(tripsRepository = fakeRepo)
+    fakeUserRepo = FakeUserRepository()
+    viewModel = TripSettingsViewModel(tripsRepository = fakeRepo, userRepository = fakeUserRepo)
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -99,12 +101,12 @@ class TripSettingsViewModelTest {
   @Test
   fun updatePreferencesShouldUpdateThePreferencesInTheTripSettings() {
     val preferences =
-        TripPreferences(
-            quickTraveler = true,
-            sportyLevel = true,
-            foodyLevel = true,
-            museumInterest = true,
-            hasHandicap = true)
+        listOf(
+            Preference.QUICK,
+            Preference.FOODIE,
+            Preference.MUSEUMS,
+            Preference.HANDICAP,
+            Preference.SPORTY)
 
     viewModel.updatePreferences(preferences)
 
@@ -113,46 +115,32 @@ class TripSettingsViewModelTest {
   }
 
   @Test
-  fun saveTripShouldAddTripAndEmitSaveSuccessWithMappedRatedPreferences() = runTest {
-    // Arrange: set dates, travelers and preferences that should map to 3 rated prefs
+  fun saveTripShouldAddTripAndEmitSaveSuccess() = runTest {
+    // Arrange
     val start = LocalDate.of(2025, 1, 1)
     val end = LocalDate.of(2025, 1, 2)
     viewModel.updateDates(start, end)
     viewModel.updateTravelers(adults = 2, children = 1)
-    val prefs =
-        TripPreferences(
-            quickTraveler = true,
-            sportyLevel = false,
-            foodyLevel = true,
-            museumInterest = true,
-            hasHandicap = false)
+    val prefs = listOf(Preference.QUICK, Preference.FOODIE, Preference.MUSEUMS)
     viewModel.updatePreferences(prefs)
 
     // Act
     viewModel.saveTrip()
 
-    // Assert: receive event and inspect saved trip
+    // Assert
     val event = viewModel.validationEvents.first()
     assertEquals(ValidationEvent.SaveSuccess, event)
 
     val added = fakeRepo.addedTrip
     assertNotNull(added, "Trip should have been added to repository")
 
+    // Check basic trip info
     assertEquals("fake-uid", added.uid)
     assertEquals(2, added.tripProfile.adults)
     assertEquals(1, added.tripProfile.children)
 
-    val expectedPrefs =
-        listOf(
-            RatedPreferences(Preference.QUICK, 5),
-            RatedPreferences(Preference.FOODIE, 5),
-            RatedPreferences(Preference.MUSEUMS, 5))
-    // ensure all expected rated prefs are present (order not guaranteed)
-    expectedPrefs.forEach { expected ->
-      assertTrue(
-          added.tripProfile.preferences.contains(expected),
-          "Expected rated preference $expected to be present")
-    }
+    // Check preferences
+    assertEquals(prefs, added.tripProfile.preferences)
     assertEquals(3, added.tripProfile.preferences.size)
   }
 
@@ -197,5 +185,18 @@ class TripSettingsViewModelTest {
     override suspend fun deleteTrip(tripId: String) {
       /* no-op for tests */
     }
+  }
+
+  private class FakeUserRepository : UserRepository {
+    override suspend fun getCurrentUser(): com.github.swent.swisstravel.model.user.User {
+      return User(
+          uid = "test-user",
+          name = "Test User",
+          email = "test@example.com",
+          profilePicUrl = "",
+          preferences = listOf(Preference.FOODIE))
+    }
+
+    override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {}
   }
 }

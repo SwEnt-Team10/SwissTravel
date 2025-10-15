@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Timestamp
 import java.time.LocalDate
@@ -49,7 +50,8 @@ sealed interface ValidationEvent {
  * @property tripsRepository Repository for managing trip data.
  */
 class TripSettingsViewModel(
-    private val tripsRepository: TripsRepository = TripsRepositoryFirestore()
+    private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
+    private val userRepository: UserRepository = UserRepositoryFirebase()
 ) : ViewModel() {
 
   private val _tripSettings = MutableStateFlow(TripSettings())
@@ -74,7 +76,7 @@ class TripSettingsViewModel(
   init {
     viewModelScope.launch {
       try {
-        val user = UserRepositoryFirebase().getCurrentUser()
+        val user = userRepository.getCurrentUser()
         _tripSettings.update { it.copy(preferences = user.preferences) }
       } catch (e: Exception) {
         Log.e("TripSettingsViewModel", "Failed to load user preferences", e)
@@ -92,7 +94,7 @@ class TripSettingsViewModel(
       try {
         val settings = _tripSettings.value
         val newUid = tripsRepository.getNewUid()
-        val user = UserRepositoryFirebase().getCurrentUser()
+        val user = userRepository.getCurrentUser()
 
         val tripProfile =
             TripProfile(
