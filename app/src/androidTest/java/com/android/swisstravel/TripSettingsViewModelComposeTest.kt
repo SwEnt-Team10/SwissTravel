@@ -14,6 +14,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.tripSettingsViewModel
 import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -41,7 +42,7 @@ class TripSettingsViewModelComposeTest {
     composeRule.setContent {
       val navController = rememberNavController()
       // directly call the caller without setting up a NavHost for TripSettings
-      Caller(navController = navController)
+      SwissTravelTheme { Caller(navController = navController) }
     }
 
     composeRule.onNodeWithTag(tag).assertExists()

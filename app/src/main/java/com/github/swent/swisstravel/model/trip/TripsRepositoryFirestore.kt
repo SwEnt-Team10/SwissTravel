@@ -173,8 +173,13 @@ class TripsRepositoryFirestore(
             ?: emptyList()
 
     val preferences =
-        (map["preferences"] as? List<*>)?.mapNotNull { mapToPreferences(it as Map<*, *>) }
-            ?: emptyList()
+        (map["preferences"] as? List<*>)?.mapNotNull {
+          when (it) {
+            is String -> Preference.valueOf(it)
+            is Map<*, *> -> mapToPreferences(it)
+            else -> null
+          }
+        } ?: emptyList()
 
     val adults = (map["adults"] as? Long)?.toInt() ?: 1
     val children = (map["children"] as? Long)?.toInt() ?: 0
@@ -183,11 +188,11 @@ class TripsRepositoryFirestore(
   }
 
   /**
-   * Converts a Firestore map into a [RatedPreferences] object.
+   * Converts a Firestore map into a [Preference] object.
    *
    * @param map The Firestore map expected to contain "preference" (enum name) and "rating"
    *   (number).
-   * @return A [RatedPreferences] if valid data is provided, or `null` if conversion fails.
+   * @return A [Preference] if valid data is provided, or `null` if conversion fails.
    */
   private fun mapToPreferences(map: Map<*, *>): Preference? {
     val preferenceStr = map["preference"] as? String ?: return null

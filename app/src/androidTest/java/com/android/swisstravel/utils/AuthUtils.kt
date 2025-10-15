@@ -69,5 +69,43 @@ class FakeCredentialManager private constructor(private val context: Context) :
 
       return fakeCredentialManager
     }
+
+    // Creates a mock CredentialManager that returns a sequence of tokens on successive
+    // getCredential() calls. Useful to simulate multiple logins within a single test without
+    // recreating the composition.
+    fun sequence(vararg fakeUserIdTokens: String): CredentialManager {
+      mockkObject(GoogleIdTokenCredential)
+
+      val fakeCredentialManager = mockk<FakeCredentialManager>()
+
+      // Prepare GoogleIdTokenCredential objects per token
+      val googleCreds =
+          fakeUserIdTokens.map { token ->
+            mockk<GoogleIdTokenCredential>().also { every { it.idToken } returns token }
+          }
+
+      // Return a different GoogleIdTokenCredential on each createFrom() call
+      every { GoogleIdTokenCredential.createFrom(any()) } returnsMany
+          googleCreds andThen
+          googleCreds.last()
+
+      // Prepare GetCredentialResponse per token containing the raw id_token in the bundle
+      val responses =
+          fakeUserIdTokens.map { token ->
+            val response = mockk<GetCredentialResponse>()
+            val credential =
+                CustomCredential(
+                    type = TYPE_GOOGLE_ID_TOKEN_CREDENTIAL, data = bundleOf("id_token" to token))
+            every { response.credential } returns credential
+            response
+          }
+
+      // Return responses in order for successive getCredential() calls
+      coEvery {
+        fakeCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
+      } returnsMany responses andThen responses.last()
+
+      return fakeCredentialManager
+    }
   }
 }

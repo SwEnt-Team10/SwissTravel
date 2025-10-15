@@ -63,6 +63,8 @@ mockkAgent = "1.13.7"
 mockkAndroid = "1.13.7"
 navigationCompose = "2.7.7"
 robolectric = "4.11.1"
+espressoContrib = "3.6.1"
+
 
 [libraries]
 # Core
@@ -86,7 +88,7 @@ mockito-android = { module = "org.mockito:mockito-android", version.ref = "mocki
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 compose-design-material3 = {group = "androidx.compose.material", name = "material-icons-extended", version.ref ="design-material3"}
 compose-material3 = { group = "androidx.compose.material3", name = "material3" }
-compose-ui = { group = "androidx.compose.ui", name = "ui" }
+compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref ="ui" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 compose-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
@@ -126,6 +128,7 @@ mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin" , version.ref="m
 coroutines-kotlin = {module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref ="corountineKotlin"}
 ## Testing UI
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
+androidx-espresso-contrib = { module = "androidx.test.espresso:espresso-contrib", version.ref = "espressoContrib" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 kaspresso = { module = "com.kaspersky.android-components:kaspresso", version.ref = "kaspresso" }
 kaspresso-allure-support = { module = "com.kaspersky.android-components:kaspresso-allure-support", version.ref = "kaspressoAllureSupport" }
