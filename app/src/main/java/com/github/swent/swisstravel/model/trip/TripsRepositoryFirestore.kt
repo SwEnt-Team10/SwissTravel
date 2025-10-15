@@ -73,8 +73,7 @@ class TripsRepositoryFirestore(
           } ?: emptyList()
 
       val tripProfile =
-          (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) }
-              ?: return null
+          (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
 
       Trip(
           uid = uid,
