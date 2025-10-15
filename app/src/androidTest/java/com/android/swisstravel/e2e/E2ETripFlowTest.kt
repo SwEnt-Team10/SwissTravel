@@ -96,6 +96,16 @@ class E2ETripFlowTest : SwissTravelTest() {
 
     // 7) Go to profile and modify a preference
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+
+    // Wait explicitly until the preference switch node appears in the Compose tree
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(
+              ProfileScreenTestTags.preferenceSwitchTag("Museums"), useUnmergedTree = true)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+    // Now safely interact
     composeTestRule
         .onNodeWithTag(ProfileScreenTestTags.preferenceSwitchTag("Museums"), useUnmergedTree = true)
         .performScrollTo()
