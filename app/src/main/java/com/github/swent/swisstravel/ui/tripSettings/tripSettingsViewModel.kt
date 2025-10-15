@@ -114,7 +114,7 @@ class TripSettingsViewModel(
         val trip =
             Trip(
                 uid = newUid,
-                name = "Trip from ${settings.date.startDate}", // TODO Placeholder name
+                name = "Trip from ${settings.date.startDate.toString()}", // TODO Placeholder name
                 ownerId = user.uid,
                 locations = emptyList(),
                 routeSegments = emptyList(),
