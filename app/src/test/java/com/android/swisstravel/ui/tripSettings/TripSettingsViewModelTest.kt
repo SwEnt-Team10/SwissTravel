@@ -2,8 +2,8 @@ package com.android.swisstravel.ui.tripSettings
 
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.RatedPreferences
-import com.github.swent.swisstravel.model.user.UserPreference
 import com.github.swent.swisstravel.ui.tripSettings.TripPreferences
 import com.github.swent.swisstravel.ui.tripSettings.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripSettings.ValidationEvent
@@ -144,9 +144,9 @@ class TripSettingsViewModelTest {
 
     val expectedPrefs =
         listOf(
-            RatedPreferences(UserPreference.QUICK, 5),
-            RatedPreferences(UserPreference.FOODIE, 5),
-            RatedPreferences(UserPreference.MUSEUMS, 5))
+            RatedPreferences(Preference.QUICK, 5),
+            RatedPreferences(Preference.FOODIE, 5),
+            RatedPreferences(Preference.MUSEUMS, 5))
     // ensure all expected rated prefs are present (order not guaranteed)
     expectedPrefs.forEach { expected ->
       assertTrue(

@@ -1,8 +1,7 @@
 package com.github.swent.swisstravel.model.trip
 
 import android.util.Log
-import com.github.swent.swisstravel.model.user.RatedPreferences
-import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
@@ -179,7 +178,7 @@ class TripsRepositoryFirestore(
             ?: emptyList()
 
     val preferences =
-        (map["preferences"] as? List<*>)?.mapNotNull { mapToRatedPreferences(it as Map<*, *>) }
+        (map["preferences"] as? List<*>)?.mapNotNull { mapToPreferences(it as Map<*, *>) }
             ?: emptyList()
 
     val adults = (map["adults"] as? Long)?.toInt() ?: 1
@@ -195,11 +194,9 @@ class TripsRepositoryFirestore(
    *   (number).
    * @return A [RatedPreferences] if valid data is provided, or `null` if conversion fails.
    */
-  private fun mapToRatedPreferences(map: Map<*, *>): RatedPreferences? {
-    val rating = (map["rating"] as? Number)?.toInt() ?: return null
+  private fun mapToPreferences(map: Map<*, *>): Preference? {
     val preferenceStr = map["preference"] as? String ?: return null
-    val userPreference = UserPreference.valueOf(preferenceStr)
-
-    return RatedPreferences(userPreference, rating)
+    val preference = Preference.valueOf(preferenceStr)
+    return preference
   }
 }

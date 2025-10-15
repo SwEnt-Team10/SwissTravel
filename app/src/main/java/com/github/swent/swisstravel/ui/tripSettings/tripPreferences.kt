@@ -16,8 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -30,6 +28,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import kotlinx.coroutines.flow.collectLatest
@@ -49,7 +48,7 @@ object TripPreferencesTestTags {
 @Composable
 fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone: () -> Unit = {}) {
   val tripSettings by viewModel.tripSettings.collectAsState()
-  var prefs by remember { mutableStateOf(tripSettings.preferences) }
+  val prefs = tripSettings.preferences
   val context = LocalContext.current
 
   LaunchedEffect(Unit) {
@@ -91,25 +90,40 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // --- Preferences ---
-                PreferenceSwitch(stringResource(R.string.quickTraveler), prefs.quickTraveler) {
-                  prefs = prefs.copy(quickTraveler = it)
-                }
+                PreferenceSwitch(
+                    stringResource(R.string.quickTraveler),
+                    prefs.contains(Preference.QUICK),
+                    onCheckedChange = { checked ->
+                      viewModel.updatePreferences(prefs.toggle(Preference.QUICK, checked))
+                    })
 
-                PreferenceSwitch(stringResource(R.string.sportyTrip), prefs.sportyLevel) {
-                  prefs = prefs.copy(sportyLevel = it)
-                }
+                PreferenceSwitch(
+                    stringResource(R.string.sportyTrip),
+                    prefs.contains(Preference.SPORTY),
+                    onCheckedChange = { checked ->
+                      viewModel.updatePreferences(prefs.toggle(Preference.SPORTY, checked))
+                    })
 
-                PreferenceSwitch(stringResource(R.string.foodyTrip), prefs.foodyLevel) {
-                  prefs = prefs.copy(foodyLevel = it)
-                }
+                PreferenceSwitch(
+                    stringResource(R.string.foodyTrip),
+                    prefs.contains(Preference.FOODIE),
+                    onCheckedChange = { checked ->
+                      viewModel.updatePreferences(prefs.toggle(Preference.FOODIE, checked))
+                    })
 
-                PreferenceSwitch(stringResource(R.string.museumsLiker), prefs.museumInterest) {
-                  prefs = prefs.copy(museumInterest = it)
-                }
+                PreferenceSwitch(
+                    stringResource(R.string.museumsLiker),
+                    prefs.contains(Preference.MUSEUMS),
+                    onCheckedChange = { checked ->
+                      viewModel.updatePreferences(prefs.toggle(Preference.MUSEUMS, checked))
+                    })
 
-                PreferenceToggle(stringResource(R.string.handicappedTraveler), prefs.hasHandicap) {
-                  prefs = prefs.copy(hasHandicap = it)
-                }
+                PreferenceToggle(
+                    stringResource(R.string.handicappedTraveler),
+                    prefs.contains(Preference.HANDICAP),
+                    onValueChange = { checked ->
+                      viewModel.updatePreferences(prefs.toggle(Preference.HANDICAP, checked))
+                    })
 
                 Spacer(modifier = Modifier.height(24.dp))
               }
@@ -131,4 +145,9 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                   }
             }
       }
+}
+
+/** Toggles the given [preference] in the list. Adds it if it's not present, removes it if it is. */
+private fun List<Preference>.toggle(preference: Preference, checked: Boolean): List<Preference> {
+  return this.toMutableList().apply { if (checked) add(preference) else remove(preference) }
 }

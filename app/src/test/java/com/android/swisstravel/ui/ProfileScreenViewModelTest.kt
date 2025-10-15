@@ -1,7 +1,7 @@
 package com.github.swent.swisstravel.ui
 
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserPreference
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.displayString
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
@@ -34,7 +34,7 @@ class ProfileScreenViewModelTest {
           name = "Lionel Hegetschweiler",
           email = "lionel@example.com",
           profilePicUrl = "http://example.com/pic.jpg",
-          preferences = listOf(UserPreference.HIKING, UserPreference.FOODIE))
+          preferences = listOf(Preference.HIKING, Preference.FOODIE))
 
   @Before
   fun setup() {

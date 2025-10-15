@@ -1,6 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
-import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.Preference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -86,8 +86,7 @@ class TripsRepositoryFirestorePublicTest {
             "startDate" to Timestamp.now(),
             "endDate" to Timestamp.now(),
             "preferredLocations" to listOf(locationMap),
-            "preferences" to
-                listOf(mapOf("rating" to 5, "preference" to UserPreference.FOODIE.name)))
+            "preferences" to listOf(mapOf("rating" to 5, "preference" to Preference.FOODIE.name)))
 
     every { doc.get("locations") } returns listOf(locationMap)
     every { doc.get("routeSegments") } returns listOf(routeSegmentMap)
