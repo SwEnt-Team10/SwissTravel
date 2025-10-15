@@ -159,7 +159,7 @@ class E2ETripFlowTest : SwissTravelTest() {
 
   private fun createTrip(selectNonToday: Boolean) {
     composeTestRule.onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).performClick()
-
+    Thread.sleep(1000)
     // TripDateScreen: optionally change start date to non-today
     if (selectNonToday) {
       val dateButtons = composeTestRule.onAllNodesWithTag(DateSelectorTestTags.DATE)
