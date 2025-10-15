@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/** Test tags for UI tests to identify components. */
 object CounterTestTags {
   const val COUNTER = "counter"
   const val INCREMENT = "increment"
@@ -38,7 +39,7 @@ object CounterTestTags {
  * @param onDecrement Callback to be invoked when the decrement button is clicked.
  */
 @Composable
-fun counter(label: String, count: Int, onIncrement: () -> Unit, onDecrement: () -> Unit) {
+fun Counter(label: String, count: Int, onIncrement: () -> Unit, onDecrement: () -> Unit) {
   Column(
       modifier =
           Modifier.fillMaxWidth()

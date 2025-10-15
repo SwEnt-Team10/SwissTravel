@@ -24,6 +24,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 
+/** Test tags for UI tests to identify components. */
 object ToggleTestTags {
   const val TOGGLE = "toggle"
   const val RADIO_BUTTON = "radioButton"
@@ -35,8 +36,8 @@ object ToggleTestTags {
 /**
  * A reusable component for a preference toggle with a label.
  *
- * @param label The text label for the switch.
- * @param Boolean The current state of the switch.
+ * @param label The text label for the toggle.
+ * @param Boolean The current state of the toggle.
  * @param onValueChange Callback to be invoked when the toggle state changes.
  */
 @Composable

@@ -8,7 +8,6 @@ import com.github.swent.swisstravel.ui.tripSettings.TripPreferences
 import com.github.swent.swisstravel.ui.tripSettings.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripSettings.ValidationEvent
 import java.time.LocalDate
-import junit.framework.TestCase
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -44,19 +43,19 @@ class TripSettingsViewModelTest {
   }
 
   @Test
-  fun `updateDates should update the date in the trip settings`() {
+  fun updateDatesShouldUpdateTheDateInTheTripSettings() {
     val startDate = LocalDate.of(2025, 1, 1)
     val endDate = LocalDate.of(2025, 1, 1)
 
     viewModel.updateDates(startDate, endDate)
 
     val newDate = viewModel.tripSettings.value.date
-    TestCase.assertEquals(startDate, newDate.startDate)
-    TestCase.assertEquals(endDate, newDate.endDate)
+    assertEquals(startDate, newDate.startDate)
+    assertEquals(endDate, newDate.endDate)
   }
 
   @Test
-  fun `onNextFromDateScreen should emit error when end date is before start date`() = runTest {
+  fun onNextFromDateScreenShouldEmitErrorWhenEndDateIsBeforeStartDate() = runTest {
     // Arrange
     val startDate = LocalDate.of(2025, 1, 2)
     val endDate = LocalDate.of(2025, 1, 1)
@@ -67,11 +66,11 @@ class TripSettingsViewModelTest {
 
     // Assert
     val event = viewModel.validationEvents.first()
-    TestCase.assertEquals(ValidationEvent.EndDateIsBeforeStartDateError, event)
+    assertEquals(ValidationEvent.EndDateIsBeforeStartDateError, event)
   }
 
   @Test
-  fun `onNextFromDateScreen should emit proceed when dates are valid`() = runTest {
+  fun onNextFromDateScreenShouldEmitProceedWhenDatesAreValid() = runTest {
     // Arrange
     val startDate = LocalDate.of(2025, 1, 1)
     val endDate = LocalDate.of(2025, 1, 2)
@@ -82,23 +81,23 @@ class TripSettingsViewModelTest {
 
     // Assert
     val event = viewModel.validationEvents.first()
-    TestCase.assertEquals(ValidationEvent.Proceed, event)
+    assertEquals(ValidationEvent.Proceed, event)
   }
 
   @Test
-  fun `updateTravelers should update the travelers in the trip settings`() {
+  fun updateTravelersShouldUpdateTheTravelersInTheTripSettings() {
     val adults = 2
     val children = 1
 
     viewModel.updateTravelers(adults, children)
 
     val newTravelers = viewModel.tripSettings.value.travelers
-    TestCase.assertEquals(adults, newTravelers.adults)
-    TestCase.assertEquals(children, newTravelers.children)
+    assertEquals(adults, newTravelers.adults)
+    assertEquals(children, newTravelers.children)
   }
 
   @Test
-  fun `updatePreferences should update the preferences in the trip settings`() {
+  fun updatePreferencesShouldUpdateThePreferencesInTheTripSettings() {
     val preferences =
         TripPreferences(
             quickTraveler = true,
@@ -110,11 +109,11 @@ class TripSettingsViewModelTest {
     viewModel.updatePreferences(preferences)
 
     val newPreferences = viewModel.tripSettings.value.preferences
-    TestCase.assertEquals(preferences, newPreferences)
+    assertEquals(preferences, newPreferences)
   }
 
   @Test
-  fun `saveTrip should add trip and emit SaveSuccess with mapped rated preferences`() = runTest {
+  fun saveTripShouldAddTripAndEmitSaveSuccessWithMappedRatedPreferences() = runTest {
     // Arrange: set dates, travelers and preferences that should map to 3 rated prefs
     val start = LocalDate.of(2025, 1, 1)
     val end = LocalDate.of(2025, 1, 2)
@@ -158,7 +157,7 @@ class TripSettingsViewModelTest {
   }
 
   @Test
-  fun `saveTrip should emit SaveError when repository throws`() = runTest {
+  fun saveTripShouldEmitSaveErrorWhenRepositoryThrows() = runTest {
     // Arrange: cause repository to throw
     fakeRepo.shouldThrow = true
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
@@ -176,6 +175,7 @@ class TripSettingsViewModelTest {
     }
   }
 
+  /** A fake repository that records added trips and can be made to throw on addTrip. */
   private class FakeTripsRepository : TripsRepository {
     var addedTrip: Trip? = null
     var shouldThrow: Boolean = false

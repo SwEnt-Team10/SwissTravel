@@ -21,11 +21,18 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.flow.collectLatest
 
+/** Test tags for UI tests to identify components. */
 object TripDateTestTags {
   const val NEXT = "next"
   const val TRIP_DATE_SCREEN = "tripDateScreen"
 }
 
+/**
+ * Screen where users can set the start and end dates for their trip.
+ *
+ * @param viewModel ViewModel to handle the trip settings logic.
+ * @param onNext Callback to be invoked when the user wants to proceed to the next step.
+ */
 @Composable
 fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () -> Unit = {}) {
   val tripSettings by viewModel.tripSettings.collectAsState()

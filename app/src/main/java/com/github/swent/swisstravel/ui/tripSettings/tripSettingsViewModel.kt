@@ -18,10 +18,13 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** * Data class representing the start and end dates of a trip. */
 data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = null)
 
+/** Data class representing the number of adults and children traveling. */
 data class TripTravelers(val adults: Int = 1, val children: Int = 0)
 
+/** Data class representing user preferences for the trip. */
 data class TripPreferences(
     val quickTraveler: Boolean = false,
     val sportyLevel: Boolean = false,
@@ -30,12 +33,14 @@ data class TripPreferences(
     val hasHandicap: Boolean = false
 )
 
+/** Data class encapsulating all trip settings: dates, travelers, and preferences. */
 data class TripSettings(
     val date: TripDate = TripDate(),
     val travelers: TripTravelers = TripTravelers(),
     val preferences: TripPreferences = TripPreferences()
 )
 
+/** Sealed interface representing various validation events during trip settings. */
 sealed interface ValidationEvent {
   object Proceed : ValidationEvent
 
@@ -46,6 +51,11 @@ sealed interface ValidationEvent {
   object EndDateIsBeforeStartDateError : ValidationEvent
 }
 
+/**
+ * ViewModel managing the state and logic for trip settings.
+ *
+ * @property tripsRepository Repository for managing trip data.
+ */
 class TripSettingsViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore()
 ) : ViewModel() {
@@ -70,7 +80,11 @@ class TripSettingsViewModel(
     _tripSettings.update { it.copy(preferences = prefs) }
   }
 
-  // Trip should be saved once an internet connection is available
+  /**
+   * Saves the current trip settings as a new Trip in the repository.
+   *
+   * Trip should be saved once an internet connection is available.
+   */
   fun saveTrip() {
     viewModelScope.launch {
       try {
@@ -111,6 +125,7 @@ class TripSettingsViewModel(
     }
   }
 
+  /** Maps the user's trip preferences to a list of rated preferences. */
   private fun mapToRatedPreferences(
       prefs: TripPreferences
   ): List<RatedPreferences> { // TODO check how do rating works
@@ -123,6 +138,12 @@ class TripSettingsViewModel(
     return ratedPrefs
   }
 
+  /**
+   * Validates the current trip settings when proceeding from the date selection screen.
+   *
+   * Ensures that the end date is not before the start date. Sends a validation event indicating
+   * success or the type of error encountered.
+   */
   fun onNextFromDateScreen() {
     viewModelScope.launch {
       val currentSettings = _tripSettings.value

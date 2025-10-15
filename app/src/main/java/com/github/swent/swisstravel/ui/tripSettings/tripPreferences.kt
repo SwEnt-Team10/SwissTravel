@@ -34,6 +34,7 @@ import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import kotlinx.coroutines.flow.collectLatest
 
+/** Test tags for UI tests to identify components. */
 object TripPreferencesTestTags {
   const val DONE = "done"
   const val TRIP_PREFERENCES_SCREEN = "tripPreferencesScreen"

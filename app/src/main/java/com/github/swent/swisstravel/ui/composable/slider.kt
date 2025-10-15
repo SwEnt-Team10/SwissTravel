@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
+/** Test tags for UI tests to identify components. */
 object SliderTestTags {
   const val SLIDER = "slider"
   const val SLIDER_ELEMENT = "sliderElement"

@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.ui.composable.Counter
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.DateSelectorRow
 import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
@@ -14,7 +15,6 @@ import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import com.github.swent.swisstravel.ui.composable.SliderTestTags
 import com.github.swent.swisstravel.ui.composable.SwitchTestTags
 import com.github.swent.swisstravel.ui.composable.ToggleTestTags
-import com.github.swent.swisstravel.ui.composable.counter
 import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -27,7 +27,7 @@ class ComposableTests {
   fun counterTest() {
     val count = mutableStateOf(0)
     composeTestRule.setContent {
-      counter(
+      Counter(
           label = "test",
           count = count.value,
           onIncrement = { count.value++ },

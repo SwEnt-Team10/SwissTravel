@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
+/** Test tags for UI tests to identify components. */
 object DateSelectorTestTags {
   const val DATE_SELECTOR = "dateSelector"
   const val DATE = "date"

@@ -13,19 +13,31 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.composable.counter
+import com.github.swent.swisstravel.ui.composable.Counter
 
+/** Test tags for UI tests to identify components. */
 object TripTravelersTestTags {
   const val NEXT = "next"
   const val TRIP_TRAVELERS_SCREEN = "tripTravelersScreen"
 }
 
+/**
+ * Screen where users can set the number of travelers for their trip.
+ *
+ * @param viewModel ViewModel to handle the trip settings logic.
+ * @param onNext Callback to be invoked when the user proceeds to the next step.
+ */
 @Composable
 fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () -> Unit = {}) {
   val tripSettings by viewModel.tripSettings.collectAsState()
   var travelers by remember { mutableStateOf(tripSettings.travelers) }
 
-  LaunchedEffect(travelers) { viewModel.updateTravelers(travelers.adults, travelers.children) }
+  LaunchedEffect(travelers) {
+    val current = viewModel.tripSettings.value.travelers
+    if (current != travelers) {
+      viewModel.updateTravelers(travelers.adults, travelers.children)
+    }
+  }
 
   Surface(
       modifier = Modifier.fillMaxSize().testTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN),
@@ -51,7 +63,7 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
                   modifier = Modifier.fillMaxWidth(),
                   verticalArrangement = Arrangement.Center,
               ) {
-                counter(
+                Counter(
                     label = stringResource(R.string.nbAdults),
                     count = travelers.adults,
                     onIncrement = { travelers = travelers.copy(adults = travelers.adults + 1) },
@@ -62,7 +74,7 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
 
                 Spacer(modifier = Modifier.height(96.dp))
 
-                counter(
+                Counter(
                     label = stringResource(R.string.nbChildren),
                     count = travelers.children,
                     onIncrement = { travelers = travelers.copy(children = travelers.children + 1) },
