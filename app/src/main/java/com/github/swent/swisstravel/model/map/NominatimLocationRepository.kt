@@ -30,7 +30,7 @@ class NominatimLocationRepository(
         val url =
             HttpUrl.Builder()
                 .scheme("https")
-                .host(baseUrl.toHttpUrl().host) // utiliser baseUrl
+                .host(baseUrl.toHttpUrl().host)
                 .addPathSegment("search")
                 .addQueryParameter("q", query)
                 .addQueryParameter("format", "json")
@@ -40,8 +40,7 @@ class NominatimLocationRepository(
         val request =
             Request.Builder()
                 .url(url)
-                .header("User-Agent", "YourAppName/1.0 (your-email@example.com)")
-                .header("Referer", "https://yourapp.com")
+                .header("User-Agent", "SwissTravel/1.0 (swisstravel.epfl@proton.me)")
                 .build()
 
         client.newCall(request).execute().use { response ->

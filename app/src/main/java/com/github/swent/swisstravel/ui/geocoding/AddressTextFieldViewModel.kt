@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** Tags used for logging within the AddressTextFieldViewModel. */
 object AddressTextFieldViewModelTags {
   const val TAG = "AddressTextFieldViewModel"
 }

@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+/** Test tags for the AddressAutocompleteTextField composable. */
 object AddressTextTestTags {
   const val INPUT_LOCATION = "inputLocation"
   const val LOCATION_SUGGESTION = "locationSuggestion"
