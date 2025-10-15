@@ -20,8 +20,8 @@ import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
+import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
