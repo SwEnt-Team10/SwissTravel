@@ -42,6 +42,7 @@ object MyTripsScreenTestTags {
   const val UPCOMING_TRIPS_TITLE = "upcomingTripsTitle"
   const val UPCOMING_TRIPS = "upcomingTrips"
   const val EMPTY_UPCOMING_TRIPS_MSG = "emptyUpcomingTrips"
+  const val CREATE_TRIP_BUTTON = "createTripButton"
 
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
@@ -129,7 +130,8 @@ fun MyTripsScreen(
 
           Button(
               onClick = { navigationActions?.navigateTo(Screen.TripSettings1) },
-              modifier = Modifier.fillMaxWidth()) {
+              modifier =
+                  Modifier.fillMaxWidth().testTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)) {
                 Text("Create trip")
               }
           // Upcoming Trip section
