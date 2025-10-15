@@ -1,8 +1,6 @@
 package com.github.swent.swisstravel.ui.mytrips
 
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripProfile
-import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.*
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.mockk
@@ -20,26 +18,6 @@ class MyTripsViewModelTest {
   private val testDispatcher = StandardTestDispatcher()
   private lateinit var repository: TripsRepository
   private lateinit var viewModel: MyTripsViewModel
-
-  private val currentTrip =
-      Trip(
-          "1",
-          "Current Trip",
-          "ownerX",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
-
-  private val upcomingTrip =
-      Trip(
-          "2",
-          "Upcoming Trip",
-          "ownerX",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
 
   @Before
   fun setup() {
@@ -179,11 +157,9 @@ class MyTripsViewModelTest {
     viewModel = MyTripsViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    assert(stateHasError(viewModel))
+    assert(viewModel.uiState.value.errorMsg != null)
     viewModel.clearErrorMsg()
     val state = viewModel.uiState.value
     assertEquals(null, state.errorMsg)
   }
-
-  private fun stateHasError(vm: MyTripsViewModel) = vm.uiState.value.errorMsg != null
 }
