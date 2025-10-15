@@ -11,12 +11,16 @@ import kotlin.math.round
  * @property endDate The end date of the trip.
  * @property preferredLocations The list of locations the user wants to see for the trip.
  * @property preferences The list of preferences for the trip.
+ * @property adults The number of adults for the trip.
+ * @property children The number of children for the trip.
  */
 data class TripProfile(
-    val startDate: Timestamp,
-    val endDate: Timestamp,
-    val preferredLocations: List<Location>,
-    val preferences: List<RatedPreferences>
+    val startDate: Timestamp = Timestamp.now(),
+    val endDate: Timestamp = Timestamp.now(),
+    val preferredLocations: List<Location> = emptyList(),
+    val preferences: List<RatedPreferences> = emptyList(),
+    val adults: Int = 1,
+    val children: Int = 0
 ) {
   /** Returns the total time of the trip in hours. */
   fun getTotalTime(): Double {

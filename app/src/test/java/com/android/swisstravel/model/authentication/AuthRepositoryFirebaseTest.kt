@@ -1,7 +1,9 @@
-package com.github.swent.swisstravel.model.authentication
+package com.android.swisstravel.model.authentication
 
 import androidx.credentials.Credential
 import androidx.credentials.CustomCredential
+import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
+import com.github.swent.swisstravel.model.authentication.GoogleSignInHelper
 import com.google.android.gms.tasks.Tasks
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthResult

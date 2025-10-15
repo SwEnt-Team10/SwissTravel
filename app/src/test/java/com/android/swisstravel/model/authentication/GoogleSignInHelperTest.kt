@@ -1,5 +1,6 @@
-package com.github.swent.swisstravel.model.authentication
+package com.android.swisstravel.model.authentication
 
+import com.github.swent.swisstravel.model.authentication.DefaultGoogleSignInHelper
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.GoogleAuthProvider

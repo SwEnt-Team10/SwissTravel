@@ -1,10 +1,12 @@
-package com.github.swent.swisstravel.ui.authentication
+package com.android.swisstravel.ui.authentication
 
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.github.swent.swisstravel.model.authentication.AuthRepository
+import com.github.swent.swisstravel.ui.authentication.AuthUiState
+import com.github.swent.swisstravel.ui.authentication.SignInViewModel
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
 import io.mockk.coVerify

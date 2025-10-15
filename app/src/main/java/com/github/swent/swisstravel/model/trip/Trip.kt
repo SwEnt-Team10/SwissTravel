@@ -20,12 +20,11 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  *
  * @property uid The unique identifier of the trip.
  * @property name The name of the trip.
- * @property startDate The start date of the trip.
- * @property endDate The end date of the trip.
  * @property ownerId The unique identifier of the owner of the trip.
  * @property locations The list of locations of the trip.
  * @property routeSegments The list of route segments of the trip.
  * @property activities The list of activities of the trip.
+ * @property tripProfile The profile of the trip.
  */
 data class Trip(
     val uid: String,

@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.sp
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 object DummyScreenTestTags {
@@ -58,6 +59,9 @@ fun DummyScreen(
               Text("Trip UID: ${it.uid}")
               Text("Trip Name: ${it.name}")
               Text("Trip Owner ID: ${it.ownerId}")
+            }
+            Button(onClick = { navigationActions?.navigateTo(Screen.TripSettings1) }) {
+              Text("Create trip")
             }
           }
         }

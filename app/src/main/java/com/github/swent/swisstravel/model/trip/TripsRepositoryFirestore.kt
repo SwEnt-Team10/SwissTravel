@@ -182,7 +182,10 @@ class TripsRepositoryFirestore(
         (map["preferences"] as? List<*>)?.mapNotNull { mapToRatedPreferences(it as Map<*, *>) }
             ?: emptyList()
 
-    return TripProfile(startDate, endDate, preferredLocations, preferences)
+    val adults = (map["adults"] as? Long)?.toInt() ?: 1
+    val children = (map["children"] as? Long)?.toInt() ?: 0
+
+    return TripProfile(startDate, endDate, preferredLocations, preferences, adults, children)
   }
 
   /**
