@@ -31,7 +31,8 @@ class ComposableTests {
           label = "test",
           count = count.value,
           onIncrement = { count.value++ },
-          onDecrement = { count.value-- })
+          onDecrement = { count.value-- },
+          enableButton = count.value > 0)
     }
     composeTestRule.onNodeWithTag("test" + CounterTestTags.COUNTER).assertIsDisplayed()
     composeTestRule.onNodeWithTag(CounterTestTags.DECREMENT).performClick()
