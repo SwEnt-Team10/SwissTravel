@@ -1,9 +1,7 @@
 package com.android.swisstravel.e2e
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
-import androidx.compose.ui.test.assertIsToggleable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -17,7 +15,6 @@ import com.android.swisstravel.utils.FakeJwtGenerator
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
 import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
-import com.google.firebase.auth.FirebaseAuth
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
