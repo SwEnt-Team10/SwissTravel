@@ -15,8 +15,8 @@ import kotlin.math.round
  * @property children The number of children for the trip.
  */
 data class TripProfile(
-    val startDate: Timestamp = Timestamp.now(),
-    val endDate: Timestamp = Timestamp.now(),
+    val startDate: Timestamp,
+    val endDate: Timestamp,
     val preferredLocations: List<Location> = emptyList(),
     val preferences: List<Preference> = emptyList(),
     val adults: Int = 1,

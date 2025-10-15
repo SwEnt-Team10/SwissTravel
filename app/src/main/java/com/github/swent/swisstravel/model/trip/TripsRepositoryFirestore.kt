@@ -74,11 +74,7 @@ class TripsRepositoryFirestore(
 
       val tripProfile =
           (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) }
-              ?: TripProfile(
-                  startDate = Timestamp.now(),
-                  endDate = Timestamp.now(),
-                  preferredLocations = emptyList(),
-                  preferences = emptyList())
+              ?: return null
 
       Trip(
           uid = uid,

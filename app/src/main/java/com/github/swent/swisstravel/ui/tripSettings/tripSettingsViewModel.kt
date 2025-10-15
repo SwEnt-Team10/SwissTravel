@@ -96,16 +96,22 @@ class TripSettingsViewModel(
         val newUid = tripsRepository.getNewUid()
         val user = userRepository.getCurrentUser()
 
+        val start = settings.date.startDate
+        val end = settings.date.endDate
+
+        if (start == null || end == null) {
+          _validationEventChannel.send(
+              ValidationEvent.SaveError("Please select both start and end dates."))
+          return@launch
+        }
+
+        val startTs = Timestamp(start.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
+        val endTs = Timestamp(end.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
+
         val tripProfile =
             TripProfile(
-                startDate =
-                    settings.date.startDate?.atStartOfDay(ZoneId.systemDefault())?.let {
-                      Timestamp(it.toEpochSecond(), 0)
-                    } ?: Timestamp.now(),
-                endDate =
-                    settings.date.endDate?.atStartOfDay(ZoneId.systemDefault())?.let {
-                      Timestamp(it.toEpochSecond(), 0)
-                    } ?: Timestamp.now(),
+                startDate = startTs,
+                endDate = endTs,
                 preferredLocations = emptyList(), // Placeholder
                 preferences = settings.preferences,
                 adults = settings.travelers.adults,
