@@ -31,7 +31,7 @@ class NavigationTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
-    // composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).assertIsDisplayed()
   }
 
   @Test
@@ -39,13 +39,12 @@ class NavigationTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
   }
 
-  // TODO Uncomment this when My trips has been implemented
-  //    @Test
-  //    fun bottomNavigationIsDisplayedForMyTrips() {
-  //        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-  //
-  // composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
-  //    }
+  @Test
+  fun bottomNavigationIsDisplayedForMyTrips() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+  }
 
   @Test
   fun bottomNavigationIsDisplayedForProfile() {
@@ -68,68 +67,34 @@ class NavigationTest : SwissTravelTest() {
 
   @Test
   fun navigationBetweenTabsWorks() {
-    //        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    //        composeTestRule.checkCurrentTripScreenIsDisplayed()
-    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-    //        composeTestRule.checkProfileScreenIsNotDisplayed()
-    //        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-    //        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    //        composeTestRule.checkMyTripsScreenIsDisplayed()
-    //        composeTestRule.checkProfileScreenIsNotDisplayed()
-    //        composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    //        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-    //        composeTestRule.checkProfileScreenIsDisplayed()
-    //        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    //        composeTestRule.checkCurrentTripScreenIsDisplayed()
-    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-    //        composeTestRule.checkProfileScreenIsNotDisplayed()
-  }
-
-  // TODO delete this when My trips implemented
-  @Test
-  fun navigationBetweenTabsWorksDummies() {
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
     composeTestRule.checkCurrentTripScreenIsDisplayed()
-    composeTestRule.checkDummyScreenIsNotDisplayed()
+    composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
     composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    composeTestRule.checkDummyScreenIsDisplayed()
+    composeTestRule.checkMyTripsScreenIsDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    composeTestRule.checkDummyScreenIsNotDisplayed()
+    composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
     composeTestRule.checkCurrentTripScreenIsDisplayed()
-    composeTestRule.checkDummyScreenIsNotDisplayed()
-    composeTestRule.checkProfileScreenIsNotDisplayed()
-  }
-
-  // TODO delete this when My trips implemented
-  @Test
-  fun canNavigateBackToDummyScreenAndBackToCurrentTripSystemBack() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-    composeTestRule.checkDummyScreenIsDisplayed()
-    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    composeTestRule.checkProfileScreenIsNotDisplayed()
-    pressBack(shouldFinish = false)
-    composeTestRule.checkCurrentTripScreenIsDisplayed()
-    composeTestRule.checkDummyScreenIsNotDisplayed()
+    composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
   }
 
   @Test
   fun canNavigateBackToMyTripsAndBackToCurrentTripUsingSystemBack() {
-    //        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-    //        composeTestRule.checkMyTripsScreenIsDisplayed()
-    //        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    //        composeTestRule.checkProfileScreenIsNotDisplayed()
-    //        pressBack(shouldFinish = false)
-    //        composeTestRule.checkCurrentTripScreenIsDisplayed()
-    //        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-    //        composeTestRule.checkProfileScreenIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    composeTestRule.checkMyTripsScreenIsDisplayed()
+    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+    composeTestRule.checkProfileScreenIsNotDisplayed()
+    pressBack(shouldFinish = false)
+    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkMyTripsScreenIsNotDisplayed()
+    composeTestRule.checkProfileScreenIsNotDisplayed()
   }
 
   private fun pressBack(shouldFinish: Boolean) {

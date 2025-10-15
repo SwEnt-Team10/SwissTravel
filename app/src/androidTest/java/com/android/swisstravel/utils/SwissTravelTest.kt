@@ -10,6 +10,7 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
 import com.github.swent.swisstravel.ui.DummyScreenTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
+import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.google.firebase.auth.FirebaseUser
@@ -77,16 +78,19 @@ abstract class SwissTravelTest {
   // TODO : Declare ComposeTestRules here
 
   fun ComposeTestRule.checkMyTripsScreenIsDisplayed() {
-    //    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-    //      .assertIsDisplayed()
-    //     .assertTextContains("My Trips", substring = false, ignoreCase = true)
-    //    // TODO what defines the MyTripScreen that is different from others like the top bar
+    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
+    onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE)
+        .assertIsDisplayed()
+        .assertTextContains("Upcoming Trip", substring = false, ignoreCase = true)
+    onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
+        .assertIsDisplayed()
+        .assertTextContains("Current Trip", substring = false, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkMyTripsScreenIsNotDisplayed() {
-    //    onNodeWithTag(ProfileScreenTestTags.DROPDOWN_PREFERENCES)
-    //      .assertDoesNotExist()
-    // TODO
+    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertDoesNotExist()
+    onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE).assertDoesNotExist()
+    onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).assertDoesNotExist()
   }
 
   fun ComposeTestRule.checkCurrentTripScreenIsDisplayed() {

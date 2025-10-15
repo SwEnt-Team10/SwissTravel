@@ -33,7 +33,7 @@ fun DummyScreen(
   Scaffold(
       bottomBar = {
         BottomNavigationMenu(
-            selectedTab = Tab.MyTrips,
+            selectedTab = Tab.CurrentTrip,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
