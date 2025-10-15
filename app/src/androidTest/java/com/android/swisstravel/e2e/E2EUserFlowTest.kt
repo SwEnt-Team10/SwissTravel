@@ -13,6 +13,7 @@ import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -76,5 +77,10 @@ class E2EUserFlowTest : SwissTravelTest() {
     composeTestRule.checkCurrentTripScreenIsNotDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsDisplayed()
+  }
+
+  @After
+  override fun tearDown() {
+    super.tearDown()
   }
 }
