@@ -55,6 +55,7 @@ object ProfileScreenTestTags {
   const val GREETING = "greeting"
   const val PERSONAL_INFO = "personalInfo"
   const val PREFERENCES = "preferences"
+
   fun preferenceSwitchTag(title: String): String = "preferenceSwitch:$title"
 }
 

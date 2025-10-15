@@ -28,53 +28,53 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class E2EUserFlowTest : SwissTravelTest() {
 
-    @get:Rule val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-        FirebaseEmulator.auth.signOut()
+  @Before
+  override fun setUp() {
+    super.setUp()
+    FirebaseEmulator.auth.signOut()
+  }
+
+  @Test
+  fun user_can_sign_in_and_navigate_across_tabs() {
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
+    val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
+
+    // Start app logged out
+    composeTestRule.setContent {
+      SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) }
+    }
+    composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertExists().performClick()
+
+    // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
     }
 
-    @Test
-    fun user_can_sign_in_and_navigate_across_tabs() {
-        val fakeGoogleIdToken =
-            FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
-        val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
+    // Verify bottom navigation visible
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
 
-        // Start app logged out
-        composeTestRule.setContent { SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) } }
-        composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertExists().performClick()
+    // Navigate to Current Trip and verify
+    composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
+    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkMyTripsScreenIsNotDisplayed()
+    composeTestRule.checkProfileScreenIsNotDisplayed()
 
-        // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
-        composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-            composeTestRule
-                .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-                .fetchSemanticsNodes()
-                .isNotEmpty()
-        }
+    // Navigate to My Trips and verify
+    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+    composeTestRule.checkMyTripsScreenIsDisplayed()
+    composeTestRule.checkProfileScreenIsNotDisplayed()
 
-        // Verify bottom navigation visible
-        composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
-
-        // Navigate to Current Trip and verify
-        composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-        composeTestRule.checkCurrentTripScreenIsDisplayed()
-        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-        composeTestRule.checkProfileScreenIsNotDisplayed()
-
-        // Navigate to My Trips and verify
-        composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-        composeTestRule.checkMyTripsScreenIsDisplayed()
-        composeTestRule.checkProfileScreenIsNotDisplayed()
-
-        // Navigate to Profile and verify
-        composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-        composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-        composeTestRule.checkMyTripsScreenIsNotDisplayed()
-        composeTestRule.checkProfileScreenIsDisplayed()
-    }
+    // Navigate to Profile and verify
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+    composeTestRule.checkMyTripsScreenIsNotDisplayed()
+    composeTestRule.checkProfileScreenIsDisplayed()
+  }
 }
-
-

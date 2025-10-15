@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.google.firebase.Timestamp
 import org.junit.Rule
 import org.junit.Test
@@ -67,7 +68,7 @@ class MyTripsScreenEmulatorTest {
     val fakeRepo = FakeTripsRepository(listOf(currentTrip, upcomingTrip))
     val viewModel = MyTripsViewModel(fakeRepo)
 
-    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
     // Check current trip
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).assertIsDisplayed()
@@ -86,7 +87,7 @@ class MyTripsScreenEmulatorTest {
   fun displaysEmptyMessagesWhenNoTrips() {
     val viewModel = MyTripsViewModel(FakeTripsRepository(emptyList()))
 
-    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).assertIsDisplayed()
     composeTestRule
@@ -100,7 +101,9 @@ class MyTripsScreenEmulatorTest {
     val viewModel = MyTripsViewModel(FakeTripsRepository(emptyList()))
 
     composeTestRule.setContent {
-      MyTripsScreen(myTripsViewModel = viewModel, onPastTrips = { clicked = true })
+      SwissTravelTheme {
+        MyTripsScreen(myTripsViewModel = viewModel, onPastTrips = { clicked = true })
+      }
     }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).performClick()

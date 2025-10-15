@@ -20,16 +20,16 @@ import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
 import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
 import com.github.swent.swisstravel.SwissTravelApp
+import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
+import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
+import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripSettings.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripSettings.TripPreferencesTestTags
 import com.github.swent.swisstravel.ui.tripSettings.TripTravelersTestTags
-import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
-import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import java.time.LocalDate
 import org.junit.Before
 import org.junit.Rule
@@ -50,18 +50,19 @@ class E2ETripFlowTest : SwissTravelTest() {
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.auth.signOut()
     val today = LocalDate.now()
-    todayLabel = "Trip from ${today}"
+    todayLabel = "Trip from $today"
     val other = today.plusDays(5)
-    otherDayLabel = "Trip from ${other}"
+    otherDayLabel = "Trip from $other"
   }
 
   @Test
   fun full_multi_account_trip_and_prefs_flow() {
-    val alice = FakeJwtGenerator.createFakeGoogleIdToken(name = "Alice", email = "alice@example.com")
+    val alice =
+        FakeJwtGenerator.createFakeGoogleIdToken(name = "Alice", email = "alice@example.com")
     val bob = FakeJwtGenerator.createFakeGoogleIdToken(name = "Bob", email = "bob@example.com")
     val creds = FakeCredentialManager.sequence(alice, bob)
 
-    composeTestRule.setContent { SwissTravelTheme{SwissTravelApp(credentialManager = creds)}}
+    composeTestRule.setContent { SwissTravelTheme { SwissTravelApp(credentialManager = creds) } }
 
     // 1) Log in as first account
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertExists().performClick()
@@ -94,7 +95,10 @@ class E2ETripFlowTest : SwissTravelTest() {
         .performClick()
 
     // 8) Log out
-    composeTestRule.onNodeWithText("Sign Out", useUnmergedTree = true).performScrollTo().performClick()
+    composeTestRule
+        .onNodeWithText("Sign Out", useUnmergedTree = true)
+        .performScrollTo()
+        .performClick()
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
       composeTestRule.onAllNodesWithTag(LOGIN_BUTTON).fetchSemanticsNodes().isNotEmpty()
     }
@@ -123,7 +127,10 @@ class E2ETripFlowTest : SwissTravelTest() {
 
     // 13) Log out
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    composeTestRule.onNodeWithText("Sign Out", useUnmergedTree = true).performScrollTo().performClick()
+    composeTestRule
+        .onNodeWithText("Sign Out", useUnmergedTree = true)
+        .performScrollTo()
+        .performClick()
   }
 
   private fun waitForMainUi() {
@@ -161,5 +168,3 @@ class E2ETripFlowTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
   }
 }
-
-

@@ -13,6 +13,7 @@ import com.github.swent.swisstravel.ui.profile.PreferenceToggle
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
 
@@ -70,7 +71,9 @@ class ProfileScreenUITest {
           }
         }
 
-    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(emptyRepo)) }
+    composeTestRule.setContent {
+      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(emptyRepo)) }
+    }
 
     composeTestRule
         .onNode(
@@ -84,7 +87,9 @@ class ProfileScreenUITest {
 
   @Test
   fun toggleSwitch_changesStateWhenClicked() {
-    composeTestRule.setContent { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
+    composeTestRule.setContent {
+      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
+    }
 
     // Ensure the preference switch is visible
     val hikingToggle = composeTestRule.onNodeWithText("Hiking & Outdoor")
@@ -103,8 +108,10 @@ class ProfileScreenUITest {
   @Test
   fun infoSection_and_InfoItem_renderTextProperly() {
     composeTestRule.setContent {
-      InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
-        InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
+      SwissTravelTheme {
+        InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
+          InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
+        }
       }
     }
 
@@ -118,11 +125,13 @@ class ProfileScreenUITest {
   fun preferenceToggle_changesState() {
     var toggled = false
     composeTestRule.setContent {
-      PreferenceToggle(
-          title = "My Toggle",
-          checked = toggled,
-          onCheckedChange = { toggled = !toggled },
-          modifier = Modifier.testTag("toggle"))
+      SwissTravelTheme {
+        PreferenceToggle(
+            title = "My Toggle",
+            checked = toggled,
+            onCheckedChange = { toggled = !toggled },
+            modifier = Modifier.testTag("toggle"))
+      }
     }
 
     val toggleNode = composeTestRule.onNodeWithText("My Toggle", useUnmergedTree = true)
