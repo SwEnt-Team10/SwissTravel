@@ -70,7 +70,8 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
                     onDecrement = {
                       if (travelers.adults > 1)
                           travelers = travelers.copy(adults = travelers.adults - 1)
-                    })
+                    },
+                    enableButton = travelers.adults > 1)
 
                 Spacer(modifier = Modifier.height(96.dp))
 
@@ -81,7 +82,8 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
                     onDecrement = {
                       if (travelers.children > 0)
                           travelers = travelers.copy(children = travelers.children - 1)
-                    })
+                    },
+                    enableButton = travelers.children > 0)
               }
 
               Spacer(modifier = Modifier.height(16.dp))
