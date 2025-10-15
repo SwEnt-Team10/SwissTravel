@@ -2,6 +2,7 @@ package com.github.swent.swisstravel
 
 import android.content.Context
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,10 +19,10 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
-import com.github.swent.swisstravel.ui.DummyScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
+import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -100,7 +101,14 @@ fun SwissTravelApp(
         route = Screen.MyTrips.name,
     ) {
       composable(Screen.MyTrips.route) {
-        DummyScreen(navigationActions = navigationActions) // TODO change this
+        MyTripsScreen(
+            onSelectTrip = {
+              Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
+            },
+            onPastTrips = {
+              Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
+            },
+            navigationActions = navigationActions)
       }
     }
     navigation(

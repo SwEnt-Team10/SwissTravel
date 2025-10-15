@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
@@ -31,11 +32,7 @@ sealed class Tab(
 ) {
 
   object MyTrips :
-      Tab(
-          "My trips",
-          Screen.MyTrips,
-          Icons.AutoMirrored.Filled.MenuOpen,
-          Icons.AutoMirrored.Filled.MenuOpen)
+      Tab("My trips", Screen.MyTrips, Icons.AutoMirrored.Filled.MenuOpen, Icons.Filled.Menu)
 
   object CurrentTrip :
       Tab("Current trip", Screen.CurrentTrip, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
