@@ -11,6 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
+import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import kotlinx.coroutines.test.runTest
@@ -26,9 +27,9 @@ class CurrentTripScreenTest {
   fun setup() {
     composeTestRule.setContent {
       val navController = rememberNavController()
-      NavHost(navController = navController, startDestination = Screen.CurrentTrip.route) {
-        composable(Screen.CurrentTrip.route) {
-          CurrentTripScreen(navigationActions = NavigationActions(navController))
+      NavHost(navController = navController, startDestination = Screen.MyTrips.route) {
+        composable(Screen.MyTrips.route) {
+          MyTripsScreen(navigationActions = NavigationActions(navController))
         }
         composable(Screen.SelectedTripMap.route) {
           NavigationMapScreen(navigationActions = NavigationActions(navController))
