@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -17,6 +18,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
@@ -58,16 +60,25 @@ class MainActivity : ComponentActivity() {
 /**
  * Retrieves the TripSettingsViewModel scoped to the TripSettings navigation graph.
  *
+ * Bug solved with Copilot.
+ *
  * @param navController The NavHostController used for navigation.
  * @return The TripSettingsViewModel instance.
  */
 @Composable
 fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewModel {
+  val currentEntry by navController.currentBackStackEntryAsState()
+
   val parentEntry =
-      remember(navController.currentBackStackEntry) {
-        navController.getBackStackEntry(Screen.TripSettings1.name)
+      remember(currentEntry) {
+        runCatching { navController.getBackStackEntry(Screen.TripSettings1.name) }.getOrNull()
       }
-  return viewModel(parentEntry)
+
+  return if (parentEntry != null) {
+    viewModel(parentEntry)
+  } else {
+    viewModel()
+  }
 }
 
 @Composable

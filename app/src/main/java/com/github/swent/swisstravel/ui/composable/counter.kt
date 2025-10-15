@@ -39,7 +39,13 @@ object CounterTestTags {
  * @param onDecrement Callback to be invoked when the decrement button is clicked.
  */
 @Composable
-fun Counter(label: String, count: Int, onIncrement: () -> Unit, onDecrement: () -> Unit) {
+fun Counter(
+    label: String,
+    count: Int,
+    onIncrement: () -> Unit,
+    onDecrement: () -> Unit,
+    enableButton: Boolean
+) {
   Column(
       modifier =
           Modifier.fillMaxWidth()
@@ -60,7 +66,7 @@ fun Counter(label: String, count: Int, onIncrement: () -> Unit, onDecrement: () 
               RoundIconButton(
                   text = "–",
                   onClick = onDecrement,
-                  enabled = count > 0,
+                  enabled = enableButton,
                   testTag = CounterTestTags.DECREMENT)
 
               Text(
