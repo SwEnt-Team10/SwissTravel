@@ -14,11 +14,11 @@ import androidx.test.espresso.contrib.PickerActions
 import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.android.swisstravel.utils.FakeCredentialManager
 import com.android.swisstravel.utils.FakeJwtGenerator
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
-import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
@@ -26,7 +26,6 @@ import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripSettings.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripSettings.TripPreferencesTestTags
 import com.github.swent.swisstravel.ui.tripSettings.TripTravelersTestTags
@@ -62,7 +61,7 @@ class E2ETripFlowTest : SwissTravelTest() {
     val bob = FakeJwtGenerator.createFakeGoogleIdToken(name = "Bob", email = "bob@example.com")
     val creds = FakeCredentialManager.sequence(alice, bob)
 
-    composeTestRule.setContent { SwissTravelTheme { SwissTravelApp(credentialManager = creds) } }
+    composeTestRule.setContent { SwissTravelApp(credentialManager = creds) }
 
     // 1) Log in as first account
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertExists().performClick()
@@ -76,7 +75,11 @@ class E2ETripFlowTest : SwissTravelTest() {
     createTrip(selectNonToday = false)
 
     // 4) See that the trip is displayed in My Trips
-    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    waitForMainUi()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.onNodeWithText(todayLabel, useUnmergedTree = true).assertIsDisplayed()
 
     // 5) Go back to current trip and create another trip with non-today date
@@ -84,7 +87,11 @@ class E2ETripFlowTest : SwissTravelTest() {
     createTrip(selectNonToday = true)
 
     // 6) Verify second trip is displayed in My Trips
-    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    waitForMainUi()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.onNodeWithText(otherDayLabel, useUnmergedTree = true).assertIsDisplayed()
 
     // 7) Go to profile and modify a preference
@@ -99,7 +106,7 @@ class E2ETripFlowTest : SwissTravelTest() {
         .onNodeWithText("Sign Out", useUnmergedTree = true)
         .performScrollTo()
         .performClick()
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule.onAllNodesWithTag(LOGIN_BUTTON).fetchSemanticsNodes().isNotEmpty()
     }
 
@@ -108,7 +115,11 @@ class E2ETripFlowTest : SwissTravelTest() {
     waitForMainUi()
 
     // 10) Verify no other trip is displayed
-    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    waitForMainUi()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
     // Expect empty messages to be displayed for a fresh account
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG, useUnmergedTree = true)
@@ -122,7 +133,11 @@ class E2ETripFlowTest : SwissTravelTest() {
     createTrip(selectNonToday = false)
 
     // 12) Verify it is displayed in My Trips
-    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    waitForMainUi()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.onNodeWithText(todayLabel, useUnmergedTree = true).assertIsDisplayed()
 
     // 13) Log out
@@ -134,7 +149,7 @@ class E2ETripFlowTest : SwissTravelTest() {
   }
 
   private fun waitForMainUi() {
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule
           .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
           .fetchSemanticsNodes()

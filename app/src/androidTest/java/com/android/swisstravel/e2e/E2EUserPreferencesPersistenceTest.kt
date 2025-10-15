@@ -10,16 +10,15 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.android.swisstravel.utils.FakeCredentialManager
 import com.android.swisstravel.utils.FakeJwtGenerator
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
-import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +44,7 @@ class E2EUserPreferencesPersistenceTest : SwissTravelTest() {
     val creds = FakeCredentialManager.sequence(alice, bob, alice)
 
     // Single setContent for the whole flow
-    composeTestRule.setContent { SwissTravelTheme { SwissTravelApp(credentialManager = creds) } }
+    composeTestRule.setContent { SwissTravelApp(credentialManager = creds) }
 
     // Sign in as Alice
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertExists().performClick()
@@ -88,7 +87,7 @@ class E2EUserPreferencesPersistenceTest : SwissTravelTest() {
   }
 
   private fun waitForMainUi() {
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule
           .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
           .fetchSemanticsNodes()
@@ -98,7 +97,7 @@ class E2EUserPreferencesPersistenceTest : SwissTravelTest() {
 
   private fun goToProfile() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule
           .onAllNodesWithTag(ProfileScreenTestTags.PREFERENCES_LIST)
           .fetchSemanticsNodes()
@@ -111,7 +110,7 @@ class E2EUserPreferencesPersistenceTest : SwissTravelTest() {
         .onNodeWithText("Sign Out", useUnmergedTree = true)
         .performScrollTo()
         .performClick()
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule.onAllNodesWithTag(LOGIN_BUTTON).fetchSemanticsNodes().isNotEmpty()
     }
   }

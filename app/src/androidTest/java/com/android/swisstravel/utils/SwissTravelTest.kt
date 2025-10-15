@@ -22,6 +22,7 @@ import org.junit.After
 import org.junit.Before
 
 const val UI_WAIT_TIMEOUT = 15_000L
+const val E2E_WAIT_TIMEOUT = 25_000L
 
 /**
  * Base class for all SwissTravel tests, providing common setup and utility functions.
