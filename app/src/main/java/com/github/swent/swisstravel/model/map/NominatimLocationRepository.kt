@@ -11,6 +11,15 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
 
+/**
+ * Implementation of [LocationRepository] using the Nominatim API. Note: Nominatim has usage
+ * policies that must be followed, including setting a proper User-Agent. See
+ * https://operations.osmfoundation.org/policies/nominatim/
+ *
+ * @param client The OkHttpClient to use for network requests.
+ * @param baseUrl The base URL for the Nominatim API. Default is
+ *   "https://nominatim.openstreetmap.org".
+ */
 class NominatimLocationRepository(
     private val client: OkHttpClient,
     private val baseUrl: String = "https://nominatim.openstreetmap.org"

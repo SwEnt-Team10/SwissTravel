@@ -7,6 +7,7 @@ import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContra
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+/** A fake implementation of [AddressTextFieldViewModelContract] for testing purposes. */
 class FakeAddressTextFieldViewModel : AddressTextFieldViewModelContract {
 
   private val _state =
