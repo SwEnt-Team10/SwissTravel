@@ -50,6 +50,12 @@ class NominatimLocationRepository(
         }
       }
 
+  /**
+   * Parses the JSON response body from the Nominatim API into a list of Location objects.
+   *
+   * @param body The JSON response body as a string.
+   * @return A list of Location objects parsed from the response.
+   */
   private fun parseBody(body: String): List<Location> {
     val jsonArray = JSONArray(body)
     return List(jsonArray.length()) { i ->
