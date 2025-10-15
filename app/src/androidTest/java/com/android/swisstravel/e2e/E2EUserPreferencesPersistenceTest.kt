@@ -87,6 +87,8 @@ class E2EUserPreferencesPersistenceTest : SwissTravelTest() {
   }
 
   private fun waitForMainUi() {
+    composeTestRule.waitForIdle()
+    Thread.sleep(500)
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule
           .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)

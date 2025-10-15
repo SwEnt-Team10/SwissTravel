@@ -33,6 +33,7 @@ class E2EUserFlowTest : SwissTravelTest() {
   override fun setUp() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
+    FirebaseEmulator.clearAuthEmulator()
   }
 
   @Test
@@ -70,6 +71,8 @@ class E2EUserFlowTest : SwissTravelTest() {
 
     // Navigate to Profile and verify
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.waitForIdle()
+    Thread.sleep(500)
     composeTestRule.checkCurrentTripScreenIsNotDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsDisplayed()
