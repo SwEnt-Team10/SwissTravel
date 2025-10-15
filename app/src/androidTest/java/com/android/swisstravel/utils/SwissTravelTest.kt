@@ -94,15 +94,15 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkCurrentTripScreenIsDisplayed() {
-    onNodeWithTag(CurrentTripScreenTestTags.TEMPORARY_TEST_TAG)
+    onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT)
         .assertIsDisplayed()
-        .assertTextContains("Current Trip", substring = false, ignoreCase = true)
-    // TODO what defines the CurrentTrip that is different from others like the top bar
+        .assertTextContains("Create a trip", substring = false, ignoreCase = true)
+    onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkCurrentTripScreenIsNotDisplayed() {
-    onNodeWithTag(CurrentTripScreenTestTags.TEMPORARY_TEST_TAG).assertDoesNotExist()
-    // TODO Change this
+    onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT).assertDoesNotExist()
+    onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).assertDoesNotExist()
   }
 
   fun ComposeTestRule.checkDummyScreenIsDisplayed() {

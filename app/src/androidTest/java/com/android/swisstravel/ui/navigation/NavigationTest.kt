@@ -9,6 +9,7 @@ import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -23,7 +24,7 @@ class NavigationTest : SwissTravelTest() {
     super.setUp()
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.auth.signInAnonymously()
-    composeTestRule.setContent { SwissTravelApp() }
+    composeTestRule.setContent { SwissTravelTheme { SwissTravelApp() } }
   }
 
   @Test
