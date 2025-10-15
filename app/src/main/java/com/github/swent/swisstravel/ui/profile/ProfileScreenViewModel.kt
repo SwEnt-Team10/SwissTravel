@@ -2,8 +2,8 @@ package com.github.swent.swisstravel.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserPreference
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.displayString
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -26,7 +26,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
   private val _uiState = MutableStateFlow(ProfileScreenUIState())
   private var currentUser: User? = null
   val uiState: StateFlow<ProfileScreenUIState> = _uiState.asStateFlow()
-  val allPreferences = enumValues<UserPreference>().map { it.displayString() }
+  val allPreferences = enumValues<Preference>().map { it.displayString() }
 
   init {
     viewModelScope.launch {

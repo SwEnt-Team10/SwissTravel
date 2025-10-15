@@ -4,8 +4,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserPreference
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.ui.profile.InfoItem
 import com.github.swent.swisstravel.ui.profile.InfoSection
@@ -24,7 +24,7 @@ class FakeUserRepository : UserRepository {
         name = "Test User",
         email = "test@example.com",
         profilePicUrl = "",
-        preferences = listOf(UserPreference.MUSEUMS))
+        preferences = listOf(Preference.MUSEUMS))
   }
 
   override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {
@@ -48,7 +48,7 @@ class ProfileScreenUITest {
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
 
-    val expectedPreferenceCount = UserPreference.values().size
+    val expectedPreferenceCount = Preference.values().size
 
     composeTestRule
         .onAllNodesWithTag(ProfileScreenTestTags.PREFERENCES)

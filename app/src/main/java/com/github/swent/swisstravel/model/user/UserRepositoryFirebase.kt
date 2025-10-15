@@ -65,7 +65,7 @@ class UserRepositoryFirebase(
         profilePicUrl = doc.getString("profilePicUrl") ?: "",
         preferences =
             (doc.get("preferences") as? List<*>)?.mapNotNull { str ->
-              enumValues<UserPreference>().find { it.displayString() == str }
+              enumValues<Preference>().find { it.displayString() == str }
             } ?: emptyList())
   }
 
