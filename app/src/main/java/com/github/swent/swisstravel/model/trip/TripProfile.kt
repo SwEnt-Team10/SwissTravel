@@ -1,6 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
-import com.github.swent.swisstravel.model.user.RatedPreferences
+import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import kotlin.math.round
 
@@ -15,10 +15,10 @@ import kotlin.math.round
  * @property children The number of children for the trip.
  */
 data class TripProfile(
-    val startDate: Timestamp = Timestamp.now(),
-    val endDate: Timestamp = Timestamp.now(),
+    val startDate: Timestamp,
+    val endDate: Timestamp,
     val preferredLocations: List<Location> = emptyList(),
-    val preferences: List<RatedPreferences> = emptyList(),
+    val preferences: List<Preference> = emptyList(),
     val adults: Int = 1,
     val children: Int = 0
 ) {

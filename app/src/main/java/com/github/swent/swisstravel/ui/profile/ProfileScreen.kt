@@ -147,6 +147,13 @@ private fun ProfileScreenContent(
         InfoSection(
             title = "Travel Preferences",
             modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
+              Text(
+                  text = "These preferences will be selected by default when creating a new trip.",
+                  style =
+                      MaterialTheme.typography.bodyMedium.copy(
+                          color = MaterialTheme.colorScheme.onSurfaceVariant),
+                  modifier = Modifier.padding(bottom = 12.dp))
+
               profileScreenViewModel.allPreferences.forEach { pref ->
                 val isSelected = uiState.selectedPreferences.contains(pref)
                 PreferenceToggle(
