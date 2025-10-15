@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -51,6 +52,21 @@ class MainActivity : ComponentActivity() {
       }
     }
   }
+}
+
+/**
+ * Retrieves the TripSettingsViewModel scoped to the TripSettings navigation graph.
+ *
+ * @param navController The NavHostController used for navigation.
+ * @return The TripSettingsViewModel instance.
+ */
+@Composable
+fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewModel {
+  val parentEntry =
+      remember(navController.currentBackStackEntry) {
+        navController.getBackStackEntry(Screen.TripSettings1.name)
+      }
+  return viewModel(parentEntry)
 }
 
 @Composable
@@ -122,25 +138,19 @@ fun SwissTravelApp(
         route = Screen.TripSettings1.name,
     ) {
       composable(Screen.TripSettings1.route) {
-        val parentEntry =
-            remember(it) { navController.getBackStackEntry(Screen.TripSettings1.name) }
-        val viewModel = viewModel<TripSettingsViewModel>(parentEntry)
         TripDateScreen(
-            viewModel = viewModel, onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
+            viewModel = tripSettingsViewModel(navController),
+            onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
       }
       composable(Screen.TripSettings2.route) {
-        val parentEntry =
-            remember(it) { navController.getBackStackEntry(Screen.TripSettings1.name) }
-        val viewModel = viewModel<TripSettingsViewModel>(parentEntry)
         TripTravelersScreen(
-            viewModel = viewModel, onNext = { navigationActions.navigateTo(Screen.TripSettings3) })
+            viewModel = tripSettingsViewModel(navController),
+            onNext = { navigationActions.navigateTo(Screen.TripSettings3) })
       }
       composable(Screen.TripSettings3.route) {
-        val parentEntry =
-            remember(it) { navController.getBackStackEntry(Screen.TripSettings1.name) }
-        val viewModel = viewModel<TripSettingsViewModel>(parentEntry)
         TripPreferencesScreen(
-            viewModel = viewModel, onDone = { navigationActions.navigateTo(Screen.MyTrips) })
+            viewModel = tripSettingsViewModel(navController),
+            onDone = { navigationActions.navigateTo(Screen.MyTrips) })
       }
     }
   }

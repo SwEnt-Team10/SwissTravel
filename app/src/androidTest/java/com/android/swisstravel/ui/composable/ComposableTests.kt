@@ -15,6 +15,7 @@ import com.github.swent.swisstravel.ui.composable.SliderTestTags
 import com.github.swent.swisstravel.ui.composable.SwitchTestTags
 import com.github.swent.swisstravel.ui.composable.ToggleTestTags
 import com.github.swent.swisstravel.ui.composable.counter
+import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
 
@@ -34,9 +35,9 @@ class ComposableTests {
     }
     composeTestRule.onNodeWithTag("test" + CounterTestTags.COUNTER).assertIsDisplayed()
     composeTestRule.onNodeWithTag(CounterTestTags.DECREMENT).performClick()
-    assert(count.value == 0)
+    assertEquals(0, count.value)
     composeTestRule.onNodeWithTag(CounterTestTags.INCREMENT).performClick()
-    assert(count.value == 1)
+    assertEquals(1, count.value)
     composeTestRule.onNodeWithTag(CounterTestTags.COUNT).assertIsDisplayed()
   }
 
