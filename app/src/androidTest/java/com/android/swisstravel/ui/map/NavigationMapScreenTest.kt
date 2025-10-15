@@ -51,6 +51,7 @@ class CurrentTripScreenTest {
   @Test
   fun canEnterAndExitNavigationMap() = runTest {
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).performClick()
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON)

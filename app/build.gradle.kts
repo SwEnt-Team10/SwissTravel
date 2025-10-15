@@ -142,8 +142,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.mapbox.maps)
     implementation(libs.mapbox.maps.compose)
-
-    implementation("com.mapbox.navigationcore:android-ndk27:3.16.0-beta.1")
+    implementation(libs.mapbox.maps.navigation)
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)

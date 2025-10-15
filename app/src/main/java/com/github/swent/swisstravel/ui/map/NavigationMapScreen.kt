@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.material3.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,7 +14,6 @@ import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
-import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -51,7 +49,7 @@ fun NavigationMapScreen(navigationActions: NavigationActions) {
   Box(modifier = Modifier.fillMaxSize()) {
     NavigationMap()
     Button(
-        onClick = { navigationActions.navigateTo(Screen.CurrentTrip) },
+        onClick = { navigationActions.navigateTo(Screen.MyTrips) },
         modifier =
             Modifier.align(Alignment.TopStart).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
           Icon(
@@ -75,9 +73,14 @@ fun NavigationMap() {
   val routeLineView = MapboxRouteLineView(routeLineViewOptions)
 
   // create the main map component (a "mapboxNavigation" instance)
-  val mapboxNavigation = remember {
-    MapboxNavigationProvider.create(NavigationOptions.Builder(context).build())
-  }
+  val mapboxNavigation =
+      remember(context) {
+        if (MapboxNavigationProvider.isCreated()) {
+          MapboxNavigationProvider.retrieve()
+        } else {
+          MapboxNavigationProvider.create(NavigationOptions.Builder(context).build())
+        }
+      }
 
   // get the possible routes from origin to destination
   val routeOptions =
@@ -101,15 +104,18 @@ fun NavigationMap() {
 
   // create a map
   val mapViewportState = rememberMapViewportState()
+  // set the initial location of the map
+  // hardcoded to EPFL for now to see the start of the hardcoded route
+  LaunchedEffect(Unit) {
+    mapViewportState.setCameraOptions {
+      center(Locations.EPFL_IC)
+      zoom(14.0)
+    }
+  }
   MapboxMap(
       modifier = Modifier.fillMaxSize().testTag(NavigationMapScreenTestTags.MAP),
       mapViewportState = mapViewportState) {
         MapEffect(Unit) { mapView ->
-
-          // set the initial location of the map
-          val initialLocation = CameraOptions.Builder().center(Locations.EPFL_IC).zoom(14.0).build()
-          mapView.mapboxMap.setCamera(initialLocation)
-
           // observer to update the route on the map when routes change
           val routesObserver =
               object : RoutesObserver {
@@ -133,5 +139,10 @@ fun NavigationMap() {
   mapboxNavigation.requestRoutes(routeOptions, callback)
 
   // create a manageable lifecycle
-  DisposableEffect(Unit) { onDispose { MapboxNavigationProvider.destroy() } }
+  DisposableEffect(Unit) {
+    onDispose {
+      // mapboxNavigation.unregisterRoutesObserver(routesObserver)
+      MapboxNavigationProvider.destroy()
+    }
+  }
 }
