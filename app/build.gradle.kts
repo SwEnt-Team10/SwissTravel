@@ -142,6 +142,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.mapbox.maps)
     implementation(libs.mapbox.maps.compose)
+    implementation(libs.mapbox.maps.navigation)
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)

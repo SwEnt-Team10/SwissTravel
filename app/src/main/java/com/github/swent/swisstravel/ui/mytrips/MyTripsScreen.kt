@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,15 +24,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 object MyTripsScreenTestTags {
@@ -112,6 +117,15 @@ fun MyTripsScreen(
                   Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
                       .padding(top = 0.dp, bottom = 10.dp))
 
+          Spacer(modifier = Modifier.height(4.dp))
+          Box(contentAlignment = Alignment.TopCenter) {
+            Button(
+                onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
+                modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
+                  // TODO : modify this to an "extend" icon when the map preview is implemented
+                  Text("Enter Map")
+                }
+          }
           Spacer(modifier = Modifier.height(4.dp))
 
           if (currentTrip != null) {

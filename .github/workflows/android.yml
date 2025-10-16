@@ -112,6 +112,10 @@ jobs:
           # To run the CI with debug informations, add --info
           ./gradlew ktfmtCheck
 
+      # Export Mapbox token for Gradle to download private mapbox artifacts
+      - name: Set Mapbox token for Gradle
+        run: echo "MAPBOX_DOWNLOADS_TOKEN=${{ secrets.MAP_BOX_DOWNLOAD_SECRET }}" >> $GITHUB_ENV
+
       # This step runs gradle commands to build the application
       - name: Assemble
         run: |
