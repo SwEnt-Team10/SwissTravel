@@ -92,15 +92,15 @@ class ProfileScreenUITest {
     }
 
     // Ensure the preference switch is visible
-    val hikingToggle = composeTestRule.onNodeWithText("Hiking & Outdoor")
-    hikingToggle.assertIsDisplayed()
+    val museumsToggle = composeTestRule.onNodeWithText("Museums")
+    museumsToggle.assertIsDisplayed()
 
     // Click the toggle to change state
-    hikingToggle.performClick()
+    museumsToggle.performClick()
     composeTestRule.waitForIdle()
 
     // Click again to revert
-    hikingToggle.performClick()
+    museumsToggle.performClick()
     composeTestRule.waitForIdle()
   }
 

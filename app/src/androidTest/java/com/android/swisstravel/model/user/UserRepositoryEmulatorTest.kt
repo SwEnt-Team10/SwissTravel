@@ -67,7 +67,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
             "name" to "Saved User",
             "email" to "existing@example.com",
             "profilePicUrl" to "http://example.com/avatar.png",
-            "preferences" to listOf("Hiking & Outdoor", "Sporty"))
+            "preferences" to listOf("Hiking", "Sports"))
     FirebaseEmulator.firestore.collection("users").document(uid).set(existingData).await()
 
     // TripActivity

@@ -105,8 +105,8 @@ class TripSettingsViewModelTest {
             Preference.QUICK,
             Preference.FOODIE,
             Preference.MUSEUMS,
-            Preference.HANDICAP,
-            Preference.SPORTY)
+            Preference.WHEELCHAIR_ACCESSIBLE,
+            Preference.SPORTS)
 
     viewModel.updatePreferences(preferences)
 

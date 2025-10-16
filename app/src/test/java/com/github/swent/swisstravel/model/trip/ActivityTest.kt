@@ -13,7 +13,8 @@ class ActivityTest {
           startDate = Timestamp(1734000000, 0),
           endDate = Timestamp(1734003600, 0),
           location =
-              Location(name = "Jet d'eau de Genève", coordinate = Coordinate(46.2074, 6.1551)))
+              Location(name = "Jet d'eau de Genève", coordinate = Coordinate(46.2074, 6.1551)),
+          description = "Description")
 
   @Test
   fun testGetName() {
