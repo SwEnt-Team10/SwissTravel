@@ -1,7 +1,7 @@
 package com.github.swent.swisstravel.model.trip.activity
 
 import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.Preference
 
 interface ActivityRepository {
 
@@ -35,7 +35,7 @@ interface ActivityRepository {
    * @return List of activities (could be empty if none found or request fails).
    */
   suspend fun getActivitiesByPreferences(
-      preferences: List<UserPreference>,
+      preferences: List<Preference>,
       limit: Int = 5
   ): List<Activity>
 }

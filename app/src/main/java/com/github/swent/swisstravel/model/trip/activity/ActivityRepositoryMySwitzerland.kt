@@ -4,7 +4,7 @@ import android.util.Log
 import com.github.swent.swisstravel.BuildConfig
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.toSwissTourismFacet
 import com.github.swent.swisstravel.model.user.toSwissTourismFacetFilter
 import com.google.firebase.Timestamp
@@ -132,7 +132,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
    * @param limit The limit of the number of activities to return.
    * @return The URL to fetch activities from.
    */
-  private fun computeUrlWithPreferences(preferences: List<UserPreference>, limit: Int): HttpUrl {
+  private fun computeUrlWithPreferences(preferences: List<Preference>, limit: Int): HttpUrl {
     if (preferences.isEmpty()) return baseHttpUrl
 
     val facetsParam = preferences.joinToString(",") { it.toSwissTourismFacet() }
@@ -206,7 +206,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
    * @return A list of activities by the given preferences.
    */
   override suspend fun getActivitiesByPreferences(
-      preferences: List<UserPreference>,
+      preferences: List<Preference>,
       limit: Int
   ): List<Activity> {
     return fetchActivitiesFromUrl(computeUrlWithPreferences(preferences, limit))
