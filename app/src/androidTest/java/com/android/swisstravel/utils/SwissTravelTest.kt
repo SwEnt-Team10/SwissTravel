@@ -81,7 +81,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE)
         .assertIsDisplayed()
-        .assertTextContains("Upcoming Trip", substring = false, ignoreCase = true)
+        .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)

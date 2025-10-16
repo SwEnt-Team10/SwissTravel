@@ -128,7 +128,7 @@ fun MyTripsScreen(
 
           // Upcoming Trip section
           Text(
-              text = "Upcoming Trip",
+              text = "Upcoming Trips",
               style = MaterialTheme.typography.headlineLarge,
               color = MaterialTheme.colorScheme.onBackground,
               modifier =
