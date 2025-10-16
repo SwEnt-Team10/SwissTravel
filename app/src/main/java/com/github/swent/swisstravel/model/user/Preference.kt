@@ -16,7 +16,8 @@ enum class Preference {
   INDIVIDUAL,
   COUPLE,
   WHEELCHAIR_ACCESSIBLE,
-  PUBLIC_TRANSPORT
+  PUBLIC_TRANSPORT,
+  QUICK
 }
 
 /**
@@ -41,6 +42,7 @@ fun Preference.displayString(): String {
     Preference.COUPLE -> "Couple Friendly"
     Preference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
     Preference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
+    Preference.QUICK -> "Fast Trip"
   }
 }
 
@@ -66,6 +68,7 @@ fun Preference.toSwissTourismFacet(): String {
     Preference.COUPLE -> "suitablefortype"
     Preference.WHEELCHAIR_ACCESSIBLE -> "wheelchairaccessibleclassifications"
     Preference.PUBLIC_TRANSPORT -> "reachabilitylocation"
+    Preference.QUICK -> ""
   }
 }
 
@@ -91,5 +94,6 @@ fun Preference.toSwissTourismFacetFilter(): String {
     Preference.COUPLE -> "couples"
     Preference.WHEELCHAIR_ACCESSIBLE -> "%2A"
     Preference.PUBLIC_TRANSPORT -> "closetopublictransport"
+    Preference.QUICK -> ""
   }
 }
