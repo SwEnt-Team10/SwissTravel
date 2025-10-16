@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.ui.map
 
 import android.app.Application
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
@@ -30,6 +29,8 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
 
   private val _routeLineDrawData = MutableStateFlow<Expected<RouteLineError, RouteSetValue>?>(null)
   val routeLineDrawData: StateFlow<Expected<RouteLineError, RouteSetValue>?> = _routeLineDrawData
+  private val _isRouteRendered = MutableStateFlow(false)
+  val isRouteRendered: StateFlow<Boolean> = _isRouteRendered
 
   private val mapboxNavigation =
       if (MapboxNavigationProvider.isCreated()) {
@@ -81,8 +82,12 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
           }
         }
 
-    Log.d("NavigationMapViewModel", "Requesting route (API request)")
+    // Requesting route (API request)
     mapboxNavigation.requestRoutes(routeOptions, callback)
+  }
+
+  fun setRouteRendered(isRendered: Boolean) {
+    _isRouteRendered.value = isRendered
   }
 
   override fun onCleared() {

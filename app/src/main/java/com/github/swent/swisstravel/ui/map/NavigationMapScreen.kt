@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.map
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -10,9 +11,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.swent.swisstravel.ui.navigation.NavigationActions
-import com.github.swent.swisstravel.ui.navigation.Screen
+import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.ui.navigation.*
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -41,7 +41,9 @@ fun NavigationMapScreen(navigationActions: NavigationActions) {
     Button(
         onClick = { navigationActions.navigateTo(Screen.MyTrips) },
         modifier =
-            Modifier.align(Alignment.TopStart).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
+            Modifier.align(Alignment.TopStart)
+                .offset(x = 4.dp, y = 26.dp)
+                .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
           Icon(
               imageVector = Icons.AutoMirrored.Default.ArrowBack,
               contentDescription = "Exit Map Icon")
@@ -77,7 +79,10 @@ fun NavigationMap() {
         MapEffect(routeDrawData) { mapView ->
           // render route draw data provided by the ViewModel whenever available
           val drawData = routeDrawData ?: return@MapEffect
-          mapView.mapboxMap.getStyle { style -> routeLineView.renderRouteDrawData(style, drawData) }
+          mapView.mapboxMap.getStyle { style ->
+            routeLineView.renderRouteDrawData(style, drawData)
+            viewModel.setRouteRendered(true)
+          }
         }
       }
 
