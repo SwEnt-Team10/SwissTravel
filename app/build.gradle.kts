@@ -213,6 +213,7 @@ dependencies {
     testImplementation(libs.credentials.play.services.auth)
     testImplementation(libs.googleid)
     testImplementation(libs.firebase.auth.ktx)
+    testImplementation(libs.kotlin.reflect)
 
     //----------   Test UI   --------------------
     androidTestImplementation(libs.androidx.junit)
