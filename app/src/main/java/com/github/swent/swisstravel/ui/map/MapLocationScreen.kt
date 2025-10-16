@@ -14,10 +14,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
-import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.github.swent.swisstravel.ui.navigation.Tab
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -56,50 +53,41 @@ fun MapLocationScreen(
         viewModel.setPermissionGranted(isGranted)
       }
 
-  Scaffold(
-      bottomBar = {
-        BottomNavigationMenu(
-            selectedTab = Tab.Map,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
-      }) { contentPadding ->
-        when {
-          isActivityNull -> {
-            Text(
-                "Error: unable to access the activity.",
-                modifier =
-                    Modifier.padding(contentPadding).testTag(MapLocationScreenTags.ERROR_TEXT))
-          }
-          !permissionGranted -> {
-            Column(modifier = Modifier.padding(contentPadding)) {
-              Text(
-                  "Location is required to display your position on the map.",
-                  modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_TEXT))
-              Button(
-                  onClick = { launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
-                  modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_BUTTON)) {
-                    Text("Allow location")
-                  }
-            }
-          }
-          else -> {
-            MapboxMap(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .padding(contentPadding)
-                        .testTag(MapLocationScreenTags.MAP),
-                mapViewportState = mapViewportState) {
-                  MapEffect(Unit) { mapView ->
-                    mapView.location.updateSettings {
-                      locationPuck = createDefault2DPuck(withBearing = true)
-                      enabled = true
-                      puckBearing = PuckBearing.COURSE
-                      puckBearingEnabled = true
-                    }
-                    mapViewportState.transitionToFollowPuckState()
-                  }
-                }
-          }
+  Scaffold { contentPadding ->
+    when {
+      isActivityNull -> {
+        Text(
+            "Error: unable to access the activity.",
+            modifier = Modifier.padding(contentPadding).testTag(MapLocationScreenTags.ERROR_TEXT))
+      }
+      !permissionGranted -> {
+        Column(modifier = Modifier.padding(contentPadding)) {
+          Text(
+              "Location is required to display your position on the map.",
+              modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_TEXT))
+          Button(
+              onClick = { launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
+              modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_BUTTON)) {
+                Text("Allow location")
+              }
         }
       }
+      else -> {
+        MapboxMap(
+            modifier =
+                Modifier.fillMaxSize().padding(contentPadding).testTag(MapLocationScreenTags.MAP),
+            mapViewportState = mapViewportState) {
+              MapEffect(Unit) { mapView ->
+                mapView.location.updateSettings {
+                  locationPuck = createDefault2DPuck(withBearing = true)
+                  enabled = true
+                  puckBearing = PuckBearing.COURSE
+                  puckBearingEnabled = true
+                }
+                mapViewportState.transitionToFollowPuckState()
+              }
+            }
+      }
+    }
+  }
 }

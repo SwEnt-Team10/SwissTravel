@@ -1,9 +1,9 @@
-package com.android.swisstravel.ui
+package com.github.swent.swisstravel.ui
 
 import com.github.swent.swisstravel.ui.map.MapLocationViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
+import org.junit.Assert
 import org.junit.Test
 
 class MapLocationViewModelTest {
@@ -11,14 +11,14 @@ class MapLocationViewModelTest {
   @Test
   fun permissionIsFalseByDefault() = runTest {
     val viewModel = MapLocationViewModel()
-    assertFalse(viewModel.permissionGranted.value)
+    Assert.assertFalse(viewModel.permissionGranted.value)
   }
 
   @Test
   fun setPermissionGrantedTrueUpdatesState() = runTest {
     val viewModel = MapLocationViewModel()
     viewModel.setPermissionGranted(true)
-    assertTrue(viewModel.permissionGranted.value)
+    Assert.assertTrue(viewModel.permissionGranted.value)
   }
 
   @Test
@@ -26,7 +26,7 @@ class MapLocationViewModelTest {
     val viewModel = MapLocationViewModel()
     viewModel.setPermissionGranted(true)
     viewModel.setPermissionGranted(false)
-    assertFalse(viewModel.permissionGranted.value)
+    Assert.assertFalse(viewModel.permissionGranted.value)
   }
 
   @Test
@@ -34,6 +34,6 @@ class MapLocationViewModelTest {
     val viewModel = MapLocationViewModel()
     viewModel.setPermissionGranted(true)
     val value = viewModel.permissionGranted.first()
-    assertTrue(value)
+    Assert.assertTrue(value)
   }
 }

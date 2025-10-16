@@ -55,6 +55,8 @@ object ProfileScreenTestTags {
   const val GREETING = "greeting"
   const val PERSONAL_INFO = "personalInfo"
   const val PREFERENCES = "preferences"
+
+  fun preferenceSwitchTag(title: String): String = "preferenceSwitch:$title"
 }
 
 @Composable
@@ -147,6 +149,13 @@ private fun ProfileScreenContent(
         InfoSection(
             title = "Travel Preferences",
             modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
+              Text(
+                  text = "These preferences will be selected by default when creating a new trip.",
+                  style =
+                      MaterialTheme.typography.bodyMedium.copy(
+                          color = MaterialTheme.colorScheme.onSurfaceVariant),
+                  modifier = Modifier.padding(bottom = 12.dp))
+
               profileScreenViewModel.allPreferences.forEach { pref ->
                 val isSelected = uiState.selectedPreferences.contains(pref)
                 PreferenceToggle(
@@ -237,6 +246,9 @@ fun PreferenceToggle(
             style =
                 MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface))
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked,
+            onCheckedChange = onCheckedChange,
+            modifier = Modifier.testTag(ProfileScreenTestTags.preferenceSwitchTag(title)))
       }
 }
