@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.ui.authentication.GoogleSignInButton
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
@@ -18,7 +19,9 @@ class GoogleSignInButtonTest {
     val onSignInClick: () -> Unit = Mockito.mock(Function0::class.java) as () -> Unit
 
     // When
-    composeTestRule.setContent { GoogleSignInButton(onSignInClick = onSignInClick) }
+    composeTestRule.setContent {
+      SwissTravelTheme { GoogleSignInButton(onSignInClick = onSignInClick) }
+    }
 
     // Then
     composeTestRule.onNodeWithText("Sign in with Google").assertExists()

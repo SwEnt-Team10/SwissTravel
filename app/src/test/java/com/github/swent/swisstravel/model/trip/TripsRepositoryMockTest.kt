@@ -1,6 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
-import com.github.swent.swisstravel.model.user.UserPreference
+import com.github.swent.swisstravel.model.user.Preference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -86,8 +86,7 @@ class TripsRepositoryFirestorePublicTest {
             "startDate" to Timestamp.now(),
             "endDate" to Timestamp.now(),
             "preferredLocations" to listOf(locationMap),
-            "preferences" to
-                listOf(mapOf("rating" to 5, "preference" to UserPreference.FOODIE.name)))
+            "preferences" to listOf(mapOf("rating" to 5, "preference" to Preference.FOODIE.name)))
 
     every { doc.get("locations") } returns listOf(locationMap)
     every { doc.get("routeSegments") } returns listOf(routeSegmentMap)
@@ -128,7 +127,14 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("locations") } returns emptyList<Map<String, Any>>()
     every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
     every { doc.get("activities") } returns emptyList<Map<String, Any>>()
-    every { doc.get("tripProfile") } returns null
+    every { doc.get("tripProfile") } returns
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "preferredLocations" to emptyList<Map<String, Any>>(),
+            "preferences" to emptyList<Map<String, Any>>(),
+            "adults" to 1L,
+            "children" to 0L)
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)
@@ -163,7 +169,14 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("locations") } returns emptyList<Map<String, Any>>()
     every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
     every { doc.get("activities") } returns emptyList<Map<String, Any>>()
-    every { doc.get("tripProfile") } returns null
+    every { doc.get("tripProfile") } returns
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "preferredLocations" to emptyList<Map<String, Any>>(),
+            "preferences" to emptyList<Map<String, Any>>(),
+            "adults" to 1L,
+            "children" to 0L)
 
     val trips = repo.getAllTrips()
 

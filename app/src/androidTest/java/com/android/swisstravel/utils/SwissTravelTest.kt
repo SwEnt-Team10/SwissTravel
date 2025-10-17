@@ -8,7 +8,6 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
-import com.github.swent.swisstravel.ui.DummyScreenTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -22,6 +21,7 @@ import org.junit.After
 import org.junit.Before
 
 const val UI_WAIT_TIMEOUT = 15_000L
+const val E2E_WAIT_TIMEOUT = 15_000L
 
 /**
  * Base class for all SwissTravel tests, providing common setup and utility functions.
@@ -103,16 +103,6 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkCurrentTripScreenIsNotDisplayed() {
     onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT).assertDoesNotExist()
     onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).assertDoesNotExist()
-  }
-
-  fun ComposeTestRule.checkDummyScreenIsDisplayed() {
-    onNodeWithTag(DummyScreenTestTags.TEMPORARY_TEST_TAG).assertIsDisplayed()
-    // TODO delete this when My trips implemented
-  }
-
-  fun ComposeTestRule.checkDummyScreenIsNotDisplayed() {
-    onNodeWithTag(DummyScreenTestTags.TEMPORARY_TEST_TAG).assertDoesNotExist()
-    // TODO delete this when My trips implemented
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {

@@ -133,6 +133,10 @@ fun MyTripsScreen(
 
           if (currentTrip != null) {
             TripElement(trip = currentTrip, onClick = { onSelectTrip(currentTrip) })
+            Text(
+                text =
+                    "We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.",
+                style = MaterialTheme.typography.labelSmall)
           } else {
             Text(
                 text = "You have no current trip. Get planning!",

@@ -4,6 +4,7 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextTestTags
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,7 +14,7 @@ class AddressAutocompleteTextFieldTest {
 
   private fun setContentWithFakeViewModel(fakeViewModel: FakeAddressTextFieldViewModel) {
     composeTestRule.setContent {
-      AddressAutocompleteTextField(addressTextFieldViewModel = fakeViewModel)
+      SwissTravelTheme { AddressAutocompleteTextField(addressTextFieldViewModel = fakeViewModel) }
     }
   }
 

@@ -15,6 +15,7 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.APP_LOGO
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.NAME
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -35,7 +36,7 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
 
   @Test
   fun testSignInScreenDisplaysCorrectly() {
-    composeTestRule.setContent { SignInScreen() }
+    composeTestRule.setContent { SwissTravelTheme { SignInScreen() } }
 
     composeTestRule.onNodeWithTag(APP_LOGO).assertIsDisplayed()
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed()

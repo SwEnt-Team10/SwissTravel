@@ -83,6 +83,14 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
         endDate.dayOfMonth)
   }
 
+  LaunchedEffect(startDate) {
+    startDatePicker.updateDate(startDate.year, startDate.monthValue - 1, startDate.dayOfMonth)
+  }
+
+  LaunchedEffect(endDate) {
+    endDatePicker.updateDate(endDate.year, endDate.monthValue - 1, endDate.dayOfMonth)
+  }
+
   Surface(
       modifier = Modifier.fillMaxSize().testTag(TripDateTestTags.TRIP_DATE_SCREEN),
       color = MaterialTheme.colorScheme.background) {
