@@ -1,11 +1,7 @@
 package com.android.swisstravel.e2e
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.swisstravel.utils.SwissTravelTest
-import org.junit.runner.RunWith
-
-@RunWith(AndroidJUnit4::class)
-class E2ETripFlowTest : SwissTravelTest() {
+// @RunWith(AndroidJUnit4::class)
+// class E2ETripFlowTest : SwissTravelTest() {
 
   //  @get:Rule val composeTestRule = createComposeRule()
   //
@@ -166,4 +162,4 @@ class E2ETripFlowTest : SwissTravelTest() {
   //    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
   //    composeTestRule.waitForIdle()
   //  }
-}
+// }
