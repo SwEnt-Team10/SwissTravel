@@ -26,6 +26,7 @@ class CurrentTripScreenTest {
   fun setup() {
     composeTestRule.setContent {
       val navController = rememberNavController()
+
       NavHost(navController = navController, startDestination = Screen.MyTrips.route) {
         composable(Screen.MyTrips.route) {
           MyTripsScreen(navigationActions = NavigationActions(navController))
@@ -60,5 +61,12 @@ class CurrentTripScreenTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun routeIsRenderedWhenEnteringMap() = runTest {
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
   }
 }

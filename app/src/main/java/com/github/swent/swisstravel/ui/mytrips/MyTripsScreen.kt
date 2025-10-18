@@ -118,6 +118,8 @@ fun MyTripsScreen(
                       .padding(top = 0.dp, bottom = 10.dp))
 
           Spacer(modifier = Modifier.height(4.dp))
+
+          // Button to enter a map displaying the next route
           Box(contentAlignment = Alignment.TopCenter) {
             Button(
                 onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
@@ -126,6 +128,7 @@ fun MyTripsScreen(
                   Text("Enter Map")
                 }
           }
+
           Spacer(modifier = Modifier.height(4.dp))
 
           if (currentTrip != null) {
