@@ -9,9 +9,10 @@ interface ActivityRepository {
    * Fetches a list of the most popular activities.
    *
    * @param limit Maximum number of activities to return.
+   * @param page Page number of the response.
    * @return List of activities (could be empty if none found or request fails).
    */
-  suspend fun getMostPopularActivities(limit: Int = 5): List<Activity>
+  suspend fun getMostPopularActivities(limit: Int = 5, page: Int = 0): List<Activity>
 
   /**
    * Fetches a list of activities near a specific coordinate.

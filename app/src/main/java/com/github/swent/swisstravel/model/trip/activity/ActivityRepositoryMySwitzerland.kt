@@ -114,6 +114,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
           }
 
           // Dummy start/end times for now
+          // TODO add start/end times
           val start = Timestamp.now()
           val end = Timestamp(start.seconds + 3600, 0)
 
@@ -164,11 +165,12 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
    * @param limit The limit of the number of activities to return.
    * @return A list of the most popular activities.
    */
-  override suspend fun getMostPopularActivities(limit: Int): List<Activity> {
+  override suspend fun getMostPopularActivities(limit: Int, page: Int): List<Activity> {
     val url =
         baseHttpUrl
             .newBuilder()
             .addQueryParameter("hitsPerPage", limit.toString())
+            .setQueryParameter("page", page.toString())
             .addQueryParameter("top", "true")
             .build()
     return fetchActivitiesFromUrl(url)
