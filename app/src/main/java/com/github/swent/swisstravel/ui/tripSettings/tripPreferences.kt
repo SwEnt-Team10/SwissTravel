@@ -100,9 +100,9 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
 
                 PreferenceSwitch(
                     stringResource(R.string.sportyTrip),
-                    prefs.contains(Preference.SPORTY),
+                    prefs.contains(Preference.SPORTS),
                     onCheckedChange = { checked ->
-                      viewModel.updatePreferences(prefs.toggle(Preference.SPORTY, checked))
+                      viewModel.updatePreferences(prefs.toggle(Preference.SPORTS, checked))
                     })
 
                 PreferenceSwitch(
@@ -121,9 +121,10 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
 
                 PreferenceToggle(
                     stringResource(R.string.handicappedTraveler),
-                    prefs.contains(Preference.HANDICAP),
+                    prefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
                     onValueChange = { checked ->
-                      viewModel.updatePreferences(prefs.toggle(Preference.HANDICAP, checked))
+                      viewModel.updatePreferences(
+                          prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE, checked))
                     })
 
                 Spacer(modifier = Modifier.height(24.dp))

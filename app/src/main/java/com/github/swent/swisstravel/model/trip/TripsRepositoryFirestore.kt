@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.model.trip
 
 import android.util.Log
+import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -124,8 +125,9 @@ class TripsRepositoryFirestore(
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
     val locationMap = map["location"] as? Map<*, *> ?: return null
+    val description = map["description"] as? String ?: return null
     val location = mapToLocation(locationMap) ?: return null
-    return Activity(startDate, endDate, location)
+    return Activity(startDate, endDate, location, description)
   }
 
   /**

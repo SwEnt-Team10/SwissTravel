@@ -80,13 +80,16 @@ class TripsRepositoryFirestorePublicTest {
             "endDate" to Timestamp.now())
     val activityMap =
         mapOf(
-            "startDate" to Timestamp.now(), "endDate" to Timestamp.now(), "location" to locationMap)
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "location" to locationMap,
+            "description" to "Activity")
     val tripProfileMap =
         mapOf(
             "startDate" to Timestamp.now(),
             "endDate" to Timestamp.now(),
             "preferredLocations" to listOf(locationMap),
-            "preferences" to listOf(mapOf("rating" to 5, "preference" to Preference.FOODIE.name)))
+            "preferences" to listOf(mapOf("preference" to Preference.FOODIE.name)))
 
     every { doc.get("locations") } returns listOf(locationMap)
     every { doc.get("routeSegments") } returns listOf(routeSegmentMap)
