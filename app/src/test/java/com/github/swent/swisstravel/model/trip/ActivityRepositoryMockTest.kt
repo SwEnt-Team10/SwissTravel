@@ -225,6 +225,97 @@ class ActivityRepositoryMockTest {
   }
 
   // ---------------------------------------------------------------------------
+  //  Public API coverage (mocked HTTP client, no real network)
+  // ---------------------------------------------------------------------------
+
+  @Test
+  fun `getMostPopularActivities executes safely and builds correct url`() = runTest {
+    val repo = spyk(ActivityRepositoryMySwitzerland())
+
+    // Mock OkHttp internals
+    val mockClient = mockk<OkHttpClient>(relaxed = true)
+    val mockCall = mockk<okhttp3.Call>()
+    val mockResponse = mockk<Response>()
+
+    // Swap the lazy client with the mock
+    val field = repo.javaClass.getDeclaredField("client\$delegate")
+    field.isAccessible = true
+    field.set(repo, lazy { mockClient })
+
+    // Prepare a fake JSON body
+    val body = """{"data": []}""".toResponseBody("application/json".toMediaType())
+
+    every { mockClient.newCall(any()) } returns mockCall
+    every { mockCall.execute() } returns mockResponse
+    every { mockResponse.isSuccessful } returns true
+    every { mockResponse.body } returns body
+    every { mockResponse.close() } just Runs
+
+    val result = repo.getMostPopularActivities(3)
+
+    assertNotNull(result)
+    assertTrue(result.isEmpty())
+  }
+
+  @Test
+  fun `getActivitiesNear executes safely and builds correct url`() = runTest {
+    val repo = spyk(ActivityRepositoryMySwitzerland())
+
+    // Mock OkHttp internals
+    val mockClient = mockk<OkHttpClient>(relaxed = true)
+    val mockCall = mockk<okhttp3.Call>()
+    val mockResponse = mockk<Response>()
+
+    // Swap the lazy client with the mock
+    val field = repo.javaClass.getDeclaredField("client\$delegate")
+    field.isAccessible = true
+    field.set(repo, lazy { mockClient })
+
+    val body = """{"data": []}""".toResponseBody("application/json".toMediaType())
+
+    every { mockClient.newCall(any()) } returns mockCall
+    every { mockCall.execute() } returns mockResponse
+    every { mockResponse.isSuccessful } returns true
+    every { mockResponse.body } returns body
+    every { mockResponse.close() } just Runs
+
+    val coord = Coordinate(46.8, 7.9)
+    val result = repo.getActivitiesNear(coord, 1000, 2)
+
+    assertNotNull(result)
+    assertTrue(result.isEmpty())
+  }
+
+  @Test
+  fun `getActivitiesByPreferences executes safely and builds correct url`() = runTest {
+    val repo = spyk(ActivityRepositoryMySwitzerland())
+
+    // Mock OkHttp internals
+    val mockClient = mockk<OkHttpClient>(relaxed = true)
+    val mockCall = mockk<okhttp3.Call>()
+    val mockResponse = mockk<Response>()
+
+    // Swap the lazy client with the mock
+    val field = repo.javaClass.getDeclaredField("client\$delegate")
+    field.isAccessible = true
+    field.set(repo, lazy { mockClient })
+
+    val body = """{"data": []}""".toResponseBody("application/json".toMediaType())
+
+    every { mockClient.newCall(any()) } returns mockCall
+    every { mockCall.execute() } returns mockResponse
+    every { mockResponse.isSuccessful } returns true
+    every { mockResponse.body } returns body
+    every { mockResponse.close() } just Runs
+
+    val prefs = listOf(Preference.MUSEUMS)
+    val result = repo.getActivitiesByPreferences(prefs, 4)
+
+    assertNotNull(result)
+    assertTrue(result.isEmpty())
+  }
+
+  // ---------------------------------------------------------------------------
   // Helpers to call private suspend/non-suspend methods
   // ---------------------------------------------------------------------------
 
