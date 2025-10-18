@@ -185,11 +185,14 @@ class E2ETripFlowTest : SwissTravelTest() {
 
     // Next from date screen
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
+    composeTestRule.waitForIdle()
 
     // TripTravelersScreen: accept defaults
     composeTestRule.onNodeWithTag(TripTravelersTestTags.NEXT).performClick()
+    composeTestRule.waitForIdle()
 
     // TripPreferencesScreen: save
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
+    composeTestRule.waitForIdle()
   }
 }
