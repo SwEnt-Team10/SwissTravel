@@ -6,9 +6,10 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo // 1. Import performScrollTo
+import androidx.compose.ui.test.performScrollTo
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
+import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -114,7 +115,7 @@ class NavigationTest : SwissTravelTest() {
         .performClick()
 
     // 3. Wait for navigation and verify we are on the login screen
-    composeTestRule.waitUntil(timeoutMillis = 5000) {
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
       composeTestRule
           .onAllNodesWithTag(SignInScreenTestTags.LOGIN_BUTTON)
           .fetchSemanticsNodes()
