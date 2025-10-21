@@ -133,7 +133,7 @@ class NavigationTest : SwissTravelTest() {
       activity.onBackPressedDispatcher.onBackPressed()
     }
     // Give the system a moment to process the back press and activity state change
-    composeTestRule.waitUntil(timeoutMillis = 2000) {
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
       composeTestRule.activity.isFinishing == shouldFinish
     }
     // Final assertion to confirm the state
