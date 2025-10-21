@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.navigation
 
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 
 /** Heavily inspired from the B3 of the SwEnt course at EPFL */
@@ -58,10 +59,10 @@ class NavigationActions(
     }
 
     navController.navigate(destination.route) {
-      if (destination.isTopLevelDestination) {
-        /* Pop up to the start of the graph to avoid large stacks */
-        popUpTo(destination.route) {
-          inclusive = true // Save state of popped destinations
+      if (destination is Screen.Auth) {
+        // Pop the entire back stack up to the very start of the graph.
+        popUpTo(navController.graph.findStartDestination().id) {
+          inclusive = true // This removes the start destination as well, clearing the stack.
         }
       }
       if (destination !is Screen.Auth) {
