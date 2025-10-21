@@ -56,6 +56,8 @@ object ProfileScreenTestTags {
   const val PERSONAL_INFO = "personalInfo"
   const val PREFERENCES = "preferences"
 
+  const val LOGOUT_BUTTON = "logoutButton"
+
   fun preferenceSwitchTag(title: String): String = "preferenceSwitch:$title"
 }
 
@@ -175,7 +177,10 @@ private fun ProfileScreenContent(
               authRepository.signOut()
               navigationActions?.navigateTo(Screen.Auth)
             },
-            modifier = Modifier.fillMaxWidth(0.5f).height(50.dp),
+            modifier =
+                Modifier.fillMaxWidth(0.5f)
+                    .height(50.dp)
+                    .testTag(ProfileScreenTestTags.LOGOUT_BUTTON),
             shape = CircleShape,
             colors =
                 ButtonDefaults.buttonColors(

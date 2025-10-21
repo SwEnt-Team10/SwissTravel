@@ -3,12 +3,17 @@ package com.android.swisstravel.ui.navigation
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import com.android.swisstravel.utils.FirebaseEmulator
 import com.android.swisstravel.utils.SwissTravelTest
+import com.android.swisstravel.utils.UI_WAIT_TIMEOUT
 import com.github.swent.swisstravel.SwissTravelApp
+import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
@@ -98,11 +103,40 @@ class NavigationTest : SwissTravelTest() {
     composeTestRule.checkProfileScreenIsNotDisplayed()
   }
 
+  @Test
+  fun whenLoggingOut_backPressExitsApp() {
+    // 1. Navigate to the profile screen
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+
+    // 2. Scroll to the logout button and click it
+    composeTestRule
+        .onNodeWithTag(ProfileScreenTestTags.LOGOUT_BUTTON)
+        .performScrollTo()
+        .performClick()
+
+    // 3. Wait for navigation and verify we are on the login screen
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(SignInScreenTestTags.LOGIN_BUTTON)
+          .fetchSemanticsNodes()
+          .size == 1
+    }
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON).assertIsDisplayed()
+    composeTestRule.checkProfileScreenIsNotDisplayed()
+
+    // 4. Press the back button and assert that the activity finishes
+    pressBack(shouldFinish = true)
+  }
+
   private fun pressBack(shouldFinish: Boolean) {
     composeTestRule.activityRule.scenario.onActivity { activity ->
       activity.onBackPressedDispatcher.onBackPressed()
     }
-    composeTestRule.waitUntil { composeTestRule.activity.isFinishing == shouldFinish }
+    // Give the system a moment to process the back press and activity state change
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule.activity.isFinishing == shouldFinish
+    }
+    // Final assertion to confirm the state
     assertEquals(shouldFinish, composeTestRule.activity.isFinishing)
   }
 }
