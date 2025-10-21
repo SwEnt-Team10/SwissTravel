@@ -59,13 +59,16 @@ class NavigationActions(
     }
 
     navController.navigate(destination.route) {
+      if (destination.isTopLevelDestination) {
+        // Pop up to start of the graph to avoid large stacks
+        popUpTo(destination.route) { inclusive = true }
+      }
       if (destination is Screen.Auth) {
         // Pop the entire back stack up to the very start of the graph.
         popUpTo(navController.graph.findStartDestination().id) {
           inclusive = true // This removes the start destination as well, clearing the stack.
         }
-      }
-      if (destination !is Screen.Auth) {
+      } else {
         restoreState = true
       }
     }
