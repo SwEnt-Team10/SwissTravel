@@ -65,4 +65,9 @@
     <string name="go_trip_details">Go to Trip details</string>
     <string name="fail_load_trips">Failed to load trips</string>
 
+    <!-- navigation -->
+    <string name="my_trips_tab">My trips</string>
+    <string name="current_trip_tab">Current Trip</string>
+    <string name="profile_tab">Profile</string>
+
 </resources>
