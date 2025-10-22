@@ -53,4 +53,16 @@
     <string name="allow_location">Allow location</string>
     <string name="exit_map_desc">Exit Map Icon</string>
 
+    <!-- My trips -->
+    <string name="my_trips">My trips</string>
+    <string name="go_past_trips">Go to Past Trips</string>
+    <string name="current_trip">Current Trip</string>
+    <string name="enter_map">Enter Map</string>
+    <string name="warning_multiple_current_trip">We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.</string>
+    <string name="no_current_trip">You have no current trip. Get planning!</string>
+    <string name="upcoming_trip">Upcoming Trip</string>
+    <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
+    <string name="go_trip_details">Go to Trip details</string>
+    <string name="fail_load_trips">Failed to load trips</string>
+
 </resources>

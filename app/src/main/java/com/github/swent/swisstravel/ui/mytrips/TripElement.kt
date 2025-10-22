@@ -24,7 +24,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 
 object TripElementTestTags {
@@ -65,7 +67,7 @@ fun TripElement(trip: Trip, onClick: () -> Unit) {
 
               Icon(
                   Icons.AutoMirrored.Filled.ArrowRight,
-                  contentDescription = "Go to Trip details",
+                  contentDescription = stringResource(R.string.go_trip_details),
                   tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
       }
