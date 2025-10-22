@@ -55,11 +55,11 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
     viewModel.validationEvents.collectLatest { event ->
       when (event) {
         is ValidationEvent.SaveSuccess -> {
-          Toast.makeText(context, "Trip saved successfully!", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
           onDone()
         }
         is ValidationEvent.SaveError -> {
-          Toast.makeText(context, "Error: ${event.message}", Toast.LENGTH_LONG).show()
+          Toast.makeText(context, "${R.string.error}: ${event.message}", Toast.LENGTH_LONG).show()
         }
         else -> {
           // Other events are not handled here

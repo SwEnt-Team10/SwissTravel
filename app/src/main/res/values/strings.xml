@@ -20,6 +20,7 @@
     <string name="done">Done</string>
     <string name="next">Next</string>
     <string name="unexpected_error">Unexpected error: %1$s</string>
+    <string name="error">Error</string>
 
     <!-- Trip preferences -->
     <string name="travellingPreferences">What are your travelling preferences?</string>
@@ -28,6 +29,7 @@
     <string name="foodyTrip">I want to eat some local specialities.</string>
     <string name="museumsLiker">I\'d like to see some museums.</string>
     <string name="handicappedTraveler">Are you or one of your travelers physically handicapped?</string>
+    <string name="trip_saved">Trip saved successfully!</string>
 
     <!-- Trip travelers -->
     <string name="nbTravelers">How many travelers will there be?</string>
