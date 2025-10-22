@@ -56,7 +56,7 @@ class MyTripsViewModel(
         _uiState.value = MyTripsUIState(currentTrip = currentTrip, upcomingTrips = upcomingTrips)
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error fetching trips", e)
-        setErrorMsg("${e.message}")
+        setErrorMsg("Failed to load trips: ${e.message}")
       }
     }
   }

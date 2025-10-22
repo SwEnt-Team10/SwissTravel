@@ -71,7 +71,7 @@ fun MyTripsScreen(
   // Show error message if fetching Trips fails
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let { message ->
-      Toast.makeText(context, "${R.string.fail_load_trips}: $message", Toast.LENGTH_SHORT).show()
+      Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
       myTripsViewModel.clearErrorMsg()
     }
   }

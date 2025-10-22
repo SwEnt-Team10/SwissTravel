@@ -12,7 +12,6 @@
     <string name="google_sign_in">Sign in with Google</string>
     <string name="app_logo_desc">App Logo</string>
     <string name="google_logo_desc">Google Logo</string>
-    <string name="sign_in_cancelled">Sign-in cancelled</string>
     <string name="sign_out">Sign Out</string>
 
     <!-- General -->
@@ -66,7 +65,6 @@
     <string name="upcoming_trip">Upcoming Trip</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
-    <string name="fail_load_trips">Failed to load trips</string>
 
     <!-- navigation -->
     <string name="my_trips_tab">My trips</string>
