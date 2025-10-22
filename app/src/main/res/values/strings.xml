@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">SwissTravel</string>
+    <string name="name_lower">swisstravel</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
 
@@ -9,12 +10,16 @@
     <!-- Authentication resources -->
     <string name="login_success">Login successful!</string>
     <string name="google_sign_in">Sign in with Google</string>
+    <string name="app_logo_desc">App Logo</string>
+    <string name="google_logo_desc">Google Logo</string>
+    <string name="sign_in_cancelled">Sign-in cancelled</string>
 
-    <!-- General options -->
+    <!-- General -->
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="done">Done</string>
     <string name="next">Next</string>
+    <string name="unexpected_error">Unexpected error: %1$s</string>
 
     <!-- Trip preferences -->
     <string name="travellingPreferences">What are your travelling preferences?</string>

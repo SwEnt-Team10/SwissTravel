@@ -96,14 +96,18 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
       } catch (e: GetCredentialCancellationException) {
         // User cancelled the sign-in flow
         _uiState.update {
-          it.copy(isLoading = false, errorMsg = "Sign-in cancelled", signedOut = true, user = null)
+          it.copy(
+              isLoading = false,
+              errorMsg = context.getString(string.sign_in_cancelled),
+              signedOut = true,
+              user = null)
         }
       } catch (e: Exception) {
         // Unexpected errors
         _uiState.update {
           it.copy(
               isLoading = false,
-              errorMsg = "Unexpected error: ${e.localizedMessage}",
+              errorMsg = context.getString(string.unexpected_error, e.localizedMessage),
               signedOut = true,
               user = null)
         }
