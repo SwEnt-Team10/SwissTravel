@@ -43,4 +43,8 @@
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
     <string name="where_starting">Where are you starting?</string>
+
+    <!-- Geocoding -->
+    <string name="address">Address</string>
+
 </resources>
