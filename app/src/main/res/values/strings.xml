@@ -7,12 +7,13 @@
     <!-- Client ID for Google Sign-In -->
     <string name="default_web_client_id">188461068405-bd2f3li3vhnsmphl3tuj8kkgb5lnvo5f.apps.googleusercontent.com</string>
 
-    <!-- Authentication resources -->
+    <!-- Authentication -->
     <string name="login_success">Login successful!</string>
     <string name="google_sign_in">Sign in with Google</string>
     <string name="app_logo_desc">App Logo</string>
     <string name="google_logo_desc">Google Logo</string>
     <string name="sign_in_cancelled">Sign-in cancelled</string>
+    <string name="sign_out">Sign Out</string>
 
     <!-- General -->
     <string name="yes">Yes</string>
@@ -71,5 +72,15 @@
     <string name="my_trips_tab">My trips</string>
     <string name="current_trip_tab">Current Trip</string>
     <string name="profile_tab">Profile</string>
+
+    <!-- Profile -->
+    <string name="my_profile">My Profile</string>
+    <string name="profile_pic_desc">Profile picture</string>
+    <string name="hi">Hi,</string>
+    <string name="personal_info">Personal Information</string>
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="travel_pref">Travel Preferences</string>
+    <string name="default_pref_info">These preferences will be selected by default when creating a new trip.</string>
 
 </resources>
