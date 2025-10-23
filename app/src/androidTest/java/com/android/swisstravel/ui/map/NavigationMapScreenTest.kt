@@ -18,8 +18,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class CurrentTripScreenTest {
-
+class NavigationMapScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
