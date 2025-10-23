@@ -46,6 +46,27 @@ fun Preference.displayString(): String {
   }
 }
 
+fun Preference.toTestTagString(): String {
+  return when (this) {
+    Preference.SCENIC_VIEWS -> "scenicViews"
+    Preference.SPORTS -> "sports"
+    Preference.MUSEUMS -> "museums"
+    Preference.HIKE -> "hike"
+    Preference.CHILDREN_FRIENDLY -> "childrenFriendly"
+    Preference.NIGHTLIFE -> "nightlife"
+    Preference.SHOPPING -> "shopping"
+    Preference.WELLNESS -> "wellness"
+    Preference.FOODIE -> "foodie"
+    Preference.URBAN -> "urban"
+    Preference.GROUP -> "group"
+    Preference.INDIVIDUAL -> "individual"
+    Preference.COUPLE -> "couple"
+    Preference.WHEELCHAIR_ACCESSIBLE -> "wheelchairAccessible"
+    Preference.PUBLIC_TRANSPORT -> "publicTransport"
+    Preference.QUICK -> "quick"
+  }
+}
+
 /**
  * Extension function to convert a Preference to a Swiss Tourism facet.
  *
