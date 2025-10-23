@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -80,7 +81,7 @@ fun ProfileScreen(
   Scaffold(
       topBar = {
         Text(
-            text = "My Profile",
+            text = stringResource(R.string.my_profile),
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier.padding(bottom = 16.dp))
       },
@@ -120,12 +121,12 @@ private fun ProfileScreenContent(
       horizontalAlignment = Alignment.CenterHorizontally) {
         AsyncImage(
             model = uiState.profilePicUrl.ifBlank { R.drawable.default_profile_pic },
-            contentDescription = "Profile picture",
+            contentDescription = stringResource(R.string.profile_pic_desc),
             modifier =
                 Modifier.size(100.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
 
         Text(
-            text = "Hi, ${uiState.name.ifBlank { "User" }}!",
+            text = "${stringResource(R.string.hi)} ${uiState.name.ifBlank { "User" }}!",
             style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
             modifier = Modifier.padding(top = 12.dp).testTag(ProfileScreenTestTags.GREETING))
 
@@ -133,14 +134,14 @@ private fun ProfileScreenContent(
 
         // Personal Info Section
         InfoSection(
-            title = "Personal Information",
+            title = stringResource(R.string.personal_info),
             modifier = Modifier.testTag(ProfileScreenTestTags.PERSONAL_INFO)) {
               InfoItem(
-                  label = "Name",
+                  label = stringResource(R.string.name),
                   value = uiState.name,
                   modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
               InfoItem(
-                  label = "Email",
+                  label = stringResource(R.string.email),
                   value = uiState.email,
                   modifier = Modifier.testTag(ProfileScreenTestTags.EMAIL))
             }
@@ -149,10 +150,10 @@ private fun ProfileScreenContent(
 
         // Travel Preferences Section
         InfoSection(
-            title = "Travel Preferences",
+            title = stringResource(R.string.travel_pref),
             modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
               Text(
-                  text = "These preferences will be selected by default when creating a new trip.",
+                  text = stringResource(R.string.default_pref_info),
                   style =
                       MaterialTheme.typography.bodyMedium.copy(
                           color = MaterialTheme.colorScheme.onSurfaceVariant),
@@ -189,9 +190,9 @@ private fun ProfileScreenContent(
                 )) {
               Icon(
                   imageVector = Icons.AutoMirrored.Filled.Logout,
-                  contentDescription = "Sign Out",
+                  contentDescription = stringResource(R.string.sign_out),
                   modifier = Modifier.padding(end = 8.dp))
-              Text("Sign Out")
+              Text(stringResource(R.string.sign_out))
             }
       }
 }

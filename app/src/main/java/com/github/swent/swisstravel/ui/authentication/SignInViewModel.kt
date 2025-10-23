@@ -103,7 +103,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
         _uiState.update {
           it.copy(
               isLoading = false,
-              errorMsg = "Unexpected error: ${e.localizedMessage}",
+              errorMsg = context.getString(string.unexpected_error, e.localizedMessage),
               signedOut = true,
               user = null)
         }

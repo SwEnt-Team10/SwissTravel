@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.tripSettings
+package com.github.swent.swisstravel.ui.tripsettings
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape

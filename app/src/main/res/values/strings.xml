@@ -1,20 +1,26 @@
 <resources>
     <string name="app_name">SwissTravel</string>
+    <string name="name_lower">swisstravel</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
 
     <!-- Client ID for Google Sign-In -->
     <string name="default_web_client_id">188461068405-bd2f3li3vhnsmphl3tuj8kkgb5lnvo5f.apps.googleusercontent.com</string>
 
-    <!-- Authentication resources -->
+    <!-- Authentication -->
     <string name="login_success">Login successful!</string>
     <string name="google_sign_in">Sign in with Google</string>
+    <string name="app_logo_desc">App Logo</string>
+    <string name="google_logo_desc">Google Logo</string>
+    <string name="sign_out">Sign Out</string>
 
-    <!-- General options -->
+    <!-- General -->
     <string name="yes">Yes</string>
     <string name="no">No</string>
     <string name="done">Done</string>
     <string name="next">Next</string>
+    <string name="unexpected_error">Unexpected error: %1$s</string>
+    <string name="error">Error</string>
 
     <!-- Trip preferences -->
     <string name="travellingPreferences">What are your travelling preferences?</string>
@@ -23,6 +29,7 @@
     <string name="foodyTrip">I want to eat some local specialities.</string>
     <string name="museumsLiker">I\'d like to see some museums.</string>
     <string name="handicappedTraveler">Are you or one of your travelers physically handicapped?</string>
+    <string name="trip_saved">Trip saved successfully!</string>
 
     <!-- Trip travelers -->
     <string name="nbTravelers">How many travelers will there be?</string>
@@ -34,4 +41,44 @@
     <string name="startDate">Start date</string>
     <string name="endDate">End date</string>
     <string name="endDateError">End date must be on or after start date.</string>
+
+    <!-- Current trip -->
+    <string name="create_trip">Create a trip</string>
+    <string name="where_starting">Where are you starting?</string>
+
+    <!-- Geocoding -->
+    <string name="address">Address</string>
+
+    <!-- Map -->
+    <string name="error_access_activity">Error: unable to access the activity.</string>
+    <string name="location_required_to_display">Location is required to display your position on the map.</string>
+    <string name="allow_location">Allow location</string>
+    <string name="exit_map_desc">Exit Map Icon</string>
+
+    <!-- My trips -->
+    <string name="my_trips">My trips</string>
+    <string name="go_past_trips">Go to Past Trips</string>
+    <string name="current_trip">Current Trip</string>
+    <string name="enter_map">Enter Map</string>
+    <string name="warning_multiple_current_trip">We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.</string>
+    <string name="no_current_trip">You have no current trip. Get planning!</string>
+    <string name="upcoming_trip">Upcoming Trip</string>
+    <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
+    <string name="go_trip_details">Go to Trip details</string>
+
+    <!-- navigation -->
+    <string name="my_trips_tab">My trips</string>
+    <string name="current_trip_tab">Current Trip</string>
+    <string name="profile_tab">Profile</string>
+
+    <!-- Profile -->
+    <string name="my_profile">My Profile</string>
+    <string name="profile_pic_desc">Profile picture</string>
+    <string name="hi">Hi,</string>
+    <string name="personal_info">Personal Information</string>
+    <string name="name">Name</string>
+    <string name="email">Email</string>
+    <string name="travel_pref">Travel Preferences</string>
+    <string name="default_pref_info">These preferences will be selected by default when creating a new trip.</string>
+
 </resources>

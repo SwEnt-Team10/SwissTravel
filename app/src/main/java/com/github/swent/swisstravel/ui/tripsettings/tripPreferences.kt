@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.tripSettings
+package com.github.swent.swisstravel.ui.tripsettings
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
@@ -16,7 +16,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,11 +54,11 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
     viewModel.validationEvents.collectLatest { event ->
       when (event) {
         is ValidationEvent.SaveSuccess -> {
-          Toast.makeText(context, "Trip saved successfully!", Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
           onDone()
         }
         is ValidationEvent.SaveError -> {
-          Toast.makeText(context, "Error: ${event.message}", Toast.LENGTH_LONG).show()
+          Toast.makeText(context, "${R.string.error}: ${event.message}", Toast.LENGTH_LONG).show()
         }
         else -> {
           // Other events are not handled here

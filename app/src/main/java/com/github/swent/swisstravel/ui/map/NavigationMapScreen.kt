@@ -10,6 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
@@ -54,7 +56,7 @@ fun NavigationMapScreen(navigationActions: NavigationActions) {
             Modifier.align(Alignment.TopStart).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
           Icon(
               imageVector = Icons.AutoMirrored.Default.ArrowBack,
-              contentDescription = "Exit Map Icon")
+              contentDescription = stringResource(R.string.exit_map_desc))
         }
   }
 }
