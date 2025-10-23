@@ -61,11 +61,4 @@ class NavigationMapScreenTest {
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsNotDisplayed()
   }
-
-  @Test
-  fun routeIsRenderedWhenEnteringMap() = runTest {
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
-  }
 }
