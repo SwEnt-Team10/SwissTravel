@@ -5,8 +5,8 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.ui.tripSettings.TripSettingsViewModel
-import com.github.swent.swisstravel.ui.tripSettings.ValidationEvent
+import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripsettings.ValidationEvent
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -105,8 +105,8 @@ class TripSettingsViewModelTest {
             Preference.QUICK,
             Preference.FOODIE,
             Preference.MUSEUMS,
-            Preference.HANDICAP,
-            Preference.SPORTY)
+            Preference.WHEELCHAIR_ACCESSIBLE,
+            Preference.SPORTS)
 
     viewModel.updatePreferences(preferences)
 

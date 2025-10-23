@@ -34,7 +34,7 @@ class ProfileScreenViewModelTest {
           name = "Lionel Hegetschweiler",
           email = "lionel@example.com",
           profilePicUrl = "http://example.com/pic.jpg",
-          preferences = listOf(Preference.HIKING, Preference.FOODIE))
+          preferences = listOf(Preference.HIKE, Preference.FOODIE))
 
   @Before
   fun setup() {

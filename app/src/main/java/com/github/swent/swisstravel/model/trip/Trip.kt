@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
+import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.google.firebase.Timestamp
 
 /**

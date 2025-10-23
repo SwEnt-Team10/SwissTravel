@@ -4,12 +4,12 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.ui.tripSettings.TripDateScreen
-import com.github.swent.swisstravel.ui.tripSettings.TripDateTestTags
-import com.github.swent.swisstravel.ui.tripSettings.TripPreferencesScreen
-import com.github.swent.swisstravel.ui.tripSettings.TripPreferencesTestTags
-import com.github.swent.swisstravel.ui.tripSettings.TripTravelersScreen
-import com.github.swent.swisstravel.ui.tripSettings.TripTravelersTestTags
+import com.github.swent.swisstravel.ui.tripsettings.TripDateScreen
+import com.github.swent.swisstravel.ui.tripsettings.TripDateTestTags
+import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesScreen
+import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesTestTags
+import com.github.swent.swisstravel.ui.tripsettings.TripTravelersScreen
+import com.github.swent.swisstravel.ui.tripsettings.TripTravelersTestTags
 import org.junit.Rule
 import org.junit.Test
 

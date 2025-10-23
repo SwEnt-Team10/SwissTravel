@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.tripSettings
+package com.github.swent.swisstravel.ui.tripsettings
 
 import android.util.Log
 import androidx.lifecycle.ViewModel

@@ -16,35 +16,3 @@ data class User(
     val profilePicUrl: String,
     val preferences: List<Preference>
 )
-
-/**
- * Enum representing various user preferences.
- *
- * Add more preferences as needed.
- */
-enum class Preference {
-  HANDICAP,
-  HIKING,
-  MUSEUMS,
-  SPORTY,
-  FOODIE,
-  QUICK
-  // Add more preferences as needed
-}
-
-/**
- * Extension function to get a display string for a UserPreference.
- *
- * @return A UI-friendly string representation of the preference.
- */
-fun Preference.displayString(): String {
-  return when (this) {
-    Preference.HANDICAP -> "Handicap Accessible"
-    Preference.HIKING -> "Hiking & Outdoor"
-    Preference.MUSEUMS -> "Museums"
-    Preference.SPORTY -> "Sporty"
-    Preference.FOODIE -> "Food & Culinary Experiences"
-    Preference.QUICK -> "Quick Traveler"
-  // Add more cases as needed
-  }
-}

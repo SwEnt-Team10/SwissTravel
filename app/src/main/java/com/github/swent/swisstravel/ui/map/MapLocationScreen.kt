@@ -13,7 +13,9 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -57,18 +59,18 @@ fun MapLocationScreen(
     when {
       isActivityNull -> {
         Text(
-            "Error: unable to access the activity.",
+            text = stringResource(R.string.error_access_activity),
             modifier = Modifier.padding(contentPadding).testTag(MapLocationScreenTags.ERROR_TEXT))
       }
       !permissionGranted -> {
         Column(modifier = Modifier.padding(contentPadding)) {
           Text(
-              "Location is required to display your position on the map.",
+              text = stringResource(R.string.location_required_to_display),
               modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_TEXT))
           Button(
               onClick = { launcher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION) },
               modifier = Modifier.testTag(MapLocationScreenTags.PERMISSION_BUTTON)) {
-                Text("Allow location")
+                Text(stringResource(R.string.allow_location))
               }
         }
       }

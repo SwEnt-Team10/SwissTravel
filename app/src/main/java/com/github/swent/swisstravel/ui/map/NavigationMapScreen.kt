@@ -46,7 +46,7 @@ fun NavigationMapScreen(navigationActions: NavigationActions) {
                 .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
           Icon(
               imageVector = Icons.AutoMirrored.Default.ArrowBack,
-              contentDescription = "Exit Map Icon")
+              contentDescription = stringResource(R.string.exit_map_desc))
         }
   }
 }
