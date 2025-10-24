@@ -92,6 +92,8 @@ fun SwissTravelApp(
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
       else Screen.CurrentTrip.name
   NavHost(navController = navController, startDestination = startDestination) {
+
+    // Sign-in screen
     navigation(
         startDestination = Screen.Auth.route,
         route = Screen.Auth.name,
@@ -103,6 +105,7 @@ fun SwissTravelApp(
       }
     }
 
+    // Profile screen
     navigation(
         startDestination = Screen.Profile.route,
         route = Screen.Profile.name,
@@ -115,15 +118,19 @@ fun SwissTravelApp(
       }
     }
 
+    // Current trip screen
     navigation(
         startDestination = Screen.CurrentTrip.route,
         route = Screen.CurrentTrip.name,
     ) {
       composable(Screen.CurrentTrip.route) {
-        CurrentTripScreen(navigationActions = navigationActions)
+        CurrentTripScreen(
+            navigationActions = navigationActions,
+            isLoggedIn = FirebaseAuth.getInstance().currentUser != null)
       }
     }
 
+    // My trips screen
     navigation(
         startDestination = Screen.MyTrips.route,
         route = Screen.MyTrips.name,
@@ -139,12 +146,16 @@ fun SwissTravelApp(
             navigationActions = navigationActions)
       }
     }
+
+    // Map location screen
     navigation(
         startDestination = Screen.Map.route,
         route = Screen.Map.name,
     ) {
       composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
     }
+
+    // Trip settings screens
     navigation(
         startDestination = Screen.TripSettings1.route,
         route = Screen.TripSettings1.name,
@@ -165,6 +176,8 @@ fun SwissTravelApp(
             onDone = { navigationActions.navigateTo(Screen.MyTrips) })
       }
     }
+
+    // Trip map screen
     navigation(
         startDestination = Screen.SelectedTripMap.route,
         route = Screen.SelectedTripMap.name,
