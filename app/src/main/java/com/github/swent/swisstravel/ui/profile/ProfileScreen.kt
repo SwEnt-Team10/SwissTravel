@@ -175,6 +175,7 @@ private fun ProfileScreenContent(
                           else uiState.selectedPreferences - pref
                       profileScreenViewModel.savePreferences(newSelection)
                     },
+                    enable = isSignedIn,
                     modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES))
               }
             }
@@ -253,6 +254,7 @@ fun PreferenceToggle(
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    enable: Boolean = true,
     modifier: Modifier
 ) {
   Row(
@@ -267,6 +269,7 @@ fun PreferenceToggle(
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            enabled = enable,
             modifier = Modifier.testTag(ProfileScreenTestTags.preferenceSwitchTag(title)))
       }
 }
