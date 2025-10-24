@@ -1,5 +1,8 @@
 package com.github.swent.swisstravel.model.user
 
+import androidx.annotation.StringRes
+import com.github.swent.swisstravel.R
+
 /** Enum representing the different preferences a user can select. */
 enum class Preference {
   SCENIC_VIEWS,
@@ -23,26 +26,27 @@ enum class Preference {
 /**
  * Extension function to get a display string for a Preference.
  *
- * @return A UI-friendly string representation of the preference.
+ * @return A string representation of the preference.
  */
-fun Preference.displayString(): String {
+@StringRes
+fun Preference.displayStringRes(): Int {
   return when (this) {
-    Preference.SCENIC_VIEWS -> "Scenic Views"
-    Preference.SPORTS -> "Sports"
-    Preference.MUSEUMS -> "Museums"
-    Preference.HIKE -> "Hiking"
-    Preference.CHILDREN_FRIENDLY -> "Children Friendly"
-    Preference.NIGHTLIFE -> "Nightlife & Party"
-    Preference.SHOPPING -> "Shopping"
-    Preference.WELLNESS -> "Wellness"
-    Preference.FOODIE -> "Food & Culinary Experiences"
-    Preference.URBAN -> "Urban Sightseeing"
-    Preference.GROUP -> "Group Friendly"
-    Preference.INDIVIDUAL -> "Solo Traveler Friendly"
-    Preference.COUPLE -> "Couple Friendly"
-    Preference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
-    Preference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
-    Preference.QUICK -> "Fast Trip"
+    Preference.SCENIC_VIEWS -> R.string.preference_scenic_views
+    Preference.SPORTS -> R.string.preference_sports
+    Preference.MUSEUMS -> R.string.preference_museums
+    Preference.HIKE -> R.string.preference_hike
+    Preference.CHILDREN_FRIENDLY -> R.string.preference_children_friendly
+    Preference.NIGHTLIFE -> R.string.preference_nightlife
+    Preference.SHOPPING -> R.string.preference_shopping
+    Preference.WELLNESS -> R.string.preference_wellness
+    Preference.FOODIE -> R.string.preference_foodie
+    Preference.URBAN -> R.string.preference_urban
+    Preference.GROUP -> R.string.preference_group
+    Preference.INDIVIDUAL -> R.string.preference_individual
+    Preference.COUPLE -> R.string.preference_couple
+    Preference.WHEELCHAIR_ACCESSIBLE -> R.string.preference_wheelchair_accessible
+    Preference.PUBLIC_TRANSPORT -> R.string.preference_public_transport
+    Preference.QUICK -> R.string.preference_quick
   }
 }
 

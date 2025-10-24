@@ -17,11 +17,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.model.user.displayString
+import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.toTestTagString
 
 /** Test tags for the [PreferenceSelector] composable. */
@@ -59,7 +60,7 @@ fun PreferenceButton(
       colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = color),
       border = BorderStroke(Dp.Hairline, color),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagButton(preference))) {
-        Text(text = preference.displayString())
+        Text(text = stringResource(preference.displayStringRes()))
       }
 }
 
