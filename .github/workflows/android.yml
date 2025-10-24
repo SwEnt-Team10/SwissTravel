@@ -16,6 +16,7 @@ jobs:
   bootcamp-ci:
     name: CI-SwissTravel
     runs-on: ubuntu-latest
+    timeout-minutes: 40
     env:
       app_name: SwissTravelDebug
 
