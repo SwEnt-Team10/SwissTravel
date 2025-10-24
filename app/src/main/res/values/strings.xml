@@ -13,6 +13,7 @@
     <string name="app_logo_desc">App Logo</string>
     <string name="google_logo_desc">Google Logo</string>
     <string name="sign_out">Sign Out</string>
+    <string name="sign_in">Sign In</string>
 
     <!-- General -->
     <string name="yes">Yes</string>
