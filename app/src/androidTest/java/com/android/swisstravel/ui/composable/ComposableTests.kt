@@ -19,6 +19,7 @@ import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSlider
 import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
+import com.github.swent.swisstravel.ui.composable.PreviewContentPreferenceSelector
 import com.github.swent.swisstravel.ui.composable.SliderTestTags
 import com.github.swent.swisstravel.ui.composable.SwitchTestTags
 import com.github.swent.swisstravel.ui.composable.ToggleTestTags
@@ -113,6 +114,14 @@ class ComposableTests {
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.FOODIE))
         .performClick()
     assertTrue(selected.value.contains(Preference.FOODIE))
+  }
+
+  @Test
+  fun preferenceSelectorPreviewContentDisplays() {
+    composeTestRule.setContent { PreviewContentPreferenceSelector() }
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+        .assertIsDisplayed()
   }
 
   @Test

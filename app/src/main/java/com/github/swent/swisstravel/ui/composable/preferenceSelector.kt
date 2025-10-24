@@ -112,10 +112,8 @@ fun PreferenceSelector(
       }
 }
 
-/** A preview of the [PreferenceSelector] composable. */
-@Preview(showBackground = true)
 @Composable
-fun PreferenceSelectorPreview() {
+fun PreviewContentPreferenceSelector() {
   MaterialTheme {
     val selected = remember {
       androidx.compose.runtime.mutableStateOf(listOf(Preference.FOODIE, Preference.SPORTS))
@@ -128,4 +126,10 @@ fun PreferenceSelectorPreview() {
           selected.value = if (current.contains(pref)) current - pref else current + pref
         })
   }
+}
+/** A preview of the [PreferenceSelector] composable. */
+@Preview(showBackground = true)
+@Composable
+fun PreferenceSelectorPreview() {
+  PreviewContentPreferenceSelector()
 }
