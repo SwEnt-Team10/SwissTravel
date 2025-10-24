@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +48,8 @@ import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 
 object ProfileScreenTestTags {
   const val PROFILE_PIC = "profilePic"
@@ -58,6 +61,7 @@ object ProfileScreenTestTags {
   const val PREFERENCES = "preferences"
 
   const val LOGOUT_BUTTON = "logoutButton"
+  const val LOGIN_BUTTON = "loginButton"
 
   fun preferenceSwitchTag(title: String): String = "preferenceSwitch:$title"
 }
@@ -115,6 +119,7 @@ private fun ProfileScreenContent(
     navigationActions: NavigationActions? = null
 ) {
   val scrollState = rememberScrollState()
+  val isSignedIn = Firebase.auth.currentUser != null
 
   Column(
       modifier = modifier.fillMaxSize().padding(20.dp).verticalScroll(scrollState),
@@ -170,18 +175,23 @@ private fun ProfileScreenContent(
                           else uiState.selectedPreferences - pref
                       profileScreenViewModel.savePreferences(newSelection)
                     },
+                    enable = isSignedIn,
                     modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES))
               }
             }
         Button(
             onClick = {
-              authRepository.signOut()
+              if (isSignedIn) {
+                authRepository.signOut()
+              }
               navigationActions?.navigateTo(Screen.Auth)
             },
             modifier =
                 Modifier.fillMaxWidth(0.5f)
                     .height(50.dp)
-                    .testTag(ProfileScreenTestTags.LOGOUT_BUTTON),
+                    .testTag(
+                        if (isSignedIn) ProfileScreenTestTags.LOGOUT_BUTTON
+                        else ProfileScreenTestTags.LOGIN_BUTTON),
             shape = CircleShape,
             colors =
                 ButtonDefaults.buttonColors(
@@ -189,10 +199,13 @@ private fun ProfileScreenContent(
                     contentColor = MaterialTheme.colorScheme.onPrimary,
                 )) {
               Icon(
-                  imageVector = Icons.AutoMirrored.Filled.Logout,
-                  contentDescription = stringResource(R.string.sign_out),
+                  imageVector =
+                      if (isSignedIn) Icons.AutoMirrored.Filled.Logout
+                      else Icons.AutoMirrored.Filled.Login,
+                  contentDescription =
+                      stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in),
                   modifier = Modifier.padding(end = 8.dp))
-              Text(stringResource(R.string.sign_out))
+              Text(stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in))
             }
       }
 }
@@ -241,6 +254,7 @@ fun PreferenceToggle(
     title: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
+    enable: Boolean = true,
     modifier: Modifier
 ) {
   Row(
@@ -255,6 +269,7 @@ fun PreferenceToggle(
         Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
+            enabled = enable,
             modifier = Modifier.testTag(ProfileScreenTestTags.preferenceSwitchTag(title)))
       }
 }
