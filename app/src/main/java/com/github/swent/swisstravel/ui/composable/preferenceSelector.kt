@@ -2,10 +2,9 @@ package com.github.swent.swisstravel.ui.composable
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -66,6 +65,30 @@ fun PreferenceButton(
 }
 
 /**
+ * A row of [PreferenceButton]s.
+ *
+ * @param prefs the list of preferences to display
+ * @param isChecked a function that returns whether the given preference is checked
+ * @param onCheckedChange a function that is called when the user clicks on a preference
+ */
+@Composable
+fun PreferenceSelectorRow(
+    prefs: List<Preference>,
+    isChecked: (Preference) -> Boolean,
+    onCheckedChange: (Preference) -> Unit,
+) {
+  Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+    for (preference in prefs) {
+      PreferenceButton(
+          preference = preference,
+          isChecked = isChecked(preference),
+          onCheckedChange = onCheckedChange,
+      )
+    }
+  }
+}
+
+/**
  * A composable that displays a selector of [PreferenceButton]s.
  *
  * @param isChecked a function that returns whether the given preference is checked
@@ -77,37 +100,22 @@ fun PreferenceSelector(
     isChecked: (Preference) -> Boolean,
     onCheckedChange: (Preference) -> Unit,
 ) {
-  val allPreferences =
+  val preferenceRows =
       listOf(
-          Preference.WELLNESS,
-          Preference.SPORTS,
-          Preference.HIKE,
-          Preference.MUSEUMS,
-          Preference.SCENIC_VIEWS,
-          Preference.SHOPPING,
-          Preference.FOODIE,
-          Preference.URBAN,
-          Preference.NIGHTLIFE,
-          Preference.GROUP,
-          Preference.INDIVIDUAL,
-          Preference.CHILDREN_FRIENDLY,
-          Preference.COUPLE,
-          Preference.PUBLIC_TRANSPORT,
-          Preference.QUICK)
-
-  FlowRow(
-      horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+          listOf(Preference.WELLNESS, Preference.SPORTS, Preference.HIKE),
+          listOf(Preference.MUSEUMS, Preference.SCENIC_VIEWS),
+          listOf(Preference.SHOPPING, Preference.FOODIE),
+          listOf(Preference.URBAN, Preference.NIGHTLIFE),
+          listOf(Preference.GROUP, Preference.INDIVIDUAL),
+          listOf(Preference.CHILDREN_FRIENDLY, Preference.COUPLE),
+          listOf(Preference.PUBLIC_TRANSPORT, Preference.QUICK))
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.spacedBy(10.dp),
-      modifier =
-          Modifier.widthIn(max = 360.dp)
-              .wrapContentWidth(Alignment.CenterHorizontally)
-              .testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR),
-      maxItemsInEachRow = 3) {
-        for (preference in allPreferences) {
-          PreferenceButton(
-              preference = preference,
-              isChecked = isChecked(preference),
-              onCheckedChange = onCheckedChange)
+      modifier = Modifier.testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)) {
+        preferenceRows.forEach { row ->
+          PreferenceSelectorRow(
+              prefs = row, isChecked = isChecked, onCheckedChange = onCheckedChange)
         }
       }
 }
