@@ -1,21 +1,31 @@
 package com.android.swisstravel.ui.composable
 
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.Counter
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.DateSelectorRow
 import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
+import com.github.swent.swisstravel.ui.composable.PreferenceSelector
+import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSlider
 import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
+import com.github.swent.swisstravel.ui.composable.PreviewContentPreferenceSelector
 import com.github.swent.swisstravel.ui.composable.SliderTestTags
 import com.github.swent.swisstravel.ui.composable.SwitchTestTags
 import com.github.swent.swisstravel.ui.composable.ToggleTestTags
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -51,6 +61,67 @@ class ComposableTests {
     composeTestRule.onNodeWithTag("test" + DateSelectorTestTags.DATE_SELECTOR).assertIsDisplayed()
     composeTestRule.onNodeWithTag(DateSelectorTestTags.DATE).performClick()
     assert(clicked.value)
+  }
+
+  @Test
+  fun preferenceSelectorTest() {
+    val selected = mutableStateOf(listOf(Preference.FOODIE, Preference.SPORTS))
+
+    composeTestRule.setContent {
+      MaterialTheme {
+        PreferenceSelector(
+            isChecked = { pref -> selected.value.contains(pref) },
+            onCheckedChange = { pref ->
+              selected.value =
+                  if (selected.value.contains(pref)) selected.value.filter { it != pref }
+                  else selected.value + pref
+            })
+      }
+    }
+
+    assertTrue(selected.value.contains(Preference.FOODIE))
+    assertTrue(selected.value.contains(Preference.SPORTS))
+
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+        .assertIsDisplayed()
+    for (preference in Preference.values().filter { it != Preference.WHEELCHAIR_ACCESSIBLE }) {
+      composeTestRule
+          .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
+          .assertIsDisplayed()
+    }
+    composeTestRule
+        .onNodeWithTag(
+            PreferenceSelectorTestTags.getTestTagButton(Preference.WHEELCHAIR_ACCESSIBLE))
+        .assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.FOODIE))
+        .performClick()
+    assertFalse(selected.value.contains(Preference.FOODIE))
+
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.WELLNESS))
+        .performClick()
+    assertTrue(selected.value.contains(Preference.WELLNESS))
+
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.SPORTS))
+        .performClick()
+    assertFalse(selected.value.contains(Preference.SPORTS))
+
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.FOODIE))
+        .performClick()
+    assertTrue(selected.value.contains(Preference.FOODIE))
+  }
+
+  @Test
+  fun preferenceSelectorPreviewContentDisplays() {
+    composeTestRule.setContent { PreviewContentPreferenceSelector() }
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+        .assertIsDisplayed()
   }
 
   @Test

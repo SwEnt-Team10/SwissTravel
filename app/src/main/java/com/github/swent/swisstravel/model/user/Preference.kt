@@ -1,5 +1,8 @@
 package com.github.swent.swisstravel.model.user
 
+import androidx.annotation.StringRes
+import com.github.swent.swisstravel.R
+
 /** Enum representing the different preferences a user can select. */
 enum class Preference {
   SCENIC_VIEWS,
@@ -23,7 +26,34 @@ enum class Preference {
 /**
  * Extension function to get a display string for a Preference.
  *
- * @return A UI-friendly string representation of the preference.
+ * @return A string representation of the preference.
+ */
+@StringRes
+fun Preference.displayStringRes(): Int {
+  return when (this) {
+    Preference.SCENIC_VIEWS -> R.string.preference_scenic_views
+    Preference.SPORTS -> R.string.preference_sports
+    Preference.MUSEUMS -> R.string.preference_museums
+    Preference.HIKE -> R.string.preference_hike
+    Preference.CHILDREN_FRIENDLY -> R.string.preference_children_friendly
+    Preference.NIGHTLIFE -> R.string.preference_nightlife
+    Preference.SHOPPING -> R.string.preference_shopping
+    Preference.WELLNESS -> R.string.preference_wellness
+    Preference.FOODIE -> R.string.preference_foodie
+    Preference.URBAN -> R.string.preference_urban
+    Preference.GROUP -> R.string.preference_group_friendly
+    Preference.INDIVIDUAL -> R.string.preference_solo_friendly
+    Preference.COUPLE -> R.string.preference_couple_friendly
+    Preference.WHEELCHAIR_ACCESSIBLE -> R.string.preference_wheelchair_accessible
+    Preference.PUBLIC_TRANSPORT -> R.string.preference_public_transport
+    Preference.QUICK -> R.string.preference_quick
+  }
+}
+
+/**
+ * Extension function to get the string representation of a Preference as stored in the firebase.
+ *
+ * @return A string representation of the preference.
  */
 fun Preference.displayString(): String {
   return when (this) {
@@ -43,6 +73,32 @@ fun Preference.displayString(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
     Preference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
     Preference.QUICK -> "Fast Trip"
+  }
+}
+
+/**
+ * Extension function to convert a Preference to a test tag string.
+ *
+ * @return A string representing the test tag for the given preference.
+ */
+fun Preference.toTestTagString(): String {
+  return when (this) {
+    Preference.SCENIC_VIEWS -> "scenicViews"
+    Preference.SPORTS -> "sports"
+    Preference.MUSEUMS -> "museums"
+    Preference.HIKE -> "hike"
+    Preference.CHILDREN_FRIENDLY -> "childrenFriendly"
+    Preference.NIGHTLIFE -> "nightlife"
+    Preference.SHOPPING -> "shopping"
+    Preference.WELLNESS -> "wellness"
+    Preference.FOODIE -> "foodie"
+    Preference.URBAN -> "urban"
+    Preference.GROUP -> "group"
+    Preference.INDIVIDUAL -> "individual"
+    Preference.COUPLE -> "couple"
+    Preference.WHEELCHAIR_ACCESSIBLE -> "wheelchairAccessible"
+    Preference.PUBLIC_TRANSPORT -> "publicTransport"
+    Preference.QUICK -> "quick"
   }
 }
 
