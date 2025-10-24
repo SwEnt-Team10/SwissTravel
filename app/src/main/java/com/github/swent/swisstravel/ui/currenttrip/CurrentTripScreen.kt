@@ -15,7 +15,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -46,7 +48,7 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null) {
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
               Text(
-                  text = "Create a trip",
+                  text = stringResource(R.string.create_trip),
                   style = MaterialTheme.typography.displayLarge,
                   color = MaterialTheme.colorScheme.onBackground,
                   modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT))
@@ -59,7 +61,7 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null) {
                           .height(56.dp)
                           .width(240.dp)) {
                     Text(
-                        text = "Where are you starting?",
+                        text = stringResource(R.string.where_starting),
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onPrimary,
                     )

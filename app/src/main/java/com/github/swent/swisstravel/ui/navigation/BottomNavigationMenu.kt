@@ -19,25 +19,36 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.navBarItemBackground
 
 /** Heavily inspired from the B3 of the SwEnt course at EPFL */
 
 /** This class stores the bottom navigation tabs */
 sealed class Tab(
-    val name: String,
+    val name: Int,
     val destination: Screen,
     val iconSelected: ImageVector,
     val iconNotSelected: ImageVector
 ) {
 
   object MyTrips :
-      Tab("My trips", Screen.MyTrips, Icons.AutoMirrored.Filled.MenuOpen, Icons.Filled.Menu)
+      Tab(
+          R.string.my_trips_tab,
+          Screen.MyTrips,
+          Icons.AutoMirrored.Filled.MenuOpen,
+          Icons.Filled.Menu)
 
   object CurrentTrip :
-      Tab("Current trip", Screen.CurrentTrip, Icons.Filled.LocationOn, Icons.Outlined.LocationOn)
+      Tab(
+          R.string.current_trip_tab,
+          Screen.CurrentTrip,
+          Icons.Filled.LocationOn,
+          Icons.Outlined.LocationOn)
 
-  object Profile : Tab("Profile", Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person)
+  object Profile :
+      Tab(R.string.profile_tab, Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person)
 }
 
 /* List of all the tabs in the bottom bar */
@@ -61,6 +72,7 @@ fun BottomNavigationMenu(
       containerColor = MaterialTheme.colorScheme.primary,
   ) {
     tabs.forEach { tab ->
+      val tabName = stringResource(tab.name)
       NavigationBarItem(
           modifier = Modifier.testTag(NavigationTestTags.getTestTag(tab)),
           selected = (tab == selectedTab),
@@ -71,16 +83,15 @@ fun BottomNavigationMenu(
               ),
           icon = {
             if (tab == selectedTab) {
-              Icon(
-                  imageVector = tab.iconSelected, contentDescription = tab.name, tint = Color.White)
+              Icon(imageVector = tab.iconSelected, contentDescription = tabName, tint = Color.White)
             } else {
               Icon(
                   imageVector = tab.iconNotSelected,
-                  contentDescription = tab.name,
+                  contentDescription = tabName,
                   tint = Color.White)
             }
           },
-          label = { Text(tab.name, color = Color.White) },
+          label = { Text(tabName, color = Color.White) },
           alwaysShowLabel = true)
     }
   }

@@ -28,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
@@ -79,7 +81,7 @@ fun MyTripsScreen(
         TopAppBar(
             title = {
               Text(
-                  text = "My Trips",
+                  text = stringResource(R.string.my_trips),
                   style = MaterialTheme.typography.titleLarge,
                   color = MaterialTheme.colorScheme.onBackground
                   /*,modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE)*/ )
@@ -91,7 +93,7 @@ fun MyTripsScreen(
                   modifier = Modifier.testTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)) {
                     Icon(
                         imageVector = Icons.Outlined.Archive,
-                        contentDescription = "Go to Past Trips")
+                        contentDescription = stringResource(R.string.go_past_trips))
                   }
             })
       },
@@ -110,7 +112,7 @@ fun MyTripsScreen(
         ) {
           // Current Trip section
           Text(
-              text = "Current Trip",
+              text = stringResource(R.string.current_trip),
               style = MaterialTheme.typography.headlineLarge,
               color = MaterialTheme.colorScheme.onBackground,
               modifier =
@@ -123,7 +125,7 @@ fun MyTripsScreen(
                 onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
                 modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
                   // TODO : modify this to an "extend" icon when the map preview is implemented
-                  Text("Enter Map")
+                  Text(stringResource(R.string.enter_map))
                 }
           }
           Spacer(modifier = Modifier.height(4.dp))
@@ -131,18 +133,17 @@ fun MyTripsScreen(
           if (currentTrip != null) {
             TripElement(trip = currentTrip, onClick = { onSelectTrip(currentTrip) })
             Text(
-                text =
-                    "We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.",
+                text = stringResource(R.string.warning_multiple_current_trip),
                 style = MaterialTheme.typography.labelSmall)
           } else {
             Text(
-                text = "You have no current trip. Get planning!",
+                text = stringResource(R.string.no_current_trip),
                 modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG))
           }
 
           // Upcoming Trip section
           Text(
-              text = "Upcoming Trip",
+              text = stringResource(R.string.upcoming_trip),
               style = MaterialTheme.typography.headlineLarge,
               color = MaterialTheme.colorScheme.onBackground,
               modifier =
@@ -163,7 +164,7 @@ fun MyTripsScreen(
                 }
           } else {
             Text(
-                text = "You have no upcoming trips. Get planning!",
+                text = stringResource(R.string.no_upcoming_trip),
                 modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_UPCOMING_TRIPS_MSG))
           }
         }

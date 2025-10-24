@@ -94,7 +94,7 @@ fun SignInScreen(
           // App Logo Image
           Image(
               painter = painterResource(id = R.drawable.swisstravel),
-              contentDescription = "App Logo",
+              contentDescription = stringResource(R.string.app_logo_desc),
               modifier =
                   Modifier.size(250.dp)
                       .clip(RoundedCornerShape(16.dp))
@@ -105,7 +105,7 @@ fun SignInScreen(
           // App Name
           Text(
               modifier = Modifier.testTag(SignInScreenTestTags.NAME),
-              text = "swisstravel",
+              text = stringResource(R.string.name_lower),
               style =
                   MaterialTheme.typography.headlineLarge.copy(fontSize = 57.sp, lineHeight = 64.sp),
               fontWeight = FontWeight.Bold,
@@ -147,7 +147,7 @@ fun GoogleSignInButton(onSignInClick: () -> Unit) {
               // Load the 'Google logo' from resources
               Image(
                   painter = painterResource(id = R.drawable.google_logo),
-                  contentDescription = "Google Logo",
+                  contentDescription = stringResource(R.string.app_logo_desc),
                   modifier = Modifier.size(30.dp).padding(end = 8.dp))
 
               // Text for the button

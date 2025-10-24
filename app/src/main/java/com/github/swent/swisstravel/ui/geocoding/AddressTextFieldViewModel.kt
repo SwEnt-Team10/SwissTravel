@@ -82,6 +82,7 @@ class AddressTextFieldViewModel(
           val results = locationRepository.search(query)
           _addressState.value = _addressState.value.copy(locationSuggestions = results)
         } catch (e: Exception) {
+          // Log, doesn't need a string resource
           Log.e(AddressTextFieldViewModelTags.TAG, "Error fetching location suggestions", e)
 
           _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
