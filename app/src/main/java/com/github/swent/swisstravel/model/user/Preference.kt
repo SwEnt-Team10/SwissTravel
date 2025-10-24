@@ -41,12 +41,38 @@ fun Preference.displayStringRes(): Int {
     Preference.WELLNESS -> R.string.preference_wellness
     Preference.FOODIE -> R.string.preference_foodie
     Preference.URBAN -> R.string.preference_urban
-    Preference.GROUP -> R.string.preference_group
-    Preference.INDIVIDUAL -> R.string.preference_individual
-    Preference.COUPLE -> R.string.preference_couple
+    Preference.GROUP -> R.string.preference_group_friendly
+    Preference.INDIVIDUAL -> R.string.preference_solo_friendly
+    Preference.COUPLE -> R.string.preference_couple_friendly
     Preference.WHEELCHAIR_ACCESSIBLE -> R.string.preference_wheelchair_accessible
     Preference.PUBLIC_TRANSPORT -> R.string.preference_public_transport
     Preference.QUICK -> R.string.preference_quick
+  }
+}
+
+/**
+ * Extension function to get the string representation of a Preference.
+ *
+ * @return A string representation of the preference.
+ */
+fun Preference.displayString(): String {
+  return when (this) {
+    Preference.SCENIC_VIEWS -> "Scenic Views"
+    Preference.SPORTS -> "Sports"
+    Preference.MUSEUMS -> "Museums"
+    Preference.HIKE -> "Hiking"
+    Preference.CHILDREN_FRIENDLY -> "Children Friendly"
+    Preference.NIGHTLIFE -> "Nightlife & Party"
+    Preference.SHOPPING -> "Shopping"
+    Preference.WELLNESS -> "Wellness"
+    Preference.FOODIE -> "Food & Culinary Experiences"
+    Preference.URBAN -> "Urban Sightseeing"
+    Preference.GROUP -> "Group Friendly"
+    Preference.INDIVIDUAL -> "Solo Traveler Friendly"
+    Preference.COUPLE -> "Couple Friendly"
+    Preference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
+    Preference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
+    Preference.QUICK -> "Fast Trip"
   }
 }
 

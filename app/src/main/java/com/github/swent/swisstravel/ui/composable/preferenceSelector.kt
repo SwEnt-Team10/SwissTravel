@@ -2,8 +2,11 @@ package com.github.swent.swisstravel.ui.composable
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -15,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,7 +59,9 @@ fun PreferenceButton(
   Button(
       onClick = { onCheckedChange(preference) },
       shape = RoundedCornerShape(50),
-      colors = ButtonDefaults.buttonColors(containerColor = Color.White, contentColor = color),
+      colors =
+          ButtonDefaults.buttonColors(
+              containerColor = MaterialTheme.colorScheme.onPrimary, contentColor = color),
       border = BorderStroke(Dp.Hairline, color),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagButton(preference))) {
         Text(text = stringResource(preference.displayStringRes()))
@@ -94,37 +98,44 @@ fun PreferenceSelectorRow(
  * @param isChecked a function that returns whether the given preference is checked
  * @param onCheckedChange a function that is called when the user clicks on a preference
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PreferenceSelector(
     isChecked: (Preference) -> Boolean,
     onCheckedChange: (Preference) -> Unit,
 ) {
-  Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.spacedBy(10.dp),
-      modifier = Modifier.testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)) {
-        val firstRow = listOf(Preference.WELLNESS, Preference.SPORTS, Preference.HIKE)
-        val secondRow = listOf(Preference.MUSEUMS, Preference.SCENIC_VIEWS)
-        val thirdRow = listOf(Preference.SHOPPING, Preference.FOODIE)
-        val fourthRow = listOf(Preference.URBAN, Preference.NIGHTLIFE)
-        val fifthRow = listOf(Preference.GROUP, Preference.INDIVIDUAL)
-        val sixthRow = listOf(Preference.CHILDREN_FRIENDLY, Preference.COUPLE)
-        val seventhRow = listOf(Preference.PUBLIC_TRANSPORT, Preference.QUICK)
+  val allPreferences =
+      listOf(
+          Preference.WELLNESS,
+          Preference.SPORTS,
+          Preference.HIKE,
+          Preference.MUSEUMS,
+          Preference.SCENIC_VIEWS,
+          Preference.SHOPPING,
+          Preference.FOODIE,
+          Preference.URBAN,
+          Preference.NIGHTLIFE,
+          Preference.GROUP,
+          Preference.INDIVIDUAL,
+          Preference.CHILDREN_FRIENDLY,
+          Preference.COUPLE,
+          Preference.PUBLIC_TRANSPORT,
+          Preference.QUICK)
 
-        PreferenceSelectorRow(
-            prefs = firstRow, isChecked = isChecked, onCheckedChange = onCheckedChange)
-        PreferenceSelectorRow(
-            prefs = secondRow, isChecked = isChecked, onCheckedChange = onCheckedChange)
-        PreferenceSelectorRow(
-            prefs = thirdRow, isChecked = isChecked, onCheckedChange = onCheckedChange)
-        PreferenceSelectorRow(
-            prefs = fourthRow, isChecked = isChecked, onCheckedChange = onCheckedChange)
-        PreferenceSelectorRow(
-            prefs = fifthRow, isChecked = isChecked, onCheckedChange = onCheckedChange)
-        PreferenceSelectorRow(
-            prefs = sixthRow, isChecked = isChecked, onCheckedChange = onCheckedChange)
-        PreferenceSelectorRow(
-            prefs = seventhRow, isChecked = isChecked, onCheckedChange = onCheckedChange)
+  FlowRow(
+      horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+      verticalArrangement = Arrangement.spacedBy(10.dp),
+      modifier =
+          Modifier.widthIn(max = 360.dp)
+              .wrapContentWidth(Alignment.CenterHorizontally)
+              .testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR),
+      maxItemsInEachRow = 3) {
+        for (preference in allPreferences) {
+          PreferenceButton(
+              preference = preference,
+              isChecked = isChecked(preference),
+              onCheckedChange = onCheckedChange)
+        }
       }
 }
 
