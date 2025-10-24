@@ -51,7 +51,7 @@ fun Preference.displayStringRes(): Int {
 }
 
 /**
- * Extension function to get the string representation of a Preference.
+ * Extension function to get the string representation of a Preference as stored in the firebase.
  *
  * @return A string representation of the preference.
  */
@@ -76,6 +76,11 @@ fun Preference.displayString(): String {
   }
 }
 
+/**
+ * Extension function to convert a Preference to a test tag string.
+ *
+ * @return A string representing the test tag for the given preference.
+ */
 fun Preference.toTestTagString(): String {
   return when (this) {
     Preference.SCENIC_VIEWS -> "scenicViews"

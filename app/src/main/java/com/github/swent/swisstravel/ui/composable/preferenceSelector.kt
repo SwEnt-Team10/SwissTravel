@@ -4,7 +4,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,9 +12,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -66,30 +63,6 @@ fun PreferenceButton(
       modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagButton(preference))) {
         Text(text = stringResource(preference.displayStringRes()))
       }
-}
-
-/**
- * A row of [PreferenceButton]s.
- *
- * @param prefs the list of preferences to display
- * @param isChecked a function that returns whether the given preference is checked
- * @param onCheckedChange a function that is called when the user clicks on a preference
- */
-@Composable
-fun PreferenceSelectorRow(
-    prefs: List<Preference>,
-    isChecked: (Preference) -> Boolean,
-    onCheckedChange: (Preference) -> Unit,
-) {
-  Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-    for (preference in prefs) {
-      PreferenceButton(
-          preference = preference,
-          isChecked = isChecked(preference),
-          onCheckedChange = onCheckedChange,
-      )
-    }
-  }
 }
 
 /**
