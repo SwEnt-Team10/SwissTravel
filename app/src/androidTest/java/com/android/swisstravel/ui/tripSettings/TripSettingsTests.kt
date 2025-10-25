@@ -1,8 +1,12 @@
 package com.android.swisstravel.ui.tripSettings
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
+import com.github.swent.swisstravel.ui.composable.ToggleTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripsettings.TripDateScreen
 import com.github.swent.swisstravel.ui.tripsettings.TripDateTestTags
@@ -28,7 +32,24 @@ class TripSettingsTests {
   fun tripPreferencesScreenTest() {
     composeTestRule.setContent { SwissTravelTheme { TripPreferencesScreen(onDone = {}) } }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
-    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
+    composeTestRule
+        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)
+        .assertIsDisplayed()
+    /* Preference Selector */
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+        .assertIsDisplayed()
+    val preferences = Preference.values().filter { it != Preference.WHEELCHAIR_ACCESSIBLE }
+    for (preference in preferences) {
+      composeTestRule
+          .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
+          .assertIsDisplayed()
+    }
+    /* Preference toggle */
+    composeTestRule.onNodeWithTag(ToggleTestTags.NO).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ToggleTestTags.YES).assertIsDisplayed()
+    /* Done button */
+    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
   }
 
   @Test
