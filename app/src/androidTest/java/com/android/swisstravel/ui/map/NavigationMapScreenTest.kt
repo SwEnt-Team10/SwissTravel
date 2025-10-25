@@ -18,14 +18,14 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class CurrentTripScreenTest {
-
+class NavigationMapScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
 
   @Before
   fun setup() {
     composeTestRule.setContent {
       val navController = rememberNavController()
+
       NavHost(navController = navController, startDestination = Screen.MyTrips.route) {
         composable(Screen.MyTrips.route) {
           MyTripsScreen(navigationActions = NavigationActions(navController))
