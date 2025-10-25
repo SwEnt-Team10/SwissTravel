@@ -12,8 +12,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import com.github.swent.swisstravel.R
 import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.*
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
