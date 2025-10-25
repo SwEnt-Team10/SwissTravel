@@ -13,6 +13,7 @@
     <string name="app_logo_desc">App Logo</string>
     <string name="google_logo_desc">Google Logo</string>
     <string name="sign_out">Sign Out</string>
+    <string name="sign_in">Sign In</string>
 
     <!-- General -->
     <string name="yes">Yes</string>
@@ -45,6 +46,7 @@
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
     <string name="where_starting">Where are you starting?</string>
+    <string name="log_in_to_display">You must be logged in to display a current trip a create one.</string>
 
     <!-- Geocoding -->
     <string name="address">Address</string>
@@ -80,5 +82,23 @@
     <string name="email">Email</string>
     <string name="travel_pref">Travel Preferences</string>
     <string name="default_pref_info">These preferences will be selected by default when creating a new trip.</string>
+
+    <!-- Preferences -->
+    <string name="preference_scenic_views">Scenic Views</string>
+    <string name="preference_sports">Sports</string>
+    <string name="preference_museums">Museums</string>
+    <string name="preference_hike">Hiking</string>
+    <string name="preference_children_friendly">Child-Friendly</string>
+    <string name="preference_nightlife">Nightlife &amp; Party</string>
+    <string name="preference_shopping">Shopping</string>
+    <string name="preference_wellness">Wellness</string>
+    <string name="preference_foodie">Food &amp; Culinary Experiences</string>
+    <string name="preference_urban">Urban Sightseeing</string>
+    <string name="preference_group_friendly">Group Friendly</string>
+    <string name="preference_solo_friendly">Solo Traveler Friendly</string>
+    <string name="preference_couple_friendly">Couple Friendly</string>
+    <string name="preference_wheelchair_accessible">Wheelchair Accessible</string>
+    <string name="preference_public_transport">Public Transport Accessibility</string>
+    <string name="preference_quick">Fast Trip</string>
 
 </resources>
