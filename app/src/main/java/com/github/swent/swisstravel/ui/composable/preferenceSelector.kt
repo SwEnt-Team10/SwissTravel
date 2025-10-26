@@ -35,6 +35,7 @@ object PreferenceSelectorTestTags {
   fun getTestTagButton(preference: Preference): String = preference.toTestTagString() + "Button"
 }
 
+/* Constants */
 const val BORDER_WIDTH = 1.5
 
 /**
