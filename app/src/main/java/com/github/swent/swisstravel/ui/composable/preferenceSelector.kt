@@ -17,7 +17,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.displayStringRes
@@ -36,6 +35,9 @@ object PreferenceSelectorTestTags {
   fun getTestTagButton(preference: Preference): String = preference.toTestTagString() + "Button"
 }
 
+/* Constants */
+const val BORDER_WIDTH = 1.5
+
 /**
  * A button that represents a [Preference].
  *
@@ -50,15 +52,14 @@ fun PreferenceButton(
     onCheckedChange: (Preference) -> Unit,
 ) {
   val color =
-      if (isChecked) MaterialTheme.colorScheme.primaryContainer
-      else MaterialTheme.colorScheme.onBackground
+      if (isChecked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
   Button(
       onClick = { onCheckedChange(preference) },
       shape = RoundedCornerShape(50),
       colors =
           ButtonDefaults.buttonColors(
               containerColor = MaterialTheme.colorScheme.onPrimary, contentColor = color),
-      border = BorderStroke(Dp.Hairline, color),
+      border = BorderStroke(BORDER_WIDTH.dp, color),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagButton(preference))) {
         Text(text = stringResource(preference.displayStringRes()))
       }
