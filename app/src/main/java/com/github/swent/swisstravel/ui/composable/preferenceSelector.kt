@@ -35,6 +35,8 @@ object PreferenceSelectorTestTags {
   fun getTestTagButton(preference: Preference): String = preference.toTestTagString() + "Button"
 }
 
+const val BORDER_WIDTH = 1.5
+
 /**
  * A button that represents a [Preference].
  *
@@ -56,7 +58,7 @@ fun PreferenceButton(
       colors =
           ButtonDefaults.buttonColors(
               containerColor = MaterialTheme.colorScheme.onPrimary, contentColor = color),
-      border = BorderStroke(1.5.dp, color),
+      border = BorderStroke(BORDER_WIDTH.dp, color),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagButton(preference))) {
         Text(text = stringResource(preference.displayStringRes()))
       }
