@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,22 +16,31 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -50,6 +60,11 @@ object MyTripsScreenTestTags {
   const val UPCOMING_TRIPS_TITLE = "upcomingTripsTitle"
   const val UPCOMING_TRIPS = "upcomingTrips"
   const val EMPTY_UPCOMING_TRIPS_MSG = "emptyUpcomingTrips"
+  const val CONFIRM_DELETE_BUTTON = "confirmDelete"
+  const val CANCEL_DELETE_BUTTON = "cancelDelete"
+  const val DELETE_SELECTED_BUTTON = "deleteSelected"
+  const val SELECT_ALL_BUTTON = "selectAll"
+  const val CANCEL_SELECTION_BUTTON = "cancelSelection"
 
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
@@ -79,6 +94,37 @@ fun MyTripsScreen(
     }
   }
 
+  var showDeleteConfirmation by remember { mutableStateOf(false) }
+  if (showDeleteConfirmation) {
+    val count = uiState.selectedTrips.size
+    AlertDialog(
+        onDismissRequest = { showDeleteConfirmation = false },
+        title = { Text(pluralStringResource(R.plurals.confirm_delete_title, count, count)) },
+        text = { Text(stringResource(R.string.confirm_delete_message)) },
+        confirmButton = {
+          TextButton(
+              onClick = { showDeleteConfirmation = false },
+              modifier = Modifier.testTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)) {
+                Text(stringResource(R.string.cancel))
+              }
+        },
+        dismissButton = {
+          TextButton(
+              onClick = {
+                myTripsViewModel.deleteSelectedTrips()
+                showDeleteConfirmation = false
+              },
+              colors =
+                  ButtonDefaults.textButtonColors(
+                      contentColor = MaterialTheme.colorScheme.onBackground),
+              modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON)) {
+                Text(stringResource(R.string.delete))
+              }
+        },
+        containerColor = MaterialTheme.colorScheme.onPrimary,
+    )
+  }
+
   Scaffold(
       topBar = {
         TopAppBar(
@@ -102,25 +148,42 @@ fun MyTripsScreen(
             },
             navigationIcon = {
               if (uiState.isSelectionMode) {
-                IconButton(onClick = { myTripsViewModel.toggleSelectionMode(false) }) {
-                  Icon(
-                      Icons.Default.Close,
-                      contentDescription = stringResource(R.string.cancel_selection))
-                }
+                IconButton(
+                    onClick = { myTripsViewModel.toggleSelectionMode(false) },
+                    modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON)) {
+                      Icon(
+                          Icons.Default.Close,
+                          contentDescription = stringResource(R.string.cancel_selection))
+                    }
               }
             },
             actions = {
               if (uiState.isSelectionMode) {
-                IconButton(onClick = { myTripsViewModel.deleteSelectedTrips() }) {
-                  Icon(
-                      Icons.Default.DeleteOutline,
-                      contentDescription = stringResource(R.string.delete_selected))
-                }
-                IconButton(onClick = { TODO() }) {
+                var selectExpanded by remember { mutableStateOf(false) }
+                IconButton(
+                    onClick = { showDeleteConfirmation = true },
+                    modifier = Modifier.testTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON)) {
+                      Icon(
+                          Icons.Default.DeleteOutline,
+                          contentDescription = stringResource(R.string.delete_selected))
+                    }
+                IconButton(onClick = { selectExpanded = true }) {
                   Icon(
                       Icons.Default.MoreVert,
-                      contentDescription = stringResource(R.string.select_more))
+                      contentDescription = stringResource(R.string.more_options))
                 }
+                DropdownMenu(
+                    expanded = selectExpanded,
+                    onDismissRequest = { selectExpanded = false },
+                    modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)) {
+                      DropdownMenuItem(
+                          text = { Text(stringResource(R.string.select_all)) },
+                          onClick = {
+                            selectExpanded = false
+                            myTripsViewModel.selectAllTrips()
+                          },
+                          modifier = Modifier.testTag(MyTripsScreenTestTags.SELECT_ALL_BUTTON))
+                    }
               } else {
                 // Past Trips Icon Button
                 IconButton(

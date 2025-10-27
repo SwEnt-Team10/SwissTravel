@@ -98,4 +98,12 @@ class MyTripsViewModel(
       }
     }
   }
+
+  fun selectAllTrips() {
+    val allTrips = buildList {
+      uiState.value.currentTrip?.let { add(it) }
+      addAll(uiState.value.upcomingTrips)
+    }
+    _uiState.value = _uiState.value.copy(selectedTrips = allTrips.toSet())
+  }
 }
