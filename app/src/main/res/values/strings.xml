@@ -27,7 +27,7 @@
     <string name="travellingPreferences">What are your travelling preferences?</string>
     <string name="quickTraveler">I want to see as much as possible.</string>
     <string name="sportyTrip">I\'d like to do some exercise.</string>
-    <string name="foodyTrip">I want to eat some local specialities.</string>
+    <string name="foodieTrip">I want to eat some local specialities.</string>
     <string name="museumsLiker">I\'d like to see some museums.</string>
     <string name="handicappedTraveler">Are you or one of your travelers physically handicapped?</string>
     <string name="trip_saved">Trip saved successfully!</string>
@@ -67,6 +67,13 @@
     <string name="upcoming_trip">Upcoming Trip</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
+    <string name="sort">Button to sort Upcoming Trips</string>
+    <string name="start_date_asc">Start Date ⬆</string>
+    <string name="start_date_desc">Start Date ⬇</string>
+    <string name="end_date_asc">End Date ⬆</string>
+    <string name="end_date_desc">End Date ⬇</string>
+    <string name="name_asc">Name A–Z</string>
+    <string name="name_desc">Name Z-A</string>
 
     <!-- navigation -->
     <string name="my_trips_tab">My trips</string>

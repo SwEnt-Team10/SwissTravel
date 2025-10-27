@@ -41,8 +41,7 @@ fun TripElement(trip: Trip, onClick: () -> Unit) {
               .clickable(onClick = onClick)
               .fillMaxWidth()
               .height(56.dp),
-      colors =
-          CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
       shape = MaterialTheme.shapes.large) {
         Row(
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),

@@ -13,10 +13,20 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+enum class TripSortType {
+  START_DATE_ASC,
+  START_DATE_DESC,
+  END_DATE_ASC,
+  END_DATE_DESC,
+  NAME_ASC,
+  NAME_DESC
+}
+
 data class MyTripsUIState(
     val currentTrip: Trip? = null,
     val upcomingTrips: List<Trip> = emptyList(),
     val errorMsg: String? = null,
+    val sortType: TripSortType = TripSortType.START_DATE_ASC
 )
 
 class MyTripsViewModel(
@@ -52,12 +62,30 @@ class MyTripsViewModel(
         val trips = tripsRepository.getAllTrips()
         val currentTrip = trips.find { it.isCurrent() }
         val upcomingTrips = trips.filter { it.isUpcoming() }
+        val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
 
-        _uiState.value = MyTripsUIState(currentTrip = currentTrip, upcomingTrips = upcomingTrips)
+        _uiState.value = _uiState.value.copy(currentTrip = currentTrip, upcomingTrips = sortedTrips)
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error fetching trips", e)
         setErrorMsg("Failed to load trips: ${e.message}")
       }
     }
+  }
+
+  private fun sortTrips(trips: List<Trip>, sortType: TripSortType): List<Trip> {
+    return when (sortType) {
+      TripSortType.START_DATE_ASC -> trips.sortedBy { it.tripProfile.startDate }
+      TripSortType.START_DATE_DESC -> trips.sortedByDescending { it.tripProfile.startDate }
+      TripSortType.END_DATE_ASC -> trips.sortedBy { it.tripProfile.endDate }
+      TripSortType.END_DATE_DESC -> trips.sortedByDescending { it.tripProfile.endDate }
+      TripSortType.NAME_ASC -> trips.sortedBy { it.name.lowercase() }
+      TripSortType.NAME_DESC -> trips.sortedByDescending { it.name.lowercase() }
+    }
+  }
+
+  fun updateSortType(sortType: TripSortType) {
+    val trips = _uiState.value.upcomingTrips
+    _uiState.value =
+        _uiState.value.copy(sortType = sortType, upcomingTrips = sortTrips(trips, sortType))
   }
 }
