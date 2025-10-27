@@ -1,13 +1,13 @@
 package com.github.swent.swisstravel.ui.geocoding
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,13 +20,13 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.collectLatest
-import androidx.compose.ui.unit.dp
 
 /** Test tags for the AddressAutocompleteTextField composable. */
 object AddressTextTestTags {
@@ -82,11 +82,10 @@ fun AddressAutocompleteTextField(
 
             // Add a divider between items for clarity (but not after the last item)
             if (index < suggestions.lastIndex) {
-                HorizontalDivider(
-                    modifier = Modifier.fillMaxWidth(),
-                    thickness = 1.dp,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
-                )
+              HorizontalDivider(
+                  modifier = Modifier.fillMaxWidth(),
+                  thickness = 1.dp,
+                  color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
           }
         }
@@ -94,9 +93,7 @@ fun AddressAutocompleteTextField(
 
   // When the selectedLocation from the ViewModel changes (e.g., setLocation called
   // from elsewhere), update the local text to reflect it.
-  LaunchedEffect(state.selectedLocation) {
-    state.selectedLocation?.let { text = it.name }
-  }
+  LaunchedEffect(state.selectedLocation) { state.selectedLocation?.let { text = it.name } }
 
   // Debounce user input and call the ViewModel only after the user stops typing.
   LaunchedEffect(Unit) {

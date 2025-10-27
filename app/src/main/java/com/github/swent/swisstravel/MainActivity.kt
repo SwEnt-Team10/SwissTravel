@@ -176,12 +176,11 @@ fun SwissTravelApp(
             viewModel = tripSettingsViewModel(navController),
             onDone = { navigationActions.navigateTo(Screen.TripSettingsArrivalDeparture) })
       }
-        composable(Screen.TripSettingsArrivalDeparture.route) {
-            ArrivalDepartureScreen(
-                viewModel = tripSettingsViewModel(navController),
-                onNext = { navigationActions.navigateTo(Screen.MyTrips)}
-            )
-        }
+      composable(Screen.TripSettingsArrivalDeparture.route) {
+        ArrivalDepartureScreen(
+            viewModel = tripSettingsViewModel(navController),
+            onNext = { navigationActions.navigateTo(Screen.MyTrips) })
+      }
     }
 
     // Trip map screen

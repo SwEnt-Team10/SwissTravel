@@ -28,85 +28,85 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ArrivalDepartureScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () -> Unit = {}){
+fun ArrivalDepartureScreen(
+    viewModel: TripSettingsViewModel = viewModel(),
+    onNext: () -> Unit = {}
+) {
 
-    // Use different separate view models for arrival and departure
-    val arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm")
-    val departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
+  // Use different separate view models for arrival and departure
+  val arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm")
+  val departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
 
-    val arrivalState by arrivalAddressVm.addressState.collectAsState()
-    val departureState by departureAddressVm.addressState.collectAsState()
+  val arrivalState by arrivalAddressVm.addressState.collectAsState()
+  val departureState by departureAddressVm.addressState.collectAsState()
 
-    // Synch the queries with the view model
-    LaunchedEffect(arrivalState.locationQuery) {
-        // Update the model at each modification
-        viewModel.updateArrivalLocation(arrivalState.locationQuery)
-    }
-    LaunchedEffect(arrivalState.selectedLocation) {
-        arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it.name) }
-    }
-    LaunchedEffect(departureState.locationQuery) {
-        viewModel.updateDepartureLocation(departureState.locationQuery)
-    }
-    LaunchedEffect(departureState.selectedLocation) {
-        departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it.name) }
-    }
+  // Synch the queries with the view model
+  LaunchedEffect(arrivalState.locationQuery) {
+    // Update the model at each modification
+    viewModel.updateArrivalLocation(arrivalState.locationQuery)
+  }
+  LaunchedEffect(arrivalState.selectedLocation) {
+    arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it.name) }
+  }
+  LaunchedEffect(departureState.locationQuery) {
+    viewModel.updateDepartureLocation(departureState.locationQuery)
+  }
+  LaunchedEffect(departureState.selectedLocation) {
+    departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it.name) }
+  }
 
+  Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceBetween) {
+          Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-    Surface(
-        modifier = Modifier.fillMaxSize(),
-        color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            // --- Title ---
+            Text(
+                text = stringResource(R.string.arrivalDeparture),
+                textAlign = TextAlign.Center,
+                style =
+                    MaterialTheme.typography.headlineMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                    ))
 
-                // --- Title ---
-                Text(
-                    text = stringResource(R.string.arrivalDeparture),
-                    textAlign = TextAlign.Center,
-                    style =
-                        MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                        ))
+            Spacer(modifier = Modifier.height(32.dp))
 
-                Spacer(modifier = Modifier.height(32.dp))
+            // --- Arrival Destination (autocomplete) ---
+            AddressAutocompleteTextField(addressTextFieldViewModel = arrivalAddressVm)
 
-                // --- Arrival Destination (autocomplete) ---
-                AddressAutocompleteTextField(addressTextFieldViewModel = arrivalAddressVm)
+            Spacer(modifier = Modifier.height(32.dp))
 
-                Spacer(modifier = Modifier.height(32.dp))
+            // --- Departure Destination (autocomplete) ---
+            AddressAutocompleteTextField(addressTextFieldViewModel = departureAddressVm)
 
-                // --- Departure Destination (autocomplete) ---
-                AddressAutocompleteTextField(addressTextFieldViewModel = departureAddressVm)
+            Spacer(modifier = Modifier.height(32.dp))
+          }
 
-                Spacer(modifier = Modifier.height(32.dp))
-            }
-
-            // --- Done button ---
-            Button(
-                onClick = {
-                    // save uses the tripSettings LiveData which we keep updated via the LaunchedEffects above
-                    viewModel.saveTrip()
-                    onNext()
-                },
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary)) {
+          // --- Done button ---
+          Button(
+              onClick = {
+                // save uses the tripSettings LiveData which we keep updated via the LaunchedEffects
+                // above
+                viewModel.saveTrip()
+                onNext()
+              },
+              colors =
+                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
                 Text(
                     stringResource(R.string.done),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.titleMedium)
-            }
+              }
         }
-    }
+  }
 }
+
 @Preview
 @Composable
-fun TripArrivalDeparturePreview(){
-    ArrivalDepartureScreen()
+fun TripArrivalDeparturePreview() {
+  ArrivalDepartureScreen()
 }
