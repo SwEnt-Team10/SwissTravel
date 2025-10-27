@@ -100,7 +100,7 @@ fun SwissTravelApp(
     when {
       /* If the current route is authentication then quit the app */
       currentRoute == Screen.Auth.route -> {
-        return@BackHandler
+        (context as? ComponentActivity)?.finish()
       }
 
       /* If the stack is not empty, go back to the previous screen */
