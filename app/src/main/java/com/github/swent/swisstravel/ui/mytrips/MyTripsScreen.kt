@@ -65,6 +65,7 @@ object MyTripsScreenTestTags {
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
   const val CANCEL_SELECTION_BUTTON = "cancelSelection"
+  const val MORE_OPTIONS_BUTTON = "moreOptions"
 
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
@@ -167,11 +168,13 @@ fun MyTripsScreen(
                           Icons.Default.DeleteOutline,
                           contentDescription = stringResource(R.string.delete_selected))
                     }
-                IconButton(onClick = { selectExpanded = true }) {
-                  Icon(
-                      Icons.Default.MoreVert,
-                      contentDescription = stringResource(R.string.more_options))
-                }
+                IconButton(
+                    onClick = { selectExpanded = true },
+                    modifier = Modifier.testTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON)) {
+                      Icon(
+                          Icons.Default.MoreVert,
+                          contentDescription = stringResource(R.string.more_options))
+                    }
                 DropdownMenu(
                     expanded = selectExpanded,
                     onDismissRequest = { selectExpanded = false },

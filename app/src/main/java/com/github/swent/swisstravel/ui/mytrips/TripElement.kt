@@ -36,6 +36,8 @@ import com.github.swent.swisstravel.model.trip.Trip
 
 object TripElementTestTags {
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
+
+  fun getTestTagForTripCheckbox(trip: Trip): String = "checkbox${trip.uid}"
 }
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -81,7 +83,12 @@ fun TripElement(
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
               }
               if (isSelectionMode) {
-                Checkbox(checked = isSelected, onCheckedChange = null)
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = {}, // Could be null but it causes issues with the tests I
+                    // wrote, so I am leaving it like this.
+                    modifier =
+                        Modifier.testTag(TripElementTestTags.getTestTagForTripCheckbox(trip)))
               } else {
                 Icon(
                     Icons.AutoMirrored.Filled.ArrowRight,
