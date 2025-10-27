@@ -80,6 +80,5 @@ fun NavigationMap() {
         }
       }
 
-    viewModel.onCleare()
   // No explicit DisposableEffect needed; ViewModel handles teardown in onCleared()
 }
