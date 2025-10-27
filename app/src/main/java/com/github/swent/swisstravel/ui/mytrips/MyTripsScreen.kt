@@ -59,6 +59,7 @@ object MyTripsScreenTestTags {
   const val UPCOMING_TRIPS_TITLE = "upcomingTripsTitle"
   const val UPCOMING_TRIPS = "upcomingTrips"
   const val EMPTY_UPCOMING_TRIPS_MSG = "emptyUpcomingTrips"
+  const val SORT_DROPDOWN_MENU = "sortDropdownMenu"
 
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
@@ -177,11 +178,13 @@ fun MyTripsScreen(
                 var expanded by remember { mutableStateOf(false) }
 
                 Box {
-                  IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Sort,
-                        contentDescription = stringResource(R.string.sort))
-                  }
+                  IconButton(
+                      onClick = { expanded = !expanded },
+                      modifier = Modifier.testTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU)) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Sort,
+                            contentDescription = stringResource(R.string.sort))
+                      }
 
                   DropdownMenu(
                       expanded = expanded,

@@ -6,6 +6,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.swisstravel.ui.mytrips.FakeTripsRepository
 import com.android.swisstravel.ui.profile.FakeUserRepository
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.ToggleTestTags
@@ -26,6 +28,25 @@ import org.junit.Test
 class TripSettingsTests {
 
   @get:Rule val composeTestRule = createComposeRule()
+
+  /** Fake TripsRepository to feed the ViewModel without touching Firestore. */
+  class FakeTripsRepository(private val trips: List<Trip>) : TripsRepository {
+    override suspend fun getAllTrips(): List<Trip> = trips
+
+    override suspend fun getTrip(tripId: String): Trip {
+      return trips.find { it.uid == tripId } ?: throw Exception("Trip not found: $tripId")
+    }
+
+    override suspend fun addTrip(trip: Trip) {
+      // No-op for testing
+    }
+
+    override suspend fun deleteTrip(tripId: String) {
+      // No-op for testing
+    }
+
+    override fun getNewUid(): String = "fake-uid"
+  }
 
   private val fakeRepo = FakeTripsRepository(emptyList())
   private val fakeUserRepo = FakeUserRepository()
