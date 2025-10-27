@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Archive
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -80,21 +83,54 @@ fun MyTripsScreen(
       topBar = {
         TopAppBar(
             title = {
-              Text(
-                  text = stringResource(R.string.my_trips),
-                  style = MaterialTheme.typography.titleLarge,
-                  color = MaterialTheme.colorScheme.onBackground
-                  /*,modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE)*/ )
+              if (uiState.isSelectionMode) {
+                val count = uiState.selectedTrips.size
+                Text(
+                    text = stringResource(R.string.n_selected, count),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                    /*,modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE)*/
+                    )
+              } else {
+                Text(
+                    text = stringResource(R.string.my_trips),
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                    /*,modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE)*/
+                    )
+              }
+            },
+            navigationIcon = {
+              if (uiState.isSelectionMode) {
+                IconButton(onClick = { myTripsViewModel.toggleSelectionMode(false) }) {
+                  Icon(
+                      Icons.Default.Close,
+                      contentDescription = stringResource(R.string.cancel_selection))
+                }
+              }
             },
             actions = {
-              // Past Trips Icon Button
-              IconButton(
-                  onClick = { onPastTrips() },
-                  modifier = Modifier.testTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)) {
-                    Icon(
-                        imageVector = Icons.Outlined.Archive,
-                        contentDescription = stringResource(R.string.go_past_trips))
-                  }
+              if (uiState.isSelectionMode) {
+                IconButton(onClick = { myTripsViewModel.deleteSelectedTrips() }) {
+                  Icon(
+                      Icons.Default.DeleteOutline,
+                      contentDescription = stringResource(R.string.delete_selected))
+                }
+                IconButton(onClick = { TODO() }) {
+                  Icon(
+                      Icons.Default.MoreVert,
+                      contentDescription = stringResource(R.string.select_more))
+                }
+              } else {
+                // Past Trips Icon Button
+                IconButton(
+                    onClick = { onPastTrips() },
+                    modifier = Modifier.testTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)) {
+                      Icon(
+                          imageVector = Icons.Outlined.Archive,
+                          contentDescription = stringResource(R.string.go_past_trips))
+                    }
+              }
             })
       },
       bottomBar = {
@@ -131,7 +167,21 @@ fun MyTripsScreen(
           Spacer(modifier = Modifier.height(4.dp))
 
           if (currentTrip != null) {
-            TripElement(trip = currentTrip, onClick = { onSelectTrip(currentTrip) })
+            TripElement(
+                trip = currentTrip,
+                onClick = {
+                  if (uiState.isSelectionMode) {
+                    myTripsViewModel.toggleTripSelection(currentTrip)
+                  } else {
+                    onSelectTrip(currentTrip)
+                  }
+                },
+                onLongPress = {
+                  myTripsViewModel.toggleSelectionMode(true)
+                  myTripsViewModel.toggleTripSelection(currentTrip)
+                },
+                isSelected = currentTrip in uiState.selectedTrips,
+                isSelectionMode = uiState.isSelectionMode)
             Text(
                 text = stringResource(R.string.warning_multiple_current_trip),
                 style = MaterialTheme.typography.labelSmall)
@@ -157,9 +207,22 @@ fun MyTripsScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxWidth().testTag(MyTripsScreenTestTags.UPCOMING_TRIPS)) {
                   items(upcomingTrips.size) { index ->
+                    val trip = upcomingTrips[index]
                     TripElement(
-                        trip = upcomingTrips[index],
-                        onClick = { onSelectTrip(upcomingTrips[index]) })
+                        trip = trip,
+                        onClick = {
+                          if (uiState.isSelectionMode) {
+                            myTripsViewModel.toggleTripSelection(trip)
+                          } else {
+                            onSelectTrip(trip)
+                          }
+                        },
+                        onLongPress = {
+                          myTripsViewModel.toggleSelectionMode(true)
+                          myTripsViewModel.toggleTripSelection(trip)
+                        },
+                        isSelected = trip in uiState.selectedTrips,
+                        isSelectionMode = uiState.isSelectionMode)
                   }
                 }
           } else {

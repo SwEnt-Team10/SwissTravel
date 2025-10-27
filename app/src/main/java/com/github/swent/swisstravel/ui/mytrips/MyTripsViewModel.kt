@@ -17,6 +17,8 @@ data class MyTripsUIState(
     val currentTrip: Trip? = null,
     val upcomingTrips: List<Trip> = emptyList(),
     val errorMsg: String? = null,
+    val isSelectionMode: Boolean = false,
+    val selectedTrips: Set<Trip> = emptySet(),
 )
 
 class MyTripsViewModel(
@@ -57,6 +59,42 @@ class MyTripsViewModel(
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error fetching trips", e)
         setErrorMsg("Failed to load trips: ${e.message}")
+      }
+    }
+  }
+
+  fun toggleSelectionMode(enabled: Boolean) {
+    _uiState.value =
+        _uiState.value.copy(
+            isSelectionMode = enabled,
+            selectedTrips = if (!enabled) emptySet() else _uiState.value.selectedTrips)
+  }
+
+  fun toggleTripSelection(trip: Trip) {
+    val current = _uiState.value.selectedTrips.toMutableSet()
+    if (current.contains(trip)) current.remove(trip) else current.add(trip)
+
+    val newState = _uiState.value.copy(selectedTrips = current)
+
+    // Automatically exit selection mode if nothing is selected
+    _uiState.value =
+        if (current.isEmpty()) {
+          newState.copy(isSelectionMode = false)
+        } else {
+          newState
+        }
+  }
+
+  fun deleteSelectedTrips() {
+    val toDelete = _uiState.value.selectedTrips
+    viewModelScope.launch {
+      try {
+        toDelete.forEach { tripsRepository.deleteTrip(it.uid) }
+        toggleSelectionMode(false)
+        refreshUIState()
+      } catch (e: Exception) {
+        Log.e("MyTripsViewModel", "Error deleting trips", e)
+        setErrorMsg("Failed to delete trips: ${e.message}")
       }
     }
   }

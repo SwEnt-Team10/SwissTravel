@@ -67,6 +67,10 @@
     <string name="upcoming_trip">Upcoming Trip</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
+    <string name="n_selected">%1$d selected</string>
+    <string name="cancel_selection">Cancel selection</string>
+    <string name="select_more">Selection menu</string>
+    <string name="delete_selected">Delete selected</string>
 
     <!-- navigation -->
     <string name="my_trips_tab">My trips</string>
