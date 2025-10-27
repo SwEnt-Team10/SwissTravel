@@ -187,8 +187,7 @@ fun SwissTravelApp(
       composable(Screen.TripSettings1.route) {
         TripDateScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
-            onPrevious = { navigationActions.goBack() })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
       }
       composable(Screen.TripSettings2.route) {
         TripTravelersScreen(

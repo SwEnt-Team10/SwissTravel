@@ -12,6 +12,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 
+/** Object containing test tags for the [TopBar] composable. */
+object TopBarTestTags {
+  /**
+   * Create the test tag for the given [title].
+   *
+   * @param title the title of the top bar
+   * @return the test tag for the given title
+   */
+  fun getTestTagTitle(title: String): String {
+    return "TopBarTitle$title"
+  }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
@@ -24,15 +37,17 @@ fun TopBar(
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.testTag(TopBarTestTags.getTestTagTitle(title)))
       },
       navigationIcon = {
-        IconButton(onClick = onClick) {
-          Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = "Back Arrow",
-              tint = MaterialTheme.colorScheme.onBackground)
-        }
+        IconButton(
+            onClick = onClick, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_BUTTON)) {
+              Icon(
+                  imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                  contentDescription = "Back Arrow",
+                  tint = MaterialTheme.colorScheme.onBackground)
+            }
       },
       modifier = modifier.testTag(NavigationTestTags.TOP_BAR))
 }
