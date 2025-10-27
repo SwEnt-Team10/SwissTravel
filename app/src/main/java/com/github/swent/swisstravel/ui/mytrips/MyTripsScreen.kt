@@ -104,22 +104,22 @@ fun MyTripsScreen(
         text = { Text(stringResource(R.string.confirm_delete_message)) },
         confirmButton = {
           TextButton(
-              onClick = { showDeleteConfirmation = false },
-              modifier = Modifier.testTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)) {
-                Text(stringResource(R.string.cancel))
-              }
-        },
-        dismissButton = {
-          TextButton(
               onClick = {
                 myTripsViewModel.deleteSelectedTrips()
                 showDeleteConfirmation = false
               },
+              modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON)) {
+                Text(stringResource(R.string.delete))
+              }
+        },
+        dismissButton = {
+          TextButton(
+              onClick = { showDeleteConfirmation = false },
               colors =
                   ButtonDefaults.textButtonColors(
                       contentColor = MaterialTheme.colorScheme.onBackground),
-              modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON)) {
-                Text(stringResource(R.string.delete))
+              modifier = Modifier.testTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)) {
+                Text(stringResource(R.string.cancel))
               }
         },
         containerColor = MaterialTheme.colorScheme.onPrimary,
