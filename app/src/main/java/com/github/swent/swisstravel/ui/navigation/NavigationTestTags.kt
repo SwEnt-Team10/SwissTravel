@@ -7,6 +7,8 @@ object NavigationTestTags {
   const val PROFILE_TAB = "ProfileTab"
   const val MY_TRIPS_TAB = "MyTripsTab"
   const val CURRENT_TRIP_TAB = "CurrentTripTab"
+  const val TOP_BAR = "TopBar"
+  const val TOP_BAR_BUTTON = "TopBarButton"
 
   fun getTestTag(tab: Tab): String =
       when (tab) {

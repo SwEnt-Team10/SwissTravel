@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -91,6 +92,29 @@ fun SwissTravelApp(
   val startDestination =
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
       else Screen.CurrentTrip.name
+
+  val navBackStackEntry by navController.currentBackStackEntryAsState()
+  val currentRoute = navBackStackEntry?.destination?.route
+  /* System back button handler */
+  BackHandler {
+    when {
+      /* If the current route is authentication then quit the app */
+      currentRoute == Screen.Auth.route -> {
+        return@BackHandler
+      }
+
+      /* If the stack is not empty, go back to the previous screen */
+      navController.previousBackStackEntry != null -> {
+        navController.popBackStack()
+      }
+
+      /* If the stack is empty, do nothing */
+      else -> {
+        // Do nothing (prevents accidental app exit)
+      }
+    }
+  }
+
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Sign-in screen
@@ -163,7 +187,8 @@ fun SwissTravelApp(
       composable(Screen.TripSettings1.route) {
         TripDateScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.TripSettings2.route) {
         TripTravelersScreen(
