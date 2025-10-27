@@ -11,9 +11,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Archive
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +45,7 @@ import com.github.swent.swisstravel.ui.navigation.Tab
 object MyTripsScreenTestTags {
   const val PAST_TRIPS_BUTTON = "pastTrips"
   const val CURRENT_TRIP_TITLE = "currentTripTitle"
+  const val CREATE_TRIP_BUTTON = "createTrip"
   const val EMPTY_CURRENT_TRIP_MSG = "emptyCurrentTrip"
   const val UPCOMING_TRIPS_TITLE = "upcomingTripsTitle"
   const val UPCOMING_TRIPS = "upcomingTrips"
@@ -57,6 +60,7 @@ fun MyTripsScreen(
     myTripsViewModel: MyTripsViewModel = viewModel(),
     onSelectTrip: (Trip) -> Unit = {},
     onPastTrips: () -> Unit = {},
+    onCreateTrip: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
 
@@ -92,10 +96,19 @@ fun MyTripsScreen(
                   onClick = { onPastTrips() },
                   modifier = Modifier.testTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)) {
                     Icon(
-                        imageVector = Icons.Outlined.Archive,
+                        imageVector = Icons.Default.History,
                         contentDescription = stringResource(R.string.go_past_trips))
                   }
             })
+      },
+      floatingActionButton = {
+        FloatingActionButton(
+            onClick = { onCreateTrip() },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.testTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)) {
+              Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+            }
       },
       bottomBar = {
         BottomNavigationMenu(

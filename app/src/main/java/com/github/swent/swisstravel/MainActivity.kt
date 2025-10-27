@@ -130,7 +130,7 @@ fun SwissTravelApp(
       }
     }
 
-    // My trips screen
+    // My Trips screen
     navigation(
         startDestination = Screen.MyTrips.route,
         route = Screen.MyTrips.name,
@@ -143,6 +143,7 @@ fun SwissTravelApp(
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
+            onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
             navigationActions = navigationActions)
       }
     }
