@@ -18,7 +18,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -28,7 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
+import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import kotlinx.coroutines.flow.collectLatest
 
@@ -36,6 +35,7 @@ import kotlinx.coroutines.flow.collectLatest
 object TripPreferencesTestTags {
   const val DONE = "done"
   const val TRIP_PREFERENCES_SCREEN = "tripPreferencesScreen"
+  const val TRIP_PREFERENCES_TITLE = "tripPreferencesTitle"
 }
 
 /**
@@ -73,13 +73,14 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
       modifier = Modifier.fillMaxSize().testTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN),
       color = MaterialTheme.colorScheme.background) {
         Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween) {
               Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
                 // --- Title ---
                 Text(
+                    modifier = Modifier.testTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE),
                     text = stringResource(R.string.travellingPreferences),
                     textAlign = TextAlign.Center,
                     style =
@@ -90,43 +91,19 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                 Spacer(modifier = Modifier.height(32.dp))
 
                 // --- Preferences ---
-                PreferenceSwitch(
-                    stringResource(R.string.quickTraveler),
-                    prefs.contains(Preference.QUICK),
-                    onCheckedChange = { checked ->
-                      viewModel.updatePreferences(prefs.toggle(Preference.QUICK, checked))
+                PreferenceSelector(
+                    isChecked = { pref -> prefs.contains(pref) },
+                    onCheckedChange = { preference ->
+                      viewModel.updatePreferences(prefs.toggle(preference))
                     })
-
-                PreferenceSwitch(
-                    stringResource(R.string.sportyTrip),
-                    prefs.contains(Preference.SPORTS),
-                    onCheckedChange = { checked ->
-                      viewModel.updatePreferences(prefs.toggle(Preference.SPORTS, checked))
-                    })
-
-                PreferenceSwitch(
-                    stringResource(R.string.foodyTrip),
-                    prefs.contains(Preference.FOODIE),
-                    onCheckedChange = { checked ->
-                      viewModel.updatePreferences(prefs.toggle(Preference.FOODIE, checked))
-                    })
-
-                PreferenceSwitch(
-                    stringResource(R.string.museumsLiker),
-                    prefs.contains(Preference.MUSEUMS),
-                    onCheckedChange = { checked ->
-                      viewModel.updatePreferences(prefs.toggle(Preference.MUSEUMS, checked))
-                    })
+                Spacer(modifier = Modifier.height(32.dp))
 
                 PreferenceToggle(
                     stringResource(R.string.handicappedTraveler),
                     prefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
                     onValueChange = { checked ->
-                      viewModel.updatePreferences(
-                          prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE, checked))
+                      viewModel.updatePreferences(prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE))
                     })
-
-                Spacer(modifier = Modifier.height(24.dp))
               }
 
               // --- Done button ---
@@ -138,7 +115,7 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                   modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
                     Text(
                         stringResource(R.string.done),
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         style = MaterialTheme.typography.titleMedium)
                   }
             }
@@ -146,6 +123,8 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
 }
 
 /** Toggles the given [preference] in the list. Adds it if it's not present, removes it if it is. */
-private fun List<Preference>.toggle(preference: Preference, checked: Boolean): List<Preference> {
-  return this.toMutableList().apply { if (checked) add(preference) else remove(preference) }
+private fun List<Preference>.toggle(preference: Preference): List<Preference> {
+  return this.toMutableList().apply {
+    if (!this.contains(preference)) add(preference) else remove(preference)
+  }
 }

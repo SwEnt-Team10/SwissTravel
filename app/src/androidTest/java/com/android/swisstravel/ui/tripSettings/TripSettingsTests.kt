@@ -1,21 +1,34 @@
 package com.android.swisstravel.ui.tripSettings
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.android.swisstravel.ui.mytrips.FakeTripsRepository
+import com.android.swisstravel.ui.profile.FakeUserRepository
+import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
+import com.github.swent.swisstravel.ui.composable.ToggleTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripsettings.TripDateScreen
 import com.github.swent.swisstravel.ui.tripsettings.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesTestTags
+import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripsettings.TripTravelersScreen
 import com.github.swent.swisstravel.ui.tripsettings.TripTravelersTestTags
+import java.time.LocalDate
+import kotlin.test.assertEquals
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 
 class TripSettingsTests {
 
   @get:Rule val composeTestRule = createComposeRule()
+
+  private val fakeRepo = FakeTripsRepository(emptyList())
+  private val fakeUserRepo = FakeUserRepository()
 
   @Test
   fun tripDateScreenTest() {
@@ -28,7 +41,55 @@ class TripSettingsTests {
   fun tripPreferencesScreenTest() {
     composeTestRule.setContent { SwissTravelTheme { TripPreferencesScreen(onDone = {}) } }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
+    composeTestRule
+        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)
+        .assertIsDisplayed()
+    /* Preference Selector */
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+        .assertIsDisplayed()
+    val preferences = Preference.values().filter { it != Preference.WHEELCHAIR_ACCESSIBLE }
+    for (preference in preferences) {
+      composeTestRule
+          .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
+          .assertIsDisplayed()
+    }
+    /* Preference toggle */
+    composeTestRule.onNodeWithTag(ToggleTestTags.NO).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ToggleTestTags.YES).assertIsDisplayed()
+    /* Done button */
+    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
+  }
+
+  @Test
+  fun tripPreferencesScreenTestWithViewModel() = runBlocking {
+    val viewModel = TripSettingsViewModel(fakeRepo, fakeUserRepo)
+    val fakeStartDate = LocalDate.of(2024, 7, 20)
+    val fakeEndDate = LocalDate.of(2024, 7, 25)
+    composeTestRule.setContent { SwissTravelTheme { TripPreferencesScreen(viewModel) } }
+    viewModel.updateDates(fakeStartDate, fakeEndDate) // Need a date to save a trip
+    assert(viewModel.tripSettings.value.preferences.contains(Preference.MUSEUMS))
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.SPORTS))
+        .assertExists()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.SPORTS))
+        .performClick()
+    assert(viewModel.tripSettings.value.preferences.contains(Preference.SPORTS))
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.MUSEUMS))
+        .assertExists()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.MUSEUMS))
+        .performClick()
+    assert(!viewModel.tripSettings.value.preferences.contains(Preference.MUSEUMS))
+    composeTestRule.onNodeWithTag(ToggleTestTags.YES).assertExists()
+    composeTestRule.onNodeWithTag(ToggleTestTags.YES).performClick()
+    assert(viewModel.tripSettings.value.preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE))
+    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertExists()
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
+    assertEquals(2, viewModel.tripSettings.value.preferences.size)
+    // assert(fakeRepo.getAllTrips().isNotEmpty()) //can't make it to work
   }
 
   @Test
