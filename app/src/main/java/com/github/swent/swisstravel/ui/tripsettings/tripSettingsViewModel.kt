@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.tripsettings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
@@ -26,11 +27,18 @@ data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = 
 /** Data class representing the number of adults and children traveling. */
 data class TripTravelers(val adults: Int = 1, val children: Int = 0)
 
+/**
+ * Data class representing the arrival and departure destinations of the trip
+ */
+data class TripArrivalDeparture(val arrivalLocation : String? = "",
+                                val departureLocation : String? = "")
+
 /** Data class encapsulating all trip settings: dates, travelers, and preferences. */
 data class TripSettings(
     val date: TripDate = TripDate(),
     val travelers: TripTravelers = TripTravelers(),
-    val preferences: List<Preference> = emptyList()
+    val preferences: List<Preference> = emptyList(),
+    val arrivalDeparture : TripArrivalDeparture = TripArrivalDeparture()
 )
 
 /** Sealed interface representing various validation events during trip settings. */
@@ -151,6 +159,24 @@ class TripSettingsViewModel(
       } else {
         _validationEventChannel.send(ValidationEvent.Proceed)
       }
+    }
+  }
+
+  /**
+   * Update arrival location string in trip settings.
+   */
+  fun updateArrivalLocation(arrival: String) {
+    _tripSettings.update {
+      it.copy(arrivalDeparture = it.arrivalDeparture.copy(arrivalLocation = arrival))
+    }
+  }
+
+  /**
+   * Update departure location string in trip settings.
+   */
+  fun updateDepartureLocation(departure: String) {
+    _tripSettings.update {
+      it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = departure))
     }
   }
 }
