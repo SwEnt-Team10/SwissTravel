@@ -15,7 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.*
-import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -27,13 +26,6 @@ object NavigationMapScreenTestTags {
   const val ENTER_MAP_BUTTON = "enterMapButton"
   const val EXIT_BUTTON = "exitButton"
   const val MAP = "map"
-}
-
-object Locations {
-  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
-  val ZERMATT = Point.fromLngLat(7.747, 46.019)
-  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
-  val CHUV = Point.fromLngLat(6.6209, 46.5197)
 }
 
 @Composable
@@ -88,5 +80,6 @@ fun NavigationMap() {
         }
       }
 
+    viewModel.onCleare()
   // No explicit DisposableEffect needed; ViewModel handles teardown in onCleared()
 }

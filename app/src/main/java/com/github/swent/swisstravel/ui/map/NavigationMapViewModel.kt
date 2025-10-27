@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
 import com.mapbox.bindgen.ExpectedFactory
+import com.mapbox.geojson.Point
 import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -20,6 +21,13 @@ import com.mapbox.navigation.ui.maps.route.line.model.RouteLineError
 import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+
+object Locations {
+  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
+  val ZERMATT = Point.fromLngLat(7.747, 46.019)
+  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
+  val CHUV = Point.fromLngLat(6.6209, 46.5197)
+}
 
 /**
  * ViewModel responsible for configuring and managing the Mapbox Navigation instance.
@@ -150,11 +158,7 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
    */
   override fun onCleared() {
     super.onCleared()
-    try {
-      mapboxNavigation.unregisterRoutesObserver(routesObserver)
-    } catch (_: Throwable) {}
-    try {
-      MapboxNavigationProvider.destroy()
-    } catch (_: Throwable) {}
+    mapboxNavigation.unregisterRoutesObserver(routesObserver)
+    MapboxNavigationProvider.destroy()
   }
 }
