@@ -8,8 +8,10 @@ import androidx.compose.ui.test.performClick
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.test.core.app.ApplicationProvider
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
+import com.github.swent.swisstravel.ui.map.NavigationMapViewModel
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
@@ -60,5 +62,13 @@ class NavigationMapScreenTest {
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsNotDisplayed()
+  }
+
+  @Test
+  fun isRouteRenderedIsInitiallyFalseAndSetterWorks() {
+    val vm = NavigationMapViewModel(ApplicationProvider.getApplicationContext())
+    assert(!vm.isRouteRendered.value)
+    vm.setRouteRendered(true)
+    assert(vm.isRouteRendered.value)
   }
 }
