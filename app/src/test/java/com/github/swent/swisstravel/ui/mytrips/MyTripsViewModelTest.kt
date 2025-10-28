@@ -140,14 +140,14 @@ class MyTripsViewModelTest {
   }
 
   @Test
-  fun `UI state sets error message on exception`() = runTest {
+  fun `UI state shows error message on exception`() = runTest {
     coEvery { repository.getAllTrips() } throws Exception("Fake network error")
 
     viewModel = MyTripsViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertEquals("Failed to load trips: Fake network error", state.errorMsg)
+    assertEquals("Failed to load trips.", state.errorMsg)
   }
 
   @Test
