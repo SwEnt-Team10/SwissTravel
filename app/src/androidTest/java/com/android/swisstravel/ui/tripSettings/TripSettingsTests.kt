@@ -41,6 +41,10 @@ class TripSettingsTests {
       // No-op for testing
     }
 
+    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+      // No-op for testing
+    }
+
     override suspend fun deleteTrip(tripId: String) {
       // No-op for testing
     }
