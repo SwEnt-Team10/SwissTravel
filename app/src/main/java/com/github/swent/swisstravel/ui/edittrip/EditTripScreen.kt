@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -24,6 +25,17 @@ import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.TravelersSelector
+
+object EditTripScreenTestTags {
+  const val SCREEN = "editTripScreen"
+  const val LOADING = "editTripLoading"
+  const val TITLE = "editTripTitle"
+  const val CONFIRM = "editTripConfirm"
+  const val DELETE = "editTripDelete"
+  const val DELETE_DIALOG = "editTripDeleteDialog"
+  const val DELETE_CONFIRM = "editTripDeleteConfirm"
+  const val DELETE_CANCEL = "editTripDeleteCancel"
+}
 
 /**
  * Screen for editing a trip.
@@ -54,6 +66,7 @@ fun EditTripScreen(
   }
 
   Scaffold(
+      modifier = Modifier.testTag(EditTripScreenTestTags.SCREEN),
       topBar = { TopBar(onClick = onBack, title = "") },
       bottomBar = {
         Surface(tonalElevation = 2.dp) {
@@ -68,7 +81,8 @@ fun EditTripScreen(
                     },
                     enabled = !state.isLoading,
                     shape = RoundedCornerShape(28.dp),
-                    modifier = Modifier.fillMaxWidth(0.9f)) {
+                    modifier =
+                        Modifier.fillMaxWidth(0.9f).testTag(EditTripScreenTestTags.CONFIRM)) {
                       Icon(Icons.Filled.Edit, contentDescription = null)
                       Spacer(Modifier.width(8.dp))
                       Text(stringResource(R.string.confirm_changes))
@@ -77,9 +91,11 @@ fun EditTripScreen(
         }
       }) { inner ->
         if (state.isLoading) {
-          Box(Modifier.fillMaxSize().padding(inner), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
-          }
+          Box(
+              Modifier.fillMaxSize().padding(inner).testTag(EditTripScreenTestTags.LOADING),
+              contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+              }
           return@Scaffold
         }
 
@@ -95,7 +111,7 @@ fun EditTripScreen(
                   style = MaterialTheme.typography.headlineLarge,
                   fontWeight = FontWeight.ExtraBold,
                   textAlign = TextAlign.Center,
-                  modifier = Modifier.fillMaxWidth())
+                  modifier = Modifier.fillMaxWidth().testTag(EditTripScreenTestTags.TITLE))
 
               SectionHeader(stringResource(R.string.travelers))
               TravelersSelector(
@@ -121,7 +137,9 @@ fun EditTripScreen(
                   colors =
                       ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
                   shape = RoundedCornerShape(28.dp),
-                  modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                  modifier =
+                      Modifier.align(Alignment.CenterHorizontally)
+                          .testTag(EditTripScreenTestTags.DELETE)) {
                     Icon(Icons.Filled.Delete, contentDescription = null)
                     Spacer(Modifier.width(8.dp))
                     Text(stringResource(R.string.delete_trip))
@@ -132,6 +150,7 @@ fun EditTripScreen(
 
         if (showDeleteDialog) {
           AlertDialog(
+              modifier = Modifier.testTag(EditTripScreenTestTags.DELETE_DIALOG),
               onDismissRequest = { showDeleteDialog = false },
               containerColor = MaterialTheme.colorScheme.onPrimary,
               confirmButton = {
@@ -141,14 +160,17 @@ fun EditTripScreen(
                       showDeleteDialog = false
                       Toast.makeText(context, R.string.trip_deleted, Toast.LENGTH_SHORT).show()
                       onSavedOrDelete()
-                    }) {
+                    },
+                    modifier = Modifier.testTag(EditTripScreenTestTags.DELETE_CONFIRM)) {
                       Text(stringResource(R.string.confirm))
                     }
               },
               dismissButton = {
-                TextButton(onClick = { showDeleteDialog = false }) {
-                  Text(stringResource(R.string.cancel))
-                }
+                TextButton(
+                    onClick = { showDeleteDialog = false },
+                    modifier = Modifier.testTag(EditTripScreenTestTags.DELETE_CANCEL)) {
+                      Text(stringResource(R.string.cancel))
+                    }
               },
               title = { Text(stringResource(R.string.confirm_deletion)) },
               text = { Text(stringResource(R.string.delete_trip_prompt)) })
