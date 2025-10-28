@@ -123,6 +123,11 @@ abstract class SwissTravelTest {
     onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
   }
 
+  fun ComposeTestRule.checkTopBarIsDisplayed() {
+    onNodeWithTag(NavigationTestTags.TOP_BAR).assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).assertIsDisplayed()
+  }
+
   fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
       .checkActivityStateOnPressBack(shouldFinish: Boolean) {
     activityRule.scenario.onActivity { activity ->

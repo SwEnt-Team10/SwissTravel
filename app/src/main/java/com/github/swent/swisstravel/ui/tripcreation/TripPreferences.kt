@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
+import com.github.swent.swisstravel.ui.navigation.TopBar
 import kotlinx.coroutines.flow.collectLatest
 
 /** Test tags for UI tests to identify components. */
@@ -45,7 +47,11 @@ object TripPreferencesTestTags {
  * @param onDone Callback to be invoked when the user is done setting preferences.
  */
 @Composable
-fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone: () -> Unit = {}) {
+fun TripPreferencesScreen(
+    viewModel: TripSettingsViewModel = viewModel(),
+    onDone: () -> Unit = {},
+    onPrevious: () -> Unit = {}
+) {
   val tripSettings by viewModel.tripSettings.collectAsState()
   val prefs = tripSettings.preferences
   val context = LocalContext.current
@@ -68,55 +74,60 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
   }
 
   LaunchedEffect(prefs) { viewModel.updatePreferences(prefs) }
-
-  Surface(
+  Scaffold(
       modifier = Modifier.fillMaxSize().testTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN),
-      color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween) {
-              Column(horizontalAlignment = Alignment.CenterHorizontally) {
+      topBar = { TopBar(onClick = { onPrevious() }) }) { pd ->
+        Surface(
+            modifier = Modifier.fillMaxSize().padding(pd),
+            color = MaterialTheme.colorScheme.background) {
+              Column(
+                  modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
+                  horizontalAlignment = Alignment.CenterHorizontally,
+                  verticalArrangement = Arrangement.SpaceBetween) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                // --- Title ---
-                Text(
-                    modifier = Modifier.testTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE),
-                    text = stringResource(R.string.travelling_preferences),
-                    textAlign = TextAlign.Center,
-                    style =
-                        MaterialTheme.typography.headlineMedium.copy(
-                            fontWeight = FontWeight.Bold,
-                        ))
+                      // --- Title ---
+                      Text(
+                          modifier =
+                              Modifier.testTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE),
+                          text = stringResource(R.string.travelling_preferences),
+                          textAlign = TextAlign.Center,
+                          style =
+                              MaterialTheme.typography.headlineMedium.copy(
+                                  fontWeight = FontWeight.Bold,
+                              ))
 
-                Spacer(modifier = Modifier.height(32.dp))
+                      Spacer(modifier = Modifier.height(32.dp))
 
-                // --- Preferences ---
-                PreferenceSelector(
-                    isChecked = { pref -> prefs.contains(pref) },
-                    onCheckedChange = { preference ->
-                      viewModel.updatePreferences(prefs.toggle(preference))
-                    })
-                Spacer(modifier = Modifier.height(32.dp))
+                      // --- Preferences ---
+                      PreferenceSelector(
+                          isChecked = { pref -> prefs.contains(pref) },
+                          onCheckedChange = { preference ->
+                            viewModel.updatePreferences(prefs.toggle(preference))
+                          })
+                      Spacer(modifier = Modifier.height(32.dp))
 
-                PreferenceToggle(
-                    stringResource(R.string.handicapped_traveler),
-                    prefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
-                    onValueChange = { _ ->
-                      viewModel.updatePreferences(prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE))
-                    })
-              }
+                      PreferenceToggle(
+                          stringResource(R.string.handicapped_traveler),
+                          prefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
+                          onValueChange = { _ ->
+                            viewModel.updatePreferences(
+                                prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE))
+                          })
+                    }
 
-              // --- Done button ---
-              Button(
-                  onClick = { viewModel.saveTrip() },
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.primary),
-                  modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
-                    Text(
-                        stringResource(R.string.done),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.titleMedium)
+                    // --- Done button ---
+                    Button(
+                        onClick = { viewModel.saveTrip() },
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
+                          Text(
+                              stringResource(R.string.done),
+                              color = MaterialTheme.colorScheme.onPrimary,
+                              style = MaterialTheme.typography.titleMedium)
+                        }
                   }
             }
       }
