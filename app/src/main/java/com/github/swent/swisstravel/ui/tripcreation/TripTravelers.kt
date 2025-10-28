@@ -82,26 +82,27 @@ fun TripTravelersScreen(
                           },
                           enableButton = travelers.adults > 1)
 
-              // --- Travelers selectors ---
-              TravelersSelector(
-                  adults = travelers.adults,
-                  children = travelers.children,
-                  onAdultsChange = { travelers = travelers.copy(adults = it) },
-                  onChildrenChange = { travelers = travelers.copy(children = it) })
+                      // --- Travelers selectors ---
+                      TravelersSelector(
+                          adults = travelers.adults,
+                          children = travelers.children,
+                          onAdultsChange = { travelers = travelers.copy(adults = it) },
+                          onChildrenChange = { travelers = travelers.copy(children = it) })
 
-                    // --- Done button ---
-                    Button(
-                        onClick = onNext,
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(24.dp),
-                        modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
-                          Text(
-                              text = stringResource(R.string.next),
-                              color = MaterialTheme.colorScheme.onPrimary,
-                              style = MaterialTheme.typography.titleMedium)
-                        }
+                      // --- Done button ---
+                      Button(
+                          onClick = onNext,
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primary),
+                          shape = RoundedCornerShape(24.dp),
+                          modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
+                            Text(
+                                text = stringResource(R.string.next),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.titleMedium)
+                          }
+                    }
                   }
             }
       }
