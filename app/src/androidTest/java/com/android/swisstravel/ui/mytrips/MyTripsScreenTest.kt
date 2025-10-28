@@ -200,7 +200,7 @@ class MyTripsScreenEmulatorTest {
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
 
     // Cancel deletion
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON).performClick()
 
     // Selection should remain
     assert(viewModel.uiState.value.selectedTrips.contains(trip1))
@@ -220,7 +220,7 @@ class MyTripsScreenEmulatorTest {
 
     // Confirm deletion
     composeTestRule
-        .onNodeWithTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON)
+        .onNodeWithTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)
         .performClick() // This triggers deleteSelectedTrips()
 
     // Verify selection cleared

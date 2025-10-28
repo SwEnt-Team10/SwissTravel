@@ -108,7 +108,7 @@ fun MyTripsScreen(
                 myTripsViewModel.deleteSelectedTrips()
                 showDeleteConfirmation = false
               },
-              modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON)) {
+              modifier = Modifier.testTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)) {
                 Text(stringResource(R.string.delete))
               }
         },
@@ -118,7 +118,7 @@ fun MyTripsScreen(
               colors =
                   ButtonDefaults.textButtonColors(
                       contentColor = MaterialTheme.colorScheme.onBackground),
-              modifier = Modifier.testTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)) {
+              modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON)) {
                 Text(stringResource(R.string.cancel))
               }
         },
