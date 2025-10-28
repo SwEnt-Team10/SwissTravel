@@ -188,7 +188,7 @@ class TripSettingsViewModelTest {
   }
 
   private class FakeUserRepository : UserRepository {
-    override suspend fun getCurrentUser(): com.github.swent.swisstravel.model.user.User {
+    override suspend fun getCurrentUser(): User {
       return User(
           uid = "test-user",
           name = "Test User",
