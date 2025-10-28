@@ -25,6 +25,13 @@ import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.TravelersSelector
 
+/**
+ * Screen for editing a trip.
+ *
+ * @param tripId The ID of the trip to edit.
+ * @param onBack Called when the back button is pressed.
+ * @param onSavedOrDelete Called when the trip is saved or deleted.
+ */
 @Composable
 fun EditTripScreen(
     tripId: String,
@@ -84,7 +91,7 @@ fun EditTripScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)) {
               Text(
-                  text = "Editing ${state.tripName.ifBlank { "{TripName}" }} Info",
+                  text = "Editing ${state.tripName.ifBlank { "{TripName}" }}",
                   style = MaterialTheme.typography.headlineLarge,
                   fontWeight = FontWeight.ExtraBold,
                   textAlign = TextAlign.Center,
@@ -126,6 +133,7 @@ fun EditTripScreen(
         if (showDeleteDialog) {
           AlertDialog(
               onDismissRequest = { showDeleteDialog = false },
+              containerColor = MaterialTheme.colorScheme.onPrimary,
               confirmButton = {
                 TextButton(
                     onClick = {
@@ -148,6 +156,11 @@ fun EditTripScreen(
       }
 }
 
+/**
+ * A composable that displays a section header.
+ *
+ * @param text The text to display in the header.
+ */
 @Composable
 private fun SectionHeader(text: String) {
   Column {

@@ -29,6 +29,12 @@ class EditTripScreenViewModel(
   val state: StateFlow<EditTripUiState> = _uiState
   private lateinit var originalTrip: Trip
 
+  /**
+   * Loads a trip from the repository and fills the UI
+   *
+   * @param tripId The ID of the trip to load.
+   * @throws Exception if the trip could not be loaded.
+   */
   fun loadTrip(tripId: String) =
       viewModelScope.launch {
         _uiState.update { it.copy(isLoading = true, errorMsg = null, tripId = tripId) }
@@ -48,6 +54,11 @@ class EditTripScreenViewModel(
         }
       }
 
+  /**
+   * Deletes the current trip.
+   *
+   * @throws Exception if the trip could not be deleted.
+   */
   fun deleteTrip() {
     viewModelScope.launch {
       try {
@@ -58,6 +69,11 @@ class EditTripScreenViewModel(
     }
   }
 
+  /**
+   * Toggles a preference in the current trip.
+   *
+   * @param pref The preference to toggle.
+   */
   fun togglePref(pref: Preference) =
       _uiState.update {
         val selected = it.selectedPrefs.toMutableSet()
@@ -65,6 +81,11 @@ class EditTripScreenViewModel(
         it.copy(selectedPrefs = selected)
       }
 
+  /**
+   * Saves the current trip with the edited information.
+   *
+   * @throws Exception if the trip could not be saved.
+   */
   fun save() {
     viewModelScope.launch {
       try {
@@ -82,14 +103,25 @@ class EditTripScreenViewModel(
     }
   }
 
+  /**
+   * Sets the number of adults for the traveler composable.
+   *
+   * @param value The new value
+   */
   fun setAdults(value: Int) {
     _uiState.update { it.copy(adults = value) }
   }
 
+  /**
+   * Sets the number of children for the traveler composable.
+   *
+   * @param value The new value
+   */
   fun setChildren(value: Int) {
     _uiState.update { it.copy(children = value) }
   }
 
+  /** Clears the current error message. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
   }
