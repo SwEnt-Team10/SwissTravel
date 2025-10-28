@@ -39,6 +39,7 @@ class NavigationMapScreenTest {
     }
   }
 
+  // this test simply checks that it is possible to enter and see the map
   @Test
   fun canEnterNavigationMapFromCurrentTrip() = runTest {
     composeTestRule
@@ -50,16 +51,21 @@ class NavigationMapScreenTest {
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
   }
 
+  // this test first enters the map, then checks the map is displayed, and then navigates back to check it is not displayed anymore
   @Test
   fun canEnterAndExitNavigationMap() = runTest {
+    // enter the map
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).performClick()
     composeTestRule.waitForIdle()
+    // check the map is displayed
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
+    // exit the map
     composeTestRule
         .onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON)
         .assertIsDisplayed()
         .performClick()
     composeTestRule.waitForIdle()
+    // checks components are correctly displayed
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsNotDisplayed()
   }
