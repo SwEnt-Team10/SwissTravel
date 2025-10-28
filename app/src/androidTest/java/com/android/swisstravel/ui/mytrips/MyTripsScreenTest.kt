@@ -213,7 +213,6 @@ class MyTripsScreenEmulatorTest {
     // Verify initial order: START_DATE_ASC
     composeTestRule.onAllNodesWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS).onFirst().assertExists()
 
-    val upcomingNode = composeTestRule.onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS)
     val firstTripNode =
         composeTestRule.onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripB))
     val secondTripNode =
@@ -267,7 +266,7 @@ class MyTripsScreenEmulatorTest {
 
   /** Helper to launch screen with trips */
   private fun launchScreen(vararg trips: Trip): MyTripsViewModel {
-    val viewModel = MyTripsViewModel(FakeTripsRepository(trips.toList()))
+    val viewModel = MyTripsViewModel(FakeTripsRepository(trips.toMutableList()))
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
     return viewModel
   }

@@ -81,7 +81,6 @@ fun TripElement(
               .combinedClickable(onClick = onClick, onLongClick = onLongPress)
               .fillMaxWidth()
               .height(56.dp)
-              .height(56.dp)
               .border(
                   width = if (isSelected) 3.dp else 0.dp,
                   color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,

@@ -2,7 +2,6 @@ package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,10 +19,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.Sort
-import androidx.compose.material.icons.outlined.Archive
-import androidx.compose.material3.*
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -33,8 +31,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -53,7 +51,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
-import com.github.swent.swisstravel.ui.navigation.*
+import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.navigation.Tab
 
 /**
  * Contains constants for test tags used within [MyTripsScreen].
@@ -112,6 +114,7 @@ fun MyTripsScreen(
   val uiState by myTripsViewModel.uiState.collectAsState()
   val currentTrip = uiState.currentTrip
   val upcomingTrips = uiState.upcomingTrips
+  val selectedTripCount = uiState.selectedTrips.size
 
   // Refresh trips whenever the screen is displayed
   LaunchedEffect(Unit) { myTripsViewModel.refreshUIState() }
@@ -127,10 +130,13 @@ fun MyTripsScreen(
   // State for delete confirmation dialog visibility
   var showDeleteConfirmation by remember { mutableStateOf(false) }
   if (showDeleteConfirmation) {
-    val count = uiState.selectedTrips.size
     AlertDialog(
         onDismissRequest = { showDeleteConfirmation = false },
-        title = { Text(pluralStringResource(R.plurals.confirm_delete_title, count, count)) },
+        title = {
+          Text(
+              pluralStringResource(
+                  R.plurals.confirm_delete_title, selectedTripCount, selectedTripCount))
+        },
         text = { Text(stringResource(R.string.confirm_delete_message)) },
         confirmButton = {
           TextButton(
@@ -161,9 +167,8 @@ fun MyTripsScreen(
         TopAppBar(
             title = {
               if (uiState.isSelectionMode) {
-                val count = uiState.selectedTrips.size
                 Text(
-                    text = stringResource(R.string.n_selected, count),
+                    text = stringResource(R.string.n_selected, selectedTripCount),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground)
               } else {
@@ -185,14 +190,6 @@ fun MyTripsScreen(
               }
             },
             actions = {
-              // Past Trips Icon Button
-              IconButton(
-                  onClick = { onPastTrips() },
-                  modifier = Modifier.testTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)) {
-                    Icon(
-                        imageVector = Icons.Default.History,
-                        contentDescription = stringResource(R.string.go_past_trips))
-                  }
               if (uiState.isSelectionMode) {
                 var selectExpanded by remember { mutableStateOf(false) }
                 IconButton(
@@ -222,12 +219,12 @@ fun MyTripsScreen(
                           modifier = Modifier.testTag(MyTripsScreenTestTags.SELECT_ALL_BUTTON))
                     }
               } else {
-                // Past Trips button
+                // Past Trips Icon Button
                 IconButton(
                     onClick = { onPastTrips() },
                     modifier = Modifier.testTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)) {
                       Icon(
-                          imageVector = Icons.Outlined.Archive,
+                          imageVector = Icons.Default.History,
                           contentDescription = stringResource(R.string.go_past_trips))
                     }
               }
@@ -328,54 +325,26 @@ fun MyTripsScreen(
                       expanded = expanded,
                       onDismissRequest = { expanded = false },
                       modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)) {
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.start_date_asc)) },
-                            onClick = {
-                              myTripsViewModel.updateSortType(TripSortType.START_DATE_ASC)
-                              expanded = false
-                            })
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.start_date_desc)) },
-                            onClick = {
-                              myTripsViewModel.updateSortType(TripSortType.START_DATE_DESC)
-                              expanded = false
-                            })
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.end_date_asc)) },
-                            onClick = {
-                              myTripsViewModel.updateSortType(TripSortType.END_DATE_ASC)
-                              expanded = false
-                            })
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.end_date_desc)) },
-                            onClick = {
-                              myTripsViewModel.updateSortType(TripSortType.END_DATE_DESC)
-                              expanded = false
-                            })
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.name_asc)) },
-                            onClick = {
-                              myTripsViewModel.updateSortType(TripSortType.NAME_ASC)
-                              expanded = false
-                            })
-                        DropdownMenuItem(
-                            text = { Text(stringResource(R.string.name_desc)) },
-                            onClick = {
-                              myTripsViewModel.updateSortType(TripSortType.NAME_DESC)
-                              expanded = false
-                            })
+                        val sortOptions =
+                            listOf(
+                                TripSortType.START_DATE_ASC to R.string.start_date_asc,
+                                TripSortType.START_DATE_DESC to R.string.start_date_desc,
+                                TripSortType.END_DATE_ASC to R.string.end_date_asc,
+                                TripSortType.END_DATE_DESC to R.string.end_date_desc,
+                                TripSortType.NAME_ASC to R.string.name_asc,
+                                TripSortType.NAME_DESC to R.string.name_desc)
+
+                        sortOptions.forEach { (type, resId) ->
+                          DropdownMenuItem(
+                              text = { Text(stringResource(resId)) },
+                              onClick = {
+                                myTripsViewModel.updateSortType(type)
+                                expanded = false
+                              })
+                        }
                       }
                 }
               }
-          // Upcoming Trips section
-          Text(
-              text = stringResource(R.string.upcoming_trip),
-              style = MaterialTheme.typography.headlineLarge,
-              color = MaterialTheme.colorScheme.onBackground,
-              modifier =
-                  Modifier.testTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE)
-                      .padding(top = 26.dp, bottom = 10.dp))
-
           if (upcomingTrips.isNotEmpty()) {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
