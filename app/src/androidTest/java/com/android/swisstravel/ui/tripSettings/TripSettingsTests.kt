@@ -6,8 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.swisstravel.ui.mytrips.FakeTripsRepository
 import com.android.swisstravel.ui.profile.FakeUserRepository
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.ToggleTestTags
@@ -25,7 +24,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 
-class TripSettingsTests {
+class TripSettingsTests : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -59,6 +58,7 @@ class TripSettingsTests {
   fun tripDateScreenTest() {
     composeTestRule.setContent { SwissTravelTheme { TripDateScreen(onNext = {}) } }
     composeTestRule.onNodeWithTag(TripDateTestTags.TRIP_DATE_SCREEN).assertExists()
+    composeTestRule.checkTopBarIsDisplayed()
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
   }
 
@@ -69,6 +69,7 @@ class TripSettingsTests {
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)
         .assertIsDisplayed()
+    composeTestRule.checkTopBarIsDisplayed()
     /* Preference Selector */
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
@@ -121,6 +122,7 @@ class TripSettingsTests {
   fun tripTravelersScreenTest() {
     composeTestRule.setContent { SwissTravelTheme { TripTravelersScreen(onNext = {}) } }
     composeTestRule.onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertExists()
+    composeTestRule.checkTopBarIsDisplayed()
     composeTestRule.onNodeWithTag(TripTravelersTestTags.NEXT).performClick()
   }
 }
