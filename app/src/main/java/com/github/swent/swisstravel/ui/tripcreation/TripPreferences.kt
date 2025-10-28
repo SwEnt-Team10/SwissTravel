@@ -101,7 +101,7 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                 PreferenceToggle(
                     stringResource(R.string.handicapped_traveler),
                     prefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
-                    onValueChange = { checked ->
+                    onValueChange = { _ ->
                       viewModel.updatePreferences(prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE))
                     })
               }

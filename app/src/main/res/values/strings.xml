@@ -25,10 +25,10 @@
 
     <!-- Trip preferences -->
     <string name="travelling_preferences">What are your travelling preferences?</string>
-    <string name="quick_traveler">I want to see as much as possible.</string>
-    <string name="sporty_trip">I\'d like to do some exercise.</string>
-    <string name="foody_trip">I want to eat some local specialities.</string>
-    <string name="museums_liker">I\'d like to see some museums.</string>
+    <string name="quick_traveler">I want to see as much as possible.</string>   <!-- Not used -->
+    <string name="sporty_trip">I\'d like to do some exercise.</string>          <!-- Not used -->
+    <string name="foody_trip">I want to eat some local specialities.</string>   <!-- Not used -->
+    <string name="museums_liker">I\'d like to see some museums.</string>        <!-- Not used -->
     <string name="handicapped_traveler">Are you or one of your travelers physically handicapped?</string>
     <string name="trip_saved">Trip saved successfully!</string>
 
