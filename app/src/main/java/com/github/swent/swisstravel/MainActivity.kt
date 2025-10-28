@@ -176,7 +176,10 @@ fun SwissTravelApp(
           arguments = listOf(navArgument("tripId") { type = NavType.StringType })) {
               navBackStackEntry ->
             val tripId = requireNotNull(navBackStackEntry.arguments?.getString("tripId"))
-            EditTripScreen(tripId = tripId)
+            EditTripScreen(
+                tripId = tripId,
+                onBack = { navController.popBackStack() },
+                onSavedOrDelete = { navController.popBackStack() })
           }
     }
 

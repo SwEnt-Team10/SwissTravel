@@ -1,31 +1,27 @@
 package com.github.swent.swisstravel.ui.edittrip
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
+import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.TravelersSelector
 
@@ -33,55 +29,129 @@ import com.github.swent.swisstravel.ui.tripcreation.TravelersSelector
 fun EditTripScreen(
     tripId: String,
     editTripViewModel: EditTripScreenViewModel = viewModel(),
+    onBack: () -> Unit,
+    onSavedOrDelete: () -> Unit,
 ) {
+  val context = LocalContext.current
+  val state by editTripViewModel.state.collectAsState()
+
+  var showDeleteDialog by remember { mutableStateOf(false) }
+
   LaunchedEffect(tripId) { editTripViewModel.loadTrip(tripId) }
 
-  val state by editTripViewModel.state.collectAsState()
-  val context = LocalContext.current
-
   LaunchedEffect(state.errorMsg) {
-    if (state.errorMsg != null) {
-      Toast.makeText(context, state.errorMsg, Toast.LENGTH_SHORT).show()
+    state.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       editTripViewModel.clearErrorMsg()
     }
   }
 
   Scaffold(
-      topBar = { TopBar(onClick = {}, title = "") },
+      topBar = { TopBar(onClick = onBack, title = "") },
       bottomBar = {
         Surface(tonalElevation = 2.dp) {
-          Row(
-              Modifier.fillMaxWidth().padding(16.dp),
-              verticalAlignment = Alignment.CenterVertically,
-              horizontalArrangement = Arrangement.SpaceBetween) {
-                IconButton(
-                    onClick = { editTripViewModel.save() },
+          Box(
+              modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+              contentAlignment = Alignment.Center) {
+                Button(
+                    onClick = {
+                      editTripViewModel.save()
+                      Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
+                      onSavedOrDelete()
+                    },
                     enabled = !state.isLoading,
-                ) {
-                  Icon(imageVector = Icons.Filled.Edit, contentDescription = "Confirm Changes")
-                }
+                    shape = RoundedCornerShape(28.dp),
+                    modifier = Modifier.fillMaxWidth(0.9f)) {
+                      Icon(Icons.Filled.Edit, contentDescription = null)
+                      Spacer(Modifier.width(8.dp))
+                      Text(stringResource(R.string.confirm_changes))
+                    }
               }
         }
-      },
-      content = { inner ->
+      }) { inner ->
         if (state.isLoading) {
           Box(Modifier.fillMaxSize().padding(inner), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
           }
-        } else {
-          Text("Travelers", style = MaterialTheme.typography.titleMedium)
-          TravelersSelector(
-              adults = state.adults,
-              children = state.children,
-              onAdultsChange = editTripViewModel::setAdults,
-              onChildrenChange = editTripViewModel::setChildren,
-          )
-
-          Text("Preferences", style = MaterialTheme.typography.titleMedium)
-          PreferenceSelector(
-              isChecked = { pref -> state.selectedPrefs.contains(pref) },
-              onCheckedChange = editTripViewModel::togglePref,
-          )
+          return@Scaffold
         }
-      })
+
+        Column(
+            modifier =
+                Modifier.padding(inner)
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp)) {
+              Text(
+                  text = "Editing ${state.tripName.ifBlank { "{TripName}" }} Info",
+                  style = MaterialTheme.typography.headlineLarge,
+                  fontWeight = FontWeight.ExtraBold,
+                  textAlign = TextAlign.Center,
+                  modifier = Modifier.fillMaxWidth())
+
+              SectionHeader(stringResource(R.string.travelers))
+              TravelersSelector(
+                  adults = state.adults,
+                  children = state.children,
+                  onAdultsChange = editTripViewModel::setAdults,
+                  onChildrenChange = editTripViewModel::setChildren)
+
+              SectionHeader(stringResource(R.string.preferences))
+              PreferenceSelector(
+                  isChecked = { pref -> state.selectedPrefs.contains(pref) },
+                  onCheckedChange = editTripViewModel::togglePref)
+
+              PreferenceToggle(
+                  label = stringResource(R.string.handicapped_traveler),
+                  value = state.selectedPrefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
+                  onValueChange = {
+                    editTripViewModel.togglePref(Preference.WHEELCHAIR_ACCESSIBLE)
+                  })
+
+              Button(
+                  onClick = { showDeleteDialog = true },
+                  colors =
+                      ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                  shape = RoundedCornerShape(28.dp),
+                  modifier = Modifier.align(Alignment.CenterHorizontally)) {
+                    Icon(Icons.Filled.Delete, contentDescription = null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(stringResource(R.string.delete_trip))
+                  }
+
+              Spacer(Modifier.height(100.dp))
+            }
+
+        if (showDeleteDialog) {
+          AlertDialog(
+              onDismissRequest = { showDeleteDialog = false },
+              confirmButton = {
+                TextButton(
+                    onClick = {
+                      editTripViewModel.deleteTrip()
+                      showDeleteDialog = false
+                      Toast.makeText(context, R.string.trip_deleted, Toast.LENGTH_SHORT).show()
+                      onSavedOrDelete()
+                    }) {
+                      Text(stringResource(R.string.confirm))
+                    }
+              },
+              dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                  Text(stringResource(R.string.cancel))
+                }
+              },
+              title = { Text(stringResource(R.string.confirm_deletion)) },
+              text = { Text(stringResource(R.string.delete_trip_prompt)) })
+        }
+      }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+  Column {
+    Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+    HorizontalDivider(Modifier.padding(top = 6.dp))
+  }
 }

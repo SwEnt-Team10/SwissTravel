@@ -18,7 +18,7 @@ data class EditTripUiState(
     val tripName: String = "",
     val adults: Int = 1,
     val children: Int = 0,
-    val selectedPrefs: List<Preference> = emptyList()
+    val selectedPrefs: Set<Preference> = emptySet()
 )
 
 class EditTripScreenViewModel(
@@ -41,16 +41,26 @@ class EditTripScreenViewModel(
                 tripName = originalTrip.name,
                 adults = originalTrip.tripProfile.adults,
                 children = originalTrip.tripProfile.children,
-                selectedPrefs = originalTrip.tripProfile.preferences)
+                selectedPrefs = originalTrip.tripProfile.preferences.toSet())
           }
         } catch (e: Exception) {
           _uiState.update { it.copy(isLoading = false, errorMsg = e.message ?: "Failed to load") }
         }
       }
 
+  fun deleteTrip() {
+    viewModelScope.launch {
+      try {
+        tripRepository.deleteTrip(originalTrip.uid)
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = e.message ?: "Failed to delete trip") }
+      }
+    }
+  }
+
   fun togglePref(pref: Preference) =
       _uiState.update {
-        val selected = it.selectedPrefs.toMutableList()
+        val selected = it.selectedPrefs.toMutableSet()
         if (!selected.add(pref)) selected.remove(pref)
         it.copy(selectedPrefs = selected)
       }
@@ -61,7 +71,9 @@ class EditTripScreenViewModel(
         val state = _uiState.value
         val updatedTripProfile =
             originalTrip.tripProfile.copy(
-                adults = state.adults, children = state.children, preferences = state.selectedPrefs)
+                adults = state.adults,
+                children = state.children,
+                preferences = state.selectedPrefs.toList())
         val updatedTrip = originalTrip.copy(tripProfile = updatedTripProfile)
         tripRepository.editTrip(state.tripId, updatedTrip)
       } catch (e: Exception) {
