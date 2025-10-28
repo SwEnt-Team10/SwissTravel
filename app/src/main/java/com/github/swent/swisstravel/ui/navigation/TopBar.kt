@@ -25,6 +25,13 @@ object TopBarTestTags {
   }
 }
 
+/**
+ * Composable representing the top bar of the app.
+ *
+ * @param onClick the action to perform when the back arrow is clicked
+ * @param modifier the modifier to apply to the top bar
+ * @param title the title of the top bar
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBar(
