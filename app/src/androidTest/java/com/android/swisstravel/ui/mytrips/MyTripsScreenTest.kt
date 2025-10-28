@@ -27,6 +27,10 @@ class FakeTripsRepository(private val trips: List<Trip>) : TripsRepository {
     // No-op for testing
   }
 
+  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+    // No-op for testing
+  }
+
   override fun getNewUid(): String = "fake-uid"
 }
 

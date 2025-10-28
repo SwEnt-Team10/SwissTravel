@@ -185,6 +185,10 @@ class TripSettingsViewModelTest {
     override suspend fun deleteTrip(tripId: String) {
       /* no-op for tests */
     }
+
+    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+      /* no-op for tests */
+    }
   }
 
   private class FakeUserRepository : UserRepository {
