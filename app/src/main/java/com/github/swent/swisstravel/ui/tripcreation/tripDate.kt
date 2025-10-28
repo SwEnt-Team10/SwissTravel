@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.tripsettings
+package com.github.swent.swisstravel.ui.tripcreation
 
 import android.app.DatePickerDialog
 import android.widget.Toast

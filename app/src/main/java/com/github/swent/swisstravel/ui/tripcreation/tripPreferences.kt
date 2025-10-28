@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.tripsettings
+package com.github.swent.swisstravel.ui.tripcreation
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
