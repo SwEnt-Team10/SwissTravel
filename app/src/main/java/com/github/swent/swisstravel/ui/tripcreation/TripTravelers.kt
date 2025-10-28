@@ -59,32 +59,11 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
               Spacer(modifier = Modifier.height(16.dp))
 
               // --- Travelers selectors ---
-              Column(
-                  modifier = Modifier.fillMaxWidth(),
-                  verticalArrangement = Arrangement.Center,
-              ) {
-                Counter(
-                    label = stringResource(R.string.nb_adults),
-                    count = travelers.adults,
-                    onIncrement = { travelers = travelers.copy(adults = travelers.adults + 1) },
-                    onDecrement = {
-                      if (travelers.adults > 1)
-                          travelers = travelers.copy(adults = travelers.adults - 1)
-                    },
-                    enableButton = travelers.adults > 1)
-
-                Spacer(modifier = Modifier.height(96.dp))
-
-                Counter(
-                    label = stringResource(R.string.nb_children),
-                    count = travelers.children,
-                    onIncrement = { travelers = travelers.copy(children = travelers.children + 1) },
-                    onDecrement = {
-                      if (travelers.children > 0)
-                          travelers = travelers.copy(children = travelers.children - 1)
-                    },
-                    enableButton = travelers.children > 0)
-              }
+              TravelersSelector(
+                  adults = travelers.adults,
+                  children = travelers.children,
+                  onAdultsChange = { travelers = travelers.copy(adults = it) },
+                  onChildrenChange = { travelers = travelers.copy(children = it) })
 
               Spacer(modifier = Modifier.height(16.dp))
 
@@ -103,4 +82,32 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
                   }
             }
       }
+}
+
+/** A reusable traveler selector composable that displays adult and children counters. */
+@Composable
+fun TravelersSelector(
+    adults: Int,
+    children: Int,
+    onAdultsChange: (Int) -> Unit,
+    onChildrenChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
+    Counter(
+        label = stringResource(R.string.nb_adults),
+        count = adults,
+        onIncrement = { onAdultsChange(adults + 1) },
+        onDecrement = { if (adults > 1) onAdultsChange(adults - 1) },
+        enableButton = adults > 1)
+
+    Spacer(modifier = Modifier.height(96.dp))
+
+    Counter(
+        label = stringResource(R.string.nb_children),
+        count = children,
+        onIncrement = { onChildrenChange(children + 1) },
+        onDecrement = { if (children > 0) onChildrenChange(children - 1) },
+        enableButton = children > 0)
+  }
 }
