@@ -41,6 +41,10 @@ class TripsRepositoryFirestore(
     db.collection(TRIPS_COLLECTION_PATH).document(trip.uid).set(trip).await()
   }
 
+  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+    db.collection(TRIPS_COLLECTION_PATH).document(tripId).set(updatedTrip).await()
+  }
+
   override suspend fun deleteTrip(tripId: String) {
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
   }

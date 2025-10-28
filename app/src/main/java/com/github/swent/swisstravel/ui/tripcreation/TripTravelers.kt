@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.tripsettings
+package com.github.swent.swisstravel.ui.tripcreation
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -49,7 +49,7 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
 
               // --- Title ---
               Text(
-                  text = stringResource(R.string.nbTravelers),
+                  text = stringResource(R.string.nb_travelers),
                   textAlign = TextAlign.Center,
                   style =
                       MaterialTheme.typography.headlineMedium.copy(
@@ -64,7 +64,7 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
                   verticalArrangement = Arrangement.Center,
               ) {
                 Counter(
-                    label = stringResource(R.string.nbAdults),
+                    label = stringResource(R.string.nb_adults),
                     count = travelers.adults,
                     onIncrement = { travelers = travelers.copy(adults = travelers.adults + 1) },
                     onDecrement = {
@@ -76,7 +76,7 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
                 Spacer(modifier = Modifier.height(96.dp))
 
                 Counter(
-                    label = stringResource(R.string.nbChildren),
+                    label = stringResource(R.string.nb_children),
                     count = travelers.children,
                     onIncrement = { travelers = travelers.copy(children = travelers.children + 1) },
                     onDecrement = {
