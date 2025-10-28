@@ -32,14 +32,14 @@ class TripSettingsTests {
 
   @Test
   fun tripDateScreenTest() {
-    composeTestRule.setContent { SwissTravelTheme { TripDateScreen(onNext = {}) } }
+    composeTestRule.setContent {TripDateScreen(onNext = {}) }
     composeTestRule.onNodeWithTag(TripDateTestTags.TRIP_DATE_SCREEN).assertExists()
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
   }
 
   @Test
   fun tripPreferencesScreenTest() {
-    composeTestRule.setContent { SwissTravelTheme { TripPreferencesScreen(onDone = {}) } }
+    composeTestRule.setContent { TripPreferencesScreen(onDone = {}) }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)

@@ -3,6 +3,8 @@ package com.github.swent.swisstravel.ui.tripsettings
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
@@ -28,8 +30,8 @@ data class TripTravelers(val adults: Int = 1, val children: Int = 0)
 
 /** Data class representing the arrival and departure destinations of the trip */
 data class TripArrivalDeparture(
-    val arrivalLocation: String? = "",
-    val departureLocation: String? = ""
+    val arrivalLocation: Location? = null,
+    val departureLocation: Location? = null
 )
 
 /** Data class encapsulating all trip settings: dates, travelers, and preferences. */
@@ -122,7 +124,9 @@ class TripSettingsViewModel(
                 preferredLocations = emptyList(), // Placeholder
                 preferences = settings.preferences,
                 adults = settings.travelers.adults,
-                children = settings.travelers.children)
+                children = settings.travelers.children,
+                arrivalLocation = settings.arrivalDeparture.arrivalLocation,
+                departureLocation = settings.arrivalDeparture.departureLocation)
 
         val trip =
             Trip(
@@ -162,14 +166,14 @@ class TripSettingsViewModel(
   }
 
   /** Update arrival location string in trip settings. */
-  fun updateArrivalLocation(arrival: String) {
+  fun updateArrivalLocation(arrival: Location?) {
     _tripSettings.update {
       it.copy(arrivalDeparture = it.arrivalDeparture.copy(arrivalLocation = arrival))
     }
   }
 
   /** Update departure location string in trip settings. */
-  fun updateDepartureLocation(departure: String) {
+  fun updateDepartureLocation(departure: Location?) {
     _tripSettings.update {
       it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = departure))
     }

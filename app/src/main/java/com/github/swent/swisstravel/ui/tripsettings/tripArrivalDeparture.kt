@@ -18,6 +18,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -27,7 +28,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
+import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureTestTags.NEXT_BUTTON
 
+object ArrivalDepartureTestTags{
+    const val ARRIVAL_TEXTFIELD = "arrival_textfield"
+    const val DEPARTURE_TEXTFIELD = "departure_textfield"
+    const val NEXT_BUTTON = "next"
+}
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArrivalDepartureScreen(
@@ -45,16 +52,16 @@ fun ArrivalDepartureScreen(
   // Synch the queries with the view model
   LaunchedEffect(arrivalState.locationQuery) {
     // Update the model at each modification
-    viewModel.updateArrivalLocation(arrivalState.locationQuery)
+    viewModel.updateArrivalLocation(arrivalState.selectedLocation)
   }
   LaunchedEffect(arrivalState.selectedLocation) {
-    arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it.name) }
+    arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it) }
   }
   LaunchedEffect(departureState.locationQuery) {
-    viewModel.updateDepartureLocation(departureState.locationQuery)
+    viewModel.updateDepartureLocation(departureState.selectedLocation)
   }
   LaunchedEffect(departureState.selectedLocation) {
-    departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it.name) }
+    departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
   }
 
   Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
@@ -88,8 +95,9 @@ fun ArrivalDepartureScreen(
 
           // --- Done button ---
           Button(
+              modifier = Modifier.testTag(NEXT_BUTTON),
               onClick = {
-                // save uses the tripSettings LiveData which we keep updated via the LaunchedEffects
+                // save uses the trip arrival and departure LiveData which we keep updated via the LaunchedEffects
                 // above
                 viewModel.saveTrip()
                 onNext()
