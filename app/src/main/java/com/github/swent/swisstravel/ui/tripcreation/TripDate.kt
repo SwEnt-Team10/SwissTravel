@@ -52,7 +52,7 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
       when (it) {
         ValidationEvent.Proceed -> onNext()
         ValidationEvent.EndDateIsBeforeStartDateError -> {
-          Toast.makeText(context, R.string.endDateError, Toast.LENGTH_SHORT).show()
+          Toast.makeText(context, R.string.end_date_error, Toast.LENGTH_SHORT).show()
         }
         else -> {
           /* Ignore other events */
@@ -101,7 +101,7 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
 
               // --- Title ---
               Text(
-                  text = stringResource(R.string.tripDates),
+                  text = stringResource(R.string.trip_dates),
                   textAlign = TextAlign.Center,
                   style =
                       MaterialTheme.typography.headlineMedium.copy(
@@ -115,14 +115,14 @@ fun TripDateScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () ->
                   modifier = Modifier.fillMaxWidth(),
                   horizontalAlignment = Alignment.CenterHorizontally) {
                     DateSelectorRow(
-                        label = stringResource(R.string.startDate),
+                        label = stringResource(R.string.start_date),
                         dateText = startDate.format(formatter),
                         onClick = { startDatePicker.show() })
 
                     Spacer(modifier = Modifier.height(48.dp))
 
                     DateSelectorRow(
-                        label = stringResource(R.string.endDate),
+                        label = stringResource(R.string.end_date),
                         dateText = endDate.format(formatter),
                         onClick = { endDatePicker.show() })
                   }

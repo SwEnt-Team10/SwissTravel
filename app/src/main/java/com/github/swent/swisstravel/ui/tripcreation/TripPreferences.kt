@@ -81,7 +81,7 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                 // --- Title ---
                 Text(
                     modifier = Modifier.testTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE),
-                    text = stringResource(R.string.travellingPreferences),
+                    text = stringResource(R.string.travelling_preferences),
                     textAlign = TextAlign.Center,
                     style =
                         MaterialTheme.typography.headlineMedium.copy(
@@ -99,7 +99,7 @@ fun TripPreferencesScreen(viewModel: TripSettingsViewModel = viewModel(), onDone
                 Spacer(modifier = Modifier.height(32.dp))
 
                 PreferenceToggle(
-                    stringResource(R.string.handicappedTraveler),
+                    stringResource(R.string.handicapped_traveler),
                     prefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
                     onValueChange = { checked ->
                       viewModel.updatePreferences(prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE))
