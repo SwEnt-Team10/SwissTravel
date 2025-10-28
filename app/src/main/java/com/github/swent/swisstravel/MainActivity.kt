@@ -199,17 +199,20 @@ fun SwissTravelApp(
       composable(Screen.TripSettings1.route) {
         TripDateScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.TripSettings2.route) {
         TripTravelersScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings3) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings3) },
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.TripSettings3.route) {
         TripPreferencesScreen(
             viewModel = tripSettingsViewModel(navController),
-            onDone = { navigationActions.navigateTo(Screen.MyTrips) })
+            onDone = { navigationActions.navigateTo(Screen.MyTrips) },
+            onPrevious = { navigationActions.goBack() })
       }
     }
 
