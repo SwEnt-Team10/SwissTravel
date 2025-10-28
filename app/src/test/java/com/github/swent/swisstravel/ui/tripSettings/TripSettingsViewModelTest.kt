@@ -1,4 +1,4 @@
-package com.android.swisstravel.ui.tripSettings
+package com.github.swent.swisstravel.ui.tripSettings
 
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository

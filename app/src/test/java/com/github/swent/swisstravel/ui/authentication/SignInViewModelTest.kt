@@ -1,12 +1,10 @@
-package com.android.swisstravel.ui.authentication
+package com.github.swent.swisstravel.ui.authentication
 
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import com.github.swent.swisstravel.model.authentication.AuthRepository
-import com.github.swent.swisstravel.ui.authentication.AuthUiState
-import com.github.swent.swisstravel.ui.authentication.SignInViewModel
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -21,10 +19,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
 
@@ -62,10 +57,10 @@ class SignInViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     val uiState = viewModel.uiState.value
-    assertFalse(uiState.isLoading)
-    assertEquals(mockUser, uiState.user)
-    assertNull(uiState.errorMsg)
-    assertFalse(uiState.signedOut)
+    Assert.assertFalse(uiState.isLoading)
+    Assert.assertEquals(mockUser, uiState.user)
+    Assert.assertNull(uiState.errorMsg)
+    Assert.assertFalse(uiState.signedOut)
   }
 
   @Test
@@ -81,10 +76,10 @@ class SignInViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     val uiState = viewModel.uiState.value
-    assertFalse(uiState.isLoading)
-    assertNull(uiState.user)
-    assertEquals(errorMessage, uiState.errorMsg)
-    assertTrue(uiState.signedOut)
+    Assert.assertFalse(uiState.isLoading)
+    Assert.assertNull(uiState.user)
+    Assert.assertEquals(errorMessage, uiState.errorMsg)
+    Assert.assertTrue(uiState.signedOut)
   }
 
   @Test
@@ -97,10 +92,10 @@ class SignInViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     val uiState = viewModel.uiState.value
-    assertFalse(uiState.isLoading)
-    assertNull(uiState.user)
-    assertEquals("Sign-in cancelled", uiState.errorMsg)
-    assertTrue(uiState.signedOut)
+    Assert.assertFalse(uiState.isLoading)
+    Assert.assertNull(uiState.user)
+    Assert.assertEquals("Sign-in cancelled", uiState.errorMsg)
+    Assert.assertTrue(uiState.signedOut)
   }
 
   @Test
@@ -119,7 +114,7 @@ class SignInViewModelTest {
     viewModel.clearErrorMsg()
 
     // Then
-    assertNull(viewModel.uiState.value.errorMsg)
+    Assert.assertNull(viewModel.uiState.value.errorMsg)
   }
 
   @Test
