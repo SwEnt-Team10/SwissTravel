@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.Counter
+import com.github.swent.swisstravel.ui.navigation.TopBar
 
 /** Test tags for UI tests to identify components. */
 object TripTravelersTestTags {
@@ -28,7 +29,11 @@ object TripTravelersTestTags {
  * @param onNext Callback to be invoked when the user proceeds to the next step.
  */
 @Composable
-fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: () -> Unit = {}) {
+fun TripTravelersScreen(
+    viewModel: TripSettingsViewModel = viewModel(),
+    onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {}
+) {
   val tripSettings by viewModel.tripSettings.collectAsState()
   var travelers by remember { mutableStateOf(tripSettings.travelers) }
 
@@ -38,68 +43,75 @@ fun TripTravelersScreen(viewModel: TripSettingsViewModel = viewModel(), onNext: 
       viewModel.updateTravelers(travelers.adults, travelers.children)
     }
   }
-
-  Surface(
-      modifier = Modifier.fillMaxSize().testTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN),
-      color = MaterialTheme.colorScheme.background) {
-        Column(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween) {
-
-              // --- Title ---
-              Text(
-                  text = stringResource(R.string.nb_travelers),
-                  textAlign = TextAlign.Center,
-                  style =
-                      MaterialTheme.typography.headlineMedium.copy(
-                          fontWeight = FontWeight.Bold,
-                          color = MaterialTheme.colorScheme.onBackground))
-
-              Spacer(modifier = Modifier.height(16.dp))
-
-              // --- Travelers selectors ---
+  Scaffold(
+      modifier = Modifier.testTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN),
+      topBar = { TopBar(onClick = { onPrevious() }) }) { pd ->
+        Surface(
+            modifier = Modifier.fillMaxSize().padding(pd),
+            color = MaterialTheme.colorScheme.background) {
               Column(
-                  modifier = Modifier.fillMaxWidth(),
-                  verticalArrangement = Arrangement.Center,
-              ) {
-                Counter(
-                    label = stringResource(R.string.nb_adults),
-                    count = travelers.adults,
-                    onIncrement = { travelers = travelers.copy(adults = travelers.adults + 1) },
-                    onDecrement = {
-                      if (travelers.adults > 1)
-                          travelers = travelers.copy(adults = travelers.adults - 1)
-                    },
-                    enableButton = travelers.adults > 1)
+                  modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
+                  horizontalAlignment = Alignment.CenterHorizontally,
+                  verticalArrangement = Arrangement.SpaceBetween) {
 
-                Spacer(modifier = Modifier.height(96.dp))
-
-                Counter(
-                    label = stringResource(R.string.nb_children),
-                    count = travelers.children,
-                    onIncrement = { travelers = travelers.copy(children = travelers.children + 1) },
-                    onDecrement = {
-                      if (travelers.children > 0)
-                          travelers = travelers.copy(children = travelers.children - 1)
-                    },
-                    enableButton = travelers.children > 0)
-              }
-
-              Spacer(modifier = Modifier.height(16.dp))
-
-              // --- Done button ---
-              Button(
-                  onClick = onNext,
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.primary),
-                  shape = RoundedCornerShape(24.dp),
-                  modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
+                    // --- Title ---
                     Text(
-                        text = stringResource(R.string.next),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.titleMedium)
+                        text = stringResource(R.string.nb_travelers),
+                        textAlign = TextAlign.Center,
+                        style =
+                            MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground))
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // --- Travelers selectors ---
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.Center,
+                    ) {
+                      Counter(
+                          label = stringResource(R.string.nb_adults),
+                          count = travelers.adults,
+                          onIncrement = {
+                            travelers = travelers.copy(adults = travelers.adults + 1)
+                          },
+                          onDecrement = {
+                            if (travelers.adults > 1)
+                                travelers = travelers.copy(adults = travelers.adults - 1)
+                          },
+                          enableButton = travelers.adults > 1)
+
+                      Spacer(modifier = Modifier.height(96.dp))
+
+                      Counter(
+                          label = stringResource(R.string.nb_children),
+                          count = travelers.children,
+                          onIncrement = {
+                            travelers = travelers.copy(children = travelers.children + 1)
+                          },
+                          onDecrement = {
+                            if (travelers.children > 0)
+                                travelers = travelers.copy(children = travelers.children - 1)
+                          },
+                          enableButton = travelers.children > 0)
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // --- Done button ---
+                    Button(
+                        onClick = onNext,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
+                          Text(
+                              text = stringResource(R.string.next),
+                              color = MaterialTheme.colorScheme.onPrimary,
+                              style = MaterialTheme.typography.titleMedium)
+                        }
                   }
             }
       }
