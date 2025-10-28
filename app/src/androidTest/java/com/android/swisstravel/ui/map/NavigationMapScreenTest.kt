@@ -51,7 +51,8 @@ class NavigationMapScreenTest {
     composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
   }
 
-  // this test first enters the map, then checks the map is displayed, and then navigates back to check it is not displayed anymore
+  // this test first enters the map, then checks the map is displayed, and then navigates back to
+  // check it is not displayed anymore
   @Test
   fun canEnterAndExitNavigationMap() = runTest {
     // enter the map
