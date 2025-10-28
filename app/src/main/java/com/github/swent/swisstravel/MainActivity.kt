@@ -32,10 +32,10 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.ui.tripsettings.TripDateScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
-import com.github.swent.swisstravel.ui.tripsettings.TripTravelersScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
