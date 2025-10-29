@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.tripsettings
+package com.github.swent.swisstravel.ui.tripcreation
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
@@ -28,15 +28,30 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
-import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
-import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureTestTags.NEXT_BUTTON
+import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
 
+/** Test tags for UI tests to identify components within the Arrival/Departure screen. */
 object ArrivalDepartureTestTags {
-  const val ARRIVAL_TEXTFIELD = "arrival_textfield"
-  const val DEPARTURE_TEXTFIELD = "departure_textfield"
-  const val NEXT_BUTTON = "next"
+    const val ARRIVAL_TEXTFIELD = "arrival_textfield"
+    const val DEPARTURE_TEXTFIELD = "departure_textfield"
+    const val NEXT_BUTTON = "next"
 }
 
+/**
+ * A composable screen that allows users to set the arrival and departure locations for their trip.
+ *
+ * This screen features two [AddressAutocompleteTextField] components, one for the arrival
+ * location and one for the departure location. It uses separate instances of
+ * [AddressTextFieldViewModelContract] to manage the state of each text field independently.
+ * The selected locations are synchronized with the main [TripSettingsViewModel].
+ *
+ * @param viewModel The [TripSettingsViewModel] instance that holds the overall trip configuration.
+ * @param onNext A callback function to be invoked when the user proceeds to the next step.
+ * @param arrivalAddressVm The view model for the arrival address text field. A unique key is
+ *   used to ensure a distinct instance from the departure view model.
+ * @param departureAddressVm The view model for the departure address text field. A unique key is
+ *   used to ensure a distinct instance from the arrival view model.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArrivalDepartureScreen(
@@ -46,81 +61,77 @@ fun ArrivalDepartureScreen(
     departureAddressVm: AddressTextFieldViewModelContract = viewModel(key = "departureAddressVm")
 ) {
 
-  // Use different separate view models for arrival and departure
+    // Use different separate view models for arrival and departure
+    val arrivalState by arrivalAddressVm.addressState.collectAsState()
+    val departureState by departureAddressVm.addressState.collectAsState()
 
-  val arrivalState by arrivalAddressVm.addressState.collectAsState()
-  val departureState by departureAddressVm.addressState.collectAsState()
+    // A LaunchedEffect to synchronize the selected arrival location with the TripSettingsViewModel.
+    // It triggers whenever the selected location in the arrivalAddressVm changes.
+    LaunchedEffect(arrivalState.selectedLocation) {
+        arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it) }
+    }
 
-  // Synch the queries with the view model
-  LaunchedEffect(arrivalState.locationQuery) {
-    // Update the model at each modification
-    viewModel.updateArrivalLocation(arrivalState.selectedLocation)
-  }
-  LaunchedEffect(arrivalState.selectedLocation) {
-    arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it) }
-  }
-  LaunchedEffect(departureState.locationQuery) {
-    viewModel.updateDepartureLocation(departureState.selectedLocation)
-  }
-  LaunchedEffect(departureState.selectedLocation) {
-    departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
-  }
+    // A LaunchedEffect to synchronize the selected departure location with the TripSettingsViewModel.
+    // It triggers whenever the selected location in the departureAddressVm changes.
+    LaunchedEffect(departureState.selectedLocation) {
+        departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
+    }
 
-  Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-            // --- Title ---
-            Text(
-                text = stringResource(R.string.arrivalDeparture),
-                textAlign = TextAlign.Center,
-                style =
-                    MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                    ))
+                // --- Title ---
+                Text(
+                    text = stringResource(R.string.arrivalDeparture),
+                    textAlign = TextAlign.Center,
+                    style =
+                        MaterialTheme.typography.headlineMedium.copy(
+                            fontWeight = FontWeight.Bold,
+                        ))
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // --- Arrival Destination (autocomplete) ---
-            AddressAutocompleteTextField(
-                addressTextFieldViewModel = arrivalAddressVm,
-                modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD))
-            Spacer(modifier = Modifier.height(32.dp))
+                // --- Arrival Destination (autocomplete) ---
+                AddressAutocompleteTextField(
+                    addressTextFieldViewModel = arrivalAddressVm,
+                    modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            // --- Departure Destination (autocomplete) ---
-            AddressAutocompleteTextField(
-                addressTextFieldViewModel = departureAddressVm,
-                modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD))
+                // --- Departure Destination (autocomplete) ---
+                AddressAutocompleteTextField(
+                    addressTextFieldViewModel = departureAddressVm,
+                    modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD))
 
-            Spacer(modifier = Modifier.height(32.dp))
-          }
+                Spacer(modifier = Modifier.height(32.dp))
+            }
 
-          // --- Done button ---
-          Button(
-              modifier = Modifier.testTag(NEXT_BUTTON),
-              onClick = {
-                // save uses the trip arrival and departure LiveData which we keep updated via the
-                // LaunchedEffects
-                // above
-                viewModel.saveTrip()
-                onNext()
-              },
-              colors =
-                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+            // --- Done button ---
+            Button(
+                modifier = Modifier.testTag(NEXT_BUTTON),
+                onClick = {
+                    // The viewModel's saveTrip() function uses the arrival and departure LiveData
+                    // which are kept updated via the LaunchedEffects above.
+                    viewModel.saveTrip()
+                    onNext()
+                },
+                colors =
+                    ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
                 Text(
                     stringResource(R.string.done),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.titleMedium)
-              }
+            }
         }
-  }
+    }
 }
 
+/** A composable preview function for the [ArrivalDepartureScreen]. */
 @Preview
 @Composable
 fun TripArrivalDeparturePreview() {
-  ArrivalDepartureScreen()
+    ArrivalDepartureScreen()
 }

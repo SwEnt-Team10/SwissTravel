@@ -14,8 +14,8 @@ import com.android.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.AddressTextTestTags
-import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureScreen
-import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureTestTags
+import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
+import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Rule

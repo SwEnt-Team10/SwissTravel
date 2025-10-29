@@ -37,7 +37,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
-import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureScreen
+import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
