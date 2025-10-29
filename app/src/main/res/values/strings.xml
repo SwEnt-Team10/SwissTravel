@@ -67,10 +67,7 @@
     <string name="upcoming_trip">Upcoming Trip</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
-    <plurals name="n_selected">
-        <item quantity="one" formatted="true">%1$d trip selected</item>
-        <item quantity="other">%1d trips selected</item>
-    </plurals>
+    <string name="n_selected">%1$d selected</string>
     <string name="cancel_selection">Cancel selection</string>
     <string name="more_options">More options</string>
     <string name="delete_selected">Delete selected</string>
