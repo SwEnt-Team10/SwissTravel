@@ -1,0 +1,40 @@
+package com.github.swent.swisstravel.ui.composable
+
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
+
+/** A reusable traveler selector composable that displays adult and children counters. */
+@Composable
+fun TravelersSelector(
+    adults: Int,
+    children: Int,
+    onAdultsChange: (Int) -> Unit,
+    onChildrenChange: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
+    Counter(
+        label = stringResource(R.string.nb_adults),
+        count = adults,
+        onIncrement = { onAdultsChange(adults + 1) },
+        onDecrement = { if (adults > 1) onAdultsChange(adults - 1) },
+        enableButton = adults > 1)
+
+    Spacer(modifier = Modifier.height(96.dp))
+
+    Counter(
+        label = stringResource(R.string.nb_children),
+        count = children,
+        onIncrement = { onChildrenChange(children + 1) },
+        onDecrement = { if (children > 0) onChildrenChange(children - 1) },
+        enableButton = children > 0)
+  }
+}

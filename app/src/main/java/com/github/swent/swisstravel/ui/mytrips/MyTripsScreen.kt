@@ -129,7 +129,7 @@ fun MyTripsScreen(
               if (uiState.isSelectionMode) {
                 val count = uiState.selectedTrips.size
                 Text(
-                    text = stringResource(R.string.n_selected, count),
+                    text = pluralStringResource(R.plurals.n_selected, count, count),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground)
               } else {

@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui
+package com.github.swent.swisstravel.ui.edittrip
 
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
@@ -7,7 +7,6 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.ui.edittrip.EditTripScreenViewModel
 import com.google.firebase.Timestamp
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers

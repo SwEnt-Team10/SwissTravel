@@ -13,7 +13,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.composable.Counter
+import com.github.swent.swisstravel.ui.composable.TravelersSelector
 import com.github.swent.swisstravel.ui.navigation.TopBar
 
 /** Test tags for UI tests to identify components. */
@@ -66,72 +66,26 @@ fun TripTravelersScreen(
                     Spacer(modifier = Modifier.height(16.dp))
 
                     // --- Travelers selectors ---
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.Center,
-                    ) {
-                      Counter(
-                          label = stringResource(R.string.nb_adults),
-                          count = travelers.adults,
-                          onIncrement = {
-                            travelers = travelers.copy(adults = travelers.adults + 1)
-                          },
-                          onDecrement = {
-                            if (travelers.adults > 1)
-                                travelers = travelers.copy(adults = travelers.adults - 1)
-                          },
-                          enableButton = travelers.adults > 1)
+                    TravelersSelector(
+                        adults = travelers.adults,
+                        children = travelers.children,
+                        onAdultsChange = { travelers = travelers.copy(adults = it) },
+                        onChildrenChange = { travelers = travelers.copy(children = it) })
 
-                      // --- Travelers selectors ---
-                      TravelersSelector(
-                          adults = travelers.adults,
-                          children = travelers.children,
-                          onAdultsChange = { travelers = travelers.copy(adults = it) },
-                          onChildrenChange = { travelers = travelers.copy(children = it) })
-
-                      // --- Done button ---
-                      Button(
-                          onClick = onNext,
-                          colors =
-                              ButtonDefaults.buttonColors(
-                                  containerColor = MaterialTheme.colorScheme.primary),
-                          shape = RoundedCornerShape(24.dp),
-                          modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
-                            Text(
-                                text = stringResource(R.string.next),
-                                color = MaterialTheme.colorScheme.onPrimary,
-                                style = MaterialTheme.typography.titleMedium)
-                          }
-                    }
+                    // --- Done button ---
+                    Button(
+                        onClick = onNext,
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary),
+                        shape = RoundedCornerShape(24.dp),
+                        modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
+                          Text(
+                              text = stringResource(R.string.next),
+                              color = MaterialTheme.colorScheme.onPrimary,
+                              style = MaterialTheme.typography.titleMedium)
+                        }
                   }
             }
       }
-}
-
-/** A reusable traveler selector composable that displays adult and children counters. */
-@Composable
-fun TravelersSelector(
-    adults: Int,
-    children: Int,
-    onAdultsChange: (Int) -> Unit,
-    onChildrenChange: (Int) -> Unit,
-    modifier: Modifier = Modifier
-) {
-  Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.Center) {
-    Counter(
-        label = stringResource(R.string.nb_adults),
-        count = adults,
-        onIncrement = { onAdultsChange(adults + 1) },
-        onDecrement = { if (adults > 1) onAdultsChange(adults - 1) },
-        enableButton = adults > 1)
-
-    Spacer(modifier = Modifier.height(96.dp))
-
-    Counter(
-        label = stringResource(R.string.nb_children),
-        count = children,
-        onIncrement = { onChildrenChange(children + 1) },
-        onDecrement = { if (children > 0) onChildrenChange(children - 1) },
-        enableButton = children > 0)
-  }
 }

@@ -23,8 +23,8 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.composable.PreferenceToggle
+import com.github.swent.swisstravel.ui.composable.TravelersSelector
 import com.github.swent.swisstravel.ui.navigation.TopBar
-import com.github.swent.swisstravel.ui.tripcreation.TravelersSelector
 
 object EditTripScreenTestTags {
   const val SCREEN = "editTripScreen"
@@ -107,7 +107,9 @@ fun EditTripScreen(
                     .padding(horizontal = 24.dp, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)) {
               Text(
-                  text = "Editing ${state.tripName.ifBlank { "{TripName}" }}",
+                  text =
+                      stringResource(
+                          R.string.editing_trip_title, state.tripName.ifBlank { "{TripName}" }),
                   style = MaterialTheme.typography.headlineLarge,
                   fontWeight = FontWeight.ExtraBold,
                   textAlign = TextAlign.Center,
