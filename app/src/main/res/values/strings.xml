@@ -48,6 +48,10 @@
     <string name="where_starting">Where are you starting?</string>
     <string name="log_in_to_display">You must be logged in to display a current trip a create one.</string>
 
+    <!-- Set current trip -->
+    <string name="select_a_trip">Select a trip</string>
+
+
     <!-- Geocoding -->
     <string name="address">Address</string>
 
