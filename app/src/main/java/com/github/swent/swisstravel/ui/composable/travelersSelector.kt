@@ -11,7 +11,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 
-/** A reusable traveler selector composable that displays adult and children counters. */
+/**
+ * A composable that displays a selector for the number of adults and children.
+ *
+ * @param adults The current number of adults.
+ * @param children The current number of children.
+ * @param onAdultsChange A callback that is invoked when the number of adults changes.
+ * @param onChildrenChange A callback that is invoked when the number of children changes.
+ * @param modifier The modifier to apply to this composable.
+ */
 @Composable
 fun TravelersSelector(
     adults: Int,
