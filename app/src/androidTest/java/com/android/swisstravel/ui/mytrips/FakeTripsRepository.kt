@@ -18,6 +18,10 @@ class FakeTripsRepository(initialTrips: List<Trip> = emptyList()) : TripsReposit
     trips.add(trip)
   }
 
+  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+    TODO("Not yet implemented")
+  }
+
   override suspend fun deleteTrip(tripId: String) {
     trips.removeAll { it.uid == tripId }
   }

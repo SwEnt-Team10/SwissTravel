@@ -12,29 +12,6 @@ import com.google.firebase.Timestamp
 import org.junit.Rule
 import org.junit.Test
 
-/** Fake TripsRepository to feed the ViewModel without touching Firestore. */
-class FakeTripsRepository(private val trips: List<Trip>) : TripsRepository {
-  override suspend fun getAllTrips(): List<Trip> = trips
-
-  override suspend fun getTrip(tripId: String): Trip {
-    return trips.find { it.uid == tripId } ?: throw Exception("Trip not found: $tripId")
-  }
-
-  override suspend fun addTrip(trip: Trip) {
-    // No-op for testing
-  }
-
-  override suspend fun deleteTrip(tripId: String) {
-    // No-op for testing
-  }
-
-  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
-    // No-op for testing
-  }
-
-  override fun getNewUid(): String = "fake-uid"
-}
-
 class MyTripsScreenEmulatorTest {
 
   @get:Rule val composeTestRule = createComposeRule()

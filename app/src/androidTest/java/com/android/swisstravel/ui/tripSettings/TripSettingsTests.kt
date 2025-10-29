@@ -41,7 +41,7 @@ class TripSettingsTests : SwissTravelTest() {
 
   @Test
   fun tripPreferencesScreenTest() {
-    composeTestRule.setContent { TripPreferencesScreen(onDone = {}) }
+    composeTestRule.setContent { TripPreferencesScreen(onNext = {}) }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)

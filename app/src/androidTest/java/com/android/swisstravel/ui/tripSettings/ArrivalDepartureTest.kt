@@ -16,7 +16,7 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.AddressTextTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
-import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test

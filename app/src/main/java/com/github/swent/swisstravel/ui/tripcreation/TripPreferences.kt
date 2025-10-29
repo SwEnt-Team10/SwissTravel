@@ -60,7 +60,7 @@ fun TripPreferencesScreen(
     viewModel.validationEvents.collectLatest { event ->
       when (event) {
         is ValidationEvent.SaveSuccess -> {
-          //Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
+          // Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
           onNext()
         }
         is ValidationEvent.SaveError -> {
