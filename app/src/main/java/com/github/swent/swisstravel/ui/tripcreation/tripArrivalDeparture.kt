@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
+import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureTestTags.NEXT_BUTTON
 
 object ArrivalDepartureTestTags {
