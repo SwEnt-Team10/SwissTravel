@@ -27,15 +27,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
-import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureTestTags.NEXT_BUTTON
 
-object ArrivalDepartureTestTags{
-    const val ARRIVAL_TEXTFIELD = "arrival_textfield"
-    const val DEPARTURE_TEXTFIELD = "departure_textfield"
-    const val NEXT_BUTTON = "next"
+object ArrivalDepartureTestTags {
+  const val ARRIVAL_TEXTFIELD = "arrival_textfield"
+  const val DEPARTURE_TEXTFIELD = "departure_textfield"
+  const val NEXT_BUTTON = "next"
 }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ArrivalDepartureScreen(
@@ -84,12 +84,14 @@ fun ArrivalDepartureScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- Arrival Destination (autocomplete) ---
-            AddressAutocompleteTextField(addressTextFieldViewModel = arrivalAddressVm,
+            AddressAutocompleteTextField(
+                addressTextFieldViewModel = arrivalAddressVm,
                 modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD))
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- Departure Destination (autocomplete) ---
-            AddressAutocompleteTextField(addressTextFieldViewModel = departureAddressVm,
+            AddressAutocompleteTextField(
+                addressTextFieldViewModel = departureAddressVm,
                 modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD))
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -99,7 +101,8 @@ fun ArrivalDepartureScreen(
           Button(
               modifier = Modifier.testTag(NEXT_BUTTON),
               onClick = {
-                // save uses the trip arrival and departure LiveData which we keep updated via the LaunchedEffects
+                // save uses the trip arrival and departure LiveData which we keep updated via the
+                // LaunchedEffects
                 // above
                 viewModel.saveTrip()
                 onNext()

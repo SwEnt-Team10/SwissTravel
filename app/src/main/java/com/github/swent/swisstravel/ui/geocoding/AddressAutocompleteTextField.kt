@@ -48,7 +48,7 @@ object AddressTextTestTags {
 fun AddressAutocompleteTextField(
     addressTextFieldViewModel: AddressTextFieldViewModelContract =
         viewModel<AddressTextFieldViewModel>(),
-    modifier : Modifier = Modifier
+    modifier: Modifier = Modifier
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
   // Local text state to avoid immediate writes to the ViewModel on every keystroke.

@@ -32,7 +32,7 @@ class TripSettingsTests {
 
   @Test
   fun tripDateScreenTest() {
-    composeTestRule.setContent {TripDateScreen(onNext = {}) }
+    composeTestRule.setContent { TripDateScreen(onNext = {}) }
     composeTestRule.onNodeWithTag(TripDateTestTags.TRIP_DATE_SCREEN).assertExists()
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
   }
