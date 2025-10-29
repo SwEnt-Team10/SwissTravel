@@ -1,8 +1,11 @@
 package com.android.swisstravel.ui.mytrips
 
-import androidx.compose.ui.test.*
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
-import com.github.swent.swisstravel.model.trip.*
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
@@ -10,25 +13,6 @@ import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.google.firebase.Timestamp
 import org.junit.Rule
 import org.junit.Test
-
-/** Fake TripsRepository to feed the ViewModel without touching Firestore. */
-class FakeTripsRepository(private val trips: List<Trip>) : TripsRepository {
-  override suspend fun getAllTrips(): List<Trip> = trips
-
-  override suspend fun getTrip(tripId: String): Trip {
-    return trips.find { it.uid == tripId } ?: throw Exception("Trip not found: $tripId")
-  }
-
-  override suspend fun addTrip(trip: Trip) {
-    // No-op for testing
-  }
-
-  override suspend fun deleteTrip(tripId: String) {
-    // No-op for testing
-  }
-
-  override fun getNewUid(): String = "fake-uid"
-}
 
 class MyTripsScreenEmulatorTest {
 

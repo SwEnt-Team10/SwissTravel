@@ -28,6 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
+import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureTestTags.NEXT_BUTTON
 
 object ArrivalDepartureTestTags{
@@ -39,12 +40,12 @@ object ArrivalDepartureTestTags{
 @Composable
 fun ArrivalDepartureScreen(
     viewModel: TripSettingsViewModel = viewModel(),
-    onNext: () -> Unit = {}
+    onNext: () -> Unit = {},
+    arrivalAddressVm: AddressTextFieldViewModelContract = viewModel(key = "arrivalAddressVm"),
+    departureAddressVm: AddressTextFieldViewModelContract = viewModel(key = "departureAddressVm")
 ) {
 
   // Use different separate view models for arrival and departure
-  val arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm")
-  val departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
 
   val arrivalState by arrivalAddressVm.addressState.collectAsState()
   val departureState by departureAddressVm.addressState.collectAsState()
@@ -83,12 +84,13 @@ fun ArrivalDepartureScreen(
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- Arrival Destination (autocomplete) ---
-            AddressAutocompleteTextField(addressTextFieldViewModel = arrivalAddressVm)
-
+            AddressAutocompleteTextField(addressTextFieldViewModel = arrivalAddressVm,
+                modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD))
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- Departure Destination (autocomplete) ---
-            AddressAutocompleteTextField(addressTextFieldViewModel = departureAddressVm)
+            AddressAutocompleteTextField(addressTextFieldViewModel = departureAddressVm,
+                modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD))
 
             Spacer(modifier = Modifier.height(32.dp))
           }

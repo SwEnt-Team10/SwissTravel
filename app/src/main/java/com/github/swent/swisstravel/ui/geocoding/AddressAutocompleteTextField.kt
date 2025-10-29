@@ -47,7 +47,8 @@ object AddressTextTestTags {
 @Composable
 fun AddressAutocompleteTextField(
     addressTextFieldViewModel: AddressTextFieldViewModelContract =
-        viewModel<AddressTextFieldViewModel>()
+        viewModel<AddressTextFieldViewModel>(),
+    modifier : Modifier = Modifier
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
   // Local text state to avoid immediate writes to the ViewModel on every keystroke.
@@ -63,7 +64,7 @@ fun AddressAutocompleteTextField(
           // open the dropdown while typing
           expanded = true
         },
-        modifier = Modifier.menuAnchor().testTag(AddressTextTestTags.INPUT_LOCATION),
+        modifier = modifier.menuAnchor().testTag(AddressTextTestTags.INPUT_LOCATION),
         label = { Text(stringResource(R.string.address)) })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
