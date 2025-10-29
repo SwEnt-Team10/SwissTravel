@@ -222,4 +222,70 @@ class TripsRepositoryFirestorePublicTest {
     repo.deleteTrip("todel")
     verify { mockDocumentRef.delete() }
   }
+
+  // ---------------------------------------------------
+  // editTrip
+  // ---------------------------------------------------
+  @Test
+  fun `editTrip calls set on the document with tripId`() = runTest {
+    val updated =
+        Trip(
+            "any-uid-will-do",
+            "Updated Trip",
+            "ownerX",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+
+    every { mockCollection.document("server-id-123") } returns mockDocumentRef
+    every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
+
+    repo.editTrip("server-id-123", updated)
+
+    // Verify we wrote to the doc identified by the tripId and passed the updatedTrip as payload
+    verify { mockCollection.document("server-id-123") }
+    verify { mockDocumentRef.set(updated) }
+  }
+
+  @Test
+  fun `editTrip propagates Firestore errors`() = runTest {
+    val updated =
+        Trip(
+            "t1",
+            "Bad Update",
+            "ownerX",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+
+    every { mockCollection.document("t1") } returns mockDocumentRef
+    every { mockDocumentRef.set(updated) } returns
+        Tasks.forException(RuntimeException("firestore boom"))
+
+    assertFailsWith<RuntimeException> { repo.editTrip("t1", updated) }
+  }
+
+  @Test
+  fun `editTrip uses tripId even if updatedTrip uid differs`() = runTest {
+    val updated =
+        Trip(
+            "different-local-uid",
+            "Updated Trip",
+            "ownerX",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+
+    every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
+    every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
+
+    repo.editTrip("authoritative-server-id", updated)
+
+    // Ensures repository doesn't derive the path from updatedTrip.uid
+    verify { mockCollection.document("authoritative-server-id") }
+    verify { mockDocumentRef.set(updated) }
+  }
 }

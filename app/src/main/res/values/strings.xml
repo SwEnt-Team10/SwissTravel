@@ -24,24 +24,24 @@
     <string name="error">Error</string>
 
     <!-- Trip preferences -->
-    <string name="travellingPreferences">What are your travelling preferences?</string>
-    <string name="quickTraveler">I want to see as much as possible.</string>
-    <string name="sportyTrip">I\'d like to do some exercise.</string>
-    <string name="foodyTrip">I want to eat some local specialities.</string>
-    <string name="museumsLiker">I\'d like to see some museums.</string>
-    <string name="handicappedTraveler">Are you or one of your travelers physically handicapped?</string>
+    <string name="travelling_preferences">What are your travelling preferences?</string>
+    <string name="quick_traveler">I want to see as much as possible.</string>   <!-- Not used -->
+    <string name="sporty_trip">I\'d like to do some exercise.</string>          <!-- Not used -->
+    <string name="foody_trip">I want to eat some local specialities.</string>   <!-- Not used -->
+    <string name="museums_liker">I\'d like to see some museums.</string>        <!-- Not used -->
+    <string name="handicapped_traveler">Are you or one of your travelers physically handicapped?</string>
     <string name="trip_saved">Trip saved successfully!</string>
 
     <!-- Trip travelers -->
-    <string name="nbTravelers">How many travelers will there be?</string>
-    <string name="nbAdults">How many adults?</string>
-    <string name="nbChildren">How many children?</string>
+    <string name="nb_travelers">How many travelers will there be?</string>
+    <string name="nb_adults">How many adults?</string>
+    <string name="nb_children">How many children?</string>
 
     <!-- Trip dates -->
-    <string name="tripDates">When will you be travelling?</string>
-    <string name="startDate">Start date</string>
-    <string name="endDate">End date</string>
-    <string name="endDateError">End date must be on or after start date.</string>
+    <string name="trip_dates">When will you be travelling?</string>
+    <string name="start_date">Start date</string>
+    <string name="end_date">End date</string>
+    <string name="end_date_error">End date must be on or after start date.</string>
 
     <!-- Arrival and Departure -->
     <string name="arrivalDeparture">Where are your arrival and departure destinations?</string>
@@ -72,6 +72,18 @@
     <string name="upcoming_trip">Upcoming Trip</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
+    <string name="n_selected">%1$d selected</string>
+    <string name="cancel_selection">Cancel selection</string>
+    <string name="more_options">More options</string>
+    <string name="delete_selected">Delete selected</string>
+    <plurals name="confirm_delete_title">
+        <item quantity="one" formatted="true">Are you sure you want to delete %1$d Trip?</item>
+        <item quantity="other" formatted="true">Are you sure you want to delete %1$d Trips?</item>
+    </plurals>
+    <string name="confirm_delete_message">This action is irreversible!</string>
+    <string name="cancel">Cancel</string>
+    <string name="delete">Delete</string>
+    <string name="select_all">Select all</string>
 
     <!-- navigation -->
     <string name="my_trips_tab">My trips</string>

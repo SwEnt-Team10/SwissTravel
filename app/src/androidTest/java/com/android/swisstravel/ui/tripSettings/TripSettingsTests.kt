@@ -6,24 +6,25 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.swisstravel.ui.mytrips.FakeTripsRepository
 import com.android.swisstravel.ui.profile.FakeUserRepository
+import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.ToggleTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.ui.tripsettings.TripDateScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripDateTestTags
-import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesTestTags
-import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
-import com.github.swent.swisstravel.ui.tripsettings.TripTravelersScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripTravelersTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelersTestTags
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 
-class TripSettingsTests {
+class TripSettingsTests : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -34,6 +35,7 @@ class TripSettingsTests {
   fun tripDateScreenTest() {
     composeTestRule.setContent { TripDateScreen(onNext = {}) }
     composeTestRule.onNodeWithTag(TripDateTestTags.TRIP_DATE_SCREEN).assertExists()
+    composeTestRule.checkTopBarIsDisplayed()
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
   }
 
@@ -44,6 +46,7 @@ class TripSettingsTests {
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)
         .assertIsDisplayed()
+    composeTestRule.checkTopBarIsDisplayed()
     /* Preference Selector */
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
@@ -96,6 +99,7 @@ class TripSettingsTests {
   fun tripTravelersScreenTest() {
     composeTestRule.setContent { SwissTravelTheme { TripTravelersScreen(onNext = {}) } }
     composeTestRule.onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertExists()
+    composeTestRule.checkTopBarIsDisplayed()
     composeTestRule.onNodeWithTag(TripTravelersTestTags.NEXT).performClick()
   }
 }

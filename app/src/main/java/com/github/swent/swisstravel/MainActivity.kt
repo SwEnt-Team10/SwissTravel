@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -32,11 +33,11 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
 import com.github.swent.swisstravel.ui.tripsettings.ArrivalDepartureScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripDateScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
-import com.github.swent.swisstravel.ui.tripsettings.TripTravelersScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
@@ -92,6 +93,29 @@ fun SwissTravelApp(
   val startDestination =
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
       else Screen.CurrentTrip.name
+
+  val navBackStackEntry by navController.currentBackStackEntryAsState()
+  val currentRoute = navBackStackEntry?.destination?.route
+  /* System back button handler */
+  BackHandler {
+    when {
+      /* If the current route is authentication then quit the app */
+      currentRoute == Screen.Auth.route -> {
+        (context as? ComponentActivity)?.finish()
+      }
+
+      /* If the stack is not empty, go back to the previous screen */
+      navController.previousBackStackEntry != null -> {
+        navController.popBackStack()
+      }
+
+      /* If the stack is empty, do nothing */
+      else -> {
+        // Do nothing (prevents accidental app exit)
+      }
+    }
+  }
+
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Sign-in screen
@@ -164,12 +188,14 @@ fun SwissTravelApp(
       composable(Screen.TripSettings1.route) {
         TripDateScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.TripSettings2.route) {
         TripTravelersScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings3) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings3) },
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.TripSettings3.route) {
         TripPreferencesScreen(
