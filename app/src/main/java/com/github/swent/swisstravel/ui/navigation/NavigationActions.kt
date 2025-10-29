@@ -36,6 +36,8 @@ sealed class Screen(
 
   object TripSettings3 : Screen(route = "trip_settings_3", name = "Trip Settings 3")
 
+  object TripInfo : Screen(route = "trip_info", name = "Trip Info")
+
   // TODO change this when there is a new screen
 }
 

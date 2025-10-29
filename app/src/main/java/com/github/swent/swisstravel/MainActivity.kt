@@ -27,6 +27,7 @@ import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -138,13 +139,22 @@ fun SwissTravelApp(
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
             onSelectTrip = {
-              Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
+              navigationActions.navigateTo(Screen.TripInfo)
             },
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
             navigationActions = navigationActions)
       }
+    }
+      //Trip info screen
+    navigation(
+        startDestination = Screen.TripInfo.route,
+        route = Screen.TripInfo.name,
+    ) {
+        composable(Screen.TripInfo.route) {
+            TripInfoScreen()
+        }
     }
 
     // Map location screen
