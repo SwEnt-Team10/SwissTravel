@@ -245,7 +245,8 @@ private fun MyTripsTopAppBar(
   TopAppBar(
       title = {
         val title =
-            if (uiState.isSelectionMode) stringResource(R.string.n_selected, selectedTripCount)
+            if (uiState.isSelectionMode)
+                pluralStringResource(R.plurals.n_selected, selectedTripCount, selectedTripCount)
             else stringResource(R.string.my_trips)
         Text(
             title,

@@ -106,7 +106,7 @@ fun TripElement(
                 Text(
                     text = trip.name,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    color = MaterialTheme.colorScheme.onSurface)
               }
 
               if (isSelectionMode) {

@@ -67,13 +67,16 @@
     <string name="upcoming_trip">Upcoming Trip</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
-    <string name="n_selected">%1$d selected</string>
+    <plurals name="n_selected">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
     <string name="cancel_selection">Cancel selection</string>
     <string name="more_options">More options</string>
     <string name="delete_selected">Delete selected</string>
     <plurals name="confirm_delete_title">
-        <item quantity="one" formatted="true">Are you sure you want to delete %1$d Trip?</item>
-        <item quantity="other" formatted="true">Are you sure you want to delete %1$d Trips?</item>
+        <item quantity="one" formatted="true">Are you sure you want to delete %d Trip?</item>
+        <item quantity="other" formatted="true">Are you sure you want to delete %d Trips?</item>
     </plurals>
     <string name="confirm_delete_message">This action is irreversible!</string>
     <string name="cancel">Cancel</string>
