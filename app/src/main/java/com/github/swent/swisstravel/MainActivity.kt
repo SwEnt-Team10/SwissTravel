@@ -17,14 +17,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
@@ -161,14 +164,23 @@ fun SwissTravelApp(
     ) {
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
-            onSelectTrip = {
-              Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
-            },
+            onSelectTrip = { tripId -> navigationActions.navigateToEditTrip(tripId) },
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
             navigationActions = navigationActions)
       }
+
+      composable(
+          route = Screen.EditTrip.route,
+          arguments = listOf(navArgument("tripId") { type = NavType.StringType })) {
+              navBackStackEntry ->
+            val tripId = requireNotNull(navBackStackEntry.arguments?.getString("tripId"))
+            EditTripScreen(
+                tripId = tripId,
+                onBack = { navController.popBackStack() },
+                onSavedOrDelete = { navController.popBackStack() })
+          }
     }
 
     // Map location screen

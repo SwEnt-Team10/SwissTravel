@@ -70,7 +70,7 @@ object MyTripsScreenTestTags {
 @Composable
 fun MyTripsScreen(
     myTripsViewModel: MyTripsViewModel = viewModel(),
-    onSelectTrip: (Trip) -> Unit = {},
+    onSelectTrip: (String) -> Unit = {},
     onPastTrips: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
@@ -129,7 +129,7 @@ fun MyTripsScreen(
               if (uiState.isSelectionMode) {
                 val count = uiState.selectedTrips.size
                 Text(
-                    text = stringResource(R.string.n_selected, count),
+                    text = pluralStringResource(R.plurals.n_selected, count, count),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.onBackground)
               } else {
@@ -233,7 +233,7 @@ fun MyTripsScreen(
                   if (uiState.isSelectionMode) {
                     myTripsViewModel.toggleTripSelection(currentTrip)
                   } else {
-                    onSelectTrip(currentTrip)
+                    onSelectTrip(currentTrip.uid)
                   }
                 },
                 onLongPress = {
@@ -272,7 +272,7 @@ fun MyTripsScreen(
                           if (uiState.isSelectionMode) {
                             myTripsViewModel.toggleTripSelection(trip)
                           } else {
-                            onSelectTrip(trip)
+                            onSelectTrip(trip.uid)
                           }
                         },
                         onLongPress = {
