@@ -3,6 +3,7 @@ package com.android.swisstravel.ui.mytrips
 import android.content.Context
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.*
@@ -12,6 +13,8 @@ import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.mytrips.TripElementTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.google.firebase.Timestamp
+import kotlin.test.DefaultAsserter.assertTrue
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -177,6 +180,9 @@ class MyTripsScreenEmulatorTest {
 
   @Test
   fun sortingUpcomingTrips_worksCorrectly() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val now = Timestamp.now()
+
     val tripA =
         Trip(
             "a",
@@ -205,35 +211,46 @@ class MyTripsScreenEmulatorTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()))
 
-    val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip, tripA, tripB))
+    val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
     val viewModel = MyTripsViewModel(fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
-    // Verify initial order: START_DATE_ASC
-    composeTestRule.onAllNodesWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS).onFirst().assertExists()
+    composeTestRule.waitForIdle()
 
-    val firstTripNode =
-        composeTestRule.onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripB))
-    val secondTripNode =
-        composeTestRule.onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripA))
+    // Initial order (START_DATE_ASC expected)
+    val tripANodeInitial =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripA))
+            .fetchSemanticsNode()
+    val tripBNodeInitial =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripB))
+            .fetchSemanticsNode()
 
-    firstTripNode.assertIsDisplayed()
-    secondTripNode.assertIsDisplayed()
+    assertTrue(
+        tripBNodeInitial.positionInRoot.y < tripANodeInitial.positionInRoot.y,
+        "Trip B should appear before Trip A when sorted ASC by start date")
 
-    // Open sort menu and select START_DATE_DESC
+    // Change sort to START_DATE_DESC
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU).performClick()
-    composeTestRule.onNodeWithText(context.getString(R.string.start_date_asc)).performClick()
+    composeTestRule.onNodeWithText(context.getString(R.string.start_date_desc)).performClick()
 
     composeTestRule.waitForIdle()
 
-    // After sort, first should be tripA, then tripB
-    composeTestRule
-        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripA))
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripB))
-        .assertIsDisplayed()
+    // New order (START_DATE_DESC expected)
+    val tripANodeAfterSort =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripA))
+            .fetchSemanticsNode()
+    val tripBNodeAfterSort =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripB))
+            .fetchSemanticsNode()
+
+    assertTrue(
+        tripANodeAfterSort.positionInRoot.y < tripBNodeAfterSort.positionInRoot.y,
+        "Trip A should appear before Trip B when sorted DESC by start date")
   }
 
   private val trip1 =
