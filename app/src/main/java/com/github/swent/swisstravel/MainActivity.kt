@@ -138,23 +138,22 @@ fun SwissTravelApp(
     ) {
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
-            onSelectTrip = {
-              navigationActions.navigateTo(Screen.TripInfo)
-            },
+            onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it.uid)) },
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
             navigationActions = navigationActions)
       }
     }
-      //Trip info screen
+    // Trip info screen
     navigation(
         startDestination = Screen.TripInfo.route,
         route = Screen.TripInfo.name,
     ) {
-        composable(Screen.TripInfo.route) {
-            TripInfoScreen()
-        }
+      composable(Screen.TripInfo.route) { naveBackStackEntry ->
+        val uid = naveBackStackEntry.arguments?.getString("uid")
+        TripInfoScreen(uid, onPastTrips = { navigationActions.goBack() })
+      }
     }
 
     // Map location screen
@@ -192,9 +191,7 @@ fun SwissTravelApp(
         startDestination = Screen.SelectedTripMap.route,
         route = Screen.SelectedTripMap.name,
     ) {
-      composable(Screen.SelectedTripMap.route) {
-        NavigationMapScreen(navigationActions = navigationActions)
-      }
+      composable(Screen.SelectedTripMap.route) { NavigationMapScreen() }
     }
   }
 }

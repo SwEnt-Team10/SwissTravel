@@ -36,7 +36,12 @@ sealed class Screen(
 
   object TripSettings3 : Screen(route = "trip_settings_3", name = "Trip Settings 3")
 
-  object TripInfo : Screen(route = "trip_info", name = "Trip Info")
+  data class TripInfo(val uid: String) : Screen(route = "trip_info/${uid}", name = "Trip Info") {
+    companion object {
+      const val route = "trip_info/{uid}"
+      const val name = "Trip Info"
+    }
+  }
 
   // TODO change this when there is a new screen
 }

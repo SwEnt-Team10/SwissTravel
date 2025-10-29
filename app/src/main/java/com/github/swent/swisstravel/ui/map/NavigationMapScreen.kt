@@ -2,18 +2,10 @@ package com.github.swent.swisstravel.ui.map
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.navigation.NavigationActions
-import com.github.swent.swisstravel.ui.navigation.Screen
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
@@ -47,18 +39,8 @@ object Locations {
 }
 
 @Composable
-fun NavigationMapScreen(navigationActions: NavigationActions) {
-  Box(modifier = Modifier.fillMaxSize()) {
-    NavigationMap()
-    Button(
-        onClick = { navigationActions.navigateTo(Screen.MyTrips) },
-        modifier =
-            Modifier.align(Alignment.TopStart).testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
-          Icon(
-              imageVector = Icons.AutoMirrored.Default.ArrowBack,
-              contentDescription = stringResource(R.string.exit_map_desc))
-        }
-  }
+fun NavigationMapScreen() {
+  Box(modifier = Modifier.fillMaxSize()) { NavigationMap() }
 }
 
 @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
