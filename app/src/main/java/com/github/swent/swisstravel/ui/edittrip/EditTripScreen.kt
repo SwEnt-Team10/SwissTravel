@@ -42,14 +42,16 @@ object EditTripScreenTestTags {
  *
  * @param tripId The ID of the trip to edit.
  * @param onBack Called when the back button is pressed.
- * @param onSavedOrDelete Called when the trip is saved or deleted.
+ * @param onSaved Called when the trip is saved.
+ * @param onDelete Called when the trip is deleted.
  */
 @Composable
 fun EditTripScreen(
     tripId: String,
     editTripViewModel: EditTripScreenViewModel = viewModel(),
     onBack: () -> Unit,
-    onSavedOrDelete: () -> Unit,
+    onSaved: () -> Unit,
+    onDelete: () -> Unit
 ) {
   val context = LocalContext.current
   val state by editTripViewModel.state.collectAsState()
@@ -77,7 +79,7 @@ fun EditTripScreen(
                     onClick = {
                       editTripViewModel.save()
                       Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-                      onSavedOrDelete()
+                      onSaved()
                     },
                     enabled = !state.isLoading,
                     shape = RoundedCornerShape(28.dp),
@@ -161,7 +163,7 @@ fun EditTripScreen(
                       editTripViewModel.deleteTrip()
                       showDeleteDialog = false
                       Toast.makeText(context, R.string.trip_deleted, Toast.LENGTH_SHORT).show()
-                      onSavedOrDelete()
+                      onDelete()
                     },
                     modifier = Modifier.testTag(EditTripScreenTestTags.DELETE_CONFIRM)) {
                       Text(stringResource(R.string.confirm))

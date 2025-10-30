@@ -122,7 +122,7 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
     val routeOptions =
         RouteOptions.builder()
             .applyDefaultNavigationOptions()
-            .coordinatesList(listOf(Locations.EPFL_IC, Locations.OLYMPIC_MUSEUM))
+            .coordinatesList(listOf(LocationsHardCoded.EPFL_IC, LocationsHardCoded.OLYMPIC_MUSEUM))
             .build()
 
     val callback =

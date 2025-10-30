@@ -41,7 +41,7 @@ class EditTripScreenTest {
     composeRule.setContent {
       SwissTravelTheme {
         EditTripScreen(
-            tripId = tripId, editTripViewModel = vm, onBack = {}, onSavedOrDelete = { navigated++ })
+            tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = { navigated++ })
       }
     }
 
@@ -71,7 +71,7 @@ class EditTripScreenTest {
     composeRule.setContent {
       SwissTravelTheme {
         EditTripScreen(
-            tripId = tripId, editTripViewModel = vm, onBack = {}, onSavedOrDelete = { navigated++ })
+            tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = { navigated++ })
       }
     }
 
@@ -94,7 +94,7 @@ class EditTripScreenTest {
     composeRule.setContent {
       SwissTravelTheme {
         EditTripScreen(
-            tripId = tripId, editTripViewModel = vm, onBack = {}, onSavedOrDelete = { navigated++ })
+            tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = { navigated++ })
       }
     }
 

@@ -166,11 +166,8 @@ fun SwissTravelApp(
     ) {
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
-<<<<<<< HEAD
-            onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it.uid)) },
-=======
-            onSelectTrip = { tripId -> navigationActions.navigateToEditTrip(tripId) },
->>>>>>> main
+            onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
@@ -185,7 +182,8 @@ fun SwissTravelApp(
             EditTripScreen(
                 tripId = tripId,
                 onBack = { navController.popBackStack() },
-                onSavedOrDelete = { navController.popBackStack() })
+                onSaved = { navController.popBackStack() },
+                onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
           }
     }
     // Trip info screen
@@ -195,12 +193,17 @@ fun SwissTravelApp(
     ) {
       composable(Screen.TripInfo.route) { naveBackStackEntry ->
         val uid = naveBackStackEntry.arguments?.getString("uid")
+          if (uid == null) {
+            Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
+            navigationActions.navigateTo(Screen.MyTrips)
+            return@composable
+          }
         TripInfoScreen(
             uid,
             onPastTrips = { navigationActions.goBack() },
             onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
             onEditTrip = {
-              Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
+              navigationActions.navigateToEditTrip(uid)
             }
         )
       }
