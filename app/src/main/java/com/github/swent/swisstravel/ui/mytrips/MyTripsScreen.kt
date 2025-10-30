@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,9 +19,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,8 +29,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -49,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
@@ -188,39 +188,6 @@ fun MyTripsScreen(
 }
 
 /**
- * Dialog displayed when the user confirms deletion of selected trips.
- *
- * @param count Number of selected trips.
- * @param onConfirm Invoked when user confirms deletion.
- * @param onCancel Invoked when dialog is dismissed or canceled.
- */
-@Composable
-private fun DeleteTripsDialog(count: Int, onConfirm: () -> Unit, onCancel: () -> Unit) {
-  AlertDialog(
-      onDismissRequest = onCancel,
-      title = { Text(pluralStringResource(R.plurals.confirm_delete_title, count, count)) },
-      text = { Text(stringResource(R.string.confirm_delete_message)) },
-      confirmButton = {
-        TextButton(
-            onClick = onConfirm,
-            modifier = Modifier.testTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)) {
-              Text(stringResource(R.string.delete))
-            }
-      },
-      dismissButton = {
-        TextButton(
-            onClick = onCancel,
-            colors =
-                ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onBackground),
-            modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON)) {
-              Text(stringResource(R.string.cancel))
-            }
-      },
-      containerColor = MaterialTheme.colorScheme.onPrimary)
-}
-
-/**
  * Top bar for the My Trips screen.
  * - Displays either title or selection mode info.
  * - Provides actions for delete, select all, or navigate to past trips.
@@ -281,15 +248,18 @@ private fun MyTripsTopAppBar(
                     Icons.Default.MoreVert,
                     contentDescription = stringResource(R.string.more_options))
               }
-          DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.select_all)) },
-                onClick = {
-                  expanded = false
-                  onSelectAll()
-                },
-                modifier = Modifier.testTag(MyTripsScreenTestTags.SELECT_ALL_BUTTON))
-          }
+          DropdownMenu(
+              expanded = expanded,
+              onDismissRequest = { expanded = false },
+              modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.select_all)) },
+                    onClick = {
+                      expanded = false
+                      onSelectAll()
+                    },
+                    modifier = Modifier.testTag(MyTripsScreenTestTags.SELECT_ALL_BUTTON))
+              }
         } else {
           IconButton(
               onClick = onPastTrips,
@@ -299,7 +269,12 @@ private fun MyTripsTopAppBar(
                     contentDescription = stringResource(R.string.go_past_trips))
               }
         }
-      })
+      },
+      colors =
+          TopAppBarDefaults.topAppBarColors(
+              titleContentColor = MaterialTheme.colorScheme.onBackground,
+              navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
+              actionIconContentColor = MaterialTheme.colorScheme.onBackground))
 }
 
 /**
@@ -406,24 +381,27 @@ private fun UpcomingTripsSection(
                     contentDescription = stringResource(R.string.sort))
               }
 
-          DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            val sortOptions =
-                listOf(
-                    TripSortType.START_DATE_ASC to R.string.start_date_asc,
-                    TripSortType.START_DATE_DESC to R.string.start_date_desc,
-                    TripSortType.END_DATE_ASC to R.string.end_date_asc,
-                    TripSortType.END_DATE_DESC to R.string.end_date_desc,
-                    TripSortType.NAME_ASC to R.string.name_asc,
-                    TripSortType.NAME_DESC to R.string.name_desc)
-            sortOptions.forEach { (type, resId) ->
-              DropdownMenuItem(
-                  text = { Text(stringResource(resId)) },
-                  onClick = {
-                    onSortSelected(type)
-                    expanded = false
-                  })
-            }
-          }
+          DropdownMenu(
+              expanded = expanded,
+              onDismissRequest = { expanded = false },
+              modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)) {
+                val sortOptions =
+                    listOf(
+                        TripSortType.START_DATE_ASC to R.string.start_date_asc,
+                        TripSortType.START_DATE_DESC to R.string.start_date_desc,
+                        TripSortType.END_DATE_ASC to R.string.end_date_asc,
+                        TripSortType.END_DATE_DESC to R.string.end_date_desc,
+                        TripSortType.NAME_ASC to R.string.name_asc,
+                        TripSortType.NAME_DESC to R.string.name_desc)
+                sortOptions.forEach { (type, resId) ->
+                  DropdownMenuItem(
+                      text = { Text(stringResource(resId)) },
+                      onClick = {
+                        onSortSelected(type)
+                        expanded = false
+                      })
+                }
+              }
         }
       }
 
