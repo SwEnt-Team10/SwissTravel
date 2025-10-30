@@ -49,4 +49,11 @@ interface TripsRepository {
    * @throws Exception if the Trip is not found.
    */
   suspend fun deleteTrip(tripId: String)
+
+  /**
+   * Removes the current trip designation from the specified Trip.
+   *
+   * @param tripId The unique identifier of the Trip to update.
+   */
+  suspend fun removeCurrentTrip(tripId: String)
 }

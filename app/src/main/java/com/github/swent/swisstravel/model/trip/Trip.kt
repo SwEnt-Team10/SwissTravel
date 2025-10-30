@@ -22,6 +22,7 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  * @property uid The unique identifier of the trip.
  * @property name The name of the trip.
  * @property ownerId The unique identifier of the owner of the trip.
+ * @property isCurrentTrip Indicates whether the trip is marked as the current trip.
  * @property locations The list of locations of the trip.
  * @property routeSegments The list of route segments of the trip.
  * @property activities The list of activities of the trip.
@@ -31,6 +32,7 @@ data class Trip(
     val uid: String,
     val name: String,
     val ownerId: String,
+    val isCurrentTrip: Boolean = false,
     val locations: List<Location>,
     val routeSegments: List<RouteSegment>,
     val activities: List<Activity>,

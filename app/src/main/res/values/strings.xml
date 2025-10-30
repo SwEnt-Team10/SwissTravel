@@ -57,7 +57,7 @@
 
     <!-- Set current trip -->
     <string name="select_a_trip">Select a trip</string>
-
+    <string name="your_trips">Your Trips</string>
 
     <!-- Geocoding -->
     <string name="address">Address</string>
@@ -75,9 +75,11 @@
     <string name="enter_map">Enter Map</string>
     <string name="warning_multiple_current_trip">We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.</string>
     <string name="no_current_trip">You have no current trip. Get planning!</string>
+    <string name="edit_current_trip">Edit current trip</string>
     <string name="upcoming_trip">Upcoming Trip</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
+    <string name="is_current_trip">This is the current Trip</string>
     <plurals name="n_selected">
         <item quantity="one">%d selected</item>
         <item quantity="other">%d selected</item>

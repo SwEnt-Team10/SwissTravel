@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -73,7 +74,8 @@ fun TripElement(
     onClick: () -> Unit,
     onLongPress: () -> Unit = {},
     isSelected: Boolean = false,
-    isSelectionMode: Boolean = false
+    isSelectionMode: Boolean = false,
+    isCurrentTrip: Boolean = false
 ) {
   Card(
       modifier =
@@ -82,8 +84,10 @@ fun TripElement(
               .fillMaxWidth()
               .height(56.dp)
               .border(
-                  width = if (isSelected) 3.dp else 0.dp,
-                  color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                  width = if (isSelected || isCurrentTrip) 3.dp else 0.dp,
+                  color =
+                      if (isSelected || isCurrentTrip) MaterialTheme.colorScheme.primary
+                      else Color.Transparent,
                   shape = RoundedCornerShape(16.dp)),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
       shape = MaterialTheme.shapes.large) {
@@ -125,10 +129,17 @@ fun TripElement(
                             })
               } else {
                 // Arrow icon for normal (non-selection) mode
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowRight,
-                    contentDescription = stringResource(R.string.go_trip_details),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (isCurrentTrip) {
+                  Icon(
+                      Icons.Filled.Check,
+                      contentDescription = stringResource(R.string.is_current_trip),
+                      tint = MaterialTheme.colorScheme.primary)
+                } else {
+                  Icon(
+                      Icons.AutoMirrored.Filled.ArrowRight,
+                      contentDescription = stringResource(R.string.go_trip_details),
+                      tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
               }
             }
       }

@@ -160,6 +160,23 @@ class MyTripsViewModel(
     }
   }
 
+  fun changeCurrentTrip(trip: Trip) {
+    viewModelScope.launch {
+      try {
+        // Remove current trip designation from existing current trip
+        uiState.value.currentTrip?.let { tripsRepository.removeCurrentTrip(it.uid) }
+        // Set the new current trip
+        val updatedTrip = trip.copy(isCurrentTrip = true)
+        tripsRepository.editTrip(trip.uid, updatedTrip)
+        _uiState.value = _uiState.value.copy(currentTrip = updatedTrip)
+        refreshUIState()
+      } catch (e: Exception) {
+        Log.e("MyTripsViewModel", "Error changing current trip", e)
+        setErrorMsg("Failed to change current trip.")
+      }
+    }
+  }
+
   /**
    * Selects all trips (both current and upcoming).
    *

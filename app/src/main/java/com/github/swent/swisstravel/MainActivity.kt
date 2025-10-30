@@ -27,6 +27,7 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreen
 import com.github.swent.swisstravel.ui.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
@@ -170,6 +171,7 @@ fun SwissTravelApp(
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
             onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
+            onCurrentTripClick = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
             navigationActions = navigationActions)
       }
 
@@ -183,6 +185,13 @@ fun SwissTravelApp(
                 onBack = { navController.popBackStack() },
                 onSavedOrDelete = { navController.popBackStack() })
           }
+
+      composable(route = Screen.SetCurrentTrip.route) {
+        SetCurrentTripScreen(
+            onPrevious = { navigationActions.goBack() },
+            navigationActions = navigationActions,
+        )
+      }
     }
 
     // Map location screen

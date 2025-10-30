@@ -50,6 +50,7 @@ fun SortedTripList(
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
     isSelectionMode: Boolean = false,
+    isCurrentTrip: (Trip) -> Boolean = { false },
     titleTestTag: String,
     lazyColumnTestTag: String,
     emptyMessageTestTag: String
@@ -107,7 +108,8 @@ fun SortedTripList(
                 onClick = { onClickTripElement(trip) },
                 onLongPress = { onLongPress(trip) },
                 isSelected = isSelected(trip),
-                isSelectionMode = isSelectionMode)
+                isSelectionMode = isSelectionMode,
+                isCurrentTrip = isCurrentTrip(trip))
           }
         }
   } else {

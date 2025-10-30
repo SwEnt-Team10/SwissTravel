@@ -24,23 +24,18 @@ fun Timestamp.toZonedDateTime(): ZonedDateTime =
  */
 fun Trip.isUpcoming(): Boolean {
   val now = ZonedDateTime.now()
-  return tripProfile.startDate.toZonedDateTime().isAfter(now)
+  val end = tripProfile.endDate.toZonedDateTime()
+  return end.isAfter(now)
 }
 
 /**
- * Check whether the trip is currently ongoing.
+ * Check whether the trip has been set as the current trip.
  *
- * A trip is considered current when the current instant is between the trip's `startDate` and
- * `endDate`, inclusive. Dates are compared as `ZonedDateTime` using the system default zone.
- *
- * @return `true` if now is between `startDate` and `endDate` (inclusive), otherwise `false`
+ * @return `true` if the trip is set as the current trip by the user, otherwise `false`
  * @receiver Trip the trip to evaluate
  */
 fun Trip.isCurrent(): Boolean {
-  val now = ZonedDateTime.now()
-  val start = tripProfile.startDate.toZonedDateTime()
-  val end = tripProfile.endDate.toZonedDateTime()
-  return !start.isAfter(now) && !end.isBefore(now)
+  return isCurrentTrip
 }
 
 /**

@@ -49,6 +49,11 @@ class TripsRepositoryFirestore(
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
   }
 
+  override suspend fun removeCurrentTrip(tripId: String) {
+    val tripRef = db.collection(TRIPS_COLLECTION_PATH).document(tripId)
+    tripRef.update("isCurrentTrip", false).await()
+  }
+
   // The following code was made with the help of AI
   /**
    * Converts a Firestore document to a Trip object.
@@ -61,6 +66,7 @@ class TripsRepositoryFirestore(
       val uid = document.id
       val name = document.getString("name") ?: return null
       val ownerId = document.getString("ownerId") ?: return null
+      val isCurrentTrip = document.getBoolean("isCurrentTrip") ?: false
 
       val locations =
           (document.get("locations") as? List<*>)?.mapNotNull { it ->
@@ -84,6 +90,7 @@ class TripsRepositoryFirestore(
           uid = uid,
           name = name,
           ownerId = ownerId,
+          isCurrentTrip = isCurrentTrip,
           locations = locations,
           routeSegments = routeSegments,
           activities = activities,

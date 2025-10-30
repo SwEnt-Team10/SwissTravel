@@ -2,16 +2,20 @@ package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Button
@@ -73,6 +77,7 @@ object MyTripsScreenTestTags {
   const val CANCEL_SELECTION_BUTTON = "cancelSelection"
   const val MORE_OPTIONS_BUTTON = "moreOptions"
   const val SORT_DROPDOWN_MENU = "sortDropdownMenu"
+  const val SET_CURRENT_TRIP_BUTTON = "setCurrentTrip"
 
   /** Returns a unique test tag for the given [trip] element. */
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
@@ -104,6 +109,7 @@ fun MyTripsScreen(
     onPastTrips: () -> Unit = {},
     onCreateTrip: () -> Unit = {},
     navigationActions: NavigationActions? = null,
+    onCurrentTripClick: () -> Unit = {},
 ) {
   val context = LocalContext.current
   val uiState by myTripsViewModel.uiState.collectAsState()
@@ -170,7 +176,7 @@ fun MyTripsScreen(
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
                   onEnterSelectionMode = { myTripsViewModel.toggleSelectionMode(true) },
-                  navigationActions = navigationActions)
+                  onCurrentTripClick = onCurrentTripClick)
 
               UpcomingTripsSection(
                   trips = uiState.upcomingTrips,
@@ -285,7 +291,7 @@ private fun MyTripsTopAppBar(
  * @param onSelectTrip Callback when a trip is clicked.
  * @param onToggleSelection Toggles trip selection.
  * @param onEnterSelectionMode Activates selection mode.
- * @param navigationActions Optional navigation actions for map entry.
+ * @param onCurrentTripClick Callback when the edit current trip button is clicked.
  */
 @Composable
 private fun CurrentTripSection(
@@ -295,13 +301,27 @@ private fun CurrentTripSection(
     onSelectTrip: (String) -> Unit,
     onToggleSelection: (Trip) -> Unit,
     onEnterSelectionMode: () -> Unit,
-    navigationActions: NavigationActions?,
+    onCurrentTripClick: () -> Unit = {},
+    navigationActions: NavigationActions? = null,
 ) {
-  Text(
-      text = stringResource(R.string.current_trip),
-      style = MaterialTheme.typography.headlineLarge,
-      color = MaterialTheme.colorScheme.onBackground,
-      modifier = Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.current_trip),
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier =
+                Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+        IconButton(
+            onClick = onCurrentTripClick,
+            modifier = Modifier.testTag(MyTripsScreenTestTags.SET_CURRENT_TRIP_BUTTON)) {
+              Icon(
+                  Icons.Filled.Edit,
+                  contentDescription = stringResource(R.string.edit_current_trip))
+            }
+      }
 
   Spacer(modifier = Modifier.height(4.dp))
 
