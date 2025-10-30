@@ -35,6 +35,7 @@ class NominatimLocationRepository(
                 .addQueryParameter("q", query)
                 .addQueryParameter("format", "json")
                 .addQueryParameter("countrycodes", "ch")
+                .addQueryParameter("layer", "poi")
                 .build()
 
         val request =

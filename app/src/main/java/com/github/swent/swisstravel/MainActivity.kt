@@ -38,6 +38,7 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
@@ -159,7 +160,7 @@ fun SwissTravelApp(
       }
     }
 
-    // My trips screen
+    // My Trips screen
     navigation(
         startDestination = Screen.MyTrips.route,
         route = Screen.MyTrips.name,
@@ -171,6 +172,7 @@ fun SwissTravelApp(
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
+            onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
             navigationActions = navigationActions)
       }
 
@@ -247,8 +249,13 @@ fun SwissTravelApp(
       composable(Screen.TripSettings3.route) {
         TripPreferencesScreen(
             viewModel = tripSettingsViewModel(navController),
-            onDone = { navigationActions.navigateTo(Screen.MyTrips) },
+            onNext = { navigationActions.navigateTo(Screen.TripSettingsArrivalDeparture) },
             onPrevious = { navigationActions.goBack() })
+      }
+      composable(Screen.TripSettingsArrivalDeparture.route) {
+        ArrivalDepartureScreen(
+            viewModel = tripSettingsViewModel(navController),
+            onNext = { navigationActions.navigateTo(Screen.MyTrips) })
       }
     }
 

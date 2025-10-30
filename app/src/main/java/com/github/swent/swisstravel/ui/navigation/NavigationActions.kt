@@ -43,6 +43,10 @@ sealed class Screen(
     }
   }
   object TripInfoMap : Screen(route = "trip_info_map", name = "Trip Info Map")
+
+  object TripSettingsArrivalDeparture :
+      Screen(route = "arrival_departure", name = "Arrival_Departure")
+
   object EditTrip : Screen(route = "edit_trip/{tripId}", name = "Edit trip") {
     fun createRoute(tripId: String) = "edit_trip/${URLEncoder.encode(tripId, "UTF-8")}"
   }
