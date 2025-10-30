@@ -121,6 +121,11 @@ class EditTripScreenViewModel(
     _uiState.update { it.copy(children = value) }
   }
 
+  /**
+   * Sets the name of the trip.
+   *
+   * @param value The new value
+   */
   fun editTripName(value: String) {
     _uiState.update { it.copy(tripName = value) }
   }
