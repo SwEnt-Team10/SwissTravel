@@ -30,6 +30,7 @@ import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
+import com.mapbox.maps.extension.style.expressions.dsl.generated.string
 
 /** Test tags for UI tests to identify components within the Arrival/Departure screen. */
 object ArrivalDepartureTestTags {
@@ -99,13 +100,15 @@ fun ArrivalDepartureScreen(
             // --- Arrival Destination (autocomplete) ---
             AddressAutocompleteTextField(
                 addressTextFieldViewModel = arrivalAddressVm,
-                modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD))
-            Spacer(modifier = Modifier.height(32.dp))
+                modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
+                name = stringResource(R.string.arrival_location))
+            Spacer(modifier = Modifier.height(50.dp))
 
             // --- Departure Destination (autocomplete) ---
             AddressAutocompleteTextField(
                 addressTextFieldViewModel = departureAddressVm,
-                modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD))
+                modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
+                name = stringResource(R.string.departure_location))
 
             Spacer(modifier = Modifier.height(32.dp))
           }

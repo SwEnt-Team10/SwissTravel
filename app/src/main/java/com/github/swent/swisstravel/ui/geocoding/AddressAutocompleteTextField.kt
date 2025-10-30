@@ -6,8 +6,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -19,10 +19,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.swent.swisstravel.R
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -48,7 +46,8 @@ object AddressTextTestTags {
 fun AddressAutocompleteTextField(
     addressTextFieldViewModel: AddressTextFieldViewModelContract =
         viewModel<AddressTextFieldViewModel>(),
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    name: String = "location"
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
   // Local text state to avoid immediate writes to the ViewModel on every keystroke.
@@ -57,7 +56,7 @@ fun AddressAutocompleteTextField(
   var expanded by remember { mutableStateOf(false) }
 
   ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-    TextField(
+    OutlinedTextField(
         value = text,
         onValueChange = {
           text = it
@@ -65,7 +64,7 @@ fun AddressAutocompleteTextField(
           expanded = true
         },
         modifier = modifier.menuAnchor().testTag(AddressTextTestTags.INPUT_LOCATION),
-        label = { Text(stringResource(R.string.address)) })
+        label = { Text(name) })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
         onDismissRequest = { expanded = false }) {

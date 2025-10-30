@@ -47,6 +47,8 @@
     <string name="arrivalDeparture">Where are your arrival and departure destinations?</string>
     <string name="enterArrivalLocation">Enter your arrival location</string>
     <string name="enterDepartureLocation">Enter your departure location</string>
+    <string name="arrival_location">Arrival location</string>
+    <string name="departure_location">Departure location"</string>
 
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
