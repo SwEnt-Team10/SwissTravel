@@ -1,7 +1,10 @@
 package com.android.swisstravel.ui.map
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -12,63 +15,57 @@ import androidx.test.core.app.ApplicationProvider
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
 import com.github.swent.swisstravel.ui.map.NavigationMapViewModel
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
-import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 class NavigationMapScreenTest {
-  @get:Rule val composeTestRule = createComposeRule()
 
-  @Before
-  fun setup() {
-    composeTestRule.setContent {
+  @get:Rule val composeRule = createComposeRule()
+
+  private val MY_TRIPS_ROOT = "myTripsRoot"
+
+  /** Map is shown by default when starting on SelectedTripMap; Exit button is visible. */
+  @Test
+  fun mapIsVisibleOnEntry() {
+    composeRule.setContent {
       val navController = rememberNavController()
-
-      NavHost(navController = navController, startDestination = Screen.MyTrips.route) {
-        composable(Screen.MyTrips.route) {
-          MyTripsScreen(navigationActions = NavigationActions(navController))
-        }
+      NavHost(navController = navController, startDestination = Screen.SelectedTripMap.route) {
         composable(Screen.SelectedTripMap.route) {
           NavigationMapScreen(navigationActions = NavigationActions(navController))
         }
+        // Minimal destination for MyTrips
+        composable(Screen.MyTrips.route) { Box(Modifier.fillMaxSize().testTag(MY_TRIPS_ROOT)) }
       }
     }
+
+    composeRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON).assertIsDisplayed()
   }
 
-  // this test simply checks that it is possible to enter and see the map
+  /** Tapping Exit navigates to MyTrips; the map is no longer present. */
   @Test
-  fun canEnterNavigationMapFromCurrentTrip() = runTest {
-    composeTestRule
-        .onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)
-        .assertIsDisplayed()
-        .performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
-  }
+  fun exitNavigatesToMyTrips() {
+    composeRule.setContent {
+      val navController = rememberNavController()
+      NavHost(navController = navController, startDestination = Screen.SelectedTripMap.route) {
+        composable(Screen.SelectedTripMap.route) {
+          NavigationMapScreen(navigationActions = NavigationActions(navController))
+        }
+        composable(Screen.MyTrips.route) { Box(Modifier.fillMaxSize().testTag(MY_TRIPS_ROOT)) }
+      }
+    }
 
-  // this test first enters the map, then checks the map is displayed, and then navigates back to
-  // check it is not displayed anymore
-  @Test
-  fun canEnterAndExitNavigationMap() = runTest {
-    // enter the map
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).performClick()
-    composeTestRule.waitForIdle()
-    // check the map is displayed
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
-    // exit the map
-    composeTestRule
-        .onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON)
-        .assertIsDisplayed()
-        .performClick()
-    composeTestRule.waitForIdle()
-    // checks components are correctly displayed
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsNotDisplayed()
+    // We are on the map
+    composeRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
+
+    // Click Exit
+    composeRule.onNodeWithTag(NavigationMapScreenTestTags.EXIT_BUTTON).performClick()
+
+    // Landed on MyTrips, map removed
+    composeRule.onNodeWithTag(MY_TRIPS_ROOT).assertIsDisplayed()
+    composeRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertDoesNotExist()
   }
 
   @Test
