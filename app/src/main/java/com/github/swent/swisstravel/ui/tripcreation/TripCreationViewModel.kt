@@ -124,7 +124,7 @@ class TripSettingsViewModel(
             TripProfile(
                 startDate = startTs,
                 endDate = endTs,
-                preferredLocations = emptyList(), // Placeholder
+                preferredLocations = settings.destinations, // Placeholder
                 preferences = settings.preferences,
                 adults = settings.travelers.adults,
                 children = settings.travelers.children,

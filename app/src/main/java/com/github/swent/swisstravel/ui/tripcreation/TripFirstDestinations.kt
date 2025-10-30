@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,18 +33,33 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel // Import the concrete class
 import com.github.swent.swisstravel.ui.navigation.TopBar
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.NEXT_BUTTON
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
+
+object TripFirstDestinationsTestTags {
+    const val FIRST_DESTINATIONS_TITLE = "first_destinations_title"
+    const val ADD_FIRST_DESTINATION = "add_first_destination"
+    const val NEXT_BUTTON = "next_button"
+    const val RETURN_BUTTON = "return_button"
+}
 
 @Composable
 fun FirstDestinationScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
-    onPrevious: () -> Unit = {}
+    onPrevious: () -> Unit = {},
+    //Add the factory as a parameter with a default for production use
+    addressViewModelFactory: @Composable (Int) -> AddressTextFieldViewModel = { index ->
+        viewModel(key = "destination_$index")
+    }
 ) {
     val destinations = remember { mutableStateListOf<Location>() }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = { TopBar(onClick = { onPrevious() }) }
+        topBar = { TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON)) }
     ) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
@@ -59,6 +75,7 @@ fun FirstDestinationScreen(
                     modifier = Modifier.weight(1f)
                 ) {
                     Text(
+                        modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
                         text = stringResource(R.string.first_destinations_title),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold)
@@ -66,20 +83,15 @@ fun FirstDestinationScreen(
 
                     Spacer(modifier = Modifier.height(32.dp))
 
-                    Button(onClick = { destinations.add(Location(coordinate = Coordinate(0.0, 0.0),name="")) }) {
-                        Text(stringResource(R.string.add_first_destination))
-                    }
 
-                    Spacer(modifier = Modifier.height(16.dp))
 
                     LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                        // Use itemsIndexed to get the index of each item
                         itemsIndexed(destinations, key = { index, _ -> index }) { index, _ ->
-                            // Create a unique ViewModel for each text field using the index as a key
-                            val addressVm: AddressTextFieldViewModel = viewModel(key = "destination_$index")
+                            //Use the factory to create the ViewModel
+                            val addressVm = addressViewModelFactory(index)
 
                             AddressAutocompleteTextField(
-                                addressTextFieldViewModel = addressVm, // Pass the unique ViewModel instance
+                                addressTextFieldViewModel = addressVm, // Pass the created ViewModel
                                 onLocationSelected = { selectedLocation ->
                                     destinations[index] = selectedLocation
                                 },
@@ -89,6 +101,15 @@ fun FirstDestinationScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                         }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
+                        onClick = { destinations.add(Location(coordinate = Coordinate(0.0, 0.0), name = "")) },
+                        enabled = destinations.isEmpty() || destinations.last().name.isNotEmpty(),
+                    ) {
+                        Text(stringResource(R.string.add_first_destination))
+                    }
                 }
 
                 Row(
@@ -96,11 +117,12 @@ fun FirstDestinationScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Button(
+                        modifier = Modifier.testTag(NEXT_BUTTON),
                         onClick = {
+                            destinations.filter({element -> element.name.isNotEmpty()})
                             viewModel.setDestinations(destinations.toList())
                             onNext()
                         },
-                        enabled = destinations.isNotEmpty() && destinations.all { it.name.isNotEmpty() },
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                     ) {
                         Text(
