@@ -221,14 +221,14 @@ fun SwissTravelApp(
         ArrivalDepartureScreen(
             viewModel = tripSettingsViewModel(navController),
             onNext = { navigationActions.navigateTo(Screen.TripSettingsFirstDestination) },
-        onPrevious = { navigationActions.goBack() })
+            onPrevious = { navigationActions.goBack() })
       }
-        composable(Screen.TripSettingsFirstDestination.route) {
-            FirstDestinationScreen(
-                viewModel = tripSettingsViewModel(navController),
-                onNext = { navigationActions.navigateTo(Screen.MyTrips) },
-                onPrevious = { navigationActions.goBack() })
-        }
+      composable(Screen.TripSettingsFirstDestination.route) {
+        FirstDestinationScreen(
+            viewModel = tripSettingsViewModel(navController),
+            onNext = { navigationActions.navigateTo(Screen.MyTrips) },
+            onPrevious = { navigationActions.goBack() })
+      }
     }
 
     // Trip map screen

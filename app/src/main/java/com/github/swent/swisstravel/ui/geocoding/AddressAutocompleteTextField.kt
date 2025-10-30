@@ -45,8 +45,7 @@ object AddressTextTestTags {
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun AddressAutocompleteTextField(
-    addressTextFieldViewModel: AddressTextFieldViewModelContract =
-        viewModel(),
+    addressTextFieldViewModel: AddressTextFieldViewModelContract = viewModel(),
     modifier: Modifier = Modifier,
     name: String = "location",
     onLocationSelected: (Location) -> Unit = {},
@@ -87,12 +86,12 @@ fun AddressAutocompleteTextField(
                   expanded = false
                 },
                 modifier = Modifier.testTag(AddressTextTestTags.LOCATION_SUGGESTION))
-              LaunchedEffect(state.selectedLocation) {
-                  state.selectedLocation?.let {
-                      // When the selected location is not null, notify the parent.
-                      onLocationSelected(it)
-                  }
+            LaunchedEffect(state.selectedLocation) {
+              state.selectedLocation?.let {
+                // When the selected location is not null, notify the parent.
+                onLocationSelected(it)
               }
+            }
 
             // Add a divider between items for clarity (but not after the last item)
             if (index < suggestions.lastIndex) {

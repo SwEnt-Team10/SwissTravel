@@ -118,9 +118,7 @@ fun TripPreferencesScreen(
 
                     // --- Next button ---
                     Button(
-                        onClick = {
-                          onNext()
-                        },
+                        onClick = { onNext() },
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary),

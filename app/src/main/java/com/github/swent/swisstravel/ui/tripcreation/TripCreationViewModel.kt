@@ -39,7 +39,7 @@ data class TripSettings(
     val travelers: TripTravelers = TripTravelers(),
     val preferences: List<Preference> = emptyList(),
     val arrivalDeparture: TripArrivalDeparture = TripArrivalDeparture(),
-    val destinations : List<Location> = emptyList()
+    val destinations: List<Location> = emptyList()
 )
 
 /** Sealed interface representing various validation events during trip settings. */
@@ -81,9 +81,10 @@ class TripSettingsViewModel(
     _tripSettings.update { it.copy(preferences = prefs) }
     Log.d("TripSettingsViewModel", "Updated preferences: ${_tripSettings.value.preferences}")
   }
-    fun setDestinations(destinations: List<Location>) {
-        _tripSettings.update { it.copy(destinations = destinations) }
-    }
+
+  fun setDestinations(destinations: List<Location>) {
+    _tripSettings.update { it.copy(destinations = destinations) }
+  }
 
   init {
     viewModelScope.launch {

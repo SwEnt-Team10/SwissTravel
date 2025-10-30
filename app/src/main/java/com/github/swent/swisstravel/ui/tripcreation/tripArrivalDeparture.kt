@@ -82,72 +82,63 @@ fun ArrivalDepartureScreen(
     departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
   }
 
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = { TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON)) }
-
-    ) { paddingValues ->
-
+  Scaffold(
+      modifier = Modifier.fillMaxSize(),
+      topBar = {
+        TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON))
+      }) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             color = MaterialTheme.colorScheme.background,
-
         ) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
+          Column(
+              modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.SpaceBetween) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-                    // --- Title ---
-                    Text(
-                        text = stringResource(R.string.arrivalDeparture),
-                        textAlign = TextAlign.Center,
-                        style =
-                            MaterialTheme.typography.headlineMedium.copy(
-                                fontWeight = FontWeight.Bold,
-                            )
-                    )
+                  // --- Title ---
+                  Text(
+                      text = stringResource(R.string.arrivalDeparture),
+                      textAlign = TextAlign.Center,
+                      style =
+                          MaterialTheme.typography.headlineMedium.copy(
+                              fontWeight = FontWeight.Bold,
+                          ))
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                  Spacer(modifier = Modifier.height(32.dp))
 
-                    // --- Arrival Destination (autocomplete) ---
-                    AddressAutocompleteTextField(
-                        addressTextFieldViewModel = arrivalAddressVm,
-                        modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
-                        name = stringResource(R.string.arrival_location)
-                    )
-                    Spacer(modifier = Modifier.height(50.dp))
+                  // --- Arrival Destination (autocomplete) ---
+                  AddressAutocompleteTextField(
+                      addressTextFieldViewModel = arrivalAddressVm,
+                      modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
+                      name = stringResource(R.string.arrival_location))
+                  Spacer(modifier = Modifier.height(50.dp))
 
-                    // --- Departure Destination (autocomplete) ---
-                    AddressAutocompleteTextField(
-                        addressTextFieldViewModel = departureAddressVm,
-                        modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
-                        name = stringResource(R.string.departure_location)
-                    )
+                  // --- Departure Destination (autocomplete) ---
+                  AddressAutocompleteTextField(
+                      addressTextFieldViewModel = departureAddressVm,
+                      modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
+                      name = stringResource(R.string.departure_location))
 
-                    Spacer(modifier = Modifier.height(32.dp))
+                  Spacer(modifier = Modifier.height(32.dp))
                 }
 
                 // --- Done button ---
                 Button(
                     modifier = Modifier.testTag(NEXT_BUTTON),
-                    onClick = {
-                        onNext()
-                    },
+                    onClick = { onNext() },
                     colors =
-                        ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
-                ) {
-                    Text(
-                        stringResource(R.string.done),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                }
-            }
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary)) {
+                      Text(
+                          stringResource(R.string.done),
+                          color = MaterialTheme.colorScheme.onPrimary,
+                          style = MaterialTheme.typography.titleMedium)
+                    }
+              }
         }
-    }
+      }
 }
 
 /** A composable preview function for the [ArrivalDepartureScreen]. */
