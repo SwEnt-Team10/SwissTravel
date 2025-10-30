@@ -32,6 +32,7 @@ import com.github.swent.swisstravel.ui.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
+import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -78,6 +79,28 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
   val parentEntry =
       remember(currentEntry) {
         runCatching { navController.getBackStackEntry(Screen.TripSettings1.name) }.getOrNull()
+      }
+
+  return if (parentEntry != null) {
+    viewModel(parentEntry)
+  } else {
+    viewModel()
+  }
+}
+
+/**
+ * Retrieves the MyTripsViewModel scoped to the MyTrips navigation graph.
+ *
+ * @param navController The NavHostController used for navigation.
+ * @return The MyTripsViewModel instance.
+ */
+@Composable
+fun myTripsViewModel(navController: NavHostController): MyTripsViewModel {
+  val currentEntry by navController.currentBackStackEntryAsState()
+
+  val parentEntry =
+      remember(currentEntry) {
+        runCatching { navController.getBackStackEntry(Screen.MyTrips.name) }.getOrNull()
       }
 
   return if (parentEntry != null) {
@@ -166,6 +189,7 @@ fun SwissTravelApp(
     ) {
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
+            myTripsViewModel = myTripsViewModel(navController),
             onSelectTrip = { tripId -> navigationActions.navigateToEditTrip(tripId) },
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
@@ -188,6 +212,7 @@ fun SwissTravelApp(
 
       composable(route = Screen.SetCurrentTrip.route) {
         SetCurrentTripScreen(
+            viewModel = myTripsViewModel(navController),
             onPrevious = { navigationActions.goBack() },
             navigationActions = navigationActions,
         )

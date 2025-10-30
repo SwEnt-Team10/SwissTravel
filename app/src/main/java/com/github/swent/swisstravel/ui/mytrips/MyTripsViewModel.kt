@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isCurrent
 import com.github.swent.swisstravel.model.trip.isUpcoming
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -93,7 +94,7 @@ class MyTripsViewModel(
       try {
         val trips = tripsRepository.getAllTrips()
         val currentTrip = trips.find { it.isCurrent() }
-        val upcomingTrips = trips.filter { it.isUpcoming() }
+        val upcomingTrips = trips.filter { it.isUpcoming() && !it.isCurrent() }
         val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
 
         _uiState.value = _uiState.value.copy(currentTrip = currentTrip, upcomingTrips = sortedTrips)
@@ -163,12 +164,26 @@ class MyTripsViewModel(
   fun changeCurrentTrip(trip: Trip) {
     viewModelScope.launch {
       try {
+        val previousCurrentTrip = _uiState.value.currentTrip
+        val upcomingTrips = _uiState.value.upcomingTrips.toMutableList()
+
         // Remove current trip designation from existing current trip
-        uiState.value.currentTrip?.let { tripsRepository.removeCurrentTrip(it.uid) }
+        previousCurrentTrip?.let { tripsRepository.removeCurrentTrip(it.uid) }
+
         // Set the new current trip
         val updatedTrip = trip.copy(isCurrentTrip = true)
         tripsRepository.editTrip(trip.uid, updatedTrip)
-        _uiState.value = _uiState.value.copy(currentTrip = updatedTrip)
+
+        val newUpcomingTrips = buildList {
+          // Remove the trip that is now current
+          addAll(upcomingTrips.filter { it.uid != trip.uid })
+          // Add the old current trip back if it existed
+          previousCurrentTrip?.let { add(it.copy(isCurrentTrip = false)) }
+        }
+
+        _uiState.value =
+            _uiState.value.copy(currentTrip = updatedTrip, upcomingTrips = newUpcomingTrips)
+        delay(1000)
         refreshUIState()
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error changing current trip", e)

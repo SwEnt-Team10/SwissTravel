@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -55,66 +56,68 @@ fun SortedTripList(
     lazyColumnTestTag: String,
     emptyMessageTestTag: String
 ) {
-  Row(
-      modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.testTag(titleTestTag))
+  Column {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = title,
+              style = MaterialTheme.typography.headlineLarge,
+              color = MaterialTheme.colorScheme.onBackground,
+              modifier = Modifier.testTag(titleTestTag))
 
-        var expanded by remember { mutableStateOf(false) }
+          var expanded by remember { mutableStateOf(false) }
 
-        Box {
-          IconButton(
-              onClick = { expanded = !expanded },
-              modifier = Modifier.testTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU)) {
-                Icon(
-                    Icons.AutoMirrored.Filled.Sort,
-                    contentDescription = stringResource(R.string.sort))
+          Box {
+            IconButton(
+                onClick = { expanded = !expanded },
+                modifier = Modifier.testTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU)) {
+                  Icon(
+                      Icons.AutoMirrored.Filled.Sort,
+                      contentDescription = stringResource(R.string.sort))
+                }
+
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+              val sortOptions =
+                  listOf(
+                      TripSortType.START_DATE_ASC to R.string.start_date_asc,
+                      TripSortType.START_DATE_DESC to R.string.start_date_desc,
+                      TripSortType.END_DATE_ASC to R.string.end_date_asc,
+                      TripSortType.END_DATE_DESC to R.string.end_date_desc,
+                      TripSortType.NAME_ASC to R.string.name_asc,
+                      TripSortType.NAME_DESC to R.string.name_desc)
+              sortOptions.forEach { (type, resId) ->
+                DropdownMenuItem(
+                    text = { Text(stringResource(resId)) },
+                    onClick = {
+                      onClickDropDownMenu(type)
+                      expanded = false
+                    })
               }
-
-          DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            val sortOptions =
-                listOf(
-                    TripSortType.START_DATE_ASC to R.string.start_date_asc,
-                    TripSortType.START_DATE_DESC to R.string.start_date_desc,
-                    TripSortType.END_DATE_ASC to R.string.end_date_asc,
-                    TripSortType.END_DATE_DESC to R.string.end_date_desc,
-                    TripSortType.NAME_ASC to R.string.name_asc,
-                    TripSortType.NAME_DESC to R.string.name_desc)
-            sortOptions.forEach { (type, resId) ->
-              DropdownMenuItem(
-                  text = { Text(stringResource(resId)) },
-                  onClick = {
-                    onClickDropDownMenu(type)
-                    expanded = false
-                  })
             }
           }
         }
-      }
 
-  if (trips.isNotEmpty()) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth().testTag(lazyColumnTestTag)) {
-          items(trips.size) { index ->
-            val trip = trips[index]
-            TripElement(
-                trip = trip,
-                onClick = { onClickTripElement(trip) },
-                onLongPress = { onLongPress(trip) },
-                isSelected = isSelected(trip),
-                isSelectionMode = isSelectionMode,
-                isCurrentTrip = isCurrentTrip(trip))
+    if (trips.isNotEmpty()) {
+      LazyColumn(
+          verticalArrangement = Arrangement.spacedBy(12.dp),
+          modifier = Modifier.fillMaxWidth().testTag(lazyColumnTestTag)) {
+            items(trips.size) { index ->
+              val trip = trips[index]
+              TripElement(
+                  trip = trip,
+                  onClick = { onClickTripElement(trip) },
+                  onLongPress = { onLongPress(trip) },
+                  isSelected = isSelected(trip),
+                  isSelectionMode = isSelectionMode,
+                  isCurrentTrip = isCurrentTrip(trip))
+            }
           }
-        }
-  } else {
-    Text(
-        text = stringResource(R.string.no_upcoming_trip),
-        modifier = Modifier.testTag(emptyMessageTestTag))
+    } else {
+      Text(
+          text = stringResource(R.string.no_upcoming_trip),
+          modifier = Modifier.testTag(emptyMessageTestTag))
+    }
   }
 }

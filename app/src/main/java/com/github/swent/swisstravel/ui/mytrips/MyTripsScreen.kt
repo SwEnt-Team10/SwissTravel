@@ -165,6 +165,7 @@ fun MyTripsScreen(
                 Modifier.fillMaxSize()
                     .padding(padding)
                     .padding(start = 16.dp, end = 16.dp, bottom = 4.dp)) {
+              Text(text = "uistate current trip id = ${uiState.currentTrip?.uid}")
               CurrentTripSection(
                   currentTrip = uiState.currentTrip,
                   isSelectionMode = uiState.isSelectionMode,
@@ -175,7 +176,7 @@ fun MyTripsScreen(
                   onCurrentTripClick = onCurrentTripClick)
 
               UpcomingTripsSection(
-                  trips = uiState.upcomingTrips,
+                  trips = uiState.upcomingTrips.filter { it.uid != uiState.currentTrip?.uid },
                   uiState = uiState,
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
