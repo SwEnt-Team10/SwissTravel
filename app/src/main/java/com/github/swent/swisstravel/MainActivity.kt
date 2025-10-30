@@ -27,6 +27,7 @@ import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
@@ -152,9 +153,26 @@ fun SwissTravelApp(
     ) {
       composable(Screen.TripInfo.route) { naveBackStackEntry ->
         val uid = naveBackStackEntry.arguments?.getString("uid")
-        TripInfoScreen(uid, onPastTrips = { navigationActions.goBack() })
+        TripInfoScreen(
+            uid,
+            onPastTrips = { navigationActions.goBack() },
+            onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
+            onEditTrip = {
+              Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
+            }
+        )
       }
     }
+      navigation(
+        startDestination = Screen.TripInfoMap.route,
+        route = Screen.TripInfoMap.name,
+      ) {
+          composable(Screen.TripInfoMap.route) {
+            TripInfoMapScreen(
+                onBack = {navigationActions.goBack()}
+            )
+          }
+      }
 
     // Map location screen
     navigation(
@@ -191,7 +209,7 @@ fun SwissTravelApp(
         startDestination = Screen.SelectedTripMap.route,
         route = Screen.SelectedTripMap.name,
     ) {
-      composable(Screen.SelectedTripMap.route) { NavigationMapScreen() }
+      composable(Screen.SelectedTripMap.route) { NavigationMapScreen(navigationActions) }
     }
   }
 }

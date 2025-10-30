@@ -42,6 +42,7 @@ sealed class Screen(
       const val name = "Trip Info"
     }
   }
+  object TripInfoMap : Screen(route = "trip_info_map", name = "Trip Info Map")
 
   // TODO change this when there is a new screen
 }

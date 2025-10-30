@@ -10,15 +10,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -29,14 +30,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoScreen(
     uid: String?,
     tripInfoViewModel: TripInfoViewModel = viewModel(),
-    onPastTrips: () -> Unit = {}
+    onPastTrips: () -> Unit = {},
+    onFullscreenClick: () -> Unit = {},
+    onEditTrip: () -> Unit = {}
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
@@ -54,31 +56,57 @@ fun TripInfoScreen(
 
   Scaffold(
       topBar = {
-        CenterAlignedTopAppBar(
-            title = {
-              Text(
-                  text = tripInfoUIState.name,
-                  style = MaterialTheme.typography.titleLarge,
-                  color = MaterialTheme.colorScheme.onBackground)
-            },
-            navigationIcon = {
-              IconButton(onClick = { onPastTrips() }, modifier = Modifier.testTag("back_button")) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back to My Trips",
-                    tint = MaterialTheme.colorScheme.onBackground)
-              }
-            })
+          TopAppBar(
+              title = {
+                Text(
+                    text = tripInfoUIState.name,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onBackground)
+              },
+              navigationIcon = {
+                IconButton(onClick = { onPastTrips() }, modifier = Modifier.testTag("back_button")) {
+                  Icon(
+                      imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                      contentDescription = "Back to My Trips",
+                      tint = MaterialTheme.colorScheme.onBackground)
+                }
+              },
+              actions = {
+                  IconButton(
+                      onClick = { onEditTrip() },
+                      modifier = Modifier.testTag("edit_button")
+                  ) {
+                      Icon(
+                          imageVector = Icons.Filled.Edit,
+                          contentDescription = "Edit trip",
+                          tint = MaterialTheme.colorScheme.onBackground
+                      )
+                  }
+              })
       }) { pd ->
         Column(
             modifier = Modifier.padding(pd).fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
+              val location1 = tripInfoUIState.locations.firstOrNull()?.name.orEmpty()
+              if (location1.isNotBlank()) {
+                Text(
+                    text = location1,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                            .testTag("location1_text"))
+              }
               Card(
-                  modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).height(270.dp),
+                  modifier = Modifier
+                      .fillMaxWidth()
+                      .padding(horizontal = 20.dp)
+                      .height(270.dp),
                   shape = RoundedCornerShape(12.dp),
                   elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
-                    NavigationMapScreen()
+                  TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
                   }
             }
       }
