@@ -60,7 +60,7 @@ data class AddressTextFieldState(
  *
  * @param locationRepository The repository used to fetch location suggestions.
  */
-class AddressTextFieldViewModel(
+open class AddressTextFieldViewModel(
     private val locationRepository: LocationRepository =
         NominatimLocationRepository(HttpClientProvider.client)
 ) : ViewModel(), AddressTextFieldViewModelContract {

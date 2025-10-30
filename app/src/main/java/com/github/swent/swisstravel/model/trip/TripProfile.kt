@@ -20,7 +20,9 @@ data class TripProfile(
     val preferredLocations: List<Location> = emptyList(),
     val preferences: List<Preference> = emptyList(),
     val adults: Int = 1,
-    val children: Int = 0
+    val children: Int = 0,
+    val arrivalLocation: Location? = null,
+    val departureLocation: Location? = null
 ) {
   /** Returns the total time of the trip in hours. */
   fun getTotalTime(): Double {

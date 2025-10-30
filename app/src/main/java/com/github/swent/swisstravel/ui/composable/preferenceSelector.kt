@@ -11,6 +11,7 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -35,9 +36,6 @@ object PreferenceSelectorTestTags {
   fun getTestTagButton(preference: Preference): String = preference.toTestTagString() + "Button"
 }
 
-/* Constants */
-const val BORDER_WIDTH = 1.5
-
 /**
  * A button that represents a [Preference].
  *
@@ -51,15 +49,19 @@ fun PreferenceButton(
     isChecked: Boolean,
     onCheckedChange: (Preference) -> Unit,
 ) {
-  val color =
+  val borderColor =
       if (isChecked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onBackground
+  val containerColor =
+      if (isChecked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
+  val textColor =
+      if (isChecked) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
+  val borderWidth = 1.5.dp
   Button(
       onClick = { onCheckedChange(preference) },
       shape = RoundedCornerShape(50),
       colors =
-          ButtonDefaults.buttonColors(
-              containerColor = MaterialTheme.colorScheme.onPrimary, contentColor = color),
-      border = BorderStroke(BORDER_WIDTH.dp, color),
+          ButtonDefaults.buttonColors(containerColor = containerColor, contentColor = textColor),
+      border = BorderStroke(borderWidth, borderColor),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagButton(preference))) {
         Text(text = stringResource(preference.displayStringRes()))
       }
@@ -121,12 +123,11 @@ fun PreferenceSelector(
       }
 }
 
+/** The content of the preview of the [PreferenceSelector] composable. */
 @Composable
 fun PreviewContentPreferenceSelector() {
   MaterialTheme {
-    val selected = remember {
-      androidx.compose.runtime.mutableStateOf(listOf(Preference.FOODIE, Preference.SPORTS))
-    }
+    val selected = remember { mutableStateOf(listOf(Preference.FOODIE, Preference.SPORTS)) }
 
     PreferenceSelector(
         isChecked = { pref -> selected.value.contains(pref) },

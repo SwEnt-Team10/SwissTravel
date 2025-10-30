@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.theme.navBarItemBackground
 
 /** Heavily inspired from the B3 of the SwEnt course at EPFL */
 
@@ -78,14 +77,14 @@ fun BottomNavigationMenu(
           onClick = { onTabSelected(tab) },
           colors =
               NavigationBarItemDefaults.colors(
-                  indicatorColor = navBarItemBackground,
+                  indicatorColor = MaterialTheme.colorScheme.onPrimary,
               ),
           icon = {
             if (tab == selectedTab) {
               Icon(
                   imageVector = tab.iconSelected,
                   contentDescription = tabName,
-                  tint = MaterialTheme.colorScheme.onPrimary)
+                  tint = MaterialTheme.colorScheme.primary)
             } else {
               Icon(
                   imageVector = tab.iconNotSelected,
