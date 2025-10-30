@@ -43,6 +43,9 @@
     <string name="end_date">End date</string>
     <string name="end_date_error">End date must be on or after start date.</string>
 
+    <!-- Trip Name -->
+    <string name="trip_name">How do you want to name your trip?</string>
+
     <!-- Arrival and Departure -->
     <string name="arrivalDeparture">Where are your arrival and departure destinations?</string>
     <string name="enterArrivalLocation">Enter your arrival location</string>
@@ -98,10 +101,11 @@
     <string name="name_desc">Name Z-A</string>
 
     <!-- Edit Trip -->
+    <string name="edit_trip">Edit Trip</string>
     <string name="travelers">Travelers</string>
     <string name="editing_trip_title">Editing %1$s</string>
     <string name="preferences">Preferences</string>
-    <string name="confirm_changes">Confirm Changes</string>
+    <string name="confirm_changes">Save</string>
     <string name="delete_trip">Delete Trip</string>
     <string name="confirm_deletion">Confirm Deletion</string>
     <string name="delete_trip_prompt">Are you sure you want to delete this trip? This action cannot be undone.</string>

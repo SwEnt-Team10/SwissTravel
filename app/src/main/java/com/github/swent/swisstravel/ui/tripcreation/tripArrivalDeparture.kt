@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,6 +30,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
+import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
 import com.mapbox.maps.extension.style.expressions.dsl.generated.string
 
@@ -59,10 +61,10 @@ object ArrivalDepartureTestTags {
 fun ArrivalDepartureScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
+    onPrevious: () -> Unit = {},
     arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm"),
     departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
 ) {
-
   // Use different separate view models for arrival and departure
   val arrivalState by arrivalAddressVm.addressState.collectAsState()
   val departureState by departureAddressVm.addressState.collectAsState()
@@ -79,57 +81,57 @@ fun ArrivalDepartureScreen(
     departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
   }
 
-  Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-    Column(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceBetween) {
-          Column(horizontalAlignment = Alignment.CenterHorizontally) {
+  Scaffold(
+      topBar = { TopBar(onClick = onPrevious, title = "") },
+  ) { padding ->
+    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+      Column(
+          modifier = Modifier.fillMaxSize().padding(padding),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.SpaceBetween) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-            // --- Title ---
-            Text(
-                text = stringResource(R.string.arrivalDeparture),
-                textAlign = TextAlign.Center,
-                style =
-                    MaterialTheme.typography.headlineMedium.copy(
-                        fontWeight = FontWeight.Bold,
-                    ))
+              // --- Title ---
+              Text(
+                  text = stringResource(R.string.arrivalDeparture),
+                  textAlign = TextAlign.Center,
+                  style =
+                      MaterialTheme.typography.headlineMedium.copy(
+                          fontWeight = FontWeight.Bold,
+                      ))
 
-            Spacer(modifier = Modifier.height(32.dp))
+              Spacer(modifier = Modifier.height(32.dp))
 
-            // --- Arrival Destination (autocomplete) ---
-            AddressAutocompleteTextField(
-                addressTextFieldViewModel = arrivalAddressVm,
-                modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
-                name = stringResource(R.string.arrival_location))
-            Spacer(modifier = Modifier.height(50.dp))
+              // --- Arrival Destination (autocomplete) ---
+              AddressAutocompleteTextField(
+                  addressTextFieldViewModel = arrivalAddressVm,
+                  modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
+                  name = stringResource(R.string.arrival_location))
+              Spacer(modifier = Modifier.height(50.dp))
 
-            // --- Departure Destination (autocomplete) ---
-            AddressAutocompleteTextField(
-                addressTextFieldViewModel = departureAddressVm,
-                modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
-                name = stringResource(R.string.departure_location))
+              // --- Departure Destination (autocomplete) ---
+              AddressAutocompleteTextField(
+                  addressTextFieldViewModel = departureAddressVm,
+                  modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
+                  name = stringResource(R.string.departure_location))
 
-            Spacer(modifier = Modifier.height(32.dp))
+              Spacer(modifier = Modifier.height(32.dp))
+            }
+
+            // --- Next button ---
+            Button(
+                modifier = Modifier.testTag(NEXT_BUTTON),
+                onClick = { onNext() },
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary)) {
+                  Text(
+                      stringResource(R.string.next),
+                      color = MaterialTheme.colorScheme.onPrimary,
+                      style = MaterialTheme.typography.titleMedium)
+                }
           }
-
-          // --- Done button ---
-          Button(
-              modifier = Modifier.testTag(NEXT_BUTTON),
-              onClick = {
-                // The viewModel's saveTrip() function uses the arrival and departure LiveData
-                // which are kept updated via the LaunchedEffects above.
-                viewModel.saveTrip()
-                onNext()
-              },
-              colors =
-                  ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-                Text(
-                    stringResource(R.string.done),
-                    color = MaterialTheme.colorScheme.onPrimary,
-                    style = MaterialTheme.typography.titleMedium)
-              }
-        }
+    }
   }
 }
 
