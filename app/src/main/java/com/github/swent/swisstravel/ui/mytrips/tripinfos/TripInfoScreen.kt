@@ -30,6 +30,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+
 /**
  * Screen that displays the information of a specific trip
  *
@@ -48,74 +49,73 @@ fun TripInfoScreen(
     onFullscreenClick: () -> Unit = {},
     onEditTrip: () -> Unit = {}
 ) {
-  LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
+    LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
-  val tripInfoUIState by tripInfoViewModel.uiState.collectAsState()
-  val errorMsg = tripInfoUIState.errorMsg
+    val tripInfoUIState by tripInfoViewModel.uiState.collectAsState()
+    val errorMsg = tripInfoUIState.errorMsg
 
-  val context = LocalContext.current
+    val context = LocalContext.current
 
-  LaunchedEffect(errorMsg) {
-    if (errorMsg != null) {
-      Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
-      tripInfoViewModel.clearErrorMsg()
+    LaunchedEffect(errorMsg) {
+        if (errorMsg != null) {
+            Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+            tripInfoViewModel.clearErrorMsg()
+        }
     }
-  }
 
-  Scaffold(
-      topBar = {
-          TopAppBar(
-              title = {
-                Text(
-                    text = tripInfoUIState.name,
-                    style = MaterialTheme.typography.titleLarge,
-                    color = MaterialTheme.colorScheme.onBackground)
-              },
-              navigationIcon = {
-                IconButton(onClick = { onPastTrips() }, modifier = Modifier.testTag("back_button")) {
-                  Icon(
-                      imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                      contentDescription = "Back to My Trips",
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-              },
-              actions = {
-                  IconButton(
-                      onClick = { onEditTrip() },
-                      modifier = Modifier.testTag("edit_button")
-                  ) {
-                      Icon(
-                          imageVector = Icons.Filled.Edit,
-                          contentDescription = "Edit trip",
-                          tint = MaterialTheme.colorScheme.onBackground
-                      )
-                  }
-              })
-      }) { pd ->
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = tripInfoUIState.name,
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.onBackground)
+                },
+                navigationIcon = {
+                    IconButton(onClick = { onPastTrips() }, modifier = Modifier.testTag(TestTags.BACK_BUTTON)) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Back to My Trips",
+                            tint = MaterialTheme.colorScheme.onBackground)
+                    }
+                },
+                actions = {
+                    IconButton(
+                        onClick = { onEditTrip() },
+                        modifier = Modifier.testTag(TestTags.EDIT_BUTTON)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Edit,
+                            contentDescription = "Edit trip",
+                            tint = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+                })
+        }) { pd ->
         Column(
             modifier = Modifier.padding(pd).fillMaxSize(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally) {
-              val location1 = tripInfoUIState.locations.firstOrNull()?.name.orEmpty()
-              if (location1.isNotBlank()) {
-                Text(
-                    text = location1,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = 20.dp, vertical = 8.dp)
-                            .testTag("location1_text"))
-              }
-              Card(
-                  modifier = Modifier
-                      .fillMaxWidth()
-                      .padding(horizontal = 20.dp)
-                      .height(270.dp),
-                  shape = RoundedCornerShape(12.dp),
-                  elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
-                  TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
-                  }
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .height(270.dp)
+                    .testTag(TestTags.TRIP_CARD),
+                shape = RoundedCornerShape(12.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
+                TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
             }
-      }
+        }
+    }
+}
+
+/**
+ * Test tags for TripInfoScreen composable
+ */
+object TestTags {
+    const val BACK_BUTTON = "backButton"
+    const val EDIT_BUTTON = "editButton"
+    const val TRIP_CARD = "tripCard"
 }
