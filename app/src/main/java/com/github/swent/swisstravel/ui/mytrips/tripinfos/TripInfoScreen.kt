@@ -32,6 +32,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 /**
+ * Test tags for TripInfoScreen composable
+ */
+object TripInfoTestTags {
+    const val BACK_BUTTON = "backButton"
+    const val EDIT_BUTTON = "editButton"
+    const val TRIP_CARD = "tripCard"
+}
+
+/**
  * Screen that displays the information of a specific trip
  *
  * @param uid the unique identifier of the trip
@@ -73,7 +82,8 @@ fun TripInfoScreen(
                         color = MaterialTheme.colorScheme.onBackground)
                 },
                 navigationIcon = {
-                    IconButton(onClick = { onPastTrips() }, modifier = Modifier.testTag(TestTags.BACK_BUTTON)) {
+                    IconButton(onClick = { onPastTrips() }, modifier = Modifier.testTag(
+                        TripInfoTestTags.BACK_BUTTON)) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back to My Trips",
@@ -83,7 +93,7 @@ fun TripInfoScreen(
                 actions = {
                     IconButton(
                         onClick = { onEditTrip() },
-                        modifier = Modifier.testTag(TestTags.EDIT_BUTTON)
+                        modifier = Modifier.testTag(TripInfoTestTags.EDIT_BUTTON)
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Edit,
@@ -102,7 +112,7 @@ fun TripInfoScreen(
                     .fillMaxWidth()
                     .padding(horizontal = 20.dp)
                     .height(270.dp)
-                    .testTag(TestTags.TRIP_CARD),
+                    .testTag(TripInfoTestTags.TRIP_CARD),
                 shape = RoundedCornerShape(12.dp),
                 elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
                 TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
@@ -111,11 +121,3 @@ fun TripInfoScreen(
     }
 }
 
-/**
- * Test tags for TripInfoScreen composable
- */
-object TestTags {
-    const val BACK_BUTTON = "backButton"
-    const val EDIT_BUTTON = "editButton"
-    const val TRIP_CARD = "tripCard"
-}

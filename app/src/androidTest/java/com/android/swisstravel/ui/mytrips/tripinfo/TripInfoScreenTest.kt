@@ -1,6 +1,6 @@
 package com.android.swisstravel.ui.mytrips.tripinfo
 
-import com.github.swent.swisstravel.ui.mytrips.tripinfos.TestTags
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapTestTags
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoTestTags
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -35,15 +36,15 @@ class TripInfoScreenTest {
         }
 
         // Verify that UI elements are displayed
-        composeRule.onNodeWithTag(TestTags.BACK_BUTTON).assertIsDisplayed()
-        composeRule.onNodeWithTag(TestTags.EDIT_BUTTON).assertIsDisplayed()
-        composeRule.onNodeWithTag(TestTags.TRIP_CARD).assertIsDisplayed()
+        composeRule.onNodeWithTag(TripInfoMapTestTags.BACK_BUTTON).assertIsDisplayed()
+        composeRule.onNodeWithTag(TripInfoTestTags.EDIT_BUTTON).assertIsDisplayed()
+        composeRule.onNodeWithTag(TripInfoTestTags.TRIP_CARD).assertIsDisplayed()
 
         // Click buttons and verify callbacks
-        composeRule.onNodeWithTag(TestTags.BACK_BUTTON).performClick()
+        composeRule.onNodeWithTag(TripInfoMapTestTags.BACK_BUTTON).performClick()
         composeRule.runOnIdle { assertTrue("onPastTrips should have been called", pastClicked) }
 
-        composeRule.onNodeWithTag(TestTags.EDIT_BUTTON).performClick()
+        composeRule.onNodeWithTag(TripInfoTestTags.EDIT_BUTTON).performClick()
         composeRule.runOnIdle { assertTrue("onEditTrip should have been called", editClicked) }
     }
 }

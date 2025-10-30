@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
@@ -88,6 +89,7 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
   }
 }
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun SwissTravelApp(
     context: Context = LocalContext.current,
