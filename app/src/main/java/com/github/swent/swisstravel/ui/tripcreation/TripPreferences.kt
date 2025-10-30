@@ -119,7 +119,6 @@ fun TripPreferencesScreen(
                     // --- Next button ---
                     Button(
                         onClick = {
-                          viewModel.saveTrip()
                           onNext()
                         },
                         colors =
