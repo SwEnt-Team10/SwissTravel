@@ -38,7 +38,7 @@ sealed class Screen(
   object TripSettings3 : Screen(route = "trip_settings_3", name = "Trip Settings 3")
 
   object TripSettingsArrivalDeparture :
-      Screen(route = "arrival_departure", name = "Arrival/Departure")
+      Screen(route = "arrival_departure", name = "Arrival_Departure")
 
   object EditTrip : Screen(route = "edit_trip/{tripId}", name = "Edit trip") {
     fun createRoute(tripId: String) = "edit_trip/${URLEncoder.encode(tripId, "UTF-8")}"

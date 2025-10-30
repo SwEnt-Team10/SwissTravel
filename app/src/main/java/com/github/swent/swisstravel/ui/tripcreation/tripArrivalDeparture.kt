@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
+import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
 
@@ -57,8 +58,8 @@ object ArrivalDepartureTestTags {
 fun ArrivalDepartureScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
-    arrivalAddressVm: AddressTextFieldViewModelContract = viewModel(key = "arrivalAddressVm"),
-    departureAddressVm: AddressTextFieldViewModelContract = viewModel(key = "departureAddressVm")
+    arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm"),
+    departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
 ) {
 
   // Use different separate view models for arrival and departure

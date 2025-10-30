@@ -116,15 +116,18 @@ fun TripPreferencesScreen(
                           })
                     }
 
-                    // --- Done button ---
+                    // --- Next button ---
                     Button(
-                        onClick = { viewModel.saveTrip() },
+                        onClick = {
+                            viewModel.saveTrip()
+                            onNext()
+                                  },
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
                           Text(
-                              stringResource(R.string.done),
+                              stringResource(R.string.next),
                               color = MaterialTheme.colorScheme.onPrimary,
                               style = MaterialTheme.typography.titleMedium)
                         }
