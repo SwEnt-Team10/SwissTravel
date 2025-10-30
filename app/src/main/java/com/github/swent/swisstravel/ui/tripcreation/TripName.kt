@@ -33,6 +33,13 @@ import com.github.swent.swisstravel.ui.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
 
+/**
+ * A screen to edit the name of a trip.
+ *
+ * @param viewModel The [TripSettingsViewModel] to use for this screen.
+ * @param onNext A callback to invoke when the user has finished editing the trip name.
+ * @param onPrevious A callback to invoke when the user wants to go back to the previous screen.
+ */
 @Composable
 fun TripNameScreen(
     viewModel: TripSettingsViewModel = viewModel(),

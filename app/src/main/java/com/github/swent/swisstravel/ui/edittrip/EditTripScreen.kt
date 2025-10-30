@@ -42,7 +42,8 @@ object EditTripScreenTestTags {
  *
  * @param tripId The ID of the trip to edit.
  * @param onBack Called when the back button is pressed.
- * @param onSavedOrDelete Called when the trip is saved or deleted.
+ * @param onSaved Called when the trip is saved.
+ * @param onDelete Called when the trip is deleted.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
