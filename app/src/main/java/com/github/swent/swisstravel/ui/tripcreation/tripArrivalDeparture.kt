@@ -113,19 +113,14 @@ fun ArrivalDepartureScreen(
             Spacer(modifier = Modifier.height(32.dp))
           }
 
-          // --- Done button ---
+          // --- Next button ---
           Button(
               modifier = Modifier.testTag(NEXT_BUTTON),
-              onClick = {
-                // The viewModel's saveTrip() function uses the arrival and departure LiveData
-                // which are kept updated via the LaunchedEffects above.
-                viewModel.saveTrip()
-                onNext()
-              },
+              onClick = { onNext() },
               colors =
                   ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
                 Text(
-                    stringResource(R.string.done),
+                    stringResource(R.string.next),
                     color = MaterialTheme.colorScheme.onPrimary,
                     style = MaterialTheme.typography.titleMedium)
               }
