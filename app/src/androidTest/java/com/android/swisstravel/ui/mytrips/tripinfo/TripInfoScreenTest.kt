@@ -5,7 +5,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapTestTags
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoTestTags
 import org.junit.Assert.assertTrue
@@ -31,12 +30,12 @@ class TripInfoScreenTest {
     }
 
     // Verify that UI elements are displayed
-    composeRule.onNodeWithTag(TripInfoMapTestTags.BACK_BUTTON).assertIsDisplayed()
+    composeRule.onNodeWithTag(TripInfoTestTags.BACK_BUTTON).assertIsDisplayed()
     composeRule.onNodeWithTag(TripInfoTestTags.EDIT_BUTTON).assertIsDisplayed()
     composeRule.onNodeWithTag(TripInfoTestTags.TRIP_CARD).assertIsDisplayed()
 
     // Click buttons and verify callbacks
-    composeRule.onNodeWithTag(TripInfoMapTestTags.BACK_BUTTON).performClick()
+    composeRule.onNodeWithTag(TripInfoTestTags.BACK_BUTTON).performClick()
     composeRule.runOnIdle { assertTrue("onPastTrips should have been called", pastClicked) }
 
     composeRule.onNodeWithTag(TripInfoTestTags.EDIT_BUTTON).performClick()

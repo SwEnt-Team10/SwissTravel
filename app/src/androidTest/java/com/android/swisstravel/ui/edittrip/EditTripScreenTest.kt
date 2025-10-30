@@ -106,7 +106,7 @@ class EditTripScreenTest {
             editTripViewModel = vm,
             onBack = {},
             onSaved = { navigated++ },
-            onDelete = {})
+            onDelete = { navigated++ })
       }
     }
 
