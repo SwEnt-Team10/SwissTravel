@@ -3,12 +3,13 @@ package com.android.swisstravel.ui.geocoding
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldState
+import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
 /** A fake implementation of [AddressTextFieldViewModelContract] for testing purposes. */
-class FakeAddressTextFieldViewModel : AddressTextFieldViewModelContract {
+class FakeAddressTextFieldViewModel : AddressTextFieldViewModel() {
 
   private val _state =
       MutableStateFlow(

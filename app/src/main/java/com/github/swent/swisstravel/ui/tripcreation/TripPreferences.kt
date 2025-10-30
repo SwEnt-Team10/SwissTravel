@@ -44,12 +44,12 @@ object TripPreferencesTestTags {
  * Screen where users can set their trip preferences.
  *
  * @param viewModel ViewModel to handle the trip settings logic.
- * @param onDone Callback to be invoked when the user is done setting preferences.
+ * @param onNext Callback to be invoked when the user is done setting preferences.
  */
 @Composable
 fun TripPreferencesScreen(
     viewModel: TripSettingsViewModel = viewModel(),
-    onDone: () -> Unit = {},
+    onNext: () -> Unit = {},
     onPrevious: () -> Unit = {}
 ) {
   val tripSettings by viewModel.tripSettings.collectAsState()
@@ -60,8 +60,8 @@ fun TripPreferencesScreen(
     viewModel.validationEvents.collectLatest { event ->
       when (event) {
         is ValidationEvent.SaveSuccess -> {
-          Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-          onDone()
+          // Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
+          onNext()
         }
         is ValidationEvent.SaveError -> {
           Toast.makeText(context, "${R.string.error}: ${event.message}", Toast.LENGTH_LONG).show()
@@ -116,15 +116,18 @@ fun TripPreferencesScreen(
                           })
                     }
 
-                    // --- Done button ---
+                    // --- Next button ---
                     Button(
-                        onClick = { viewModel.saveTrip() },
+                        onClick = {
+                          viewModel.saveTrip()
+                          onNext()
+                        },
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary),
                         modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
                           Text(
-                              stringResource(R.string.done),
+                              stringResource(R.string.next),
                               color = MaterialTheme.colorScheme.onPrimary,
                               style = MaterialTheme.typography.titleMedium)
                         }

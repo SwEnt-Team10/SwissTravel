@@ -43,6 +43,13 @@
     <string name="end_date">End date</string>
     <string name="end_date_error">End date must be on or after start date.</string>
 
+    <!-- Arrival and Departure -->
+    <string name="arrivalDeparture">Where are your arrival and departure destinations?</string>
+    <string name="enterArrivalLocation">Enter your arrival location</string>
+    <string name="enterDepartureLocation">Enter your departure location</string>
+    <string name="arrival_location">Arrival location</string>
+    <string name="departure_location">Departure location"</string>
+
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
     <string name="where_starting">Where are you starting?</string>
