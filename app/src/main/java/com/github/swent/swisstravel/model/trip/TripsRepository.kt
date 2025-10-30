@@ -34,6 +34,15 @@ interface TripsRepository {
   suspend fun addTrip(trip: Trip)
 
   /**
+   * Edits an existing Trip in the repository.
+   *
+   * @param tripId The unique identifier of the Trip to edit.
+   * @param updatedTrip The updated Trip object.
+   * @throws Exception if the Trip is not found.
+   */
+  suspend fun editTrip(tripId: String, updatedTrip: Trip)
+
+  /**
    * Deletes a Trip from the repository.
    *
    * @param tripId The unique identifier of the Trip to delete.

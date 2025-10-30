@@ -16,7 +16,6 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -83,15 +82,18 @@ fun BottomNavigationMenu(
               ),
           icon = {
             if (tab == selectedTab) {
-              Icon(imageVector = tab.iconSelected, contentDescription = tabName, tint = Color.White)
+              Icon(
+                  imageVector = tab.iconSelected,
+                  contentDescription = tabName,
+                  tint = MaterialTheme.colorScheme.onPrimary)
             } else {
               Icon(
                   imageVector = tab.iconNotSelected,
                   contentDescription = tabName,
-                  tint = Color.White)
+                  tint = MaterialTheme.colorScheme.onPrimary)
             }
           },
-          label = { Text(tabName, color = Color.White) },
+          label = { Text(tabName, color = MaterialTheme.colorScheme.onPrimary) },
           alwaysShowLabel = true)
     }
   }

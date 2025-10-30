@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.navigation
 
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import java.net.URLEncoder
 
 /** Heavily inspired from the B3 of the SwEnt course at EPFL */
 
@@ -36,6 +37,7 @@ sealed class Screen(
 
   object TripSettings3 : Screen(route = "trip_settings_3", name = "Trip Settings 3")
 
+<<<<<<< HEAD
   data class TripInfo(val uid: String) : Screen(route = "trip_info/${uid}", name = "Trip Info") {
     companion object {
       const val route = "trip_info/{uid}"
@@ -43,6 +45,11 @@ sealed class Screen(
     }
   }
   object TripInfoMap : Screen(route = "trip_info_map", name = "Trip Info Map")
+=======
+  object EditTrip : Screen(route = "edit_trip/{tripId}", name = "Edit trip") {
+    fun createRoute(tripId: String) = "edit_trip/${URLEncoder.encode(tripId, "UTF-8")}"
+  }
+>>>>>>> main
 
   // TODO change this when there is a new screen
 }
@@ -79,6 +86,13 @@ class NavigationActions(
       } else {
         restoreState = true
       }
+    }
+  }
+
+  fun navigateToEditTrip(tripId: String) {
+    navController.navigate(Screen.EditTrip.createRoute(tripId)) {
+      launchSingleTop = true
+      restoreState = true
     }
   }
 

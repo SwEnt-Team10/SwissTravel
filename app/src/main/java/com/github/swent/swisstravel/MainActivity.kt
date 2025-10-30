@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
@@ -16,14 +17,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
@@ -34,10 +38,10 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.ui.tripsettings.TripDateScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripPreferencesScreen
-import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
-import com.github.swent.swisstravel.ui.tripsettings.TripTravelersScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
@@ -93,6 +97,29 @@ fun SwissTravelApp(
   val startDestination =
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
       else Screen.CurrentTrip.name
+
+  val navBackStackEntry by navController.currentBackStackEntryAsState()
+  val currentRoute = navBackStackEntry?.destination?.route
+  /* System back button handler */
+  BackHandler {
+    when {
+      /* If the current route is authentication then quit the app */
+      currentRoute == Screen.Auth.route -> {
+        (context as? ComponentActivity)?.finish()
+      }
+
+      /* If the stack is not empty, go back to the previous screen */
+      navController.previousBackStackEntry != null -> {
+        navController.popBackStack()
+      }
+
+      /* If the stack is empty, do nothing */
+      else -> {
+        // Do nothing (prevents accidental app exit)
+      }
+    }
+  }
+
   NavHost(navController = navController, startDestination = startDestination) {
 
     // Sign-in screen
@@ -139,12 +166,27 @@ fun SwissTravelApp(
     ) {
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
+<<<<<<< HEAD
             onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it.uid)) },
+=======
+            onSelectTrip = { tripId -> navigationActions.navigateToEditTrip(tripId) },
+>>>>>>> main
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
             navigationActions = navigationActions)
       }
+
+      composable(
+          route = Screen.EditTrip.route,
+          arguments = listOf(navArgument("tripId") { type = NavType.StringType })) {
+              navBackStackEntry ->
+            val tripId = requireNotNull(navBackStackEntry.arguments?.getString("tripId"))
+            EditTripScreen(
+                tripId = tripId,
+                onBack = { navController.popBackStack() },
+                onSavedOrDelete = { navController.popBackStack() })
+          }
     }
     // Trip info screen
     navigation(
@@ -190,17 +232,20 @@ fun SwissTravelApp(
       composable(Screen.TripSettings1.route) {
         TripDateScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings2) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.TripSettings2.route) {
         TripTravelersScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings3) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettings3) },
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.TripSettings3.route) {
         TripPreferencesScreen(
             viewModel = tripSettingsViewModel(navController),
-            onDone = { navigationActions.navigateTo(Screen.MyTrips) })
+            onDone = { navigationActions.navigateTo(Screen.MyTrips) },
+            onPrevious = { navigationActions.goBack() })
       }
     }
 

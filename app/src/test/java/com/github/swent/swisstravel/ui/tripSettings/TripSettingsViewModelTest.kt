@@ -1,12 +1,12 @@
-package com.android.swisstravel.ui.tripSettings
+package com.github.swent.swisstravel.ui.tripSettings
 
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.ui.tripsettings.TripSettingsViewModel
-import com.github.swent.swisstravel.ui.tripsettings.ValidationEvent
+import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -185,10 +185,14 @@ class TripSettingsViewModelTest {
     override suspend fun deleteTrip(tripId: String) {
       /* no-op for tests */
     }
+
+    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+      /* no-op for tests */
+    }
   }
 
   private class FakeUserRepository : UserRepository {
-    override suspend fun getCurrentUser(): com.github.swent.swisstravel.model.user.User {
+    override suspend fun getCurrentUser(): User {
       return User(
           uid = "test-user",
           name = "Test User",
