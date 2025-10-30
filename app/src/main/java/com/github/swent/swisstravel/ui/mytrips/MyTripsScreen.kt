@@ -25,6 +25,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -33,10 +34,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
@@ -103,6 +107,18 @@ fun MyTripsScreen(
   val context = LocalContext.current
   val uiState by myTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
+
+  val lifecycleOwner = LocalLifecycleOwner.current
+
+  // This piece of code is to make sure that the trips recompose after creating a trip, had issues
+  // before
+  DisposableEffect(lifecycleOwner) {
+    val observer = LifecycleEventObserver { _, e ->
+      if (e == Lifecycle.Event.ON_RESUME) myTripsViewModel.refreshUIState()
+    }
+    lifecycleOwner.lifecycle.addObserver(observer)
+    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+  }
 
   // Refresh trips when entering the screen
   LaunchedEffect(Unit) { myTripsViewModel.refreshUIState() }

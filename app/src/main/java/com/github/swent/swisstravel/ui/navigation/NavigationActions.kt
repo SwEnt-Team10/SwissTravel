@@ -84,6 +84,11 @@ class NavigationActions(
     }
   }
 
+  /**
+   * Navigate to the selected trip edit screen
+   *
+   * @param tripId the id of the trip
+   */
   fun navigateToEditTrip(tripId: String) {
     navController.navigate(Screen.EditTrip.createRoute(tripId)) {
       launchSingleTop = true

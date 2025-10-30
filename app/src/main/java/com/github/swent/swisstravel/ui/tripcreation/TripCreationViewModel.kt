@@ -74,7 +74,9 @@ class TripSettingsViewModel(
   }
 
   fun updateDates(start: LocalDate, end: LocalDate) {
-    _tripSettings.update { it.copy(date = TripDate(start, end)) }
+    _tripSettings.update {
+      it.copy(name = "Trip from ${start.toString()}", date = TripDate(start, end))
+    }
   }
 
   fun updateTravelers(adults: Int, children: Int) {
