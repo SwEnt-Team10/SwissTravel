@@ -1,8 +1,8 @@
 package com.github.swent.swisstravel.ui.currenttrip
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -35,7 +35,7 @@ fun SetCurrentTripScreen(
       modifier = Modifier.testTag(SetCurrentTripTestTags.SET_CURRENT_TRIP_SCREEN)) { pd ->
         val uiState by viewModel.uiState.collectAsState()
 
-        Surface(modifier = Modifier.padding(pd)) {
+        Box(modifier = Modifier.padding(pd)) {
           SortedTripList(
               title = stringResource(R.string.your_trips),
               trips = uiState.upcomingTrips,

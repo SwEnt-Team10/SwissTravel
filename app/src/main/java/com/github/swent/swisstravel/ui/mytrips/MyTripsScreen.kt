@@ -3,7 +3,6 @@ package com.github.swent.swisstravel.ui.mytrips
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -18,7 +17,6 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -49,11 +47,9 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripList
-import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 /**
@@ -325,13 +321,13 @@ private fun CurrentTripSection(
 
   Spacer(modifier = Modifier.height(4.dp))
 
-  Box(contentAlignment = Alignment.TopCenter) {
-    Button(
-        onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
-        modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
-          Text(stringResource(R.string.enter_map))
-        }
-  }
+  //  Box(contentAlignment = Alignment.TopCenter) {
+  //    Button(
+  //        onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
+  //        modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
+  //          Text(stringResource(R.string.enter_map))
+  //        }
+  //  }
 
   Spacer(modifier = Modifier.height(4.dp))
 
