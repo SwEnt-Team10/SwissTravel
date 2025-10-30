@@ -1,8 +1,7 @@
-package com.github.swent.swisstravel.ui.tripsettings
+package com.github.swent.swisstravel.ui.tripcreation
 
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 
 @Composable
 /**
