@@ -33,7 +33,6 @@ import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContra
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
-import com.mapbox.maps.extension.style.expressions.dsl.generated.string
 
 /** Test tags for UI tests to identify components within the Arrival/Departure screen. */
 object ArrivalDepartureTestTags {
