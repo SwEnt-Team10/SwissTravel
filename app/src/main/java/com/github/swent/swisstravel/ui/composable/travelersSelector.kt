@@ -36,7 +36,7 @@ fun TravelersSelector(
         onDecrement = { if (adults > 1) onAdultsChange(adults - 1) },
         enableButton = adults > 1)
 
-    Spacer(modifier = Modifier.height(96.dp))
+    Spacer(modifier = Modifier.height(50.dp))
 
     Counter(
         label = stringResource(R.string.nb_children),

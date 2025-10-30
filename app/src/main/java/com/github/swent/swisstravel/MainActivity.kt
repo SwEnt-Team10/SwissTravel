@@ -180,7 +180,8 @@ fun SwissTravelApp(
             EditTripScreen(
                 tripId = tripId,
                 onBack = { navController.popBackStack() },
-                onSavedOrDelete = { navController.popBackStack() })
+                onSaved = { navController.popBackStack() },
+                onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
           }
     }
 
