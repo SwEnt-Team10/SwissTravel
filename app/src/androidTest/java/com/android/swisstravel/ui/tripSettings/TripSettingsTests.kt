@@ -57,7 +57,7 @@ class TripSettingsTests : SwissTravelTest() {
 
   @Test
   fun tripDateScreenTest() {
-    composeTestRule.setContent { SwissTravelTheme { TripDateScreen(onNext = {}) } }
+    composeTestRule.setContent { TripDateScreen(onNext = {}) }
     composeTestRule.onNodeWithTag(TripDateTestTags.TRIP_DATE_SCREEN).assertExists()
     composeTestRule.checkTopBarIsDisplayed()
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
@@ -65,7 +65,7 @@ class TripSettingsTests : SwissTravelTest() {
 
   @Test
   fun tripPreferencesScreenTest() {
-    composeTestRule.setContent { SwissTravelTheme { TripPreferencesScreen(onDone = {}) } }
+    composeTestRule.setContent { TripPreferencesScreen(onNext = {}) }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)
