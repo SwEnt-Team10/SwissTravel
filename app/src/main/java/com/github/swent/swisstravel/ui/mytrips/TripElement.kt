@@ -85,8 +85,7 @@ fun TripElement(
                   width = if (isSelected) 3.dp else 0.dp,
                   color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                   shape = RoundedCornerShape(16.dp)),
-      colors =
-          CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
       shape = MaterialTheme.shapes.large) {
         Row(
             modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
@@ -107,7 +106,7 @@ fun TripElement(
                 Text(
                     text = trip.name,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    color = MaterialTheme.colorScheme.onSurface)
               }
 
               if (isSelectionMode) {

@@ -1,7 +1,11 @@
 package com.android.swisstravel.ui.mytrips
 
+import android.content.Context
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.platform.app.InstrumentationRegistry
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
@@ -9,13 +13,42 @@ import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.mytrips.TripElementTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.google.firebase.Timestamp
+import kotlin.test.DefaultAsserter.assertTrue
+import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
+
+/** Fake TripsRepository to feed the ViewModel without touching Firestore. */
+class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()) :
+    TripsRepository {
+
+  override suspend fun getAllTrips(): List<Trip> = trips
+
+  override suspend fun getTrip(tripId: String): Trip {
+    return trips.find { it.uid == tripId } ?: throw Exception("Trip not found: $tripId")
+  }
+
+  override suspend fun addTrip(trip: Trip) {
+    trips.add(trip)
+  }
+
+  override suspend fun deleteTrip(tripId: String) {
+    trips.removeIf { it.uid == tripId }
+  }
+
+  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+    // No-op for testing
+  }
+
+  override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
+}
 
 class MyTripsScreenEmulatorTest {
 
   @get:Rule val composeTestRule = createComposeRule()
   private val now = Timestamp.now()
+  val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
   private val currentTrip =
       Trip(
@@ -47,7 +80,7 @@ class MyTripsScreenEmulatorTest {
 
   @Test
   fun displaysCurrentAndUpcomingTrips_usingRealViewModel() {
-    val fakeRepo = FakeTripsRepository(listOf(currentTrip, upcomingTrip))
+    val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip, upcomingTrip))
     val viewModel = MyTripsViewModel(fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
@@ -67,7 +100,7 @@ class MyTripsScreenEmulatorTest {
 
   @Test
   fun displaysEmptyMessagesWhenNoTrips() {
-    val viewModel = MyTripsViewModel(FakeTripsRepository(emptyList()))
+    val viewModel = MyTripsViewModel(FakeTripsRepository())
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -80,7 +113,7 @@ class MyTripsScreenEmulatorTest {
   @Test
   fun pastTripsButton_clickTriggersCallback() {
     var clicked = false
-    val viewModel = MyTripsViewModel(FakeTripsRepository(emptyList()))
+    val viewModel = MyTripsViewModel(FakeTripsRepository())
 
     composeTestRule.setContent {
       SwissTravelTheme {
@@ -90,6 +123,134 @@ class MyTripsScreenEmulatorTest {
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).performClick()
     assert(clicked)
+  }
+
+  @Test
+  fun addTripButton_triggersAddTripCallback() {
+    var createClicked = false
+    val viewModel = MyTripsViewModel(FakeTripsRepository())
+
+    composeTestRule.setContent {
+      SwissTravelTheme {
+        MyTripsScreen(myTripsViewModel = viewModel, onCreateTrip = { createClicked = true })
+      }
+    }
+
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON).performClick()
+    assert(createClicked)
+  }
+
+  @Test
+  fun addingTrip_updatesUpcomingTripsList() {
+    val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
+    val viewModel = MyTripsViewModel(fakeRepo)
+
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+
+    // Before adding, no upcoming trips
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS).assertDoesNotExist()
+
+    // Add a new upcoming trip inside a coroutine
+    val newUpcomingTrip =
+        Trip(
+            "3",
+            "New Upcoming",
+            "ownerX",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(
+                startDate = Timestamp(now.seconds + 7200, 0),
+                endDate = Timestamp(now.seconds + 10800, 0),
+                preferredLocations = emptyList(),
+                preferences = emptyList()))
+
+    runBlocking { fakeRepo.addTrip(newUpcomingTrip) }
+
+    // Trigger recomposition and refresh state
+    composeTestRule.runOnIdle { viewModel.refreshUIState() }
+
+    composeTestRule.waitForIdle()
+
+    // Check that the new trip appears
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(newUpcomingTrip))
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun sortingUpcomingTrips_worksCorrectly() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val now = Timestamp.now()
+
+    val tripA =
+        Trip(
+            "a",
+            "Alpha",
+            "ownerX",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(
+                startDate = Timestamp(now.seconds + 10800, 0), // later
+                endDate = Timestamp(now.seconds + 14400, 0),
+                preferredLocations = emptyList(),
+                preferences = emptyList()))
+
+    val tripB =
+        Trip(
+            "b",
+            "Beta",
+            "ownerX",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(
+                startDate = Timestamp(now.seconds + 7200, 0), // earlier
+                endDate = Timestamp(now.seconds + 10800, 0),
+                preferredLocations = emptyList(),
+                preferences = emptyList()))
+
+    val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
+    val viewModel = MyTripsViewModel(fakeRepo)
+
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+
+    composeTestRule.waitForIdle()
+
+    // Initial order (START_DATE_ASC expected)
+    val tripANodeInitial =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripA))
+            .fetchSemanticsNode()
+    val tripBNodeInitial =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripB))
+            .fetchSemanticsNode()
+
+    assertTrue(
+        tripBNodeInitial.positionInRoot.y < tripANodeInitial.positionInRoot.y,
+        "Trip B should appear before Trip A when sorted ASC by start date")
+
+    // Change sort to START_DATE_DESC
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithText(context.getString(R.string.start_date_desc)).performClick()
+
+    composeTestRule.waitForIdle()
+
+    // New order (START_DATE_DESC expected)
+    val tripANodeAfterSort =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripA))
+            .fetchSemanticsNode()
+    val tripBNodeAfterSort =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripB))
+            .fetchSemanticsNode()
+
+    assertTrue(
+        tripANodeAfterSort.positionInRoot.y < tripBNodeAfterSort.positionInRoot.y,
+        "Trip A should appear before Trip B when sorted DESC by start date")
   }
 
   private val trip1 =
@@ -122,7 +283,7 @@ class MyTripsScreenEmulatorTest {
 
   /** Helper to launch screen with trips */
   private fun launchScreen(vararg trips: Trip): MyTripsViewModel {
-    val viewModel = MyTripsViewModel(FakeTripsRepository(trips.toList()))
+    val viewModel = MyTripsViewModel(FakeTripsRepository(trips.toMutableList()))
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
     return viewModel
   }
