@@ -2,24 +2,17 @@ package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,28 +25,30 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
-import com.github.swent.swisstravel.ui.map.NavigationMapScreenTestTags
+import com.github.swent.swisstravel.ui.composable.SortedTripList
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 /**
@@ -112,6 +107,18 @@ fun MyTripsScreen(
   val context = LocalContext.current
   val uiState by myTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
+
+  val lifecycleOwner = LocalLifecycleOwner.current
+
+  // This piece of code is to make sure that the trips recompose after creating a trip, had issues
+  // before
+  DisposableEffect(lifecycleOwner) {
+    val observer = LifecycleEventObserver { _, e ->
+      if (e == Lifecycle.Event.ON_RESUME) myTripsViewModel.refreshUIState()
+    }
+    lifecycleOwner.lifecycle.addObserver(observer)
+    onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+  }
 
   // Refresh trips when entering the screen
   LaunchedEffect(Unit) { myTripsViewModel.refreshUIState() }
@@ -309,13 +316,13 @@ private fun CurrentTripSection(
 
   Spacer(modifier = Modifier.height(4.dp))
 
-  Box(contentAlignment = Alignment.TopCenter) {
-    Button(
-        onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
-        modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
-          Text(stringResource(R.string.enter_map))
-        }
-  }
+  //  Box(contentAlignment = Alignment.TopCenter) {
+  //    Button(
+  //        onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
+  //        modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
+  //          Text(stringResource(R.string.enter_map))
+  //        }
+  //  }
 
   Spacer(modifier = Modifier.height(4.dp))
 
@@ -360,73 +367,95 @@ private fun UpcomingTripsSection(
     onEnterSelectionMode: () -> Unit,
     onSortSelected: (TripSortType) -> Unit
 ) {
-  Row(
-      modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = stringResource(R.string.upcoming_trip),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.testTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE))
-
-        var expanded by remember { mutableStateOf(false) }
-
-        Box {
-          IconButton(
-              onClick = { expanded = !expanded },
-              modifier = Modifier.testTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU)) {
-                Icon(
-                    Icons.AutoMirrored.Filled.Sort,
-                    contentDescription = stringResource(R.string.sort))
-              }
-
-          DropdownMenu(
-              expanded = expanded,
-              onDismissRequest = { expanded = false },
-              modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)) {
-                val sortOptions =
-                    listOf(
-                        TripSortType.START_DATE_ASC to R.string.start_date_asc,
-                        TripSortType.START_DATE_DESC to R.string.start_date_desc,
-                        TripSortType.END_DATE_ASC to R.string.end_date_asc,
-                        TripSortType.END_DATE_DESC to R.string.end_date_desc,
-                        TripSortType.NAME_ASC to R.string.name_asc,
-                        TripSortType.NAME_DESC to R.string.name_desc)
-                sortOptions.forEach { (type, resId) ->
-                  DropdownMenuItem(
-                      text = { Text(stringResource(resId)) },
-                      onClick = {
-                        onSortSelected(type)
-                        expanded = false
-                      })
-                }
-              }
+  SortedTripList(
+      title = stringResource(R.string.upcoming_trip),
+      trips = trips,
+      onClickTripElement = {
+        it?.let { trip ->
+          if (uiState.isSelectionMode) onToggleSelection(trip) else onSelectTrip(trip.uid)
         }
-      }
-
-  if (trips.isNotEmpty()) {
-    LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = Modifier.fillMaxWidth().testTag(MyTripsScreenTestTags.UPCOMING_TRIPS)) {
-          items(trips.size) { index ->
-            val trip = trips[index]
-            TripElement(
-                trip = trip,
-                onClick = {
-                  if (uiState.isSelectionMode) onToggleSelection(trip) else onSelectTrip(trip.uid)
-                },
-                onLongPress = {
-                  onEnterSelectionMode()
-                  onToggleSelection(trip)
-                },
-                isSelected = trip in uiState.selectedTrips,
-                isSelectionMode = uiState.isSelectionMode)
-          }
+      },
+      onClickDropDownMenu = { type -> onSortSelected(type) },
+      onLongPress = {
+        it?.let { trip ->
+          onEnterSelectionMode()
+          onToggleSelection(trip)
         }
-  } else {
-    Text(
-        text = stringResource(R.string.no_upcoming_trip),
-        modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_UPCOMING_TRIPS_MSG))
-  }
+      },
+      isSelected = { trip -> trip in uiState.selectedTrips },
+      isSelectionMode = uiState.isSelectionMode,
+      titleTestTag = MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE,
+      lazyColumnTestTag = MyTripsScreenTestTags.UPCOMING_TRIPS,
+      emptyMessageTestTag = MyTripsScreenTestTags.EMPTY_UPCOMING_TRIPS_MSG)
+  // TODO delete this once the screen is completed in the CurrentTrip selection PR
+  //  Row(
+  //      modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
+  //      horizontalArrangement = Arrangement.SpaceBetween,
+  //      verticalAlignment = Alignment.CenterVertically) {
+  //        Text(
+  //            text = stringResource(R.string.upcoming_trip),
+  //            style = MaterialTheme.typography.headlineLarge,
+  //            color = MaterialTheme.colorScheme.onBackground,
+  //            modifier = Modifier.testTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE))
+  //
+  //        var expanded by remember { mutableStateOf(false) }
+  //
+  //        Box {
+  //          IconButton(
+  //              onClick = { expanded = !expanded },
+  //              modifier = Modifier.testTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU)) {
+  //                Icon(
+  //                    Icons.AutoMirrored.Filled.Sort,
+  //                    contentDescription = stringResource(R.string.sort))
+  //              }
+  //
+  //          DropdownMenu(
+  //              expanded = expanded,
+  //              onDismissRequest = { expanded = false },
+  //              modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)) {
+  //                val sortOptions =
+  //                    listOf(
+  //                        TripSortType.START_DATE_ASC to R.string.start_date_asc,
+  //                        TripSortType.START_DATE_DESC to R.string.start_date_desc,
+  //                        TripSortType.END_DATE_ASC to R.string.end_date_asc,
+  //                        TripSortType.END_DATE_DESC to R.string.end_date_desc,
+  //                        TripSortType.NAME_ASC to R.string.name_asc,
+  //                        TripSortType.NAME_DESC to R.string.name_desc)
+  //                sortOptions.forEach { (type, resId) ->
+  //                  DropdownMenuItem(
+  //                      text = { Text(stringResource(resId)) },
+  //                      onClick = {
+  //                        onSortSelected(type)
+  //                        expanded = false
+  //                      })
+  //                }
+  //              }
+  //        }
+  //      }
+  //
+  //  if (trips.isNotEmpty()) {
+  //    LazyColumn(
+  //        verticalArrangement = Arrangement.spacedBy(12.dp),
+  //        modifier = Modifier.fillMaxWidth().testTag(MyTripsScreenTestTags.UPCOMING_TRIPS)) {
+  //          items(trips.size) { index ->
+  //            val trip = trips[index]
+  //            TripElement(
+  //                trip = trip,
+  //                onClick = {
+  //                  if (uiState.isSelectionMode) onToggleSelection(trip) else
+  // onSelectTrip(trip.uid)
+  //                },
+  //                onLongPress = {
+  //                  onEnterSelectionMode()
+  //                  onToggleSelection(trip)
+  //                },
+  //                isSelected = trip in uiState.selectedTrips,
+  //                isSelectionMode = uiState.isSelectionMode)
+  //          }
+  //        }
+  //  } else {
+  //    Text(
+  //        text = stringResource(R.string.no_upcoming_trip),
+  //        modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_UPCOMING_TRIPS_MSG))
+  //  }
 }

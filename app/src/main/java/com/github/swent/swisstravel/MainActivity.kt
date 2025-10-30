@@ -39,6 +39,7 @@ import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
+import com.github.swent.swisstravel.ui.tripcreation.TripNameScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
@@ -182,7 +183,8 @@ fun SwissTravelApp(
             EditTripScreen(
                 tripId = tripId,
                 onBack = { navController.popBackStack() },
-                onSavedOrDelete = { navController.popBackStack() })
+                onSaved = { navController.popBackStack() },
+                onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
           }
     }
 
@@ -219,6 +221,12 @@ fun SwissTravelApp(
       }
       composable(Screen.TripSettingsArrivalDeparture.route) {
         ArrivalDepartureScreen(
+            viewModel = tripSettingsViewModel(navController),
+            onNext = { navigationActions.navigateTo(Screen.TripSettingsName) },
+            onPrevious = { navigationActions.goBack() })
+      }
+      composable(Screen.TripSettingsName.route) {
+        TripNameScreen(
             viewModel = tripSettingsViewModel(navController),
             onNext = { navigationActions.navigateTo(Screen.TripSettingsFirstDestination) },
             onPrevious = { navigationActions.goBack() })

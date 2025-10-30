@@ -95,7 +95,7 @@ class EditTripScreenViewModel(
                 adults = state.adults,
                 children = state.children,
                 preferences = state.selectedPrefs.toList())
-        val updatedTrip = originalTrip.copy(tripProfile = updatedTripProfile)
+        val updatedTrip = originalTrip.copy(name = state.tripName, tripProfile = updatedTripProfile)
         tripRepository.editTrip(state.tripId, updatedTrip)
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = e.message ?: "Failed to save trip") }
@@ -121,6 +121,14 @@ class EditTripScreenViewModel(
     _uiState.update { it.copy(children = value) }
   }
 
+  /**
+   * Sets the name of the trip.
+   *
+   * @param value The new value
+   */
+  fun editTripName(value: String) {
+    _uiState.update { it.copy(tripName = value) }
+  }
   /** Clears the current error message. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }

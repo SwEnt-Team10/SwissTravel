@@ -33,8 +33,9 @@ data class TripArrivalDeparture(
     val departureLocation: Location? = null
 )
 
-/** Data class encapsulating all trip settings: dates, travelers, and preferences. */
+/** Data class encapsulating all trip settings: name, dates, travelers, and preferences. */
 data class TripSettings(
+    val name: String = "",
     val date: TripDate = TripDate(),
     val travelers: TripTravelers = TripTravelers(),
     val preferences: List<Preference> = emptyList(),
@@ -69,8 +70,14 @@ class TripSettingsViewModel(
   private val _validationEventChannel = Channel<ValidationEvent>()
   val validationEvents = _validationEventChannel.receiveAsFlow()
 
+  fun updateName(name: String) {
+    _tripSettings.update { it.copy(name = name) }
+  }
+
   fun updateDates(start: LocalDate, end: LocalDate) {
-    _tripSettings.update { it.copy(date = TripDate(start, end)) }
+    _tripSettings.update {
+      it.copy(name = "Trip from ${start.toString()}", date = TripDate(start, end))
+    }
   }
 
   fun updateTravelers(adults: Int, children: Int) {
@@ -120,6 +127,7 @@ class TripSettingsViewModel(
 
         val startTs = Timestamp(start.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
         val endTs = Timestamp(end.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
+        val finalName = settings.name.ifBlank { "Trip from ${settings.date.startDate.toString()}" }
 
         val tripProfile =
             TripProfile(
@@ -135,7 +143,7 @@ class TripSettingsViewModel(
         val trip =
             Trip(
                 uid = newUid,
-                name = "Trip from ${settings.date.startDate.toString()}", // TODO Placeholder name
+                name = finalName,
                 ownerId = user.uid,
                 locations = emptyList(),
                 routeSegments = emptyList(),

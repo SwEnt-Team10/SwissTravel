@@ -65,7 +65,6 @@ fun ArrivalDepartureScreen(
     arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm"),
     departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
 ) {
-
   // Use different separate view models for arrival and departure
   val arrivalState by arrivalAddressVm.addressState.collectAsState()
   val departureState by departureAddressVm.addressState.collectAsState()
