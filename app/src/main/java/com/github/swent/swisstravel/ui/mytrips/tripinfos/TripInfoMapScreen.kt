@@ -16,6 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.github.swent.swisstravel.ui.map.NavigationMap
 
+/**
+ * Screen that displays the map for a specific trip
+ *
+ * @param onBack lambda to be called when the back button is pressed
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoMapScreen(onBack: () -> Unit = {}) {

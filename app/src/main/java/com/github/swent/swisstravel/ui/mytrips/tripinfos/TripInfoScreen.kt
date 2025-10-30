@@ -30,7 +30,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-
+/**
+ * Screen that displays the information of a specific trip
+ *
+ * @param uid the unique identifier of the trip
+ * @param tripInfoViewModel the view model that holds the trip information state
+ * @param onPastTrips lambda to be called when navigating back to past trips
+ * @param onFullscreenClick lambda to be called when the fullscreen button is clicked
+ * @param onEditTrip lambda to be called when the edit trip button is clicked
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoScreen(
