@@ -13,9 +13,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-/**
- * UI state for the TripInfo screen
- */
+
+/** UI state for the TripInfo screen */
 data class TripInfoUIState(
     val uid: String = "",
     val name: String = "",
@@ -26,21 +25,17 @@ data class TripInfoUIState(
     val tripProfile: TripProfile? = null,
     val errorMsg: String? = null
 )
-/**
- * ViewModel for the TripInfo screen
- */
+/** ViewModel for the TripInfo screen */
 class TripInfoViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(TripInfoUIState())
   val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
-/**
-   * Clears the error message in the UI state
-   */
+  /** Clears the error message in the UI state */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
-/**
+  /**
    * Sets the error message in the UI state
    *
    * @param errorMsg the error message to set
@@ -48,7 +43,7 @@ class TripInfoViewModel(
   private fun setErrorMsg(errorMsg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
-/**
+  /**
    * Loads the trip information for the given trip ID
    *
    * @param tripId the unique identifier of the trip

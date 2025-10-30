@@ -15,12 +15,10 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.ui.map.NavigationMap
 
-/**
- * Test tags for TripInfoZoomableMap composable
- */
+/** Test tags for TripInfoZoomableMap composable */
 object TripInfoZoomableMapTestTags {
-    const val MAP_CONTAINER = "mapContainer"
-    const val FULLSCREEN_BUTTON = "fullscreenButton"
+  const val MAP_CONTAINER = "mapContainer"
+  const val FULLSCREEN_BUTTON = "fullscreenButton"
 }
 /**
  * Composable function for the Trip Info Zoomable Map.
@@ -29,36 +27,20 @@ object TripInfoZoomableMapTestTags {
  */
 @Composable
 fun TripInfoZoomableMap(onFullscreenClick: () -> Unit) {
-    Scaffold { pd ->
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(pd)
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .testTag(TripInfoZoomableMapTestTags.MAP_CONTAINER)
-            ) {
-                NavigationMap()
-            }
+  Scaffold { pd ->
+    Box(modifier = Modifier.fillMaxSize().padding(pd)) {
+      Box(modifier = Modifier.fillMaxSize().testTag(TripInfoZoomableMapTestTags.MAP_CONTAINER)) {
+        NavigationMap()
+      }
 
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.BottomEnd
-            ) {
-                IconButton(
-                    onClick = onFullscreenClick,
-                    modifier = Modifier
-                        .padding(16.dp)
-                        .testTag(TripInfoZoomableMapTestTags.FULLSCREEN_BUTTON)
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Fullscreen,
-                        contentDescription = "FullScreen"
-                    )
-                }
+      Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {
+        IconButton(
+            onClick = onFullscreenClick,
+            modifier =
+                Modifier.padding(16.dp).testTag(TripInfoZoomableMapTestTags.FULLSCREEN_BUTTON)) {
+              Icon(imageVector = Icons.Filled.Fullscreen, contentDescription = "FullScreen")
             }
-        }
+      }
     }
+  }
 }

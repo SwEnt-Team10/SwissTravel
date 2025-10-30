@@ -170,7 +170,6 @@ fun SwissTravelApp(
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
             onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
@@ -197,31 +196,26 @@ fun SwissTravelApp(
     ) {
       composable(Screen.TripInfo.route) { naveBackStackEntry ->
         val uid = naveBackStackEntry.arguments?.getString("uid")
-          if (uid == null) {
-            Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
-            navigationActions.navigateTo(Screen.MyTrips)
-            return@composable
-          }
+        if (uid == null) {
+          Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
+          navigationActions.navigateTo(Screen.MyTrips)
+          return@composable
+        }
         TripInfoScreen(
             uid,
             onPastTrips = { navigationActions.goBack() },
             onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
-            onEditTrip = {
-              navigationActions.navigateToEditTrip(uid)
-            }
-        )
+            onEditTrip = { navigationActions.navigateToEditTrip(uid) })
       }
     }
-      navigation(
+    navigation(
         startDestination = Screen.TripInfoMap.route,
         route = Screen.TripInfoMap.name,
-      ) {
-          composable(Screen.TripInfoMap.route) {
-            TripInfoMapScreen(
-                onBack = {navigationActions.goBack()}
-            )
-          }
+    ) {
+      composable(Screen.TripInfoMap.route) {
+        TripInfoMapScreen(onBack = { navigationActions.goBack() })
       }
+    }
 
     // Map location screen
     navigation(

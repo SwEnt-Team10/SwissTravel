@@ -25,34 +25,33 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 
 object NavigationMapScreenTestTags {
-    const val ENTER_MAP_BUTTON = "enterMapButton"
-    const val EXIT_BUTTON = "exitButton"
-    const val MAP = "map"
+  const val ENTER_MAP_BUTTON = "enterMapButton"
+  const val EXIT_BUTTON = "exitButton"
+  const val MAP = "map"
 }
+
 object LocationsHardCoded {
-    val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
-    val ZERMATT = Point.fromLngLat(7.747, 46.019)
-    val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
-    val CHUV = Point.fromLngLat(6.6209, 46.5197)
+  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
+  val ZERMATT = Point.fromLngLat(7.747, 46.019)
+  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
+  val CHUV = Point.fromLngLat(6.6209, 46.5197)
 }
 
 @Composable
 fun NavigationMapScreen(navigationActions: NavigationActions) {
-    Box(modifier = Modifier.fillMaxSize()) {
-        NavigationMap()
-        Button(
-            onClick = { navigationActions.navigateTo(Screen.MyTrips) },
-            modifier =
-                Modifier.align(Alignment.TopStart)
-                    .offset(x = 4.dp, y = 26.dp)
-                    .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.exit_map_desc)
-            )
+  Box(modifier = Modifier.fillMaxSize()) {
+    NavigationMap()
+    Button(
+        onClick = { navigationActions.navigateTo(Screen.MyTrips) },
+        modifier =
+            Modifier.align(Alignment.TopStart)
+                .offset(x = 4.dp, y = 26.dp)
+                .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
+          Icon(
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+              contentDescription = stringResource(R.string.exit_map_desc))
         }
-    }
+  }
 }
 
 @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)

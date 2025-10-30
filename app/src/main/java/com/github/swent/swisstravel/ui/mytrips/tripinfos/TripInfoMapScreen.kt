@@ -17,13 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import com.github.swent.swisstravel.ui.map.NavigationMap
 
-/**
- * Screen displaying the map for trip information.
- */
+/** Screen displaying the map for trip information. */
 object TripInfoMapTestTags {
-    const val TOP_APP_BAR = "TripInfoMap_TopAppBar"
-    const val BACK_BUTTON = "TripInfoMap_BackButton"
-    const val MAP_CONTAINER = "TripInfoMap_MapContainer"
+  const val TOP_APP_BAR = "TripInfoMap_TopAppBar"
+  const val BACK_BUTTON = "TripInfoMap_BackButton"
+  const val MAP_CONTAINER = "TripInfoMap_MapContainer"
 }
 /**
  * Composable function for the Trip Info Map Screen.
@@ -33,30 +31,23 @@ object TripInfoMapTestTags {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoMapScreen(onBack: () -> Unit = {}) {
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(text = "Trip") },
-                navigationIcon = {
-                    IconButton(
-                        onClick = onBack,
-                        modifier = Modifier.testTag(TripInfoMapTestTags.BACK_BUTTON)
-                    ) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
-                    }
-                },
-                modifier = Modifier.testTag(TripInfoMapTestTags.TOP_APP_BAR)
-            )
-        }
-    ) { padding ->
+  Scaffold(
+      topBar = {
+        TopAppBar(
+            title = { Text(text = "Trip") },
+            navigationIcon = {
+              IconButton(
+                  onClick = onBack, modifier = Modifier.testTag(TripInfoMapTestTags.BACK_BUTTON)) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                  }
+            },
+            modifier = Modifier.testTag(TripInfoMapTestTags.TOP_APP_BAR))
+      }) { padding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .testTag(TripInfoMapTestTags.MAP_CONTAINER),
-            contentAlignment = Alignment.Center
-        ) {
-            NavigationMap()
-        }
-    }
+            modifier =
+                Modifier.fillMaxSize().padding(padding).testTag(TripInfoMapTestTags.MAP_CONTAINER),
+            contentAlignment = Alignment.Center) {
+              NavigationMap()
+            }
+      }
 }
