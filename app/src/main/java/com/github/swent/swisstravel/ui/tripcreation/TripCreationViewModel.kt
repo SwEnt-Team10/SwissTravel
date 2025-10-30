@@ -177,7 +177,7 @@ class TripSettingsViewModel(
       it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = departure))
     }
   }
-
+  /** Validate the trip settings when proceeding from the arrival/departure selection screen. */
   fun onNextFromArrivalDepartureScreen() {
     viewModelScope.launch {
       val currentSettings = _tripSettings.value
