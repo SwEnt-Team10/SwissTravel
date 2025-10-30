@@ -37,6 +37,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
+import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
@@ -219,8 +220,13 @@ fun SwissTravelApp(
       composable(Screen.TripSettingsArrivalDeparture.route) {
         ArrivalDepartureScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.MyTrips) })
+            onNext = { navigationActions.navigateTo(Screen.TripSettingsFirstDestination) })
       }
+        composable(Screen.TripSettingsFirstDestination.route) {
+            FirstDestinationScreen(
+                viewModel = tripSettingsViewModel(navController),
+                onNext = { navigationActions.navigateTo(Screen.MyTrips) })
+        }
     }
 
     // Trip map screen

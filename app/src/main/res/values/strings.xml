@@ -49,6 +49,9 @@
     <string name="enterDepartureLocation">Enter your departure location</string>
     <string name="arrival_location">Arrival location</string>
     <string name="departure_location">Departure location"</string>
+    <!--- First Destinations -->
+    <string name="add_first_destination">Add a destination</string>
+    <string name="first_destinations_title">Select any location you already know you want to visit</string>
 
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
