@@ -32,7 +32,7 @@ import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
-import com.mapbox.maps.extension.style.expressions.dsl.generated.string
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
 
 /** Test tags for UI tests to identify components within the Arrival/Departure screen. */
 object ArrivalDepartureTestTags {
@@ -82,57 +82,62 @@ fun ArrivalDepartureScreen(
   }
 
   Scaffold(
-      topBar = { TopBar(onClick = onPrevious, title = "") },
-  ) { padding ->
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-      Column(
-          modifier = Modifier.fillMaxSize().padding(padding),
-          horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.SpaceBetween) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+      modifier = Modifier.fillMaxSize(),
+      topBar = {
+        TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON))
+      }) { paddingValues ->
+        Surface(
+            modifier = Modifier.fillMaxSize().padding(paddingValues),
+            color = MaterialTheme.colorScheme.background,
+        ) {
+          Column(
+              modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.SpaceBetween) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
-              // --- Title ---
-              Text(
-                  text = stringResource(R.string.arrivalDeparture),
-                  textAlign = TextAlign.Center,
-                  style =
-                      MaterialTheme.typography.headlineMedium.copy(
-                          fontWeight = FontWeight.Bold,
-                      ))
-
-              Spacer(modifier = Modifier.height(32.dp))
-
-              // --- Arrival Destination (autocomplete) ---
-              AddressAutocompleteTextField(
-                  addressTextFieldViewModel = arrivalAddressVm,
-                  modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
-                  name = stringResource(R.string.arrival_location))
-              Spacer(modifier = Modifier.height(50.dp))
-
-              // --- Departure Destination (autocomplete) ---
-              AddressAutocompleteTextField(
-                  addressTextFieldViewModel = departureAddressVm,
-                  modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
-                  name = stringResource(R.string.departure_location))
-
-              Spacer(modifier = Modifier.height(32.dp))
-            }
-
-            // --- Next button ---
-            Button(
-                modifier = Modifier.testTag(NEXT_BUTTON),
-                onClick = { onNext() },
-                colors =
-                    ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.primary)) {
+                  // --- Title ---
                   Text(
-                      stringResource(R.string.next),
-                      color = MaterialTheme.colorScheme.onPrimary,
-                      style = MaterialTheme.typography.titleMedium)
+                      text = stringResource(R.string.arrivalDeparture),
+                      textAlign = TextAlign.Center,
+                      style =
+                          MaterialTheme.typography.headlineMedium.copy(
+                              fontWeight = FontWeight.Bold,
+                          ))
+
+                  Spacer(modifier = Modifier.height(32.dp))
+
+                  // --- Arrival Destination (autocomplete) ---
+                  AddressAutocompleteTextField(
+                      addressTextFieldViewModel = arrivalAddressVm,
+                      modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
+                      name = stringResource(R.string.arrival_location))
+                  Spacer(modifier = Modifier.height(50.dp))
+
+                  // --- Departure Destination (autocomplete) ---
+                  AddressAutocompleteTextField(
+                      addressTextFieldViewModel = departureAddressVm,
+                      modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
+                      name = stringResource(R.string.departure_location))
+
+                  Spacer(modifier = Modifier.height(32.dp))
                 }
-          }
-    }
-  }
+
+                // --- Done button ---
+                Button(
+                    modifier = Modifier.testTag(NEXT_BUTTON),
+                    onClick = { onNext() },
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary)) {
+                      Text(
+                          stringResource(R.string.done),
+                          color = MaterialTheme.colorScheme.onPrimary,
+                          style = MaterialTheme.typography.titleMedium)
+                    }
+              }
+        }
+      }
 }
 
 /** A composable preview function for the [ArrivalDepartureScreen]. */
