@@ -96,7 +96,11 @@
     <string name="end_date_desc">End Date ⬇</string>
     <string name="name_asc">Name A–Z</string>
     <string name="name_desc">Name Z-A</string>
-
+    <!-- Info trip -->
+    <string name="back_to_my_trips">Back to My Trips</string>
+    <string name="fullscreen">fullscreen</string>
+    <string name="edit_trip">Edit trip</string>
+    <string name="back">Go back</string>
     <!-- Edit Trip -->
     <string name="travelers">Travelers</string>
     <string name="editing_trip_title">Editing %1$s</string>

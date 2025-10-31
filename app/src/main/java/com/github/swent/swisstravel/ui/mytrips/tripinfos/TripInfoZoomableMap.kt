@@ -12,7 +12,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.map.NavigationMap
 
 /** Test tags for TripInfoZoomableMap composable */
@@ -38,7 +40,9 @@ fun TripInfoZoomableMap(onFullscreenClick: () -> Unit) {
             onClick = onFullscreenClick,
             modifier =
                 Modifier.padding(16.dp).testTag(TripInfoZoomableMapTestTags.FULLSCREEN_BUTTON)) {
-              Icon(imageVector = Icons.Filled.Fullscreen, contentDescription = "FullScreen")
+              Icon(
+                  imageVector = Icons.Filled.Fullscreen,
+                  contentDescription = stringResource(R.string.fullscreen))
             }
       }
     }

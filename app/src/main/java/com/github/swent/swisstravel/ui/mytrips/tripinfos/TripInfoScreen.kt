@@ -28,8 +28,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.R
 
 /** Test tags for TripInfoScreen composable */
 object TripInfoTestTags {
@@ -43,7 +45,7 @@ object TripInfoTestTags {
  *
  * @param uid the unique identifier of the trip
  * @param tripInfoViewModel the view model that holds the trip information state
- * @param onPastTrips lambda to be called when navigating back to past trips
+ * @param onMyTrips lambda to be called when navigating back to past trips
  * @param onFullscreenClick lambda to be called when the fullscreen button is clicked
  * @param onEditTrip lambda to be called when the edit trip button is clicked
  */
@@ -52,7 +54,7 @@ object TripInfoTestTags {
 fun TripInfoScreen(
     uid: String?,
     tripInfoViewModel: TripInfoViewModel = viewModel(),
-    onPastTrips: () -> Unit = {},
+    onMyTrips: () -> Unit = {},
     onFullscreenClick: () -> Unit = {},
     onEditTrip: () -> Unit = {}
 ) {
@@ -81,11 +83,11 @@ fun TripInfoScreen(
             },
             navigationIcon = {
               IconButton(
-                  onClick = { onPastTrips() },
+                  onClick = { onMyTrips() },
                   modifier = Modifier.testTag(TripInfoTestTags.BACK_BUTTON)) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back to My Trips",
+                        contentDescription = stringResource(R.string.back_to_my_trips),
                         tint = MaterialTheme.colorScheme.onBackground)
                   }
             },
@@ -95,7 +97,7 @@ fun TripInfoScreen(
                   modifier = Modifier.testTag(TripInfoTestTags.EDIT_BUTTON)) {
                     Icon(
                         imageVector = Icons.Filled.Edit,
-                        contentDescription = "Edit trip",
+                        contentDescription = stringResource(R.string.edit_trip),
                         tint = MaterialTheme.colorScheme.onBackground)
                   }
             })

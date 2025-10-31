@@ -203,7 +203,7 @@ fun SwissTravelApp(
         }
         TripInfoScreen(
             uid,
-            onPastTrips = { navigationActions.goBack() },
+            onMyTrips = { navigationActions.goBack() },
             onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
             onEditTrip = { navigationActions.navigateToEditTrip(uid) })
       }

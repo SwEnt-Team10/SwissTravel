@@ -15,6 +15,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.map.NavigationMap
 
 /** Screen displaying the map for trip information. */
@@ -38,7 +40,9 @@ fun TripInfoMapScreen(onBack: () -> Unit = {}) {
             navigationIcon = {
               IconButton(
                   onClick = onBack, modifier = Modifier.testTag(TripInfoMapTestTags.BACK_BUTTON)) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Retour")
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back))
                   }
             },
             modifier = Modifier.testTag(TripInfoMapTestTags.TOP_APP_BAR))

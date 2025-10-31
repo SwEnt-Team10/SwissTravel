@@ -24,7 +24,7 @@ class TripInfoScreenTest {
     composeRule.setContent {
       TripInfoScreen(
           uid = null,
-          onPastTrips = { pastClicked = true },
+          onMyTrips = { pastClicked = true },
           onFullscreenClick = {},
           onEditTrip = { editClicked = true })
     }
