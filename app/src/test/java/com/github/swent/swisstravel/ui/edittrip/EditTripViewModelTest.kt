@@ -121,6 +121,18 @@ class EditTripScreenViewModelTest {
     assertEquals(3, s.children)
   }
 
+  @Test
+  fun `editName updates state`() = runTest {
+    coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
+    vm.loadTrip(sampleTripId)
+    advanceUntilIdle()
+
+    vm.editTripName("New Trip")
+
+    val s = vm.state.value
+    assertEquals("New Trip", s.tripName)
+  }
+
   // -------------------------
   // save
   // -------------------------

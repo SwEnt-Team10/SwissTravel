@@ -3,6 +3,7 @@ package com.android.swisstravel.ui.edittrip
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.performTextInput
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
@@ -45,7 +46,7 @@ class EditTripScreenTest {
             editTripViewModel = vm,
             onBack = {},
             onSaved = { navigated++ },
-            onDelete = {})
+            onDelete = { navigated++ })
       }
     }
 
@@ -59,11 +60,11 @@ class EditTripScreenTest {
     // Let UI settle
     composeRule.waitForIdle()
 
-    // Title visible
+    // Text field visible
     composeRule
-        .onNodeWithTag(EditTripScreenTestTags.TITLE)
+        .onNodeWithTag(EditTripScreenTestTags.TRIP_NAME)
         .assertIsDisplayed()
-        .assertTextContains("Editing Alpine Fun")
+        .assertTextContains(initialTrip.name)
   }
 
   @Test
@@ -79,12 +80,12 @@ class EditTripScreenTest {
             editTripViewModel = vm,
             onBack = {},
             onSaved = { navigated++ },
-            onDelete = {})
+            onDelete = { navigated++ })
       }
     }
 
     // Wait for content
-    composeRule.onNodeWithTag(EditTripScreenTestTags.TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
 
     composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).performClick()
 
@@ -111,7 +112,7 @@ class EditTripScreenTest {
     }
 
     // Ensure content visible
-    composeRule.onNodeWithTag(EditTripScreenTestTags.TITLE).assertIsDisplayed()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
 
     // If the Delete button is off-screen, scroll to it first.
     composeRule.onNodeWithTag(EditTripScreenTestTags.DELETE).performScrollTo().performClick()
@@ -143,6 +144,97 @@ class EditTripScreenTest {
 
     assertEquals(1, repo.deleteCalls)
     assertEquals(1, navigated)
+  }
+
+  @Test
+  fun backButtonCallsOnBack() {
+    val repo = FakeRepo(initialTrip)
+    val vm = EditTripScreenViewModel(repo)
+
+    var backCalls = 0
+    composeRule.setContent {
+      SwissTravelTheme {
+        EditTripScreen(
+            tripId = tripId,
+            editTripViewModel = vm,
+            onBack = { backCalls++ },
+            onSaved = {},
+            onDelete = {})
+      }
+    }
+
+    // Ensure content visible so app bar is there
+    composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
+
+    // Click the top bar close button
+    composeRule
+        .onNodeWithTag(com.github.swent.swisstravel.ui.navigation.NavigationTestTags.TOP_BAR_BUTTON)
+        .performClick()
+
+    assertEquals(1, backCalls)
+  }
+
+  @Test
+  fun confirmDisabledWhileLoading_thenEnabledAfterLoad() {
+    val repo = FakeRepo(initialTrip).apply { delayGetTrip = true }
+    val vm = EditTripScreenViewModel(repo)
+
+    composeRule.setContent {
+      SwissTravelTheme {
+        EditTripScreen(
+            tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = {}, onDelete = {})
+      }
+    }
+
+    // Spinner shown, confirm disabled
+    composeRule.onNodeWithTag(EditTripScreenTestTags.LOADING).assertIsDisplayed()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).assertIsNotEnabled()
+
+    // Finish load
+    repo.delayGetTrip = false
+    repo.releaseGet()
+    composeRule.waitForIdle()
+
+    // Text field visible, confirm enabled
+    composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).assertIsEnabled()
+  }
+
+  @Test
+  fun editingTripName_isPersistedOnSave() {
+    val repo = FakeRepo(initialTrip)
+    val vm = EditTripScreenViewModel(repo)
+
+    var savedNav = 0
+    composeRule.setContent {
+      SwissTravelTheme {
+        EditTripScreen(
+            tripId = tripId,
+            editTripViewModel = vm,
+            onBack = {},
+            onSaved = { savedNav++ },
+            onDelete = {})
+      }
+    }
+
+    // Wait for content
+    composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
+
+    // Type a new name
+    val newName = "Alpine Fun X"
+    val field = composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME)
+    field.performClick() // ensure focus
+    field.performTextClearance() // this returns Unit in some versions
+    field.performTextInput(newName)
+
+    // Save
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).performClick()
+
+    // Assert repo received updated name
+    assertEquals(1, repo.editCalls)
+    assertEquals(tripId, repo.lastEditedTripId)
+    assertEquals(newName, repo.lastEditedTrip?.name)
+    assertEquals(1, savedNav)
   }
 
   // -------- helpers --------
@@ -199,8 +291,13 @@ class EditTripScreenTest {
       /* no-op */
     }
 
+    var lastEditedTripId: String? = null
+    var lastEditedTrip: Trip? = null
+
     override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
       editCalls++
+      lastEditedTripId = tripId
+      lastEditedTrip = updatedTrip
     }
 
     override suspend fun deleteTrip(tripId: String) {

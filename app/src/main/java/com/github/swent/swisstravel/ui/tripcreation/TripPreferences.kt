@@ -60,7 +60,6 @@ fun TripPreferencesScreen(
     viewModel.validationEvents.collectLatest { event ->
       when (event) {
         is ValidationEvent.SaveSuccess -> {
-          // Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
           onNext()
         }
         is ValidationEvent.SaveError -> {
@@ -118,10 +117,7 @@ fun TripPreferencesScreen(
 
                     // --- Next button ---
                     Button(
-                        onClick = {
-                          viewModel.saveTrip()
-                          onNext()
-                        },
+                        onClick = { onNext() },
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary),

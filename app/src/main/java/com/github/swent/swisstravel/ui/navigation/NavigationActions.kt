@@ -49,6 +49,8 @@ sealed class Screen(
   object TripSettingsArrivalDeparture :
       Screen(route = "arrival_departure", name = "Arrival_Departure")
 
+  object TripSettingsName : Screen(route = "trip_name", name = "Name your trip")
+
   object EditTrip : Screen(route = "edit_trip/{tripId}", name = "Edit trip") {
     fun createRoute(tripId: String) = "edit_trip/${URLEncoder.encode(tripId, "UTF-8")}"
   }
@@ -91,6 +93,11 @@ class NavigationActions(
     }
   }
 
+  /**
+   * Navigate to the selected trip edit screen
+   *
+   * @param tripId the id of the trip
+   */
   fun navigateToEditTrip(tripId: String) {
     navController.navigate(Screen.EditTrip.createRoute(tripId)) {
       launchSingleTop = true
