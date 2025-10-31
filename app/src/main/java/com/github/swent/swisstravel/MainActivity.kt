@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel
 
+import EditTripScreen
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
@@ -28,7 +29,6 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
-import com.github.swent.swisstravel.ui.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen

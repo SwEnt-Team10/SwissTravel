@@ -1,5 +1,6 @@
 package com.android.swisstravel.ui.edittrip
 
+import EditTripScreen
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -11,8 +12,6 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.ui.edittrip.EditTripScreen
-import com.github.swent.swisstravel.ui.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.edittrip.EditTripScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.google.firebase.Timestamp
@@ -46,7 +45,7 @@ class EditTripScreenTest {
             editTripViewModel = vm,
             onBack = {},
             onSaved = { navigated++ },
-            onDelete = { navigated++ })
+            onDelete = {})
       }
     }
 
@@ -80,14 +79,14 @@ class EditTripScreenTest {
             editTripViewModel = vm,
             onBack = {},
             onSaved = { navigated++ },
-            onDelete = { navigated++ })
+            onDelete = {})
       }
     }
 
     // Wait for content
     composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
 
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).performClick()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).performClick()
 
     // save called exactly once and navigation fired
     assertEquals(1, repo.editCalls)
@@ -188,7 +187,7 @@ class EditTripScreenTest {
 
     // Spinner shown, confirm disabled
     composeRule.onNodeWithTag(EditTripScreenTestTags.LOADING).assertIsDisplayed()
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).assertIsNotEnabled()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).assertIsNotEnabled()
 
     // Finish load
     repo.delayGetTrip = false
@@ -197,7 +196,7 @@ class EditTripScreenTest {
 
     // Text field visible, confirm enabled
     composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).assertIsEnabled()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).assertIsEnabled()
   }
 
   @Test
@@ -228,7 +227,7 @@ class EditTripScreenTest {
     field.performTextInput(newName)
 
     // Save
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM).performClick()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).performClick()
 
     // Assert repo received updated name
     assertEquals(1, repo.editCalls)
