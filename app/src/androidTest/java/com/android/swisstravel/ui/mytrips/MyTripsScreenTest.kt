@@ -5,8 +5,10 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
+import com.android.swisstravel.utils.SwissTravelTest
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.*
+import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
@@ -44,39 +46,15 @@ class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()
   override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
 }
 
-class MyTripsScreenEmulatorTest {
+class MyTripsScreenEmulatorTest : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
   private val now = Timestamp.now()
   val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
-  private val currentTrip =
-      Trip(
-          "1",
-          "Current Trip",
-          "ownerX",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(
-              startDate = Timestamp(now.seconds - 3600, 0),
-              endDate = Timestamp(now.seconds + 3600, 0),
-              preferredLocations = emptyList(),
-              preferences = emptyList()))
+  private val currentTrip = trip1
 
-  private val upcomingTrip =
-      Trip(
-          "2",
-          "Upcoming Trip",
-          "ownerX",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(
-              startDate = Timestamp(now.seconds + 7200, 0),
-              endDate = Timestamp(now.seconds + 10800, 0),
-              preferredLocations = emptyList(),
-              preferences = emptyList()))
+  private val upcomingTrip = trip2
 
   @Test
   fun displaysCurrentAndUpcomingTrips_usingRealViewModel() {
@@ -92,7 +70,7 @@ class MyTripsScreenEmulatorTest {
         .assertIsDisplayed()
 
     // Check upcoming trip
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE).assertIsDisplayed()
+    composeTestRule.checkSortedTripListNoTopBarIsDisplayed()
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(upcomingTrip))
         .assertIsDisplayed()
@@ -105,9 +83,7 @@ class MyTripsScreenEmulatorTest {
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(MyTripsScreenTestTags.EMPTY_UPCOMING_TRIPS_MSG)
-        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
   }
 
   @Test
@@ -148,7 +124,7 @@ class MyTripsScreenEmulatorTest {
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
     // Before adding, no upcoming trips
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS).assertDoesNotExist()
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertDoesNotExist()
 
     // Add a new upcoming trip inside a coroutine
     val newUpcomingTrip =
@@ -233,7 +209,7 @@ class MyTripsScreenEmulatorTest {
         "Trip B should appear before Trip A when sorted ASC by start date")
 
     // Change sort to START_DATE_DESC
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
     composeTestRule.onNodeWithText(context.getString(R.string.start_date_desc)).performClick()
 
     composeTestRule.waitForIdle()
@@ -252,34 +228,6 @@ class MyTripsScreenEmulatorTest {
         tripANodeAfterSort.positionInRoot.y < tripBNodeAfterSort.positionInRoot.y,
         "Trip A should appear before Trip B when sorted DESC by start date")
   }
-
-  private val trip1 =
-      Trip(
-          "1",
-          "Trip 1",
-          "user",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(
-              startDate = Timestamp(now.seconds - 3600, 0),
-              endDate = Timestamp(now.seconds + 3600, 0),
-              preferredLocations = emptyList(),
-              preferences = emptyList()))
-
-  private val trip2 =
-      Trip(
-          "2",
-          "Trip 2",
-          "user",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(
-              startDate = Timestamp(now.seconds + 7200, 0),
-              endDate = Timestamp(now.seconds + 10800, 0),
-              preferredLocations = emptyList(),
-              preferences = emptyList()))
 
   /** Helper to launch screen with trips */
   private fun launchScreen(vararg trips: Trip): MyTripsViewModel {

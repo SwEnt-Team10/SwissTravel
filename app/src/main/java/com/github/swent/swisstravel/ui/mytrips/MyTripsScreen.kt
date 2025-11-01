@@ -384,9 +384,7 @@ private fun UpcomingTripsSection(
       },
       isSelected = { trip -> trip in uiState.selectedTrips },
       isSelectionMode = uiState.isSelectionMode,
-      titleTestTag = MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE,
-      lazyColumnTestTag = MyTripsScreenTestTags.UPCOMING_TRIPS,
-      emptyMessageTestTag = MyTripsScreenTestTags.EMPTY_UPCOMING_TRIPS_MSG)
+      topBar = false)
   // TODO delete this once the screen is completed in the CurrentTrip selection PR
   //  Row(
   //      modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
