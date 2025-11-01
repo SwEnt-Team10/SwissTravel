@@ -44,6 +44,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripNameScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripSummaryScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
@@ -252,15 +253,24 @@ fun SwissTravelApp(
       composable(Screen.TripSettingsArrivalDeparture.route) {
         ArrivalDepartureScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettingsName) },
+            onNext = { navigationActions.navigateTo(Screen.TripSummary) },
             onPrevious = { navigationActions.goBack() })
       }
+        /**
       composable(Screen.TripSettingsName.route) {
         TripNameScreen(
             viewModel = tripSettingsViewModel(navController),
             onNext = { navigationActions.navigateTo(Screen.MyTrips) },
             onPrevious = { navigationActions.goBack() })
       }
+      */
+        composable(Screen.TripSummary.route) {
+            TripSummaryScreen(
+                viewModel = tripSettingsViewModel(navController),
+                onNext = { navigationActions.navigateTo(Screen.MyTrips) },
+                onPrevious = { navigationActions.goBack() }
+            )
+        }
     }
 
     // Trip map screen
