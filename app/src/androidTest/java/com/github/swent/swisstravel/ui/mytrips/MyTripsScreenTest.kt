@@ -9,7 +9,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.google.firebase.Timestamp
-import kotlin.test.DefaultAsserter.assertTrue
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
