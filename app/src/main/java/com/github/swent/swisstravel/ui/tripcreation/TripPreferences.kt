@@ -2,11 +2,10 @@ package com.github.swent.swisstravel.ui.tripcreation
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -29,7 +28,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
-import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import kotlinx.coroutines.flow.collectLatest
 
@@ -38,6 +36,7 @@ object TripPreferencesTestTags {
   const val DONE = "done"
   const val TRIP_PREFERENCES_SCREEN = "tripPreferencesScreen"
   const val TRIP_PREFERENCES_TITLE = "tripPreferencesTitle"
+  const val TRIP_PREFERENCE_CONTENT = "tripPreferenceContent"
 }
 
 /**
@@ -55,6 +54,7 @@ fun TripPreferencesScreen(
   val tripSettings by viewModel.tripSettings.collectAsState()
   val prefs = tripSettings.preferences
   val context = LocalContext.current
+  val scrollState = rememberScrollState()
 
   LaunchedEffect(Unit) {
     viewModel.validationEvents.collectLatest { event ->
@@ -79,13 +79,16 @@ fun TripPreferencesScreen(
         Surface(
             modifier = Modifier.fillMaxSize().padding(pd),
             color = MaterialTheme.colorScheme.background) {
-              Column(
-                  modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
+              LazyColumn(
+                  modifier =
+                      Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
+                          .fillMaxSize()
+                          .testTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT),
                   horizontalAlignment = Alignment.CenterHorizontally,
-                  verticalArrangement = Arrangement.SpaceBetween) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                  verticalArrangement = Arrangement.spacedBy(24.dp)) {
 
-                      // --- Title ---
+                    // --- Title ---
+                    item {
                       Text(
                           modifier =
                               Modifier.testTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE),
@@ -95,38 +98,31 @@ fun TripPreferencesScreen(
                               MaterialTheme.typography.headlineMedium.copy(
                                   fontWeight = FontWeight.Bold,
                               ))
+                    }
 
-                      Spacer(modifier = Modifier.height(32.dp))
-
-                      // --- Preferences ---
+                    // --- Preferences ---
+                    item {
                       PreferenceSelector(
                           isChecked = { pref -> prefs.contains(pref) },
                           onCheckedChange = { preference ->
                             viewModel.updatePreferences(prefs.toggle(preference))
                           })
-                      Spacer(modifier = Modifier.height(32.dp))
-
-                      PreferenceToggle(
-                          stringResource(R.string.handicapped_traveler),
-                          prefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
-                          onValueChange = { _ ->
-                            viewModel.updatePreferences(
-                                prefs.toggle(Preference.WHEELCHAIR_ACCESSIBLE))
-                          })
                     }
 
                     // --- Next button ---
-                    Button(
-                        onClick = { onNext() },
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
-                          Text(
-                              stringResource(R.string.next),
-                              color = MaterialTheme.colorScheme.onPrimary,
-                              style = MaterialTheme.typography.titleMedium)
-                        }
+                    item {
+                      Button(
+                          onClick = { onNext() },
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primary),
+                          modifier = Modifier.testTag(TripPreferencesTestTags.DONE)) {
+                            Text(
+                                stringResource(R.string.next),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.titleMedium)
+                          }
+                    }
                   }
             }
       }

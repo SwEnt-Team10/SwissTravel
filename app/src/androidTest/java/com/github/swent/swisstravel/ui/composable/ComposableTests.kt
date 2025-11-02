@@ -3,7 +3,6 @@ package com.github.swent.swisstravel.ui.composable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -70,15 +69,11 @@ class ComposableTests {
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
         .assertIsDisplayed()
-    for (preference in Preference.values().filter { it != Preference.WHEELCHAIR_ACCESSIBLE }) {
+    for (preference in Preference.values()) {
       composeTestRule
           .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
           .assertIsDisplayed()
     }
-    composeTestRule
-        .onNodeWithTag(
-            PreferenceSelectorTestTags.getTestTagButton(Preference.WHEELCHAIR_ACCESSIBLE))
-        .assertIsNotDisplayed()
 
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.FOODIE))
