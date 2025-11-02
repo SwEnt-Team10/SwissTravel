@@ -23,6 +23,62 @@ enum class Preference {
   QUICK
 }
 
+/** Object containing utility functions and mappings related to preference categories. */
+object PreferenceCategories {
+  /** Enum representing the different categories of preferences. */
+  enum class Category {
+    ACTIVITY_TYPE,
+    TRAVEL_COMPANION,
+    ENVIRONMENT,
+    ACCESSIBILITY
+  }
+
+  /**
+   * Maps a Category to its corresponding string resource ID.
+   *
+   * @param category The category to be converted.
+   * @return The string resource ID corresponding to the category.
+   */
+  @StringRes
+  fun categoryToStringRes(category: Category): Int =
+      when (category) {
+        Category.ACTIVITY_TYPE -> R.string.preference_category_activity_type
+        Category.TRAVEL_COMPANION -> R.string.preference_category_travel_companion
+        Category.ENVIRONMENT -> R.string.preference_category_environment
+        Category.ACCESSIBILITY -> R.string.preference_category_accessibility
+      }
+
+  /** Map linking each Preference to its corresponding Category. */
+  fun Preference.category(): Category =
+      when (this) {
+        Preference.SPORTS -> Category.ACTIVITY_TYPE
+        Preference.MUSEUMS -> Category.ACTIVITY_TYPE
+        Preference.HIKE -> Category.ACTIVITY_TYPE
+        Preference.SHOPPING -> Category.ACTIVITY_TYPE
+        Preference.WELLNESS -> Category.ACTIVITY_TYPE
+        Preference.FOODIE -> Category.ACTIVITY_TYPE
+        Preference.SCENIC_VIEWS -> Category.ENVIRONMENT
+        Preference.URBAN -> Category.ENVIRONMENT
+        Preference.NIGHTLIFE -> Category.ENVIRONMENT
+        Preference.CHILDREN_FRIENDLY -> Category.TRAVEL_COMPANION
+        Preference.GROUP -> Category.TRAVEL_COMPANION
+        Preference.INDIVIDUAL -> Category.TRAVEL_COMPANION
+        Preference.COUPLE -> Category.TRAVEL_COMPANION
+        Preference.WHEELCHAIR_ACCESSIBLE -> Category.ACCESSIBILITY
+        Preference.PUBLIC_TRANSPORT -> Category.ACCESSIBILITY
+        Preference.QUICK -> Category.ACCESSIBILITY
+      }
+
+  /** Lists of preferences grouped by their categories. */
+  val activityTypePreferences =
+      Preference.values().filter { it.category() == Category.ACTIVITY_TYPE }
+  val travelCompanionPreferences =
+      Preference.values().filter { it.category() == Category.TRAVEL_COMPANION }
+  val environmentPreferences = Preference.values().filter { it.category() == Category.ENVIRONMENT }
+  val accessibilityPreferences =
+      Preference.values().filter { it.category() == Category.ACCESSIBILITY }
+}
+
 /**
  * Extension function to get a display string for a Preference.
  *
