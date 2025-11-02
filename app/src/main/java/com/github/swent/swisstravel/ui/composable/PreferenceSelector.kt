@@ -139,70 +139,20 @@ fun PreferenceSelector(
       verticalArrangement = Arrangement.spacedBy(20.dp),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)) {
         for (category in PreferenceCategories.Category.values()) {
-          PreferenceSelectorCategory(
-              category = category,
-              isChecked = isChecked,
-              onCheckedChange = onCheckedChange,
-          )
+          if (category == PreferenceCategories.Category.DEFAULT &&
+              category.getPreferences().isEmpty()) {
+            // Skip DEFAULT category if it has no preferences
+          } else {
+            PreferenceSelectorCategory(
+                category = category,
+                isChecked = isChecked,
+                onCheckedChange = onCheckedChange,
+            )
+          }
         }
       }
 }
-/// **
-// * A row of [PreferenceButton]s.
-// *
-// * @param prefs the list of preferences to display
-// * @param isChecked a function that returns whether the given preference is checked
-// * @param onCheckedChange a function that is called when the user clicks on a preference
-// */
-// @Composable
-// fun PreferenceSelectorRow(
-//    prefs: List<Preference>,
-//    isChecked: (Preference) -> Boolean,
-//    onCheckedChange: (Preference) -> Unit,
-// ) {
-//  Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-//    for (preference in prefs) {
-//      PreferenceButton(
-//          preference = preference,
-//          isChecked = isChecked(preference),
-//          onCheckedChange = onCheckedChange,
-//      )
-//    }
-//  }
-// }
-//
-/// **
-// * A composable that displays a selector of [PreferenceButton]s.
-// *
-// * @param isChecked a function that returns whether the given preference is checked
-// * @param onCheckedChange a function that is called when the user clicks on a preference
-// */
-// @OptIn(ExperimentalLayoutApi::class)
-// @Composable
-// fun PreferenceSelector(
-//    isChecked: (Preference) -> Boolean,
-//    onCheckedChange: (Preference) -> Unit,
-// ) {
-//  val preferenceRows =
-//      listOf(
-//          listOf(Preference.WELLNESS, Preference.SPORTS, Preference.HIKE),
-//          listOf(Preference.MUSEUMS, Preference.SCENIC_VIEWS),
-//          listOf(Preference.SHOPPING, Preference.FOODIE),
-//          listOf(Preference.URBAN, Preference.NIGHTLIFE),
-//          listOf(Preference.GROUP, Preference.INDIVIDUAL),
-//          listOf(Preference.CHILDREN_FRIENDLY, Preference.COUPLE),
-//          listOf(Preference.PUBLIC_TRANSPORT, Preference.QUICK))
-//  Column(
-//      horizontalAlignment = Alignment.CenterHorizontally,
-//      verticalArrangement = Arrangement.spacedBy(10.dp),
-//      modifier = Modifier.testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)) {
-//        preferenceRows.forEach { row ->
-//          PreferenceSelectorRow(
-//              prefs = row, isChecked = isChecked, onCheckedChange = onCheckedChange)
-//        }
-//      }
-// }
-//
+
 /** The content of the preview of the [PreferenceSelector] composable. */
 @Composable
 fun PreviewContentPreferenceSelector() {
@@ -217,7 +167,8 @@ fun PreviewContentPreferenceSelector() {
         })
   }
 }
-/// ** A preview of the [PreferenceSelector] composable. */
+/// ** A preview of the [PreferenceSelector] composable. (Commented for better coverage) */
+// import androidx.compose.ui.tooling.preview.Preview
 // @Preview(showBackground = true)
 // @Composable
 // fun PreferenceSelectorPreview() {

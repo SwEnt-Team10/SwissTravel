@@ -3,10 +3,12 @@ package com.github.swent.swisstravel.ui.composable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceCategories
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -74,6 +76,11 @@ class ComposableTests {
           .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
           .assertIsDisplayed()
     }
+    // Should never have preferences in the default category
+    composeTestRule
+        .onNodeWithTag(
+            PreferenceSelectorTestTags.getTestTagCategory(PreferenceCategories.Category.DEFAULT))
+        .assertIsNotDisplayed()
 
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.FOODIE))

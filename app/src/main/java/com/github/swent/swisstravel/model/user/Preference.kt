@@ -30,7 +30,8 @@ object PreferenceCategories {
     ACTIVITY_TYPE,
     TRAVEL_COMPANION,
     ENVIRONMENT,
-    ACCESSIBILITY
+    ACCESSIBILITY,
+    DEFAULT // Should never have preferences in the default category
   }
 
   /**
@@ -46,6 +47,7 @@ object PreferenceCategories {
         Category.TRAVEL_COMPANION -> R.string.preference_category_travel_companion
         Category.ENVIRONMENT -> R.string.preference_category_environment
         Category.ACCESSIBILITY -> R.string.preference_category_accessibility
+        else -> R.string.preference_category_default
       }
 
   /** Map linking each Preference to its corresponding Category. */
@@ -77,6 +79,8 @@ object PreferenceCategories {
   val environmentPreferences = Preference.values().filter { it.category() == Category.ENVIRONMENT }
   val accessibilityPreferences =
       Preference.values().filter { it.category() == Category.ACCESSIBILITY }
+  // Should always be empty
+  val defaultPreferences = Preference.values().filter { it.category() == Category.DEFAULT }
 
   /**
    * Extension function to get the list of preferences for a given Category.
@@ -89,6 +93,7 @@ object PreferenceCategories {
       Category.TRAVEL_COMPANION -> travelCompanionPreferences
       Category.ENVIRONMENT -> environmentPreferences
       Category.ACCESSIBILITY -> accessibilityPreferences
+      else -> defaultPreferences
     }
   }
 
@@ -99,6 +104,7 @@ object PreferenceCategories {
       Category.TRAVEL_COMPANION -> "travelCompanion"
       Category.ENVIRONMENT -> "environment"
       Category.ACCESSIBILITY -> "accessibility"
+      else -> "default"
     }
   }
 }

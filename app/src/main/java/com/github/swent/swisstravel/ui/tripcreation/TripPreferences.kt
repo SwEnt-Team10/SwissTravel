@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -54,7 +53,6 @@ fun TripPreferencesScreen(
   val tripSettings by viewModel.tripSettings.collectAsState()
   val prefs = tripSettings.preferences
   val context = LocalContext.current
-  val scrollState = rememberScrollState()
 
   LaunchedEffect(Unit) {
     viewModel.validationEvents.collectLatest { event ->
