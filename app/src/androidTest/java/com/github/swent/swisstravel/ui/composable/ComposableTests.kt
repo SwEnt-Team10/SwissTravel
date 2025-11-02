@@ -8,6 +8,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceCategories
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -70,14 +71,15 @@ class ComposableTests {
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
         .assertIsDisplayed()
-    for (preference in Preference.values().filter { it != Preference.WHEELCHAIR_ACCESSIBLE }) {
+    for (preference in Preference.values()) {
       composeTestRule
           .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
           .assertIsDisplayed()
     }
+    // Should never have preferences in the default category
     composeTestRule
         .onNodeWithTag(
-            PreferenceSelectorTestTags.getTestTagButton(Preference.WHEELCHAIR_ACCESSIBLE))
+            PreferenceSelectorTestTags.getTestTagCategory(PreferenceCategories.Category.DEFAULT))
         .assertIsNotDisplayed()
 
     composeTestRule
