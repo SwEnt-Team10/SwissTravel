@@ -23,6 +23,7 @@ import com.github.swent.swisstravel.ui.composable.Counter
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.DateSelectorRow
 import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
+import com.github.swent.swisstravel.ui.composable.IconType
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSlider
@@ -169,6 +170,26 @@ class ComposableTests : SwissTravelTest() {
     assert(value.value)
     composeTestRule.onNodeWithTag(ToggleTestTags.NO).performClick()
     assert(!value.value)
+  }
+
+  @Test
+  fun sortedTripListTopBarDisplaysCorrectlyTest() {
+    var trips by mutableStateOf(tripList)
+
+    composeTestRule.setContent {
+      SortedTripList(
+          title = "My Trips",
+          trips = trips,
+          onClickDropDownMenu = { sortType ->
+            trips = trips.sortedByDescending { trip -> trip.tripProfile.endDate.seconds }
+          },
+          isSelectionMode = false,
+          topBar = true,
+          topBarBackIcon = IconType.CROSS)
+    }
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.TOP_BAR)
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.TOP_BAR_BACK_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
   }
 
   @OptIn(ExperimentalTestApi::class)
