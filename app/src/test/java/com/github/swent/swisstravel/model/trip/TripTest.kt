@@ -93,7 +93,8 @@ class TripTest {
           locations = emptyList(),
           routeSegments = listRouteSegments,
           activities = listActivities,
-          tripProfile = tripProfile)
+          tripProfile = tripProfile,
+          isFavorite = false)
 
   @Test
   fun testGetAllTripElementsOrdered() {

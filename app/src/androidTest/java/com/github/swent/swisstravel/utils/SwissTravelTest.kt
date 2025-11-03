@@ -96,7 +96,8 @@ abstract class SwissTravelTest {
               startDate = Timestamp(now.seconds - 3600, 0),
               endDate = Timestamp(now.seconds + 3600, 0),
               preferredLocations = emptyList(),
-              preferences = emptyList()))
+              preferences = emptyList()),
+          isFavorite = false)
 
   val trip2 =
       Trip(
@@ -110,7 +111,8 @@ abstract class SwissTravelTest {
               startDate = Timestamp(now.seconds + 7200, 0),
               endDate = Timestamp(now.seconds + 10800, 0),
               preferredLocations = emptyList(),
-              preferences = emptyList()))
+              preferences = emptyList()),
+          isFavorite = false)
 
   val tripList = listOf(trip1, trip2)
 

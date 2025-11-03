@@ -11,6 +11,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
+import org.bouncycastle.util.test.SimpleTest.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -95,6 +96,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("routeSegments") } returns listOf(routeSegmentMap)
     every { doc.get("activities") } returns listOf(activityMap)
     every { doc.get("tripProfile") } returns tripProfileMap
+    every { doc.getBoolean("isFavorite") } returns true
 
     val trip = repo.getTrip("trip1")
 
@@ -105,6 +107,7 @@ class TripsRepositoryFirestorePublicTest {
     assertTrue(trip.routeSegments.isNotEmpty())
     assertTrue(trip.activities.isNotEmpty())
     assertEquals(1, trip.tripProfile.preferences.size)
+    assertTrue(trip.isFavorite)
   }
 
   @Test
@@ -138,6 +141,7 @@ class TripsRepositoryFirestorePublicTest {
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
             "children" to 0L)
+    every { doc.getBoolean("isFavorite") } returns false
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)
@@ -152,15 +156,14 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getAllTrips returns trips for current user`() = runTest {
     val mockQuery = mockk<Query>()
-    val mockQuerySnapshot = mockk<QuerySnapshot>()
-    val doc = mockk<QueryDocumentSnapshot>()
+    val mockQuerySnapshot = mockk<QuerySnapshot>(relaxed = true)
+    val doc = mockk<QueryDocumentSnapshot>(relaxed = true)
 
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.uid } returns "owner123"
 
     every { mockDb.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", "owner123") } returns
         mockQuery
-
     every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
     every { mockQuerySnapshot.documents } returns listOf(doc)
     every { mockQuerySnapshot.iterator() } returns
@@ -180,6 +183,7 @@ class TripsRepositoryFirestorePublicTest {
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
             "children" to 0L)
+    every { doc.get("isFavorite") } returns false
 
     val trips = repo.getAllTrips()
 
@@ -206,7 +210,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
@@ -236,7 +241,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     every { mockCollection.document("server-id-123") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
@@ -258,7 +264,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns
@@ -277,7 +284,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
