@@ -85,18 +85,19 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
     val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
-    val uid = Firebase.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     val createUser = repository.getCurrentUser()
 
     // TripActivity
-    val newPrefs = listOf("City", "Nature", "Adventure")
+    val newPrefs = listOf(Preference.URBAN, Preference.SCENIC_VIEWS, Preference.NIGHTLIFE)
     repository.updateUserPreferences(uid, newPrefs)
 
     // Assert
-    val doc = Firebase.firestore.collection("users").document(uid).get().await()
+    val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
     val storedPrefs = doc.get("preferences") as List<*>
-    assertEquals(newPrefs, storedPrefs)
+    val storedEnums = storedPrefs.map { Preference.valueOf(it as String) }
+    assertEquals(newPrefs, storedEnums)
   }
 
   @Test
@@ -158,13 +159,13 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     // TripActivity — no Firestore doc created yet
-    repository.updateUserPreferences(uid, listOf("Museums"))
+    repository.updateUserPreferences(uid, listOf(Preference.MUSEUMS))
   }
 
   @Test
   fun updateUserPreferences_doesNothingForGuest() = runBlocking {
     // TripActivity
-    repository.updateUserPreferences("guest", listOf("Nature"))
+    repository.updateUserPreferences("guest", listOf(Preference.SCENIC_VIEWS))
     // Assert — should not throw
     assertTrue(true)
   }

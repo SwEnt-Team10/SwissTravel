@@ -19,17 +19,23 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +49,8 @@ import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
+import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -59,7 +67,7 @@ object ProfileScreenTestTags {
   const val GREETING = "greeting"
   const val PERSONAL_INFO = "personalInfo"
   const val PREFERENCES = "preferences"
-
+  const val PREFERENCES_TOGGLE = "preferencesToggle"
   const val LOGOUT_BUTTON = "logoutButton"
   const val LOGIN_BUTTON = "loginButton"
 
@@ -154,29 +162,59 @@ private fun ProfileScreenContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         // Travel Preferences Section
-        InfoSection(
-            title = stringResource(R.string.travel_pref),
-            modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
-              Text(
-                  text = stringResource(R.string.default_pref_info),
-                  style =
-                      MaterialTheme.typography.bodyMedium.copy(
-                          color = MaterialTheme.colorScheme.onSurfaceVariant),
-                  modifier = Modifier.padding(bottom = 12.dp))
+        // --- Travel Preferences (collapsible) ---
+        var prefsExpanded by remember { mutableStateOf(false) }
 
-              profileScreenViewModel.allPreferences.forEach { pref ->
-                val isSelected = uiState.selectedPreferences.contains(pref)
-                PreferenceToggle(
-                    title = pref,
-                    checked = isSelected,
-                    onCheckedChange = { checked ->
-                      val newSelection =
-                          if (checked) uiState.selectedPreferences + pref
-                          else uiState.selectedPreferences - pref
-                      profileScreenViewModel.savePreferences(newSelection)
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .padding(16.dp)
+                    .testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
+              // Header row with title + chevron
+              Row(
+                  modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PREFERENCES),
+                  verticalAlignment = Alignment.CenterVertically,
+                  horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text(
+                        text = stringResource(R.string.travel_pref),
+                        style =
+                            MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.SemiBold),
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                    IconButton(
+                        onClick = { prefsExpanded = !prefsExpanded },
+                        modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_TOGGLE)) {
+                          Icon(
+                              imageVector =
+                                  if (prefsExpanded) Icons.Default.ExpandLess
+                                  else Icons.Default.ExpandMore,
+                              contentDescription = if (prefsExpanded) "Collapse" else "Expand",
+                              tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                        }
+                  }
+
+              if (prefsExpanded) {
+                Spacer(Modifier.height(12.dp))
+                Text(
+                    text = stringResource(R.string.default_pref_info),
+                    style =
+                        MaterialTheme.typography.bodyMedium.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant),
+                )
+                Spacer(Modifier.height(12.dp))
+
+                val selected: List<Preference> = uiState.selectedPreferences
+                PreferenceSelector(
+                    isChecked = { pref -> pref in selected },
+                    onCheckedChange = { pref ->
+                      profileScreenViewModel.savePreferences(
+                          if (pref in selected) selected - pref else selected + pref)
                     },
-                    enable = isSignedIn,
-                    modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES))
+                    textStyle = MaterialTheme.typography.headlineSmall)
               }
             }
         Button(
@@ -247,29 +285,4 @@ fun InfoItem(label: String, value: String, modifier: Modifier) {
         style = MaterialTheme.typography.bodyLarge,
         modifier = modifier)
   }
-}
-
-@Composable
-fun PreferenceToggle(
-    title: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    enable: Boolean = true,
-    modifier: Modifier
-) {
-  Row(
-      modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            text = title,
-            style =
-                MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            enabled = enable,
-            modifier = Modifier.testTag(ProfileScreenTestTags.preferenceSwitchTag(title)))
-      }
 }

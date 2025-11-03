@@ -81,7 +81,7 @@ class UserRepositoryFirebase(
     return newUser
   }
 
-  override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {
+  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {
     if (uid == "guest") return
 
     val userDoc = db.collection("users").document(uid).get().await()
