@@ -214,7 +214,7 @@ private fun ProfileScreenContent(
                       profileScreenViewModel.savePreferences(
                           if (pref in selected) selected - pref else selected + pref)
                     },
-                    textStyle = MaterialTheme.typography.headlineSmall)
+                    textStyle = MaterialTheme.typography.bodyLarge)
               }
             }
         Button(

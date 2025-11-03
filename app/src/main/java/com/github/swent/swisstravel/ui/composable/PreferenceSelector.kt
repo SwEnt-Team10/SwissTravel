@@ -85,6 +85,7 @@ fun PreferenceButton(
  * @param category the category of preferences to display
  * @param isChecked a function that returns whether the given preference is checked
  * @param onCheckedChange a function that is called when the user clicks on a preference
+ * @param textStyle the text style to use for the title
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -129,6 +130,7 @@ fun PreferenceSelectorCategory(
  *
  * @param isChecked a function that returns whether the given preference is checked
  * @param onCheckedChange a function that is called when the user clicks on a preference
+ * @param textStyle the text style to use for the title
  */
 @Composable
 fun PreferenceSelector(
@@ -148,7 +150,7 @@ fun PreferenceSelector(
                 category = category,
                 isChecked = isChecked,
                 onCheckedChange = onCheckedChange,
-            )
+                textStyle)
           }
         }
       }
