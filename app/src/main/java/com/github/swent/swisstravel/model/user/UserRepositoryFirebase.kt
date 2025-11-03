@@ -58,7 +58,7 @@ class UserRepositoryFirebase(
   }
 
   private fun createUser(doc: DocumentSnapshot, uid: String): User {
-    val rawList = (doc.get("preferences") as? List<*>) ?: emptyList<Any>()
+    val rawList = (doc["preferences"] as? List<*>) ?: emptyList<Any>()
     val prefs = mutableListOf<Preference>()
 
     for (item in rawList) {
@@ -98,7 +98,9 @@ class UserRepositoryFirebase(
     if (uid == "guest") return
     val docRef = db.collection("users").document(uid)
     val userDoc = docRef.get().await()
-    if (!userDoc.exists()) throw IllegalStateException("User document does not exist for uid: $uid")
+    check(userDoc.exists()) {
+      throw IllegalStateException("User document does not exist for uid: $uid")
+    }
 
     val names = preferences.map { it.name }
     docRef.update("preferences", names).await()
