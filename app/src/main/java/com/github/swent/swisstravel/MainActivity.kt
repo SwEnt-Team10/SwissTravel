@@ -1,5 +1,7 @@
 package com.github.swent.swisstravel
 
+import EditTripScreen
+import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
@@ -27,10 +29,11 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
-import com.github.swent.swisstravel.ui.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -88,6 +91,7 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
   }
 }
 
+@SuppressLint("SuspiciousIndentation")
 @Composable
 fun SwissTravelApp(
     context: Context = LocalContext.current,
@@ -167,7 +171,7 @@ fun SwissTravelApp(
     ) {
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
-            onSelectTrip = { tripId -> navigationActions.navigateToEditTrip(tripId) },
+            onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
@@ -186,6 +190,33 @@ fun SwissTravelApp(
                 onSaved = { navController.popBackStack() },
                 onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
           }
+    }
+    // Trip info screen
+    navigation(
+        startDestination = Screen.TripInfo.route,
+        route = Screen.TripInfo.name,
+    ) {
+      composable(Screen.TripInfo.route) { naveBackStackEntry ->
+        val uid = naveBackStackEntry.arguments?.getString("uid")
+        if (uid == null) {
+          Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
+          navigationActions.navigateTo(Screen.MyTrips)
+          return@composable
+        }
+        TripInfoScreen(
+            uid,
+            onMyTrips = { navigationActions.goBack() },
+            onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
+            onEditTrip = { navigationActions.navigateToEditTrip(uid) })
+      }
+    }
+    navigation(
+        startDestination = Screen.TripInfoMap.route,
+        route = Screen.TripInfoMap.name,
+    ) {
+      composable(Screen.TripInfoMap.route) {
+        TripInfoMapScreen(onBack = { navigationActions.goBack() })
+      }
     }
 
     // Map location screen
@@ -245,9 +276,7 @@ fun SwissTravelApp(
         startDestination = Screen.SelectedTripMap.route,
         route = Screen.SelectedTripMap.name,
     ) {
-      composable(Screen.SelectedTripMap.route) {
-        NavigationMapScreen(navigationActions = navigationActions)
-      }
+      composable(Screen.SelectedTripMap.route) { NavigationMapScreen(navigationActions) }
     }
   }
 }

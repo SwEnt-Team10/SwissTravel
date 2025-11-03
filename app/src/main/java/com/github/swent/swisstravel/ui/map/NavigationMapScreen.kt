@@ -5,7 +5,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.offset
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -15,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.*
+import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -28,6 +30,13 @@ object NavigationMapScreenTestTags {
   const val MAP = "map"
 }
 
+object LocationsHardCoded {
+  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
+  val ZERMATT = Point.fromLngLat(7.747, 46.019)
+  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
+  val CHUV = Point.fromLngLat(6.6209, 46.5197)
+}
+
 @Composable
 fun NavigationMapScreen(navigationActions: NavigationActions) {
   Box(modifier = Modifier.fillMaxSize()) {
@@ -39,7 +48,7 @@ fun NavigationMapScreen(navigationActions: NavigationActions) {
                 .offset(x = 4.dp, y = 26.dp)
                 .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
           Icon(
-              imageVector = Icons.AutoMirrored.Default.ArrowBack,
+              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
               contentDescription = stringResource(R.string.exit_map_desc))
         }
   }
@@ -48,6 +57,7 @@ fun NavigationMapScreen(navigationActions: NavigationActions) {
 @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 @Composable
 fun NavigationMap() {
+
   val context = LocalContext.current
   val viewModel =
       NavigationMapViewModel(application = context.applicationContext as android.app.Application)
@@ -62,7 +72,7 @@ fun NavigationMap() {
   val mapViewportState = rememberMapViewportState()
   LaunchedEffect(Unit) {
     mapViewportState.setCameraOptions {
-      center(Locations.EPFL_IC)
+      center(LocationsHardCoded.EPFL_IC)
       zoom(14.0)
     }
   }
