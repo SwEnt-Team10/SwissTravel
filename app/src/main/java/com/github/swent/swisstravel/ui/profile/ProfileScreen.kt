@@ -69,11 +69,14 @@ object ProfileScreenTestTags {
   const val PREFERENCES = "preferences"
   const val PREFERENCES_TOGGLE = "preferencesToggle"
   const val LOGOUT_BUTTON = "logoutButton"
-  const val LOGIN_BUTTON = "loginButton"
-
-  fun preferenceSwitchTag(title: String): String = "preferenceSwitch:$title"
 }
 
+/**
+ * A composable that represents the profile screen.
+ *
+ * @param profileScreenViewModel The view model for the profile screen.
+ * @param navigationActions The navigation actions for the app.
+ */
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
@@ -118,6 +121,15 @@ fun ProfileScreen(
       })
 }
 
+/**
+ * A composable that represents the content of the profile screen.
+ *
+ * @param uiState The UI state of the profile screen.
+ * @param profileScreenViewModel The view model for the profile screen.
+ * @param modifier The modifier to apply to the content.
+ * @param authRepository The authentication repository.
+ * @param navigationActions The navigation actions for the app.
+ */
 @Composable
 private fun ProfileScreenContent(
     uiState: ProfileScreenUIState,
@@ -227,9 +239,7 @@ private fun ProfileScreenContent(
             modifier =
                 Modifier.fillMaxWidth(0.5f)
                     .height(50.dp)
-                    .testTag(
-                        if (isSignedIn) ProfileScreenTestTags.LOGOUT_BUTTON
-                        else ProfileScreenTestTags.LOGIN_BUTTON),
+                    .testTag(ProfileScreenTestTags.LOGOUT_BUTTON),
             shape = CircleShape,
             colors =
                 ButtonDefaults.buttonColors(
@@ -248,6 +258,13 @@ private fun ProfileScreenContent(
       }
 }
 
+/**
+ * A composable that represents an info section.
+ *
+ * @param title The title of the section.
+ * @param modifier The modifier to apply to the section.
+ * @param content The content of the section.
+ */
 @Composable
 fun InfoSection(
     title: String,
@@ -271,6 +288,13 @@ fun InfoSection(
       }
 }
 
+/**
+ * A composable that represents an info item.
+ *
+ * @param label The label of the item.
+ * @param value The value of the item.
+ * @param modifier The modifier to apply to the item.
+ */
 @Composable
 fun InfoItem(label: String, value: String, modifier: Modifier) {
   Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
