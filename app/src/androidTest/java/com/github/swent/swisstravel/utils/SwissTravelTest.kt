@@ -10,8 +10,11 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
+import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
@@ -176,6 +179,14 @@ abstract class SwissTravelTest {
     onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE)
     onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkSetCurrentTripIsDisplayed() {
+    onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR).assertIsDisplayed()
+    onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
   }
 
   fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
