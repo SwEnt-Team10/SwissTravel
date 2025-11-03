@@ -3,7 +3,6 @@ package com.github.swent.swisstravel.ui
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
-import com.github.swent.swisstravel.model.user.displayString
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -58,7 +57,7 @@ class ProfileScreenViewModelTest {
     Assert.assertEquals(fakeUser.name, state.name)
     Assert.assertEquals(fakeUser.email, state.email)
     Assert.assertEquals(fakeUser.profilePicUrl, state.profilePicUrl)
-    Assert.assertEquals(fakeUser.preferences.map { it.displayString() }, state.selectedPreferences)
+    Assert.assertEquals(fakeUser.preferences, state.selectedPreferences)
     Assert.assertNull(state.errorMsg)
   }
 
@@ -82,7 +81,7 @@ class ProfileScreenViewModelTest {
 
     val state = viewModel.uiState.value
     Assert.assertEquals(fakeUser.email, state.email)
-    Assert.assertEquals(fakeUser.preferences.map { it.displayString() }, state.selectedPreferences)
+    Assert.assertEquals(fakeUser.preferences, state.selectedPreferences)
   }
 
   @Test
@@ -98,7 +97,7 @@ class ProfileScreenViewModelTest {
 
   @Test
   fun savePreferencesUpdatesRepositoryAndUiState() = runTest {
-    val updatedPrefs = listOf("Museums", "Food & Culinary Experiences")
+    val updatedPrefs = listOf(Preference.MUSEUMS, Preference.FOODIE)
     coEvery { repository.getCurrentUser() } returns fakeUser
     coEvery { repository.updateUserPreferences(fakeUser.uid, updatedPrefs) } just Runs
 
@@ -114,7 +113,7 @@ class ProfileScreenViewModelTest {
 
   @Test
   fun savePreferencesSetsErrorMsgWhenUpdateFails() = runTest {
-    val updatedPrefs = listOf("Hiking & Outdoor")
+    val updatedPrefs = listOf(Preference.HIKE)
     coEvery { repository.getCurrentUser() } returns fakeUser
     coEvery { repository.updateUserPreferences(any(), any()) } throws Exception("Firestore error")
 
@@ -136,7 +135,7 @@ class ProfileScreenViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity — try saving preferences with no user
-    viewModel.savePreferences(listOf("Nature"))
+    viewModel.savePreferences(listOf(Preference.SCENIC_VIEWS))
     testDispatcher.scheduler.advanceUntilIdle()
 
     // Assert
@@ -160,7 +159,7 @@ class ProfileScreenViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity
-    viewModel.savePreferences(listOf("Hiking"))
+    viewModel.savePreferences(listOf(Preference.HIKE))
     testDispatcher.scheduler.advanceUntilIdle()
 
     // Assert

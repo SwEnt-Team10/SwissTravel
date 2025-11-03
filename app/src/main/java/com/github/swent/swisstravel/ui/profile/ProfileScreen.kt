@@ -19,17 +19,25 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,6 +51,8 @@ import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
+import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -59,13 +69,17 @@ object ProfileScreenTestTags {
   const val GREETING = "greeting"
   const val PERSONAL_INFO = "personalInfo"
   const val PREFERENCES = "preferences"
-
+  const val PREFERENCES_TOGGLE = "preferencesToggle"
   const val LOGOUT_BUTTON = "logoutButton"
-  const val LOGIN_BUTTON = "loginButton"
-
-  fun preferenceSwitchTag(title: String): String = "preferenceSwitch:$title"
 }
 
+/**
+ * A screen that shows the user's profile information.
+ *
+ * @param profileScreenViewModel The view model for this screen.
+ * @param navigationActions The navigation actions for this screen.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     profileScreenViewModel: ProfileScreenViewModel = viewModel(),
@@ -75,29 +89,28 @@ fun ProfileScreen(
   val uiState = profileScreenViewModel.uiState.collectAsState().value
 
   LaunchedEffect(uiState.errorMsg) {
-    val msg = uiState.errorMsg
-    if (!msg.isNullOrBlank()) {
-      Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
-      profileScreenViewModel.clearErrorMsg()
-    }
+    uiState.errorMsg
+        ?.takeIf { it.isNotBlank() }
+        ?.let {
+          Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+          profileScreenViewModel.clearErrorMsg()
+        }
   }
 
   Scaffold(
       topBar = {
-        Text(
-            text = stringResource(R.string.my_profile),
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.padding(bottom = 16.dp))
+        TopAppBar(
+            title = { Text(stringResource(R.string.my_profile)) },
+            modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
       },
       bottomBar = {
         BottomNavigationMenu(
             selectedTab = Tab.Profile,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
-      },
-      content = { pd ->
+      }) { pd ->
         if (uiState.isLoading) {
-          Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
           }
         } else {
@@ -107,9 +120,15 @@ fun ProfileScreen(
               modifier = Modifier.padding(pd),
               navigationActions = navigationActions)
         }
-      })
+      }
 }
 
+/**
+ * The content of the profile screen.
+ *
+ * @param uiState The state of the screen.
+ * @param profileScreenViewModel The view model for this screen.
+ */
 @Composable
 private fun ProfileScreenContent(
     uiState: ProfileScreenUIState,
@@ -124,92 +143,161 @@ private fun ProfileScreenContent(
   Column(
       modifier = modifier.fillMaxSize().padding(20.dp).verticalScroll(scrollState),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        AsyncImage(
-            model = uiState.profilePicUrl.ifBlank { R.drawable.default_profile_pic },
-            contentDescription = stringResource(R.string.profile_pic_desc),
-            modifier =
-                Modifier.size(100.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
+        ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-        Text(
-            text = "${stringResource(R.string.hi)} ${uiState.name.ifBlank { "User" }}!",
-            style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-            modifier = Modifier.padding(top = 12.dp).testTag(ProfileScreenTestTags.GREETING))
+        Spacer(Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+        PersonalInfoSection(name = uiState.name, email = uiState.email)
 
-        // Personal Info Section
-        InfoSection(
-            title = stringResource(R.string.personal_info),
-            modifier = Modifier.testTag(ProfileScreenTestTags.PERSONAL_INFO)) {
-              InfoItem(
-                  label = stringResource(R.string.name),
-                  value = uiState.name,
-                  modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
-              InfoItem(
-                  label = stringResource(R.string.email),
-                  value = uiState.email,
-                  modifier = Modifier.testTag(ProfileScreenTestTags.EMAIL))
-            }
+        Spacer(Modifier.height(24.dp))
 
-        Spacer(modifier = Modifier.height(24.dp))
+        PreferencesSection(
+            selected = uiState.selectedPreferences,
+            onToggle = { pref ->
+              val sel = uiState.selectedPreferences
+              profileScreenViewModel.savePreferences(if (pref in sel) sel - pref else sel + pref)
+            })
 
-        // Travel Preferences Section
-        InfoSection(
-            title = stringResource(R.string.travel_pref),
-            modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
-              Text(
-                  text = stringResource(R.string.default_pref_info),
-                  style =
-                      MaterialTheme.typography.bodyMedium.copy(
-                          color = MaterialTheme.colorScheme.onSurfaceVariant),
-                  modifier = Modifier.padding(bottom = 12.dp))
-
-              profileScreenViewModel.allPreferences.forEach { pref ->
-                val isSelected = uiState.selectedPreferences.contains(pref)
-                PreferenceToggle(
-                    title = pref,
-                    checked = isSelected,
-                    onCheckedChange = { checked ->
-                      val newSelection =
-                          if (checked) uiState.selectedPreferences + pref
-                          else uiState.selectedPreferences - pref
-                      profileScreenViewModel.savePreferences(newSelection)
-                    },
-                    enable = isSignedIn,
-                    modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES))
-              }
-            }
-        Button(
+        AuthButton(
+            isSignedIn = isSignedIn,
             onClick = {
-              if (isSignedIn) {
-                authRepository.signOut()
-              }
+              if (isSignedIn) authRepository.signOut()
               navigationActions?.navigateTo(Screen.Auth)
-            },
-            modifier =
-                Modifier.fillMaxWidth(0.5f)
-                    .height(50.dp)
-                    .testTag(
-                        if (isSignedIn) ProfileScreenTestTags.LOGOUT_BUTTON
-                        else ProfileScreenTestTags.LOGIN_BUTTON),
-            shape = CircleShape,
-            colors =
-                ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary,
-                )) {
-              Icon(
-                  imageVector =
-                      if (isSignedIn) Icons.AutoMirrored.Filled.Logout
-                      else Icons.AutoMirrored.Filled.Login,
-                  contentDescription =
-                      stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in),
-                  modifier = Modifier.padding(end = 8.dp))
-              Text(stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in))
-            }
+            })
       }
 }
 
+/**
+ * The profile header section of the profile screen.
+ *
+ * @param photoUrl The URL of the profile picture.
+ * @param name The name of the user.
+ */
+@Composable
+private fun ProfileHeader(photoUrl: String, name: String) {
+  AsyncImage(
+      model = photoUrl.ifBlank { R.drawable.default_profile_pic },
+      contentDescription = stringResource(R.string.profile_pic_desc),
+      modifier = Modifier.size(100.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
+  Text(
+      text = "${stringResource(R.string.hi)} ${name.ifBlank { "User" }}!",
+      style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+      modifier = Modifier.padding(top = 12.dp).testTag(ProfileScreenTestTags.GREETING))
+}
+
+/**
+ * A personal information section of the profile screen.
+ *
+ * @param name The name of the user.
+ * @param email The email of the user.
+ */
+@Composable
+private fun PersonalInfoSection(name: String, email: String) {
+  InfoSection(
+      title = stringResource(R.string.personal_info),
+      modifier = Modifier.testTag(ProfileScreenTestTags.PERSONAL_INFO)) {
+        InfoItem(
+            label = stringResource(R.string.name),
+            value = name,
+            modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
+        InfoItem(
+            label = stringResource(R.string.email),
+            value = email,
+            modifier = Modifier.testTag(ProfileScreenTestTags.EMAIL))
+      }
+}
+
+/**
+ * A section of the profile screen that shows the user's preferences.
+ *
+ * @param selected The list of selected preferences.
+ * @param onToggle The callback for when a preference is toggled.
+ */
+@Composable
+private fun PreferencesSection(selected: List<Preference>, onToggle: (Preference) -> Unit) {
+  var expanded by remember { mutableStateOf(false) }
+
+  Column(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = 8.dp)
+              .clip(MaterialTheme.shapes.medium)
+              .background(MaterialTheme.colorScheme.secondaryContainer)
+              .padding(16.dp)
+              .testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
+        // Header row
+        Row(
+            modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PREFERENCES),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween) {
+              Text(
+                  text = stringResource(R.string.travel_pref),
+                  style =
+                      MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
+                  color = MaterialTheme.colorScheme.onSecondaryContainer)
+              IconButton(
+                  onClick = { expanded = !expanded },
+                  modifier = Modifier.testTag(ProfileScreenTestTags.PREFERENCES_TOGGLE)) {
+                    Icon(
+                        imageVector =
+                            if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
+                        contentDescription = if (expanded) "Collapse" else "Expand",
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                  }
+            }
+
+        if (expanded) {
+          Spacer(Modifier.height(12.dp))
+          Text(
+              text = stringResource(R.string.default_pref_info),
+              style =
+                  MaterialTheme.typography.bodyMedium.copy(
+                      color = MaterialTheme.colorScheme.onSurfaceVariant))
+          Spacer(Modifier.height(12.dp))
+
+          PreferenceSelector(
+              isChecked = { pref -> pref in selected },
+              onCheckedChange = onToggle,
+              textStyle = MaterialTheme.typography.bodyLarge)
+        }
+      }
+}
+
+/**
+ * A button that allows the user to sign in or out.
+ *
+ * @param isSignedIn Whether the user is signed in.
+ * @param onClick The callback for when the button is clicked.
+ */
+@Composable
+private fun AuthButton(isSignedIn: Boolean, onClick: () -> Unit) {
+  Button(
+      onClick = onClick,
+      modifier =
+          Modifier.fillMaxWidth(0.5f).height(50.dp).testTag(ProfileScreenTestTags.LOGOUT_BUTTON),
+      shape = CircleShape,
+      colors =
+          ButtonDefaults.buttonColors(
+              containerColor = MaterialTheme.colorScheme.primary,
+              contentColor = MaterialTheme.colorScheme.onPrimary)) {
+        Icon(
+            imageVector =
+                if (isSignedIn) Icons.AutoMirrored.Filled.Logout
+                else Icons.AutoMirrored.Filled.Login,
+            contentDescription =
+                stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in),
+            modifier = Modifier.padding(end = 8.dp))
+        Text(stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in))
+      }
+}
+
+/**
+ * A section of the profile screen that shows information.
+ *
+ * @param title The title of the section.
+ * @param modifier The modifier for the section.
+ * @param content The content of the section.
+ */
 @Composable
 fun InfoSection(
     title: String,
@@ -233,6 +321,13 @@ fun InfoSection(
       }
 }
 
+/**
+ * A single item of information in the profile screen.
+ *
+ * @param label The label for the item.
+ * @param value The value of the item.
+ * @param modifier The modifier for the item.
+ */
 @Composable
 fun InfoItem(label: String, value: String, modifier: Modifier) {
   Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
@@ -247,29 +342,4 @@ fun InfoItem(label: String, value: String, modifier: Modifier) {
         style = MaterialTheme.typography.bodyLarge,
         modifier = modifier)
   }
-}
-
-@Composable
-fun PreferenceToggle(
-    title: String,
-    checked: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    enable: Boolean = true,
-    modifier: Modifier
-) {
-  Row(
-      modifier = modifier.fillMaxWidth().padding(vertical = 6.dp),
-      verticalAlignment = Alignment.CenterVertically,
-      horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            text = title,
-            style =
-                MaterialTheme.typography.bodyLarge.copy(
-                    color = MaterialTheme.colorScheme.onSurface))
-        Switch(
-            checked = checked,
-            onCheckedChange = onCheckedChange,
-            enabled = enable,
-            modifier = Modifier.testTag(ProfileScreenTestTags.preferenceSwitchTag(title)))
-      }
 }
