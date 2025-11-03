@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
@@ -82,9 +83,8 @@ fun ArrivalDepartureScreen(
   }
 
   Scaffold(
-      modifier = Modifier.fillMaxSize(),
       topBar = {
-        TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON))
+        TopBar(onClick = { onPrevious() }, modifier = Modifier.fillMaxWidth().testTag(RETURN_BUTTON))
       }) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize().padding(paddingValues),

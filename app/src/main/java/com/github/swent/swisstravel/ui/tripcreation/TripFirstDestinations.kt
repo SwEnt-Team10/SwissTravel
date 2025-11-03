@@ -25,6 +25,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
@@ -69,91 +70,108 @@ fun FirstDestinationScreen(
       viewModel(key = "destination_$index")
     }
 ) {
-  val destinations = remember { mutableStateListOf<Location>() }
+    val destinations = remember { mutableStateListOf<Location>() }
 
-  Scaffold(
-      modifier = Modifier.fillMaxSize(),
-      topBar = {
-        TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON))
-      }) { paddingValues ->
+    Scaffold(
+        topBar = {
+            TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON))
+        }) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
-            color = MaterialTheme.colorScheme.background) {
-              Column(
-                  modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
-                  horizontalAlignment = Alignment.CenterHorizontally,
-                  verticalArrangement = Arrangement.SpaceBetween) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)) {
-                          // --- Title ---
-                          Text(
-                              modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
-                              text = stringResource(R.string.first_destinations_title),
-                              textAlign = TextAlign.Center,
-                              style =
-                                  MaterialTheme.typography.headlineMedium.copy(
-                                      fontWeight = FontWeight.Bold))
+            color = MaterialTheme.colorScheme.background
+        ) {
+            Column(
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    // --- Title ---
+                    Text(
+                        modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
+                        text = stringResource(R.string.first_destinations_title),
+                        textAlign = TextAlign.Center,
+                        style =
+                            MaterialTheme.typography.headlineMedium.copy(
+                                fontWeight = FontWeight.Bold
+                            )
+                    )
 
-                          Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(32.dp))
 
-                          // --- List of Destination Input Fields ---
-                          LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                            itemsIndexed(destinations, key = { index, _ -> index }) { index, _ ->
-                              // Use the factory to create the ViewModel
-                              val addressVm = addressViewModelFactory(index)
+                    // --- List of Destination Input Fields ---
+                    LazyColumn(modifier = Modifier.fillMaxWidth()) {
+                        itemsIndexed(destinations, key = { index, _ -> index }) { index, _ ->
+                            // Use the factory to create the ViewModel
+                            val addressVm = addressViewModelFactory(index)
 
-                              AddressAutocompleteTextField(
-                                  addressTextFieldViewModel =
-                                      addressVm, // Pass the created ViewModel
-                                  onLocationSelected = { selectedLocation ->
+                            AddressAutocompleteTextField(
+                                addressTextFieldViewModel =
+                                    addressVm, // Pass the created ViewModel
+                                onLocationSelected = { selectedLocation ->
                                     destinations[index] = selectedLocation
-                                  },
-                                  clearOnSelect = false,
-                                  name = "Destination ${index + 1}")
-                              Spacer(modifier = Modifier.height(8.dp))
-                            }
-                          }
-
-                          Spacer(modifier = Modifier.height(16.dp))
-
-                          // --- Add Destination Button ---
-                          Button(
-                              modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
-                              onClick = {
-                                destinations.add(
-                                    Location(coordinate = Coordinate(0.0, 0.0), name = ""))
-                              },
-                              // The button is disabled if the last added destination is still empty
-                              enabled =
-                                  destinations.isEmpty() || destinations.last().name.isNotEmpty(),
-                          ) {
-                            Text(stringResource(R.string.add_first_destination))
-                          }
+                                },
+                                clearOnSelect = false,
+                                name = "Destination ${index + 1}"
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
                         }
+                    }
 
-                    // --- Next Button ---
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center) {
-                          Button(
-                              modifier = Modifier.testTag(NEXT_BUTTON),
-                              onClick = {
-                                // Filter out any potentially empty destinations before saving
-                                val finalList = destinations.filter { it.name.isNotEmpty() }
-                                viewModel.setDestinations(finalList)
-                                onNext()
-                              },
-                              colors =
-                                  ButtonDefaults.buttonColors(
-                                      containerColor = MaterialTheme.colorScheme.primary)) {
-                                Text(
-                                    stringResource(R.string.next),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.titleMedium)
-                              }
-                        }
-                  }
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // --- Add Destination Button ---
+                    Button(
+                        modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
+                        onClick = {
+                            destinations.add(
+                                Location(coordinate = Coordinate(0.0, 0.0), name = "")
+                            )
+                        },
+                        // The button is disabled if the last added destination is still empty
+                        enabled =
+                            destinations.isEmpty() || destinations.last().name.isNotEmpty(),
+                    ) {
+                        Text(stringResource(R.string.add_first_destination))
+                    }
+                }
+
+                // --- Next Button ---
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(
+                        modifier = Modifier.testTag(NEXT_BUTTON),
+                        onClick = {
+                            // Filter out any potentially empty destinations before saving
+                            val finalList = destinations.filter { it.name.isNotEmpty() }
+                            viewModel.setDestinations(finalList)
+                            onNext()
+                        },
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary
+                            )
+                    ) {
+                        Text(
+                            stringResource(R.string.next),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                    }
+                }
             }
-      }
+
+        }
+
+    }
+}
+@Preview
+@Composable
+fun FirstDestinationScreenPreview() {
+    FirstDestinationScreen()
 }
