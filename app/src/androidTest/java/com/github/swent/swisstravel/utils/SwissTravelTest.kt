@@ -184,7 +184,7 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkSetCurrentTripIsDisplayed() {
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR).assertIsDisplayed()
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_TITLE).assertIsDisplayed()
-    onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).assertIsDisplayed()
     onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
   }

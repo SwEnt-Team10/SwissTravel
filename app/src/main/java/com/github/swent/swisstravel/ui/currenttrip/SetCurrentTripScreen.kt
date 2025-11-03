@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.currenttrip
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -25,7 +26,7 @@ import com.github.swent.swisstravel.ui.mytrips.TripSortType
 object SetCurrentTripScreenTestTags {
   const val TOP_BAR = "SetCurrentTripScreenTopBar"
   const val TOP_BAR_TITLE = "SetCurrentTripScreenTopBarTitle"
-  const val TOP_BAR_BACK_BUTTON = "SetCurrentTripScreenTopBarBackButton"
+  const val TOP_BAR_CLOSE_BUTTON = "SetCurrentTripScreenTopBarCloseButton"
 }
 
 // TODO will selectionMode really be necessary? Probably not, as only one trip can be selected at a
@@ -41,7 +42,7 @@ object SetCurrentTripScreenTestTags {
  * @param onLongPress Callback when a trip element is long-pressed.
  * @param isSelected Function to determine if a trip is selected.
  * @param isSelectionMode Whether the selection mode is active.
- * @param onBackClick Callback when the back button is clicked.
+ * @param onClose Callback when the close button is clicked.
  */
 @Composable
 fun SetCurrentTripScreen(
@@ -52,18 +53,18 @@ fun SetCurrentTripScreen(
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
     isSelectionMode: Boolean = false,
-    onBackClick: () -> Unit = {},
+    onClose: () -> Unit = {},
 ) {
   Scaffold(
       topBar = {
         TopBarSetCurrentTrip(
             title = title,
-            onBackClick = onBackClick,
+            onClose = onClose,
             onClickDropDownMenu = onClickDropDownMenu,
         )
       },
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) { pd ->
-        Box(modifier = Modifier.padding(pd)) {
+        Box(modifier = Modifier.padding(pd).fillMaxSize()) {
           TripList(
               trips = trips,
               onClickTripElement = onClickTripElement,
@@ -78,14 +79,14 @@ fun SetCurrentTripScreen(
  * A composable that displays the top bar for the Set Current Trip screen.
  *
  * @param title The title to display in the top bar.
- * @param onBackClick Callback when the back button is clicked.
+ * @param onClose Callback when the close button is clicked.
  * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBarSetCurrentTrip(
     title: String = "",
-    onBackClick: () -> Unit = {},
+    onClose: () -> Unit = {},
     onClickDropDownMenu: (TripSortType) -> Unit
 ) {
   TopAppBar(
@@ -98,11 +99,11 @@ fun TopBarSetCurrentTrip(
       },
       navigationIcon = {
         IconButton(
-            onClick = onBackClick,
-            modifier = Modifier.testTag(SetCurrentTripScreenTestTags.TOP_BAR_BACK_BUTTON)) {
+            onClick = onClose,
+            modifier = Modifier.testTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON)) {
               Icon(
                   imageVector = Icons.Filled.Close,
-                  contentDescription = "Close Icon",
+                  contentDescription = "Close",
                   tint = MaterialTheme.colorScheme.onBackground)
             }
       },

@@ -16,6 +16,7 @@ import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.TripElementTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.SwissTravelTest
+import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -45,7 +46,7 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
             trips = tripList,
             onClickTripElement = { trip -> clickedTrip = trip },
             onLongPress = { trip -> longPress = trip },
-            onBackClick = { backClicked = true },
+            onClose = { backClicked = true },
         )
       }
     }
@@ -53,11 +54,11 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
     composeTestRule
         .onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2))
         .performSemanticsAction(SemanticsActions.OnLongClick)
-    assert(longPress == trip2)
+    assertEquals(trip2, longPress)
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).performClick()
-    assert(clickedTrip == trip1)
-    composeTestRule.onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_BACK_BUTTON).performClick()
-    assert(backClicked)
+    assertEquals(trip1, clickedTrip)
+    composeTestRule.onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).performClick()
+    assertTrue(backClicked)
   }
 
   @Test
@@ -113,7 +114,7 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
     }
 
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).performClick()
-    assert(selectedTrips.contains(trip1))
-    assert(isSelectionMode)
+    assertTrue(selectedTrips.contains(trip1))
+    assertTrue(isSelectionMode)
   }
 }
