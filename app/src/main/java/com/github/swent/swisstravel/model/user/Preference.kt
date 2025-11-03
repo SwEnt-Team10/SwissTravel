@@ -5,22 +5,108 @@ import com.github.swent.swisstravel.R
 
 /** Enum representing the different preferences a user can select. */
 enum class Preference {
-  SCENIC_VIEWS,
+  FOODIE,
   SPORTS,
   MUSEUMS,
-  HIKE,
-  CHILDREN_FRIENDLY,
-  NIGHTLIFE,
-  SHOPPING,
   WELLNESS,
-  FOODIE,
-  URBAN,
-  GROUP,
+  HIKE,
+  SHOPPING,
   INDIVIDUAL,
+  GROUP,
+  CHILDREN_FRIENDLY,
   COUPLE,
-  WHEELCHAIR_ACCESSIBLE,
+  URBAN,
+  NIGHTLIFE,
+  SCENIC_VIEWS,
   PUBLIC_TRANSPORT,
-  QUICK
+  QUICK,
+  WHEELCHAIR_ACCESSIBLE
+}
+
+/** Object containing utility functions and mappings related to preference categories. */
+object PreferenceCategories {
+  /** Enum representing the different categories of preferences. */
+  enum class Category {
+    ACTIVITY_TYPE,
+    TRAVEL_COMPANION,
+    ENVIRONMENT,
+    ACCESSIBILITY,
+    DEFAULT // Should never have preferences in the default category
+  }
+
+  /**
+   * Maps a Category to its corresponding string resource ID.
+   *
+   * @param category The category to be converted.
+   * @return The string resource ID corresponding to the category.
+   */
+  @StringRes
+  fun Category.categoryToStringRes(): Int =
+      when (this) {
+        Category.ACTIVITY_TYPE -> R.string.preference_category_activity_type
+        Category.TRAVEL_COMPANION -> R.string.preference_category_travel_companion
+        Category.ENVIRONMENT -> R.string.preference_category_environment
+        Category.ACCESSIBILITY -> R.string.preference_category_accessibility
+        else -> R.string.preference_category_default
+      }
+
+  /** Map linking each Preference to its corresponding Category. */
+  fun Preference.category(): Category =
+      when (this) {
+        Preference.MUSEUMS -> Category.ACTIVITY_TYPE
+        Preference.WELLNESS -> Category.ACTIVITY_TYPE
+        Preference.HIKE -> Category.ACTIVITY_TYPE
+        Preference.FOODIE -> Category.ACTIVITY_TYPE
+        Preference.SPORTS -> Category.ACTIVITY_TYPE
+        Preference.SHOPPING -> Category.ACTIVITY_TYPE
+        Preference.INDIVIDUAL -> Category.TRAVEL_COMPANION
+        Preference.GROUP -> Category.TRAVEL_COMPANION
+        Preference.CHILDREN_FRIENDLY -> Category.TRAVEL_COMPANION
+        Preference.COUPLE -> Category.TRAVEL_COMPANION
+        Preference.URBAN -> Category.ENVIRONMENT
+        Preference.NIGHTLIFE -> Category.ENVIRONMENT
+        Preference.SCENIC_VIEWS -> Category.ENVIRONMENT
+        Preference.PUBLIC_TRANSPORT -> Category.ACCESSIBILITY
+        Preference.QUICK -> Category.ACCESSIBILITY
+        Preference.WHEELCHAIR_ACCESSIBLE -> Category.ACCESSIBILITY
+      }
+
+  /** Lists of preferences grouped by their categories. */
+  val activityTypePreferences =
+      Preference.values().filter { it.category() == Category.ACTIVITY_TYPE }
+  val travelCompanionPreferences =
+      Preference.values().filter { it.category() == Category.TRAVEL_COMPANION }
+  val environmentPreferences = Preference.values().filter { it.category() == Category.ENVIRONMENT }
+  val accessibilityPreferences =
+      Preference.values().filter { it.category() == Category.ACCESSIBILITY }
+  // Should always be empty
+  val defaultPreferences = Preference.values().filter { it.category() == Category.DEFAULT }
+
+  /**
+   * Extension function to get the list of preferences for a given Category.
+   *
+   * @return A list of preferences belonging to the category.
+   */
+  fun Category.getPreferences(): List<Preference> {
+    return when (this) {
+      Category.ACTIVITY_TYPE -> activityTypePreferences
+      Category.TRAVEL_COMPANION -> travelCompanionPreferences
+      Category.ENVIRONMENT -> environmentPreferences
+      Category.ACCESSIBILITY -> accessibilityPreferences
+      else -> defaultPreferences
+    }
+  }
+
+  /** Extension function to convert a Category to a test tag string. */
+  fun Category.toTestTagString(): String {
+    return when (this) {
+      Category.ACTIVITY_TYPE -> "activityType"
+      Category.TRAVEL_COMPANION -> "travelCompanion"
+      Category.ENVIRONMENT -> "environment"
+      Category.ACCESSIBILITY -> "accessibility"
+      else -> "default"
+    }
+  }
 }
 
 /**

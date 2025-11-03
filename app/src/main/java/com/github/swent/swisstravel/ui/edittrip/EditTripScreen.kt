@@ -18,9 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
-import com.github.swent.swisstravel.ui.composable.PreferenceToggle
 import com.github.swent.swisstravel.ui.composable.TravelersSelector
 import com.github.swent.swisstravel.ui.edittrip.EditTripScreenViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -165,13 +163,6 @@ fun EditTripScreen(
               PreferenceSelector(
                   isChecked = { pref -> state.selectedPrefs.contains(pref) },
                   onCheckedChange = editTripViewModel::togglePref)
-
-              PreferenceToggle(
-                  label = stringResource(R.string.handicapped_traveler),
-                  value = state.selectedPrefs.contains(Preference.WHEELCHAIR_ACCESSIBLE),
-                  onValueChange = {
-                    editTripViewModel.togglePref(Preference.WHEELCHAIR_ACCESSIBLE)
-                  })
 
               Button(
                   onClick = { showDeleteDialog = true },
