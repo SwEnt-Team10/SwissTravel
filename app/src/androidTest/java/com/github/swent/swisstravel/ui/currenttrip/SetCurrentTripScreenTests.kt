@@ -39,14 +39,14 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
   fun checkScreenFunctionality() {
     var clickedTrip: Trip? = null
     var longPress: Trip? = null
-    var backClicked = false
+    var closeClicked = false
     composeTestRule.setContent {
       SwissTravelTheme {
         SetCurrentTripScreen(
             trips = tripList,
             onClickTripElement = { trip -> clickedTrip = trip },
             onLongPress = { trip -> longPress = trip },
-            onClose = { backClicked = true },
+            onClose = { closeClicked = true },
         )
       }
     }
@@ -58,7 +58,7 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).performClick()
     assertEquals(trip1, clickedTrip)
     composeTestRule.onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).performClick()
-    assertTrue(backClicked)
+    assertTrue(closeClicked)
   }
 
   @Test
