@@ -171,18 +171,10 @@ abstract class SwissTravelTest {
     onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).assertDoesNotExist()
   }
 
-  fun ComposeTestRule.checkSortedTripListNoTopBarIsDisplayed() {
+  fun ComposeTestRule.checkSortedTripListIsDisplayed() {
     onNodeWithTag(SortedTripListTestTags.TITLE_BUTTON_ROW).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE)
-    onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertIsDisplayed()
-  }
-
-  fun ComposeTestRule.checkSortedTripListTopBarIsDisplayed() {
-    onNodeWithTag(SortedTripListTestTags.TOP_BAR).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.TOP_BAR_TITLE).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.TOP_BAR_BACK_BUTTON).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertIsDisplayed()
   }
 

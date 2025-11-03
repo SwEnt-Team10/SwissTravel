@@ -1,9 +1,8 @@
-package com.android.swisstravel.ui.composable
+package com.github.swent.swisstravel.ui.composable
 
+import android.content.Context
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -18,31 +17,16 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
-import com.github.swent.swisstravel.ui.composable.Counter
-import com.github.swent.swisstravel.ui.composable.CounterTestTags
-import com.github.swent.swisstravel.ui.composable.DateSelectorRow
-import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
-import com.github.swent.swisstravel.ui.composable.IconType
-import com.github.swent.swisstravel.ui.composable.PreferenceSelector
-import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
-import com.github.swent.swisstravel.ui.composable.PreferenceSlider
-import com.github.swent.swisstravel.ui.composable.PreferenceSwitch
-import com.github.swent.swisstravel.ui.composable.PreferenceToggle
-import com.github.swent.swisstravel.ui.composable.PreviewContentPreferenceSelector
-import com.github.swent.swisstravel.ui.composable.SliderTestTags
-import com.github.swent.swisstravel.ui.composable.SortedTripList
-import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
-import com.github.swent.swisstravel.ui.composable.SwitchTestTags
-import com.github.swent.swisstravel.ui.composable.ToggleTestTags
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.TripElementTestTags
+import com.github.swent.swisstravel.ui.mytrips.TripSortType
+import com.github.swent.swisstravel.utils.SwissTravelTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-class ComposableTests {
+class ComposableTests : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -173,23 +157,45 @@ class ComposableTests {
   }
 
   @Test
-  fun sortedTripListTopBarDisplaysCorrectlyTest() {
-    var trips by mutableStateOf(tripList)
+  fun sortMenuTest() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    var selectedSortType: TripSortType? = null
+
+    composeTestRule.setContent { SortMenu(onClickDropDownMenu = { selectedSortType = it }) }
+
+    composeTestRule
+        .onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithText(context.getString(R.string.start_date_desc)).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(SortMenuTestTags.getTestTagSortOption(TripSortType.START_DATE_ASC))
+        .performClick()
+    assert(selectedSortType == TripSortType.START_DATE_ASC)
+  }
+
+  @Test
+  fun tripListTest() {
+    var clicked: Trip? = null
+    var longPressed: Trip? = null
 
     composeTestRule.setContent {
-      SortedTripList(
-          title = "My Trips",
-          trips = trips,
-          onClickDropDownMenu = { sortType ->
-            trips = trips.sortedByDescending { trip -> trip.tripProfile.endDate.seconds }
-          },
-          isSelectionMode = false,
-          topBar = true,
-          topBarBackIcon = IconType.CROSS)
+      TripList(
+          trips = tripList,
+          onClickTripElement = { clicked = it },
+          onLongPress = { longPressed = it })
     }
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.TOP_BAR)
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.TOP_BAR_BACK_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+
+    composeTestRule.onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).performClick()
+    assertEquals(trip1, clicked)
+    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).performTouchInput {
+      longClick()
+    }
+    assertEquals(trip2, longPressed)
   }
 
   @OptIn(ExperimentalTestApi::class)
@@ -207,11 +213,10 @@ class ComposableTests {
           onClickTripElement = { clickedTrip = it },
           onLongPress = { longPressedTrip = it },
           onClickDropDownMenu = { sortClicked = true },
-          isSelectionMode = false,
-          topBar = false)
+          isSelectionMode = false)
     }
 
-    composeTestRule.checkSortedTripListNoTopBarIsDisplayed()
+    composeTestRule.checkSortedTripListIsDisplayed()
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).performClick()
     assertEquals(trip1, clickedTrip)
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).performTouchInput {
@@ -226,51 +231,6 @@ class ComposableTests {
     //
     // composeTestRule.onNodeWithTag(SortedTripListTestTags.getTestTagSortOption(TripSortType.END_DATE_DESC)).performClick()
     //        assert(sortClicked)
-  }
-
-  @Test
-  fun sortedTripListWithTopBarTest() {
-    val context = ApplicationProvider.getApplicationContext<Context>()
-    // State trackers for testing callbacks
-    var clickedTrip: Trip? = null
-    var longPressedTrip: Trip? = null
-    var trips by mutableStateOf(tripList)
-
-    composeTestRule.setContent {
-      SortedTripList(
-          title = "My Trips",
-          trips = trips,
-          onClickTripElement = { clickedTrip = it },
-          onLongPress = { longPressedTrip = it },
-          onClickDropDownMenu = { sortType ->
-            trips = trips.sortedByDescending { trip -> trip.tripProfile.endDate.seconds }
-          },
-          isSelectionMode = false,
-          topBar = true)
-    }
-    composeTestRule.checkSortedTripListTopBarIsDisplayed()
-    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).performClick()
-    assertEquals(trip1, clickedTrip)
-    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).performTouchInput {
-      longClick()
-    }
-    assertEquals(trip2, longPressedTrip)
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText(context.getString(R.string.end_date_desc)).performClick()
-    composeTestRule.waitForIdle()
-    val trip1NodeAfterSort =
-        composeTestRule
-            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip1))
-            .fetchSemanticsNode()
-    val trip2NodeAfterSort =
-        composeTestRule
-            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip2))
-            .fetchSemanticsNode()
-
-    assertTrue(
-        trip2NodeAfterSort.positionInRoot.y < trip1NodeAfterSort.positionInRoot.y,
-        "Trip 2 should appear before Trip 1 when sorted DESC by end date")
   }
 
   @Test

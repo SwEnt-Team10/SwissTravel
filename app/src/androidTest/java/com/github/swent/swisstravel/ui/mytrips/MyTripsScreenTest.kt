@@ -1,4 +1,4 @@
-package com.android.swisstravel.ui.mytrips
+package com.github.swent.swisstravel.ui.mytrips
 
 import android.content.Context
 import androidx.compose.ui.test.*
@@ -8,10 +8,6 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
-import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
-import com.github.swent.swisstravel.ui.mytrips.TripElementTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
@@ -69,7 +65,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
         .assertIsDisplayed()
 
     // Check upcoming trip
-    composeTestRule.checkSortedTripListNoTopBarIsDisplayed()
+    composeTestRule.checkSortedTripListIsDisplayed()
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(upcomingTrip))
         .assertIsDisplayed()
