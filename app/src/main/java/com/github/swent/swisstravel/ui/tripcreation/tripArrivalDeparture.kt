@@ -84,7 +84,8 @@ fun ArrivalDepartureScreen(
 
   Scaffold(
       topBar = {
-        TopBar(onClick = { onPrevious() }, modifier = Modifier.fillMaxWidth().testTag(RETURN_BUTTON))
+        TopBar(
+            onClick = { onPrevious() }, modifier = Modifier.fillMaxWidth().testTag(RETURN_BUTTON))
       }) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize().padding(paddingValues),

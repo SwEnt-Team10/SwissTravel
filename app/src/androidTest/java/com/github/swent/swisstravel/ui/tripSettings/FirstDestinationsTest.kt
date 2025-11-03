@@ -13,7 +13,6 @@ import com.github.swent.swisstravel.ui.geocoding.AddressTextTestTags
 import com.github.swent.swisstravel.ui.geocoding.FakeAddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.mytrips.FakeTripsRepository
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
-import com.github.swent.swisstravel.ui.tripSettings.TripSettingsTests
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE
