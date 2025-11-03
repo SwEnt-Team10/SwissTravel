@@ -8,10 +8,14 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.tasks.await
@@ -75,13 +79,46 @@ abstract class SwissTravelTest {
     }
   }
 
+  /** Two examples trips for testing purposes */
+  private val now = Timestamp.now()
+  val trip1 =
+      Trip(
+          "1",
+          "Current Trip",
+          "ownerX",
+          emptyList(),
+          emptyList(),
+          emptyList(),
+          TripProfile(
+              startDate = Timestamp(now.seconds - 3600, 0),
+              endDate = Timestamp(now.seconds + 3600, 0),
+              preferredLocations = emptyList(),
+              preferences = emptyList()))
+
+  val trip2 =
+      Trip(
+          "2",
+          "Upcoming Trip",
+          "ownerX",
+          emptyList(),
+          emptyList(),
+          emptyList(),
+          TripProfile(
+              startDate = Timestamp(now.seconds + 7200, 0),
+              endDate = Timestamp(now.seconds + 10800, 0),
+              preferredLocations = emptyList(),
+              preferences = emptyList()))
+
+  val tripList = listOf(trip1, trip2)
+
   // TODO : Declare ComposeTestRules here
 
   fun ComposeTestRule.checkMyTripsScreenIsDisplayed() {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE)
+    onNodeWithTag(SortedTripListTestTags.TITLE)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trip", substring = false, ignoreCase = true)
+    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
@@ -89,7 +126,8 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkMyTripsScreenIsNotDisplayed() {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertDoesNotExist()
-    onNodeWithTag(MyTripsScreenTestTags.UPCOMING_TRIPS_TITLE).assertDoesNotExist()
+    onNodeWithTag(SortedTripListTestTags.TITLE).assertDoesNotExist()
+    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertDoesNotExist()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).assertDoesNotExist()
   }
 
@@ -126,6 +164,18 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkTopBarIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR).assertIsDisplayed()
     onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkTopBarIsNotDisplayed() {
+    onNodeWithTag(NavigationTestTags.TOP_BAR).assertDoesNotExist()
+    onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkSortedTripListIsDisplayed() {
+    onNodeWithTag(SortedTripListTestTags.TITLE_BUTTON_ROW).assertIsDisplayed()
+    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(SortedTripListTestTags.TITLE)
+    onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertIsDisplayed()
   }
 
   fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
