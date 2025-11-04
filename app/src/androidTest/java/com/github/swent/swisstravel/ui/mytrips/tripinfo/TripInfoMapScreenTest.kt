@@ -29,11 +29,20 @@ class TripInfoMapScreenTest {
   }
 
   @Test
-  fun clickOnBackCallOnBack() {
+  fun clickOnBackCallsOnBackAfterMapHides() {
     var called = false
+
     composeRule.setContent { TripInfoMapScreen(onBack = { called = true }) }
 
+    // Perform click on back button
     composeRule.onNodeWithTag(TripInfoMapTestTags.BACK_BUTTON).performClick()
+
+    // Advance until all recompositions / coroutines are done
+    composeRule.waitForIdle()
+
+    // Or, safer with coroutines that use LaunchedEffect:
+    composeRule.mainClock.advanceTimeByFrame()
+
     assertTrue("onBack should have been called after clicking back button", called)
   }
 }
