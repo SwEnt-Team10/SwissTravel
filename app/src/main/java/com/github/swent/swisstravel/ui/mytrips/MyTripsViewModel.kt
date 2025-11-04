@@ -161,6 +161,12 @@ class MyTripsViewModel(
     }
   }
 
+  /**
+   * Toggles the favorite status of all selected trips.
+   *
+   * Updates each selected trip by inverting its `isFavorite` flag, saves changes via
+   * [TripsRepository.editTrip], exits selection mode, and refreshes the UI.
+   */
   fun toggleFavoriteForSelectedTrips() {
     val selected = _uiState.value.selectedTrips
     viewModelScope.launch {
