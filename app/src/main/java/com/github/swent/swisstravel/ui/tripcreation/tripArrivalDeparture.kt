@@ -132,7 +132,7 @@ fun ArrivalDepartureScreen(
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary)) {
                       Text(
-                          stringResource(R.string.done),
+                          stringResource(R.string.next),
                           color = MaterialTheme.colorScheme.onPrimary,
                           style = MaterialTheme.typography.titleMedium)
                     }

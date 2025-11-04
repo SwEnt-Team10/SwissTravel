@@ -70,9 +70,7 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null, isLoggedIn: 
                   onClick = { navigationActions?.navigateTo(Screen.TripSettings1) },
                   enabled = isLoggedIn,
                   modifier =
-                      Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)
-                          .height(56.dp)
-                          .width(240.dp)) {
+                      Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                     Text(
                         text = stringResource(R.string.where_starting),
                         style = MaterialTheme.typography.titleMedium,
