@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.displayStringRes
 
+/** Test tags for UI tests to identify components. */
 object TripPreferenceIconTestTags {
   const val TRIP_PREFERENCE_ICON = "tripPreferenceIcon"
 }
