@@ -82,6 +82,7 @@
     <string name="cancel_selection">Cancel selection</string>
     <string name="more_options">More options</string>
     <string name="delete_selected">Delete selected</string>
+    <string name="favorite_selected">Favorite selected</string>
     <plurals name="confirm_delete_title">
         <item quantity="one" formatted="true">Are you sure you want to delete %d Trip?</item>
         <item quantity="other" formatted="true">Are you sure you want to delete %d Trips?</item>
@@ -157,6 +158,5 @@
     <string name="preference_category_environment">Environment</string>
     <string name="preference_category_accessibility">Accessibility</string>
     <string name="preference_category_default">Default</string>
-    <string name="favorite_selected">Favorite selected</string>
 
 </resources>
