@@ -70,6 +70,7 @@ open class DurationMatrix(private val context: Context) {
                 callback(body.durations()?.map { it.toDoubleArray() }?.toTypedArray())
               } else {
                 // The request was successful, but the Matrix API returned an error.
+                Log.e("DurationMatrix", "Matrix API error: ${response.message()}")
                 callback(null)
               }
             } else {
@@ -80,6 +81,7 @@ open class DurationMatrix(private val context: Context) {
           }
 
           override fun onFailure(call: Call<MatrixResponse>, t: Throwable) {
+            Log.e("DurationMatrix", "Request execution failed.", t)
             callback(null)
           }
         })
