@@ -56,7 +56,8 @@ fun SortMenu(onClickDropDownMenu: (TripSortType) -> Unit = {}) {
                   TripSortType.END_DATE_ASC to R.string.end_date_asc,
                   TripSortType.END_DATE_DESC to R.string.end_date_desc,
                   TripSortType.NAME_ASC to R.string.name_asc,
-                  TripSortType.NAME_DESC to R.string.name_desc)
+                  TripSortType.NAME_DESC to R.string.name_desc,
+                  TripSortType.FAVORITES_FIRST to R.string.favorites_first)
           sortOptions.forEach { (type, resId) ->
             DropdownMenuItem(
                 modifier =

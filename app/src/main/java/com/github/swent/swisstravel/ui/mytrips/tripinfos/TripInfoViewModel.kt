@@ -23,6 +23,7 @@ data class TripInfoUIState(
     val routeSegments: List<RouteSegment> = emptyList(),
     val activities: List<Activity> = emptyList(),
     val tripProfile: TripProfile? = null,
+    val isFavorite: Boolean = false,
     val errorMsg: String? = null
 )
 /** ViewModel for the TripInfo screen */
@@ -65,10 +66,43 @@ class TripInfoViewModel(
                 locations = trip.locations,
                 routeSegments = trip.routeSegments,
                 activities = trip.activities,
-                tripProfile = trip.tripProfile)
+                tripProfile = trip.tripProfile,
+                isFavorite = trip.isFavorite)
       } catch (e: Exception) {
         Log.e("TripInfoViewModel", "Error loading trip info", e)
         setErrorMsg("Failed to load trip info: ${e.message}")
+      }
+    }
+  }
+
+  /**
+   * Toggles the favorite status of the current trip.
+   *
+   * Updates the UI and persists the change to the repository. Rolls back and sets an error message
+   * if persistence fails.
+   */
+  fun toggleFavorite() {
+    val current = _uiState.value
+    val newFavorite = !current.isFavorite
+
+    viewModelScope.launch {
+      try {
+        // Get the full trip object from the repository (if needed)
+        val trip = tripsRepository.getTrip(current.uid)
+
+        // Create an updated version of it
+        val updatedTrip = trip.copy(isFavorite = newFavorite)
+
+        // Persist using the existing updateTrip() method
+        tripsRepository.editTrip(current.uid, updatedTrip)
+
+        // Update UI
+        _uiState.value = current.copy(isFavorite = newFavorite)
+      } catch (e: Exception) {
+        Log.e("TripInfoViewModel", "Failed to update favorite", e)
+        // Roll back on failure
+        _uiState.value = current
+        setErrorMsg("Failed to update favorite: ${e.message}")
       }
     }
   }

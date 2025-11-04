@@ -20,7 +20,8 @@ enum class TripSortType {
   END_DATE_ASC,
   END_DATE_DESC,
   NAME_ASC,
-  NAME_DESC
+  NAME_DESC,
+  FAVORITES_FIRST,
 }
 
 /**
@@ -188,6 +189,7 @@ class MyTripsViewModel(
       TripSortType.END_DATE_DESC -> trips.sortedByDescending { it.tripProfile.endDate }
       TripSortType.NAME_ASC -> trips.sortedBy { it.name.lowercase() }
       TripSortType.NAME_DESC -> trips.sortedByDescending { it.name.lowercase() }
+      TripSortType.FAVORITES_FIRST -> trips.sortedByDescending { it.isFavorite }
     }
   }
 

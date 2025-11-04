@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -36,11 +38,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.theme.favoriteIcon
 
 /** Test tags for TripInfoScreen composable */
 object TripInfoTestTags {
   const val BACK_BUTTON = "backButton"
   const val EDIT_BUTTON = "editButton"
+  const val FAVORITE_BUTTON = "favoriteButton"
   const val TRIP_CARD = "tripCard"
 }
 
@@ -98,11 +102,15 @@ fun TripInfoScreen(
                   }
             },
             actions = {
+              val isFavorite = tripInfoUIState.isFavorite
+              FavoriteButton(
+                  isFavorite = isFavorite,
+                  onToggleFavorite = { tripInfoViewModel.toggleFavorite() })
               IconButton(
                   onClick = { onEditTrip() },
                   modifier = Modifier.testTag(TripInfoTestTags.EDIT_BUTTON)) {
                     Icon(
-                        imageVector = Icons.Filled.Edit,
+                        imageVector = Icons.Outlined.Edit,
                         contentDescription = stringResource(R.string.edit_trip),
                         tint = MaterialTheme.colorScheme.onBackground)
                   }
@@ -131,5 +139,29 @@ fun TripInfoScreen(
                     }
                   }
             }
+      }
+}
+
+/**
+ * Composable that displays a favorite button.
+ *
+ * @param isFavorite whether the trip is a favorite
+ * @param onToggleFavorite lambda to be called when the favorite button is clicked
+ */
+@Composable
+fun FavoriteButton(isFavorite: Boolean, onToggleFavorite: () -> Unit) {
+  IconButton(
+      onClick = onToggleFavorite, modifier = Modifier.testTag(TripInfoTestTags.FAVORITE_BUTTON)) {
+        if (isFavorite) {
+          Icon(
+              imageVector = Icons.Default.Star,
+              contentDescription = stringResource(R.string.unfavorite_icon),
+              tint = favoriteIcon)
+        } else {
+          Icon(
+              imageVector = Icons.Outlined.StarOutline,
+              contentDescription = stringResource(R.string.favorite_icon_empty),
+              tint = MaterialTheme.colorScheme.onBackground)
+        }
       }
 }

@@ -39,6 +39,7 @@ import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.theme.favoriteIcon
 
 /**
  * Contains helper methods for generating unique test tags used in [TripElement].
@@ -115,7 +116,7 @@ fun TripElement(
                   Icon(
                       Icons.Default.Star,
                       contentDescription = stringResource(R.string.favorite_icon),
-                      tint = Color(0xFFFFC107))
+                      tint = favoriteIcon)
                   Spacer(modifier = Modifier.width(16.dp))
                 }
                 if (isSelectionMode) {
