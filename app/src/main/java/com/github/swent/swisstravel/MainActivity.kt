@@ -256,14 +256,6 @@ fun SwissTravelApp(
             onNext = { navigationActions.navigateTo(Screen.TripSummary) },
             onPrevious = { navigationActions.goBack() })
       }
-        /**
-      composable(Screen.TripSettingsName.route) {
-        TripNameScreen(
-            viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.MyTrips) },
-            onPrevious = { navigationActions.goBack() })
-      }
-      */
         composable(Screen.TripSummary.route) {
             TripSummaryScreen(
                 viewModel = tripSettingsViewModel(navController),
