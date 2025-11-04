@@ -114,8 +114,8 @@ fun FirstDestinationScreen(
                                     Location(coordinate = Coordinate(0.0, 0.0), name = ""))
                               },
                               enabled =
-                                  destinations.isEmpty() ||
-                                      destinations.last().name.isNotEmpty() ||
+                                  (destinations.isEmpty() ||
+                                      destinations.last().name.isNotEmpty()) &&
                                       destinations.size < MAX_DESTINATIONS,
                           ) {
                             Text(
