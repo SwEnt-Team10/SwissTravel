@@ -22,13 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.TopBar
-import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
 import androidx.compose.foundation.layout.Box
 
 @Composable
@@ -42,11 +40,29 @@ fun TripSummaryScreen(
     var tripName by rememberSaveable { mutableStateOf("") }
     val startDate = state.date.startDate
     val endDate = state.date.endDate
+    val departure = state.arrivalDeparture.departureLocation?.name ?: ""
+    val arrival = state.arrivalDeparture.arrivalLocation?.name ?: ""
+
+    val tripSummaryTitle = stringResource(R.string.trip_summary)
+    val tripNameLabel = stringResource(R.string.trip_name_summary)
+    val numberOfTravelersLabel = stringResource(R.string.number_of_travelers)
+    val adultSingular = stringResource(R.string.adult)
+    val adultPlural = stringResource(R.string.adults)
+    val childSingular = stringResource(R.string.child)
+    val childPlural = stringResource(R.string.children)
+    val travellingPreferencesLabel = stringResource(R.string.travelling_preferences_summary)
+    val arrivalLabel = stringResource(R.string.arrival)
+    val departureLabel = stringResource(R.string.departure)
+    val placesLabel = stringResource(R.string.places)
+    val createTripLabel = stringResource(R.string.create_trip_summary)
+    val emptyNameToast = stringResource(R.string.trip_name_required)
+    val emptyDeparture = stringResource(R.string.departure_required)
+    val emptyArrival = stringResource(R.string.arrival_required)
 
     val listState = rememberLazyListState()
 
     Scaffold(
-        topBar = { TopBar(onClick = onPrevious, title = stringResource(R.string.trip_summary)) }
+        topBar = { TopBar(onClick = onPrevious, title = tripSummaryTitle) }
     ) { pd ->
         Surface(
             modifier = Modifier.fillMaxSize(),
@@ -64,12 +80,13 @@ fun TripSummaryScreen(
                         onValueChange = { new ->
                             tripName = new
                         },
-                        label = { Text(stringResource(R.string.trip_name_summary)) },
+                        label = { Text(tripNameLabel) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(16.dp)
                     )
                 }
+                // Summary of dates
                 item {
                     Text(
                         text = "From: $startDate",
@@ -84,21 +101,17 @@ fun TripSummaryScreen(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
+                // Summary of travelers
                 item {
                     Text(
-                        text = stringResource(R.string.number_of_travelers),
+                        text = numberOfTravelersLabel,
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
                 item {
                     val nAdults = state.travelers.adults
-                    val stringAdult =
-                        if (nAdults == 1) {
-                            stringResource(R.string.adult)
-                        } else {
-                            stringResource(R.string.adults)
-                        }
+                    val stringAdult = if (nAdults == 1) adultSingular else adultPlural
                     Text(
                         text = "$nAdults $stringAdult",
                         style = MaterialTheme.typography.bodyLarge,
@@ -107,35 +120,59 @@ fun TripSummaryScreen(
                 }
                 item {
                     val nChildren = state.travelers.children
-                    val stringAdult =
-                        if (nChildren == 1) {
-                            stringResource(R.string.child)
-                        } else {
-                            stringResource(R.string.children)
-                        }
+                    val stringChild = if (nChildren == 1) childSingular else childPlural
                     Text(
-                        text = "$nChildren $stringAdult",
+                        text = "$nChildren $stringChild",
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                // Summary of travelling preferences
+                item {
+                    Text(
+                        text = travellingPreferencesLabel,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                // summary of start and end locations
+                item {
+                    Text(
+                        text = arrivalLabel,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                item {
+                    Text(
+                        text = arrival,
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
                 item {
                     Text(
-                        text = stringResource(R.string.travelling_preferences_summary),
+                        text = departureLabel,
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
-
-
-
-
-
-
-
-
-
-
+                item {
+                    Text(
+                        text = departure,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                // summary of places
+                item {
+                    Text(
+                        text = placesLabel,
+                        style = MaterialTheme.typography.headlineSmall,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    )
+                }
+                // Create trip button
                 item {
                     Box(
                         modifier = Modifier
@@ -145,17 +182,27 @@ fun TripSummaryScreen(
                     ) {
                         Button(
                             onClick = {
-                                viewModel.updateName(tripName)
-                                viewModel.saveTrip()
-                                Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-                                onNext()
+                                if (tripName.isBlank()) {
+                                    Toast.makeText(context, emptyNameToast, Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                } else if (departure == "") {
+                                    Toast.makeText(context, emptyDeparture, Toast.LENGTH_SHORT).show()
+                                    return@Button
+                                } else  if (arrival == "") {
+                                    Toast.makeText(context, emptyArrival, Toast.LENGTH_SHORT).show()
+                                } else {
+                                    viewModel.updateName(tripName)
+                                    viewModel.saveTrip()
+                                    Toast.makeText(context, createTripLabel, Toast.LENGTH_SHORT).show()
+                                    onNext()
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary
                             )
                         ) {
                             Text(
-                                stringResource(R.string.create_trip_summary),
+                                createTripLabel,
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 style = MaterialTheme.typography.titleMedium
                             )
