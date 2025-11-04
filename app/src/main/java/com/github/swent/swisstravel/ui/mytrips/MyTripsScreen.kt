@@ -2,10 +2,12 @@ package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -34,6 +36,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -48,6 +51,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripList
+import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -92,6 +96,7 @@ object MyTripsScreenTestTags {
  * @param myTripsViewModel The [MyTripsViewModel] providing state and business logic.
  * @param onSelectTrip Callback invoked when a trip is selected (normal mode).
  * @param onPastTrips Callback invoked when the "Past Trips" button is pressed.
+ * @param onCreateTrip Callback invoked when the "Create Trip" button is pressed.
  * @param navigationActions Optional [NavigationActions] for handling bottom navigation and screen
  *   transitions.
  */
@@ -299,6 +304,7 @@ private fun MyTripsTopAppBar(
  * @param onToggleSelection Toggles trip selection.
  * @param onEnterSelectionMode Activates selection mode.
  * @param navigationActions Optional navigation actions for map entry.
+ * @param editButtonShown Whether to show the edit button for the current trip.
  */
 @Composable
 private fun CurrentTripSection(
@@ -315,17 +321,7 @@ private fun CurrentTripSection(
       editButtonShown = editButtonShown,
       onEditCurrentTrip = { navigationActions?.navigateTo(Screen.SetCurrentTrip) })
 
-  Spacer(modifier = Modifier.height(4.dp))
-
-  //  Box(contentAlignment = Alignment.TopCenter) {
-  //    Button(
-  //        onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
-  //        modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
-  //          Text(stringResource(R.string.enter_map))
-  //        }
-  //  }
-
-  Spacer(modifier = Modifier.height(4.dp))
+  Spacer(modifier = Modifier.height(8.dp))
 
   currentTrip?.let {
     TripElement(
@@ -337,9 +333,6 @@ private fun CurrentTripSection(
         },
         isSelected = it in selectedTrips,
         isSelectionMode = isSelectionMode)
-    Text(
-        stringResource(R.string.warning_multiple_current_trip),
-        style = MaterialTheme.typography.labelSmall)
   }
       ?: Text(
           text = stringResource(R.string.no_current_trip),
@@ -355,21 +348,27 @@ private fun CurrentTripSection(
  */
 @Composable
 private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip: () -> Unit = {}) {
-  Row {
-    Text(
-        text = stringResource(R.string.current_trip),
-        style = MaterialTheme.typography.headlineLarge,
-        color = MaterialTheme.colorScheme.onBackground,
-        modifier =
-            Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
-    if (editButtonShown) {
-      IconButton(
-          onClick = onEditCurrentTrip,
-          modifier = Modifier.testTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)) {
-            Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit current trip")
-          }
-    }
-  }
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(top = 26.dp, bottom = 10.dp)
+              .testTag(SortedTripListTestTags.TITLE_BUTTON_ROW),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.current_trip),
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier =
+                Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+        if (editButtonShown) {
+          IconButton(
+              onClick = onEditCurrentTrip,
+              modifier = Modifier.testTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)) {
+                Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit current trip")
+              }
+        }
+      }
 }
 
 /**

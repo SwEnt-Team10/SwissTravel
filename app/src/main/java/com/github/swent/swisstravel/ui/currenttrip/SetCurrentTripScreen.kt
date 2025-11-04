@@ -35,9 +35,6 @@ object SetCurrentTripScreenTestTags {
   const val TOP_BAR_CLOSE_BUTTON = "SetCurrentTripScreenTopBarCloseButton"
 }
 
-// TODO will selectionMode really be necessary? Probably not, as only one trip can be selected at a
-// time.
-// TODO I will see in my PR where I put connect with the program
 /**
  * A composable that displays the screen used to set the current trip.
  *
@@ -47,7 +44,6 @@ object SetCurrentTripScreenTestTags {
  * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
  * @param onLongPress Callback when a trip element is long-pressed.
  * @param isSelected Function to determine if a trip is selected.
- * @param isSelectionMode Whether the selection mode is active.
  * @param onClose Callback when the close button is clicked.
  */
 @Composable
@@ -58,7 +54,6 @@ fun SetCurrentTripScreen(
     onClickDropDownMenu: (TripSortType) -> Unit = {},
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false,
     onClose: () -> Unit = {},
 ) {
   val uiState = viewModel.uiState.collectAsState().value
@@ -88,7 +83,7 @@ fun SetCurrentTripScreen(
               },
               onLongPress = onLongPress,
               isSelected = isSelected,
-              isSelectionMode = isSelectionMode)
+              isSelectionMode = false)
         }
       }
 }

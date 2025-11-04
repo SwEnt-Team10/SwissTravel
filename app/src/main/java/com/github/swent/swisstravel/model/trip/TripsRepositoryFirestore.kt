@@ -43,6 +43,10 @@ class TripsRepositoryFirestore(
 
   override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).set(updatedTrip).await()
+    // Otherwise the trip doesn't get marked as current
+    if (updatedTrip.isCurrentTrip) {
+      setCurrentTrip(tripId)
+    }
   }
 
   override suspend fun deleteTrip(tripId: String) {

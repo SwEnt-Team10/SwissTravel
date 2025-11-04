@@ -261,7 +261,8 @@ class EditTripScreenTest {
         routeSegments = emptyList<RouteSegment>(),
         activities = emptyList<Activity>(),
         tripProfile = profile,
-        isFavorite = false)
+        isFavorite = false,
+        isCurrentTrip = false)
   }
 
   // inside your EditTripScreenTest.kt
@@ -301,6 +302,10 @@ class EditTripScreenTest {
 
     override suspend fun deleteTrip(tripId: String) {
       deleteCalls++
+    }
+
+    override suspend fun setCurrentTrip(newCurrentUid: String) {
+      /* no-op */
     }
 
     // Call this to release a pending getTrip() suspension
