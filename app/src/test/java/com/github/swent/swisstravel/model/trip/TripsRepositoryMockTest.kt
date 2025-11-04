@@ -11,7 +11,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
-import org.bouncycastle.util.test.SimpleTest.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -183,7 +182,7 @@ class TripsRepositoryFirestorePublicTest {
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
             "children" to 0L)
-    every { doc.get("isFavorite") } returns false
+    every { doc.getBoolean("isFavorite") } returns false
 
     val trips = repo.getAllTrips()
 
