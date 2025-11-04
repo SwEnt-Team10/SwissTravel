@@ -157,5 +157,6 @@
     <string name="preference_category_environment">Environment</string>
     <string name="preference_category_accessibility">Accessibility</string>
     <string name="preference_category_default">Default</string>
+    <string name="favorite_selected">Favorite selected</string>
 
 </resources>

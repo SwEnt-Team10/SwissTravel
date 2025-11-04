@@ -161,6 +161,23 @@ class MyTripsViewModel(
     }
   }
 
+  fun toggleFavoriteForSelectedTrips() {
+    val selected = _uiState.value.selectedTrips
+    viewModelScope.launch {
+      try {
+        selected.forEach { trip ->
+          val updatedTrip = trip.copy(isFavorite = !trip.isFavorite)
+          tripsRepository.editTrip(trip.uid, updatedTrip)
+        }
+        toggleSelectionMode(false)
+        refreshUIState()
+      } catch (e: Exception) {
+        Log.e("MyTripsViewModel", "Error toggling favorites", e)
+        setErrorMsg("Failed to update favorites.")
+      }
+    }
+  }
+
   /**
    * Selects all trips (both current and upcoming).
    *

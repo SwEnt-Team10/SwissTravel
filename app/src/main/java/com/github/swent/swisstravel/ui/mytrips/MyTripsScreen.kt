@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -13,6 +14,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -62,16 +64,13 @@ object MyTripsScreenTestTags {
   const val CURRENT_TRIP_TITLE = "currentTripTitle"
   const val CREATE_TRIP_BUTTON = "createTrip"
   const val EMPTY_CURRENT_TRIP_MSG = "emptyCurrentTrip"
-  const val UPCOMING_TRIPS_TITLE = "upcomingTripsTitle"
-  const val UPCOMING_TRIPS = "upcomingTrips"
-  const val EMPTY_UPCOMING_TRIPS_MSG = "emptyUpcomingTrips"
   const val CONFIRM_DELETE_BUTTON = "confirmDelete"
   const val CANCEL_DELETE_BUTTON = "cancelDelete"
+  const val FAVORITE_SELECTED_BUTTON = "favoriteSelected"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
   const val CANCEL_SELECTION_BUTTON = "cancelSelection"
   const val MORE_OPTIONS_BUTTON = "moreOptions"
-  const val SORT_DROPDOWN_MENU = "sortDropdownMenu"
 
   /** Returns a unique test tag for the given [trip] element. */
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
@@ -107,6 +106,9 @@ fun MyTripsScreen(
   val context = LocalContext.current
   val uiState by myTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
+
+  // Handle back press while in selection mode
+  BackHandler(enabled = uiState.isSelectionMode) { myTripsViewModel.toggleSelectionMode(false) }
 
   val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -149,6 +151,7 @@ fun MyTripsScreen(
             uiState = uiState,
             selectedTripCount = selectedTripCount,
             onCancelSelection = { myTripsViewModel.toggleSelectionMode(false) },
+            onFavoriteSelected = { myTripsViewModel.toggleFavoriteForSelectedTrips() },
             onDeleteSelected = { showDeleteConfirmation = true },
             onSelectAll = { myTripsViewModel.selectAllTrips() },
             onPastTrips = onPastTrips)
@@ -212,6 +215,7 @@ private fun MyTripsTopAppBar(
     uiState: MyTripsUIState,
     selectedTripCount: Int,
     onCancelSelection: () -> Unit,
+    onFavoriteSelected: () -> Unit,
     onDeleteSelected: () -> Unit,
     onSelectAll: () -> Unit,
     onPastTrips: () -> Unit,
@@ -241,6 +245,13 @@ private fun MyTripsTopAppBar(
       actions = {
         if (uiState.isSelectionMode) {
           var expanded by remember { mutableStateOf(false) }
+          IconButton(
+              onClick = onFavoriteSelected,
+              modifier = Modifier.testTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)) {
+                Icon(
+                    Icons.Default.StarOutline,
+                    contentDescription = stringResource(R.string.favorite_selected))
+              }
           IconButton(
               onClick = onDeleteSelected,
               modifier = Modifier.testTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON)) {
@@ -313,16 +324,6 @@ private fun CurrentTripSection(
       style = MaterialTheme.typography.headlineLarge,
       color = MaterialTheme.colorScheme.onBackground,
       modifier = Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
-
-  Spacer(modifier = Modifier.height(4.dp))
-
-  //  Box(contentAlignment = Alignment.TopCenter) {
-  //    Button(
-  //        onClick = { navigationActions?.navigateTo(Screen.SelectedTripMap) },
-  //        modifier = Modifier.testTag(NavigationMapScreenTestTags.ENTER_MAP_BUTTON)) {
-  //          Text(stringResource(R.string.enter_map))
-  //        }
-  //  }
 
   Spacer(modifier = Modifier.height(4.dp))
 
