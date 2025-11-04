@@ -256,7 +256,8 @@ class EditTripScreenViewModelTest {
         routeSegments = emptyList<RouteSegment>(),
         activities = emptyList<Activity>(),
         tripProfile = profile,
-        isFavorite = false)
+        isFavorite = false,
+        isCurrentTrip = false)
   }
 }
 
