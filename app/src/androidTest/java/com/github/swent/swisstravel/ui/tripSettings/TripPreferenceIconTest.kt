@@ -17,9 +17,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * UI tests for the TripPreferenceIcon composable.
- */
+/** UI tests for the TripPreferenceIcon composable. */
 @RunWith(AndroidJUnit4::class)
 class TripPreferenceIconTest {
 
