@@ -1,4 +1,4 @@
-package com.android.swisstravel.ui.tripSettings
+package com.github.swent.swisstravel.ui.tripcreation
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
@@ -9,26 +9,43 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import com.github.swent.swisstravel.ui.geocoding.AddressTextTestTags
-import com.github.swent.swisstravel.ui.geocoding.FakeAddressTextFieldViewModel
+import com.github.swent.swisstravel.model.map.LocationRepository
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModel
+import com.github.swent.swisstravel.ui.geocoding.DestinationTextTestTags
 import com.github.swent.swisstravel.ui.mytrips.FakeTripsRepository
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
-import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.NEXT_BUTTON
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
-import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
+// Fake repository for testing
+class FakeLocationRepository : LocationRepository {
+  val locations =
+      listOf(
+          Location(name = "Lausanne", coordinate = Coordinate(46.5197, 6.6323)),
+          Location(name = "Geneva", coordinate = Coordinate(46.2044, 6.1432)),
+          Location(name = "Zurich", coordinate = Coordinate(47.3769, 8.5417)))
+
+  override suspend fun search(query: String): List<Location> {
+    return if (query.isNotEmpty()) {
+      locations.filter { it.name.contains(query, ignoreCase = true) }
+    } else {
+      emptyList()
+    }
+  }
+}
+
 class FirstDestinationsTest {
   @get:Rule val composeTestRule = createComposeRule()
 
-  // A single, controllable fake ViewModel for all generated text fields in a test
-  private val fakeAddressVm = FakeAddressTextFieldViewModel()
+  private val fakeLocationRepository = FakeLocationRepository()
 
   private fun setContent(
       viewModel: TripSettingsViewModel =
@@ -42,7 +59,7 @@ class FirstDestinationsTest {
           onNext = onNext,
           onPrevious = onPrevious,
           // Inject the factory to return our fake ViewModel
-          addressViewModelFactory = { _ -> fakeAddressVm })
+          destinationViewModelFactory = { _ -> DestinationTextFieldViewModel(fakeLocationRepository) })
     }
   }
 
@@ -66,7 +83,7 @@ class FirstDestinationsTest {
     setContent()
     composeTestRule.onNodeWithTag(ADD_FIRST_DESTINATION).performClick()
     composeTestRule
-        .onAllNodesWithTag(AddressTextTestTags.INPUT_LOCATION)
+        .onAllNodesWithTag(DestinationTextTestTags.INPUT_LOCATION)
         .onFirst()
         .assertIsDisplayed()
   }
@@ -83,25 +100,36 @@ class FirstDestinationsTest {
   fun clickingNextUpdatesViewModelAndTriggersOnNext() {
     var onNextCalled = false
     val tripSettingsViewModel = TripSettingsViewModel(FakeTripsRepository(), FakeUserRepository())
-    setContent(viewModel = tripSettingsViewModel, onNext = { onNextCalled = true })
+    val destinationViewModel = DestinationTextFieldViewModel(fakeLocationRepository)
+
+    composeTestRule.setContent {
+      FirstDestinationScreen(
+          viewModel = tripSettingsViewModel,
+          onNext = { onNextCalled = true },
+          onPrevious = {},
+          destinationViewModelFactory = { _ -> destinationViewModel })
+    }
 
     // 1. Add the UI for the text field
     composeTestRule.onNodeWithTag(ADD_FIRST_DESTINATION).performClick()
     composeTestRule.waitForIdle()
 
     // 2. Find the input field and type text into it.
-    // This will trigger the fake ViewModel to produce suggestions.
-    val inputNode = composeTestRule.onAllNodesWithTag(AddressTextTestTags.INPUT_LOCATION).onFirst()
+    val inputNode =
+        composeTestRule.onAllNodesWithTag(DestinationTextTestTags.INPUT_LOCATION).onFirst()
     inputNode.performTextInput("Lausanne")
-    composeTestRule.waitForIdle() // Let debounce and suggestion UI appear
 
-    // 3. Find the suggestion and click it. This is the step that was missing.
-    // This click triggers onLocationSelected in AddressAutocompleteTextField.
+    // Wait until the ViewModel's state contains the suggestions. This is the key fix.
+    composeTestRule.waitUntil(timeoutMillis = 2000) {
+      destinationViewModel.addressState.value.locationSuggestions.isNotEmpty()
+    }
+
+    // 3. Find the suggestion and click it.
     composeTestRule
-        .onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
+        .onAllNodesWithTag(DestinationTextTestTags.LOCATION_SUGGESTION)
         .onFirst()
         .performClick()
-    composeTestRule.waitForIdle() // Let the state update after the click
+    composeTestRule.waitForIdle()
 
     // 4. Assert the button is now enabled
     composeTestRule.onNodeWithTag(NEXT_BUTTON).assertIsEnabled()
@@ -112,11 +140,9 @@ class FirstDestinationsTest {
     // 6. Assert the results
     assertTrue("onNext should have been called", onNextCalled)
     val finalDestinations = tripSettingsViewModel.tripSettings.value.destinations
-    val expectedLocation =
-        fakeAddressVm.addressState.value.locationSuggestions
-            .first() // Get the location from the fake
+    val expectedLocation = fakeLocationRepository.locations.first()
 
     assertEquals(1, finalDestinations.size)
-    assertEquals(expectedLocation, finalDestinations.first()) // This will now pass correctly
+    assertEquals(expectedLocation, finalDestinations.first())
   }
 }
