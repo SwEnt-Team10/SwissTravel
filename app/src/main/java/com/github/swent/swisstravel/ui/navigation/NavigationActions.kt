@@ -49,6 +49,9 @@ sealed class Screen(
   object TripSettingsArrivalDeparture :
       Screen(route = "arrival_departure", name = "Arrival_Departure")
 
+  object TripSettingsFirstDestination :
+      Screen(route = "first_destination", name = "First destination")
+
   object TripSettingsName : Screen(route = "trip_name", name = "Name your trip")
 
   object EditTrip : Screen(route = "edit_trip/{tripId}", name = "Edit trip") {

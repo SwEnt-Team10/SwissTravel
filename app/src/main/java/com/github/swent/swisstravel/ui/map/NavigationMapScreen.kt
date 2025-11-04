@@ -63,8 +63,9 @@ fun NavigationMap() {
       NavigationMapViewModel(application = context.applicationContext as android.app.Application)
 
   // get a route line view object (to display the route), and the data to draw the route
-  val routeLineViewOptions = MapboxRouteLineViewOptions.Builder(context).build()
-  val routeLineView = MapboxRouteLineView(routeLineViewOptions)
+  val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
+
+  val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
   val routeDrawData by viewModel.routeLineDrawData.collectAsState()
 
   // create a map and set the initial camera position to EPFL (hardcoded) to see the start of the
@@ -90,5 +91,10 @@ fun NavigationMap() {
         }
       }
 
-  // No explicit DisposableEffect needed; ViewModel handles teardown in onCleared()
+  DisposableEffect(Unit) {
+    onDispose {
+      routeLineView.cancel()
+      viewModel.setRouteRendered(false)
+    }
+  }
 }

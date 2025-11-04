@@ -39,7 +39,8 @@ data class TripSettings(
     val date: TripDate = TripDate(),
     val travelers: TripTravelers = TripTravelers(),
     val preferences: List<Preference> = emptyList(),
-    val arrivalDeparture: TripArrivalDeparture = TripArrivalDeparture()
+    val arrivalDeparture: TripArrivalDeparture = TripArrivalDeparture(),
+    val destinations: List<Location> = emptyList()
 )
 
 /** Sealed interface representing various validation events during trip settings. */
@@ -88,6 +89,10 @@ class TripSettingsViewModel(
     Log.d("TripSettingsViewModel", "Updated preferences: ${_tripSettings.value.preferences}")
   }
 
+  fun setDestinations(destinations: List<Location>) {
+    _tripSettings.update { it.copy(destinations = destinations) }
+  }
+
   init {
     viewModelScope.launch {
       try {
@@ -128,7 +133,7 @@ class TripSettingsViewModel(
             TripProfile(
                 startDate = startTs,
                 endDate = endTs,
-                preferredLocations = emptyList(), // Placeholder
+                preferredLocations = settings.destinations, // Placeholder
                 preferences = settings.preferences,
                 adults = settings.travelers.adults,
                 children = settings.travelers.children,
@@ -143,7 +148,8 @@ class TripSettingsViewModel(
                 locations = emptyList(),
                 routeSegments = emptyList(),
                 activities = emptyList(),
-                tripProfile = tripProfile)
+                tripProfile = tripProfile,
+                isFavorite = false)
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)
@@ -183,13 +189,6 @@ class TripSettingsViewModel(
   fun updateDepartureLocation(departure: Location?) {
     _tripSettings.update {
       it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = departure))
-    }
-  }
-  /** Validate the trip settings when proceeding from the arrival/departure selection screen. */
-  fun onNextFromArrivalDepartureScreen() {
-    viewModelScope.launch {
-      val currentSettings = _tripSettings.value
-      _validationEventChannel.send(ValidationEvent.Proceed)
     }
   }
 }

@@ -47,7 +47,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds - 3600, 0), // 1h ago
                 endDate = Timestamp(now.seconds + 3600, 0), // 1h later
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     // Upcoming trip: start > now
     val upcomingTrip =
@@ -62,7 +63,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds + 7200, 0), // 2h later
                 endDate = Timestamp(now.seconds + 10800, 0), // 3h later
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     coEvery { repository.getAllTrips() } returns listOf(currentTrip, upcomingTrip)
     viewModel = MyTripsViewModel(repository)
@@ -89,7 +91,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds - 3600, 0),
                 endDate = Timestamp(now.seconds + 3600, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     coEvery { repository.getAllTrips() } returns listOf(currentTrip)
     viewModel = MyTripsViewModel(repository)
@@ -116,7 +119,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds + 3600, 0), // 1h later
                 endDate = Timestamp(now.seconds + 7200, 0), // 2h later
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     coEvery { repository.getAllTrips() } returns listOf(upcomingTrip)
     viewModel = MyTripsViewModel(repository)
@@ -177,7 +181,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     // Initially disabled
     assertEquals(false, viewModel.uiState.value.isSelectionMode)
@@ -207,7 +212,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     val trip2 =
         Trip(
@@ -217,7 +223,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     viewModel.toggleSelectionMode(true)
 
@@ -248,7 +255,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     viewModel.toggleSelectionMode(true)
     viewModel.toggleTripSelection(trip)
@@ -269,7 +277,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     val trip2 =
         Trip(
@@ -279,7 +288,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     coEvery { repository.getAllTrips() } returns listOf(trip1, trip2)
     coEvery { repository.deleteTrip(any()) } returns Unit
@@ -315,7 +325,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds - 1000, 0),
                 endDate = Timestamp(now.seconds + 1000, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     val upcomingTrip =
         Trip(
@@ -329,7 +340,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds + 2000, 0),
                 endDate = Timestamp(now.seconds + 3000, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     coEvery { repository.getAllTrips() } returns listOf(currentTrip, upcomingTrip)
     viewModel = MyTripsViewModel(repository)
@@ -351,7 +363,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             emptyList(),
-            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()))
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
 
     coEvery { repository.getAllTrips() } returns listOf(trip1)
     coEvery { repository.deleteTrip(any()) } throws Exception("DB failure")
@@ -381,7 +394,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds + 1000, 0),
                 endDate = Timestamp(now.seconds + 2000, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList())),
+                preferences = emptyList()),
+            isFavorite = false),
         Trip(
             "2",
             "Beta",
@@ -393,7 +407,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds + 2000, 0),
                 endDate = Timestamp(now.seconds + 3000, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList())),
+                preferences = emptyList()),
+            isFavorite = false),
         Trip(
             "3",
             "Gamma",
@@ -405,7 +420,8 @@ class MyTripsViewModelTest {
                 startDate = Timestamp(now.seconds + 1500, 0),
                 endDate = Timestamp(now.seconds + 2500, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList())))
+                preferences = emptyList()),
+            isFavorite = false))
   }
 
   @Test
