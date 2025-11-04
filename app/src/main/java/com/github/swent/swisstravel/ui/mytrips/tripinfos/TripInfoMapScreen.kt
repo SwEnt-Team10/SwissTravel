@@ -12,6 +12,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -33,13 +39,23 @@ object TripInfoMapTestTags {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoMapScreen(onBack: () -> Unit = {}) {
+  var showMap by remember { mutableStateOf(true) }
+
+  LaunchedEffect(showMap) {
+    if (!showMap) {
+      withFrameNanos {}
+      onBack()
+    }
+  }
+
   Scaffold(
       topBar = {
         TopAppBar(
             title = { Text(text = "Trip") },
             navigationIcon = {
               IconButton(
-                  onClick = onBack, modifier = Modifier.testTag(TripInfoMapTestTags.BACK_BUTTON)) {
+                  onClick = { showMap = false },
+                  modifier = Modifier.testTag(TripInfoMapTestTags.BACK_BUTTON)) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back))
@@ -51,7 +67,9 @@ fun TripInfoMapScreen(onBack: () -> Unit = {}) {
             modifier =
                 Modifier.fillMaxSize().padding(padding).testTag(TripInfoMapTestTags.MAP_CONTAINER),
             contentAlignment = Alignment.Center) {
-              NavigationMap()
+              if (showMap) {
+                NavigationMap()
+              }
             }
       }
 }
