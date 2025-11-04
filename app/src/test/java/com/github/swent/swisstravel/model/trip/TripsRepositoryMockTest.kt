@@ -95,7 +95,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("routeSegments") } returns listOf(routeSegmentMap)
     every { doc.get("activities") } returns listOf(activityMap)
     every { doc.get("tripProfile") } returns tripProfileMap
-    every { doc.getBoolean("isFavorite") } returns true
+    every { doc.getBoolean("favorite") } returns true
 
     val trip = repo.getTrip("trip1")
 
@@ -140,7 +140,7 @@ class TripsRepositoryFirestorePublicTest {
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
             "children" to 0L)
-    every { doc.getBoolean("isFavorite") } returns false
+    every { doc.getBoolean("favorite") } returns false
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)

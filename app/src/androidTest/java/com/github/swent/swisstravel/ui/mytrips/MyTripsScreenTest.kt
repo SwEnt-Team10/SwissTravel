@@ -315,4 +315,69 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     assert(viewModel.uiState.value.selectedTrips.isEmpty())
     assert(!viewModel.uiState.value.isSelectionMode)
   }
+
+  @Test
+  fun sortingByFavorites_placesFavoritesFirst() {
+    val now = Timestamp.now()
+
+    // Create trips with different favorite states
+    val favoriteTrip =
+        Trip(
+            uid = "fav",
+            name = "Favorite Trip",
+            ownerId = "ownerX",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile =
+                TripProfile(
+                    startDate = Timestamp(now.seconds + 3600, 0),
+                    endDate = Timestamp(now.seconds + 7200, 0),
+                    preferredLocations = emptyList(),
+                    preferences = emptyList()),
+            isFavorite = true)
+
+    val nonFavoriteTrip =
+        Trip(
+            uid = "nonfav",
+            name = "Non-Favorite Trip",
+            ownerId = "ownerX",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile =
+                TripProfile(
+                    startDate = Timestamp(now.seconds + 3600, 0),
+                    endDate = Timestamp(now.seconds + 7200, 0),
+                    preferredLocations = emptyList(),
+                    preferences = emptyList()),
+            isFavorite = false)
+
+    val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
+    val viewModel = MyTripsViewModel(fakeRepo)
+
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+
+    composeTestRule.waitForIdle()
+
+    // Open the sort dropdown and select "Favorites"
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithText(context.getString(R.string.favorites_first)).performClick()
+
+    composeTestRule.waitForIdle()
+
+    // Verify that the favorite trip is displayed before the non-favorite trip
+    val favTripNode =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(favoriteTrip))
+            .fetchSemanticsNode()
+    val nonFavTripNode =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(nonFavoriteTrip))
+            .fetchSemanticsNode()
+
+    assertTrue(
+        favTripNode.positionInRoot.y < nonFavTripNode.positionInRoot.y,
+        "Favorite trip should appear above non-favorite trip when sorting by favorites")
+  }
 }
