@@ -28,6 +28,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import androidx.compose.foundation.layout.Box
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
+import java.util.Locale
 
 @Composable
 fun TripSummaryScreen(
@@ -89,14 +93,14 @@ fun TripSummaryScreen(
                 // Summary of dates
                 item {
                     Text(
-                        text = "From: $startDate",
+                        text = "From: ${formatDateForDisplay(startDate)}",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
                 item {
                     Text(
-                        text = "To: $endDate",
+                        text = "To: ${formatDateForDisplay(endDate)}",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
@@ -213,3 +217,19 @@ fun TripSummaryScreen(
         }
     }
 }
+private fun formatDateForDisplay(date: Any?, locale: Locale = Locale.FRANCE): String {
+    if (date == null) return ""
+    val formatter = DateTimeFormatter.ofPattern("d MMM yyyy", locale)
+    return when (date) {
+        is LocalDate -> date.format(formatter)
+        is String -> {
+            try {
+                LocalDate.parse(date).format(formatter)
+            } catch (e: DateTimeParseException) {
+                date
+            }
+        }
+        else -> date.toString()
+    }
+}
+
