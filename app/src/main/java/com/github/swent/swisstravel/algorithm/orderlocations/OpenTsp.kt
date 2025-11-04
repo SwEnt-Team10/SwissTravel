@@ -31,26 +31,34 @@ class OpenTsp {
    */
   fun openTsp(dist: Array<DoubleArray>, start: Int, end: Int): List<Int> {
     val n = dist.size
+    val route = mutableListOf(start)
     val visited = BooleanArray(n)
     visited[start] = true
-    visited[end] = true
-
-    val route = mutableListOf(start)
     var current = start
 
-    // Greedy step: always go to the nearest unvisited node (excluding end)
-    while (route.size < n - 1) {
-      val next = (0 until n).filter { !visited[it] }.minByOrNull { dist[current][it] } ?: break
-
-      route.add(next)
-      visited[next] = true
-      current = next
+    fun greedy(loopSize: Int) {
+      while (route.size < loopSize) {
+        val next = (0 until n).filter { !visited[it] }.minByOrNull { dist[current][it] } ?: break
+        route.add(next)
+        visited[next] = true
+        current = next
+      }
     }
 
-    // Add the fixed end node
+    if (start == end) {
+      // --- CLOSED TSP LOGIC (start and end are the same) ---
+      // Greedy step: visit all n-1 remaining nodes
+      greedy(n)
+    } else {
+      // --- OPEN TSP LOGIC (start and end are different) ---
+      visited[end] = true
+      // Greedy step: visit all nodes except start and end
+      greedy(n - 1)
+    }
+
+    // Add the end node
     route.add(end)
 
-    // Optional refinement: 2-opt improvement
     return twoOpt(route, dist)
   }
 
