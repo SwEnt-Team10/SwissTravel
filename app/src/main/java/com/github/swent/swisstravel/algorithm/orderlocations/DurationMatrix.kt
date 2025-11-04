@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.algorithm.orderactivities
+package com.github.swent.swisstravel.algorithm.orderlocations
 
 import android.content.Context
 import com.github.swent.swisstravel.R

@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.algorithm.orderactivities
+package com.github.swent.swisstravel.algorithm.orderlocations
 
 import android.content.Context
 import com.github.swent.swisstravel.R
@@ -21,7 +21,7 @@ import org.junit.Before
 import org.junit.Test
 
 /** This test was created with the help of Gemini */
-class E2EOrderActivities {
+class E2EOrderLocations {
 
   // Locations for the test
   private val GVA = Location(Coordinate(46.2, 6.15), "Genève")
@@ -53,7 +53,7 @@ class E2EOrderActivities {
   fun `full flow from asking matrix to computing best path`() {
     // 1. Prepare the mock response from the JSON file
     val jsonResponsePath =
-        "src/test/java/com/github/swent/swisstravel/algorithm/orderactivities/MapboxMatrixResponse.json"
+        "src/test/java/com/github/swent/swisstravel/algorithm/orderlocations/MapboxMatrixResponse.json"
     val jsonContent = File(jsonResponsePath).readText()
     val mockResponse = MockResponse().setResponseCode(200).setBody(jsonContent)
     mockWebServer.enqueue(mockResponse)

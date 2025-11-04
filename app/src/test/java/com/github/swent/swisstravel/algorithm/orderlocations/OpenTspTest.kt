@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.algorithm.orderactivities
+package com.github.swent.swisstravel.algorithm.orderlocations
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

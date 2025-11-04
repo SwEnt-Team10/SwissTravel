@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.algorithm.orderactivities
+package com.github.swent.swisstravel.algorithm.orderlocations
 
 /**
  * Asymmetric open Traveling Salesman Problem (TSP) solver.
