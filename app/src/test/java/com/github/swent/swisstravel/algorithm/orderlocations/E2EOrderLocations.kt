@@ -52,8 +52,7 @@ class E2EOrderLocations {
   @Test
   fun `full flow from asking matrix to computing best path`() {
     // 1. Prepare the mock response from the JSON file
-    val jsonResponsePath =
-        "src/test/java/com/github/swent/swisstravel/algorithm/orderlocations/MapboxMatrixResponse.json"
+    val jsonResponsePath = "src/test/resources/orderlocations/MapboxMatrixResponse.json"
     val jsonContent = File(jsonResponsePath).readText()
     val mockResponse = MockResponse().setResponseCode(200).setBody(jsonContent)
     mockWebServer.enqueue(mockResponse)
