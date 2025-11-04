@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.algorithm.orderlocations
 
 import android.content.Context
+import android.util.Log
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.mapbox.api.directions.v5.DirectionsCriteria
@@ -73,6 +74,7 @@ open class DurationMatrix(private val context: Context) {
               }
             } else {
               // The request was not successful
+              Log.e("DurationMatrix", "Request failed with status code: ${response.code()}")
               callback(null)
             }
           }

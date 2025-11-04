@@ -66,7 +66,7 @@ class OpenTsp {
    * @return an improved route with possibly shorter total cost.
    */
   fun twoOpt(route: List<Int>, dist: Array<DoubleArray>): List<Int> {
-    var best = route.toMutableList()
+    var best = route
     var improved = true
 
     fun totalDistance(path: List<Int>): Double {
@@ -77,7 +77,7 @@ class OpenTsp {
 
     while (improved) {
       improved = false
-      val bestDistance = totalDistance(best)
+      var bestDistance = totalDistance(best)
 
       for (i in 1 until best.size - 2) {
         for (j in i + 1 until best.size - 1) {
@@ -87,6 +87,7 @@ class OpenTsp {
 
           if (newDistance < bestDistance - 1e-6) {
             best = newRoute
+            bestDistance = totalDistance(newRoute)
             improved = true
           }
         }
