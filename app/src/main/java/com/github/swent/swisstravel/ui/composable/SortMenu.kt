@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.composable
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
@@ -7,6 +8,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -43,26 +45,29 @@ fun SortMenu(onClickDropDownMenu: (TripSortType) -> Unit = {}) {
           Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(R.string.sort))
         }
 
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-      val sortOptions =
-          listOf(
-              TripSortType.START_DATE_ASC to R.string.start_date_asc,
-              TripSortType.START_DATE_DESC to R.string.start_date_desc,
-              TripSortType.END_DATE_ASC to R.string.end_date_asc,
-              TripSortType.END_DATE_DESC to R.string.end_date_desc,
-              TripSortType.NAME_ASC to R.string.name_asc,
-              TripSortType.NAME_DESC to R.string.name_desc)
-      sortOptions.forEach { (type, resId) ->
-        DropdownMenuItem(
-            modifier =
-                Modifier.testTag(SortMenuTestTags.getTestTagSortOption(type)).semantics(
-                    mergeDescendants = true) {},
-            text = { Text(stringResource(resId)) },
-            onClick = {
-              onClickDropDownMenu(type)
-              expanded = false
-            })
-      }
-    }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+        modifier = Modifier.background(MaterialTheme.colorScheme.onPrimary)) {
+          val sortOptions =
+              listOf(
+                  TripSortType.START_DATE_ASC to R.string.start_date_asc,
+                  TripSortType.START_DATE_DESC to R.string.start_date_desc,
+                  TripSortType.END_DATE_ASC to R.string.end_date_asc,
+                  TripSortType.END_DATE_DESC to R.string.end_date_desc,
+                  TripSortType.NAME_ASC to R.string.name_asc,
+                  TripSortType.NAME_DESC to R.string.name_desc)
+          sortOptions.forEach { (type, resId) ->
+            DropdownMenuItem(
+                modifier =
+                    Modifier.testTag(SortMenuTestTags.getTestTagSortOption(type)).semantics(
+                        mergeDescendants = true) {},
+                text = { Text(stringResource(resId)) },
+                onClick = {
+                  onClickDropDownMenu(type)
+                  expanded = false
+                })
+          }
+        }
   }
 }

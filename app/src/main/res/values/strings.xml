@@ -72,7 +72,7 @@
     <string name="enter_map">Enter Map</string>
     <string name="warning_multiple_current_trip">We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.</string>
     <string name="no_current_trip">You have no current trip. Get planning!</string>
-    <string name="upcoming_trip">Upcoming Trip</string>
+    <string name="upcoming_trip">Upcoming Trips</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
     <string name="go_trip_details">Go to Trip details</string>
     <plurals name="n_selected">
