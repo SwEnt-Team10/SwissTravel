@@ -201,6 +201,6 @@ class TripSettingsViewModelTest {
           preferences = listOf(Preference.FOODIE))
     }
 
-    override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {}
+    override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
   }
 }

@@ -148,7 +148,8 @@ class TripSettingsViewModel(
                 locations = emptyList(),
                 routeSegments = emptyList(),
                 activities = emptyList(),
-                tripProfile = tripProfile)
+                tripProfile = tripProfile,
+                isFavorite = false)
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

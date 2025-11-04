@@ -134,7 +134,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                 startDate = Timestamp(now.seconds + 7200, 0),
                 endDate = Timestamp(now.seconds + 10800, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     runBlocking { fakeRepo.addTrip(newUpcomingTrip) }
 
@@ -166,7 +167,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                 startDate = Timestamp(now.seconds + 10800, 0), // later
                 endDate = Timestamp(now.seconds + 14400, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     val tripB =
         Trip(
@@ -180,7 +182,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                 startDate = Timestamp(now.seconds + 7200, 0), // earlier
                 endDate = Timestamp(now.seconds + 10800, 0),
                 preferredLocations = emptyList(),
-                preferences = emptyList()))
+                preferences = emptyList()),
+            isFavorite = false)
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
     val viewModel = MyTripsViewModel(fakeRepo)

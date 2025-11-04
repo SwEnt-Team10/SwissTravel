@@ -20,6 +20,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
@@ -84,6 +85,7 @@ fun PreferenceButton(
  * @param category the category of preferences to display
  * @param isChecked a function that returns whether the given preference is checked
  * @param onCheckedChange a function that is called when the user clicks on a preference
+ * @param textStyle the text style to use for the title
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -91,14 +93,13 @@ fun PreferenceSelectorCategory(
     category: PreferenceCategories.Category,
     isChecked: (Preference) -> Boolean,
     onCheckedChange: (Preference) -> Unit,
+    textStyle: TextStyle = MaterialTheme.typography.headlineMedium,
 ) {
   Column {
     Text(
         text = stringResource(category.categoryToStringRes()),
         modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagCategory(category)),
-        style =
-            MaterialTheme.typography.headlineMedium.copy(
-                color = MaterialTheme.colorScheme.onBackground))
+        style = textStyle.copy(color = MaterialTheme.colorScheme.onBackground))
 
     Spacer(modifier = Modifier.height(8.dp))
 
@@ -129,11 +130,13 @@ fun PreferenceSelectorCategory(
  *
  * @param isChecked a function that returns whether the given preference is checked
  * @param onCheckedChange a function that is called when the user clicks on a preference
+ * @param textStyle the text style to use for the title
  */
 @Composable
 fun PreferenceSelector(
     isChecked: (Preference) -> Boolean,
     onCheckedChange: (Preference) -> Unit,
+    textStyle: TextStyle = MaterialTheme.typography.headlineMedium,
 ) {
   Column(
       verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -147,7 +150,7 @@ fun PreferenceSelector(
                 category = category,
                 isChecked = isChecked,
                 onCheckedChange = onCheckedChange,
-            )
+                textStyle)
           }
         }
       }

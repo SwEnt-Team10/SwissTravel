@@ -260,7 +260,8 @@ class EditTripScreenTest {
         locations = emptyList<Location>(),
         routeSegments = emptyList<RouteSegment>(),
         activities = emptyList<Activity>(),
-        tripProfile = profile)
+        tripProfile = profile,
+        isFavorite = false)
   }
 
   // inside your EditTripScreenTest.kt
