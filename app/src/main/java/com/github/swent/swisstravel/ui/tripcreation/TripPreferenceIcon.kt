@@ -19,7 +19,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.displayStringRes
 
 object TripPreferenceIconTestTags {
-    const val TRIP_PREFERENCE_ICON = "tripPreferenceIcon"
+  const val TRIP_PREFERENCE_ICON = "tripPreferenceIcon"
 }
 
 /**
@@ -29,32 +29,27 @@ object TripPreferenceIconTestTags {
  * @param modifier The modifier to be applied to the composable.
  */
 @Composable
-fun TripPreferenceIcon(
-    preference: Preference,
-    modifier: Modifier = Modifier
-) {
-    val borderWidth = 1.5.dp
-    val shape = RoundedCornerShape(50)
-    val containerColor = MaterialTheme.colorScheme.background
-    val textColor = MaterialTheme.colorScheme.onBackground
-    val borderColor = MaterialTheme.colorScheme.onBackground
+fun TripPreferenceIcon(preference: Preference, modifier: Modifier = Modifier) {
+  val borderWidth = 1.5.dp
+  val shape = RoundedCornerShape(50)
+  val containerColor = MaterialTheme.colorScheme.background
+  val textColor = MaterialTheme.colorScheme.onBackground
+  val borderColor = MaterialTheme.colorScheme.onBackground
 
-    Box(
-        modifier = modifier
-            .testTag(TripPreferenceIconTestTags.TRIP_PREFERENCE_ICON)
-            .border(BorderStroke(borderWidth, borderColor), shape = shape)
-            .background(containerColor, shape = shape)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        contentAlignment = Alignment.Center
-    ) {
+  Box(
+      modifier =
+          modifier
+              .testTag(TripPreferenceIconTestTags.TRIP_PREFERENCE_ICON)
+              .border(BorderStroke(borderWidth, borderColor), shape = shape)
+              .background(containerColor, shape = shape)
+              .padding(horizontal = 12.dp, vertical = 8.dp),
+      contentAlignment = Alignment.Center) {
         Text(text = stringResource(preference.displayStringRes()), color = textColor)
-    }
+      }
 }
-/**
- * Preview of the TripPreferenceIcon composable.
- */
+/** Preview of the TripPreferenceIcon composable. */
 @Composable
 @Preview
 fun TripPreferenceIconPreview() {
-    TripPreferenceIcon(preference = Preference.PUBLIC_TRANSPORT)
+  TripPreferenceIcon(preference = Preference.PUBLIC_TRANSPORT)
 }
