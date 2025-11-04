@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -28,11 +29,22 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.lazy.items
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Locale
 
+/**
+ * Composable function that displays a summary screen for trip settings.
+ *
+ * @param viewModel The ViewModel that holds the trip settings state.
+ * @param onNext Callback function to be invoked when the user proceeds to the next step.
+ * @param onPrevious Callback function to be invoked when the user goes back to the previous step.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TripSummaryScreen(
     viewModel: TripSettingsViewModel = viewModel(),
@@ -62,7 +74,9 @@ fun TripSummaryScreen(
     val emptyNameToast = stringResource(R.string.trip_name_required)
     val emptyDeparture = stringResource(R.string.departure_required)
     val emptyArrival = stringResource(R.string.arrival_required)
-
+    val noWantedPlaces = stringResource(R.string.no_wanted_places)
+    val fromDate = stringResource(R.string.from_summary)
+    val toDate = stringResource(R.string.to_summary)
     val listState = rememberLazyListState()
 
     Scaffold(
@@ -93,14 +107,14 @@ fun TripSummaryScreen(
                 // Summary of dates
                 item {
                     Text(
-                        text = "From: ${formatDateForDisplay(startDate)}",
+                        text = "$fromDate ${formatDateForDisplay(startDate)}",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
                 item {
                     Text(
-                        text = "To: ${formatDateForDisplay(endDate)}",
+                        text = "$toDate ${formatDateForDisplay(endDate)}",
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
@@ -139,6 +153,31 @@ fun TripSummaryScreen(
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
                 }
+                item {
+                    val prefs = state.preferences
+                    if (prefs.isEmpty()) {
+                        Text(
+                            text = stringResource(R.string.no_preferences),
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier.fillMaxWidth(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            FlowRow(
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                                verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                                for (preference in prefs) {
+                                    TripPreferenceIcon(
+                                        preference = preference
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
                 // summary of start and end locations
                 item {
                     Text(
@@ -175,6 +214,27 @@ fun TripSummaryScreen(
                         style = MaterialTheme.typography.headlineSmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                     )
+                }
+                val destinations = state.destinations
+                if (destinations.isEmpty()) {
+                    item {
+                        Text(
+                            text = noWantedPlaces,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
+                } else {
+                    items(destinations) { loc ->
+                        if (loc.name.isEmpty())  {
+                            return@items
+                        }
+                        Text(
+                            text = loc.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        )
+                    }
                 }
                 // Create trip button
                 item {
@@ -232,4 +292,3 @@ private fun formatDateForDisplay(date: Any?, locale: Locale = Locale.FRANCE): St
         else -> date.toString()
     }
 }
-
