@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.model.user.displayString
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,7 +16,7 @@ data class ProfileScreenUIState(
     val profilePicUrl: String = "",
     val name: String = "",
     val email: String = "",
-    var selectedPreferences: List<String> = emptyList(),
+    var selectedPreferences: List<Preference> = emptyList(),
     var errorMsg: String? = null
 )
 
@@ -26,7 +25,6 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
   private val _uiState = MutableStateFlow(ProfileScreenUIState())
   private var currentUser: User? = null
   val uiState: StateFlow<ProfileScreenUIState> = _uiState.asStateFlow()
-  val allPreferences = enumValues<Preference>().map { it.displayString() }
 
   init {
     viewModelScope.launch {
@@ -48,14 +46,14 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
             profilePicUrl = loggedIn.profilePicUrl,
             name = loggedIn.name,
             email = loggedIn.email,
-            selectedPreferences = loggedIn.preferences.map { it.displayString() })
+            selectedPreferences = loggedIn.preferences)
   }
 
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
   }
 
-  fun savePreferences(selected: List<String>) {
+  fun savePreferences(selected: List<Preference>) {
     viewModelScope.launch {
       val user = currentUser
 

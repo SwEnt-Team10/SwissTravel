@@ -21,6 +21,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.model.trip.Location
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -44,10 +45,11 @@ object AddressTextTestTags {
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun AddressAutocompleteTextField(
-    addressTextFieldViewModel: AddressTextFieldViewModelContract =
-        viewModel<AddressTextFieldViewModel>(),
+    addressTextFieldViewModel: AddressTextFieldViewModelContract = viewModel(),
     modifier: Modifier = Modifier,
-    name: String = "location"
+    name: String = "location",
+    onLocationSelected: (Location) -> Unit = {},
+    clearOnSelect: Boolean = false
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
   // Local text state to avoid immediate writes to the ViewModel on every keystroke.
@@ -75,10 +77,21 @@ fun AddressAutocompleteTextField(
                 onClick = {
                   // Update both ViewModel (selected) and local text state
                   addressTextFieldViewModel.setLocation(location)
-                  text = location.name
+                  if (clearOnSelect) {
+                    text = ""
+                  } else {
+                    text = location.name
+                  }
+                  onLocationSelected(location)
                   expanded = false
                 },
                 modifier = Modifier.testTag(AddressTextTestTags.LOCATION_SUGGESTION))
+            LaunchedEffect(state.selectedLocation) {
+              state.selectedLocation?.let {
+                // When the selected location is not null, notify the parent.
+                onLocationSelected(it)
+              }
+            }
 
             // Add a divider between items for clarity (but not after the last item)
             if (index < suggestions.lastIndex) {
@@ -93,7 +106,13 @@ fun AddressAutocompleteTextField(
 
   // When the selectedLocation from the ViewModel changes (e.g., setLocation called
   // from elsewhere), update the local text to reflect it.
-  LaunchedEffect(state.selectedLocation) { state.selectedLocation?.let { text = it.name } }
+  LaunchedEffect(state.selectedLocation) {
+    state.selectedLocation?.let {
+      if (!clearOnSelect) {
+        text = it.name
+      }
+    }
+  }
 
   // Debounce user input and call the ViewModel only after the user stops typing.
   LaunchedEffect(Unit) {

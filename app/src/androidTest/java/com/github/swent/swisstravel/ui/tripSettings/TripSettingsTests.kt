@@ -1,14 +1,15 @@
 package com.github.swent.swisstravel.ui.tripSettings
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
-import com.github.swent.swisstravel.ui.composable.ToggleTestTags
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
@@ -75,16 +76,17 @@ class TripSettingsTests : SwissTravelTest() {
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
         .assertIsDisplayed()
-    val preferences = Preference.values().filter { it != Preference.WHEELCHAIR_ACCESSIBLE }
-    for (preference in preferences) {
+    for (preference in Preference.values()) {
+      val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
       composeTestRule
-          .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
-          .assertIsDisplayed()
+          .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+          .performScrollToNode(hasTestTag(tag))
+      composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
     }
-    /* Preference toggle */
-    composeTestRule.onNodeWithTag(ToggleTestTags.NO).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ToggleTestTags.YES).assertIsDisplayed()
     /* Done button */
+    composeTestRule
+        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+        .performScrollToNode(hasTestTag(TripPreferencesTestTags.DONE))
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
   }
 
@@ -110,10 +112,18 @@ class TripSettingsTests : SwissTravelTest() {
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.MUSEUMS))
         .performClick()
     assert(!viewModel.tripSettings.value.preferences.contains(Preference.MUSEUMS))
-    composeTestRule.onNodeWithTag(ToggleTestTags.YES).assertExists()
-    composeTestRule.onNodeWithTag(ToggleTestTags.YES).performClick()
+
+    val tag = PreferenceSelectorTestTags.getTestTagButton(Preference.WHEELCHAIR_ACCESSIBLE)
+    composeTestRule
+        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+        .performScrollToNode(hasTestTag(tag))
+    composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(tag).performClick()
     assert(viewModel.tripSettings.value.preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE))
-    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertExists()
+    composeTestRule
+        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+        .performScrollToNode(hasTestTag(TripPreferencesTestTags.DONE))
+    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
     assertEquals(2, viewModel.tripSettings.value.preferences.size)
     // assert(fakeRepo.getAllTrips().isNotEmpty()) //can't make it to work
