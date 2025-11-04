@@ -48,7 +48,8 @@ class TripsRepositoryEmulatorTest : SwissTravelTest() {
             locations = listOf(Location(Coordinate(46.52, 6.57), "EPFL")),
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList()),
-            routeSegments = emptyList())
+            routeSegments = emptyList(),
+            isFavorite = true)
 
     // Act
     repository.addTrip(trip)
@@ -78,7 +79,8 @@ class TripsRepositoryEmulatorTest : SwissTravelTest() {
             locations = listOf(Location(Coordinate(0.0, 0.0), "A")),
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList()),
-            routeSegments = emptyList())
+            routeSegments = emptyList(),
+            isFavorite = false)
     val trip2 =
         Trip(
             uid = repository.getNewUid(),
@@ -87,7 +89,8 @@ class TripsRepositoryEmulatorTest : SwissTravelTest() {
             locations = listOf(Location(Coordinate(1.0, 1.0), "B")),
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList()),
-            routeSegments = emptyList())
+            routeSegments = emptyList(),
+            isFavorite = false)
 
     repository.addTrip(trip1)
     repository.addTrip(trip2)
@@ -119,7 +122,8 @@ class TripsRepositoryEmulatorTest : SwissTravelTest() {
             locations = listOf(Location(Coordinate(2.0, 2.0), "C")),
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList()),
-            routeSegments = emptyList())
+            routeSegments = emptyList(),
+            isFavorite = false)
 
     repository.addTrip(trip)
 
