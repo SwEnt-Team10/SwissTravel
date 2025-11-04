@@ -84,20 +84,23 @@ fun FirstDestinationScreen(
                           Spacer(modifier = Modifier.height(32.dp))
 
                           // --- List of Destination Input Fields ---
-                          LazyColumn(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                            itemsIndexed(destinations, key = { index, _ -> index }) { index, _ ->
-                              val destinationVm = destinationViewModelFactory(index)
+                          LazyColumn(
+                              modifier = Modifier.fillMaxWidth(),
+                              horizontalAlignment = Alignment.CenterHorizontally) {
+                                itemsIndexed(destinations, key = { index, _ -> index }) { index, _
+                                  ->
+                                  val destinationVm = destinationViewModelFactory(index)
 
-                              DestinationAutocompleteTextField(
-                                  onLocationSelected = { selectedLocation ->
-                                    destinations[index] = selectedLocation
-                                  },
-                                  destinationTextFieldViewModel = destinationVm,
-                                  clearOnSelect = false,
-                                  name = "Destination ${index + 1}")
-                              Spacer(modifier = Modifier.height(8.dp))
-                            }
-                          }
+                                  DestinationAutocompleteTextField(
+                                      onLocationSelected = { selectedLocation ->
+                                        destinations[index] = selectedLocation
+                                      },
+                                      destinationTextFieldViewModel = destinationVm,
+                                      clearOnSelect = false,
+                                      name = "Destination ${index + 1}")
+                                  Spacer(modifier = Modifier.height(8.dp))
+                                }
+                              }
 
                           Spacer(modifier = Modifier.height(16.dp))
 

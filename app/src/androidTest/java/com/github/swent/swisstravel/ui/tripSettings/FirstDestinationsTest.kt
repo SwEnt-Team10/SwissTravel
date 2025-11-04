@@ -59,7 +59,9 @@ class FirstDestinationsTest {
           onNext = onNext,
           onPrevious = onPrevious,
           // Inject the factory to return our fake ViewModel
-          destinationViewModelFactory = { _ -> DestinationTextFieldViewModel(fakeLocationRepository) })
+          destinationViewModelFactory = { _ ->
+            DestinationTextFieldViewModel(fakeLocationRepository)
+          })
     }
   }
 

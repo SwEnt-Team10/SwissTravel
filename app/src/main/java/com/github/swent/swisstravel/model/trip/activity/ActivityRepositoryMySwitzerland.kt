@@ -33,16 +33,15 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
           .addQueryParameter("striphtml", "true")
           .addQueryParameter("expand", "true")
           .build()
-    private val DESTINATION_BASE_URL =
-        "https://opendata.myswitzerland.io/v1/destinations/"
-            .toHttpUrl()
-            .newBuilder()
-            .addQueryParameter("lang", "en")
-            .addQueryParameter("page", "0")
-            .addQueryParameter("striphtml", "true")
-            .addQueryParameter("expand", "true")
-            .build()
-
+  private val DESTINATION_BASE_URL =
+      "https://opendata.myswitzerland.io/v1/destinations/"
+          .toHttpUrl()
+          .newBuilder()
+          .addQueryParameter("lang", "en")
+          .addQueryParameter("page", "0")
+          .addQueryParameter("striphtml", "true")
+          .addQueryParameter("expand", "true")
+          .build()
 
   private val client: OkHttpClient by lazy {
     OkHttpClient.Builder()
@@ -227,8 +226,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
 
   override suspend fun getDestinationByName(query: String, limit: Int): List<Location> {
     val url =
-        DESTINATION_BASE_URL
-            .newBuilder()
+        DESTINATION_BASE_URL.newBuilder()
             .addQueryParameter("hitsPerPage", limit.toString())
             .addQueryParameter("query", query)
     return fetchDestinationFromUrl(url.build())

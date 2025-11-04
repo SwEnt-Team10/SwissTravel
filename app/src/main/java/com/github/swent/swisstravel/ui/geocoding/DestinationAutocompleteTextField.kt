@@ -42,7 +42,8 @@ object DestinationTextTestTags {
  *
  * @param onLocationSelected Callback to be invoked when a location is selected.
  * @param modifier The modifier to be applied to the composable.
- * @param destinationTextFieldViewModel The view model that manages the state of the address text field.
+ * @param destinationTextFieldViewModel The view model that manages the state of the address text
+ *   field.
  * @param name The label for the text field.
  * @param clearOnSelect Whether to clear the text field after a location is selected.
  */
@@ -62,7 +63,7 @@ fun DestinationAutocompleteTextField(
   var text by rememberSaveable { mutableStateOf(state.locationQuery) }
   var expanded by remember { mutableStateOf(false) }
 
-  ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it}) {
+  ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
     OutlinedTextField(
         value = text,
         onValueChange = {

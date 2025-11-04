@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -69,8 +68,7 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null, isLoggedIn: 
               Button(
                   onClick = { navigationActions?.navigateTo(Screen.TripSettings1) },
                   enabled = isLoggedIn,
-                  modifier =
-                      Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
+                  modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                     Text(
                         text = stringResource(R.string.where_starting),
                         style = MaterialTheme.typography.titleMedium,
