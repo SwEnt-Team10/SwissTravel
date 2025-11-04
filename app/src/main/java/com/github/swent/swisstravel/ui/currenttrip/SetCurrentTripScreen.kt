@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.currenttrip
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,12 +15,17 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.mytrips.TripSortType
 
 /** Object containing test tags for the [SetCurrentTripScreen] composable. */
@@ -35,8 +41,8 @@ object SetCurrentTripScreenTestTags {
 /**
  * A composable that displays the screen used to set the current trip.
  *
+ * @param viewModel The view model for the screen.
  * @param title The title to display in the top bar.
- * @param trips The list of trips to display.
  * @param onClickTripElement Callback when a trip element is clicked.
  * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
  * @param onLongPress Callback when a trip element is long-pressed.
@@ -46,8 +52,8 @@ object SetCurrentTripScreenTestTags {
  */
 @Composable
 fun SetCurrentTripScreen(
+    viewModel: MyTripsViewModel = viewModel(),
     title: String = "",
-    trips: List<Trip> = emptyList(),
     onClickTripElement: (Trip?) -> Unit = {},
     onClickDropDownMenu: (TripSortType) -> Unit = {},
     onLongPress: (Trip?) -> Unit = {},
@@ -55,6 +61,15 @@ fun SetCurrentTripScreen(
     isSelectionMode: Boolean = false,
     onClose: () -> Unit = {},
 ) {
+  val uiState = viewModel.uiState.collectAsState().value
+  // The current trip will always be at the top of the list even when sorting is applied
+  val trips = buildList {
+    uiState.currentTrip?.let { add(it) }
+    addAll(uiState.upcomingTrips)
+  }
+
+  val context = LocalContext.current
+
   Scaffold(
       topBar = {
         TopBarSetCurrentTrip(
@@ -67,7 +82,10 @@ fun SetCurrentTripScreen(
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
           TripList(
               trips = trips,
-              onClickTripElement = onClickTripElement,
+              onClickTripElement = { trip ->
+                onClickTripElement(trip!!)
+                Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT).show()
+              },
               onLongPress = onLongPress,
               isSelected = isSelected,
               isSelectionMode = isSelectionMode)

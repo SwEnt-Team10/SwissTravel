@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.mytrips
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
@@ -11,6 +12,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.DropdownMenu
@@ -49,6 +51,7 @@ import com.github.swent.swisstravel.ui.composable.SortedTripList
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 /**
@@ -62,16 +65,13 @@ object MyTripsScreenTestTags {
   const val CURRENT_TRIP_TITLE = "currentTripTitle"
   const val CREATE_TRIP_BUTTON = "createTrip"
   const val EMPTY_CURRENT_TRIP_MSG = "emptyCurrentTrip"
-  const val UPCOMING_TRIPS_TITLE = "upcomingTripsTitle"
-  const val UPCOMING_TRIPS = "upcomingTrips"
-  const val EMPTY_UPCOMING_TRIPS_MSG = "emptyUpcomingTrips"
   const val CONFIRM_DELETE_BUTTON = "confirmDelete"
   const val CANCEL_DELETE_BUTTON = "cancelDelete"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
   const val CANCEL_SELECTION_BUTTON = "cancelSelection"
   const val MORE_OPTIONS_BUTTON = "moreOptions"
-  const val SORT_DROPDOWN_MENU = "sortDropdownMenu"
+  const val EDIT_CURRENT_TRIP_BUTTON = "editCurrentTrip"
 
   /** Returns a unique test tag for the given [trip] element. */
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
@@ -181,7 +181,9 @@ fun MyTripsScreen(
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
                   onEnterSelectionMode = { myTripsViewModel.toggleSelectionMode(true) },
-                  navigationActions = navigationActions)
+                  navigationActions = navigationActions,
+                  editButtonShown =
+                      uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty())
 
               UpcomingTripsSection(
                   trips = uiState.upcomingTrips,
@@ -307,12 +309,11 @@ private fun CurrentTripSection(
     onToggleSelection: (Trip) -> Unit,
     onEnterSelectionMode: () -> Unit,
     navigationActions: NavigationActions?,
+    editButtonShown: Boolean = false,
 ) {
-  Text(
-      text = stringResource(R.string.current_trip),
-      style = MaterialTheme.typography.headlineLarge,
-      color = MaterialTheme.colorScheme.onBackground,
-      modifier = Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+  CurrentTripTitle(
+      editButtonShown = editButtonShown,
+      onEditCurrentTrip = { navigationActions?.navigateTo(Screen.SetCurrentTrip) })
 
   Spacer(modifier = Modifier.height(4.dp))
 
@@ -343,6 +344,32 @@ private fun CurrentTripSection(
       ?: Text(
           text = stringResource(R.string.no_current_trip),
           modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG))
+}
+
+/**
+ * Displays the title for the "Current Trip" section.
+ * - Optionally shows an edit button to modify the current trip.
+ *
+ * @param editButtonShown Whether to display the edit button.
+ * @param onEditCurrentTrip Callback when the edit button is clicked.
+ */
+@Composable
+private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip: () -> Unit = {}) {
+  Row {
+    Text(
+        text = stringResource(R.string.current_trip),
+        style = MaterialTheme.typography.headlineLarge,
+        color = MaterialTheme.colorScheme.onBackground,
+        modifier =
+            Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+    if (editButtonShown) {
+      IconButton(
+          onClick = onEditCurrentTrip,
+          modifier = Modifier.testTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)) {
+            Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit current trip")
+          }
+    }
+  }
 }
 
 /**

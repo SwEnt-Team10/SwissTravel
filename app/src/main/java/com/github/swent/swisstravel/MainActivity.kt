@@ -29,9 +29,11 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
+import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
@@ -91,6 +93,30 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
   }
 }
 
+/**
+ * Retrieves the MyTripsViewModel scoped to the MyTrips navigation graph.
+ *
+ * Bug solved with Copilot.
+ *
+ * @param navController The NavHostController used for navigation.
+ * @return The MyTripsViewModel instance.
+ */
+@Composable
+fun myTripsViewModel(navController: NavHostController): MyTripsViewModel {
+  val currentEntry by navController.currentBackStackEntryAsState()
+
+  val parentEntry =
+      remember(currentEntry) {
+        runCatching { navController.getBackStackEntry(Screen.MyTrips.name) }.getOrNull()
+      }
+
+  return if (parentEntry != null) {
+    viewModel(parentEntry)
+  } else {
+    viewModel()
+  }
+}
+
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun SwissTravelApp(
@@ -105,6 +131,7 @@ fun SwissTravelApp(
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route
+  val myTripsViewModel: MyTripsViewModel = myTripsViewModel(navController)
   /* System back button handler */
   BackHandler {
     when {
@@ -171,12 +198,31 @@ fun SwissTravelApp(
     ) {
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
+            myTripsViewModel = myTripsViewModel,
             onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
             onPastTrips = {
               Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
             },
             onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
             navigationActions = navigationActions)
+      }
+
+      composable(Screen.SetCurrentTrip.route) {
+        SetCurrentTripScreen(
+            viewModel = myTripsViewModel,
+            title = context.getString(R.string.set_current_trip),
+            onClickTripElement = { trip ->
+              myTripsViewModel.changeCurrentTrip(trip!!)
+              navigationActions.navigateTo(Screen.MyTrips)
+            },
+            onClickDropDownMenu = { sortType -> myTripsViewModel.updateSortType(sortType) },
+            onLongPress = { trip ->
+              myTripsViewModel.changeCurrentTrip(trip!!)
+              navigationActions.navigateTo(Screen.MyTrips)
+            },
+            isSelected = { trip -> trip.isCurrentTrip },
+            onClose = { navigationActions.goBack() },
+        )
       }
 
       composable(

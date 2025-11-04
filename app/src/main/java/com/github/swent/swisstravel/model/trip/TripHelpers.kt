@@ -16,15 +16,16 @@ fun Timestamp.toZonedDateTime(): ZonedDateTime =
 /**
  * Check whether the trip is upcoming.
  *
- * A trip is considered upcoming when its `startDate` is strictly after the current instant.
+ * A trip is considered upcoming when its `endDate` is strictly after the current instant.
  * Comparison is performed using `ZonedDateTime` in the system default time zone.
  *
- * @return `true` if the trip's `startDate` is after now, otherwise `false`
+ * @return `true` if the trip's `endDate` is after now and the trip is not the current trip,
+ *   otherwise `false`
  * @receiver Trip the trip to evaluate
  */
 fun Trip.isUpcoming(): Boolean {
   val now = ZonedDateTime.now()
-  return tripProfile.startDate.toZonedDateTime().isAfter(now)
+  return tripProfile.endDate.toZonedDateTime().isAfter(now) && !isCurrentTrip
 }
 
 /**
@@ -37,10 +38,7 @@ fun Trip.isUpcoming(): Boolean {
  * @receiver Trip the trip to evaluate
  */
 fun Trip.isCurrent(): Boolean {
-  val now = ZonedDateTime.now()
-  val start = tripProfile.startDate.toZonedDateTime()
-  val end = tripProfile.endDate.toZonedDateTime()
-  return !start.isAfter(now) && !end.isBefore(now)
+  return isCurrentTrip
 }
 
 /**

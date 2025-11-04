@@ -49,4 +49,11 @@ interface TripsRepository {
    * @throws Exception if the Trip is not found.
    */
   suspend fun deleteTrip(tripId: String)
+
+  /**
+   * Sets the specified Trip as the current trip for the user.
+   *
+   * @param newCurrentUid The unique identifier of the Trip to set as current.
+   */
+  suspend fun setCurrentTrip(newCurrentUid: String)
 }

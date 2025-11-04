@@ -97,6 +97,9 @@
     <string name="end_date_desc">End Date ⬇</string>
     <string name="name_asc">Name A–Z</string>
     <string name="name_desc">Name Z-A</string>
+    <!-- Set Current Trip -->
+    <string name="set_current_trip">Set Current Trip</string>
+    <string name="current_trip_saved">Current trip saved successfully!</string>
     <!-- Info trip -->
     <string name="back_to_my_trips">Back to My Trips</string>
     <string name="fullscreen">fullscreen</string>

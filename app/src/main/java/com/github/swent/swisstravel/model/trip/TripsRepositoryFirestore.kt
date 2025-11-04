@@ -49,6 +49,25 @@ class TripsRepositoryFirestore(
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
   }
 
+  // ChatGPT
+  override suspend fun setCurrentTrip(newCurrentUid: String) {
+    val currentUserId = auth.currentUser?.uid ?: throw Exception("User not logged in")
+
+    // 1. Get all current user's trips
+    val tripsSnapshot =
+        db.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", currentUserId).get().await()
+
+    val batch = db.batch()
+
+    tripsSnapshot.documents.forEach { doc ->
+      val isCurrent = doc.id == newCurrentUid
+      batch.update(doc.reference, "isCurrentTrip", isCurrent)
+    }
+
+    // 2. Commit batch atomically
+    batch.commit().await()
+  }
+
   // The following code was made with the help of AI
   /**
    * Converts a Firestore document to a Trip object.
@@ -82,6 +101,8 @@ class TripsRepositoryFirestore(
 
       val isFavorite = document.getBoolean("isFavorite") ?: false
 
+      val isCurrentTrip = document.getBoolean("isCurrentTrip") ?: false
+
       Trip(
           uid = uid,
           name = name,
@@ -90,7 +111,8 @@ class TripsRepositoryFirestore(
           routeSegments = routeSegments,
           activities = activities,
           tripProfile = tripProfile,
-          isFavorite = isFavorite)
+          isFavorite = isFavorite,
+          isCurrentTrip = isCurrentTrip)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null
