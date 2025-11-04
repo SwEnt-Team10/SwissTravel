@@ -94,7 +94,7 @@ fun PreferenceSelectorRow(
 /**
  * A composable that displays a selector of [PreferenceButton]s.
  *
- * @param isChecked a function that returns whether the given preference is checked
+ * @param isChecked a function thhat returns whether the given preference is checked
  * @param onCheckedChange a function that is called when the user clicks on a preference
  */
 @OptIn(ExperimentalLayoutApi::class)
