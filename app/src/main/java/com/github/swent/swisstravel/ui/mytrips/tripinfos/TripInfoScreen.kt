@@ -24,6 +24,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -64,6 +68,7 @@ fun TripInfoScreen(
   val errorMsg = tripInfoUIState.errorMsg
 
   val context = LocalContext.current
+  var showMap by remember { mutableStateOf(true) }
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -73,6 +78,7 @@ fun TripInfoScreen(
   }
 
   Scaffold(
+      containerColor = MaterialTheme.colorScheme.background,
       topBar = {
         TopAppBar(
             title = {
@@ -83,7 +89,7 @@ fun TripInfoScreen(
             },
             navigationIcon = {
               IconButton(
-                  onClick = { onMyTrips() },
+                  onClick = { showMap = false },
                   modifier = Modifier.testTag(TripInfoTestTags.BACK_BUTTON)) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -101,6 +107,12 @@ fun TripInfoScreen(
                         tint = MaterialTheme.colorScheme.onBackground)
                   }
             })
+        LaunchedEffect(showMap) {
+          if (!showMap) {
+            withFrameNanos {}
+            onMyTrips()
+          }
+        }
       }) { pd ->
         Column(
             modifier = Modifier.padding(pd).fillMaxSize(),
@@ -114,7 +126,9 @@ fun TripInfoScreen(
                           .testTag(TripInfoTestTags.TRIP_CARD),
                   shape = RoundedCornerShape(12.dp),
                   elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
-                    TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                    if (showMap) {
+                      TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                    }
                   }
             }
       }
