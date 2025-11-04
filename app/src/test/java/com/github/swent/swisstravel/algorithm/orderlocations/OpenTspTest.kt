@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.algorithm.orderlocations
 
+import kotlin.random.Random
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -65,8 +66,11 @@ class OpenTspTest {
 
   @Test
   fun `openTsp produces valid permutation`() {
+    val random = Random(42L)
     val dist =
-        Array(5) { i -> DoubleArray(5) { j -> if (i == j) 0.0 else (1..10).random().toDouble() } }
+        Array(5) { i ->
+          DoubleArray(5) { j -> if (i == j) 0.0 else (random.nextInt(10) + 1).toDouble() }
+        }
 
     val route = openTsp.openTsp(dist, start = 0, end = 4)
 
@@ -110,5 +114,19 @@ class OpenTspTest {
             doubleArrayOf(7.0, 9.0, 10.0, 4.0, 0.0))
     val route = openTsp.openTsp(dist, 0, 4)
     assertEquals(listOf(0, 1, 2, 3, 4), route)
+  }
+
+  @Test
+  fun `twoOpt does not change an optimal route`() {
+    val dist =
+        arrayOf(
+            doubleArrayOf(0.0, 1.0, 5.0, 6.0, 7.0),
+            doubleArrayOf(1.0, 0.0, 2.0, 8.0, 9.0),
+            doubleArrayOf(5.0, 2.0, 0.0, 3.0, 10.0),
+            doubleArrayOf(6.0, 8.0, 3.0, 0.0, 4.0),
+            doubleArrayOf(7.0, 9.0, 10.0, 4.0, 0.0))
+    val route = listOf(0, 1, 2, 3, 4)
+    val result = openTsp.twoOpt(route, dist)
+    assertEquals(route, result)
   }
 }

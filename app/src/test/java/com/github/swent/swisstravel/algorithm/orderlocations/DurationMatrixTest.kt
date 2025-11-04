@@ -66,11 +66,18 @@ class DurationMatrixTest {
 
   @Test
   fun `getDurations with invalid coordinate count returns null`() {
-    val coordinates = listOf(Coordinate(46.5197, 6.6323))
-
+    val coordinate = Coordinate(46.5197, 6.6323)
     var result: Array<DoubleArray>? = emptyArray()
-    durationMatrix.getDurations(coordinates) { result = it }
 
+    val coordinatesTooFew = listOf(coordinate)
+    durationMatrix.getDurations(coordinatesTooFew) { result = it }
+    assertNull(result)
+
+    val coordinatesTooMany = mutableListOf<Coordinate>()
+    for (i in 0..25) {
+      coordinatesTooMany.add(coordinate)
+    }
+    durationMatrix.getDurations(coordinatesTooMany) { result = it }
     assertNull(result)
   }
 
