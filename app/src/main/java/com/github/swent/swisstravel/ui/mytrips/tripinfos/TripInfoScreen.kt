@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.mytrips.tripinfos
 
+import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -70,6 +71,8 @@ fun TripInfoScreen(
   val context = LocalContext.current
   var showMap by remember { mutableStateOf(true) }
 
+    Log.d("TRIP_INFO", "locations = ${tripInfoUIState.locations}")
+
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
       Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
@@ -127,7 +130,8 @@ fun TripInfoScreen(
                   shape = RoundedCornerShape(12.dp),
                   elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
                     if (showMap) {
-                      TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                      TripInfoZoomableMap(
+                          onFullscreenClick = onFullscreenClick, tripInfoUIState.locations)
                     }
                   }
             }

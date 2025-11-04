@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.map
 
+import android.util.Log
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -40,13 +41,14 @@ fun NavigationMap(locations: List<Location>) {
   val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
 
   val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
-  val routeDrawData by viewModel.routeLineDrawData.collectAsState()
+  val routeDrawData = viewModel.uiState.collectAsState().value.routeLineDrawData
 
   // create a map and set the initial camera position to see the start of the route
   val mapViewportState = rememberMapViewportState()
   LaunchedEffect(Unit) {
     mapViewportState.setCameraOptions {
-      center(locationsAsPoints(locations).first())
+      //Log.d("NAV_MAP_SCREEN", "center map point = ${locationsAsPoints(locations).first()}")
+      center(LocationsHardCoded.EPFL_IC)
       zoom(14.0)
     }
   }

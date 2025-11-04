@@ -59,10 +59,7 @@ class NavigationMapViewModel(application: Application, locationsList: List<Locat
   private val _uiState =
       MutableStateFlow<NavigationMapUIState>(
           NavigationMapUIState(
-              locationsList =
-                  locationsList.map { location ->
-                    Point.fromLngLat(location.coordinate.longitude, location.coordinate.latitude)
-                  },
+              locationsList = locationsAsPoints(locationsList),
               mapboxNavigation =
                   if (MapboxNavigationProvider.isCreated()) {
                     MapboxNavigationProvider.retrieve()
@@ -105,7 +102,7 @@ class NavigationMapViewModel(application: Application, locationsList: List<Locat
    */
   init {
     // Start observing routes to emit draw data when routes change
-      Log.d("NAV_MAP_VM", "initialize a VM")
+    Log.d("NAV_MAP_VM", "initialize a VM")
     _uiState.value.mapboxNavigation.registerRoutesObserver(routesObserver)
     requestRoute()
   }
