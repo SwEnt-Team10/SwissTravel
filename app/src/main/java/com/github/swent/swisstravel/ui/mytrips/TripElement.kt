@@ -17,7 +17,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowRight
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -108,27 +109,37 @@ fun TripElement(
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface)
               }
-
-              if (isSelectionMode) {
-                // Checkbox shown only during selection mode
-                Checkbox(
-                    checked = isSelected,
-                    onCheckedChange = null, // Managed externally via ViewModel
-                    modifier =
-                        Modifier.testTag(TripElementTestTags.getTestTagForTripCheckbox(trip))
-                            .semantics {
-                              // Add semantics so UI tests (e.g., assertIsOn/assertIsOff) can detect
-                              // checked state
-                              toggleableState =
-                                  if (isSelected) ToggleableState.On else ToggleableState.Off
-                              role = Role.Checkbox
-                            })
-              } else {
-                // Arrow icon for normal (non-selection) mode
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowRight,
-                    contentDescription = stringResource(R.string.go_trip_details),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+              Row(verticalAlignment = Alignment.CenterVertically) {
+                if (trip.isFavorite) {
+                  // Favorite Icon
+                  Icon(
+                      Icons.Default.Star,
+                      contentDescription = stringResource(R.string.favorite_icon),
+                      tint = Color(0xFFFFC107))
+                  Spacer(modifier = Modifier.width(16.dp))
+                }
+                if (isSelectionMode) {
+                  // Checkbox shown only during selection mode
+                  Checkbox(
+                      checked = isSelected,
+                      onCheckedChange = null, // Managed externally via ViewModel
+                      modifier =
+                          Modifier.testTag(TripElementTestTags.getTestTagForTripCheckbox(trip))
+                              .semantics {
+                                // Add semantics so UI tests (e.g., assertIsOn/assertIsOff) can
+                                // detect
+                                // checked state
+                                toggleableState =
+                                    if (isSelected) ToggleableState.On else ToggleableState.Off
+                                role = Role.Checkbox
+                              })
+                } else {
+                  // Arrow icon for normal (non-selection) mode
+                  Icon(
+                      Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                      contentDescription = stringResource(R.string.go_trip_details),
+                      tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
               }
             }
       }
