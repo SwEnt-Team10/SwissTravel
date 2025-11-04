@@ -13,7 +13,7 @@ import com.github.swent.swisstravel.model.map.LocationRepository
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModel
-import com.github.swent.swisstravel.ui.geocoding.DestinationTextTestTags
+import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.mytrips.FakeTripsRepository
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION
@@ -85,7 +85,7 @@ class FirstDestinationsTest {
     setContent()
     composeTestRule.onNodeWithTag(ADD_FIRST_DESTINATION).performClick()
     composeTestRule
-        .onAllNodesWithTag(DestinationTextTestTags.INPUT_LOCATION)
+        .onAllNodesWithTag(LocationTextTestTags.INPUT_LOCATION)
         .onFirst()
         .assertIsDisplayed()
   }
@@ -117,8 +117,7 @@ class FirstDestinationsTest {
     composeTestRule.waitForIdle()
 
     // 2. Find the input field and type text into it.
-    val inputNode =
-        composeTestRule.onAllNodesWithTag(DestinationTextTestTags.INPUT_LOCATION).onFirst()
+    val inputNode = composeTestRule.onAllNodesWithTag(LocationTextTestTags.INPUT_LOCATION).onFirst()
     inputNode.performTextInput("Lausanne")
 
     // Wait until the ViewModel's state contains the suggestions. This is the key fix.
@@ -128,7 +127,7 @@ class FirstDestinationsTest {
 
     // 3. Find the suggestion and click it.
     composeTestRule
-        .onAllNodesWithTag(DestinationTextTestTags.LOCATION_SUGGESTION)
+        .onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION)
         .onFirst()
         .performClick()
     composeTestRule.waitForIdle()

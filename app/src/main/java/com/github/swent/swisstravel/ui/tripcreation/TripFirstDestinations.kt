@@ -32,8 +32,8 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
-import com.github.swent.swisstravel.ui.geocoding.DestinationAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModel
+import com.github.swent.swisstravel.ui.geocoding.LocationAutocompleteTextField
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE
@@ -46,6 +46,8 @@ object TripFirstDestinationsTestTags {
   const val NEXT_BUTTON = "next_button"
   const val RETURN_BUTTON = "return_button"
 }
+
+private const val MAX_DESTINATIONS = 24
 
 @Composable
 fun FirstDestinationScreen(
@@ -91,11 +93,11 @@ fun FirstDestinationScreen(
                                   ->
                                   val destinationVm = destinationViewModelFactory(index)
 
-                                  DestinationAutocompleteTextField(
+                                  LocationAutocompleteTextField(
                                       onLocationSelected = { selectedLocation ->
                                         destinations[index] = selectedLocation
                                       },
-                                      destinationTextFieldViewModel = destinationVm,
+                                      addressTextFieldViewModel = destinationVm,
                                       clearOnSelect = false,
                                       name = "Destination ${index + 1}")
                                   Spacer(modifier = Modifier.height(8.dp))
@@ -112,9 +114,14 @@ fun FirstDestinationScreen(
                                     Location(coordinate = Coordinate(0.0, 0.0), name = ""))
                               },
                               enabled =
-                                  destinations.isEmpty() || destinations.last().name.isNotEmpty(),
+                                  destinations.isEmpty() ||
+                                      destinations.last().name.isNotEmpty() ||
+                                      destinations.size < MAX_DESTINATIONS,
                           ) {
-                            Text(stringResource(R.string.add_first_destination))
+                            Text(
+                                if (destinations.size < MAX_DESTINATIONS) {
+                                  stringResource(R.string.add_first_destination)
+                                } else stringResource(R.string.destination_limited))
                           }
                         }
 

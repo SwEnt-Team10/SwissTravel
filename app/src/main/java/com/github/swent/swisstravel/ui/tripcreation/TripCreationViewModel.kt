@@ -145,7 +145,7 @@ class TripSettingsViewModel(
                 uid = newUid,
                 name = finalName,
                 ownerId = user.uid,
-                locations = emptyList(),
+                locations = settings.destinations,
                 routeSegments = emptyList(),
                 activities = emptyList(),
                 tripProfile = tripProfile,

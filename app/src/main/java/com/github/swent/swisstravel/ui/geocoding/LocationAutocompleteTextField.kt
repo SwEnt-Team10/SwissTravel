@@ -27,37 +27,36 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/** Test tags for the DestinationAutocompleteTextField composable. */
-object DestinationTextTestTags {
+/** Test tags for the LocationAutocompleteTextField composable. */
+object LocationTextTestTags {
   const val INPUT_LOCATION = "inputLocation"
   const val LOCATION_SUGGESTION = "locationSuggestion"
 }
 /**
  * A composable that provides an address autocomplete text field using a dropdown menu.
  *
- * This component interacts with the [DestinationTextFieldViewModel] to manage state and handle user
+ * This component interacts with the [AddressTextFieldViewModel] to manage state and handle user
  * input. As the user types in the text field, it fetches location suggestions and displays them in
  * a dropdown menu. When a suggestion is selected, it updates the view model with the chosen
  * location.
  *
  * @param onLocationSelected Callback to be invoked when a location is selected.
  * @param modifier The modifier to be applied to the composable.
- * @param destinationTextFieldViewModel The view model that manages the state of the address text
- *   field.
+ * @param addressTextFieldViewModel The view model that manages the state of the address text field.
  * @param name The label for the text field.
  * @param clearOnSelect Whether to clear the text field after a location is selected.
  */
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
-fun DestinationAutocompleteTextField(
-    onLocationSelected: (Location) -> Unit,
+fun LocationAutocompleteTextField(
+    onLocationSelected: (Location) -> Unit = {},
     modifier: Modifier = Modifier,
-    destinationTextFieldViewModel: AddressTextFieldViewModelContract =
+    addressTextFieldViewModel: AddressTextFieldViewModelContract =
         viewModel<DestinationTextFieldViewModel>(),
     name: String = "location",
     clearOnSelect: Boolean = false
 ) {
-  val state by destinationTextFieldViewModel.addressState.collectAsState()
+  val state by addressTextFieldViewModel.addressState.collectAsState()
   // Local text state to avoid immediate writes to the ViewModel on every keystroke.
   // This prevents frequent state updates that can cause recomposition/focus loss.
   var text by rememberSaveable { mutableStateOf(state.locationQuery) }
@@ -71,7 +70,7 @@ fun DestinationAutocompleteTextField(
           // open the dropdown while typing
           expanded = true
         },
-        modifier = modifier.menuAnchor().testTag(DestinationTextTestTags.INPUT_LOCATION),
+        modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
@@ -82,12 +81,12 @@ fun DestinationAutocompleteTextField(
                 text = { Text(location.name) },
                 onClick = {
                   // Update both ViewModel (selected) and local text state
-                  destinationTextFieldViewModel.setLocation(location)
+                  addressTextFieldViewModel.setLocation(location)
                   text = if (clearOnSelect) "" else location.name
                   onLocationSelected(location)
                   expanded = false
                 },
-                modifier = Modifier.testTag(DestinationTextTestTags.LOCATION_SUGGESTION))
+                modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION))
 
             // Add a divider between items for clarity (but not after the last item)
             if (index < suggestions.lastIndex) {
@@ -119,7 +118,7 @@ fun DestinationAutocompleteTextField(
           // Only call the view model when the query changed and is different from
           // the current ViewModel state to avoid unnecessary network calls.
           if (query != state.locationQuery) {
-            destinationTextFieldViewModel.setLocationQuery(query)
+            addressTextFieldViewModel.setLocationQuery(query)
           }
         }
   }
