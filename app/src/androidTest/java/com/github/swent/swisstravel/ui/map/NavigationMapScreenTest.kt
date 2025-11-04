@@ -28,8 +28,8 @@ class NavigationMapScreenTest {
   fun mapIsVisibleOnEntry() {
     composeRule.setContent {
       val navController = rememberNavController()
-      NavHost(navController = navController, startDestination = Screen.SelectedTripMap.route) {
-        composable(Screen.SelectedTripMap.route) {
+      NavHost(navController = navController, startDestination = Screen.TripInfo.route) {
+        composable(Screen.TripInfo.route) {
           NavigationMapScreen(navigationActions = NavigationActions(navController))
         }
         // Minimal destination for MyTrips

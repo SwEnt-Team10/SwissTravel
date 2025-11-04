@@ -15,7 +15,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.map.NavigationMap
+import kotlinx.coroutines.flow.MutableStateFlow
 
 /** Test tags for TripInfoZoomableMap composable */
 object TripInfoZoomableMapTestTags {
@@ -28,11 +30,12 @@ object TripInfoZoomableMapTestTags {
  * @param onFullscreenClick Lambda function to be called when the fullscreen button is pressed.
  */
 @Composable
-fun TripInfoZoomableMap(onFullscreenClick: () -> Unit) {
+fun TripInfoZoomableMap(onFullscreenClick: () -> Unit, locations: List<Location>) {
+  val isFullscreen = MutableStateFlow<Boolean>(false)
   Scaffold { pd ->
     Box(modifier = Modifier.fillMaxSize().padding(pd)) {
       Box(modifier = Modifier.fillMaxSize().testTag(TripInfoZoomableMapTestTags.MAP_CONTAINER)) {
-        NavigationMap()
+        NavigationMap(locations)
       }
 
       Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomEnd) {

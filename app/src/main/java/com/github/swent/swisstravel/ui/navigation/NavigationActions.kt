@@ -26,8 +26,6 @@ sealed class Screen(
 
   object Map : Screen(route = "map", name = "Map", isTopLevelDestination = true)
 
-  object SelectedTripMap : Screen(route = "selected_trip_map", name = "Selected trip map")
-
   object CurrentTrip :
       Screen(route = "current_trip", name = "Current trip", isTopLevelDestination = true)
 

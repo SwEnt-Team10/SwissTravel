@@ -30,10 +30,10 @@ import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
-import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -105,6 +105,7 @@ fun SwissTravelApp(
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route
+  val tripInfoViewModel: TripInfoViewModel = viewModel()
   /* System back button handler */
   BackHandler {
     when {
@@ -205,6 +206,7 @@ fun SwissTravelApp(
         }
         TripInfoScreen(
             uid,
+            tripInfoViewModel,
             onMyTrips = { navigationActions.goBack() },
             onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
             onEditTrip = { navigationActions.navigateToEditTrip(uid) })
@@ -215,7 +217,7 @@ fun SwissTravelApp(
         route = Screen.TripInfoMap.name,
     ) {
       composable(Screen.TripInfoMap.route) {
-        TripInfoMapScreen(onBack = { navigationActions.goBack() })
+        TripInfoMapScreen(onBack = { navigationActions.goBack() }, tripInfoViewModel)
       }
     }
 
@@ -268,14 +270,6 @@ fun SwissTravelApp(
             onNext = { navigationActions.navigateTo(Screen.MyTrips) },
             onPrevious = { navigationActions.goBack() })
       }
-    }
-
-    // Trip map screen
-    navigation(
-        startDestination = Screen.SelectedTripMap.route,
-        route = Screen.SelectedTripMap.name,
-    ) {
-      composable(Screen.SelectedTripMap.route) { NavigationMapScreen(navigationActions) }
     }
   }
 }

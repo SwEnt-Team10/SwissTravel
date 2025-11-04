@@ -1,7 +1,9 @@
 package com.github.swent.swisstravel.ui.map
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.ViewModel
+import com.github.swent.swisstravel.model.trip.Location
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
 import com.mapbox.bindgen.ExpectedFactory
@@ -12,6 +14,7 @@ import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.route.NavigationRoute
 import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
+import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.MapboxNavigationProvider
 import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.directions.session.RoutesUpdatedResult
@@ -29,6 +32,14 @@ object Locations {
   val CHUV = Point.fromLngLat(6.6209, 46.5197)
 }
 
+data class NavigationMapUIState(
+    val routeLineDrawData: Expected<RouteLineError, RouteSetValue>? = null,
+    val isRouteRendered: Boolean = false,
+    val locationsList: List<Point>,
+    val mapboxNavigation: MapboxNavigation,
+    val routeLineApi: MapboxRouteLineApi,
+)
+
 /**
  * ViewModel responsible for configuring and managing the Mapbox Navigation instance.
  *
@@ -41,43 +52,28 @@ object Locations {
  * The UI layer observes [routeLineDrawData] and [isRouteRendered] to reactively update the map view
  * when routes change or when rendering is complete.
  */
-class NavigationMapViewModel(application: Application) : ViewModel() {
+class NavigationMapViewModel(application: Application, locationsList: List<Location>) :
+    ViewModel() {
 
-  /**
-   * Backing state that holds the route line draw data (either a success or an error).
-   *
-   * This is used by the UI to render routes on the map.
-   */
-  private val _routeLineDrawData = MutableStateFlow<Expected<RouteLineError, RouteSetValue>?>(null)
+  /** ... */
+  private val _uiState =
+      MutableStateFlow<NavigationMapUIState>(
+          NavigationMapUIState(
+              locationsList =
+                  locationsList.map { location ->
+                    Point.fromLngLat(location.coordinate.longitude, location.coordinate.latitude)
+                  },
+              mapboxNavigation =
+                  if (MapboxNavigationProvider.isCreated()) {
+                    MapboxNavigationProvider.retrieve()
+                  } else {
+                    MapboxNavigationProvider.create(
+                        NavigationOptions.Builder(application.applicationContext).build())
+                  },
+              routeLineApi = MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build())))
 
-  /** Public [StateFlow] for observing route line draw data updates. */
-  val routeLineDrawData: StateFlow<Expected<RouteLineError, RouteSetValue>?> = _routeLineDrawData
-
-  /** Internal flag indicating whether the route is currently rendered on the map. */
-  private val _isRouteRendered = MutableStateFlow(false)
-
-  /** Public [StateFlow] for tracking whether the route is rendered or not. */
-  val isRouteRendered: StateFlow<Boolean> = _isRouteRendered
-
-  /**
-   * The main Mapbox Navigation instance.
-   *
-   * If an instance already exists, it is retrieved via [MapboxNavigationProvider.retrieve].
-   * Otherwise, a new one is created with default navigation options.
-   */
-  private val mapboxNavigation =
-      if (MapboxNavigationProvider.isCreated()) {
-        MapboxNavigationProvider.retrieve()
-      } else {
-        MapboxNavigationProvider.create(
-            NavigationOptions.Builder(application.applicationContext).build())
-      }
-
-  /** Configuration options for the [MapboxRouteLineApi]. */
-  val routeLineApiOptions = MapboxRouteLineApiOptions.Builder().build()
-
-  /** An instance of MapboxRouteLineAPI, used to generate and update route line draw data. */
-  private val routeLineApi = MapboxRouteLineApi(routeLineApiOptions)
+  /** ... */
+  val uiState: StateFlow<NavigationMapUIState> = _uiState
 
   /**
    * A [RoutesObserver] that listens for changes in the current navigation routes.
@@ -89,14 +85,16 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
       object : RoutesObserver {
         override fun onRoutesChanged(result: RoutesUpdatedResult) {
           val alternativesMetadata =
-              mapboxNavigation.getAlternativeMetadataFor(result.navigationRoutes)
-          routeLineApi.setNavigationRoutes(result.navigationRoutes, alternativesMetadata) { drawData
-            ->
-            // update draw data
-            if (drawData.value != null) {
-              _routeLineDrawData.value = ExpectedFactory.createValue(drawData.value!!)
-            }
-          }
+              _uiState.value.mapboxNavigation.getAlternativeMetadataFor(result.navigationRoutes)
+          _uiState.value.routeLineApi.setNavigationRoutes(
+              result.navigationRoutes, alternativesMetadata) { drawData ->
+                // update draw data
+                if (drawData.value != null) {
+                  _uiState.value =
+                      _uiState.value.copy(
+                          routeLineDrawData = ExpectedFactory.createValue(drawData.value!!))
+                }
+              }
         }
       }
 
@@ -107,7 +105,8 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
    */
   init {
     // Start observing routes to emit draw data when routes change
-    mapboxNavigation.registerRoutesObserver(routesObserver)
+      Log.d("NAV_MAP_VM", "initialize a VM")
+    _uiState.value.mapboxNavigation.registerRoutesObserver(routesObserver)
     requestRoute()
   }
 
@@ -122,7 +121,7 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
     val routeOptions =
         RouteOptions.builder()
             .applyDefaultNavigationOptions()
-            .coordinatesList(listOf(LocationsHardCoded.EPFL_IC, LocationsHardCoded.OLYMPIC_MUSEUM))
+            .coordinatesList(_uiState.value.locationsList)
             .build()
 
     val callback =
@@ -132,12 +131,12 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
           override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {}
 
           override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
-            mapboxNavigation.setNavigationRoutes(routes)
+            _uiState.value.mapboxNavigation.setNavigationRoutes(routes)
           }
         }
 
     // Requesting route (API request)
-    mapboxNavigation.requestRoutes(routeOptions, callback)
+    _uiState.value.mapboxNavigation.requestRoutes(routeOptions, callback)
   }
 
   /**
@@ -148,7 +147,7 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
    * @param isRendered `true` if the route is displayed on the map, `false` otherwise.
    */
   fun setRouteRendered(isRendered: Boolean) {
-    _isRouteRendered.value = isRendered
+    _uiState.value = _uiState.value.copy(isRouteRendered = isRendered)
   }
 
   /**
@@ -158,7 +157,17 @@ class NavigationMapViewModel(application: Application) : ViewModel() {
    */
   override fun onCleared() {
     super.onCleared()
-    mapboxNavigation.unregisterRoutesObserver(routesObserver)
+    _uiState.value.mapboxNavigation.unregisterRoutesObserver(routesObserver)
     MapboxNavigationProvider.destroy()
+  }
+}
+
+/**
+ * Converts a list of locations (from the tripInfoViewModel) to a list of Points (what the mapbox
+ * api needs)
+ */
+fun locationsAsPoints(locations: List<Location>): List<Point> {
+  return locations.map { location ->
+    Point.fromLngLat(location.coordinate.longitude, location.coordinate.latitude)
   }
 }
