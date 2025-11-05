@@ -1,7 +1,7 @@
 package com.github.swent.swisstravel.algorithm.orderlocations
 
 /**
- * Heuristic solver for the asymmetric closed Traveling Salesman Problem (TSP).
+ * Heuristic solver in O(n²) for the asymmetric closed Traveling Salesman Problem (TSP).
  *
  * Closed = start and end are the same (forms a loop). Asymmetric = distance(i, j) may differ from
  * distance(j, i). Uses greedy initialization + 2-opt refinement.
@@ -9,49 +9,51 @@ package com.github.swent.swisstravel.algorithm.orderlocations
 class ClosedTsp {
 
   /**
-   * Computes an approximate optimal closed route.
+   * Computes an approximate optimal closed route (a tour).
    *
-   * @param dist Asymmetric distance matrix where dist[i][j] is the travel cost from i → j.
-   * @param start Index of the starting (and ending) node.
-   * @return A list of node indices representing a loop starting and ending at `start`.
+   * @param dist Asymmetric distance matrix where dist[i][j] is the travel cost from node i to j.
+   * @param start Index of the starting (and ending) node for the tour.
+   * @return A list of node indices representing a loop that starts and ends at `start`.
    */
   fun closedTsp(dist: Array<DoubleArray>, start: Int): List<Int> {
     val n = dist.size
-    require(start in 0 until n) { "Invalid start index" }
+    require(n == 0 || dist.all { it.size == n }) { "The distance matrix must be square." }
+    if (n <= 1) return listOf(start)
 
-    val visited = BooleanArray(n) { false }
+    require(start in 0 until n) { "Invalid start index: $start for size $n" }
+
+    // 1. Initialize path with a greedy heuristic.
+    val initialPath = greedyNearestNeighbor(dist, start)
+
+    // 2. Refine the path using the 2-opt algorithm.
+    return runTwoOpt(initialPath, dist)
+  }
+
+  /** Constructs an initial path using the Nearest Neighbor greedy heuristic. */
+  private fun greedyNearestNeighbor(dist: Array<DoubleArray>, start: Int): MutableList<Int> {
+    val n = dist.size
     val path = mutableListOf(start)
+    val visited = BooleanArray(n) { false }
     visited[start] = true
     var current = start
 
-    // Nearest Neighbor heuristic
     repeat(n - 1) {
-      var next = -1
-      var bestDist = Double.POSITIVE_INFINITY
-      for (i in 0 until n) {
-        if (!visited[i] && dist[current][i] < bestDist) {
-          bestDist = dist[current][i]
-          next = i
-        }
-      }
-      require(next >= 0) { "No unvisited node found, something went wrong" }
+      val next =
+          (0 until n).filter { !visited[it] }.minByOrNull { dist[current][it] }
+              ?: error("No unvisited node found, which should not happen in a connected graph.")
+
       path.add(next)
       visited[next] = true
       current = next
     }
 
-    // Close the tour
+    // Close the tour by returning to the start.
     path.add(start)
+    return path
+  }
 
-    // 2-opt optimization
-    fun routeDistance(route: List<Int>): Double {
-      var total = 0.0
-      for (i in 0 until route.size - 1) {
-        total += dist[route[i]][route[i + 1]]
-      }
-      return total
-    }
-
+  /** Improves a given path by repeatedly applying the 2-opt heuristic. */
+  private fun runTwoOpt(path: MutableList<Int>, dist: Array<DoubleArray>): List<Int> {
     var improved: Boolean
     do {
       improved = false
@@ -60,6 +62,7 @@ class ClosedTsp {
           val delta =
               (dist[path[i - 1]][path[j]] + dist[path[i]][path[j + 1]]) -
                   (dist[path[i - 1]][path[i]] + dist[path[j]][path[j + 1]])
+
           if (delta < -1e-6) {
             path.subList(i, j + 1).reverse()
             improved = true
@@ -67,7 +70,6 @@ class ClosedTsp {
         }
       }
     } while (improved)
-
     return path
   }
 }

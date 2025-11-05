@@ -11,13 +11,13 @@ import com.github.swent.swisstravel.model.trip.Location
  * @property totalDuration The total estimated travel time of the entire route in seconds. A
  *   negative value (−1.0) indicates that the duration matrix could not be retrieved or the route
  *   could not be computed.
- * @property segmentDurations The list of travel times (in seconds) between each consecutive pair of
+ * @property segmentDuration The list of travel times (in seconds) between each consecutive pair of
  *   locations in [orderedLocations]. For example, if the route is `[A, B, C]`, this list contains
  *   the duration for `A → B` and `B → C`.
  */
 data class OrderedRoute(
     val orderedLocations: List<Location>,
-    val totalDuartion: Double,
+    val totalDuration: Double,
     val segmentDuration: List<Double>
 )
 

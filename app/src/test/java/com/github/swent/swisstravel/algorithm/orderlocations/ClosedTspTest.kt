@@ -31,4 +31,26 @@ class ClosedTspTest {
     val expectedRoute = listOf(0, 1, 2, 3, 0)
     assertEquals(expectedRoute, route)
   }
+
+  @Test(expected = IllegalArgumentException::class)
+  fun `closedTsp throws exception for non-square matrix`() {
+    val dist =
+        arrayOf(
+            doubleArrayOf(0.0, 1.0, 10.0),
+            doubleArrayOf(1.0, 0.0, 1.0),
+            doubleArrayOf(10.0, 1.0, 0.0, 5.0) // This row has a different length
+            )
+    closedTsp.closedTsp(dist, 0)
+  }
+
+  @Test(expected = IllegalArgumentException::class)
+  fun `closedTsp throws exception for invalid start index`() {
+    val dist =
+        arrayOf(
+            doubleArrayOf(0.0, 1.0),
+            doubleArrayOf(1.0, 0.0),
+        )
+    // The valid indices are 0 and 1, so 2 is out of bounds.
+    closedTsp.closedTsp(dist, 2)
+  }
 }
