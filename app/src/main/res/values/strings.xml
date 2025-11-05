@@ -155,4 +155,27 @@
     <string name="preference_category_accessibility">Accessibility</string>
     <string name="preference_category_default">Default</string>
 
+    <!-- Trip summary -->
+    <string name="trip_summary">Trip Summary</string>
+    <string name="trip_name_summary">Enter a name for your trip</string>
+    <string name="create_trip_summary">Create Trip</string>
+    <string name="number_of_travelers">Number of travelers</string>
+    <string name="adult">Adult</string>
+    <string name="adults">Adults</string>
+    <string name="child">Child</string>
+    <string name="children">Children</string>
+    <string name="travelling_preferences_summary">Travelling preferences</string>
+    <string name="departure">Departure</string>
+    <string name="arrival">Arrival</string>
+    <string name="places">Places you want to visit</string>
+    <string name="trip_name_required">Trip name required</string>
+    <string name="departure_required">Departure required</string>
+    <string name="arrival_required">Arrival required</string>
+    <string name="no_wanted_places">No wanted places</string>
+    <string name="no_preferences">No preferences</string>
+    <string name="from_summary">From:</string>
+    <string name="to_summary">To:</string>
+
+
+
 </resources>
