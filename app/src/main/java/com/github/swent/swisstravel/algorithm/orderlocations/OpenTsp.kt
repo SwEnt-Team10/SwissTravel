@@ -31,9 +31,14 @@ class OpenTsp {
    */
   fun openTsp(dist: Array<DoubleArray>, start: Int, end: Int): List<Int> {
     val n = dist.size
+    require(start in 0 until n) { "Invalid start index" }
+    require(end in 0 until n) { "Invalid start index" }
+
     val route = mutableListOf(start)
     val visited = BooleanArray(n)
     visited[start] = true
+    visited[end] = true
+
     var current = start
 
     fun greedy(loopSize: Int) {
@@ -45,16 +50,8 @@ class OpenTsp {
       }
     }
 
-    if (start == end) {
-      // --- CLOSED TSP LOGIC (start and end are the same) ---
-      // Greedy step: visit all n-1 remaining nodes
-      greedy(n)
-    } else {
-      // --- OPEN TSP LOGIC (start and end are different) ---
-      visited[end] = true
-      // Greedy step: visit all nodes except start and end
-      greedy(n - 1)
-    }
+    // Greedy step: visit all nodes except start and end
+    greedy(n - 1)
 
     // Add the end node
     route.add(end)
