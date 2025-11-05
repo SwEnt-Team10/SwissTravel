@@ -31,14 +31,55 @@ private fun LocalDateTime.toTs(): Timestamp =
     Timestamp(this.atZone(ZoneId.systemDefault()).toEpochSecond(), 0)
 
 /**
- * The trip scheduling algorithm. It calculates an optimal trip taking into account the start of the
- * trip and the optimal routes between activities.
+ * Builds a chronological trip schedule by assigning start and end times to activities and route
+ * segments based on a daily time window.
  *
- * @param tripStart the trip start
- * @param ordered the ordered route
- * @param activities the activities
- * @param params the parameters of the algorithm
- * @return A list of trip elements (i.e RouteSegments or TripActivities)
+ * The function takes an [OrderedRoute] (a list of locations and travel durations between them) and
+ * a list of [Activity] objects, and produces a sequence of [TripElement]s (activities and routes)
+ * scheduled day-by-day starting from a given date.
+ *
+ * ### Scheduling Rules
+ * - The day starts at [ScheduleParams.dayStart] and ends at [ScheduleParams.dayEnd].
+ * - Activities are placed at their associated location in order of [OrderedRoute.orderedLocations].
+ * - After each activity, a pause of [ScheduleParams.pauseBetweenEachActivity] seconds is inserted
+ *   before the next travel segment or activity begins.
+ * - If an activity or route segment would exceed the daily limit ([ScheduleParams.dayEnd]), it is
+ *   deferred to the next day starting at [ScheduleParams.dayStart].
+ * - The resulting elements are returned sorted chronologically by their [TripElement.startDate].
+ *
+ * ### Example
+ * Suppose we start on `2025-06-01` with:
+ * - Day start = 09:00, day end = 18:00
+ * - A route visiting locations A → B → C
+ * - Activities of 2 hours each, and travel times of 1 hour between locations
+ *
+ * Then:
+ * ```
+ * 09:00–11:00 → Activity at A
+ * 11:00–12:00 → Travel A→B
+ * 12:00–14:00 → Activity at B
+ * 14:00–15:00 → Travel B→C
+ * 15:00–17:00 → Activity at C
+ * ```
+ *
+ * ### Parameters
+ *
+ * @param tripStart The starting [LocalDate] for the trip (e.g., the first travel day).
+ * @param ordered The optimized route output from [orderLocations], defining location order and
+ *   segment durations.
+ * @param activities The list of [Activity]s to schedule along the route. Each activity must have a
+ *   [Location] matching one in [ordered.orderedLocations].
+ * @param params Optional [ScheduleParams] that define the daily scheduling constraints such as
+ *   start/end hours and the pause between activities.
+ *
+ * ### Returns
+ * A list of [TripElement]s (either [TripElement.TripActivity] or [TripElement.TripSegment]) with
+ * properly assigned [Timestamp] start and end times, sorted by start time.
+ *
+ * @see TripElement
+ * @see ScheduleParams
+ * @see OrderedRoute
+ * @see Activity
  */
 fun scheduleTrip(
     tripStart: LocalDate,
@@ -47,7 +88,8 @@ fun scheduleTrip(
     params: ScheduleParams = ScheduleParams()
 ): List<TripElement> {
 
-  // TODO: Take into account numerous preferences and other transport modes
+  // TODO: Take into account numerous preferences and other transport modes and discuss design of
+  // skipping a day or not
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
   var currentDay = tripStart
