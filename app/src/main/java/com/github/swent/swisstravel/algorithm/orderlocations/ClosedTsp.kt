@@ -1,10 +1,17 @@
 package com.github.swent.swisstravel.algorithm.orderlocations
 
 /**
- * Heuristic solver in O(n²) for the asymmetric closed Traveling Salesman Problem (TSP).
+ * Heuristic solver for the asymmetric closed Traveling Salesman Problem (TSP).
  *
- * Closed = start and end are the same (forms a loop). Asymmetric = distance(i, j) may differ from
- * distance(j, i). Uses greedy initialization + 2-opt refinement.
+ * This implementation finds an approximate solution for a closed tour, where the start and end
+ * points are the same. It is designed for asymmetric distances, where the cost from A to B may not
+ * be the same as from B to A.
+ *
+ * The algorithm uses a greedy Nearest Neighbor heuristic for initialization, followed by a 2-opt
+ * refinement process to improve the initial path.
+ *
+ * The time complexity is dominated by the 2-opt refinement, making it O(n^3) in the worst case,
+ * where n is the number of nodes.
  */
 class ClosedTsp {
 
@@ -52,18 +59,30 @@ class ClosedTsp {
     return path
   }
 
-  /** Improves a given path by repeatedly applying the 2-opt heuristic. */
+  /**
+   * Improves a given path by repeatedly applying a 2-opt like heuristic, adapted for asymmetric
+   * graphs.
+   */
   private fun runTwoOpt(path: MutableList<Int>, dist: Array<DoubleArray>): List<Int> {
     var improved: Boolean
     do {
       improved = false
       for (i in 1 until path.size - 2) {
         for (j in i + 1 until path.size - 1) {
-          val delta =
-              (dist[path[i - 1]][path[j]] + dist[path[i]][path[j + 1]]) -
-                  (dist[path[i - 1]][path[i]] + dist[path[j]][path[j + 1]])
+          // Cost of the current segment: (i-1 -> i) + ... + (j -> j+1)
+          val currentCost =
+              dist[path[i - 1]][path[i]] +
+                  (i until j).sumOf { dist[path[it]][path[it + 1]] } +
+                  dist[path[j]][path[j + 1]]
 
-          if (delta < -1e-6) {
+          // Cost of the proposed new segment with the sub-path reversed.
+          // New path is: (i-1 -> j) -> (j-1) -> ... -> (i) -> (j+1)
+          val reversedSubPathCost = (j downTo i + 1).sumOf { dist[path[it]][path[it - 1]] }
+          val newCost =
+              dist[path[i - 1]][path[j]] + reversedSubPathCost + dist[path[i]][path[j + 1]]
+
+          // If the new cost is better, perform the reversal.
+          if (newCost < currentCost - 1e-6) {
             path.subList(i, j + 1).reverse()
             improved = true
           }
