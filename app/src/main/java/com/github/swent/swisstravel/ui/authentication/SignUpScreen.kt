@@ -43,11 +43,11 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 
 object SignUpScreenTestTags {
-    const val EMAIL_FIELD = "emailField"
-    const val PASSWORD_FIELD = "passwordField"
-    const val SIGN_UP_BUTTON = "signUpButton"
-    const val SIGN_IN_BUTTON = "signInButton"
-    const val LOADING_INDICATOR = "loadingIndicator"
+  const val EMAIL_FIELD = "emailField"
+  const val PASSWORD_FIELD = "passwordField"
+  const val SIGN_UP_BUTTON = "signUpButton"
+  const val SIGN_IN_BUTTON = "signInButton"
+  const val LOADING_INDICATOR = "loadingIndicator"
 }
 
 @Composable
@@ -56,107 +56,96 @@ fun SignUpScreen(
     onSignUpSuccess: () -> Unit = {},
     onSignInClick: () -> Unit = {}
 ) {
-    val context = LocalContext.current
-    val uiState by signUpViewModel.uiState.collectAsState()
-    var email by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
+  val context = LocalContext.current
+  val uiState by signUpViewModel.uiState.collectAsState()
+  var email by remember { mutableStateOf("") }
+  var password by remember { mutableStateOf("") }
 
-    LaunchedEffect(uiState.errorMsg) {
-        uiState.errorMsg?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            signUpViewModel.clearErrorMsg()
-        }
+  LaunchedEffect(uiState.errorMsg) {
+    uiState.errorMsg?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      signUpViewModel.clearErrorMsg()
     }
+  }
 
-    LaunchedEffect(uiState.user) {
-        uiState.user?.let {
-            Toast.makeText(context, R.string.signup_success, Toast.LENGTH_SHORT).show()
-            onSignUpSuccess()
-        }
+  LaunchedEffect(uiState.user) {
+    uiState.user?.let {
+      Toast.makeText(context, R.string.signup_success, Toast.LENGTH_SHORT).show()
+      onSignUpSuccess()
     }
+  }
 
-    Scaffold(modifier = Modifier.fillMaxSize()) {
-        paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.swisstravel),
-                contentDescription = stringResource(R.string.app_logo_desc),
-                modifier =
-                Modifier.size(240.dp)
-                    .clip(RoundedCornerShape(16.dp))
-                    .testTag(SignInScreenTestTags.APP_LOGO)
-            )
+  Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
+    Column(
+        modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+      Image(
+          painter = painterResource(id = R.drawable.swisstravel),
+          contentDescription = stringResource(R.string.app_logo_desc),
+          modifier =
+              Modifier.size(240.dp)
+                  .clip(RoundedCornerShape(16.dp))
+                  .testTag(SignInScreenTestTags.APP_LOGO))
 
-            Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                modifier = Modifier.testTag(SignInScreenTestTags.NAME),
-                text = stringResource(R.string.name_lower),
-                style =
-                MaterialTheme.typography.headlineLarge.copy(
-                    fontSize = 45.sp,
-                    lineHeight = 52.sp
-                ),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center
-            )
+      Text(
+          modifier = Modifier.testTag(SignInScreenTestTags.NAME),
+          text = stringResource(R.string.name_lower),
+          style = MaterialTheme.typography.headlineLarge.copy(fontSize = 45.sp, lineHeight = 52.sp),
+          fontWeight = FontWeight.Bold,
+          textAlign = TextAlign.Center)
 
-            Spacer(modifier = Modifier.height(24.dp))
+      Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Create an account",
-                style = MaterialTheme.typography.titleMedium,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
+      Text(
+          text = "Create an account",
+          style = MaterialTheme.typography.titleMedium,
+          textAlign = TextAlign.Center,
+          modifier = Modifier.fillMaxWidth())
 
-            Spacer(modifier = Modifier.height(24.dp))
+      Spacer(modifier = Modifier.height(24.dp))
 
-            OutlinedTextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.EMAIL_FIELD)
-            )
+      OutlinedTextField(
+          value = email,
+          onValueChange = { email = it },
+          label = { Text("Email") },
+          modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.EMAIL_FIELD))
 
-            Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(16.dp))
 
-            OutlinedTextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation(),
-                modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.PASSWORD_FIELD)
-            )
+      OutlinedTextField(
+          value = password,
+          onValueChange = { password = it },
+          label = { Text("Password") },
+          visualTransformation = PasswordVisualTransformation(),
+          modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.PASSWORD_FIELD))
 
-            Spacer(modifier = Modifier.height(24.dp))
+      Spacer(modifier = Modifier.height(24.dp))
 
-            if (uiState.isLoading) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp).testTag(SignUpScreenTestTags.LOADING_INDICATOR)
-                )
-            } else {
-                Button(
-                    onClick = { signUpViewModel.signUpWithEmailPassword(email, password, context) },
-                    modifier = Modifier.fillMaxWidth().height(48.dp).testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)
-                ) {
-                    Text("Sign Up", fontSize = 16.sp)
-                }
-                Spacer(modifier = Modifier.height(16.dp))
-                TextButton(onClick = onSignInClick) {
-                    Text("Already have an account? Sign In")
-                }
+      if (uiState.isLoading) {
+        CircularProgressIndicator(
+            modifier = Modifier.size(48.dp).testTag(SignUpScreenTestTags.LOADING_INDICATOR))
+      } else {
+        Button(
+            onClick = { signUpViewModel.signUpWithEmailPassword(email, password, context) },
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(48.dp)
+                    .testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)) {
+              Text("Sign Up", fontSize = 16.sp)
             }
-        }
+        Spacer(modifier = Modifier.height(16.dp))
+        TextButton(onClick = onSignInClick) { Text("Already have an account? Sign In") }
+      }
     }
+  }
 }
 
 @Preview
 @Composable
-fun SignUpScreenPreview(){
-    SwissTravelTheme { SignUpScreen() }
+fun SignUpScreenPreview() {
+  SwissTravelTheme { SignUpScreen() }
 }

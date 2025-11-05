@@ -126,28 +126,27 @@ fun SwissTravelApp(
     }
   }
 
-    NavHost(navController = navController, startDestination = startDestination) {
+  NavHost(navController = navController, startDestination = startDestination) {
 
-        // Combined Authentication Graph
-        // The route for the whole graph is Screen.SignUp.name ("Sign up")
-        // The starting screen inside this graph is Screen.SignUp.route ("signup")
-        navigation(
-            startDestination = Screen.SignUp.route,
-            route = Screen.SignUp.name,
-        ){
-            composable(Screen.SignUp.route) {
-                SignUpScreen(
-                    onSignInClick = { navigationActions.navigateTo(Screen.Auth) },
-                    onSignUpSuccess = { navigationActions.navigateTo(Screen.CurrentTrip) }
-                )
-            }
-            composable(Screen.Auth.route) {
-                SignInScreen(
-                    credentialManager = credentialManager,
-                    onSignedIn = { navigationActions.navigateTo(Screen.CurrentTrip) },
-                )
-            }
-        }
+    // Combined Authentication Graph
+    // The route for the whole graph is Screen.SignUp.name ("Sign up")
+    // The starting screen inside this graph is Screen.SignUp.route ("signup")
+    navigation(
+        startDestination = Screen.SignUp.route,
+        route = Screen.SignUp.name,
+    ) {
+      composable(Screen.SignUp.route) {
+        SignUpScreen(
+            onSignInClick = { navigationActions.navigateTo(Screen.Auth) },
+            onSignUpSuccess = { navigationActions.navigateTo(Screen.CurrentTrip) })
+      }
+      composable(Screen.Auth.route) {
+        SignInScreen(
+            credentialManager = credentialManager,
+            onSignedIn = { navigationActions.navigateTo(Screen.CurrentTrip) },
+        )
+      }
+    }
 
     // Profile screen
     navigation(

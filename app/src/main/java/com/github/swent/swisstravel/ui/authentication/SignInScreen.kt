@@ -76,7 +76,6 @@ fun SignInScreen(
   var email by remember { mutableStateOf("") }
   var password by remember { mutableStateOf("") }
 
-
   // Show error message if login fails
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg?.let {
@@ -129,8 +128,7 @@ fun SignInScreen(
               text = "Sign in to your account",
               style = MaterialTheme.typography.titleMedium,
               textAlign = TextAlign.Center,
-              modifier = Modifier.fillMaxWidth()
-          )
+              modifier = Modifier.fillMaxWidth())
 
           Spacer(modifier = Modifier.height(24.dp))
 
@@ -138,8 +136,7 @@ fun SignInScreen(
               value = email,
               onValueChange = { email = it },
               label = { Text("Email") },
-              modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.EMAIL_FIELD)
-          )
+              modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.EMAIL_FIELD))
 
           Spacer(modifier = Modifier.height(16.dp))
 
@@ -148,11 +145,9 @@ fun SignInScreen(
               onValueChange = { password = it },
               label = { Text("Password") },
               visualTransformation = PasswordVisualTransformation(),
-              modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.PASSWORD_FIELD)
-          )
+              modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.PASSWORD_FIELD))
 
           Spacer(modifier = Modifier.height(24.dp))
-
 
           // Authenticate With Google Button
           if (uiState.isLoading) {
@@ -161,14 +156,21 @@ fun SignInScreen(
           } else {
             Button(
                 onClick = { authViewModel.signInWithEmailPassword(email, password, context) },
-                modifier = Modifier.fillMaxWidth().height(48.dp).testTag(SignInScreenTestTags.LOGIN_BUTTON)
-            ) {
-                Text("Sign In", fontSize = 16.sp)
-            }
-              Spacer(modifier = Modifier.height(24.dp))
-              Text("OR", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth(), color = Color.Gray)
-              Spacer(modifier = Modifier.height(24.dp))
-            GoogleSignInButton(onSignInClick = { authViewModel.signInWithGoogle(context, credentialManager) })
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .height(48.dp)
+                        .testTag(SignInScreenTestTags.LOGIN_BUTTON)) {
+                  Text("Sign In", fontSize = 16.sp)
+                }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "OR",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.Gray)
+            Spacer(modifier = Modifier.height(24.dp))
+            GoogleSignInButton(
+                onSignInClick = { authViewModel.signInWithGoogle(context, credentialManager) })
           }
         }
       })
@@ -189,7 +191,8 @@ fun GoogleSignInButton(onSignInClick: () -> Unit) {
               contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(50),
       border = BorderStroke(1.dp, Color.LightGray),
-      modifier = Modifier.fillMaxWidth().height(48.dp).testTag(SignInScreenTestTags.GOOGLE_LOGIN_BUTTON)) {
+      modifier =
+          Modifier.fillMaxWidth().height(48.dp).testTag(SignInScreenTestTags.GOOGLE_LOGIN_BUTTON)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center) {

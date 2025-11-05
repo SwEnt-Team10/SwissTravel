@@ -51,11 +51,15 @@ class AuthRepositoryFirebase(
     }
   }
 
-  override suspend fun signInWithEmailPassword(email: String, password: String): Result<FirebaseUser> {
+  override suspend fun signInWithEmailPassword(
+      email: String,
+      password: String
+  ): Result<FirebaseUser> {
     return try {
-      val user = auth.signInWithEmailAndPassword(email, password).await().user
-          ?: return Result.failure(
-              IllegalStateException("Login failed: Could not retrieve user information"))
+      val user =
+          auth.signInWithEmailAndPassword(email, password).await().user
+              ?: return Result.failure(
+                  IllegalStateException("Login failed: Could not retrieve user information"))
       Result.success(user)
     } catch (e: Exception) {
       Result.failure(
@@ -63,11 +67,15 @@ class AuthRepositoryFirebase(
     }
   }
 
-  override suspend fun signUpWithEmailPassword(email: String, password: String): Result<FirebaseUser> {
+  override suspend fun signUpWithEmailPassword(
+      email: String,
+      password: String
+  ): Result<FirebaseUser> {
     return try {
-      val user = auth.createUserWithEmailAndPassword(email, password).await().user
-          ?: return Result.failure(
-              IllegalStateException("Sign up failed: Could not retrieve user information"))
+      val user =
+          auth.createUserWithEmailAndPassword(email, password).await().user
+              ?: return Result.failure(
+                  IllegalStateException("Sign up failed: Could not retrieve user information"))
       Result.success(user)
     } catch (e: Exception) {
       Result.failure(

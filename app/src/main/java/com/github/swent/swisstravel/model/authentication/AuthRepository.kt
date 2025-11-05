@@ -28,7 +28,6 @@ interface AuthRepository {
    */
   suspend fun signUpWithEmailPassword(email: String, password: String): Result<FirebaseUser>
 
-
   /**
    * Signs out the currently authenticated user and clears the credential state.
    *
