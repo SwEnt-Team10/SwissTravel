@@ -144,6 +144,6 @@ class FirstDestinationsTest {
     val expectedLocation = fakeLocationRepository.locations.first()
 
     assertEquals(1, finalDestinations.size)
-    assertEquals(expectedLocation.coordinate, finalDestinations.first().coordinate)
+    assertEquals(expectedLocation.name, finalDestinations.first().name)
   }
 }
