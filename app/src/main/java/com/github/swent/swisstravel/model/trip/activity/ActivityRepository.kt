@@ -40,5 +40,15 @@ interface ActivityRepository {
       limit: Int = 5
   ): List<Activity>
 
+  /**
+   * Searches for destinations (locations) based on a text query.
+   *
+   * This is typically used for autocomplete features where a user is typing a location name.
+   *
+   * @param query The search string entered by the user.
+   * @param limit The maximum number of destination suggestions to return. Defaults to 3.
+   * @return A list of [Activity] objects representing potential destinations. The list could be
+   *   empty if no matches are found or if the request fails.
+   */
   suspend fun searchDestinations(query: String, limit: Int = 3): List<Activity>
 }

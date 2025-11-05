@@ -8,7 +8,6 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.toSwissTourismFacet
 import com.github.swent.swisstravel.model.user.toSwissTourismFacetFilter
 import com.google.firebase.Timestamp
-import com.mapbox.maps.extension.style.expressions.dsl.generated.image
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
@@ -108,21 +107,21 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
         val lon = geo.optDouble("longitude", Double.NaN)
 
         if (!lat.isNaN() && !lon.isNaN()) {
-            val imageArray = item.optJSONArray("image")
-            val imageUrls = mutableListOf<String>()
+          val imageArray = item.optJSONArray("image")
+          val imageUrls = mutableListOf<String>()
 
-            if (imageArray != null) {
-                for (j in 0 until imageArray.length()) {
-                    val imgObj = imageArray.optJSONObject(j)
-                    val url = imgObj?.optString("url")
-                    if (!url.isNullOrBlank()) {
-                        imageUrls.add(url)
-                    }
-                }
+          if (imageArray != null) {
+            for (j in 0 until imageArray.length()) {
+              val imgObj = imageArray.optJSONObject(j)
+              val url = imgObj?.optString("url")
+              if (!url.isNullOrBlank()) {
+                imageUrls.add(url)
+              }
             }
+          }
           val coordinate = Coordinate(lat, lon)
-          val location = Location(coordinate, name, imageUrls.firstOrNull())
-
+          val photo = item.optString("photo")
+          val location = Location(coordinate, name, photo)
 
           // Dummy start/end times for now
           // TODO add start/end times
@@ -224,7 +223,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
   ): List<Activity> {
     return fetchActivitiesFromUrl(computeUrlWithPreferences(preferences, limit))
   }
-
+  /** Searches for destinations based on a text query. */
   override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {
     val url =
         destinationHttpUrl
