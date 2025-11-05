@@ -129,6 +129,7 @@ mapbox-maps-navigation = {module = "com.mapbox.navigationcore:android-ndk27", ve
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin" , version.ref="mockitoKotlin"}
 coroutines-kotlin = {module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref ="corountineKotlin"}
+mockwebserver = { module = "com.squareup.okhttp3:mockwebserver", version.ref = "okhttp" }
 ## Testing UI
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
 androidx-espresso-contrib = { module = "androidx.test.espresso:espresso-contrib", version.ref = "espressoContrib" }
