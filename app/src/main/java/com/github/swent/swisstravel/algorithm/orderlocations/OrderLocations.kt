@@ -82,11 +82,17 @@ fun orderLocations(
     }
 
     // Compute the shortest path between the start and end locations
-    val tsp = OpenTsp()
     val startIndex = unique.indexOf(start)
     val endIndex = unique.indexOf(end)
 
-    val order = tsp.openTsp(durations, startIndex, endIndex)
+    val order =
+        if (startIndex == endIndex) {
+          val tsp = ClosedTsp()
+          tsp.closedTsp(durations, startIndex)
+        } else {
+          val tsp = OpenTsp()
+          tsp.openTsp(durations, startIndex, endIndex)
+        }
 
     // Maps back the order to the original locations
     val ordered = order.map { unique[it] }
