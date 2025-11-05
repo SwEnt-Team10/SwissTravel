@@ -11,15 +11,35 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
 
+/**
+ * The schedule parameters. This will be used in the main algorithm when you call scheduleTrip(),
+ * the parameters dayStart and dayEnd could be freely modified depending on which preferences the
+ * user has.
+ *
+ * @property dayStart the day start
+ * @property dayEnd the day end
+ * @property pauseBetweenEachActivity the pause between each activity
+ */
 data class ScheduleParams(
     val dayStart: LocalTime = LocalTime.of(9, 0),
     val dayEnd: LocalTime = LocalTime.of(18, 0),
     val pauseBetweenEachActivity: Int = 60 * 15
 )
 
+/** Helper to convert LocalDateTime to Timestamp. */
 private fun LocalDateTime.toTs(): Timestamp =
     Timestamp(this.atZone(ZoneId.systemDefault()).toEpochSecond(), 0)
 
+/**
+ * The trip scheduling algorithm. It calculates an optimal trip taking into account the start of the
+ * trip and the optimal routes between activities.
+ *
+ * @param tripStart the trip start
+ * @param ordered the ordered route
+ * @param activities the activities
+ * @param params the parameters of the algorithm
+ * @return A list of trip elements (i.e RouteSegments or TripActivities)
+ */
 fun scheduleTrip(
     tripStart: LocalDate,
     ordered: OrderedRoute,
@@ -27,6 +47,7 @@ fun scheduleTrip(
     params: ScheduleParams = ScheduleParams()
 ): List<TripElement> {
 
+  // TODO: Take into account numerous preferences and other transport modes
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
   var currentDay = tripStart
