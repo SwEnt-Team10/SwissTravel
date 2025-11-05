@@ -129,11 +129,14 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
 
           val estimatedTime = mapToTime(time)
 
-          // TODO add start time in the algorithm depending on the last activity
-          val start = Timestamp.now()
-          val end = Timestamp(start.seconds + estimatedTime, 0)
-
-          activities.add(Activity(start, end, location, description, imageUrls))
+          activities.add(
+              Activity(
+                  Timestamp.now(),
+                  Timestamp.now(),
+                  location,
+                  description,
+                  imageUrls,
+                  estimatedTime))
         }
       }
     }
