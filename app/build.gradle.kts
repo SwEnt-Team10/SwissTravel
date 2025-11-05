@@ -208,6 +208,7 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.mockk)
+    testImplementation(libs.mockwebserver)
     testImplementation(libs.json)
     testImplementation(libs.coroutines.kotlin)
     testImplementation(libs.credentials)
