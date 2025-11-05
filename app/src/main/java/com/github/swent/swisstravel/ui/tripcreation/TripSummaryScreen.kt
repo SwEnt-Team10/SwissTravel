@@ -54,7 +54,7 @@ object TripSummaryTestTags {
   const val DEPARTURE_LABEL = "departureLabel"
 
   const val PLACES_LABEL = "placesLabel"
-  const val DESTINATIONS_LIST = "destinationsList"
+  const val DESTINATIONS_EMPTY_LIST = "destinationsList"
   const val DESTINATION_ITEM = "destinationItem"
   const val CREATE_TRIP_BUTTON = "createTripButton"
 }
@@ -259,7 +259,7 @@ fun TripSummaryScreen(
                     style = MaterialTheme.typography.bodyLarge,
                     modifier =
                         Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
-                            .testTag(TripSummaryTestTags.DESTINATIONS_LIST))
+                            .testTag(TripSummaryTestTags.DESTINATIONS_EMPTY_LIST))
               }
             } else {
               itemsIndexed(destinations) { index, loc ->

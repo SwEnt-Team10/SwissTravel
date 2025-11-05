@@ -34,7 +34,7 @@ class TripSummaryTest {
   fun screenIsDisplayedCorrectly() {
     setContent()
     composeTestRule.onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripSummaryTestTags.DESTINATIONS_LIST).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripSummaryTestTags.DESTINATIONS_EMPTY_LIST).assertIsDisplayed()
     composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).assertIsDisplayed()
   }
 
