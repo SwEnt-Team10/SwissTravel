@@ -12,6 +12,9 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+// Number of points that the Mapbox API can handle.
+const val MAX_POINTS = 25
+
 /**
  * A class that provides methods for retrieving the duration matrix between a list of coordinates.
  *
@@ -52,7 +55,7 @@ open class DurationMatrix(private val context: Context) {
    */
   fun getDurations(coordinates: List<Coordinate>, callback: (Array<DoubleArray>?) -> Unit) {
     // Mapbox api sets limits on the number of points to give.
-    if (coordinates.size !in 2..25) {
+    if (coordinates.size !in 2..MAX_POINTS) {
       callback(null)
       return
     }

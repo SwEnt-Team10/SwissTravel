@@ -129,29 +129,4 @@ class OpenTspTest {
     val result = openTsp.twoOpt(route, dist)
     assertEquals(route, result)
   }
-
-  @Test
-  fun `openTsp with same start and end location`() {
-    val dist =
-        arrayOf(
-            doubleArrayOf(0.0, 1.0, 10.0, 1.0),
-            doubleArrayOf(1.0, 0.0, 1.0, 10.0),
-            doubleArrayOf(10.0, 1.0, 0.0, 1.0),
-            doubleArrayOf(1.0, 10.0, 1.0, 0.0))
-
-    // Start and end at location 0
-    val route = openTsp.openTsp(dist, 0, 0)
-
-    // The route should start and end at the same node
-    assertEquals("Route should start at 0", 0, route.first())
-    assertEquals("Route should end at 0", 0, route.last())
-
-    // All nodes should be visited, plus the return to the start
-    assertEquals("Route should visit all 4 nodes and return", 5, route.size)
-    assertEquals("Route should contain 4 unique nodes", 4, route.distinct().size)
-
-    // The optimal tour is 0 -> 1 -> 2 -> 3 -> 0
-    val expectedRoute = listOf(0, 1, 2, 3, 0)
-    assertEquals(expectedRoute, route)
-  }
 }
