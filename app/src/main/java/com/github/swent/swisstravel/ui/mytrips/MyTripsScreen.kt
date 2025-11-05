@@ -51,7 +51,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripList
-import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -349,10 +348,7 @@ private fun CurrentTripSection(
 @Composable
 private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip: () -> Unit = {}) {
   Row(
-      modifier =
-          Modifier.fillMaxWidth()
-              .padding(top = 26.dp, bottom = 10.dp)
-              .testTag(SortedTripListTestTags.TITLE_BUTTON_ROW),
+      modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Text(

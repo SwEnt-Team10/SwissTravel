@@ -59,7 +59,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
   private val now = Timestamp.now()
   val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
-  private val currentTrip = trip1
+  private val currentTrip = trip1.copy(isCurrentTrip = true)
 
   private val upcomingTrip = trip2
 
@@ -105,7 +105,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).performClick()
-    assert(clicked)
+    assertTrue(clicked)
   }
 
   @Test
@@ -120,13 +120,12 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON).performClick()
-    assert(createClicked)
+    assertTrue(createClicked)
   }
 
   @Test
   fun addingTrip_updatesUpcomingTripsList() {
-    val updatedCurrentTrip = currentTrip.copy(isCurrentTrip = true)
-    val fakeRepo = FakeTripsRepository(mutableListOf(updatedCurrentTrip))
+    val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
     val viewModel = MyTripsViewModel(fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
@@ -307,7 +306,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON).performClick()
 
     // Selection should remain
-    assert(viewModel.uiState.value.selectedTrips.contains(trip1))
+    assertTrue(viewModel.uiState.value.selectedTrips.contains(trip1))
   }
 
   @Test
@@ -328,8 +327,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
         .performClick() // This triggers deleteSelectedTrips()
 
     // Verify selection cleared
-    assert(viewModel.uiState.value.selectedTrips.isEmpty())
-    assert(!viewModel.uiState.value.isSelectionMode)
+    assertTrue(viewModel.uiState.value.selectedTrips.isEmpty())
+    assertTrue(!viewModel.uiState.value.isSelectionMode)
   }
 
   @Test
