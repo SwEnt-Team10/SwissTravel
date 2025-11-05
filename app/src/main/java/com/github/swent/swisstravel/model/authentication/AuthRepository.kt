@@ -15,6 +15,21 @@ interface AuthRepository {
   suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser>
 
   /**
+   * Signs in the user using an email and password.
+   *
+   * @return A [Result] containing a [FirebaseUser] on success, or an exception on failure.
+   */
+  suspend fun signInWithEmailPassword(email: String, password: String): Result<FirebaseUser>
+
+  /**
+   * Signs up the user using an email and password.
+   *
+   * @return A [Result] containing a [FirebaseUser] on success, or an exception on failure.
+   */
+  suspend fun signUpWithEmailPassword(email: String, password: String): Result<FirebaseUser>
+
+
+  /**
    * Signs out the currently authenticated user and clears the credential state.
    *
    * @return A [Result] indicating success or failure.

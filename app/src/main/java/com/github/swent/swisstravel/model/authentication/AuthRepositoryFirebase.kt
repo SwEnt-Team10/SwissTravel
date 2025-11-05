@@ -51,6 +51,30 @@ class AuthRepositoryFirebase(
     }
   }
 
+  override suspend fun signInWithEmailPassword(email: String, password: String): Result<FirebaseUser> {
+    return try {
+      val user = auth.signInWithEmailAndPassword(email, password).await().user
+          ?: return Result.failure(
+              IllegalStateException("Login failed: Could not retrieve user information"))
+      Result.success(user)
+    } catch (e: Exception) {
+      Result.failure(
+          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+    }
+  }
+
+  override suspend fun signUpWithEmailPassword(email: String, password: String): Result<FirebaseUser> {
+    return try {
+      val user = auth.createUserWithEmailAndPassword(email, password).await().user
+          ?: return Result.failure(
+              IllegalStateException("Sign up failed: Could not retrieve user information"))
+      Result.success(user)
+    } catch (e: Exception) {
+      Result.failure(
+          IllegalStateException("Sign up failed: ${e.localizedMessage ?: "Unexpected error"}"))
+    }
+  }
+
   override fun signOut(): Result<Unit> {
     return try {
       // Firebase sign out

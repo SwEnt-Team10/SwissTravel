@@ -28,6 +28,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
+import com.github.swent.swisstravel.ui.authentication.SignUpScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
@@ -100,7 +101,7 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.SignUp.name
       else Screen.CurrentTrip.name
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -125,19 +126,28 @@ fun SwissTravelApp(
     }
   }
 
-  NavHost(navController = navController, startDestination = startDestination) {
+    NavHost(navController = navController, startDestination = startDestination) {
 
-    // Sign-in screen
-    navigation(
-        startDestination = Screen.Auth.route,
-        route = Screen.Auth.name,
-    ) {
-      composable(Screen.Auth.route) {
-        SignInScreen(
-            credentialManager = credentialManager,
-            onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
-      }
-    }
+        // Combined Authentication Graph
+        // The route for the whole graph is Screen.SignUp.name ("Sign up")
+        // The starting screen inside this graph is Screen.SignUp.route ("signup")
+        navigation(
+            startDestination = Screen.SignUp.route,
+            route = Screen.SignUp.name,
+        ){
+            composable(Screen.SignUp.route) {
+                SignUpScreen(
+                    onSignInClick = { navigationActions.navigateTo(Screen.Auth) },
+                    onSignUpSuccess = { navigationActions.navigateTo(Screen.CurrentTrip) }
+                )
+            }
+            composable(Screen.Auth.route) {
+                SignInScreen(
+                    credentialManager = credentialManager,
+                    onSignedIn = { navigationActions.navigateTo(Screen.CurrentTrip) },
+                )
+            }
+        }
 
     // Profile screen
     navigation(

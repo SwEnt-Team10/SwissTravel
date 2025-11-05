@@ -13,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.test.core.app.ApplicationProvider
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
-import com.github.swent.swisstravel.ui.navigation.Screen
 import org.junit.Rule
 import org.junit.Test
 

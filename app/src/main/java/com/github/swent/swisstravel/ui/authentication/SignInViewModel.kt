@@ -66,7 +66,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
   ) = credentialManager.getCredential(context, request).credential
 
   /** Initiates the Google sign-in flow and updates the UI state on success or failure. */
-  fun signIn(context: Context, credentialManager: CredentialManager) {
+  fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
     if (_uiState.value.isLoading) return
 
     viewModelScope.launch {
@@ -97,6 +97,40 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
         // User cancelled the sign-in flow
         _uiState.update {
           it.copy(isLoading = false, errorMsg = "Sign-in cancelled", signedOut = true, user = null)
+        }
+      } catch (e: Exception) {
+        // Unexpected errors
+        _uiState.update {
+          it.copy(
+              isLoading = false,
+              errorMsg = context.getString(string.unexpected_error, e.localizedMessage),
+              signedOut = true,
+              user = null)
+        }
+      }
+    }
+  }
+
+  /** Initiates the email/password sign-in flow and updates the UI state on success or failure. */
+  fun signInWithEmailPassword(email: String, password: String, context: Context) {
+    if (_uiState.value.isLoading) return
+
+    viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true, errorMsg = null) }
+
+      try {
+        repository.signInWithEmailPassword(email, password).fold({ user ->
+          _uiState.update {
+            it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
+          }
+        }) { failure ->
+          _uiState.update {
+            it.copy(
+                isLoading = false,
+                errorMsg = failure.localizedMessage,
+                signedOut = true,
+                user = null)
+          }
         }
       } catch (e: Exception) {
         // Unexpected errors

@@ -14,6 +14,7 @@
     <string name="google_logo_desc">Google Logo</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in">Sign In</string>
+    <string name="signup_success">Thank you for joining Swisstravel !</string>
 
     <!-- General -->
     <string name="yes">Yes</string>
