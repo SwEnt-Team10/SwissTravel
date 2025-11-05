@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.toSwissTourismFacet
 import com.github.swent.swisstravel.model.user.toSwissTourismFacetFilter
 import com.google.firebase.Timestamp
+import com.mapbox.maps.extension.style.expressions.dsl.generated.image
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
@@ -25,23 +26,21 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
 
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseHttpUrl: HttpUrl =
-      "https://opendata.myswitzerland.io/v1/attractions/"
-          .toHttpUrl()
-          .newBuilder()
-          .addQueryParameter("lang", "en")
-          .addQueryParameter("page", "0")
-          .addQueryParameter("striphtml", "true")
-          .addQueryParameter("expand", "true")
-          .build()
-  private val DESTINATION_BASE_URL =
-      "https://opendata.myswitzerland.io/v1/destinations/"
-          .toHttpUrl()
-          .newBuilder()
-          .addQueryParameter("lang", "en")
-          .addQueryParameter("page", "0")
-          .addQueryParameter("striphtml", "true")
-          .addQueryParameter("expand", "true")
-          .build()
+      urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", "en")
+  private val destinationHttpUrl: HttpUrl =
+      urlBuilder("https://opendata.myswitzerland.io/v1/destinations/", "en")
+
+  private fun urlBuilder(url: String, language: String): HttpUrl {
+    val newUrl: HttpUrl =
+        url.toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("lang", language)
+            .addQueryParameter("page", "0")
+            .addQueryParameter("striphtml", "true")
+            .addQueryParameter("expand", "true")
+            .build()
+    return newUrl
+  }
 
   private val client: OkHttpClient by lazy {
     OkHttpClient.Builder()
@@ -109,19 +108,21 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
         val lon = geo.optDouble("longitude", Double.NaN)
 
         if (!lat.isNaN() && !lon.isNaN()) {
-          val coordinate = Coordinate(lat, lon)
-          val location = Location(coordinate, name)
-          val imageArray = item.optJSONArray("image")
-          val imageUrls = mutableListOf<String>()
-          if (imageArray != null) {
-            for (j in 0 until imageArray.length()) {
-              val imgObj = imageArray.optJSONObject(j)
-              val url = imgObj?.optString("url")
-              if (!url.isNullOrBlank()) {
-                imageUrls.add(url)
-              }
+            val imageArray = item.optJSONArray("image")
+            val imageUrls = mutableListOf<String>()
+
+            if (imageArray != null) {
+                for (j in 0 until imageArray.length()) {
+                    val imgObj = imageArray.optJSONObject(j)
+                    val url = imgObj?.optString("url")
+                    if (!url.isNullOrBlank()) {
+                        imageUrls.add(url)
+                    }
+                }
             }
-          }
+          val coordinate = Coordinate(lat, lon)
+          val location = Location(coordinate, name, imageUrls.firstOrNull())
+
 
           // Dummy start/end times for now
           // TODO add start/end times
@@ -224,66 +225,14 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
     return fetchActivitiesFromUrl(computeUrlWithPreferences(preferences, limit))
   }
 
-  override suspend fun getDestinationByName(query: String, limit: Int): List<Location> {
+  override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {
     val url =
-        DESTINATION_BASE_URL.newBuilder()
+        destinationHttpUrl
+            .newBuilder()
             .addQueryParameter("hitsPerPage", limit.toString())
             .addQueryParameter("query", query)
-    return fetchDestinationFromUrl(url.build())
-  }
-
-  private fun parseDestinationFromJson(json: String): List<Location> {
-    val root = JSONObject(json)
-    val dataArray: JSONArray = root.optJSONArray("data") ?: return emptyList()
-
-    val destinations = mutableListOf<Location>()
-
-    for (i in 0 until dataArray.length()) {
-      val item = dataArray.getJSONObject(i)
-      val name = item.optString("name", "Unknown Activity")
-
-      val geo = item.optJSONObject("geo")
-      if (geo != null) {
-        val lat = geo.optDouble("latitude", Double.NaN)
-        val lon = geo.optDouble("longitude", Double.NaN)
-
-        if (!lat.isNaN() && !lon.isNaN()) {
-          val coordinate = Coordinate(lat, lon)
-          val location = Location(coordinate, name)
-
-          destinations.add(location)
-        }
-      }
-    }
-    return destinations
-  }
-
-  private suspend fun fetchDestinationFromUrl(url: HttpUrl): List<Location> {
-    return withContext(Dispatchers.IO) {
-      val request =
-          Request.Builder()
-              .url(url)
-              .header("accept", "application/json")
-              .header("x-api-key", API_KEY)
-              .build()
-
-      try {
-        client.newCall(request).execute().use { response ->
-          if (!response.isSuccessful) {
-            throw IOException("Unexpected HTTP code ${response.code}")
-          }
-
-          val body = response.body?.string()
-          if (body != null) {
-            parseDestinationFromJson(body)
-          } else {
-            emptyList()
-          }
-        }
-      } catch (e: IOException) {
-        e.printStackTrace()
-        emptyList()
-      }
-    }
+            .build()
+    val activities = fetchActivitiesFromUrl(url)
+    return activities
   }
 }

@@ -1,6 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
-data class Location(val coordinate: Coordinate, val name: String) {
+data class Location(val coordinate: Coordinate, val name: String, val imageUrl : String? = null) {
 
   /**
    * Computes the distance between two coordinates in km using the Haversine formula.

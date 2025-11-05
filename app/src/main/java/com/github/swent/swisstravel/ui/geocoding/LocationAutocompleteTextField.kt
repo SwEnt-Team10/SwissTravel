@@ -1,6 +1,11 @@
 package com.github.swent.swisstravel.ui.geocoding
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -17,15 +22,21 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.model.trip.Location
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
+import com.github.swent.swisstravel.R
 
 /** Test tags for the LocationAutocompleteTextField composable. */
 object LocationTextTestTags {
@@ -70,7 +81,9 @@ fun LocationAutocompleteTextField(
           // open the dropdown while typing
           expanded = true
         },
-        modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
+        modifier = modifier
+            .menuAnchor()
+            .testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
@@ -78,7 +91,25 @@ fun LocationAutocompleteTextField(
           val suggestions = state.locationSuggestions.take(3)
           suggestions.forEachIndexed { index, location ->
             DropdownMenuItem(
-                text = { Text(location.name) },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        // Display the image if the URL is not null
+                        if (location.imageUrl != null) {
+                            AsyncImage(
+                                model = location.imageUrl,
+                                contentDescription = "${location.name} image",
+                                // It's good practice to at least keep contentScale
+                                placeholder = painterResource(id = R.drawable.debug_placeholder),
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier
+                                    .size(40.dp) // Set a fixed size for the image
+                                    .clip(CircleShape) // Clip it to a circle
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                        }
+                        Text(location.name, modifier = Modifier.weight(1f))
+                    }
+                },
                 onClick = {
                   // Update both ViewModel (selected) and local text state
                   addressTextFieldViewModel.setLocation(location)

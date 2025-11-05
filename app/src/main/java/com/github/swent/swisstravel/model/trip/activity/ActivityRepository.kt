@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.model.trip.activity
 
 import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.user.Preference
 
 interface ActivityRepository {
@@ -41,5 +40,5 @@ interface ActivityRepository {
       limit: Int = 5
   ): List<Activity>
 
-  suspend fun getDestinationByName(query: String, limit: Int = 3): List<Location>
+  suspend fun searchDestinations(query: String, limit: Int = 3): List<Activity>
 }
