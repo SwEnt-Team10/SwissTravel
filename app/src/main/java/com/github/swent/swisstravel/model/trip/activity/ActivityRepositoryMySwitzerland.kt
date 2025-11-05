@@ -113,10 +113,25 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
             }
           }
 
-          // Dummy start/end times for now
-          // TODO add start/end times
+          var time = ""
+          val classification = item.optJSONArray("classification")
+          if (classification != null) {
+            for (k in 0 until classification.length()) {
+              val obj = classification.optJSONObject(k)
+              if (obj.optString("name") == "neededtime") {
+                val values = obj.optJSONArray("values")
+                if (values != null) {
+                  time = values.optJSONObject(0).optString("name")
+                }
+              }
+            }
+          }
+
+          val estimatedTime = mapToTime(time)
+
+          // TODO add start time in the algorithm depending on the last activity
           val start = Timestamp.now()
-          val end = Timestamp(start.seconds + 3600, 0)
+          val end = Timestamp(start.seconds + estimatedTime, 0)
 
           activities.add(Activity(start, end, location, description, imageUrls))
         }
@@ -124,6 +139,21 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
     }
 
     return activities
+  }
+
+  /**
+   * Maps the given time string from the SwissTourism API to a time in seconds.
+   *
+   * @param time The time string to map.
+   * @return The time in seconds.
+   */
+  private fun mapToTime(time: String): Int {
+    return when (time) {
+      "2to4hourshalfday" -> 3600 * 4
+      "4to8hoursfullday" -> 3600 * 8
+      "between12hours" -> 3600 * 2
+      else -> 0
+    }
   }
 
   /**
