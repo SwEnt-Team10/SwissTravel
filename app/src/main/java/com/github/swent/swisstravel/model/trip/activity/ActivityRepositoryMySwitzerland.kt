@@ -25,14 +25,22 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
 
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseHttpUrl: HttpUrl =
-      "https://opendata.myswitzerland.io/v1/attractions/"
-          .toHttpUrl()
-          .newBuilder()
-          .addQueryParameter("lang", "en")
-          .addQueryParameter("page", "0")
-          .addQueryParameter("striphtml", "true")
-          .addQueryParameter("expand", "true")
-          .build()
+      urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", "en")
+  private val destinationHttpUrl: HttpUrl =
+      urlBuilder("https://opendata.myswitzerland.io/v1/destinations/", "en")
+
+  private fun urlBuilder(url: String, language: String): HttpUrl {
+    val newUrl: HttpUrl =
+        url.toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("lang", language)
+            .addQueryParameter("page", "0")
+            .addQueryParameter("striphtml", "true")
+            .addQueryParameter("expand", "true")
+            .build()
+    return newUrl
+  }
+
   private val client: OkHttpClient by lazy {
     OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
@@ -99,10 +107,9 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
         val lon = geo.optDouble("longitude", Double.NaN)
 
         if (!lat.isNaN() && !lon.isNaN()) {
-          val coordinate = Coordinate(lat, lon)
-          val location = Location(coordinate, name)
           val imageArray = item.optJSONArray("image")
           val imageUrls = mutableListOf<String>()
+
           if (imageArray != null) {
             for (j in 0 until imageArray.length()) {
               val imgObj = imageArray.optJSONObject(j)
@@ -112,6 +119,9 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
               }
             }
           }
+          val coordinate = Coordinate(lat, lon)
+          val photo = item.optString("photo")
+          val location = Location(coordinate, name, photo)
 
           // Dummy start/end times for now
           // TODO add start/end times
@@ -212,5 +222,16 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       limit: Int
   ): List<Activity> {
     return fetchActivitiesFromUrl(computeUrlWithPreferences(preferences, limit))
+  }
+  /** Searches for destinations based on a text query. */
+  override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {
+    val url =
+        destinationHttpUrl
+            .newBuilder()
+            .addQueryParameter("hitsPerPage", limit.toString())
+            .addQueryParameter("query", query)
+            .build()
+    val activities = fetchActivitiesFromUrl(url)
+    return activities
   }
 }

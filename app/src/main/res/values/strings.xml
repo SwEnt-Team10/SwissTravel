@@ -49,6 +49,7 @@
     <string name="departure_location">Departure location"</string>
     <!--- First Destinations -->
     <string name="add_first_destination">Add a destination</string>
+    <string name="destination_limited">Destination limit attained</string>
     <string name="first_destinations_title">Select any location you already know you want to visit</string>
 
     <!-- Current trip -->

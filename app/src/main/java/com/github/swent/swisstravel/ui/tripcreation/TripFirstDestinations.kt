@@ -31,8 +31,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
-import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
+import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
+import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModel
+import com.github.swent.swisstravel.ui.geocoding.LocationAutocompleteTextField
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE
@@ -46,28 +47,15 @@ object TripFirstDestinationsTestTags {
   const val RETURN_BUTTON = "return_button"
 }
 
-/**
- * A composable screen that allows users to dynamically add multiple destinations for their trip.
- *
- * This screen features a button to add new destination input fields to a list. Each destination is
- * represented by an [AddressAutocompleteTextField] to search for and select locations. The final
- * list of chosen destinations is then passed to the shared [TripSettingsViewModel].
- *
- * @param viewModel The [TripSettingsViewModel] instance that holds the overall trip configuration.
- * @param onNext A callback function to be invoked when the user has finished adding destinations
- *   and wishes to proceed to the next step.
- * @param onPrevious A callback function to handle the back navigation action from the top bar.
- * @param addressViewModelFactory A factory lambda that creates an [AddressTextFieldViewModel] for
- *   each destination in the list. This allows for dependency injection and testing with fakes.
- */
+private const val MAX_DESTINATIONS = 24
+
 @Composable
 fun FirstDestinationScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
     onPrevious: () -> Unit = {},
-    // Add the factory as a parameter with a default for production use
-    addressViewModelFactory: @Composable (Int) -> AddressTextFieldViewModel = { index ->
-      viewModel(key = "destination_$index")
+    destinationViewModelFactory: @Composable (Int) -> AddressTextFieldViewModelContract = { index ->
+      viewModel<DestinationTextFieldViewModel>(key = "destination_$index")
     }
 ) {
   val destinations = remember { mutableStateListOf<Location>() }
@@ -98,22 +86,23 @@ fun FirstDestinationScreen(
                           Spacer(modifier = Modifier.height(32.dp))
 
                           // --- List of Destination Input Fields ---
-                          LazyColumn(modifier = Modifier.fillMaxWidth()) {
-                            itemsIndexed(destinations, key = { index, _ -> index }) { index, _ ->
-                              // Use the factory to create the ViewModel
-                              val addressVm = addressViewModelFactory(index)
+                          LazyColumn(
+                              modifier = Modifier.fillMaxWidth(),
+                              horizontalAlignment = Alignment.CenterHorizontally) {
+                                itemsIndexed(destinations, key = { index, _ -> index }) { index, _
+                                  ->
+                                  val destinationVm = destinationViewModelFactory(index)
 
-                              AddressAutocompleteTextField(
-                                  addressTextFieldViewModel =
-                                      addressVm, // Pass the created ViewModel
-                                  onLocationSelected = { selectedLocation ->
-                                    destinations[index] = selectedLocation
-                                  },
-                                  clearOnSelect = false,
-                                  name = "Destination ${index + 1}")
-                              Spacer(modifier = Modifier.height(8.dp))
-                            }
-                          }
+                                  LocationAutocompleteTextField(
+                                      onLocationSelected = { selectedLocation ->
+                                        destinations[index] = selectedLocation
+                                      },
+                                      addressTextFieldViewModel = destinationVm,
+                                      clearOnSelect = false,
+                                      name = "Destination ${index + 1}")
+                                  Spacer(modifier = Modifier.height(8.dp))
+                                }
+                              }
 
                           Spacer(modifier = Modifier.height(16.dp))
 
@@ -124,11 +113,15 @@ fun FirstDestinationScreen(
                                 destinations.add(
                                     Location(coordinate = Coordinate(0.0, 0.0), name = ""))
                               },
-                              // The button is disabled if the last added destination is still empty
                               enabled =
-                                  destinations.isEmpty() || destinations.last().name.isNotEmpty(),
+                                  (destinations.isEmpty() ||
+                                      destinations.last().name.isNotEmpty()) &&
+                                      destinations.size < MAX_DESTINATIONS,
                           ) {
-                            Text(stringResource(R.string.add_first_destination))
+                            Text(
+                                if (destinations.size < MAX_DESTINATIONS) {
+                                  stringResource(R.string.add_first_destination)
+                                } else stringResource(R.string.destination_limited))
                           }
                         }
 
@@ -139,7 +132,6 @@ fun FirstDestinationScreen(
                           Button(
                               modifier = Modifier.testTag(NEXT_BUTTON),
                               onClick = {
-                                // Filter out any potentially empty destinations before saving
                                 val finalList = destinations.filter { it.name.isNotEmpty() }
                                 viewModel.setDestinations(finalList)
                                 onNext()
