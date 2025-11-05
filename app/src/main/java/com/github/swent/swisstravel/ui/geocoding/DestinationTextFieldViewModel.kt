@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.geocoding
 
+import com.github.swent.swisstravel.model.map.LocationRepository
 import com.github.swent.swisstravel.model.map.MySwitzerlandLocationRepository
 
 /**
@@ -9,4 +10,5 @@ import com.github.swent.swisstravel.model.map.MySwitzerlandLocationRepository
  * This class extends [AddressTextFieldViewModel] and provides the specific location repository for
  * fetching destination suggestions.
  */
-class DestinationTextFieldViewModel : AddressTextFieldViewModel(MySwitzerlandLocationRepository())
+class DestinationTextFieldViewModel(locationRepository: LocationRepository) :
+    AddressTextFieldViewModel(MySwitzerlandLocationRepository())
