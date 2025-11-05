@@ -9,9 +9,13 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
 
 /** UI state for the TripInfo screen */
@@ -27,15 +31,32 @@ data class TripInfoUIState(
     val errorMsg: String? = null
 )
 /** ViewModel for the TripInfo screen */
+@OptIn(FlowPreview::class)
 class TripInfoViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(TripInfoUIState())
   val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
+
+  private val favoriteDebounceMs = 800L
+  private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
+
+  init {
+    // Debounce favorite changes to avoid spamming database
+    viewModelScope.launch {
+      _favoriteToggleFlow
+          .debounce(favoriteDebounceMs) // wait 800ms after last toggle
+          .filterNotNull()
+          .distinctUntilChanged() // only persist when state truly changes
+          .collect { newFavorite -> persistFavoriteChange(newFavorite) }
+    }
+  }
+
   /** Clears the error message in the UI state */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
+
   /**
    * Sets the error message in the UI state
    *
@@ -44,6 +65,7 @@ class TripInfoViewModel(
   private fun setErrorMsg(errorMsg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
+
   /**
    * Loads the trip information for the given trip ID
    *
@@ -78,32 +100,45 @@ class TripInfoViewModel(
   /**
    * Toggles the favorite status of the current trip.
    *
-   * Updates the UI and persists the change to the repository. Rolls back and sets an error message
-   * if persistence fails.
+   * Updates the UI immediately and emits the new state to a debounced flow, which later persists
+   * the change to the repository. Prevents redundant or rapid writes to the database.
    */
   fun toggleFavorite() {
     val current = _uiState.value
+    if (current.uid.isBlank()) return
+
     val newFavorite = !current.isFavorite
 
-    viewModelScope.launch {
-      try {
-        // Get the full trip object from the repository (if needed)
-        val trip = tripsRepository.getTrip(current.uid)
+    // Update UI immediately
+    _uiState.value = current.copy(isFavorite = newFavorite)
 
-        // Create an updated version of it
-        val updatedTrip = trip.copy(isFavorite = newFavorite)
+    // Emit to debounce flow (will persist after delay)
+    _favoriteToggleFlow.value = newFavorite
+  }
 
-        // Persist using the existing updateTrip() method
-        tripsRepository.editTrip(current.uid, updatedTrip)
+  /**
+   * Persists the favorite change to the repository after debouncing.
+   *
+   * Skips redundant writes if the state is unchanged. Rolls back and sets an error message if
+   * persistence fails. *Debounce features were made with the help of AI.*
+   */
+  private suspend fun persistFavoriteChange(newFavorite: Boolean) {
+    val current = _uiState.value
+    try {
+      val trip = tripsRepository.getTrip(current.uid)
 
-        // Update UI
-        _uiState.value = current.copy(isFavorite = newFavorite)
-      } catch (e: Exception) {
-        Log.e("TripInfoViewModel", "Failed to update favorite", e)
-        // Roll back on failure
-        _uiState.value = current
-        setErrorMsg("Failed to update favorite: ${e.message}")
-      }
+      // Avoid redundant write if already correct
+      if (trip.isFavorite == newFavorite) return
+
+      val updatedTrip = trip.copy(isFavorite = newFavorite)
+      tripsRepository.editTrip(current.uid, updatedTrip)
+
+      Log.d("TripInfoViewModel", "Favorite state updated: $newFavorite")
+    } catch (e: Exception) {
+      Log.e("TripInfoViewModel", "Failed to persist favorite", e)
+      setErrorMsg("Failed to update favorite: ${e.message}")
+      // Rollback to last known correct state
+      _uiState.value = current.copy(isFavorite = !newFavorite)
     }
   }
 }
