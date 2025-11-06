@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.mytrips
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isCurrent
@@ -51,33 +52,33 @@ class MyTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvide
     }
   }
 
-    /**
-     * Updates the previous current trip to no longer be current, and sets the new trip as current.
-     *
-     * @param trip The trip to set as the new current trip.
-     */
-    fun changeCurrentTrip(trip: Trip) {
-        viewModelScope.launch {
-            try {
-                // Get all trips to find the current one (if any)
-                val trips = tripsRepository.getAllTrips()
-                val previousCurrentTrip = trips.find { it.isCurrent() }
+  /**
+   * Updates the previous current trip to no longer be current, and sets the new trip as current.
+   *
+   * @param trip The trip to set as the new current trip.
+   */
+  fun changeCurrentTrip(trip: Trip) {
+    viewModelScope.launch {
+      try {
+        // Get all trips to find the current one (if any)
+        val trips = tripsRepository.getAllTrips()
+        val previousCurrentTrip = trips.find { it.isCurrent() }
 
-                // If there was a current trip, unset it
-                previousCurrentTrip?.let { current ->
-                    val updatedOldTrip = current.copy(isCurrentTrip = false)
-                    tripsRepository.editTrip(current.uid, updatedOldTrip)
-                }
-
-                // Set the selected trip as the new current one
-                val updatedNewTrip = trip.copy(isCurrentTrip = true)
-                tripsRepository.editTrip(trip.uid, updatedNewTrip)
-
-                refreshUIState()
-            } catch (e: Exception) {
-                Log.e("MyTripsViewModel", "Error changing current trip", e)
-                setErrorMsg("Failed to change current trip.")
-            }
+        // If there was a current trip, unset it
+        previousCurrentTrip?.let { current ->
+          val updatedOldTrip = current.copy(isCurrentTrip = false)
+          tripsRepository.editTrip(current.uid, updatedOldTrip)
         }
+
+        // Set the selected trip as the new current one
+        val updatedNewTrip = trip.copy(isCurrentTrip = true)
+        tripsRepository.editTrip(trip.uid, updatedNewTrip)
+
+        refreshUIState()
+      } catch (e: Exception) {
+        Log.e("MyTripsViewModel", "Error changing current trip", e)
+        setErrorMsg("Failed to change current trip.")
+      }
     }
+  }
 }

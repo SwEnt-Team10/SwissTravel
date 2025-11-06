@@ -59,7 +59,7 @@ fun SetCurrentTripScreen(
   // The current trip will always be at the top of the list even when sorting is applied
   val trips = buildList {
     uiState.currentTrip?.let { add(it) }
-    addAll(uiState.upcomingTrips)
+    addAll(uiState.tripsList)
   }
 
   val context = LocalContext.current
