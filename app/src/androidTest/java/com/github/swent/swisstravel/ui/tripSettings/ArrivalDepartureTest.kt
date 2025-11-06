@@ -10,8 +10,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.ui.geocoding.AddressTextTestTags
 import com.github.swent.swisstravel.ui.geocoding.FakeAddressTextFieldViewModel
+import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.mytrips.FakeTripsRepository
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
@@ -64,7 +64,7 @@ class ArrivalDepartureTest {
     // Now, click the first suggestion that appears. Indexing is okay here
     // because the suggestions are in a predictable order within the dropdown.
     composeTestRule
-        .onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
+        .onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION)
         .onFirst()
         .performClick()
     assert(fakeArrivalVm.addressState.value.selectedLocation!!.name == "Lausanne")

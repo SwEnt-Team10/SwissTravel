@@ -20,8 +20,8 @@ data class RouteSegment(
     val to: Location,
     val distanceMeter: Int,
     val durationMinutes: Int,
-    val path: List<Coordinate>,
-    val transportMode: TransportMode,
+    val path: List<Coordinate>?,
+    val transportMode: TransportMode?,
     val startDate: Timestamp,
     val endDate: Timestamp
 ) {

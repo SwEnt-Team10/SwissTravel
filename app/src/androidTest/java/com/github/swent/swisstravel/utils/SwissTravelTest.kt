@@ -122,7 +122,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE)
         .assertIsDisplayed()
-        .assertTextContains("Upcoming Trip", substring = false, ignoreCase = true)
+        .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
     onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()

@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.tripcreation
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -51,49 +52,58 @@ fun TripNameScreen(
   Scaffold(
       topBar = { TopBar(onClick = onPrevious, title = "") },
   ) { padding ->
-    Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-      Column(
-          modifier = Modifier.fillMaxSize().padding(padding),
-          horizontalAlignment = Alignment.CenterHorizontally,
-          verticalArrangement = Arrangement.SpaceBetween) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Surface(
+        modifier = Modifier.fillMaxSize().padding(padding),
+        color = MaterialTheme.colorScheme.background) {
+          Column(
+              modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.SpaceBetween) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.SpaceBetween) {
 
-              // --- Title ---
-              Text(
-                  text = stringResource(R.string.trip_name),
-                  textAlign = TextAlign.Center,
-                  style =
-                      MaterialTheme.typography.headlineMedium.copy(
-                          fontWeight = FontWeight.Bold,
-                      ))
+                      // --- Title ---
+                      Text(
+                          text = stringResource(R.string.trip_name),
+                          textAlign = TextAlign.Center,
+                          style =
+                              MaterialTheme.typography.headlineMedium.copy(
+                                  fontWeight = FontWeight.Bold,
+                              ))
 
-              Spacer(modifier = Modifier.height(32.dp))
+                      Spacer(modifier = Modifier.height(32.dp))
 
-              OutlinedTextField(
-                  value = state.name,
-                  onValueChange = viewModel::updateName,
-                  modifier = Modifier.fillMaxWidth().testTag(EditTripScreenTestTags.TRIP_NAME),
-                  shape = RoundedCornerShape(12.dp),
-                  singleLine = true)
+                      OutlinedTextField(
+                          value = state.name,
+                          onValueChange = viewModel::updateName,
+                          modifier =
+                              Modifier.fillMaxWidth().testTag(EditTripScreenTestTags.TRIP_NAME),
+                          shape = RoundedCornerShape(12.dp),
+                          singleLine = true)
+                    }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center) {
+                      Button(
+                          modifier = Modifier.testTag(NEXT_BUTTON),
+                          onClick = {
+                            viewModel.saveTrip()
+                            Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
+                            onNext()
+                          },
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primary)) {
+                            Text(
+                                stringResource(R.string.done),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.titleMedium)
+                          }
+                    }
+              }
+          // --- Done button ---
 
-              // --- Done button ---
-              Button(
-                  modifier = Modifier.testTag(NEXT_BUTTON),
-                  onClick = {
-                    viewModel.saveTrip()
-                    Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-                    onNext()
-                  },
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.primary)) {
-                    Text(
-                        stringResource(R.string.done),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        style = MaterialTheme.typography.titleMedium)
-                  }
-            }
-          }
-    }
+        }
   }
 }

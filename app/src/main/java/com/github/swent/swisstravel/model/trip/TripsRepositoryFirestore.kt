@@ -80,7 +80,7 @@ class TripsRepositoryFirestore(
       val tripProfile =
           (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
 
-      val isFavorite = document.getBoolean("isFavorite") ?: false
+      val isFavorite = document.getBoolean("favorite") ?: false
 
       Trip(
           uid = uid,
