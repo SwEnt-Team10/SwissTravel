@@ -95,6 +95,8 @@ class TripsRepositoryFirestore(
 
       val isFavorite = document.getBoolean("favorite") ?: false
 
+      val isCurrentTrip = document.getBoolean("currentTrip") ?: false
+
       Trip(
           uid = uid,
           name = name,
@@ -103,7 +105,8 @@ class TripsRepositoryFirestore(
           routeSegments = routeSegments,
           activities = activities,
           tripProfile = tripProfile,
-          isFavorite = isFavorite)
+          isFavorite = isFavorite,
+          isCurrentTrip = isCurrentTrip)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null
