@@ -1,11 +1,10 @@
-package com.github.swent.swisstravel.ui.mytrips.pasttrips
+package com.github.swent.swisstravel.ui.mytrips
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isPast
-import com.github.swent.swisstravel.ui.mytrips.TripsViewModel
 import kotlinx.coroutines.launch
 
 /**

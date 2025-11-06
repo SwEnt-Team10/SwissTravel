@@ -20,6 +20,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
@@ -90,7 +91,8 @@ fun SetCurrentTripScreen(
                 Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT).show()
               },
               isSelected = isSelected,
-              isSelectionMode = false)
+              isSelectionMode = false,
+              emptyListString = stringResource(R.string.no_upcoming_trips))
         }
       }
 }

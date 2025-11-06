@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.mytrips.pasttrips
+package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -41,8 +41,6 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.mytrips.TripSortType
-import com.github.swent.swisstravel.ui.mytrips.TripsViewModel
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -162,7 +160,8 @@ fun PastTripsScreen(
                     }
                   },
                   isSelected = { trip -> trip in uiState.selectedTrips },
-                  isSelectionMode = uiState.isSelectionMode)
+                  isSelectionMode = uiState.isSelectionMode,
+                  emptyListString = stringResource(R.string.no_past_trips))
             }
       })
 }

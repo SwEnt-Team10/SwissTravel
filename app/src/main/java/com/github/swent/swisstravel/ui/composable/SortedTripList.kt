@@ -39,6 +39,7 @@ object SortedTripListTestTags {
  * @param onLongPress Callback when a trip element is long-pressed.
  * @param isSelected Function to determine if a trip is selected.
  * @param isSelectionMode Whether the selection mode is active.
+ * @param emptyListString The string to display when the trip list is empty.
  */
 @Composable
 fun SortedTripList(
@@ -48,7 +49,8 @@ fun SortedTripList(
     onClickDropDownMenu: (TripSortType) -> Unit = {},
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false
+    isSelectionMode: Boolean = false,
+    emptyListString: String = ""
 ) {
   Row(
       modifier =
@@ -71,5 +73,6 @@ fun SortedTripList(
       onClickTripElement = onClickTripElement,
       onLongPress = onLongPress,
       isSelected = isSelected,
-      isSelectionMode = isSelectionMode)
+      isSelectionMode = isSelectionMode,
+      emptyListString = emptyListString)
 }

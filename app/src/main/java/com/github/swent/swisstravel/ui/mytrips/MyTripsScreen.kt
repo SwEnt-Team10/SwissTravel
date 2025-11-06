@@ -324,7 +324,7 @@ private fun CurrentTripSection(
   val currentTrip = uiState.currentTrip
   val isSelectionMode = uiState.isSelectionMode
   val selectedTrips = uiState.selectedTrips
-  val editButtonShown = uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty()
+  val editButtonShown = uiState.currentTrip != null || uiState.tripsList.isNotEmpty()
 
   CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
 
@@ -414,5 +414,6 @@ private fun UpcomingTripsSection(
         }
       },
       isSelected = { trip -> trip in uiState.selectedTrips },
-      isSelectionMode = uiState.isSelectionMode)
+      isSelectionMode = uiState.isSelectionMode,
+      emptyListString = stringResource(R.string.no_upcoming_trips))
 }

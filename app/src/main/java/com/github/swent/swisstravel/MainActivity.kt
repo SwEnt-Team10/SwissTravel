@@ -33,7 +33,7 @@ import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
-import com.github.swent.swisstravel.ui.mytrips.pasttrips.PastTripsScreen
+import com.github.swent.swisstravel.ui.mytrips.PastTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
