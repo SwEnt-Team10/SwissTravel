@@ -102,6 +102,9 @@
     <string name="no_current_trip">You have no current trip. Get planning!</string>
     <string name="upcoming_trips">Upcoming Trips</string>
     <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
+    <!-- Set Current Trip -->
+    <string name="set_current_trip">Set Current Trip</string>
+    <string name="current_trip_saved">Current trip saved successfully!</string>
     <!-- Past Trips -->
     <string name="past_trips">Past Trips</string>
     <string name="no_past_trips">You have no past trips.</string>

@@ -29,6 +29,7 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
@@ -92,6 +93,12 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
   }
 }
 
+/**
+ * The main composable function for the Swiss Travel App.
+ *
+ * @param context The context of the current state of the application.
+ * @param credentialManager The CredentialManager for handling user credentials.
+ */
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun SwissTravelApp(
@@ -106,6 +113,7 @@ fun SwissTravelApp(
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route
+
   /* System back button handler */
   BackHandler {
     when {
@@ -175,6 +183,15 @@ fun SwissTravelApp(
             onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
             onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
             onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
+            onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
+            navigationActions = navigationActions)
+      }
+
+      composable(Screen.SetCurrentTrip.route) {
+        SetCurrentTripScreen(
+            title = context.getString(R.string.set_current_trip),
+            isSelected = { trip -> trip.isCurrentTrip },
+            onClose = { navigationActions.goBack() },
             navigationActions = navigationActions)
       }
 

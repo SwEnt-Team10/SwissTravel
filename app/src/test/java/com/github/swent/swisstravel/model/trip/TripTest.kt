@@ -94,7 +94,8 @@ class TripTest {
           routeSegments = listRouteSegments,
           activities = listActivities,
           tripProfile = tripProfile,
-          isFavorite = false)
+          isFavorite = false,
+          isCurrentTrip = false)
 
   @Test
   fun testGetAllTripElementsOrdered() {
