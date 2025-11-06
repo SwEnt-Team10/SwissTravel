@@ -187,7 +187,7 @@ fun MyTripsScreen(
                   navigationActions = navigationActions)
 
               UpcomingTripsSection(
-                  trips = uiState.upcomingTrips,
+                  trips = uiState.tripsList,
                   uiState = uiState,
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
@@ -212,7 +212,7 @@ fun MyTripsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MyTripsTopAppBar(
-    uiState: MyTripsUIState,
+    uiState: TripsViewModel.TripsUIState,
     selectedTripCount: Int,
     onCancelSelection: () -> Unit,
     onFavoriteSelected: () -> Unit,
@@ -362,7 +362,7 @@ private fun CurrentTripSection(
 @Composable
 private fun UpcomingTripsSection(
     trips: List<Trip>,
-    uiState: MyTripsUIState,
+    uiState: TripsViewModel.TripsUIState,
     onSelectTrip: (String) -> Unit,
     onToggleSelection: (Trip) -> Unit,
     onEnterSelectionMode: () -> Unit,
