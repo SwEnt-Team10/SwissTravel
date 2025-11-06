@@ -69,8 +69,6 @@ object MyTripsScreenTestTags {
   const val CURRENT_TRIP_TITLE = "currentTripTitle"
   const val CREATE_TRIP_BUTTON = "createTrip"
   const val EMPTY_CURRENT_TRIP_MSG = "emptyCurrentTrip"
-  const val CONFIRM_DELETE_BUTTON = "confirmDelete"
-  const val CANCEL_DELETE_BUTTON = "cancelDelete"
   const val FAVORITE_SELECTED_BUTTON = "favoriteSelected"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"

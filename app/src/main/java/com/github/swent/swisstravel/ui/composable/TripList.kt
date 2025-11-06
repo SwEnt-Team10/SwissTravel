@@ -33,7 +33,7 @@ fun TripList(
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
     isSelectionMode: Boolean = false,
-    emptyListString: String,
+    emptyListString: String = "",
 ) {
   if (trips.isNotEmpty()) {
     LazyColumn(
