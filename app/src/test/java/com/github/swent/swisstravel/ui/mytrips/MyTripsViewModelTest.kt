@@ -557,4 +557,64 @@ class MyTripsViewModelTest {
 
     coVerify { repository.editTrip(trip.uid, trip.copy(isFavorite = true)) }
   }
+
+  // chatGPT
+  @Test
+  fun `changeCurrentTrip sets error message on failure`() = runTest {
+    val trip =
+        Trip(
+            "1",
+            "Fail Trip",
+            "owner",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false,
+            isCurrentTrip = false)
+
+    // Simulate normal getAllTrips but fail when editing trip
+    coEvery { repository.getAllTrips() } returns listOf(trip)
+    coEvery { repository.editTrip(any(), any()) } throws Exception("Firestore edit failed")
+
+    viewModel = MyTripsViewModel(repository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Act — trigger the failure
+    viewModel.changeCurrentTrip(trip)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Assert — verify error message set by catch block
+    val state = viewModel.uiState.value
+    assertEquals("Failed to change current trip.", state.errorMsg)
+  }
+
+  @Test
+  fun `toggleFavoriteForSelectedTrips sets error message on failure`() = runTest {
+    val trip =
+        Trip(
+            "1",
+            "Fail Trip",
+            "owner",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false,
+            isCurrentTrip = false)
+
+    coEvery { repository.editTrip(any(), any()) } throws Exception("Firestore edit failed")
+
+    viewModel = MyTripsViewModel(repository)
+    viewModel.toggleTripSelection(trip)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Act — trigger the failure
+    viewModel.toggleFavoriteForSelectedTrips()
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Assert — verify error message set by catch block
+    val state = viewModel.uiState.value
+    assertEquals("Failed to update favorites.", state.errorMsg)
+  }
 }

@@ -93,7 +93,9 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
     assertEquals("1", viewModel.uiState.value.currentTrip?.uid)
 
     // Click trip2
-    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).performClick()
+    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).performTouchInput {
+      longClick()
+    }
     composeTestRule.waitForIdle()
     viewModel.refreshUIState()
     val uiState = viewModel.uiState.value
