@@ -208,7 +208,20 @@ class MyTripsViewModel(
   fun changeCurrentTrip(trip: Trip) {
     viewModelScope.launch {
       try {
-        tripsRepository.setCurrentTrip(trip.uid)
+        // Get all trips to find the current one (if any)
+        val trips = tripsRepository.getAllTrips()
+        val previousCurrentTrip = trips.find { it.isCurrent() }
+
+        // If there was a current trip, unset it
+        previousCurrentTrip?.let { current ->
+          val updatedOldTrip = current.copy(isCurrentTrip = false)
+          tripsRepository.editTrip(current.uid, updatedOldTrip)
+        }
+
+        // Set the selected trip as the new current one
+        val updatedNewTrip = trip.copy(isCurrentTrip = true)
+        tripsRepository.editTrip(trip.uid, updatedNewTrip)
+
         refreshUIState()
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error changing current trip", e)

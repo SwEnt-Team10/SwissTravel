@@ -186,10 +186,6 @@ class TripSettingsViewModelTest {
       /* no-op for tests */
     }
 
-    override suspend fun setCurrentTrip(newCurrentUid: String) {
-      /* no-op for tests */
-    }
-
     override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
       /* no-op for tests */
     }

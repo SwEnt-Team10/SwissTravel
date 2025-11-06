@@ -50,10 +50,6 @@ class TripSettingsTests : SwissTravelTest() {
       // No-op for testing
     }
 
-    override suspend fun setCurrentTrip(newCurrentUid: String) {
-      // No-op for testing
-    }
-
     override fun getNewUid(): String = "fake-uid"
   }
 

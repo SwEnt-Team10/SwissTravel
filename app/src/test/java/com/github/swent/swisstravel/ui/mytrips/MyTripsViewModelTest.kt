@@ -541,7 +541,8 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     coEvery { repository.getAllTrips() } returns listOf(trip)
     coEvery { repository.editTrip(any(), any()) } returns Unit

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,7 +57,6 @@ import com.github.swent.swisstravel.ui.composable.SortedTripList
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 
 /**
@@ -99,6 +99,7 @@ object MyTripsScreenTestTags {
  * @param onSelectTrip Callback invoked when a trip is selected (normal mode).
  * @param onPastTrips Callback invoked when the "Past Trips" button is pressed.
  * @param onCreateTrip Callback invoked when the "Create Trip" button is pressed.
+ * @param onEditCurrentTrip Callback invoked when the "Edit Current Trip" button is pressed.
  * @param navigationActions Optional [NavigationActions] for handling bottom navigation and screen
  *   transitions.
  */
@@ -109,6 +110,7 @@ fun MyTripsScreen(
     onSelectTrip: (String) -> Unit = {},
     onPastTrips: () -> Unit = {},
     onCreateTrip: () -> Unit = {},
+    onEditCurrentTrip: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
@@ -192,9 +194,9 @@ fun MyTripsScreen(
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
                   onEnterSelectionMode = { myTripsViewModel.toggleSelectionMode(true) },
-                  navigationActions = navigationActions,
                   editButtonShown =
-                      uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty())
+                      uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty(),
+                  onEditCurrentTrip = onEditCurrentTrip)
 
               UpcomingTripsSection(
                   trips = uiState.upcomingTrips,
@@ -317,8 +319,8 @@ private fun MyTripsTopAppBar(
  * @param onSelectTrip Callback when a trip is clicked.
  * @param onToggleSelection Toggles trip selection.
  * @param onEnterSelectionMode Activates selection mode.
- * @param navigationActions Optional navigation actions for map entry.
  * @param editButtonShown Whether to show the edit button for the current trip.
+ * @param onEditCurrentTrip Callback when the edit button is clicked.
  */
 @Composable
 private fun CurrentTripSection(
@@ -328,14 +330,12 @@ private fun CurrentTripSection(
     onSelectTrip: (String) -> Unit,
     onToggleSelection: (Trip) -> Unit,
     onEnterSelectionMode: () -> Unit,
-    navigationActions: NavigationActions?,
     editButtonShown: Boolean = false,
+    onEditCurrentTrip: () -> Unit = {}
 ) {
-  CurrentTripTitle(
-      editButtonShown = editButtonShown,
-      onEditCurrentTrip = { navigationActions?.navigateTo(Screen.SetCurrentTrip) })
+  CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
 
-  Spacer(modifier = Modifier.height(8.dp))
+  Spacer(modifier = Modifier.height(4.dp))
 
   currentTrip?.let {
     TripElement(
@@ -363,7 +363,7 @@ private fun CurrentTripSection(
 @Composable
 private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip: () -> Unit = {}) {
   Row(
-      modifier = Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 10.dp),
+      modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Text(
@@ -376,7 +376,7 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
           IconButton(
               onClick = onEditCurrentTrip,
               modifier = Modifier.testTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)) {
-                Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit current trip")
+                Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Edit current trip")
               }
         }
       }

@@ -43,33 +43,10 @@ class TripsRepositoryFirestore(
 
   override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).set(updatedTrip).await()
-    // Otherwise the trip doesn't get marked as current
-    if (updatedTrip.isCurrentTrip) {
-      setCurrentTrip(tripId)
-    }
   }
 
   override suspend fun deleteTrip(tripId: String) {
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
-  }
-
-  // ChatGPT
-  override suspend fun setCurrentTrip(newCurrentUid: String) {
-    val currentUserId = auth.currentUser?.uid ?: throw Exception("User not logged in")
-
-    // 1. Get all current user's trips
-    val tripsSnapshot =
-        db.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", currentUserId).get().await()
-
-    val batch = db.batch()
-
-    tripsSnapshot.documents.forEach { doc ->
-      val isCurrent = doc.id == newCurrentUid
-      batch.update(doc.reference, "isCurrentTrip", isCurrent)
-    }
-
-    // 2. Commit batch atomically
-    batch.commit().await()
   }
 
   // The following code was made with the help of AI
@@ -105,7 +82,7 @@ class TripsRepositoryFirestore(
 
       val isFavorite = document.getBoolean("favorite") ?: false
 
-      val isCurrentTrip = document.getBoolean("isCurrentTrip") ?: false
+      val isCurrentTrip = document.getBoolean("currentTrip") ?: false
 
       Trip(
           uid = uid,

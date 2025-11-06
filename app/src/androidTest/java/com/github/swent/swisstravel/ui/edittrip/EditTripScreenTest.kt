@@ -304,10 +304,6 @@ class EditTripScreenTest {
       deleteCalls++
     }
 
-    override suspend fun setCurrentTrip(newCurrentUid: String) {
-      /* no-op */
-    }
-
     // Call this to release a pending getTrip() suspension
     fun releaseGet() {
       if (!gate.isCompleted) gate.complete(Unit)

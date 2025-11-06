@@ -21,7 +21,10 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  private data class TestFlags(var tripClicked: Boolean = false, var screenClosed: Boolean = false)
+  /**
+   * Small data class to hold flags for test callbacks (e.g., to verify if the screen was closed).
+   */
+  private data class TestFlags(var screenClosed: Boolean = false)
 
   /** Launches the screen with a fake repository and returns the ViewModel. */
   private fun launchScreen(vararg trips: Trip, flags: TestFlags = TestFlags()): MyTripsViewModel {
@@ -32,12 +35,6 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
       SwissTravelTheme {
         SetCurrentTripScreen(
             viewModel = viewModel,
-            onClickTripElement = { trip ->
-              if (trip != null) {
-                viewModel.changeCurrentTrip(trip)
-                flags.tripClicked = true
-              }
-            },
             onClose = { flags.screenClosed = true },
             isSelected = { it.isCurrentTrip })
       }
@@ -55,8 +52,7 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
 
   @Test
   fun clickingTripSetsItAsCurrent() = runTest {
-    val flags = TestFlags()
-    val viewModel = launchScreen(trip1, trip2, flags = flags)
+    val viewModel = launchScreen(trip1, trip2)
 
     // Perform click on trip2
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).performClick()
@@ -70,7 +66,6 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
 
     val uiState = viewModel.uiState.value
 
-    assertTrue(flags.tripClicked, "Trip click handler not triggered.")
     assertEquals(trip2.uid, uiState.currentTrip?.uid, "Trip 2 should now be current.")
     assertTrue(uiState.currentTrip?.isCurrentTrip == true, "Current trip flag should be true.")
     assertTrue(

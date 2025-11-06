@@ -36,7 +36,8 @@ class TripInfoViewModelTest {
                   endDate = Timestamp(now.seconds + 3600, 0), // 1h later
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false)
+          isFavorite = false,
+          isCurrentTrip = false)
 
   @Before
   fun setup() {

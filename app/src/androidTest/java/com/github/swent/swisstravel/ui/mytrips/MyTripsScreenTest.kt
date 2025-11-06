@@ -33,19 +33,6 @@ class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()
     trips.removeIf { it.uid == tripId }
   }
 
-  override suspend fun setCurrentTrip(newCurrentUid: String) {
-    val newTrips =
-        trips.map { trip ->
-          if (trip.uid == newCurrentUid) {
-            trip.copy(isCurrentTrip = true)
-          } else {
-            trip.copy(isCurrentTrip = false)
-          }
-        }
-    trips.clear()
-    trips.addAll(newTrips)
-  }
-
   override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
     trips.removeIf { it.uid == tripId }
     trips.add(updatedTrip)
@@ -369,7 +356,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                     endDate = Timestamp(now.seconds + 7200, 0),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isFavorite = true)
+            isFavorite = true,
+            isCurrentTrip = false)
 
     val nonFavoriteTrip =
         Trip(
@@ -385,7 +373,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                     endDate = Timestamp(now.seconds + 7200, 0),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
     val viewModel = MyTripsViewModel(fakeRepo)

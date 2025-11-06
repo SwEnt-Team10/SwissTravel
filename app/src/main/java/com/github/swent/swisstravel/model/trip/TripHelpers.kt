@@ -38,7 +38,7 @@ fun Trip.isUpcoming(): Boolean {
  * @receiver Trip the trip to evaluate
  */
 fun Trip.isCurrent(): Boolean {
-  return isCurrentTrip
+  return isCurrentTrip && !isUpcoming() && !isPast()
 }
 
 /**
