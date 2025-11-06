@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.mytrips
 import com.github.swent.swisstravel.model.trip.*
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -512,5 +513,32 @@ class MyTripsViewModelTest {
 
     val sorted = viewModel.uiState.value.upcomingTrips
     assertEquals(listOf(trips[2], trips[1], trips[0]), sorted) // Gamma, Beta, Alpha
+  }
+
+  @Test
+  fun `toggleFavoriteForSelectedTrips toggles favorites correctly`() = runTest {
+    val trip =
+        Trip(
+            "1",
+            "Trip",
+            "owner",
+            emptyList(),
+            emptyList(),
+            emptyList(),
+            TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false)
+
+    coEvery { repository.getAllTrips() } returns listOf(trip)
+    coEvery { repository.editTrip(any(), any()) } returns Unit
+
+    viewModel = MyTripsViewModel(repository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.toggleSelectionMode(true)
+    viewModel.toggleTripSelection(trip)
+    viewModel.toggleFavoriteForSelectedTrips()
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify { repository.editTrip(trip.uid, trip.copy(isFavorite = true)) }
   }
 }

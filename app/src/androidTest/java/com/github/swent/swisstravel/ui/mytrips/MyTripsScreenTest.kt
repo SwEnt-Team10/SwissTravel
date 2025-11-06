@@ -35,7 +35,8 @@ class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()
   }
 
   override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
-    // No-op for testing
+    trips.removeIf { it.uid == tripId }
+    trips.add(updatedTrip)
   }
 
   override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
@@ -314,5 +315,111 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     // Verify selection cleared
     assert(viewModel.uiState.value.selectedTrips.isEmpty())
     assert(!viewModel.uiState.value.isSelectionMode)
+  }
+
+  @Test
+  fun sortingByFavorites_placesFavoritesFirst() {
+    val now = Timestamp.now()
+
+    // Create trips with different favorite states
+    val favoriteTrip =
+        Trip(
+            uid = "fav",
+            name = "Favorite Trip",
+            ownerId = "ownerX",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile =
+                TripProfile(
+                    startDate = Timestamp(now.seconds + 3600, 0),
+                    endDate = Timestamp(now.seconds + 7200, 0),
+                    preferredLocations = emptyList(),
+                    preferences = emptyList()),
+            isFavorite = true)
+
+    val nonFavoriteTrip =
+        Trip(
+            uid = "nonfav",
+            name = "Non-Favorite Trip",
+            ownerId = "ownerX",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile =
+                TripProfile(
+                    startDate = Timestamp(now.seconds + 3600, 0),
+                    endDate = Timestamp(now.seconds + 7200, 0),
+                    preferredLocations = emptyList(),
+                    preferences = emptyList()),
+            isFavorite = false)
+
+    val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
+    val viewModel = MyTripsViewModel(fakeRepo)
+
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+
+    composeTestRule.waitForIdle()
+
+    // Open the sort dropdown and select "Favorites"
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithText(context.getString(R.string.favorites_first)).performClick()
+
+    composeTestRule.waitForIdle()
+
+    // Verify that the favorite trip is displayed before the non-favorite trip
+    val favTripNode =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(favoriteTrip))
+            .fetchSemanticsNode()
+    val nonFavTripNode =
+        composeTestRule
+            .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(nonFavoriteTrip))
+            .fetchSemanticsNode()
+
+    assertTrue(
+        favTripNode.positionInRoot.y < nonFavTripNode.positionInRoot.y,
+        "Favorite trip should appear above non-favorite trip when sorting by favorites")
+  }
+
+  @Test
+  fun favoriteButtonAppearsInSelectionMode() {
+    launchScreen(trip1, trip2)
+
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip1))
+        .performTouchInput { longClick() }
+
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun favoriteSelectedTrips_togglesFavoriteStatus() {
+    val fakeRepo =
+        FakeTripsRepository(
+            mutableListOf(trip1.copy(isFavorite = false), trip2.copy(isFavorite = false)))
+    val viewModel = MyTripsViewModel(fakeRepo)
+
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip1))
+        .performTouchInput { longClick() }
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip2)).performClick()
+
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)
+        .assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
+
+    composeTestRule.waitForIdle()
+
+    assert(!viewModel.uiState.value.isSelectionMode)
+
+    val updatedTrips = runBlocking { fakeRepo.getAllTrips() }
+    assertTrue(updatedTrips.all { it.isFavorite }, "All selected trips should now be favorites")
   }
 }
