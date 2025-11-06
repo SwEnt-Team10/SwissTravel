@@ -28,9 +28,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.geocoding.AddressAutocompleteTextField
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
+import com.github.swent.swisstravel.ui.geocoding.LocationAutocompleteTextField
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags.NEXT_BUTTON
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
@@ -45,7 +45,7 @@ object ArrivalDepartureTestTags {
 /**
  * A composable screen that allows users to set the arrival and departure locations for their trip.
  *
- * This screen features two [AddressAutocompleteTextField] components, one for the arrival location
+ * This screen features two [LocationAutocompleteTextField] components, one for the arrival location
  * and one for the departure location. It uses separate instances of
  * [AddressTextFieldViewModelContract] to manage the state of each text field independently. The
  * selected locations are synchronized with the main [TripSettingsViewModel].
@@ -109,14 +109,14 @@ fun ArrivalDepartureScreen(
                   Spacer(modifier = Modifier.height(32.dp))
 
                   // --- Arrival Destination (autocomplete) ---
-                  AddressAutocompleteTextField(
+                  LocationAutocompleteTextField(
                       addressTextFieldViewModel = arrivalAddressVm,
                       modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
                       name = stringResource(R.string.arrival_location))
                   Spacer(modifier = Modifier.height(50.dp))
 
                   // --- Departure Destination (autocomplete) ---
-                  AddressAutocompleteTextField(
+                  LocationAutocompleteTextField(
                       addressTextFieldViewModel = departureAddressVm,
                       modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
                       name = stringResource(R.string.departure_location))
@@ -132,7 +132,7 @@ fun ArrivalDepartureScreen(
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary)) {
                       Text(
-                          stringResource(R.string.done),
+                          stringResource(R.string.next),
                           color = MaterialTheme.colorScheme.onPrimary,
                           style = MaterialTheme.typography.titleMedium)
                     }

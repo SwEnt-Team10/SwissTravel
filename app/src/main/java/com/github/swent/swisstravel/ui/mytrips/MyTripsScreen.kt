@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.mytrips
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -70,6 +72,7 @@ object MyTripsScreenTestTags {
   const val EMPTY_CURRENT_TRIP_MSG = "emptyCurrentTrip"
   const val CONFIRM_DELETE_BUTTON = "confirmDelete"
   const val CANCEL_DELETE_BUTTON = "cancelDelete"
+  const val FAVORITE_SELECTED_BUTTON = "favoriteSelected"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
   const val CANCEL_SELECTION_BUTTON = "cancelSelection"
@@ -112,6 +115,9 @@ fun MyTripsScreen(
   val uiState by myTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
 
+  // Handle back press while in selection mode
+  BackHandler(enabled = uiState.isSelectionMode) { myTripsViewModel.toggleSelectionMode(false) }
+
   val lifecycleOwner = LocalLifecycleOwner.current
 
   // This piece of code is to make sure that the trips recompose after creating a trip, had issues
@@ -153,6 +159,7 @@ fun MyTripsScreen(
             uiState = uiState,
             selectedTripCount = selectedTripCount,
             onCancelSelection = { myTripsViewModel.toggleSelectionMode(false) },
+            onFavoriteSelected = { myTripsViewModel.toggleFavoriteForSelectedTrips() },
             onDeleteSelected = { showDeleteConfirmation = true },
             onSelectAll = { myTripsViewModel.selectAllTrips() },
             onPastTrips = onPastTrips)
@@ -218,6 +225,7 @@ private fun MyTripsTopAppBar(
     uiState: MyTripsUIState,
     selectedTripCount: Int,
     onCancelSelection: () -> Unit,
+    onFavoriteSelected: () -> Unit,
     onDeleteSelected: () -> Unit,
     onSelectAll: () -> Unit,
     onPastTrips: () -> Unit,
@@ -247,6 +255,13 @@ private fun MyTripsTopAppBar(
       actions = {
         if (uiState.isSelectionMode) {
           var expanded by remember { mutableStateOf(false) }
+          IconButton(
+              onClick = onFavoriteSelected,
+              modifier = Modifier.testTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)) {
+                Icon(
+                    Icons.Default.StarOutline,
+                    contentDescription = stringResource(R.string.favorite_selected))
+              }
           IconButton(
               onClick = onDeleteSelected,
               modifier = Modifier.testTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON)) {

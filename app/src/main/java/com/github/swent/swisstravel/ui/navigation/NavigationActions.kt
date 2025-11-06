@@ -60,6 +60,8 @@ sealed class Screen(
     fun createRoute(tripId: String) = "edit_trip/${URLEncoder.encode(tripId, "UTF-8")}"
   }
 
+  object TripSummary : Screen(route = "trip_summary", name = "Trip Summary")
+
   // TODO change this when there is a new screen
 }
 

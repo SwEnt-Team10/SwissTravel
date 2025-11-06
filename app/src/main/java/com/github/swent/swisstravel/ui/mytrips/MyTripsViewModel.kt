@@ -20,7 +20,8 @@ enum class TripSortType {
   END_DATE_ASC,
   END_DATE_DESC,
   NAME_ASC,
-  NAME_DESC
+  NAME_DESC,
+  FAVORITES_FIRST,
 }
 
 /**
@@ -164,6 +165,29 @@ class MyTripsViewModel(
   }
 
   /**
+   * Toggles the favorite status of all selected trips.
+   *
+   * Updates each selected trip by inverting its `isFavorite` flag, saves changes via
+   * [TripsRepository.editTrip], exits selection mode, and refreshes the UI.
+   */
+  fun toggleFavoriteForSelectedTrips() {
+    val selected = _uiState.value.selectedTrips
+    viewModelScope.launch {
+      try {
+        selected.forEach { trip ->
+          val updatedTrip = trip.copy(isFavorite = !trip.isFavorite)
+          tripsRepository.editTrip(trip.uid, updatedTrip)
+        }
+        toggleSelectionMode(false)
+        refreshUIState()
+      } catch (e: Exception) {
+        Log.e("MyTripsViewModel", "Error toggling favorites", e)
+        setErrorMsg("Failed to update favorites.")
+      }
+    }
+  }
+
+  /**
    * Selects all trips (both current and upcoming).
    *
    * This is triggered when the user chooses "Select All" in selection mode.
@@ -208,6 +232,7 @@ class MyTripsViewModel(
       TripSortType.END_DATE_DESC -> trips.sortedByDescending { it.tripProfile.endDate }
       TripSortType.NAME_ASC -> trips.sortedBy { it.name.lowercase() }
       TripSortType.NAME_DESC -> trips.sortedByDescending { it.name.lowercase() }
+      TripSortType.FAVORITES_FIRST -> trips.sortedByDescending { it.isFavorite }
     }
   }
 
