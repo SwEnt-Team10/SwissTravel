@@ -12,7 +12,7 @@ class AddressAutocompleteTextFieldTest {
 
   private fun setContentWithFakeViewModel(fakeViewModel: FakeAddressTextFieldViewModel) {
     composeTestRule.setContent {
-      SwissTravelTheme { AddressAutocompleteTextField(addressTextFieldViewModel = fakeViewModel) }
+      SwissTravelTheme { LocationAutocompleteTextField(addressTextFieldViewModel = fakeViewModel) }
     }
   }
 
@@ -22,12 +22,12 @@ class AddressAutocompleteTextFieldTest {
     setContentWithFakeViewModel(fakeViewModel)
 
     composeTestRule
-        .onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
+        .onNodeWithTag(LocationTextTestTags.INPUT_LOCATION)
         .assertIsDisplayed()
         .performTextInput("Lausanne")
 
     composeTestRule
-        .onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
+        .onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION)
         .assertAny(hasText("Lausanne"))
   }
 
@@ -36,16 +36,16 @@ class AddressAutocompleteTextFieldTest {
     val fakeViewModel = FakeAddressTextFieldViewModel()
     setContentWithFakeViewModel(fakeViewModel)
 
-    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION).performTextInput("Genève")
+    composeTestRule.onNodeWithTag(LocationTextTestTags.INPUT_LOCATION).performTextInput("Genève")
 
     composeTestRule
-        .onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION)
+        .onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION)
         .onFirst()
         .performClick()
 
-    composeTestRule.onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION).assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION).assertCountEquals(0)
 
-    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
+    composeTestRule.onNodeWithTag(LocationTextTestTags.INPUT_LOCATION)
   }
 
   @Test
@@ -53,9 +53,9 @@ class AddressAutocompleteTextFieldTest {
     val fakeViewModel = FakeAddressTextFieldViewModel()
     setContentWithFakeViewModel(fakeViewModel)
 
-    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION).performTextReplacement("")
+    composeTestRule.onNodeWithTag(LocationTextTestTags.INPUT_LOCATION).performTextReplacement("")
 
-    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION)
+    composeTestRule.onNodeWithTag(LocationTextTestTags.INPUT_LOCATION)
   }
 
   @Test
@@ -63,8 +63,8 @@ class AddressAutocompleteTextFieldTest {
     val fakeViewModel = FakeAddressTextFieldViewModel()
     setContentWithFakeViewModel(fakeViewModel)
 
-    composeTestRule.onNodeWithTag(AddressTextTestTags.INPUT_LOCATION).performTextReplacement("")
+    composeTestRule.onNodeWithTag(LocationTextTestTags.INPUT_LOCATION).performTextReplacement("")
 
-    composeTestRule.onAllNodesWithTag(AddressTextTestTags.LOCATION_SUGGESTION).assertCountEquals(0)
+    composeTestRule.onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION).assertCountEquals(0)
   }
 }

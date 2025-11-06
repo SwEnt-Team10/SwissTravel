@@ -1,6 +1,11 @@
 package com.github.swent.swisstravel.ui.geocoding
 
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -17,18 +22,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/** Test tags for the AddressAutocompleteTextField composable. */
-object AddressTextTestTags {
+/** Test tags for the LocationAutocompleteTextField composable. */
+object LocationTextTestTags {
   const val INPUT_LOCATION = "inputLocation"
   const val LOCATION_SUGGESTION = "locationSuggestion"
 }
@@ -40,15 +51,20 @@ object AddressTextTestTags {
  * a dropdown menu. When a suggestion is selected, it updates the view model with the chosen
  * location.
  *
+ * @param onLocationSelected Callback to be invoked when a location is selected.
+ * @param modifier The modifier to be applied to the composable.
  * @param addressTextFieldViewModel The view model that manages the state of the address text field.
+ * @param name The label for the text field.
+ * @param clearOnSelect Whether to clear the text field after a location is selected.
  */
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
-fun AddressAutocompleteTextField(
-    addressTextFieldViewModel: AddressTextFieldViewModelContract = viewModel(),
-    modifier: Modifier = Modifier,
-    name: String = "location",
+fun LocationAutocompleteTextField(
     onLocationSelected: (Location) -> Unit = {},
+    modifier: Modifier = Modifier,
+    addressTextFieldViewModel: AddressTextFieldViewModelContract =
+        viewModel<DestinationTextFieldViewModel>(),
+    name: String = "location",
     clearOnSelect: Boolean = false
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
@@ -65,7 +81,7 @@ fun AddressAutocompleteTextField(
           // open the dropdown while typing
           expanded = true
         },
-        modifier = modifier.menuAnchor().testTag(AddressTextTestTags.INPUT_LOCATION),
+        modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
@@ -73,25 +89,33 @@ fun AddressAutocompleteTextField(
           val suggestions = state.locationSuggestions.take(3)
           suggestions.forEachIndexed { index, location ->
             DropdownMenuItem(
-                text = { Text(location.name) },
+                text = {
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    // Display the image if the URL is not null
+                    if (location.imageUrl != null) {
+                      AsyncImage(
+                          model = location.imageUrl,
+                          contentDescription = "${location.name} image",
+                          // It's good practice to at least keep contentScale
+                          placeholder = painterResource(id = R.drawable.debug_placeholder),
+                          contentScale = ContentScale.Crop,
+                          modifier =
+                              Modifier.size(40.dp) // Set a fixed size for the image
+                                  .clip(CircleShape) // Clip it to a circle
+                          )
+                      Spacer(modifier = Modifier.width(16.dp))
+                    }
+                    Text(location.name, modifier = Modifier.weight(1f))
+                  }
+                },
                 onClick = {
                   // Update both ViewModel (selected) and local text state
                   addressTextFieldViewModel.setLocation(location)
-                  if (clearOnSelect) {
-                    text = ""
-                  } else {
-                    text = location.name
-                  }
+                  text = if (clearOnSelect) "" else location.name
                   onLocationSelected(location)
                   expanded = false
                 },
-                modifier = Modifier.testTag(AddressTextTestTags.LOCATION_SUGGESTION))
-            LaunchedEffect(state.selectedLocation) {
-              state.selectedLocation?.let {
-                // When the selected location is not null, notify the parent.
-                onLocationSelected(it)
-              }
-            }
+                modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION))
 
             // Add a divider between items for clarity (but not after the last item)
             if (index < suggestions.lastIndex) {
@@ -117,7 +141,7 @@ fun AddressAutocompleteTextField(
   // Debounce user input and call the ViewModel only after the user stops typing.
   LaunchedEffect(Unit) {
     snapshotFlow { text }
-        .debounce(300)
+        .debounce(1000)
         .distinctUntilChanged()
         .collectLatest { query ->
           // Only call the view model when the query changed and is different from
