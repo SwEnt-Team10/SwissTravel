@@ -29,10 +29,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.map.MySwitzerlandLocationRepository
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModel
+import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModelFactory
 import com.github.swent.swisstravel.ui.geocoding.LocationAutocompleteTextField
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION
@@ -40,6 +42,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTag
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.NEXT_BUTTON
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
 
+/** Object containing test tags for the [FirstDestinationScreen] composable. */
 object TripFirstDestinationsTestTags {
   const val FIRST_DESTINATIONS_TITLE = "first_destinations_title"
   const val ADD_FIRST_DESTINATION = "add_first_destination"
@@ -49,13 +52,24 @@ object TripFirstDestinationsTestTags {
 
 private const val MAX_DESTINATIONS = 24
 
+/**
+ * Screen for entering the first destinations of a trip.
+ *
+ * @param viewModel The ViewModel managing the trip settings state.
+ * @param onNext Callback invoked when the user proceeds to the next step.
+ * @param onPrevious Callback invoked when the user goes back to the previous step.
+ * @param destinationViewModelFactory Factory function to create ViewModels for destination input
+ *   fields.
+ */
 @Composable
 fun FirstDestinationScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
     onPrevious: () -> Unit = {},
     destinationViewModelFactory: @Composable (Int) -> AddressTextFieldViewModelContract = { index ->
-      viewModel<DestinationTextFieldViewModel>(key = "destination_$index")
+      viewModel<DestinationTextFieldViewModel>(
+          key = "destination_$index",
+          factory = DestinationTextFieldViewModelFactory(MySwitzerlandLocationRepository()))
     }
 ) {
   val destinations = remember { mutableStateListOf<Location>() }
@@ -89,10 +103,11 @@ fun FirstDestinationScreen(
                           LazyColumn(
                               modifier = Modifier.fillMaxWidth(),
                               horizontalAlignment = Alignment.CenterHorizontally) {
-                                itemsIndexed(destinations, key = { index, _ -> index }) { index, _
-                                  ->
+                                itemsIndexed(destinations, key = { index, _ -> index }) {
+                                    index,
+                                    destination ->
+                                  // Create a new ViewModel for each destination input field
                                   val destinationVm = destinationViewModelFactory(index)
-
                                   LocationAutocompleteTextField(
                                       onLocationSelected = { selectedLocation ->
                                         destinations[index] = selectedLocation
@@ -100,6 +115,7 @@ fun FirstDestinationScreen(
                                       addressTextFieldViewModel = destinationVm,
                                       clearOnSelect = false,
                                       name = "Destination ${index + 1}")
+
                                   Spacer(modifier = Modifier.height(8.dp))
                                 }
                               }
