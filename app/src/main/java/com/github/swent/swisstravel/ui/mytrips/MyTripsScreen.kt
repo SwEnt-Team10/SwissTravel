@@ -15,7 +15,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.StarOutline
@@ -188,14 +187,9 @@ fun MyTripsScreen(
                     .padding(padding)
                     .padding(start = 16.dp, end = 16.dp, bottom = 4.dp)) {
               CurrentTripSection(
-                  currentTrip = uiState.currentTrip,
-                  isSelectionMode = uiState.isSelectionMode,
-                  selectedTrips = uiState.selectedTrips,
+                  myTripsViewModel = myTripsViewModel,
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
-                  onEnterSelectionMode = { myTripsViewModel.toggleSelectionMode(true) },
-                  editButtonShown =
-                      uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty(),
                   onEditCurrentTrip = onEditCurrentTrip)
 
               UpcomingTripsSection(
@@ -313,26 +307,24 @@ private fun MyTripsTopAppBar(
  * - Allows entering selection mode by long-pressing.
  * - Provides button to enter the navigation map.
  *
- * @param currentTrip Current active trip, if any.
- * @param isSelectionMode Whether selection mode is active.
- * @param selectedTrips Set of selected trips.
+ * @param myTripsViewModel The [MyTripsViewModel] providing state and business logic.
  * @param onSelectTrip Callback when a trip is clicked.
  * @param onToggleSelection Toggles trip selection.
- * @param onEnterSelectionMode Activates selection mode.
- * @param editButtonShown Whether to show the edit button for the current trip.
  * @param onEditCurrentTrip Callback when the edit button is clicked.
  */
 @Composable
 private fun CurrentTripSection(
-    currentTrip: Trip?,
-    isSelectionMode: Boolean,
-    selectedTrips: Set<Trip>,
+    myTripsViewModel: MyTripsViewModel,
     onSelectTrip: (String) -> Unit,
     onToggleSelection: (Trip) -> Unit,
-    onEnterSelectionMode: () -> Unit,
-    editButtonShown: Boolean = false,
     onEditCurrentTrip: () -> Unit = {}
 ) {
+  val uiState by myTripsViewModel.uiState.collectAsState()
+  val currentTrip = uiState.currentTrip
+  val isSelectionMode = uiState.isSelectionMode
+  val selectedTrips = uiState.selectedTrips
+  val editButtonShown = uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty()
+
   CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
 
   Spacer(modifier = Modifier.height(4.dp))
@@ -342,7 +334,8 @@ private fun CurrentTripSection(
         trip = it,
         onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
         onLongPress = {
-          onEnterSelectionMode()
+          // Enter selection mode
+          myTripsViewModel.toggleSelectionMode(true)
           onToggleSelection(it)
         },
         isSelected = it in selectedTrips,
