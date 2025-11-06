@@ -28,8 +28,6 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
-import com.github.swent.swisstravel.ui.authentication.LandingScreen
-import com.github.swent.swisstravel.ui.authentication.SignUpScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
@@ -52,7 +50,7 @@ import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
 object HttpClientProvider {
-    var client: OkHttpClient = OkHttpClient()
+  var client: OkHttpClient = OkHttpClient()
 }
 
 class MainActivity : ComponentActivity() {
@@ -93,6 +91,12 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
     }
 }
 
+/**
+ * The main composable function for the Swiss Travel App.
+ *
+ * @param context The context of the current state of the application.
+ * @param credentialManager The CredentialManager for handling user credentials.
+ */
 @SuppressLint("SuspiciousIndentation")
 @Composable
 fun SwissTravelApp(

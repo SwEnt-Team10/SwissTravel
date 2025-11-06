@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.currenttrip
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,13 +15,21 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.mytrips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.mytrips.TripSortType
+import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.Screen
 
 /** Object containing test tags for the [SetCurrentTripScreen] composable. */
 object SetCurrentTripScreenTestTags {
@@ -29,48 +38,59 @@ object SetCurrentTripScreenTestTags {
   const val TOP_BAR_CLOSE_BUTTON = "SetCurrentTripScreenTopBarCloseButton"
 }
 
-// TODO will selectionMode really be necessary? Probably not, as only one trip can be selected at a
-// time.
-// TODO I will see in my PR where I put connect with the program
 /**
  * A composable that displays the screen used to set the current trip.
  *
+ * @param viewModel The view model for the screen.
  * @param title The title to display in the top bar.
- * @param trips The list of trips to display.
- * @param onClickTripElement Callback when a trip element is clicked.
- * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
- * @param onLongPress Callback when a trip element is long-pressed.
  * @param isSelected Function to determine if a trip is selected.
- * @param isSelectionMode Whether the selection mode is active.
  * @param onClose Callback when the close button is clicked.
+ * @param navigationActions Navigation actions for screen transitions.
  */
 @Composable
 fun SetCurrentTripScreen(
+    viewModel: MyTripsViewModel = viewModel(),
     title: String = "",
-    trips: List<Trip> = emptyList(),
-    onClickTripElement: (Trip?) -> Unit = {},
-    onClickDropDownMenu: (TripSortType) -> Unit = {},
-    onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false,
     onClose: () -> Unit = {},
+    navigationActions: NavigationActions? = null
 ) {
+  val uiState = viewModel.uiState.collectAsState().value
+  // The current trip will always be at the top of the list even when sorting is applied
+  val trips = buildList {
+    uiState.currentTrip?.let { add(it) }
+    addAll(uiState.upcomingTrips)
+  }
+
+  val context = LocalContext.current
+
+  // Refresh trips when entering the screen
+  LaunchedEffect(Unit) { viewModel.refreshUIState() }
+
   Scaffold(
       topBar = {
         TopBarSetCurrentTrip(
             title = title,
             onClose = onClose,
-            onClickDropDownMenu = onClickDropDownMenu,
+            onClickDropDownMenu = { sortType -> viewModel.updateSortType(sortType) },
         )
       },
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) { pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
           TripList(
               trips = trips,
-              onClickTripElement = onClickTripElement,
-              onLongPress = onLongPress,
+              onClickTripElement = { trip ->
+                viewModel.changeCurrentTrip(trip!!)
+                navigationActions?.navigateTo(Screen.MyTrips)
+                Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT).show()
+              },
+              onLongPress = { trip ->
+                viewModel.changeCurrentTrip(trip!!)
+                navigationActions?.navigateTo(Screen.MyTrips)
+                Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT).show()
+              },
               isSelected = isSelected,
-              isSelectionMode = isSelectionMode)
+              isSelectionMode = false)
         }
       }
 }
