@@ -26,7 +26,7 @@ class TripSchedulerTest {
 
   private fun loc(name: String, lat: Double, lon: Double) = Location(Coordinate(lat, lon), name)
 
-  // Activity factory: estimatedTime is in **seconds** (your model)
+  // Activity factory: estimatedTime is in **seconds**
   private fun activityAt(location: Location, label: String, estimatedMinutes: Int): Activity {
     // start/end are placeholders; scheduler overwrites them
     val now = Instant.parse("2025-11-05T00:00:00Z").epochSecond
