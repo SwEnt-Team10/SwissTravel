@@ -33,7 +33,6 @@ import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
-import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
@@ -105,7 +104,6 @@ fun SwissTravelApp(
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route
-  val tripInfoViewModel: TripInfoViewModel = viewModel()
   /* System back button handler */
   BackHandler {
     when {
@@ -206,7 +204,7 @@ fun SwissTravelApp(
         }
         TripInfoScreen(
             uid,
-            tripInfoViewModel,
+            viewModel(),
             onMyTrips = { navigationActions.goBack() },
             onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
             onEditTrip = { navigationActions.navigateToEditTrip(uid) })
@@ -217,7 +215,7 @@ fun SwissTravelApp(
         route = Screen.TripInfoMap.name,
     ) {
       composable(Screen.TripInfoMap.route) {
-        TripInfoMapScreen(onBack = { navigationActions.goBack() }, tripInfoViewModel)
+        TripInfoMapScreen(onBack = { navigationActions.goBack() }, viewModel())
       }
     }
 

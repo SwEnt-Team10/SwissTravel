@@ -90,14 +90,17 @@ class MyTripsViewModel(
    * active sorting type to upcoming trips.
    */
   private fun getAllTrips() {
+    Log.d("MY_TRIPS_VM", "enter getAllTrips")
     viewModelScope.launch {
       try {
         val trips = tripsRepository.getAllTrips()
         val currentTrip = trips.find { it.isCurrent() }
         val upcomingTrips = trips.filter { it.isUpcoming() }
         val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
-
+        Log.d("MY_TRIPS_VM", "repo : $tripsRepository")
+        Log.d("MY_TRIPS_VM", "_uiState before get : ${_uiState.value}")
         _uiState.value = _uiState.value.copy(currentTrip = currentTrip, upcomingTrips = sortedTrips)
+        Log.d("MY_TRIPS_VM", "_uiState after get : ${_uiState.value}")
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error fetching trips", e)
         setErrorMsg("Failed to load trips.")

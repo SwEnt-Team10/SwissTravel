@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 
@@ -62,12 +61,19 @@ object TripInfoTestTags {
 @Composable
 fun TripInfoScreen(
     uid: String?,
-    tripInfoViewModel: TripInfoViewModel = viewModel(),
+    tripInfoViewModel: TripInfoViewModel,
     onMyTrips: () -> Unit = {},
     onFullscreenClick: () -> Unit = {},
     onEditTrip: () -> Unit = {}
 ) {
-  LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
+
+  LaunchedEffect(uid) {
+    Log.d("TRIP_INFO_SCREEN", "loading trip info with uid $uid")
+    Log.d("TRIP_INFO_SCREEN", "loading trip info before : ${tripInfoViewModel.uiState.value}")
+
+    tripInfoViewModel.loadTripInfo(uid)
+    Log.d("TRIP_INFO_SCREEN", "loading trip info after : ${tripInfoViewModel.uiState.value}")
+  }
 
   val tripInfoUIState by tripInfoViewModel.uiState.collectAsState()
   val errorMsg = tripInfoUIState.errorMsg
@@ -75,7 +81,9 @@ fun TripInfoScreen(
   val context = LocalContext.current
   var showMap by remember { mutableStateOf(true) }
 
-    Log.d("TRIP_INFO", "locations = ${tripInfoUIState.locations}")
+  Log.d("TRIP_INFO_SCREEN", "locations = ${tripInfoUIState.locations}")
+  Log.d("TRIP_INFO_SCREEN", "vm = $tripInfoViewModel")
+  Log.d("TRIP_INFO_SCREEN", "uiState = $tripInfoUIState")
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -96,7 +104,7 @@ fun TripInfoScreen(
             },
             navigationIcon = {
               IconButton(
-                  onClick = { showMap = false },
+                  onClick = { onMyTrips() },
                   modifier = Modifier.testTag(TripInfoTestTags.BACK_BUTTON)) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,

@@ -33,7 +33,20 @@ class TripsRepositoryFirestore(
   }
 
   override suspend fun getTrip(tripId: String): Trip {
+    Log.d("REPO_FIRESTORE", "enter get trip with uid $tripId")
+    Log.d("REPO_FIRESTORE", "db = $db")
+    Log.d(
+        "REPO_FIRESTORE",
+        "db.collection(TRIPS_COLLECTION_PATH) = ${db.collection(TRIPS_COLLECTION_PATH)}")
+    Log.d("REPO_FIRESTORE", "doc = ${db.collection(TRIPS_COLLECTION_PATH).document(tripId)}")
+    Log.d(
+        "REPO_FIRESTORE", "docGet = ${db.collection(TRIPS_COLLECTION_PATH).document(tripId).get()}")
+    Log.d(
+        "REPO_FIRESTORE",
+        "document = ${db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()}")
+
     val document = db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
+    Log.d("REPO_FIRESTORE", "document = $document")
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
   }
 

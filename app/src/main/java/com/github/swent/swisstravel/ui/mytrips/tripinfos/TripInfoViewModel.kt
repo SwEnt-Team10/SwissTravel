@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** UI state for the TripInfo screen */
 data class TripInfoUIState(
@@ -71,29 +73,36 @@ class TripInfoViewModel(
    *
    * @param tripId the unique identifier of the trip
    */
-  fun loadTripInfo(tripId: String?) {
+  suspend fun loadTripInfo(tripId: String?) {
     if (tripId.isNullOrBlank()) {
       Log.e("TripInfoViewModel", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
-    viewModelScope.launch {
-      try {
-        val trip = tripsRepository.getTrip(tripId)
-        _uiState.value =
-            TripInfoUIState(
-                uid = trip.uid,
-                name = trip.name,
-                ownerId = trip.ownerId,
-                locations = trip.locations,
-                routeSegments = trip.routeSegments,
-                activities = trip.activities,
-                tripProfile = trip.tripProfile,
-                isFavorite = trip.isFavorite)
-      } catch (e: Exception) {
-        Log.e("TripInfoViewModel", "Error loading trip info", e)
-        setErrorMsg("Failed to load trip info: ${e.message}")
-      }
+    Log.d("TRIP_INFO_VM", "loading : tripId is $tripId")
+
+    try {
+      Log.d("TRIP_INFO_VM", "tripRepo = $tripsRepository")
+
+      val trip = withContext(Dispatchers.IO) { tripsRepository.getTrip(tripId) }
+      Log.d("TRIP_INFO_VM", "trip named $ from repo = $trip")
+
+      _uiState.value =
+          TripInfoUIState(
+              uid = trip.uid,
+              name = trip.name,
+              ownerId = trip.ownerId,
+              locations = trip.locations,
+              routeSegments = trip.routeSegments,
+              activities = trip.activities,
+              tripProfile = trip.tripProfile,
+              isFavorite = trip.isFavorite)
+      Log.d("TRIP_INFO_VM", "trip named ${trip.name} locations: ${_uiState.value.locations}")
+    } catch (e: Exception) {
+      Log.d("TRIP_INFO_VM", "THROWS")
+
+      Log.e("TripInfoViewModel", "Error loading trip info", e)
+      setErrorMsg("Failed to load trip info: ${e.message}")
     }
   }
 
