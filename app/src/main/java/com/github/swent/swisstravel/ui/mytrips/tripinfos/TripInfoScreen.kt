@@ -1,9 +1,12 @@
+// language: kotlin
 package com.github.swent.swisstravel.ui.mytrips.tripinfos
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
@@ -46,6 +49,11 @@ object TripInfoTestTags {
     const val EDIT_BUTTON = "editButton"
     const val FAVORITE_BUTTON = "favoriteButton"
     const val TRIP_CARD = "tripCard"
+    const val TOPBAR_TITLE = "topbarTitle"
+    const val NO_LOCATIONS_TEXT = "noLocationsText"
+    const val FIRST_LOCATION_TEXT = "firstLocationText"
+    const val LOCATION_CARD = "locationCard"
+    const val MAP_VIEW = "mapView"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -71,7 +79,12 @@ fun TripInfoScreen(
             tripInfoViewModel.clearErrorMsg()
         }
     }
-
+    LaunchedEffect(showMap) {
+        if (!showMap) {
+            withFrameNanos {}
+            onMyTrips()
+        }
+    }
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
         topBar = {
@@ -79,6 +92,7 @@ fun TripInfoScreen(
                 title = {
                     Text(
                         text = tripInfoUIState.name,
+                        modifier = Modifier.testTag(TripInfoTestTags.TOPBAR_TITLE),
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground)
                 },
@@ -106,12 +120,6 @@ fun TripInfoScreen(
                             tint = MaterialTheme.colorScheme.onBackground)
                     }
                 })
-            LaunchedEffect(showMap) {
-                if (!showMap) {
-                    withFrameNanos {}
-                    onMyTrips()
-                }
-            }
         }) { pd ->
         LazyColumn(
             modifier = Modifier.padding(pd).fillMaxSize(),
@@ -120,35 +128,49 @@ fun TripInfoScreen(
             if (tripInfoUIState.locations.isEmpty()) {
                 item {
                     Text(
-                        text = stringResource(R.string.no_locations_available)
+                        text = stringResource(R.string.no_locations_available),
+                        modifier = Modifier.testTag(TripInfoTestTags.NO_LOCATIONS_TEXT)
                     )
                 }
-                return@LazyColumn
-            }
-            item {
-                Text(
-                    text = "${tripInfoUIState.locations[0]}"
-                )
-            }
+            } else {
+                item {
+                    Box(modifier = Modifier.testTag(TripInfoTestTags.LOCATION_CARD)) {
+                        Text(
+                            text = "${tripInfoUIState.locations[0]}",
+                            modifier = Modifier.testTag(TripInfoTestTags.FIRST_LOCATION_TEXT)
+                        )
+                    }
+                }
 
-            if (tripInfoUIState.locations.size > 1) {
-                itemsIndexed(tripInfoUIState.locations.drop(1)) { idx, location ->
-                    StepLocationCard(
-                        int = idx + 2,
-                        location = location
-                    )
+                if (tripInfoUIState.locations.size > 1) {
+                    itemsIndexed(tripInfoUIState.locations.drop(1)) { idx, location ->
+                        Box(modifier = Modifier.testTag("${TripInfoTestTags.LOCATION_CARD}_$idx")) {
+                            StepLocationCard(
+                                int = idx + 2,
+                                location = location
+                            )
+                        }
+                    }
                 }
             }
             item {
                 Card(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = 20.dp)
-                            .testTag(TripInfoTestTags.TRIP_CARD),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .testTag(TripInfoTestTags.TRIP_CARD),
                     shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
+                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)
+                ) {
                     if (showMap) {
-                        TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(200.dp)
+                                .testTag(TripInfoTestTags.MAP_VIEW)
+                        ) {
+                            TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                        }
                     }
                 }
             }

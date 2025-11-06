@@ -21,7 +21,7 @@ import kotlinx.coroutines.launch
 /** UI state for the TripInfo screen */
 data class TripInfoUIState(
     val uid: String = "",
-    val name: String = "",
+    val name: String = "Trip Name",
     val ownerId: String = "",
     val locations: List<Location> = emptyList(),
     val routeSegments: List<RouteSegment> = emptyList(),

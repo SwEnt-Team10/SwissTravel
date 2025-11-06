@@ -8,12 +8,11 @@ import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.FavoriteButton
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoTestTags
-import kotlin.test.assertTrue
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-/** Instrumented tests for the TripInfoScreen composable. */
+/** Instrumented tests for the TripInfo screen composable. */
 class TripInfoScreenTest {
 
   @get:Rule val composeRule = createAndroidComposeRule<ComponentActivity>()
@@ -25,10 +24,11 @@ class TripInfoScreenTest {
 
     composeRule.setContent {
       TripInfoScreen(
-          uid = null,
-          onMyTrips = { pastClicked = true },
-          onFullscreenClick = {},
-          onEditTrip = { editClicked = true })
+        uid = null,
+        onMyTrips = { pastClicked = true },
+        onFullscreenClick = {},
+        onEditTrip = { editClicked = true }
+      )
     }
 
     // Verify that UI elements are displayed
@@ -38,7 +38,7 @@ class TripInfoScreenTest {
 
     // Click buttons and verify callbacks
     composeRule.onNodeWithTag(TripInfoTestTags.BACK_BUTTON).performClick()
-    composeRule.runOnIdle { assertTrue("onPastTrips should have been called", pastClicked) }
+    composeRule.runOnIdle { assertTrue("onMyTrips should have been called", pastClicked) }
 
     composeRule.onNodeWithTag(TripInfoTestTags.EDIT_BUTTON).performClick()
     composeRule.runOnIdle { assertTrue("onEditTrip should have been called", editClicked) }
@@ -51,11 +51,12 @@ class TripInfoScreenTest {
 
     composeRule.setContent {
       FavoriteButton(
-          isFavorite = isFavorite,
-          onToggleFavorite = {
-            favoriteClicked = true
-            isFavorite = !isFavorite
-          })
+        isFavorite = isFavorite,
+        onToggleFavorite = {
+          favoriteClicked = true
+          isFavorite = !isFavorite
+        }
+      )
     }
 
     // Verify favorite button is displayed
@@ -68,13 +69,34 @@ class TripInfoScreenTest {
       // Callback triggered
       assertTrue("onToggleFavorite should have been called", favoriteClicked)
       // State updated
-      assertTrue(isFavorite, "isFavorite should now be true after click")
+      assertTrue("isFavorite should now be true after click", isFavorite)
     }
 
     // Click again to toggle back
     composeRule.onNodeWithTag(TripInfoTestTags.FAVORITE_BUTTON).performClick()
     composeRule.runOnIdle {
-      assertTrue(isFavorite.not(), "isFavorite should now be false after second click")
+      assertTrue("isFavorite should now be false after second click", isFavorite.not())
     }
+  }
+
+  @Test
+  fun topBarTitleNoLocationsAndMapDisplayed() {
+    composeRule.setContent {
+      TripInfoScreen(
+        uid = null,
+        onMyTrips = {},
+        onFullscreenClick = {},
+        onEditTrip = {}
+      )
+    }
+
+    // Verify top bar title is displayed
+    composeRule.onNodeWithTag(TripInfoTestTags.TOPBAR_TITLE).assertIsDisplayed()
+
+    // Verify "no locations" text is displayed by default
+    composeRule.onNodeWithTag(TripInfoTestTags.NO_LOCATIONS_TEXT).assertIsDisplayed()
+
+    // Verify the map view is displayed inside the bottom card
+    composeRule.onNodeWithTag(TripInfoTestTags.MAP_VIEW).assertIsDisplayed()
   }
 }
