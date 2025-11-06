@@ -9,6 +9,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
+import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -26,72 +27,83 @@ class AuthRepositoryFirebase(
     private val helper: GoogleSignInHelper = DefaultGoogleSignInHelper()
 ) : AuthRepository {
 
-  fun getGoogleSignInOption(serverClientId: String) =
-      GetSignInWithGoogleOption.Builder(serverClientId = serverClientId).build()
+    fun getGoogleSignInOption(serverClientId: String) =
+        GetSignInWithGoogleOption.Builder(serverClientId = serverClientId).build()
 
-  override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
-    return try {
-      if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-        val idToken = helper.extractIdTokenCredential(credential.data).idToken
-        val firebaseCred = helper.toFirebaseCredential(idToken)
+    override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
+        return try {
+            if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+                val idToken = helper.extractIdTokenCredential(credential.data).idToken
+                val firebaseCred = helper.toFirebaseCredential(idToken)
 
-        // Sign in with Firebase
-        val user =
-            auth.signInWithCredential(firebaseCred).await().user
-                ?: return Result.failure(
-                    IllegalStateException("Login failed: Could not retrieve user information"))
-        return Result.success(user)
-      } else {
-        return Result.failure(
-            IllegalStateException("Login failed: Credential is not of type Google ID"))
-      }
-    } catch (e: Exception) {
-      Result.failure(
-          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+                // Sign in with Firebase
+                val user =
+                    auth.signInWithCredential(firebaseCred).await().user
+                        ?: return Result.failure(
+                            IllegalStateException("Login failed: Could not retrieve user information"))
+                return Result.success(user)
+            } else {
+                return Result.failure(
+                    IllegalStateException("Login failed: Credential is not of type Google ID"))
+            }
+        } catch (e: Exception) {
+            Result.failure(
+                IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+        }
     }
-  }
 
-  override suspend fun signInWithEmailPassword(
-      email: String,
-      password: String
-  ): Result<FirebaseUser> {
-    return try {
-      val user =
-          auth.signInWithEmailAndPassword(email, password).await().user
-              ?: return Result.failure(
-                  IllegalStateException("Login failed: Could not retrieve user information"))
-      Result.success(user)
-    } catch (e: Exception) {
-      Result.failure(
-          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+    override suspend fun signInWithEmailPassword(
+        email: String,
+        password: String
+    ): Result<FirebaseUser> {
+        return try {
+            val user =
+                auth.signInWithEmailAndPassword(email, password).await().user
+                    ?: return Result.failure(
+                        IllegalStateException("Login failed: Could not retrieve user information"))
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(
+                IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+        }
     }
-  }
 
-  override suspend fun signUpWithEmailPassword(
-      email: String,
-      password: String
-  ): Result<FirebaseUser> {
-    return try {
-      val user =
-          auth.createUserWithEmailAndPassword(email, password).await().user
-              ?: return Result.failure(
-                  IllegalStateException("Sign up failed: Could not retrieve user information"))
-      Result.success(user)
-    } catch (e: Exception) {
-      Result.failure(
-          IllegalStateException("Sign up failed: ${e.localizedMessage ?: "Unexpected error"}"))
+    override suspend fun signUpWithEmailPassword(
+        email: String,
+        password: String,
+        firstName: String,
+        lastName: String
+    ): Result<FirebaseUser> {
+        return try {
+            val userCredential = auth.createUserWithEmailAndPassword(email, password).await()
+            val user =
+                userCredential.user
+                    ?: return Result.failure(
+                        IllegalStateException("Sign up failed: Could not retrieve user information"))
+
+            // After creation, update the user's profile with their name
+            val profileUpdates = userProfileChangeRequest { displayName = "$firstName $lastName" }
+            user.updateProfile(profileUpdates).await()
+
+            // In a real application, you would also create a document in your Firestore 'users'
+            // collection here to store additional information like first name, last name, etc.
+
+            Result.success(user)
+        } catch (e: Exception) {
+            Result.failure(
+                IllegalStateException("Sign up failed: ${e.localizedMessage ?: "Unexpected error"}"))
+        }
     }
-  }
 
-  override fun signOut(): Result<Unit> {
-    return try {
-      // Firebase sign out
-      auth.signOut()
+    override fun signOut(): Result<Unit> {
+        return try {
+            // Firebase sign out
+            auth.signOut()
 
-      Result.success(Unit)
-    } catch (e: Exception) {
-      Result.failure(
-          IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}"))
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(
+                IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}"))
+        }
     }
-  }
 }

@@ -20,14 +20,14 @@ class SignUpViewModel(private val repository: AuthRepository = AuthRepositoryFir
     _uiState.update { it.copy(errorMsg = null) }
   }
 
-  fun signUpWithEmailPassword(email: String, password: String, context: Context) {
+  fun signUpWithEmailPassword(email: String, password: String, firstName : String, lastName : String, context: Context) {
     if (_uiState.value.isLoading) return
 
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true, errorMsg = null) }
 
       try {
-        repository.signUpWithEmailPassword(email, password).fold({ user ->
+        repository.signUpWithEmailPassword(email, password, firstName, lastName).fold({ user ->
           _uiState.update {
             it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
           }

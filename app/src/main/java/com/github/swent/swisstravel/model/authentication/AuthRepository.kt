@@ -26,8 +26,12 @@ interface AuthRepository {
    *
    * @return A [Result] containing a [FirebaseUser] on success, or an exception on failure.
    */
-  suspend fun signUpWithEmailPassword(email: String, password: String): Result<FirebaseUser>
-
+  suspend fun signUpWithEmailPassword(
+    email: String,
+    password: String,
+    firstName: String,
+    lastName: String
+  ): Result<FirebaseUser>
   /**
    * Signs out the currently authenticated user and clears the credential state.
    *
