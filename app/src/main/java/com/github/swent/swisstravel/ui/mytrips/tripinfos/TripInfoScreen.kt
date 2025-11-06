@@ -51,7 +51,6 @@ object TripInfoTestTags {
   const val TRIP_CARD = "tripCard"
   const val TOPBAR_TITLE = "topbarTitle"
   const val NO_LOCATIONS_TEXT = "noLocationsText"
-  const val FIRST_LOCATION_TEXT = "firstLocationText"
   const val LOCATION_CARD = "locationCard"
   const val MAP_VIEW = "mapView"
 }
@@ -69,6 +68,7 @@ fun TripInfoScreen(
 
   val tripInfoUIState by tripInfoViewModel.uiState.collectAsState()
   val errorMsg = tripInfoUIState.errorMsg
+  val firstLocation = tripInfoUIState.locations[0]
 
   val context = LocalContext.current
   var showMap by remember { mutableStateOf(true) }
@@ -134,9 +134,7 @@ fun TripInfoScreen(
               } else {
                 item {
                   Box(modifier = Modifier.testTag(TripInfoTestTags.LOCATION_CARD)) {
-                    Text(
-                        text = "${tripInfoUIState.locations[0]}",
-                        modifier = Modifier.testTag(TripInfoTestTags.FIRST_LOCATION_TEXT))
+                    Text(text = "$firstLocation")
                   }
                 }
 
