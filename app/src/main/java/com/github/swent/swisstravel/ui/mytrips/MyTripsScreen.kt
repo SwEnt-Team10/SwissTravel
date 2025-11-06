@@ -200,11 +200,12 @@ fun MyTripsScreen(
 /**
  * Top bar for the My Trips screen.
  * - Displays either title or selection mode info.
- * - Provides actions for delete, select all, or navigate to past trips.
+ * - Provides actions for favorite, delete, select all, or navigate to past trips.
  *
  * @param uiState Current UI state for trip data.
  * @param selectedTripCount Number of selected trips.
  * @param onCancelSelection Callback to exit selection mode.
+ * @param onFavoriteSelected Callback to toggle favorite status of selected trips.
  * @param onDeleteSelected Callback to trigger delete confirmation.
  * @param onSelectAll Callback to select all trips.
  * @param onPastTrips Callback to navigate to past trips.
@@ -369,7 +370,7 @@ private fun UpcomingTripsSection(
     onSortSelected: (TripSortType) -> Unit
 ) {
   SortedTripList(
-      title = stringResource(R.string.upcoming_trip),
+      title = stringResource(R.string.upcoming_trips),
       trips = trips,
       onClickTripElement = {
         it?.let { trip ->

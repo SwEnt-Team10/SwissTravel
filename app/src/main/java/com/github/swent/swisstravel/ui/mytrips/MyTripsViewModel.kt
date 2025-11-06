@@ -2,6 +2,8 @@ package com.github.swent.swisstravel.ui.mytrips
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isCurrent
 import com.github.swent.swisstravel.model.trip.isUpcoming
 import kotlinx.coroutines.launch
@@ -16,8 +18,11 @@ import kotlinx.coroutines.launch
  * - Updating UI state and handling errors.
  *
  * Trips are loaded automatically on initialization and can be refreshed as needed.
+ *
+ * @property tripsRepository The repository to fetch trips from.
  */
-class MyTripsViewModel() : TripsViewModel() {
+class MyTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvider.repository) :
+    TripsViewModel(tripsRepository) {
 
   /** Initializes the ViewModel by loading all trips. */
   init {

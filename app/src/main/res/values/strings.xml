@@ -66,15 +66,7 @@
     <string name="allow_location">Allow location</string>
     <string name="exit_map_desc">Exit Map Icon</string>
 
-    <!-- My Trips -->
-    <string name="my_trips">My trips</string>
-    <string name="go_past_trips">Go to Past Trips</string>
-    <string name="current_trip">Current Trip</string>
-    <string name="enter_map">Enter Map</string>
-    <string name="warning_multiple_current_trip">We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.</string>
-    <string name="no_current_trip">You have no current trip. Get planning!</string>
-    <string name="upcoming_trip">Upcoming Trips</string>
-    <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
+    <!-- Trips -->
     <string name="go_trip_details">Go to Trip details</string>
     <plurals name="n_selected">
         <item quantity="one">%d selected</item>
@@ -84,6 +76,8 @@
     <string name="more_options">More options</string>
     <string name="delete_selected">Delete selected</string>
     <string name="favorite_selected">Favorite selected</string>
+    <string name="select_all">Select all</string>
+    <string name="favorite_icon">Favorite Icon</string>
     <plurals name="confirm_delete_title">
         <item quantity="one" formatted="true">Are you sure you want to delete %d Trip?</item>
         <item quantity="other" formatted="true">Are you sure you want to delete %d Trips?</item>
@@ -91,15 +85,33 @@
     <string name="confirm_delete_message">This action is irreversible!</string>
     <string name="cancel">Cancel</string>
     <string name="delete">Delete</string>
-    <string name="select_all">Select all</string>
+    <!-- Sort Trips -->
     <string name="sort">Button to sort Trips</string>
-    <string name="favorite_icon">Favorite Icon</string>
+    <string name="start_date_asc">Start Date ⬆</string>
+    <string name="start_date_desc">Start Date ⬇</string>
+    <string name="end_date_asc">End Date ⬆</string>
+    <string name="end_date_desc">End Date ⬇</string>
+    <string name="name_asc">Name A–Z</string>
+    <string name="name_desc">Name Z-A</string>
+    <string name="favorites_first">Favorites</string>
+    <!-- My Trips -->
+    <string name="my_trips">My trips</string>
+    <string name="go_past_trips">Go to Past Trips</string>
+    <string name="current_trip">Current Trip</string>
+    <string name="warning_multiple_current_trip">We currently allow saving multiple current trips, but only the first is shown. Eventually users will only be allowed one current trip.</string>
+    <string name="no_current_trip">You have no current trip. Get planning!</string>
+    <string name="upcoming_trips">Upcoming Trips</string>
+    <string name="no_upcoming_trip">You have no upcoming trips. Get planning!</string>
+    <!-- Past Trips -->
+    <string name="past_trips">Past Trips</string>
+    <string name="no_past_trips">You have no past trips.</string>
+
     <!-- Trip Info -->
     <string name="back_to_my_trips">Back to My Trips</string>
-    <string name="fullscreen">fullscreen</string>
-    <string name="back">Go back</string>
+    <string name="fullscreen">Fullscreen</string>
     <string name="favorite_icon_empty">Favorite Trip</string>
     <string name="unfavorite_icon">Unfavorite Trip</string>
+    <string name="enter_map">Enter Map</string>
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
     <string name="travelers">Travelers</string>
@@ -111,19 +123,12 @@
     <string name="delete_trip_prompt">Are you sure you want to delete this trip? This action cannot be undone.</string>
     <string name="trip_deleted">Trip deleted</string>
     <string name="confirm">Confirm</string>
-    <!-- Sort Trips -->
-    <string name="start_date_asc">Start Date ⬆</string>
-    <string name="start_date_desc">Start Date ⬇</string>
-    <string name="end_date_asc">End Date ⬆</string>
-    <string name="end_date_desc">End Date ⬇</string>
-    <string name="name_asc">Name A–Z</string>
-    <string name="name_desc">Name Z-A</string>
-    <string name="favorites_first">Favorites</string>
 
     <!-- Navigation -->
     <string name="my_trips_tab">My trips</string>
     <string name="current_trip_tab">Current Trip</string>
     <string name="profile_tab">Profile</string>
+    <string name="back">Go back</string>
 
     <!-- Profile -->
     <string name="my_profile">My Profile</string>
@@ -180,7 +185,5 @@
     <string name="no_preferences">No preferences</string>
     <string name="from_summary">From:</string>
     <string name="to_summary">To:</string>
-
-
 
 </resources>

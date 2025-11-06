@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
-import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,10 +24,10 @@ enum class TripSortType {
 /**
  * Base ViewModel for any screen displaying a list of trips. Handles selection, sorting, error
  * state, and bulk actions.
+ *
+ * @param tripsRepository The repository responsible for managing trip data.
  */
-abstract class TripsViewModel(
-    protected val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
-) : ViewModel() {
+abstract class TripsViewModel(protected val tripsRepository: TripsRepository) : ViewModel() {
   /**
    * Represents the UI state for a "Trips" screen.
    *

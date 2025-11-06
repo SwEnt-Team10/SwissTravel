@@ -2,19 +2,26 @@ package com.github.swent.swisstravel.ui.mytrips.pasttrips
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.github.swent.swisstravel.model.trip.isUpcoming
+import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
+import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.ui.mytrips.TripsViewModel
 import kotlinx.coroutines.launch
 
 /**
  * ViewModel responsible for managing the state and logic of the "Past Trips" screen.
  *
- * It handles fetching trips, managing selection mode for bulk actions, deleting trips, sorting
- * trips, and handling error messages.
+ * Extends [TripsViewModel] to manage the user's trips, including:
+ * - Fetching all trips from the repository.
+ * - Applying the selected sort order to past trips.
+ * - Updating UI state and handling errors.
  *
- * @param tripsRepository Repository providing access to trip data.
+ * Trips are loaded automatically on initialization and can be refreshed as needed.
+ *
+ * @param tripsRepository The repository responsible for managing user trips.
  */
-class PastTripsViewModel() : TripsViewModel() {
+class PastTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvider.repository) :
+    TripsViewModel(tripsRepository) {
 
   /** Initializes the ViewModel by loading all trips. */
   init {
@@ -22,17 +29,15 @@ class PastTripsViewModel() : TripsViewModel() {
   }
 
   override suspend fun getAllTrips() {
-    viewModelScope.launch {
-      try {
-        val trips = tripsRepository.getAllTrips()
-        val pastTrips = trips.filter { it.isUpcoming() }
-        val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType)
+    try {
+      val trips = tripsRepository.getAllTrips()
+      val pastTrips = trips.filter { it.isPast() }
+      val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType)
 
-        _uiState.value = _uiState.value.copy(tripsList = sortedTrips)
-      } catch (e: Exception) {
-        Log.e("PastTripsViewModel", "Error fetching trips", e)
-        setErrorMsg("Failed to load trips.")
-      }
+      _uiState.value = _uiState.value.copy(tripsList = sortedTrips)
+    } catch (e: Exception) {
+      Log.e("PastTripsViewModel", "Error fetching trips", e)
+      setErrorMsg("Failed to load trips.")
     }
   }
 }
