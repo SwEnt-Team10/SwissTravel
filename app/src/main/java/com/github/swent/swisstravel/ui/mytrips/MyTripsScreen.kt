@@ -3,9 +3,12 @@ package com.github.swent.swisstravel.ui.mytrips
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -15,6 +18,7 @@ import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.StarOutline
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +38,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
@@ -71,6 +76,7 @@ object MyTripsScreenTestTags {
   const val SELECT_ALL_BUTTON = "selectAll"
   const val CANCEL_SELECTION_BUTTON = "cancelSelection"
   const val MORE_OPTIONS_BUTTON = "moreOptions"
+  const val EDIT_CURRENT_TRIP_BUTTON = "editCurrentTrip"
 
   /** Returns a unique test tag for the given [trip] element. */
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
@@ -91,6 +97,8 @@ object MyTripsScreenTestTags {
  * @param myTripsViewModel The [MyTripsViewModel] providing state and business logic.
  * @param onSelectTrip Callback invoked when a trip is selected (normal mode).
  * @param onPastTrips Callback invoked when the "Past Trips" button is pressed.
+ * @param onCreateTrip Callback invoked when the "Create Trip" button is pressed.
+ * @param onEditCurrentTrip Callback invoked when the "Edit Current Trip" button is pressed.
  * @param navigationActions Optional [NavigationActions] for handling bottom navigation and screen
  *   transitions.
  */
@@ -101,6 +109,7 @@ fun MyTripsScreen(
     onSelectTrip: (String) -> Unit = {},
     onPastTrips: () -> Unit = {},
     onCreateTrip: () -> Unit = {},
+    onEditCurrentTrip: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
@@ -178,13 +187,10 @@ fun MyTripsScreen(
                     .padding(padding)
                     .padding(start = 16.dp, end = 16.dp, bottom = 4.dp)) {
               CurrentTripSection(
-                  currentTrip = uiState.currentTrip,
-                  isSelectionMode = uiState.isSelectionMode,
-                  selectedTrips = uiState.selectedTrips,
+                  myTripsViewModel = myTripsViewModel,
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
-                  onEnterSelectionMode = { myTripsViewModel.toggleSelectionMode(true) },
-                  navigationActions = navigationActions)
+                  onEditCurrentTrip = onEditCurrentTrip)
 
               UpcomingTripsSection(
                   trips = uiState.upcomingTrips,
@@ -301,29 +307,25 @@ private fun MyTripsTopAppBar(
  * - Allows entering selection mode by long-pressing.
  * - Provides button to enter the navigation map.
  *
- * @param currentTrip Current active trip, if any.
- * @param isSelectionMode Whether selection mode is active.
- * @param selectedTrips Set of selected trips.
+ * @param myTripsViewModel The [MyTripsViewModel] providing state and business logic.
  * @param onSelectTrip Callback when a trip is clicked.
  * @param onToggleSelection Toggles trip selection.
- * @param onEnterSelectionMode Activates selection mode.
- * @param navigationActions Optional navigation actions for map entry.
+ * @param onEditCurrentTrip Callback when the edit button is clicked.
  */
 @Composable
 private fun CurrentTripSection(
-    currentTrip: Trip?,
-    isSelectionMode: Boolean,
-    selectedTrips: Set<Trip>,
+    myTripsViewModel: MyTripsViewModel,
     onSelectTrip: (String) -> Unit,
     onToggleSelection: (Trip) -> Unit,
-    onEnterSelectionMode: () -> Unit,
-    navigationActions: NavigationActions?,
+    onEditCurrentTrip: () -> Unit = {}
 ) {
-  Text(
-      text = stringResource(R.string.current_trip),
-      style = MaterialTheme.typography.headlineLarge,
-      color = MaterialTheme.colorScheme.onBackground,
-      modifier = Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+  val uiState by myTripsViewModel.uiState.collectAsState()
+  val currentTrip = uiState.currentTrip
+  val isSelectionMode = uiState.isSelectionMode
+  val selectedTrips = uiState.selectedTrips
+  val editButtonShown = uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty()
+
+  CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
 
   Spacer(modifier = Modifier.height(4.dp))
 
@@ -332,18 +334,45 @@ private fun CurrentTripSection(
         trip = it,
         onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
         onLongPress = {
-          onEnterSelectionMode()
+          // Enter selection mode
+          myTripsViewModel.toggleSelectionMode(true)
           onToggleSelection(it)
         },
         isSelected = it in selectedTrips,
         isSelectionMode = isSelectionMode)
-    Text(
-        stringResource(R.string.warning_multiple_current_trip),
-        style = MaterialTheme.typography.labelSmall)
   }
       ?: Text(
           text = stringResource(R.string.no_current_trip),
           modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG))
+}
+
+/**
+ * Displays the title for the "Current Trip" section.
+ * - Optionally shows an edit button to modify the current trip.
+ *
+ * @param editButtonShown Whether to display the edit button.
+ * @param onEditCurrentTrip Callback when the edit button is clicked.
+ */
+@Composable
+private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip: () -> Unit = {}) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.current_trip),
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier =
+                Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+        if (editButtonShown) {
+          IconButton(
+              onClick = onEditCurrentTrip,
+              modifier = Modifier.testTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)) {
+                Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Edit current trip")
+              }
+        }
+      }
 }
 
 /**

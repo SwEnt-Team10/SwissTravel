@@ -101,6 +101,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       val name = item.optString("name", "Unknown Activity")
       val description = item.optString("abstract", "No description")
 
+      // Fetches latitude and longitude of the activity
       val geo = item.optJSONObject("geo")
       if (geo != null) {
         val lat = geo.optDouble("latitude", Double.NaN)
@@ -123,17 +124,51 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
           val photo = item.optString("photo")
           val location = Location(coordinate, name, photo)
 
-          // Dummy start/end times for now
-          // TODO add start/end times
-          val start = Timestamp.now()
-          val end = Timestamp(start.seconds + 3600, 0)
+          // Fetches the neededtime object from the activity, in order to estimate the visit time
+          var time = ""
+          val classification = item.optJSONArray("classification")
+          if (classification != null) {
+            for (k in 0 until classification.length()) {
+              val obj = classification.optJSONObject(k)
+              if (obj.optString("name") == "neededtime") {
+                val values = obj.optJSONArray("values")
+                if (values != null) {
+                  time = values.optJSONObject(0).optString("name")
+                }
+              }
+            }
+          }
 
-          activities.add(Activity(start, end, location, description, imageUrls))
+          val estimatedTime = mapToTime(time)
+
+          activities.add(
+              Activity(
+                  Timestamp.now(),
+                  Timestamp.now(),
+                  location,
+                  description,
+                  imageUrls,
+                  estimatedTime))
         }
       }
     }
 
     return activities
+  }
+
+  /**
+   * Maps the given time string from the SwissTourism API to a time in seconds.
+   *
+   * @param time The time string to map.
+   * @return The time in seconds.
+   */
+  private fun mapToTime(time: String): Int {
+    return when (time) {
+      "2to4hourshalfday" -> 3600 * 4
+      "4to8hoursfullday" -> 3600 * 8
+      "between12hours" -> 3600 * 2
+      else -> 0
+    }
   }
 
   /**

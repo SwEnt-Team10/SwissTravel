@@ -96,6 +96,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("activities") } returns listOf(activityMap)
     every { doc.get("tripProfile") } returns tripProfileMap
     every { doc.getBoolean("favorite") } returns true
+    every { doc.getBoolean("currentTrip") } returns false
 
     val trip = repo.getTrip("trip1")
 
@@ -141,6 +142,7 @@ class TripsRepositoryFirestorePublicTest {
             "adults" to 1L,
             "children" to 0L)
     every { doc.getBoolean("favorite") } returns false
+    every { doc.getBoolean("currentTrip") } returns false
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)
@@ -210,7 +212,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
@@ -241,7 +244,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     every { mockCollection.document("server-id-123") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
@@ -264,7 +268,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns
@@ -284,7 +289,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)

@@ -19,7 +19,6 @@ import org.junit.Test
 /** Fake TripsRepository to feed the ViewModel without touching Firestore. */
 class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()) :
     TripsRepository {
-
   override suspend fun getAllTrips(): List<Trip> = trips
 
   override suspend fun getTrip(tripId: String): Trip {
@@ -48,7 +47,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
   private val now = Timestamp.now()
   val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
-  private val currentTrip = trip1
+  private val currentTrip = trip1.copy(isCurrentTrip = true)
 
   private val upcomingTrip = trip2
 
@@ -94,7 +93,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).performClick()
-    assert(clicked)
+    assertTrue(clicked)
   }
 
   @Test
@@ -109,7 +108,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON).performClick()
-    assert(createClicked)
+    assertTrue(createClicked)
   }
 
   @Test
@@ -136,7 +135,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                 endDate = Timestamp(now.seconds + 10800, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     runBlocking { fakeRepo.addTrip(newUpcomingTrip) }
 
@@ -169,7 +169,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                 endDate = Timestamp(now.seconds + 14400, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     val tripB =
         Trip(
@@ -184,7 +185,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                 endDate = Timestamp(now.seconds + 10800, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
     val viewModel = MyTripsViewModel(fakeRepo)
@@ -292,7 +294,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON).performClick()
 
     // Selection should remain
-    assert(viewModel.uiState.value.selectedTrips.contains(trip1))
+    assertTrue(viewModel.uiState.value.selectedTrips.contains(trip1))
   }
 
   @Test
@@ -313,8 +315,26 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
         .performClick() // This triggers deleteSelectedTrips()
 
     // Verify selection cleared
-    assert(viewModel.uiState.value.selectedTrips.isEmpty())
-    assert(!viewModel.uiState.value.isSelectionMode)
+    assertTrue(viewModel.uiState.value.selectedTrips.isEmpty())
+    assertTrue(!viewModel.uiState.value.isSelectionMode)
+  }
+
+  @Test
+  fun checkEditCurrentTripButtonDisplays() {
+    launchScreen(trip1, trip2)
+
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun checkEditCurrentTripButtonIsNotDisplayedWhenNoTrips() {
+    launchScreen()
+
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)
+        .assertDoesNotExist()
   }
 
   @Test
@@ -336,7 +356,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                     endDate = Timestamp(now.seconds + 7200, 0),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isFavorite = true)
+            isFavorite = true,
+            isCurrentTrip = false)
 
     val nonFavoriteTrip =
         Trip(
@@ -352,7 +373,8 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
                     endDate = Timestamp(now.seconds + 7200, 0),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isFavorite = false)
+            isFavorite = false,
+            isCurrentTrip = false)
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
     val viewModel = MyTripsViewModel(fakeRepo)

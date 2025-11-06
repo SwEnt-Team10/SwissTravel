@@ -12,7 +12,6 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
-import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
@@ -97,7 +96,8 @@ abstract class SwissTravelTest {
               endDate = Timestamp(now.seconds + 3600, 0),
               preferredLocations = emptyList(),
               preferences = emptyList()),
-          isFavorite = false)
+          isFavorite = false,
+          isCurrentTrip = false)
 
   val trip2 =
       Trip(
@@ -112,7 +112,8 @@ abstract class SwissTravelTest {
               endDate = Timestamp(now.seconds + 10800, 0),
               preferredLocations = emptyList(),
               preferences = emptyList()),
-          isFavorite = false)
+          isFavorite = false,
+          isCurrentTrip = false)
 
   val tripList = listOf(trip1, trip2)
 
@@ -188,7 +189,6 @@ abstract class SwissTravelTest {
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_TITLE).assertIsDisplayed()
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).assertIsDisplayed()
     onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
-    onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
   }
 
   fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
