@@ -74,6 +74,83 @@ class ActivityRepositoryMockTest {
   // ---------------------------------------------------------------------------
 
   @Test
+  fun `parseActivitiesFromJson sets estimatedTime from neededtime`() {
+    val json =
+        """
+    {
+      "data": [{
+        "name": "Creux du Van",
+        "abstract": "Rock arena",
+        "geo": { "latitude": 46.93, "longitude": 6.72 },
+        "classification": [
+          { "@type": "Classification", "name": "experiencetype", "values": [{"name":"nature"}] },
+          { "@type": "Classification", "name": "neededtime", "values": [{"name":"4to8hoursfullday"}] }
+        ]
+      }]
+    }
+  """
+            .trimIndent()
+
+    val list = repo.invokePrivate("parseActivitiesFromJson", json) as List<Activity>
+    assertEquals(1, list.size)
+    assertEquals(8 * 3600, list.first().estimatedTime)
+  }
+
+  @Test
+  fun `parseActivitiesFromJson with no neededtime defaults estimatedTime to zero`() {
+    val json =
+        """
+    {
+      "data": [{
+        "name": "No Needed Time",
+        "abstract": "desc",
+        "geo": { "latitude": 46.5, "longitude": 7.5 },
+        "classification": [
+          { "@type": "Classification", "name": "experiencetype", "values": [{"name":"active"}] }
+        ]
+      }]
+    }
+  """
+            .trimIndent()
+
+    val list = repo.invokePrivate("parseActivitiesFromJson", json) as List<Activity>
+    assertEquals(1, list.size)
+    assertEquals(0, list.first().estimatedTime)
+  }
+
+  @Test
+  fun `parseActivitiesFromJson finds neededtime among multiple classifications`() {
+    val json =
+        """
+    {
+      "data": [{
+        "name": "Mixed Classifications",
+        "abstract": "desc",
+        "geo": { "latitude": 46.5, "longitude": 7.5 },
+        "classification": [
+          { "name": "random", "values": [{"name":"x"}] },
+          { "name": "neededtime", "values": [{"name":"between12hours"}] },
+          { "name": "other", "values": [{"name":"y"}] }
+        ]
+      }]
+    }
+  """
+            .trimIndent()
+
+    val list = repo.invokePrivate("parseActivitiesFromJson", json) as List<Activity>
+    assertEquals(1, list.size)
+    assertEquals(2 * 3600, list.first().estimatedTime)
+  }
+
+  @Test
+  fun `mapToTime maps known values and defaults`() {
+    assertEquals(4 * 3600, repo.invokePrivate("mapToTime", "2to4hourshalfday") as Int)
+    assertEquals(8 * 3600, repo.invokePrivate("mapToTime", "4to8hoursfullday") as Int)
+    assertEquals(2 * 3600, repo.invokePrivate("mapToTime", "between12hours") as Int)
+    assertEquals(0, repo.invokePrivate("mapToTime", "unknown-tag") as Int)
+  }
+
+  @Test
   fun `parseActivitiesFromJson parses valid JSON`() {
     val json =
         """
