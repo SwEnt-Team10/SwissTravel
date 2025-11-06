@@ -68,7 +68,6 @@ fun TripInfoScreen(
 
   val tripInfoUIState by tripInfoViewModel.uiState.collectAsState()
   val errorMsg = tripInfoUIState.errorMsg
-  val firstLocation = tripInfoUIState.locations[0]
 
   val context = LocalContext.current
   var showMap by remember { mutableStateOf(true) }
@@ -134,7 +133,7 @@ fun TripInfoScreen(
               } else {
                 item {
                   Box(modifier = Modifier.testTag(TripInfoTestTags.LOCATION_CARD)) {
-                    Text(text = "$firstLocation")
+                    Text(text = "${tripInfoUIState.locations[0]}")
                   }
                 }
 
