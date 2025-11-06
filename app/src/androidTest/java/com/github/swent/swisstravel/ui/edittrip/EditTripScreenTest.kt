@@ -261,7 +261,8 @@ class EditTripScreenTest {
         routeSegments = emptyList<RouteSegment>(),
         activities = emptyList<Activity>(),
         tripProfile = profile,
-        isFavorite = false)
+        isFavorite = false,
+        isCurrentTrip = false)
   }
 
   // inside your EditTripScreenTest.kt
