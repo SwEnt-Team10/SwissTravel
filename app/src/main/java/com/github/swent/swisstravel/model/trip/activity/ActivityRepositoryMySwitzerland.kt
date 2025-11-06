@@ -93,6 +93,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       val name = item.optString("name", "Unknown Activity")
       val description = item.optString("abstract", "No description")
 
+      // Fetches latitude and longitude of the activity
       val geo = item.optJSONObject("geo")
       if (geo != null) {
         val lat = geo.optDouble("latitude", Double.NaN)
@@ -113,6 +114,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
             }
           }
 
+          // Fetches the neededtime object from the activity, in order to estimate the visit time
           var time = ""
           val classification = item.optJSONArray("classification")
           if (classification != null) {

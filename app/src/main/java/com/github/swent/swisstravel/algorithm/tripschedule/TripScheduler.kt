@@ -99,11 +99,13 @@ fun scheduleTrip(
   val locs = ordered.orderedLocations
   val segments = ordered.segmentDuration
 
+  /** Inner function to advance to the next day and reset the cursor. */
   fun advanceToNextDay() {
     currentDay = currentDay.plusDays(1)
     cursor = LocalDateTime.of(currentDay, params.dayStart)
   }
 
+  /** Inner function to check if the activity fits in the current day. */
   fun fitsInDay(durationSec: Int): Boolean {
     val endOfDay = LocalDateTime.of(currentDay, params.dayEnd)
     return !cursor.plusSeconds(durationSec.toLong()).isAfter(endOfDay)
