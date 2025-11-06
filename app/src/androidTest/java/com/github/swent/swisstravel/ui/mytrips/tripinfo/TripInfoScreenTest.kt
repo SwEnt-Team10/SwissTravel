@@ -24,11 +24,10 @@ class TripInfoScreenTest {
 
     composeRule.setContent {
       TripInfoScreen(
-        uid = null,
-        onMyTrips = { pastClicked = true },
-        onFullscreenClick = {},
-        onEditTrip = { editClicked = true }
-      )
+          uid = null,
+          onMyTrips = { pastClicked = true },
+          onFullscreenClick = {},
+          onEditTrip = { editClicked = true })
     }
 
     // Verify that UI elements are displayed
@@ -51,12 +50,11 @@ class TripInfoScreenTest {
 
     composeRule.setContent {
       FavoriteButton(
-        isFavorite = isFavorite,
-        onToggleFavorite = {
-          favoriteClicked = true
-          isFavorite = !isFavorite
-        }
-      )
+          isFavorite = isFavorite,
+          onToggleFavorite = {
+            favoriteClicked = true
+            isFavorite = !isFavorite
+          })
     }
 
     // Verify favorite button is displayed
@@ -82,12 +80,7 @@ class TripInfoScreenTest {
   @Test
   fun topBarTitleNoLocationsAndMapDisplayed() {
     composeRule.setContent {
-      TripInfoScreen(
-        uid = null,
-        onMyTrips = {},
-        onFullscreenClick = {},
-        onEditTrip = {}
-      )
+      TripInfoScreen(uid = null, onMyTrips = {}, onFullscreenClick = {}, onEditTrip = {})
     }
 
     // Verify top bar title is displayed

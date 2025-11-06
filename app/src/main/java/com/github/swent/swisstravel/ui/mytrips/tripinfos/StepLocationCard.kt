@@ -22,53 +22,42 @@ import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 
 @Composable
-fun StepLocationCard(
-    int: Int,
-    location: Location
-) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(8.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
+fun StepLocationCard(int: Int, location: Location) {
+  Card(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+      shape = RoundedCornerShape(8.dp),
+      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Start
-        ) {
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.Start,
-                modifier = Modifier
-            ) {
-                Text(
-                    text = "Step $int",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = location.name,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
+            horizontalArrangement = Arrangement.Start) {
+              Column(
+                  verticalArrangement = Arrangement.Center,
+                  horizontalAlignment = Alignment.Start,
+                  modifier = Modifier) {
+                    Text(
+                        text = "Step $int",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onBackground)
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = location.name,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface)
+                  }
+
+              Spacer(modifier = Modifier.weight(1f))
+
+              Spacer(modifier = Modifier.width(24.dp))
             }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Spacer(modifier = Modifier.width(24.dp))
-        }
-    }
+      }
 }
+
 @Preview
 @Composable
 fun StepLocationCardPreview() {
-    StepLocationCard(
-        int = 1,
-        location = Location(name = "Zurich Hauptbahnhof", coordinate = Coordinate(47.378177, 8.540192))
-    )
+  StepLocationCard(
+      int = 1,
+      location =
+          Location(name = "Zurich Hauptbahnhof", coordinate = Coordinate(47.378177, 8.540192)))
 }
