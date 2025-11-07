@@ -24,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.map.NavigationMap
+import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 
 /** Screen displaying the map for trip information. */
 object TripInfoMapTestTags {
@@ -69,7 +69,7 @@ fun TripInfoMapScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoViewMo
                 Modifier.fillMaxSize().padding(padding).testTag(TripInfoMapTestTags.MAP_CONTAINER),
             contentAlignment = Alignment.Center) {
               if (showMap) {
-                NavigationMap(tripInfoViewModel.uiState.collectAsState().value.locations)
+                NavigationMapScreen(tripInfoViewModel.uiState.collectAsState().value.locations)
               }
             }
       }
