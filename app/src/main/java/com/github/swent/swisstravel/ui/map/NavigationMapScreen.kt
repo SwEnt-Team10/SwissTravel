@@ -23,13 +23,6 @@ object NavigationMapScreenTestTags {
   const val MAP = "map"
 }
 
-object LocationsHardCoded {
-  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
-  val ZERMATT = Point.fromLngLat(7.747, 46.019)
-  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
-  val CHUV = Point.fromLngLat(6.6209, 46.5197)
-}
-
 @Composable
 fun NavigationMap(locations: List<Location>) {
   val context = LocalContext.current

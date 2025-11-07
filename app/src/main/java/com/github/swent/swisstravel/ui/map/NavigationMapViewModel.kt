@@ -20,13 +20,6 @@ import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
-object Locations {
-  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
-  val ZERMATT = Point.fromLngLat(7.747, 46.019)
-  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
-  val CHUV = Point.fromLngLat(6.6209, 46.5197)
-}
-
 data class NavigationMapUIState(
     val routeLineDrawData: Expected<RouteLineError, RouteSetValue>? = null,
     val isRouteRendered: Boolean = false,
