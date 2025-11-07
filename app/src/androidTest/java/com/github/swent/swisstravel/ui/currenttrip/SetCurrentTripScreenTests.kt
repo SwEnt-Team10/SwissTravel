@@ -69,7 +69,7 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
     assertEquals(trip2.uid, uiState.currentTrip?.uid, "Trip 2 should now be current.")
     assertTrue(uiState.currentTrip?.isCurrentTrip == true, "Current trip flag should be true.")
     assertTrue(
-        uiState.upcomingTrips.none { it.isCurrentTrip }, "No other trip should be marked current.")
+        uiState.tripsList.none { it.isCurrentTrip }, "No other trip should be marked current.")
   }
 
   @Test
@@ -101,6 +101,6 @@ class SetCurrentTripScreenTests : SwissTravelTest() {
     val uiState = viewModel.uiState.value
 
     assertEquals("2", uiState.currentTrip?.uid, "Trip 2 should now be current.")
-    assertTrue(uiState.upcomingTrips.none { it.isCurrentTrip && it.uid != "2" })
+    assertTrue(uiState.tripsList.none { it.isCurrentTrip && it.uid != "2" })
   }
 }

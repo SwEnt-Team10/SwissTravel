@@ -235,7 +235,9 @@ class ComposableTests : SwissTravelTest() {
 
   @Test
   fun sortedTripListEmptyTest() {
-    composeTestRule.setContent { SortedTripList(title = "My Trips", trips = emptyList()) }
+    composeTestRule.setContent {
+      SortedTripList(title = "test", trips = emptyList(), emptyListString = "test")
+    }
 
     composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
   }
