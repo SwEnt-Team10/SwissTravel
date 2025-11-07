@@ -10,8 +10,11 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
+import com.mapbox.navigation.base.options.NavigationOptions
+import com.mapbox.navigation.core.MapboxNavigationProvider
+import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
+import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 
 object NavigationMapScreenTestTags {
@@ -27,38 +30,57 @@ object LocationsHardCoded {
   val CHUV = Point.fromLngLat(6.6209, 46.5197)
 }
 
-@OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
 @Composable
 fun NavigationMap(locations: List<Location>) {
-
   val context = LocalContext.current
-  val viewModel =
-      NavigationMapViewModel(
-          application = context.applicationContext as android.app.Application, locations)
+  val viewModel: NavigationMapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
-  // get a route line view object (to display the route), and the data to draw the route
-  val routeLineViewOptions = MapboxRouteLineViewOptions.Builder(context).build()
-  val routeLineView = MapboxRouteLineView(routeLineViewOptions)
-  val routeDrawData = viewModel.uiState.collectAsState().value.routeLineDrawData
+  val appCtx = context.applicationContext
+  val mapboxNavigation = remember {
+    if (MapboxNavigationProvider.isCreated()) MapboxNavigationProvider.retrieve()
+    else MapboxNavigationProvider.create(NavigationOptions.Builder(appCtx).build())
+  }
+  val routeLineApi = remember { MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build()) }
+  val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
+  val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
 
-  // create a map and set the initial camera position to see the start of the route
+  LaunchedEffect(Unit) { viewModel.attachMapObjects(mapboxNavigation, routeLineApi) }
+  LaunchedEffect(locations) { viewModel.updateLocations(locationsAsPoints(locations)) }
+
+  val ui by viewModel.uiState.collectAsState()
   val mapViewportState = rememberMapViewportState()
-  LaunchedEffect(Unit) {
-    mapViewportState.setCameraOptions {
-      center(locationsAsPoints(locations).first())
-      zoom(14.0)
+
+  LaunchedEffect(ui.locationsList) {
+    ui.locationsList.firstOrNull()?.let { first ->
+      mapViewportState.setCameraOptions {
+        center(first)
+        zoom(5.0)
+      }
     }
   }
+
+  var styleReady by remember { mutableStateOf(false) }
 
   MapboxMap(
       modifier = Modifier.fillMaxSize().testTag(NavigationMapScreenTestTags.MAP),
       mapViewportState = mapViewportState) {
-        MapEffect(routeDrawData) { mapView ->
-          // render route draw data provided by the ViewModel whenever available
-          val drawData = routeDrawData ?: return@MapEffect
+        MapEffect(Unit) { mapView ->
           mapView.mapboxMap.getStyle { style ->
-            routeLineView.renderRouteDrawData(style, drawData)
-            viewModel.setRouteRendered(true)
+            routeLineView.initializeLayers(style)
+            styleReady = true
+          }
+        }
+
+        // Re-render whenever routes change AND style is ready
+        val renderKey by viewModel.routeRenderTick.collectAsState()
+        MapEffect(styleReady to renderKey) { mapView ->
+          if (!styleReady) return@MapEffect
+          val api = ui.routeLineApi ?: return@MapEffect
+          mapView.mapboxMap.getStyle { style ->
+            api.getRouteDrawData { drawData ->
+              routeLineView.renderRouteDrawData(style, drawData)
+              viewModel.setRouteRendered(true)
+            }
           }
         }
       }
@@ -70,3 +92,6 @@ fun NavigationMap(locations: List<Location>) {
     }
   }
 }
+
+private fun locationsAsPoints(locations: List<Location>) =
+    locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }

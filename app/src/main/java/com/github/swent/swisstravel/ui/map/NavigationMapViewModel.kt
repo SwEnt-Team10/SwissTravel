@@ -1,16 +1,12 @@
 package com.github.swent.swisstravel.ui.map
 
-import android.app.Application
 import android.util.Log
 import androidx.lifecycle.ViewModel
-import com.github.swent.swisstravel.model.trip.Location
 import com.mapbox.api.directions.v5.models.RouteOptions
 import com.mapbox.bindgen.Expected
-import com.mapbox.bindgen.ExpectedFactory
 import com.mapbox.geojson.Point
 import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
 import com.mapbox.navigation.base.extensions.applyDefaultNavigationOptions
-import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.base.route.NavigationRoute
 import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
@@ -19,7 +15,6 @@ import com.mapbox.navigation.core.MapboxNavigationProvider
 import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.core.directions.session.RoutesUpdatedResult
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
-import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLineError
 import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,8 +31,8 @@ data class NavigationMapUIState(
     val routeLineDrawData: Expected<RouteLineError, RouteSetValue>? = null,
     val isRouteRendered: Boolean = false,
     val locationsList: List<Point>,
-    val mapboxNavigation: MapboxNavigation,
-    val routeLineApi: MapboxRouteLineApi,
+    val mapboxNavigation: MapboxNavigation?,
+    val routeLineApi: MapboxRouteLineApi?,
 )
 
 /**
@@ -52,119 +47,81 @@ data class NavigationMapUIState(
  * The UI layer observes [routeLineDrawData] and [isRouteRendered] to reactively update the map view
  * when routes change or when rendering is complete.
  */
-class NavigationMapViewModel(application: Application, locationsList: List<Location>) :
-    ViewModel() {
+class NavigationMapViewModel : ViewModel() {
 
-  /** ... */
-  private val _uiState =
-      MutableStateFlow<NavigationMapUIState>(
-          NavigationMapUIState(
-              locationsList = locationsAsPoints(locationsList),
-              mapboxNavigation =
-                  if (MapboxNavigationProvider.isCreated()) {
-                    MapboxNavigationProvider.retrieve()
-                  } else {
-                    MapboxNavigationProvider.create(
-                        NavigationOptions.Builder(application.applicationContext).build())
-                  },
-              routeLineApi = MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build())))
+  private val _routeRenderTick = MutableStateFlow(0)
+  val routeRenderTick: StateFlow<Int> = _routeRenderTick
 
-  /** ... */
-  val uiState: StateFlow<NavigationMapUIState> = _uiState
-
-  /**
-   * A [RoutesObserver] that listens for changes in the current navigation routes.
-   *
-   * When routes are updated, this observer updates the route line draw data through [routeLineApi]
-   * and emits it via [_routeLineDrawData].
-   */
   private val routesObserver =
       object : RoutesObserver {
         override fun onRoutesChanged(result: RoutesUpdatedResult) {
-          val alternativesMetadata =
-              _uiState.value.mapboxNavigation.getAlternativeMetadataFor(result.navigationRoutes)
-          _uiState.value.routeLineApi.setNavigationRoutes(
-              result.navigationRoutes, alternativesMetadata) { drawData ->
-                // update draw data
-                if (drawData.value != null) {
-                  _uiState.value =
-                      _uiState.value.copy(
-                          routeLineDrawData = ExpectedFactory.createValue(drawData.value!!))
-                }
-              }
+          val nav = _uiState.value.mapboxNavigation ?: return
+          val api = _uiState.value.routeLineApi ?: return
+          val alt = nav.getAlternativeMetadataFor(result.navigationRoutes)
+          api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
+            if (drawData.value != null) {
+              _routeRenderTick.value = _routeRenderTick.value + 1
+            }
+          }
         }
       }
 
-  /**
-   * Initializes the ViewModel:
-   * - Registers the [routesObserver] to listen for route changes;
-   * - Immediately triggers a default route request.
-   */
-  init {
-    // Start observing routes to emit draw data when routes change
-    Log.d("NAV_MAP_VM", "initialize a VM")
-    _uiState.value.mapboxNavigation.registerRoutesObserver(routesObserver)
-    requestRoute()
+  private val _uiState =
+      MutableStateFlow(
+          NavigationMapUIState(
+              routeLineDrawData = null,
+              isRouteRendered = false,
+              locationsList = emptyList(),
+              mapboxNavigation = null,
+              routeLineApi = null))
+  val uiState: StateFlow<NavigationMapUIState> = _uiState
+
+  /** Call once from the Composable after you build Mapbox objects */
+  fun attachMapObjects(nav: MapboxNavigation, api: MapboxRouteLineApi) {
+    val current = _uiState.value
+    if (current.mapboxNavigation === nav && current.routeLineApi === api) return
+    _uiState.value = current.copy(mapboxNavigation = nav, routeLineApi = api)
+    nav.registerRoutesObserver(routesObserver)
+    // request route if we already have points
+    if (_uiState.value.locationsList.size >= 2) requestRoute()
   }
 
-  /**
-   * Requests a navigation route between two points
-   *
-   * Once routes are ready, they are set on the [mapboxNavigation] instance, triggering the
-   * [routesObserver] to update the route line data.
-   */
-  @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
-  fun requestRoute() {
-    val routeOptions =
-        RouteOptions.builder()
-            .applyDefaultNavigationOptions()
-            .coordinatesList(_uiState.value.locationsList)
-            .build()
+  /** Push points when they change */
+  fun updateLocations(points: List<Point>) {
+    if (points == _uiState.value.locationsList) return
+    _uiState.value = _uiState.value.copy(locationsList = points)
+    if (points.size >= 2) requestRoute()
+  }
 
-    val callback =
+  @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
+  private fun requestRoute() {
+    val nav = _uiState.value.mapboxNavigation ?: return
+    val pts = _uiState.value.locationsList
+    if (pts.size < 2) return
+
+    val routeOptions =
+        RouteOptions.builder().applyDefaultNavigationOptions().coordinatesList(pts).build()
+
+    nav.requestRoutes(
+        routeOptions,
         object : NavigationRouterCallback {
           override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {}
 
-          override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {}
+          override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
+            Log.e("NAV_MAP_VM", "requestRoute failure: $reasons")
+          }
 
           override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
-            _uiState.value.mapboxNavigation.setNavigationRoutes(routes)
+            nav.setNavigationRoutes(routes)
           }
-        }
-
-    // Requesting route (API request)
-    _uiState.value.mapboxNavigation.requestRoutes(routeOptions, callback)
+        })
   }
 
-  /**
-   * Updates the current rendering state of the route.
-   *
-   * This is typically called by the UI after a route has been successfully rendered.
-   *
-   * @param isRendered `true` if the route is displayed on the map, `false` otherwise.
-   */
   fun setRouteRendered(isRendered: Boolean) {
     _uiState.value = _uiState.value.copy(isRouteRendered = isRendered)
   }
 
-  /**
-   * Cleans up navigation resources when the ViewModel is cleared.
-   * - Unregisters the [routesObserver];
-   * - Destroys the [MapboxNavigationProvider] instance to prevent memory leaks.
-   */
   override fun onCleared() {
-    super.onCleared()
-    _uiState.value.mapboxNavigation.unregisterRoutesObserver(routesObserver)
-    MapboxNavigationProvider.destroy()
-  }
-}
-
-/**
- * Converts a list of locations (from the tripInfoViewModel) to a list of Points (what the mapbox
- * api needs)
- */
-fun locationsAsPoints(locations: List<Location>): List<Point> {
-  return locations.map { location ->
-    Point.fromLngLat(location.coordinate.longitude, location.coordinate.latitude)
+    _uiState.value.mapboxNavigation?.unregisterRoutesObserver(routesObserver)
   }
 }

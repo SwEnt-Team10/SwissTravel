@@ -73,36 +73,29 @@ class TripInfoViewModel(
    *
    * @param tripId the unique identifier of the trip
    */
-  suspend fun loadTripInfo(tripId: String?) {
+  fun loadTripInfo(tripId: String?) {
     if (tripId.isNullOrBlank()) {
-      Log.e("TripInfoViewModel", "Trip ID is null or blank")
+      Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
-    Log.d("TRIP_INFO_VM", "loading : tripId is $tripId")
 
-    try {
-      Log.d("TRIP_INFO_VM", "tripRepo = $tripsRepository")
-
-      val trip = withContext(Dispatchers.IO) { tripsRepository.getTrip(tripId) }
-      Log.d("TRIP_INFO_VM", "trip named $ from repo = $trip")
-
-      _uiState.value =
-          TripInfoUIState(
-              uid = trip.uid,
-              name = trip.name,
-              ownerId = trip.ownerId,
-              locations = trip.locations,
-              routeSegments = trip.routeSegments,
-              activities = trip.activities,
-              tripProfile = trip.tripProfile,
-              isFavorite = trip.isFavorite)
-      Log.d("TRIP_INFO_VM", "trip named ${trip.name} locations: ${_uiState.value.locations}")
-    } catch (e: Exception) {
-      Log.d("TRIP_INFO_VM", "THROWS")
-
-      Log.e("TripInfoViewModel", "Error loading trip info", e)
-      setErrorMsg("Failed to load trip info: ${e.message}")
+    viewModelScope.launch {
+      try {
+        val trip = withContext(Dispatchers.IO) { tripsRepository.getTrip(tripId) }
+        _uiState.value =
+            TripInfoUIState(
+                uid = trip.uid,
+                name = trip.name,
+                ownerId = trip.ownerId,
+                locations = trip.locations,
+                routeSegments = trip.routeSegments,
+                activities = trip.activities,
+                tripProfile = trip.tripProfile,
+                isFavorite = trip.isFavorite)
+      } catch (e: Exception) {
+        setErrorMsg("Unexpected error: ${e.message}")
+      }
     }
   }
 
