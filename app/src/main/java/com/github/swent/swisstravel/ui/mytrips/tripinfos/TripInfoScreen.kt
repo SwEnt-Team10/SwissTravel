@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -120,8 +119,7 @@ fun TripInfoScreen(
             })
       }) { pd ->
         LazyColumn(
-            modifier = Modifier.padding(pd).fillMaxSize(),
-            horizontalAlignment = Alignment.Start) {
+            modifier = Modifier.padding(pd).fillMaxSize(), horizontalAlignment = Alignment.Start) {
               if (tripInfoUIState.locations.isEmpty()) {
                 item {
                   Text(
@@ -129,29 +127,26 @@ fun TripInfoScreen(
                       modifier = Modifier.testTag(TripInfoTestTags.NO_LOCATIONS_TEXT))
                 }
               } else {
-                  item{
-                      Text(
-                          text = stringResource(R.string.current_step),
-                          modifier = Modifier
-                              .fillMaxWidth()
+                item {
+                  Text(
+                      text = stringResource(R.string.current_step),
+                      modifier =
+                          Modifier.fillMaxWidth()
                               .padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
-                          style = MaterialTheme.typography.displaySmall
-                      )
-                  }
-                  item {
-                      Box(
-                          modifier = Modifier
-                              .fillMaxWidth()
+                      style = MaterialTheme.typography.displaySmall)
+                }
+                item {
+                  Box(
+                      modifier =
+                          Modifier.fillMaxWidth()
                               .testTag(TripInfoTestTags.LOCATION_CARD)
-                              .padding(horizontal = 16.dp)
-                      ) {
-                          Text(
-                              text = tripInfoUIState.locations[0].name,
-                              modifier = Modifier.align(Alignment.CenterStart),
-                              style = MaterialTheme.typography.headlineMedium
-                          )
+                              .padding(horizontal = 16.dp)) {
+                        Text(
+                            text = tripInfoUIState.locations[0].name,
+                            modifier = Modifier.align(Alignment.CenterStart),
+                            style = MaterialTheme.typography.headlineMedium)
                       }
-                  }
+                }
               }
               item {
                 Card(
