@@ -14,6 +14,7 @@ import org.junit.Before
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
+/** Tests for [PastTripsViewModel]. */
 class PastTripsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
@@ -334,6 +335,7 @@ class PastTripsViewModelTest {
     assert(viewModel.uiState.value.errorMsg?.contains("Failed to delete trips") == true)
   }
 
+  /** Creates a list of trips for testing. */
   private fun createTrips(): List<Trip> {
     val now = Timestamp.now()
     return listOf(
