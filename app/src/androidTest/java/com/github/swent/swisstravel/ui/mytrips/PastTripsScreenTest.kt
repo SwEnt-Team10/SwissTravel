@@ -39,6 +39,7 @@ class FakePastTripsRepository(private val trips: MutableList<Trip> = mutableList
   override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
 }
 
+/** Tests for the past trips screen. */
 class PastTripsScreenEmulatorTest : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
