@@ -103,6 +103,7 @@
     <string name="favorite_icon_empty">Favorite Trip</string>
     <string name="unfavorite_icon">Unfavorite Trip</string>
     <string name="no_locations_available">No locations available</string>
+    <string name="current_step">Current Step</string>
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
     <string name="travelers">Travelers</string>

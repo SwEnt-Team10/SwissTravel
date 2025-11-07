@@ -2,7 +2,6 @@
 package com.github.swent.swisstravel.ui.mytrips.tripinfos
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -122,8 +121,7 @@ fun TripInfoScreen(
       }) { pd ->
         LazyColumn(
             modifier = Modifier.padding(pd).fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
+            horizontalAlignment = Alignment.Start) {
               if (tripInfoUIState.locations.isEmpty()) {
                 item {
                   Text(
@@ -131,19 +129,29 @@ fun TripInfoScreen(
                       modifier = Modifier.testTag(TripInfoTestTags.NO_LOCATIONS_TEXT))
                 }
               } else {
-                item {
-                  Box(modifier = Modifier.testTag(TripInfoTestTags.LOCATION_CARD)) {
-                    Text(text = "${tripInfoUIState.locations[0]}")
+                  item{
+                      Text(
+                          text = stringResource(R.string.current_step),
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+                          style = MaterialTheme.typography.displaySmall
+                      )
                   }
-                }
-
-                if (tripInfoUIState.locations.size > 1) {
-                  itemsIndexed(tripInfoUIState.locations.drop(1)) { idx, location ->
-                    Box(modifier = Modifier.testTag("${TripInfoTestTags.LOCATION_CARD}_$idx")) {
-                      StepLocationCard(int = idx + 2, location = location)
-                    }
+                  item {
+                      Box(
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .testTag(TripInfoTestTags.LOCATION_CARD)
+                              .padding(horizontal = 16.dp)
+                      ) {
+                          Text(
+                              text = tripInfoUIState.locations[0].name,
+                              modifier = Modifier.align(Alignment.CenterStart),
+                              style = MaterialTheme.typography.headlineMedium
+                          )
+                      }
                   }
-                }
               }
               item {
                 Card(
@@ -151,8 +159,7 @@ fun TripInfoScreen(
                         Modifier.fillMaxWidth()
                             .padding(horizontal = 20.dp)
                             .testTag(TripInfoTestTags.TRIP_CARD),
-                    shape = RoundedCornerShape(12.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
+                    shape = RoundedCornerShape(12.dp)) {
                       if (showMap) {
                         Box(
                             modifier =
@@ -163,6 +170,13 @@ fun TripInfoScreen(
                             }
                       }
                     }
+              }
+              if (tripInfoUIState.locations.size > 1) {
+                itemsIndexed(tripInfoUIState.locations.drop(1)) { idx, location ->
+                  Box(modifier = Modifier.testTag("${TripInfoTestTags.LOCATION_CARD}_$idx")) {
+                    StepLocationCard(int = idx + 2, location = location)
+                  }
+                }
               }
             }
       }

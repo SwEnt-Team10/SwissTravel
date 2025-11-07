@@ -26,7 +26,8 @@ fun StepLocationCard(int: Int, location: Location) {
   Card(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
       shape = RoundedCornerShape(8.dp),
-      elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)) {
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)
+  ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
