@@ -19,13 +19,11 @@ import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 
 object NavigationMapScreenTestTags {
-  const val ENTER_MAP_BUTTON = "enterMapButton"
-  const val EXIT_BUTTON = "exitButton"
   const val MAP = "map"
 }
 
 @Composable
-fun NavigationMap(locations: List<Location>) {
+fun NavigationMapScreen(locations: List<Location>) {
   val context = LocalContext.current
   val viewModel: NavigationMapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
