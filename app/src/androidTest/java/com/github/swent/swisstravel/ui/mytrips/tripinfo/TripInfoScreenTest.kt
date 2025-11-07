@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Text
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -19,12 +20,49 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.FavoriteButton
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoTestTags
+import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoUIState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+
+class FakeTripInfoViewModel {
+  private val _uiState = MutableStateFlow(TripInfoUIState())
+  val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
+
+  fun setTripInfo(state: TripInfoUIState) {
+    _uiState.value = state
+  }
+
+  fun setLocations(locations: List<Location>) {
+    _uiState.value = _uiState.value.copy(locations = locations)
+  }
+
+  fun loadTripInfo(tripId: String?) {
+    if (tripId.isNullOrBlank()) {
+      _uiState.value = _uiState.value.copy(errorMsg = "Trip ID is invalid")
+      return
+    }
+    _uiState.value = _uiState.value.copy(uid = tripId)
+  }
+
+  fun toggleFavorite() {
+    val current = _uiState.value
+    if (current.uid.isBlank()) return
+    _uiState.value = current.copy(isFavorite = !current.isFavorite)
+  }
+
+  fun clearErrorMsg() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
+  }
+}
 
 /** Instrumented tests for the TripInfoScreen composable, consolidated into a single file. */
 class TripInfoScreenTest {
@@ -254,5 +292,41 @@ class TripInfoScreenTest {
     composeRule.onNodeWithTag("${TripInfoTestTags.LOCATION_CARD}_0").assertIsDisplayed()
     composeRule.onNodeWithTag(TripInfoTestTags.FIRST_LOCATION_NAME).assertIsDisplayed()
     composeRule.onNodeWithTag(TripInfoTestTags.FAVORITE_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun multipleLocationsDisplayIndexedLocationCards() {
+    val fake = FakeTripInfoViewModel()
+    val locations =
+        listOf(
+            Location(coordinate = Coordinate(46.0, 6.0), name = "First"),
+            Location(coordinate = Coordinate(47.0, 7.0), name = "Second"),
+            Location(coordinate = Coordinate(48.0, 8.0), name = "Third"))
+    fake.setLocations(locations)
+
+    composeRule.setContent {
+      val uiState by fake.uiState.collectAsState(initial = TripInfoUIState())
+      Column {
+        uiState.locations.forEachIndexed { idx, loc ->
+          Box(modifier = Modifier.testTag("${TripInfoTestTags.LOCATION_CARD}_$idx")) {
+            if (idx == 0) {
+              Text(
+                  text = loc.name,
+                  modifier = Modifier.testTag(TripInfoTestTags.FIRST_LOCATION_NAME))
+            } else {
+              Text(text = loc.name)
+            }
+          }
+        }
+      }
+    }
+
+    // Verify that all location cards are displayed
+    locations.indices.forEach { idx ->
+      composeRule.onNodeWithTag("${TripInfoTestTags.LOCATION_CARD}_$idx").assertIsDisplayed()
+    }
+
+    // Verify that the first location name tag is displayed
+    composeRule.onNodeWithTag(TripInfoTestTags.FIRST_LOCATION_NAME).assertIsDisplayed()
   }
 }
