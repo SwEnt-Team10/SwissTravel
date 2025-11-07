@@ -33,6 +33,7 @@ import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
+import com.github.swent.swisstravel.ui.mytrips.PastTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
@@ -180,9 +181,7 @@ fun SwissTravelApp(
       composable(Screen.MyTrips.route) {
         MyTripsScreen(
             onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-            onPastTrips = {
-              Toast.makeText(context, "I don't work yet! Sorry :(", Toast.LENGTH_SHORT).show()
-            },
+            onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
             onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
             onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
             navigationActions = navigationActions)
@@ -208,6 +207,32 @@ fun SwissTravelApp(
                 onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
           }
     }
+
+    // Past Trips screen
+    navigation(
+        startDestination = Screen.PastTrips.route,
+        route = Screen.PastTrips.name,
+    ) {
+      composable(Screen.PastTrips.route) {
+        PastTripsScreen(
+            onBack = { navigationActions.goBack() },
+            onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+            navigationActions = navigationActions)
+      }
+
+      composable(
+          route = Screen.EditTrip.route,
+          arguments = listOf(navArgument("tripId") { type = NavType.StringType })) {
+              navBackStackEntry ->
+            val tripId = requireNotNull(navBackStackEntry.arguments?.getString("tripId"))
+            EditTripScreen(
+                tripId = tripId,
+                onBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() },
+                onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
+          }
+    }
+
     // Trip info screen
     navigation(
         startDestination = Screen.TripInfo.route,

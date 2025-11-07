@@ -69,8 +69,6 @@ object MyTripsScreenTestTags {
   const val CURRENT_TRIP_TITLE = "currentTripTitle"
   const val CREATE_TRIP_BUTTON = "createTrip"
   const val EMPTY_CURRENT_TRIP_MSG = "emptyCurrentTrip"
-  const val CONFIRM_DELETE_BUTTON = "confirmDelete"
-  const val CANCEL_DELETE_BUTTON = "cancelDelete"
   const val FAVORITE_SELECTED_BUTTON = "favoriteSelected"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
@@ -193,7 +191,7 @@ fun MyTripsScreen(
                   onEditCurrentTrip = onEditCurrentTrip)
 
               UpcomingTripsSection(
-                  trips = uiState.upcomingTrips,
+                  trips = uiState.tripsList,
                   uiState = uiState,
                   onSelectTrip = onSelectTrip,
                   onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
@@ -206,11 +204,12 @@ fun MyTripsScreen(
 /**
  * Top bar for the My Trips screen.
  * - Displays either title or selection mode info.
- * - Provides actions for delete, select all, or navigate to past trips.
+ * - Provides actions for favorite, delete, select all, or navigate to past trips.
  *
  * @param uiState Current UI state for trip data.
  * @param selectedTripCount Number of selected trips.
  * @param onCancelSelection Callback to exit selection mode.
+ * @param onFavoriteSelected Callback to toggle favorite status of selected trips.
  * @param onDeleteSelected Callback to trigger delete confirmation.
  * @param onSelectAll Callback to select all trips.
  * @param onPastTrips Callback to navigate to past trips.
@@ -218,7 +217,7 @@ fun MyTripsScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MyTripsTopAppBar(
-    uiState: MyTripsUIState,
+    uiState: TripsViewModel.TripsUIState,
     selectedTripCount: Int,
     onCancelSelection: () -> Unit,
     onFavoriteSelected: () -> Unit,
@@ -323,7 +322,7 @@ private fun CurrentTripSection(
   val currentTrip = uiState.currentTrip
   val isSelectionMode = uiState.isSelectionMode
   val selectedTrips = uiState.selectedTrips
-  val editButtonShown = uiState.currentTrip != null || uiState.upcomingTrips.isNotEmpty()
+  val editButtonShown = uiState.currentTrip != null || uiState.tripsList.isNotEmpty()
 
   CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
 
@@ -391,14 +390,14 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
 @Composable
 private fun UpcomingTripsSection(
     trips: List<Trip>,
-    uiState: MyTripsUIState,
+    uiState: TripsViewModel.TripsUIState,
     onSelectTrip: (String) -> Unit,
     onToggleSelection: (Trip) -> Unit,
     onEnterSelectionMode: () -> Unit,
     onSortSelected: (TripSortType) -> Unit
 ) {
   SortedTripList(
-      title = stringResource(R.string.upcoming_trip),
+      title = stringResource(R.string.upcoming_trips),
       trips = trips,
       onClickTripElement = {
         it?.let { trip ->
@@ -413,5 +412,6 @@ private fun UpcomingTripsSection(
         }
       },
       isSelected = { trip -> trip in uiState.selectedTrips },
-      isSelectionMode = uiState.isSelectionMode)
+      isSelectionMode = uiState.isSelectionMode,
+      emptyListString = stringResource(R.string.no_upcoming_trips))
 }
