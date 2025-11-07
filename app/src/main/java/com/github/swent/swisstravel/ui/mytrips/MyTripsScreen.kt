@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.mytrips
 
-import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
@@ -112,7 +111,6 @@ fun MyTripsScreen(
     navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
-  Log.d("MY_TRIPS_SCREEN", "myTripsVM = ${myTripsViewModel.uiState}")
   val uiState by myTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
 
