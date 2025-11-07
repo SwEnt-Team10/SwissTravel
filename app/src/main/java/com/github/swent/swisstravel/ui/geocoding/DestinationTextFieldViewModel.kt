@@ -13,7 +13,7 @@ import com.github.swent.swisstravel.model.map.MySwitzerlandLocationRepository
  * fetching destination suggestions.
  */
 class DestinationTextFieldViewModel(locationRepository: LocationRepository) :
-    AddressTextFieldViewModel(MySwitzerlandLocationRepository())
+    AddressTextFieldViewModel(locationRepository)
 
 // The following code and description was done by chatGPT
 /**
