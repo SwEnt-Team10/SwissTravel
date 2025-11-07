@@ -26,6 +26,8 @@ sealed class Screen(
 
   object SetCurrentTrip : Screen(route = "set_current_trip", name = "Set current trip")
 
+  object PastTrips : Screen(route = "past_trips", name = "Past trips")
+
   object Map : Screen(route = "map", name = "Map", isTopLevelDestination = true)
 
   object CurrentTrip :
