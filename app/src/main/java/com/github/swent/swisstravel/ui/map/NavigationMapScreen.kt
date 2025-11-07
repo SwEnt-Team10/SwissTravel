@@ -7,6 +7,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import com.github.swent.swisstravel.model.trip.Location
 import com.mapbox.geojson.Point
+import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -43,15 +44,6 @@ fun NavigationMap(locations: List<Location>) {
   val ui by viewModel.uiState.collectAsState()
   val mapViewportState = rememberMapViewportState()
 
-  LaunchedEffect(ui.locationsList) {
-    ui.locationsList.firstOrNull()?.let { first ->
-      mapViewportState.setCameraOptions {
-        center(first)
-        zoom(5.0)
-      }
-    }
-  }
-
   var styleReady by remember { mutableStateOf(false) }
 
   MapboxMap(
@@ -61,6 +53,16 @@ fun NavigationMap(locations: List<Location>) {
           mapView.mapboxMap.getStyle { style ->
             routeLineView.initializeLayers(style)
             styleReady = true
+          }
+        }
+
+        MapEffect(ui.locationsList) {
+          val locations = ui.locationsList
+          if (locations.isNotEmpty()) {
+            val cameraOptions =
+                mapViewportState.cameraForCoordinates(
+                    locations, coordinatesPadding = EdgeInsets(100.0, 100.0, 100.0, 100.0))
+            mapViewportState.setCameraOptions(cameraOptions)
           }
         }
 
