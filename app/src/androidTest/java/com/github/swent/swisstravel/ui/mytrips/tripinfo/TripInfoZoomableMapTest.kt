@@ -21,7 +21,7 @@ class TripInfoZoomableMapTest {
 
   @Test
   fun displayMapContainerAndFullscreenButton() {
-    composeRule.setContent { TripInfoZoomableMap(onFullscreenClick = {}) }
+    composeRule.setContent { TripInfoZoomableMap(onFullscreenClick = {}, emptyList()) }
 
     composeRule.onNodeWithTag(TripInfoZoomableMapTestTags.MAP_CONTAINER).assertIsDisplayed()
     composeRule.onNodeWithTag(TripInfoZoomableMapTestTags.FULLSCREEN_BUTTON).assertIsDisplayed()
@@ -30,7 +30,9 @@ class TripInfoZoomableMapTest {
   @Test
   fun clickOnFullscreenCallOnFullscreenClick() {
     var called = false
-    composeRule.setContent { TripInfoZoomableMap(onFullscreenClick = { called = true }) }
+    composeRule.setContent {
+      TripInfoZoomableMap(onFullscreenClick = { called = true }, emptyList())
+    }
 
     composeRule.onNodeWithTag(TripInfoZoomableMapTestTags.FULLSCREEN_BUTTON).performClick()
     assertTrue("onFullscreenClick should have been called after clicking fullscreen button", called)
