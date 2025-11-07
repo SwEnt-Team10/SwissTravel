@@ -32,7 +32,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `UI state updates past trips`() = runTest {
+  fun uiStateUpdatesPastTrips() = runTest {
     val now = Timestamp.now()
 
     val pastTrip1 =
@@ -77,7 +77,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `UI state shows empty when no trips`() = runTest {
+  fun uiStateShowsEmptyWhenNoTrips() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
 
     viewModel = PastTripsViewModel(repository)
@@ -89,7 +89,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `UI state shows error message on exception`() = runTest {
+  fun uiStateShowsErrorMessageOnException() = runTest {
     coEvery { repository.getAllTrips() } throws Exception("Fake network error")
 
     viewModel = PastTripsViewModel(repository)
@@ -100,7 +100,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `clearErrorMsg clears the error`() = runTest {
+  fun clearErrorMsgClearsTheError() = runTest {
     coEvery { repository.getAllTrips() } throws Exception("Fake network error")
 
     viewModel = PastTripsViewModel(repository)
@@ -113,7 +113,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `toggleSelectionMode enables and disables selection correctly`() = runTest {
+  fun toggleSelectionModeEnablesAndDisablesSelectionCorrectly() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
     viewModel = PastTripsViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -145,7 +145,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `toggleTripSelection adds and removes trips from selection`() = runTest {
+  fun toggleTripSelectionAddsAndRemovesTripsFromSelection() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
     viewModel = PastTripsViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -190,7 +190,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `toggleTripSelection disables selection mode when last trip unselected`() = runTest {
+  fun toggleTripSelectionDisablesSelectionModeWhenLastTripUnselected() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
     viewModel = PastTripsViewModel(repository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -217,7 +217,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `deleteSelectedTrips removes selected trips from repository`() = runTest {
+  fun deleteSelectedTripsRemovesSelectedTripsFromRepository() = runTest {
     val trip1 =
         Trip(
             "1",
@@ -261,7 +261,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `selectAllTrips selects all past trips`() = runTest {
+  fun selectAllTripsSelectsAllPastTrips() = runTest {
     val now = Timestamp.now()
 
     val pastTrip1 =
@@ -307,7 +307,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `deleteSelectedTrips sets error message on failure`() = runTest {
+  fun deleteSelectedTripsSetsErrorMessageOnFailure() = runTest {
     val trip1 =
         Trip(
             "1",
@@ -382,7 +382,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `sort START_DATE_ASC`() = runTest {
+  fun sortSTART_DATE_ASC() = runTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
@@ -397,7 +397,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `sort START_DATE_DESC`() = runTest {
+  fun sortSTART_DATE_DESC() = runTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
@@ -412,7 +412,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `sort END_DATE_ASC`() = runTest {
+  fun sortEND_DATE_ASC() = runTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
@@ -427,7 +427,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `sort END_DATE_DESC`() = runTest {
+  fun sortEND_DATE_DESC() = runTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
@@ -442,7 +442,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `sort NAME_ASC`() = runTest {
+  fun sortNAME_ASC() = runTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
@@ -457,7 +457,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `sort NAME_DESC`() = runTest {
+  fun sortNAME_DESC() = runTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
@@ -472,7 +472,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `toggleFavoriteForSelectedTrips toggles favorites correctly`() = runTest {
+  fun toggleFavoriteForSelectedTripsTogglesFavoritesCorrectly() = runTest {
     val trip =
         Trip(
             "1",
@@ -500,7 +500,7 @@ class PastTripsViewModelTest {
   }
 
   @Test
-  fun `toggleFavoriteForSelectedTrips sets error message on failure`() = runTest {
+  fun toggleFavoriteForSelectedTripsSetsErrorMessageOnFailure() = runTest {
     val trip =
         Trip(
             "1",
