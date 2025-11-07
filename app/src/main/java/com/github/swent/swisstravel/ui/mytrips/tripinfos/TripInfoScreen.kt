@@ -47,9 +47,12 @@ object TripInfoTestTags {
   const val EDIT_BUTTON = "editButton"
   const val FAVORITE_BUTTON = "favoriteButton"
   const val TRIP_CARD = "tripCard"
+  const val TRIP_CARD_CONTENT = "tripCardContent"
   const val TOPBAR_TITLE = "topbarTitle"
   const val NO_LOCATIONS_TEXT = "noLocationsText"
   const val LOCATION_CARD = "locationCard"
+  const val FIRST_LOCATION_NAME = "firstLocationName"
+  const val CURRENT_STEP = "currentStep"
   const val MAP_VIEW = "mapView"
 }
 
@@ -132,7 +135,8 @@ fun TripInfoScreen(
                       text = stringResource(R.string.current_step),
                       modifier =
                           Modifier.fillMaxWidth()
-                              .padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+                              .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                              .testTag(TripInfoTestTags.CURRENT_STEP),
                       style = MaterialTheme.typography.displaySmall)
                 }
                 item {
@@ -143,7 +147,9 @@ fun TripInfoScreen(
                               .padding(horizontal = 16.dp)) {
                         Text(
                             text = tripInfoUIState.locations[0].name,
-                            modifier = Modifier.align(Alignment.CenterStart),
+                            modifier =
+                                Modifier.align(Alignment.CenterStart)
+                                    .testTag(TripInfoTestTags.FIRST_LOCATION_NAME),
                             style = MaterialTheme.typography.headlineMedium)
                       }
                 }
@@ -155,14 +161,16 @@ fun TripInfoScreen(
                             .padding(horizontal = 20.dp)
                             .testTag(TripInfoTestTags.TRIP_CARD),
                     shape = RoundedCornerShape(12.dp)) {
-                      if (showMap) {
-                        Box(
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .height(200.dp)
-                                    .testTag(TripInfoTestTags.MAP_VIEW)) {
-                              TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
-                            }
+                      Box(modifier = Modifier.testTag(TripInfoTestTags.TRIP_CARD_CONTENT)) {
+                        if (showMap) {
+                          Box(
+                              modifier =
+                                  Modifier.fillMaxWidth()
+                                      .height(200.dp)
+                                      .testTag(TripInfoTestTags.MAP_VIEW)) {
+                                TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                              }
+                        }
                       }
                     }
               }
