@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceRules
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,6 +42,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
   }
 
   fun autoFill(loggedIn: User) {
+    val sanitized = PreferenceRules.enforceMutualExclusivity(loggedIn.preferences)
     _uiState.value =
         ProfileScreenUIState(
             profilePicUrl = loggedIn.profilePicUrl,
@@ -62,6 +64,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
         return@launch
       }
 
+      val sanitized = PreferenceRules.enforceMutualExclusivity(selected)
       _uiState.update { it.copy(selectedPreferences = selected) }
 
       try {

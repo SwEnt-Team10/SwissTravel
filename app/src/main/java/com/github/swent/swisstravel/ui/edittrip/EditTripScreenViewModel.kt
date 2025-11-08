@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceRules
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -75,10 +76,9 @@ class EditTripScreenViewModel(
    * @param pref The preference to toggle.
    */
   fun togglePref(pref: Preference) =
-      _uiState.update {
-        val selected = it.selectedPrefs.toMutableSet()
-        if (!selected.add(pref)) selected.remove(pref)
-        it.copy(selectedPrefs = selected)
+      _uiState.update { state ->
+        val next = PreferenceRules.toggleWithExclusivity(state.selectedPrefs, pref)
+        state.copy(selectedPrefs = next.toSet())
       }
 
   /**
@@ -90,11 +90,10 @@ class EditTripScreenViewModel(
     viewModelScope.launch {
       try {
         val state = _uiState.value
+        val sanitized = PreferenceRules.enforceMutualExclusivity(state.selectedPrefs)
         val updatedTripProfile =
             originalTrip.tripProfile.copy(
-                adults = state.adults,
-                children = state.children,
-                preferences = state.selectedPrefs.toList())
+                adults = state.adults, children = state.children, preferences = sanitized)
         val updatedTrip = originalTrip.copy(name = state.tripName, tripProfile = updatedTripProfile)
         tripRepository.editTrip(state.tripId, updatedTrip)
       } catch (e: Exception) {

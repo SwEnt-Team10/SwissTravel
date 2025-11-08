@@ -20,7 +20,10 @@ enum class Preference {
   SCENIC_VIEWS,
   PUBLIC_TRANSPORT,
   QUICK,
-  WHEELCHAIR_ACCESSIBLE
+  WHEELCHAIR_ACCESSIBLE,
+  EARLY_BIRD,
+  NIGHT_OWL,
+  SLOW_PACE
 }
 
 /** Object containing utility functions and mappings related to preference categories. */
@@ -69,6 +72,9 @@ object PreferenceCategories {
         Preference.PUBLIC_TRANSPORT -> Category.ACCESSIBILITY
         Preference.QUICK -> Category.ACCESSIBILITY
         Preference.WHEELCHAIR_ACCESSIBLE -> Category.ACCESSIBILITY
+        Preference.EARLY_BIRD -> Category.ACCESSIBILITY
+        Preference.NIGHT_OWL -> Category.ACCESSIBILITY
+        Preference.SLOW_PACE -> Category.ACCESSIBILITY
       }
 
   /** Lists of preferences grouped by their categories. */
@@ -133,6 +139,9 @@ fun Preference.displayStringRes(): Int {
     Preference.WHEELCHAIR_ACCESSIBLE -> R.string.preference_wheelchair_accessible
     Preference.PUBLIC_TRANSPORT -> R.string.preference_public_transport
     Preference.QUICK -> R.string.preference_quick
+    Preference.EARLY_BIRD -> R.string.preference_early_bird
+    Preference.NIGHT_OWL -> R.string.preference_night_owl
+    Preference.SLOW_PACE -> R.string.preference_slow_pace
   }
 }
 
@@ -159,6 +168,7 @@ fun Preference.displayString(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
     Preference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
     Preference.QUICK -> "Fast Trip"
+    else -> ""
   }
 }
 
@@ -185,6 +195,9 @@ fun Preference.toTestTagString(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "wheelchairAccessible"
     Preference.PUBLIC_TRANSPORT -> "publicTransport"
     Preference.QUICK -> "quick"
+    Preference.EARLY_BIRD -> "earlyBird"
+    Preference.NIGHT_OWL -> "nightOwl"
+    Preference.SLOW_PACE -> "slowPace"
   }
 }
 
@@ -211,6 +224,9 @@ fun Preference.toSwissTourismFacet(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "wheelchairaccessibleclassifications"
     Preference.PUBLIC_TRANSPORT -> "reachabilitylocation"
     Preference.QUICK -> ""
+    Preference.EARLY_BIRD -> ""
+    Preference.NIGHT_OWL -> ""
+    Preference.SLOW_PACE -> ""
   }
 }
 
@@ -237,5 +253,47 @@ fun Preference.toSwissTourismFacetFilter(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "%2A"
     Preference.PUBLIC_TRANSPORT -> "closetopublictransport"
     Preference.QUICK -> ""
+    Preference.EARLY_BIRD -> ""
+    Preference.NIGHT_OWL -> ""
+    Preference.SLOW_PACE -> ""
+  }
+}
+
+object PreferenceRules {
+
+  /** Preferences that cannot coexist (mutually exclusive groups). */
+  val MUTUALLY_EXCLUSIVE_GROUPS: List<Set<Preference>> =
+      listOf(
+          setOf(Preference.QUICK, Preference.SLOW_PACE),
+          setOf(Preference.NIGHT_OWL, Preference.EARLY_BIRD))
+
+  /** Return all prefs that conflict with [pref]. */
+  fun conflictsFor(pref: Preference): Set<Preference> =
+      MUTUALLY_EXCLUSIVE_GROUPS.firstOrNull { pref in it }?.minus(pref) ?: emptySet()
+
+  /** True if a and b cannot coexist. */
+  fun isMutuallyExclusive(a: Preference, b: Preference): Boolean =
+      MUTUALLY_EXCLUSIVE_GROUPS.any { a in it && b in it && a != b }
+
+  /** Keep at most one per exclusive group. Later items win (stable add order respected). */
+  fun enforceMutualExclusivity(prefs: Collection<Preference>): List<Preference> {
+    val out = LinkedHashSet<Preference>()
+    for (p in prefs) {
+      out.removeAll(conflictsFor(p))
+      out.add(p)
+    }
+    return out.toList()
+  }
+
+  /** Toggle a single pref while enforcing exclusivity (remove conflicting ones first). */
+  fun toggleWithExclusivity(current: Collection<Preference>, pref: Preference): List<Preference> {
+    val set = LinkedHashSet(current)
+    if (set.contains(pref)) {
+      set.remove(pref)
+    } else {
+      set.removeAll(conflictsFor(pref))
+      set.add(pref)
+    }
+    return set.toList()
   }
 }

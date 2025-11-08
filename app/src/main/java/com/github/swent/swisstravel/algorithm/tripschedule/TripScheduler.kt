@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -21,6 +22,8 @@ import kotlin.math.ceil
  * @property dayStart the day start
  * @property dayEnd the day end
  * @property pauseBetweenEachActivity the pause between each activity
+ * @property maxActivitiesPerDay the maximum activities per day
+ * @property travelEnd the travel end
  */
 data class ScheduleParams(
     val dayStart: LocalTime = LocalTime.of(8, 0),
@@ -109,10 +112,33 @@ fun scheduleTrip(
     params: ScheduleParams = ScheduleParams()
 ): List<TripElement> {
 
+  val preferences = tripProfile.preferences
+  val effectiveParams = params
+
+  if (preferences.contains(Preference.NIGHT_OWL) || preferences.contains(Preference.NIGHTLIFE)) {
+    effectiveParams.copy(
+        dayStart = LocalTime.of(10, 0),
+        dayEnd = LocalTime.of(22, 0),
+        travelEnd = LocalTime.of(0, 0))
+  }
+
+  if (preferences.contains(Preference.EARLY_BIRD)) {
+    effectiveParams.copy(
+        dayStart = LocalTime.of(6, 0), travelEnd = LocalTime.of(20, 0), maxActivitiesPerDay = 6)
+  }
+
+  if (preferences.contains(Preference.SLOW_PACE)) {
+    effectiveParams.copy(pauseBetweenEachActivity = 60 * 60)
+  }
+
+  if (preferences.contains(Preference.QUICK)) {
+    effectiveParams.copy(pauseBetweenEachActivity = 0)
+  }
+
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
   var currentDay = tripProfile.startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-  var cursor = LocalDateTime.of(currentDay, params.dayStart).roundUpToQuarter()
+  var cursor = LocalDateTime.of(currentDay, effectiveParams.dayStart).roundUpToQuarter()
   var activitiesToday = 0
   val elements = mutableListOf<TripElement>()
 
@@ -121,17 +147,17 @@ fun scheduleTrip(
 
   fun resetToNextDay() {
     currentDay = currentDay.plusDays(1)
-    cursor = LocalDateTime.of(currentDay, params.dayStart).roundUpToQuarter()
+    cursor = LocalDateTime.of(currentDay, effectiveParams.dayStart).roundUpToQuarter()
     activitiesToday = 0
   }
 
   fun fitsInActivityWindow(durationSec: Int): Boolean {
-    val endOfDay = LocalDateTime.of(currentDay, params.dayEnd)
+    val endOfDay = LocalDateTime.of(currentDay, effectiveParams.dayEnd)
     return !cursor.plusSeconds(durationSec.toLong()).isAfter(endOfDay)
   }
 
   fun fitsInTravelWindow(durationSec: Int): Boolean {
-    val travelCutoff = LocalDateTime.of(currentDay, params.travelEnd)
+    val travelCutoff = LocalDateTime.of(currentDay, effectiveParams.travelEnd)
     return !cursor.plusSeconds(durationSec.toLong()).isAfter(travelCutoff)
   }
 
@@ -144,7 +170,7 @@ fun scheduleTrip(
       val durationSec = act.estimatedTime
 
       // Respect daily activity cap
-      if (activitiesToday >= params.maxActivitiesPerDay) {
+      if (activitiesToday >= effectiveParams.maxActivitiesPerDay) {
         resetToNextDay()
       }
 
@@ -171,7 +197,8 @@ fun scheduleTrip(
       val driveSec = segments[i].toInt()
 
       // Pause after the last thing, then round
-      cursor = cursor.plusSeconds(params.pauseBetweenEachActivity.toLong()).roundUpToQuarter()
+      cursor =
+          cursor.plusSeconds(effectiveParams.pauseBetweenEachActivity.toLong()).roundUpToQuarter()
 
       // If travel can't finish today (by travelEnd), move to next day (start at dayStart)
       if (!fitsInTravelWindow(driveSec)) {
