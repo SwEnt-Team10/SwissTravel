@@ -28,7 +28,12 @@ object StepLocationCardTestTags {
   const val STEP_LABEL = "StepLocationCard:StepLabel"
   const val LOCATION_NAME = "StepLocationCard:LocationName"
 }
-
+/**
+ * A card displaying the step number and location name for a trip step.
+ *
+ * @param int The step number.
+ * @param location The location of the step.
+ */
 @Composable
 fun StepLocationCard(int: Int, location: Location) {
   Card(

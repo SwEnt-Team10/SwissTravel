@@ -1,4 +1,3 @@
-// kotlin
 package com.github.swent.swisstravel.ui.mytrips.tripinfos
 
 import android.util.Log

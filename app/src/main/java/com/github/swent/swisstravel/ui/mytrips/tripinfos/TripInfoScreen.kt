@@ -184,7 +184,9 @@ fun TripInfoScreen(
                                   Modifier.fillMaxWidth()
                                       .height(200.dp)
                                       .testTag(TripInfoScreenTestTags.MAP_BOX)) {
-                                TripInfoZoomableMap(onFullscreenClick = onFullscreenClick, locations = tripInfoUIState.locations)
+                                TripInfoZoomableMap(
+                                    onFullscreenClick = onFullscreenClick,
+                                    locations = tripInfoUIState.locations)
                               }
                         }
                       }
@@ -202,7 +204,13 @@ fun TripInfoScreen(
             }
       }
 }
-
+/**
+ * A button to mark/unmark a trip as favorite.
+ *
+ * @param isFavorite Whether the trip is currently marked as favorite.
+ * @param onToggleFavorite Callback invoked when the button is clicked.
+ * @param testTag Optional test tag for UI testing.
+ */
 @Composable
 fun FavoriteButton(isFavorite: Boolean, onToggleFavorite: () -> Unit, testTag: String? = null) {
   IconButton(
