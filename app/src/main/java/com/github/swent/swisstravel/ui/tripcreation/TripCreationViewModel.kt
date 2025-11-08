@@ -94,7 +94,15 @@ class TripSettingsViewModel(
   }
 
   fun setDestinations(destinations: List<Location>) {
-    _tripSettings.update { it.copy(destinations = destinations) }
+    val settings = _tripSettings.value
+
+    val fullDestinationsList = buildList {
+      settings.arrivalDeparture.arrivalLocation?.let { add(it) }
+      addAll(destinations)
+      settings.arrivalDeparture.departureLocation?.let { add(it) }
+    }
+
+    _tripSettings.update { it.copy(destinations = fullDestinationsList) }
   }
 
   init {

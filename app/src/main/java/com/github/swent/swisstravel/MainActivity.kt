@@ -31,7 +31,6 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
-import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.PastTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
@@ -247,6 +246,7 @@ fun SwissTravelApp(
         }
         TripInfoScreen(
             uid,
+            viewModel(),
             onMyTrips = { navigationActions.goBack() },
             onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
             onEditTrip = { navigationActions.navigateToEditTrip(uid) })
@@ -257,7 +257,7 @@ fun SwissTravelApp(
         route = Screen.TripInfoMap.name,
     ) {
       composable(Screen.TripInfoMap.route) {
-        TripInfoMapScreen(onBack = { navigationActions.goBack() })
+        TripInfoMapScreen(onBack = { navigationActions.goBack() }, viewModel())
       }
     }
 
@@ -310,14 +310,6 @@ fun SwissTravelApp(
             onNext = { navigationActions.navigateTo(Screen.MyTrips, true) },
             onPrevious = { navigationActions.goBack() })
       }
-    }
-
-    // Trip map screen
-    navigation(
-        startDestination = Screen.SelectedTripMap.route,
-        route = Screen.SelectedTripMap.name,
-    ) {
-      composable(Screen.SelectedTripMap.route) { NavigationMapScreen(navigationActions) }
     }
   }
 }

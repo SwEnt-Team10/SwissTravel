@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -17,6 +18,7 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** UI state for the TripInfo screen */
 data class TripInfoUIState(
@@ -73,13 +75,14 @@ class TripInfoViewModel(
    */
   fun loadTripInfo(tripId: String?) {
     if (tripId.isNullOrBlank()) {
-      Log.e("TripInfoViewModel", "Trip ID is null or blank")
+      Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
+
     viewModelScope.launch {
       try {
-        val trip = tripsRepository.getTrip(tripId)
+        val trip = withContext(Dispatchers.IO) { tripsRepository.getTrip(tripId) }
         _uiState.value =
             TripInfoUIState(
                 uid = trip.uid,
@@ -91,8 +94,7 @@ class TripInfoViewModel(
                 tripProfile = trip.tripProfile,
                 isFavorite = trip.isFavorite)
       } catch (e: Exception) {
-        Log.e("TripInfoViewModel", "Error loading trip info", e)
-        setErrorMsg("Failed to load trip info: ${e.message}")
+        setErrorMsg("Unexpected error: ${e.message}")
       }
     }
   }
