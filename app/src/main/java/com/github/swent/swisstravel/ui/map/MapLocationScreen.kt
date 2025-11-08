@@ -16,7 +16,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
@@ -38,13 +37,11 @@ object MapLocationScreenTags {
  *
  * @param viewModel ViewModel to manage location permission state.
  * @param isActivityNull True if the activity context is null, false otherwise.
- * @param navigationActions Navigation actions for navigating between screens.
  */
 @Composable
 fun MapLocationScreen(
     viewModel: MapLocationViewModel = viewModel(),
     isActivityNull: Boolean = false,
-    navigationActions: NavigationActions? = null
 ) {
   val permissionGranted by viewModel.permissionGranted.collectAsState()
   val mapViewportState = rememberMapViewportState()

@@ -266,7 +266,7 @@ fun SwissTravelApp(
         startDestination = Screen.Map.route,
         route = Screen.Map.name,
     ) {
-      composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
+      composable(Screen.Map.route) { MapLocationScreen() }
     }
 
     // Trip settings screens
@@ -307,7 +307,7 @@ fun SwissTravelApp(
       composable(Screen.TripSummary.route) {
         TripSummaryScreen(
             viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.MyTrips) },
+            onNext = { navigationActions.navigateTo(Screen.MyTrips, true) },
             onPrevious = { navigationActions.goBack() })
       }
     }

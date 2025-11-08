@@ -52,6 +52,7 @@ fun SortedTripList(
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
     isSelectionMode: Boolean = false,
+    noIconTripElement: Boolean = false,
     emptyListString: String = ""
 ) {
   Column(modifier = Modifier.fillMaxWidth().testTag(SortedTripListTestTags.SORTED_TRIP_LIST)) {
@@ -77,6 +78,7 @@ fun SortedTripList(
         onLongPress = onLongPress,
         isSelected = isSelected,
         isSelectionMode = isSelectionMode,
+        noIconTripElement = noIconTripElement,
         emptyListString = emptyListString)
   }
 }
