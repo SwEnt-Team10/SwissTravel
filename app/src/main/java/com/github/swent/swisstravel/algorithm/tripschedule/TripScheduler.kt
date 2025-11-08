@@ -4,12 +4,16 @@ import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import kotlin.math.ceil
 
 /**
  * The schedule parameters. This will be used in the main algorithm when you call scheduleTrip(),
@@ -19,10 +23,14 @@ import java.time.ZoneId
  * @property dayStart the day start
  * @property dayEnd the day end
  * @property pauseBetweenEachActivity the pause between each activity
+ * @property maxActivitiesPerDay the maximum activities per day
+ * @property travelEnd the travel end
  */
 data class ScheduleParams(
-    val dayStart: LocalTime = LocalTime.of(9, 0),
+    val dayStart: LocalTime = LocalTime.of(8, 0),
     val dayEnd: LocalTime = LocalTime.of(18, 0),
+    val travelEnd: LocalTime = LocalTime.of(22, 0),
+    val maxActivitiesPerDay: Int = 4,
     val pauseBetweenEachActivity: Int = 60 * 15
 )
 
@@ -31,123 +39,188 @@ private fun LocalDateTime.toTs(): Timestamp =
     Timestamp(this.atZone(ZoneId.systemDefault()).toEpochSecond(), 0)
 
 /**
- * Builds a chronological trip schedule by assigning start and end times to activities and route
- * segments based on a daily time window.
+ * Round up to the next quarter-hour (:00, :15, :30, :45), but keep the same time if already exactly
+ * on a quarter.
+ */
+private fun LocalDateTime.roundUpToQuarter(): LocalDateTime {
+  val t = this.truncatedTo(ChronoUnit.MINUTES)
+  val remainder = t.minute % 15
+  if (remainder == 0) return t
+  return t.plusMinutes((15 - remainder).toLong())
+}
+
+/**
+ * This function changes the schedule parameters depending on which preferences are on.
  *
- * The function takes an [OrderedRoute] (a list of locations and travel durations between them) and
- * a list of [Activity] objects, and produces a sequence of [TripElement]s (activities and routes)
- * scheduled day-by-day starting from a given date.
+ * @param profile the trip profile
+ * @param base the base schedule parameters
+ * @return the updated schedule parameters
+ */
+private fun applyPreferenceOverrides(profile: TripProfile, base: ScheduleParams): ScheduleParams {
+  var eff = base
+
+  val prefs = profile.preferences.toSet()
+
+  if ((prefs.contains(Preference.NIGHTLIFE) || prefs.contains(Preference.NIGHT_OWL)) &&
+      prefs.contains(Preference.EARLY_BIRD)) {
+    eff =
+        eff.copy(
+            dayStart = LocalTime.of(6, 0), travelEnd = LocalTime.of(22, 0), maxActivitiesPerDay = 6)
+  } else if (prefs.contains(Preference.NIGHTLIFE) || prefs.contains(Preference.NIGHT_OWL)) {
+    eff =
+        eff.copy(
+            dayStart = LocalTime.of(10, 0),
+            dayEnd = LocalTime.of(22, 0),
+            travelEnd = LocalTime.of(23, 59))
+  } else if (prefs.contains(Preference.EARLY_BIRD)) {
+    eff =
+        eff.copy(
+            dayStart = LocalTime.of(6, 0), travelEnd = LocalTime.of(20, 0), maxActivitiesPerDay = 6)
+  }
+
+  if (prefs.contains(Preference.SLOW_PACE)) {
+    eff = eff.copy(pauseBetweenEachActivity = 60 * 60)
+  } else if (prefs.contains(Preference.QUICK)) {
+    eff = eff.copy(pauseBetweenEachActivity = 0)
+  }
+  return eff
+}
+
+/**
+ * Builds a chronological trip schedule by assigning start/end times to activities and travel legs,
+ * honoring daily windows, quarter-hour alignment, and a daily activity cap.
+ *
+ * ### Inputs
+ * - [tripProfile] supplies the trip start date (via [TripProfile.startDate]) and user preferences.
+ * - [ordered] is the TSP-ordered route (locations and segment durations) from `orderLocations`.
+ * - [activities] are the activities to place; each activity must reference a [Location] that
+ *   appears in [ordered.orderedLocations]. The algorithm preserves their per-location order.
+ * - [params] are the base scheduling constraints (possibly adjusted by preferences).
+ *
+ * ### Preference Overrides (applied on top of [params])
+ * - `NIGHT_OWL` or `NIGHTLIFE`:
+ *     - `dayStart = 10:00`, `dayEnd = 22:00`, `travelEnd = 00:00` (midnight).
+ * - `EARLY_BIRD`:
+ *     - `dayStart = 06:00`, `travelEnd = 20:00`, `maxActivitiesPerDay = 6`.
+ * - `SLOW_PACE`: `pauseBetweenEachActivity = 3600` (1h).
+ * - `QUICK`: `pauseBetweenEachActivity = 0`.
  *
  * ### Scheduling Rules
- * - The day starts at [ScheduleParams.dayStart] and ends at [ScheduleParams.dayEnd].
- * - Activities are placed at their associated location in order of [OrderedRoute.orderedLocations].
- * - After each activity, a pause of [ScheduleParams.pauseBetweenEachActivity] seconds is inserted
- *   before the next travel segment or activity begins.
- * - If an activity or route segment would exceed the daily limit ([ScheduleParams.dayEnd]), it is
- *   deferred to the next day starting at [ScheduleParams.dayStart].
- * - The resulting elements are returned sorted chronologically by their [TripElement.startDate].
+ * - The cursor starts at the trip start **date** (from [tripProfile.startDate]) and
+ *   [ScheduleParams.dayStart], then is **rounded up to the next quarter**.
+ * - Activities:
+ *     - Placed only within `[dayStart, dayEnd]` of the current day.
+ *     - If an activity doesn't fit, the scheduler advances to the **next day** at `dayStart`.
+ *     - A maximum of [ScheduleParams.maxActivitiesPerDay] activities per day is enforced.
+ * - Travel (route segments):
+ *     - A pause of [ScheduleParams.pauseBetweenEachActivity] seconds is added **before** travel,
+ *       then the cursor is rounded up to the next quarter.
+ *     - Travel must finish by [ScheduleParams.travelEnd] (which may be later than [dayEnd]). If it
+ *       cannot, the scheduler moves travel to the next day at `dayStart`.
+ * - All start/end times (activities and travel) are quarter-aligned (using `roundUpToQuarter()`).
+ * - The resulting elements are returned sorted by start time.
  *
  * ### Example
- * Suppose we start on `2025-06-01` with:
- * - Day start = 09:00, day end = 18:00
- * - A route visiting locations A → B → C
- * - Activities of 2 hours each, and travel times of 1 hour between locations
+ * Given:
+ * - Day window 09:00–18:00, travel until 22:00
+ * - Route A → B with 30 minutes travel
+ * - Activities: A(60m), B(60m)
+ * - Pause 15m (before travel only)
  *
- * Then:
- * ```
- * 09:00–11:00 → Activity at A
- * 11:00–12:00 → Travel A→B
- * 12:00–14:00 → Activity at B
- * 14:00–15:00 → Travel B→C
- * 15:00–17:00 → Activity at C
- * ```
+ * The schedule is:
+ * - 09:00–10:00 Activity @ A
+ * - 10:00–10:30 Travel A→B
+ * - 10:45–11:45 Activity @ B (pause 15m has been applied before the travel only)
  *
- * ### Parameters
+ * @param tripProfile Trip context (start date, preferences, etc.)
+ * @param ordered Ordered route with segment durations in seconds.
+ * @param activities Activities to place; `estimatedTime` is in seconds.
+ * @param params Base constraints (may be tweaked by preferences).
+ * @return A chronologically sorted list of [TripElement]s (activities and route segments) with
+ *   Firebase [Timestamp]s for start and end.
  *
- * @param tripStart The starting [LocalDate] for the trip (e.g., the first travel day).
- * @param ordered The optimized route output from [orderLocations], defining location order and
- *   segment durations.
- * @param activities The list of [Activity]s to schedule along the route. Each activity must have a
- *   [Location] matching one in [ordered.orderedLocations].
- * @param params Optional [ScheduleParams] that define the daily scheduling constraints such as
- *   start/end hours and the pause between activities.
- *
- * ### Returns
- * A list of [TripElement]s (either [TripElement.TripActivity] or [TripElement.TripSegment]) with
- * properly assigned [Timestamp] start and end times, sorted by start time.
- *
- * @see TripElement
- * @see ScheduleParams
- * @see OrderedRoute
- * @see Activity
+ * ### Notes & Limitations
+ * - The function does **not** check venue opening hours; it only enforces daily windows.
+ * - If [ordered.orderedLocations] is empty, the function returns an empty list.
  */
 fun scheduleTrip(
-    tripStart: LocalDate,
+    tripProfile: TripProfile,
     ordered: OrderedRoute,
     activities: List<Activity>,
     params: ScheduleParams = ScheduleParams()
 ): List<TripElement> {
-
-  // TODO: Take into account numerous preferences and other transport modes and discuss design of
-  // skipping a day or not
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
-  var currentDay = tripStart
-  var cursor = LocalDateTime.of(currentDay, params.dayStart)
-  val elements = mutableListOf<TripElement>()
+  val eff = applyPreferenceOverrides(tripProfile, params)
+  val zone = ZoneId.systemDefault()
+  var currentDay: LocalDate = tripProfile.startDate.toInstant().atZone(zone).toLocalDate()
+  var cursor: LocalDateTime = LocalDateTime.of(currentDay, eff.dayStart).roundUpToQuarter()
+  var activitiesToday = 0
+  val out = mutableListOf<TripElement>()
 
   val locs = ordered.orderedLocations
-  val segments = ordered.segmentDuration
+  val legs = ordered.segmentDuration
 
-  /** Inner function to advance to the next day and reset the cursor. */
-  fun advanceToNextDay() {
+  /** Advance the cursor to the next day. */
+  fun nextDay() {
     currentDay = currentDay.plusDays(1)
-    cursor = LocalDateTime.of(currentDay, params.dayStart)
+    cursor = LocalDateTime.of(currentDay, eff.dayStart).roundUpToQuarter()
+    activitiesToday = 0
   }
 
-  /** Inner function to check if the activity fits in the current day. */
-  fun fitsInDay(durationSec: Int): Boolean {
-    val endOfDay = LocalDateTime.of(currentDay, params.dayEnd)
-    return !cursor.plusSeconds(durationSec.toLong()).isAfter(endOfDay)
+  /** Checks if the activity fits within the current day's window. */
+  fun fitsActivity(durationSec: Int): Boolean =
+      !cursor.plusSeconds(durationSec.toLong()).isAfter(LocalDateTime.of(currentDay, eff.dayEnd))
+
+  /** Checks if the travel (RouteSegment) fits within the current day's window. */
+  fun fitsTravel(durationSec: Int): Boolean =
+      !cursor.plusSeconds(durationSec.toLong()).isAfter(LocalDateTime.of(currentDay, eff.travelEnd))
+
+  /** Schedules an activity. */
+  fun scheduleActivity(act: Activity) {
+    // Daily cap
+    if (activitiesToday >= eff.maxActivitiesPerDay) nextDay()
+
+    cursor = cursor.roundUpToQuarter()
+    if (!fitsActivity(act.estimatedTime)) nextDay()
+
+    val start = cursor
+    val end = start.plusSeconds(act.estimatedTime.toLong()).roundUpToQuarter()
+    out += TripElement.TripActivity(act.copy(startDate = start.toTs(), endDate = end.toTs()))
+    activitiesToday++
+    cursor = end
   }
 
+  /** Schedules a travel segment (RouteSegment). */
+  fun scheduleTravel(fromIdx: Int) {
+    // pause before travel, then round
+    cursor = cursor.plusSeconds(eff.pauseBetweenEachActivity.toLong()).roundUpToQuarter()
+
+    val driveSec = legs[fromIdx].toInt()
+    if (!fitsTravel(driveSec)) nextDay()
+
+    val start = cursor
+    val end = start.plusSeconds(driveSec.toLong()).roundUpToQuarter()
+    out +=
+        TripElement.TripSegment(
+            RouteSegment(
+                from = locs[fromIdx],
+                to = locs[fromIdx + 1],
+                durationMinutes = ceil(driveSec / 60.0).toInt(),
+                transportMode = TransportMode.CAR,
+                startDate = start.toTs(),
+                endDate = end.toTs()))
+    cursor = end
+  }
+
+  // Main scheduling loop
   for (i in locs.indices) {
-    val location = locs[i]
-    val activitiesHere = activities.filter { it.location == location }
+    // Activities at this location in provided order
+    activities.asSequence().filter { it.location == locs[i] }.forEach { scheduleActivity(it) }
 
-    for (act in activitiesHere) {
-      val durationSec = act.estimatedTime
-
-      if (!fitsInDay(durationSec)) advanceToNextDay()
-
-      val start = cursor
-      val end = start.plusSeconds(durationSec.toLong())
-
-      val scheduled = act.copy(startDate = start.toTs(), endDate = end.toTs())
-      elements += TripElement.TripActivity(scheduled)
-
-      cursor = end
-    }
-
-    if (i < locs.lastIndex) {
-      val driveSec = segments[i]
-      if (!fitsInDay(driveSec.toInt())) advanceToNextDay()
-
-      val segStart = cursor
-      val segEnd = segStart.plusSeconds(driveSec.toLong())
-
-      val seg =
-          RouteSegment(
-              from = locs[i],
-              to = locs[i + 1],
-              durationMinutes = driveSec.toInt() / 60,
-              transportMode = TransportMode.BUS,
-              startDate = segStart.toTs(),
-              endDate = segEnd.toTs())
-      elements += TripElement.TripSegment(seg)
-      cursor = segEnd.plusSeconds(params.pauseBetweenEachActivity.toLong())
-    }
+    // Travel to next location
+    if (i < locs.lastIndex) scheduleTravel(i)
   }
 
-  return elements.sortedBy { it.startDate.seconds }
+  return out.sortedBy { it.startDate.seconds }
 }

@@ -66,7 +66,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
             "name" to "Saved User",
             "email" to "existing@example.com",
             "profilePicUrl" to "http://example.com/avatar.png",
-            "preferences" to listOf("Hiking", "Sports"))
+            "preferences" to listOf("COUPLE", "FOODIE"))
     FirebaseEmulator.firestore.collection("users").document(uid).set(existingData).await()
 
     // TripActivity
@@ -131,11 +131,11 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
               "uid" to uid,
               "name" to "Cached User",
               "email" to "cache@example.com",
-              "preferences" to listOf("Museums"))
+              "preferences" to listOf("COUPLE"))
       FirebaseEmulator.firestore.collection("users").document(uid).set(cachedData).await()
 
       // Build repo using same Firestore but simulate network/server failure
-      val repo = UserRepositoryFirebase(FirebaseEmulator.auth, Firebase.firestore)
+      val repo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
       FirebaseEmulator.firestore.disableNetwork().await()
 
       // TripActivity
