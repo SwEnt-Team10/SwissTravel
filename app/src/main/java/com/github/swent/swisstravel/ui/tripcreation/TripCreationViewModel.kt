@@ -81,9 +81,7 @@ class TripSettingsViewModel(
   }
 
   fun updateDates(start: LocalDate, end: LocalDate) {
-    _tripSettings.update {
-      it.copy(name = "Trip from ${start.toString()}", date = TripDate(start, end))
-    }
+    _tripSettings.update { it.copy(name = "Trip from $start", date = TripDate(start, end)) }
   }
 
   fun updateTravelers(adults: Int, children: Int) {
@@ -114,10 +112,15 @@ class TripSettingsViewModel(
   private suspend fun addActivities(): List<Activity> {
     val activityRepository = ActivityRepositoryMySwitzerland()
     val output = mutableListOf<Activity>()
+    val destinations =
+        _tripSettings.value.destinations.toMutableList() // TODO add locations along the route
+    val arrivalDeparture = _tripSettings.value.arrivalDeparture
+    destinations.add(arrivalDeparture.arrivalLocation!!)
+    destinations.add(arrivalDeparture.departureLocation!!)
 
     // Get activities near stops
     val allActivitiesNear = mutableListOf<Activity>()
-    for (place in _tripSettings.value.destinations) {
+    for (place in destinations) {
       val activities = activityRepository.getActivitiesNear(place.coordinate, 15000, 20)
       allActivitiesNear.addAll(activities)
       sleep(SLEEP)
@@ -155,7 +158,7 @@ class TripSettingsViewModel(
       output.filter { activity -> allActivitiesPref.contains(activity) }
     }
 
-    setDestinations(_tripSettings.value.destinations + output.map { it.location })
+    setDestinations(destinations + output.map { it.location })
 
     return output
   }
@@ -165,7 +168,8 @@ class TripSettingsViewModel(
    *
    * Trip should be saved once an internet connection is available.
    */
-  fun saveTrip() {
+  fun saveTrip() { // TODO Set loading screen until failure or success if success continue as
+    // before, if failure continue as before
     viewModelScope.launch {
       try {
         val activities = addActivities()
@@ -185,7 +189,7 @@ class TripSettingsViewModel(
 
         val startTs = Timestamp(start.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
         val endTs = Timestamp(end.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
-        val finalName = settings.name.ifBlank { "Trip from ${settings.date.startDate.toString()}" }
+        val finalName = settings.name.ifBlank { "Trip from ${settings.date.startDate}" }
 
         val tripProfile =
             TripProfile(
