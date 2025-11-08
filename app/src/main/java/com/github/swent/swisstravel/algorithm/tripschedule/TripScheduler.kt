@@ -60,22 +60,27 @@ private fun applyPreferenceOverrides(profile: TripProfile, base: ScheduleParams)
   var eff = base
 
   val prefs = profile.preferences.toSet()
-  if (prefs.contains(Preference.NIGHT_OWL) || prefs.contains(Preference.NIGHTLIFE)) {
+
+  if ((prefs.contains(Preference.NIGHTLIFE) || prefs.contains(Preference.NIGHT_OWL)) &&
+      prefs.contains(Preference.EARLY_BIRD)) {
+    eff =
+        eff.copy(
+            dayStart = LocalTime.of(6, 0), travelEnd = LocalTime.of(22, 0), maxActivitiesPerDay = 6)
+  } else if (prefs.contains(Preference.NIGHTLIFE) || prefs.contains(Preference.NIGHT_OWL)) {
     eff =
         eff.copy(
             dayStart = LocalTime.of(10, 0),
             dayEnd = LocalTime.of(22, 0),
             travelEnd = LocalTime.of(23, 59))
-  }
-  if (prefs.contains(Preference.EARLY_BIRD)) {
+  } else if (prefs.contains(Preference.EARLY_BIRD)) {
     eff =
         eff.copy(
             dayStart = LocalTime.of(6, 0), travelEnd = LocalTime.of(20, 0), maxActivitiesPerDay = 6)
   }
+
   if (prefs.contains(Preference.SLOW_PACE)) {
     eff = eff.copy(pauseBetweenEachActivity = 60 * 60)
-  }
-  if (prefs.contains(Preference.QUICK)) {
+  } else if (prefs.contains(Preference.QUICK)) {
     eff = eff.copy(pauseBetweenEachActivity = 0)
   }
   return eff

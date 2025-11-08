@@ -146,33 +146,6 @@ fun Preference.displayStringRes(): Int {
 }
 
 /**
- * Extension function to get the string representation of a Preference as stored in the firebase.
- *
- * @return A string representation of the preference.
- */
-fun Preference.displayString(): String {
-  return when (this) {
-    Preference.SCENIC_VIEWS -> "Scenic Views"
-    Preference.SPORTS -> "Sports"
-    Preference.MUSEUMS -> "Museums"
-    Preference.HIKE -> "Hiking"
-    Preference.CHILDREN_FRIENDLY -> "Children Friendly"
-    Preference.NIGHTLIFE -> "Nightlife & Party"
-    Preference.SHOPPING -> "Shopping"
-    Preference.WELLNESS -> "Wellness"
-    Preference.FOODIE -> "Food & Culinary Experiences"
-    Preference.URBAN -> "Urban Sightseeing"
-    Preference.GROUP -> "Group Friendly"
-    Preference.INDIVIDUAL -> "Solo Traveler Friendly"
-    Preference.COUPLE -> "Couple Friendly"
-    Preference.WHEELCHAIR_ACCESSIBLE -> "Wheelchair Accessible"
-    Preference.PUBLIC_TRANSPORT -> "Public Transport Accessibility"
-    Preference.QUICK -> "Fast Trip"
-    else -> ""
-  }
-}
-
-/**
  * Extension function to convert a Preference to a test tag string.
  *
  * @return A string representing the test tag for the given preference.
