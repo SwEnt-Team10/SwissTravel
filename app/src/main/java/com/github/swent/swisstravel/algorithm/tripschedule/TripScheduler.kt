@@ -140,9 +140,7 @@ fun scheduleTrip(
           RouteSegment(
               from = locs[i],
               to = locs[i + 1],
-              distanceMeter = 0,
               durationMinutes = driveSec.toInt() / 60,
-              path = emptyList(),
               transportMode = TransportMode.BUS,
               startDate = segStart.toTs(),
               endDate = segEnd.toTs())
