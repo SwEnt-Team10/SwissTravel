@@ -40,6 +40,25 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 
+/** Test tags for TripInfoScreen composable */
+object TripInfoScreenTestTags {
+  const val TITLE = "tripInfoScreenTitle"
+  const val BACK_BUTTON = "tripInfoScreenBackButton"
+  const val FAVORITE_BUTTON = "tripInfoScreenFavoriteButton"
+  const val EDIT_BUTTON = "tripInfoScreenEditButton"
+  const val LAZY_COLUMN = "tripInfoScreenLazyColumn"
+  const val NO_LOCATIONS = "tripInfoScreenNoLocations"
+  const val CURRENT_STEP = "tripInfoScreenCurrentStep"
+  const val FIRST_LOCATION_BOX = "tripInfoScreenFirstLocationBox"
+  const val LOCATION_NAME = "tripInfoScreenLocationName"
+  const val MAP_CARD = "tripInfoScreenMapCard"
+  const val MAP_CONTAINER = "tripInfoScreenMapContainer"
+  const val MAP_BOX = "tripInfoScreenMapBox"
+
+  private const val STEP_PREFIX = "tripInfoScreenStepLocation_"
+
+  fun stepLocationTag(stepIndex: Int) = "$STEP_PREFIX$stepIndex"
+}
 
 /**
  * Screen to show detailed information about a trip.
@@ -54,7 +73,7 @@ import com.github.swent.swisstravel.ui.theme.favoriteIcon
 @Composable
 fun TripInfoScreen(
     uid: String?,
-    tripInfoViewModel: TripInfoViewModel = viewModel(),
+    tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     onMyTrips: () -> Unit = {},
     onFullscreenClick: () -> Unit = {},
     onEditTrip: () -> Unit = {}
@@ -86,12 +105,14 @@ fun TripInfoScreen(
             title = {
               Text(
                   text = tripInfoUIState.name,
+                  modifier = Modifier.testTag(TripInfoScreenTestTags.TITLE),
                   style = MaterialTheme.typography.titleLarge,
                   color = MaterialTheme.colorScheme.onBackground)
             },
             navigationIcon = {
               IconButton(
-                  onClick = { showMap = false }) {
+                  onClick = { showMap = false },
+                  modifier = Modifier.testTag(TripInfoScreenTestTags.BACK_BUTTON)) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back_to_my_trips),
@@ -102,9 +123,11 @@ fun TripInfoScreen(
               val isFavorite = tripInfoUIState.isFavorite
               FavoriteButton(
                   isFavorite = isFavorite,
-                  onToggleFavorite = { tripInfoViewModel.toggleFavorite() })
+                  onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
+                  testTag = TripInfoScreenTestTags.FAVORITE_BUTTON)
               IconButton(
-                  onClick = { onEditTrip() }) {
+                  onClick = { onEditTrip() },
+                  modifier = Modifier.testTag(TripInfoScreenTestTags.EDIT_BUTTON)) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = stringResource(R.string.edit_trip),
@@ -113,11 +136,14 @@ fun TripInfoScreen(
             })
       }) { pd ->
         LazyColumn(
-            modifier = Modifier.padding(pd).fillMaxSize(), horizontalAlignment = Alignment.Start) {
+            modifier =
+                Modifier.padding(pd).fillMaxSize().testTag(TripInfoScreenTestTags.LAZY_COLUMN),
+            horizontalAlignment = Alignment.Start) {
               if (tripInfoUIState.locations.isEmpty()) {
                 item {
                   Text(
-                      text = stringResource(R.string.no_locations_available))
+                      text = stringResource(R.string.no_locations_available),
+                      modifier = Modifier.testTag(TripInfoScreenTestTags.NO_LOCATIONS))
                 }
               } else {
                 item {
@@ -125,18 +151,21 @@ fun TripInfoScreen(
                       text = stringResource(R.string.current_step),
                       modifier =
                           Modifier.fillMaxWidth()
-                              .padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
+                              .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
+                              .testTag(TripInfoScreenTestTags.CURRENT_STEP),
                       style = MaterialTheme.typography.displaySmall)
                 }
                 item {
                   Box(
                       modifier =
                           Modifier.fillMaxWidth()
-                              .padding(horizontal = 16.dp)) {
+                              .padding(horizontal = 16.dp)
+                              .testTag(TripInfoScreenTestTags.FIRST_LOCATION_BOX)) {
                         Text(
                             text = tripInfoUIState.locations[0].name,
                             modifier =
-                                Modifier.align(Alignment.CenterStart),
+                                Modifier.align(Alignment.CenterStart)
+                                    .testTag(TripInfoScreenTestTags.LOCATION_NAME),
                             style = MaterialTheme.typography.headlineMedium)
                       }
                 }
@@ -145,14 +174,16 @@ fun TripInfoScreen(
                 Card(
                     modifier =
                         Modifier.fillMaxWidth()
-                            .padding(horizontal = 20.dp),
+                            .padding(horizontal = 20.dp)
+                            .testTag(TripInfoScreenTestTags.MAP_CARD),
                     shape = RoundedCornerShape(12.dp)) {
-                      Box {
+                      Box(modifier = Modifier.testTag(TripInfoScreenTestTags.MAP_CONTAINER)) {
                         if (showMap) {
                           Box(
                               modifier =
                                   Modifier.fillMaxWidth()
-                                      .height(200.dp)) {
+                                      .height(200.dp)
+                                      .testTag(TripInfoScreenTestTags.MAP_BOX)) {
                                 TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
                               }
                         }
@@ -161,9 +192,11 @@ fun TripInfoScreen(
               }
               if (tripInfoUIState.locations.size > 1) {
                 itemsIndexed(tripInfoUIState.locations.drop(1)) { idx, location ->
-                  Box {
-                    StepLocationCard(int = idx + 2, location = location)
-                  }
+                  Box(
+                      modifier =
+                          Modifier.testTag(TripInfoScreenTestTags.stepLocationTag(idx + 2))) {
+                        StepLocationCard(int = idx + 2, location = location)
+                      }
                 }
               }
             }
@@ -171,9 +204,10 @@ fun TripInfoScreen(
 }
 
 @Composable
-fun FavoriteButton(isFavorite: Boolean, onToggleFavorite: () -> Unit) {
+fun FavoriteButton(isFavorite: Boolean, onToggleFavorite: () -> Unit, testTag: String? = null) {
   IconButton(
-      onClick = onToggleFavorite) {
+      onClick = onToggleFavorite,
+      modifier = if (testTag != null) Modifier.testTag(testTag) else Modifier) {
         if (isFavorite) {
           Icon(
               imageVector = Icons.Default.Star,

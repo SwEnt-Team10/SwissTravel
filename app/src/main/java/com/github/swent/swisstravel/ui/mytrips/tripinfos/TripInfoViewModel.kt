@@ -1,3 +1,4 @@
+// kotlin
 package com.github.swent.swisstravel.ui.mytrips.tripinfos
 
 import android.util.Log
@@ -34,9 +35,9 @@ data class TripInfoUIState(
 @OptIn(FlowPreview::class)
 class TripInfoViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
-) : ViewModel() {
+) : ViewModel(), TripInfoViewModelContract {
   private val _uiState = MutableStateFlow(TripInfoUIState())
-  val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
+  override val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
 
   private val favoriteDebounceMs = 800L
   private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
@@ -53,7 +54,7 @@ class TripInfoViewModel(
   }
 
   /** Clears the error message in the UI state */
-  fun clearErrorMsg() {
+  override fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
@@ -69,17 +70,17 @@ class TripInfoViewModel(
   /**
    * Loads the trip information for the given trip ID
    *
-   * @param tripId the unique identifier of the trip
+   * @param uid the unique identifier of the trip
    */
-  fun loadTripInfo(tripId: String?) {
-    if (tripId.isNullOrBlank()) {
+  override fun loadTripInfo(uid: String?) {
+    if (uid.isNullOrBlank()) {
       Log.e("TripInfoViewModel", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
     viewModelScope.launch {
       try {
-        val trip = tripsRepository.getTrip(tripId)
+        val trip = tripsRepository.getTrip(uid)
         _uiState.value =
             TripInfoUIState(
                 uid = trip.uid,
@@ -103,7 +104,7 @@ class TripInfoViewModel(
    * Updates the UI immediately and emits the new state to a debounced flow, which later persists
    * the change to the repository. Prevents redundant or rapid writes to the database.
    */
-  fun toggleFavorite() {
+  override fun toggleFavorite() {
     val current = _uiState.value
     if (current.uid.isBlank()) return
 
