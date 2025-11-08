@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import java.time.*
+import java.time.temporal.ChronoUnit
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -28,28 +29,11 @@ class TripSchedulerTest {
 
   private fun loc(name: String, lat: Double, lon: Double) = Location(Coordinate(lat, lon), name)
 
-  private fun tsOf(date: LocalDate, hour: Int = 0, min: Int = 0): Timestamp {
-    val ldt = LocalDateTime.of(date, LocalTime.of(hour, min))
-    val epoch = ldt.atZone(zone).toEpochSecond()
-    return Timestamp(epoch, 0)
-  }
-
-  private fun tripProfileFor(
-      startDate: LocalDate,
-      endDate: LocalDate = startDate.plusDays(7),
-      arrival: Location? = null,
-      departure: Location? = null
-  ): TripProfile {
-    return TripProfile(
-        startDate = tsOf(startDate, 0, 0),
-        endDate = tsOf(endDate, 23, 59),
-        preferredLocations = emptyList(),
-        preferences = emptyList<Preference>(),
-        adults = 2,
-        children = 0,
-        arrivalLocation = arrival,
-        departureLocation = departure)
-  }
+  private fun tripProfileFor(date: LocalDate) =
+      TripProfile(
+          startDate = Timestamp(date.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0),
+          endDate =
+              Timestamp(date.plusDays(5).atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0))
 
   // Activity factory: estimatedTime is in **seconds**
   private fun activityAt(location: Location, label: String, estimatedMinutes: Int): Activity {
@@ -295,5 +279,117 @@ class TripSchedulerTest {
 
     val starts = out.map { tsToLocalDateTime(it.startDate) }
     assertTrue(starts.zipWithNext().all { (a, b) -> !b.isBefore(a) })
+  }
+
+  @Test
+  fun `preferences correctly adjust scheduling parameters`() {
+    val ordered =
+        OrderedRoute(
+            orderedLocations = listOf(A, B),
+            totalDuration = 1800.0,
+            segmentDuration = listOf(1800.0) // 30 min travel
+            )
+    val activities = listOf(activityAt(A, "Morning", 60), activityAt(B, "Evening", 60))
+
+    // 1️⃣ EARLY_BIRD
+    val earlyBirdProfile =
+        tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.EARLY_BIRD))
+    val earlyOut = scheduleTrip(earlyBirdProfile, ordered, activities)
+    val earlyStart =
+        tsToLocalTime((earlyOut.first() as TripElement.TripActivity).activity.startDate)
+    assertTrue("Early bird should start before 8am", earlyStart <= LocalTime.of(6, 15))
+
+    // 2️⃣ NIGHT_OWL – with short activities it won't necessarily end late.
+    // Verify that scheduling still works and could extend up to the late window if needed.
+    val nightOwlProfile =
+        tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.NIGHT_OWL))
+    val nightOut = scheduleTrip(nightOwlProfile, ordered, activities)
+    assertTrue("Night owl should schedule at least something", nightOut.isNotEmpty())
+
+    // Last activity ends no later than the extended window (22:00) and not before it started
+    val nightEnd = tsToLocalTime((nightOut.last() as TripElement.TripActivity).activity.endDate)
+    assertTrue("Night owl window should allow up to 22:00", nightEnd <= LocalTime.of(22, 0))
+
+    // 3️⃣ SLOW_PACE adds a long pause before travel
+    val slowProfile =
+        tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.SLOW_PACE))
+    val slowOut = scheduleTrip(slowProfile, ordered, activities)
+    val a1 = (slowOut[0] as TripElement.TripActivity).activity
+    val travel = (slowOut[1] as TripElement.TripSegment).route
+    val pauseMinutes =
+        ChronoUnit.MINUTES.between(tsToLocalTime(a1.endDate), tsToLocalTime(travel.startDate))
+    assertTrue("Slow pace should create at least a 60-minute pause", pauseMinutes >= 60)
+
+    // 4️⃣ QUICK removes pause before travel
+    val quickProfile =
+        tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.QUICK))
+    val quickOut = scheduleTrip(quickProfile, ordered, activities)
+    val qA1 = (quickOut[0] as TripElement.TripActivity).activity
+    val qTravel = (quickOut[1] as TripElement.TripSegment).route
+    val quickPauseMinutes =
+        ChronoUnit.MINUTES.between(tsToLocalTime(qA1.endDate), tsToLocalTime(qTravel.startDate))
+    assertTrue("Quick should have minimal or no pause", quickPauseMinutes < 15)
+  }
+
+  @Test
+  fun `night owl allows late activity end past 21_00 when schedule pushes late`() {
+    // Route A -> B with a 1h travel leg
+    val A = Location(Coordinate(46.5, 6.5), "A")
+    val B = Location(Coordinate(46.6, 6.6), "B")
+    val ordered =
+        OrderedRoute(
+            orderedLocations = listOf(A, B),
+            totalDuration = 3600.0,
+            segmentDuration = listOf(3600.0) // 1h A→B
+            )
+
+    // Activities: A has an 8h block (10:00–18:00), then travel 1h (18:00–19:00),
+    // pause 15m -> 19:15, then a 2h activity at B -> 21:15
+    fun activityAt(loc: Location, mins: Int) =
+        Activity(
+            startDate = Timestamp(0, 0),
+            endDate = Timestamp(0, 0),
+            location = loc,
+            description = "",
+            imageUrls = emptyList(),
+            estimatedTime = mins * 60)
+    val activities =
+        listOf(
+            activityAt(A, 8 * 60), // 8h
+            activityAt(B, 2 * 60) // 2h
+            )
+
+    val profile =
+        TripProfile(
+            startDate =
+                Timestamp(
+                    LocalDateTime.of(2025, 11, 5, 0, 0)
+                        .atZone(ZoneId.systemDefault())
+                        .toEpochSecond(),
+                    0),
+            endDate = Timestamp(0, 0),
+            preferredLocations = emptyList(),
+            preferences = listOf(Preference.NIGHT_OWL))
+
+    val params =
+        ScheduleParams(
+            dayStart = LocalTime.of(8, 0),
+            dayEnd = LocalTime.of(18, 0),
+            travelEnd = LocalTime.of(22, 0),
+            maxActivitiesPerDay = 4,
+            pauseBetweenEachActivity = 15 * 60)
+
+    val out =
+        scheduleTrip(
+            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+
+    // Last element should be the second activity, ending after 21:00 (expected 21:15)
+    val lastAct = (out.last() as TripElement.TripActivity).activity
+    val endTime =
+        Instant.ofEpochSecond(lastAct.endDate.seconds).atZone(ZoneId.systemDefault()).toLocalTime()
+
+    assertTrue(
+        "Night owl should allow activities to end after 21:00, was $endTime",
+        endTime >= LocalTime.of(21, 0))
   }
 }
