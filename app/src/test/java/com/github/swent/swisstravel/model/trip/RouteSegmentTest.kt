@@ -1,9 +1,5 @@
-package com.android.swisstravel.data.trips
+package com.github.swent.swisstravel.model.trip
 
-import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.RouteSegment
-import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.Timestamp
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -25,9 +21,7 @@ class RouteSegmentTest {
       RouteSegment(
           from = from,
           to = to,
-          distanceMeter = 1500,
           durationMinutes = 30,
-          path = path,
           transportMode = mode,
           startDate = Timestamp.now(),
           endDate = Timestamp.now())
@@ -37,14 +31,11 @@ class RouteSegmentTest {
         RouteSegment(
             from = from,
             to = to,
-            distanceMeter = 1500,
             durationMinutes = 30,
-            path = path,
             transportMode = TransportMode.UNKNOWN,
             startDate = Timestamp.now(),
             endDate = Timestamp.now())
 
-    assertEquals(1.5, segment.getDistanceKm(), 0.0)
     assertEquals(0.5, segment.getDurationHours(), 0.0)
   }
 }
