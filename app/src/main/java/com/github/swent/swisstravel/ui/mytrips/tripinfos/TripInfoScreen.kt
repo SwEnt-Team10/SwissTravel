@@ -1,4 +1,3 @@
-// language: kotlin
 package com.github.swent.swisstravel.ui.mytrips.tripinfos
 
 import android.widget.Toast
@@ -41,21 +40,16 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 
-/** Test tags for TripInfoScreen composable */
-object TripInfoTestTags {
-  const val BACK_BUTTON = "backButton"
-  const val EDIT_BUTTON = "editButton"
-  const val FAVORITE_BUTTON = "favoriteButton"
-  const val TRIP_CARD = "tripCard"
-  const val TRIP_CARD_CONTENT = "tripCardContent"
-  const val TOPBAR_TITLE = "topbarTitle"
-  const val NO_LOCATIONS_TEXT = "noLocationsText"
-  const val LOCATION_CARD = "locationCard"
-  const val FIRST_LOCATION_NAME = "firstLocationName"
-  const val CURRENT_STEP = "currentStep"
-  const val MAP_VIEW = "mapView"
-}
 
+/**
+ * Screen to show detailed information about a trip.
+ *
+ * @param uid The unique identifier of the trip to display.
+ * @param tripInfoViewModel The ViewModel managing the trip information state.
+ * @param onMyTrips Callback invoked when navigating back to the list of trips.
+ * @param onFullscreenClick Callback invoked when the fullscreen map button is clicked.
+ * @param onEditTrip Callback invoked when the edit trip button is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoScreen(
@@ -92,14 +86,12 @@ fun TripInfoScreen(
             title = {
               Text(
                   text = tripInfoUIState.name,
-                  modifier = Modifier.testTag(TripInfoTestTags.TOPBAR_TITLE),
                   style = MaterialTheme.typography.titleLarge,
                   color = MaterialTheme.colorScheme.onBackground)
             },
             navigationIcon = {
               IconButton(
-                  onClick = { showMap = false },
-                  modifier = Modifier.testTag(TripInfoTestTags.BACK_BUTTON)) {
+                  onClick = { showMap = false }) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(R.string.back_to_my_trips),
@@ -112,8 +104,7 @@ fun TripInfoScreen(
                   isFavorite = isFavorite,
                   onToggleFavorite = { tripInfoViewModel.toggleFavorite() })
               IconButton(
-                  onClick = { onEditTrip() },
-                  modifier = Modifier.testTag(TripInfoTestTags.EDIT_BUTTON)) {
+                  onClick = { onEditTrip() }) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = stringResource(R.string.edit_trip),
@@ -126,8 +117,7 @@ fun TripInfoScreen(
               if (tripInfoUIState.locations.isEmpty()) {
                 item {
                   Text(
-                      text = stringResource(R.string.no_locations_available),
-                      modifier = Modifier.testTag(TripInfoTestTags.NO_LOCATIONS_TEXT))
+                      text = stringResource(R.string.no_locations_available))
                 }
               } else {
                 item {
@@ -135,21 +125,18 @@ fun TripInfoScreen(
                       text = stringResource(R.string.current_step),
                       modifier =
                           Modifier.fillMaxWidth()
-                              .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                              .testTag(TripInfoTestTags.CURRENT_STEP),
+                              .padding(start = 16.dp, top = 16.dp, bottom = 8.dp),
                       style = MaterialTheme.typography.displaySmall)
                 }
                 item {
                   Box(
                       modifier =
                           Modifier.fillMaxWidth()
-                              .testTag(TripInfoTestTags.LOCATION_CARD)
                               .padding(horizontal = 16.dp)) {
                         Text(
                             text = tripInfoUIState.locations[0].name,
                             modifier =
-                                Modifier.align(Alignment.CenterStart)
-                                    .testTag(TripInfoTestTags.FIRST_LOCATION_NAME),
+                                Modifier.align(Alignment.CenterStart),
                             style = MaterialTheme.typography.headlineMedium)
                       }
                 }
@@ -158,16 +145,14 @@ fun TripInfoScreen(
                 Card(
                     modifier =
                         Modifier.fillMaxWidth()
-                            .padding(horizontal = 20.dp)
-                            .testTag(TripInfoTestTags.TRIP_CARD),
+                            .padding(horizontal = 20.dp),
                     shape = RoundedCornerShape(12.dp)) {
-                      Box(modifier = Modifier.testTag(TripInfoTestTags.TRIP_CARD_CONTENT)) {
+                      Box {
                         if (showMap) {
                           Box(
                               modifier =
                                   Modifier.fillMaxWidth()
-                                      .height(200.dp)
-                                      .testTag(TripInfoTestTags.MAP_VIEW)) {
+                                      .height(200.dp)) {
                                 TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
                               }
                         }
@@ -176,7 +161,7 @@ fun TripInfoScreen(
               }
               if (tripInfoUIState.locations.size > 1) {
                 itemsIndexed(tripInfoUIState.locations.drop(1)) { idx, location ->
-                  Box(modifier = Modifier.testTag("${TripInfoTestTags.LOCATION_CARD}_$idx")) {
+                  Box {
                     StepLocationCard(int = idx + 2, location = location)
                   }
                 }
@@ -188,7 +173,7 @@ fun TripInfoScreen(
 @Composable
 fun FavoriteButton(isFavorite: Boolean, onToggleFavorite: () -> Unit) {
   IconButton(
-      onClick = onToggleFavorite, modifier = Modifier.testTag(TripInfoTestTags.FAVORITE_BUTTON)) {
+      onClick = onToggleFavorite) {
         if (isFavorite) {
           Icon(
               imageVector = Icons.Default.Star,
