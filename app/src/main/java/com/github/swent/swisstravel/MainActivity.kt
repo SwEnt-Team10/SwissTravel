@@ -266,7 +266,7 @@ fun SwissTravelApp(
         startDestination = Screen.Map.route,
         route = Screen.Map.name,
     ) {
-      composable(Screen.Map.route) { MapLocationScreen(navigationActions = navigationActions) }
+      composable(Screen.Map.route) { MapLocationScreen() }
     }
 
     // Trip settings screens
