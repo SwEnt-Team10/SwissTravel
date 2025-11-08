@@ -147,17 +147,20 @@ fun scheduleTrip(
   val locs = ordered.orderedLocations
   val segments = ordered.segmentDuration
 
+  /** Resets the cursor to the start of the next day. */
   fun resetToNextDay() {
     currentDay = currentDay.plusDays(1)
     cursor = LocalDateTime.of(currentDay, effectiveParams.dayStart).roundUpToQuarter()
     activitiesToday = 0
   }
 
+  /** Checks if the activity fits in the current day's window. */
   fun fitsInActivityWindow(durationSec: Int): Boolean {
     val endOfDay = LocalDateTime.of(currentDay, effectiveParams.dayEnd)
     return !cursor.plusSeconds(durationSec.toLong()).isAfter(endOfDay)
   }
 
+  /** Checks if the travel segment fits in the current day's window. */
   fun fitsInTravelWindow(durationSec: Int): Boolean {
     val travelCutoff = LocalDateTime.of(currentDay, effectiveParams.travelEnd)
     return !cursor.plusSeconds(durationSec.toLong()).isAfter(travelCutoff)
