@@ -206,10 +206,8 @@ fun scheduleTrip(
             RouteSegment(
                 from = locs[fromIdx],
                 to = locs[fromIdx + 1],
-                distanceMeter = 0,
                 durationMinutes = ceil(driveSec / 60.0).toInt(),
-                path = emptyList(),
-                transportMode = TransportMode.BUS,
+                transportMode = TransportMode.CAR,
                 startDate = start.toTs(),
                 endDate = end.toTs()))
     cursor = end
@@ -217,41 +215,11 @@ fun scheduleTrip(
 
   // Main scheduling loop
   for (i in locs.indices) {
-    val location = locs[i]
-    val activitiesHere = activities.filter { it.location == location }
+    // Activities at this location in provided order
+    activities.asSequence().filter { it.location == locs[i] }.forEach { scheduleActivity(it) }
 
-    for (act in activitiesHere) {
-      val durationSec = act.estimatedTime
-
-      if (!fitsInDay(durationSec)) advanceToNextDay()
-
-      val start = cursor
-      val end = start.plusSeconds(durationSec.toLong())
-
-      val scheduled = act.copy(startDate = start.toTs(), endDate = end.toTs())
-      elements += TripElement.TripActivity(scheduled)
-
-      cursor = end
-    }
-
-    if (i < locs.lastIndex) {
-      val driveSec = segments[i]
-      if (!fitsInDay(driveSec.toInt())) advanceToNextDay()
-
-      val segStart = cursor
-      val segEnd = segStart.plusSeconds(driveSec.toLong())
-
-      val seg =
-          RouteSegment(
-              from = locs[i],
-              to = locs[i + 1],
-              durationMinutes = driveSec.toInt() / 60,
-              transportMode = TransportMode.CAR,
-              startDate = segStart.toTs(),
-              endDate = segEnd.toTs())
-      elements += TripElement.TripSegment(seg)
-      cursor = segEnd.plusSeconds(params.pauseBetweenEachActivity.toLong())
-    }
+    // Travel to next location
+    if (i < locs.lastIndex) scheduleTravel(i)
   }
 
   return out.sortedBy { it.startDate.seconds }
