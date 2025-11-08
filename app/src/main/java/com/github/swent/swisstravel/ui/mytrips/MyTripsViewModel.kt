@@ -63,6 +63,8 @@ class MyTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvide
         // Get all trips to find the current one (if any)
         val trips = tripsRepository.getAllTrips()
         val previousCurrentTrip = trips.find { it.isCurrent() }
+        // If the selected trip is already the current one, do nothing
+        if (previousCurrentTrip == trip) return@launch
 
         // If there was a current trip, unset it
         previousCurrentTrip?.let { current ->

@@ -5,9 +5,9 @@ import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.Before
