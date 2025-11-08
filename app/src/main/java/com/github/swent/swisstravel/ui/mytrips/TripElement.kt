@@ -18,6 +18,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -67,6 +68,8 @@ object TripElementTestTags {
  * @param onLongPress Called when the element is long-pressed (e.g., to enter selection mode).
  * @param isSelected Whether the trip is currently selected.
  * @param isSelectionMode Whether the UI is currently in selection mode.
+ * @param noIcon If true, no icon is displayed when isSelected is false. Otherwise, shows a check
+ *   icon.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -75,7 +78,8 @@ fun TripElement(
     onClick: () -> Unit,
     onLongPress: () -> Unit = {},
     isSelected: Boolean = false,
-    isSelectionMode: Boolean = false
+    isSelectionMode: Boolean = false,
+    noIcon: Boolean = false
 ) {
   Card(
       modifier =
@@ -134,6 +138,15 @@ fun TripElement(
                                     if (isSelected) ToggleableState.On else ToggleableState.Off
                                 role = Role.Checkbox
                               })
+                }
+                if (noIcon) {
+                  if (isSelected) {
+                    Icon(
+                        Icons.Filled.Check,
+                        contentDescription = stringResource(R.string.current_trip_details),
+                        tint = MaterialTheme.colorScheme.primary)
+                  }
+                  /* Else display nothing */
                 } else {
                   // Arrow icon for normal (non-selection) mode
                   Icon(

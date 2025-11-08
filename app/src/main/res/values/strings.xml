@@ -68,6 +68,7 @@
 
     <!-- Trips -->
     <string name="go_trip_details">Go to Trip details</string>
+    <string name="current_trip_details">This is the current trip</string>
     <plurals name="n_selected">
         <item quantity="one">%d selected</item>
         <item quantity="other">%d selected</item>
