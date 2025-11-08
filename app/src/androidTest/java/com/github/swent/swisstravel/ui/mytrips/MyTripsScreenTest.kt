@@ -66,7 +66,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
         .assertIsDisplayed()
 
     // Check upcoming trip
-    composeTestRule.checkSortedTripListIsDisplayed()
+    composeTestRule.checkSortedTripListNotEmptyIsDisplayed()
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(upcomingTrip))
         .assertIsDisplayed()
