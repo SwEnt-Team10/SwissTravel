@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.mytrips.tripinfos
 
-import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -67,23 +66,13 @@ fun TripInfoScreen(
     onEditTrip: () -> Unit = {}
 ) {
 
-  LaunchedEffect(uid) {
-    Log.d("TRIP_INFO_SCREEN", "loading trip info with uid $uid")
-    Log.d("TRIP_INFO_SCREEN", "loading trip info before : ${tripInfoViewModel.uiState.value}")
-
-    tripInfoViewModel.loadTripInfo(uid)
-    Log.d("TRIP_INFO_SCREEN", "loading trip info after : ${tripInfoViewModel.uiState.value}")
-  }
+  LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val tripInfoUIState by tripInfoViewModel.uiState.collectAsState()
   val errorMsg = tripInfoUIState.errorMsg
 
   val context = LocalContext.current
   var showMap by remember { mutableStateOf(true) }
-
-  Log.d("TRIP_INFO_SCREEN", "locations = ${tripInfoUIState.locations}")
-  Log.d("TRIP_INFO_SCREEN", "vm = $tripInfoViewModel")
-  Log.d("TRIP_INFO_SCREEN", "uiState = $tripInfoUIState")
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {

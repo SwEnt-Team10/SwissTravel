@@ -6,6 +6,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.test.core.app.ApplicationProvider
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
+import junit.framework.TestCase.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -32,13 +33,13 @@ class NavigationMapScreenTest {
   @Test
   fun setRouteRenderedUpdatesState() {
     val vm = NavigationMapViewModel()
-    assert(!vm.uiState.value.isRouteRendered)
+    assertTrue(!vm.uiState.value.isRouteRendered)
 
     vm.setRouteRendered(true)
-    assert(vm.uiState.value.isRouteRendered)
+    assertTrue(vm.uiState.value.isRouteRendered)
 
     vm.setRouteRendered(false)
-    assert(!vm.uiState.value.isRouteRendered)
+    assertTrue(!vm.uiState.value.isRouteRendered)
   }
 
   /** Check 'updateLocations' modifies the list in the uiState */
@@ -51,7 +52,7 @@ class NavigationMapScreenTest {
             com.mapbox.geojson.Point.fromLngLat(6.7, 46.6))
 
     vm.updateLocations(points)
-    assert(vm.uiState.value.locationsList == points)
+    assertTrue(vm.uiState.value.locationsList == points)
   }
 
   /** Check 'attachMapObjects' configures the MapboxNavigation and the RouteLineApi correctly */
@@ -69,7 +70,7 @@ class NavigationMapScreenTest {
 
     vm.attachMapObjects(nav, api)
 
-    assert(vm.uiState.value.mapboxNavigation === nav)
-    assert(vm.uiState.value.routeLineApi === api)
+    assertTrue(vm.uiState.value.mapboxNavigation === nav)
+    assertTrue(vm.uiState.value.routeLineApi === api)
   }
 }

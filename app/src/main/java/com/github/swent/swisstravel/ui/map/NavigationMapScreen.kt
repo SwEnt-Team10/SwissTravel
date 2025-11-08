@@ -5,6 +5,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.model.trip.Location
 import com.mapbox.geojson.Point
 import com.mapbox.maps.EdgeInsets
@@ -22,10 +23,17 @@ object NavigationMapScreenTestTags {
   const val MAP = "map"
 }
 
+/**
+ * Composable that displays a Mapbox map with navigation routes based on provided locations.
+ *
+ * @param locations List of Location objects representing the points to be displayed on the map.
+ */
 @Composable
-fun NavigationMapScreen(locations: List<Location>) {
+fun NavigationMapScreen(
+    locations: List<Location>,
+    viewModel: NavigationMapViewModel = viewModel()
+) {
   val context = LocalContext.current
-  val viewModel: NavigationMapViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
 
   val appCtx = context.applicationContext
   val mapboxNavigation = remember {
@@ -86,5 +94,6 @@ fun NavigationMapScreen(locations: List<Location>) {
   }
 }
 
+/** Convert a list of Location to a list of Mapbox Points */
 private fun locationsAsPoints(locations: List<Location>) =
     locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }
