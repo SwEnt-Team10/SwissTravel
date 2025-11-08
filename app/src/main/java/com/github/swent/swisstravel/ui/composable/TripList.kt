@@ -33,6 +33,7 @@ fun TripList(
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
     isSelectionMode: Boolean = false,
+    noIconTripElement: Boolean = false,
     emptyListString: String = "",
 ) {
   if (trips.isNotEmpty()) {
@@ -46,7 +47,8 @@ fun TripList(
                 onClick = { onClickTripElement(trip) },
                 onLongPress = { onLongPress(trip) },
                 isSelected = isSelected(trip),
-                isSelectionMode = isSelectionMode)
+                isSelectionMode = isSelectionMode,
+                noIcon = noIconTripElement)
           }
         }
   } else {
