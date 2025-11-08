@@ -13,6 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -23,7 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.map.NavigationMap
+import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 
 /** Screen displaying the map for trip information. */
 object TripInfoMapTestTags {
@@ -38,7 +39,7 @@ object TripInfoMapTestTags {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TripInfoMapScreen(onBack: () -> Unit = {}) {
+fun TripInfoMapScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoViewModel) {
   var showMap by remember { mutableStateOf(true) }
 
   LaunchedEffect(showMap) {
@@ -68,7 +69,7 @@ fun TripInfoMapScreen(onBack: () -> Unit = {}) {
                 Modifier.fillMaxSize().padding(padding).testTag(TripInfoMapTestTags.MAP_CONTAINER),
             contentAlignment = Alignment.Center) {
               if (showMap) {
-                NavigationMap()
+                NavigationMapScreen(tripInfoViewModel.uiState.collectAsState().value.locations)
               }
             }
       }

@@ -162,7 +162,7 @@ private fun ProfileScreenContent(
             isSignedIn = isSignedIn,
             onClick = {
               if (isSignedIn) authRepository.signOut()
-              navigationActions?.navigateTo(Screen.Auth)
+              navigationActions?.navigateTo(Screen.Auth, true)
             })
       }
 }

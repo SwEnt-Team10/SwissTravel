@@ -32,7 +32,7 @@ class TripSettingsViewModelComposeTest {
     Box {
       Text(text = "ok", modifier = Modifier.testTag(tag))
       // use vm to avoid unused warning
-      @Suppress("UNUSED_VARIABLE") val vm = vm.hashCode()
+      vm.hashCode()
     }
   }
 

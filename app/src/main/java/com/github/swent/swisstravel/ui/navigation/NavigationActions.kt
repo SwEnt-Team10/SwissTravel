@@ -30,8 +30,6 @@ sealed class Screen(
 
   object Map : Screen(route = "map", name = "Map", isTopLevelDestination = true)
 
-  object SelectedTripMap : Screen(route = "selected_trip_map", name = "Selected trip map")
-
   object CurrentTrip :
       Screen(route = "current_trip", name = "Current trip", isTopLevelDestination = true)
 
@@ -79,24 +77,25 @@ class NavigationActions(
    * Navigate to the given destination
    *
    * @param destination the destination to navigate to
+   * @param clearBackStack whether to clear the back stack
    */
-  fun navigateTo(destination: Screen) {
+  fun navigateTo(destination: Screen, clearBackStack: Boolean = false) {
     /* if the destination is the same as the current route, do nothing */
     if (destination.isTopLevelDestination && currentRoute() == destination.route) {
       return
     }
 
     navController.navigate(destination.route) {
-      if (destination.isTopLevelDestination) {
-        // Pop up to start of the graph to avoid large stacks
-        popUpTo(destination.route) { inclusive = true }
-      }
-      if (destination is Screen.Auth) {
+      if (clearBackStack) {
         // Pop the entire back stack up to the very start of the graph.
         popUpTo(navController.graph.findStartDestination().id) {
           inclusive = true // This removes the start destination as well, clearing the stack.
         }
       } else {
+        if (destination.isTopLevelDestination) {
+          // Pop up to start of the graph to avoid large stacks
+          popUpTo(destination.route) { inclusive = true }
+        }
         restoreState = true
       }
     }

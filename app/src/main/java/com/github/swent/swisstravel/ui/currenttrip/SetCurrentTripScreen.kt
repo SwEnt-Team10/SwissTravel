@@ -92,6 +92,7 @@ fun SetCurrentTripScreen(
               },
               isSelected = isSelected,
               isSelectionMode = false,
+              noIconTripElement = true,
               emptyListString = stringResource(R.string.no_upcoming_trips))
         }
       }

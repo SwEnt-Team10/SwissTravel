@@ -184,7 +184,7 @@ fun TripInfoScreen(
                                   Modifier.fillMaxWidth()
                                       .height(200.dp)
                                       .testTag(TripInfoScreenTestTags.MAP_BOX)) {
-                                TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                                TripInfoZoomableMap(onFullscreenClick = onFullscreenClick, locations = tripInfoUIState.locations)
                               }
                         }
                       }
