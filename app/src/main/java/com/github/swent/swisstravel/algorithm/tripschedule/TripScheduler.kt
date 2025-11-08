@@ -4,12 +4,14 @@ import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.google.firebase.Timestamp
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import kotlin.math.ceil
 
 /**
  * The schedule parameters. This will be used in the main algorithm when you call scheduleTrip(),
@@ -21,14 +23,33 @@ import java.time.ZoneId
  * @property pauseBetweenEachActivity the pause between each activity
  */
 data class ScheduleParams(
-    val dayStart: LocalTime = LocalTime.of(9, 0),
+    val dayStart: LocalTime = LocalTime.of(8, 0),
     val dayEnd: LocalTime = LocalTime.of(18, 0),
+    val travelEnd: LocalTime = LocalTime.of(22, 0),
+    val maxActivitiesPerDay: Int = 4,
     val pauseBetweenEachActivity: Int = 60 * 15
 )
 
 /** Helper to convert LocalDateTime to Timestamp. */
 private fun LocalDateTime.toTs(): Timestamp =
     Timestamp(this.atZone(ZoneId.systemDefault()).toEpochSecond(), 0)
+
+/**
+ * Round up to the next quarter-hour (:00, :15, :30, :45), but keep the same time if already exactly
+ * on a quarter.
+ */
+private fun LocalDateTime.roundUpToQuarter(): LocalDateTime {
+  // Remove nanos and seconds to prevent rounding because of stray offsets
+  val t = this.truncatedTo(ChronoUnit.MINUTES)
+  val minute = t.minute
+  val remainder = minute % 15
+
+  // If already exactly on quarter (within one minute), keep it
+  if (remainder == 0) return t
+
+  val add = 15 - remainder
+  return t.plusMinutes(add.toLong())
+}
 
 /**
  * Builds a chronological trip schedule by assigning start and end times to activities and route
@@ -64,7 +85,7 @@ private fun LocalDateTime.toTs(): Timestamp =
  *
  * ### Parameters
  *
- * @param tripStart The starting [LocalDate] for the trip (e.g., the first travel day).
+ * @param tripProfile The [TripProfile] for the trip.
  * @param ordered The optimized route output from [orderLocations], defining location order and
  *   segment durations.
  * @param activities The list of [Activity]s to schedule along the route. Each activity must have a
@@ -82,72 +103,97 @@ private fun LocalDateTime.toTs(): Timestamp =
  * @see Activity
  */
 fun scheduleTrip(
-    tripStart: LocalDate,
+    tripProfile: TripProfile,
     ordered: OrderedRoute,
     activities: List<Activity>,
     params: ScheduleParams = ScheduleParams()
 ): List<TripElement> {
 
-  // TODO: Take into account numerous preferences and other transport modes and discuss design of
-  // skipping a day or not
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
-  var currentDay = tripStart
-  var cursor = LocalDateTime.of(currentDay, params.dayStart)
+  var currentDay = tripProfile.startDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+  var cursor = LocalDateTime.of(currentDay, params.dayStart).roundUpToQuarter()
+  var activitiesToday = 0
   val elements = mutableListOf<TripElement>()
 
   val locs = ordered.orderedLocations
   val segments = ordered.segmentDuration
 
-  /** Inner function to advance to the next day and reset the cursor. */
-  fun advanceToNextDay() {
+  fun resetToNextDay() {
     currentDay = currentDay.plusDays(1)
-    cursor = LocalDateTime.of(currentDay, params.dayStart)
+    cursor = LocalDateTime.of(currentDay, params.dayStart).roundUpToQuarter()
+    activitiesToday = 0
   }
 
-  /** Inner function to check if the activity fits in the current day. */
-  fun fitsInDay(durationSec: Int): Boolean {
+  fun fitsInActivityWindow(durationSec: Int): Boolean {
     val endOfDay = LocalDateTime.of(currentDay, params.dayEnd)
     return !cursor.plusSeconds(durationSec.toLong()).isAfter(endOfDay)
   }
 
+  fun fitsInTravelWindow(durationSec: Int): Boolean {
+    val travelCutoff = LocalDateTime.of(currentDay, params.travelEnd)
+    return !cursor.plusSeconds(durationSec.toLong()).isAfter(travelCutoff)
+  }
+
   for (i in locs.indices) {
     val location = locs[i]
+    // Activities *at* this location, in given order
     val activitiesHere = activities.filter { it.location == location }
 
     for (act in activitiesHere) {
       val durationSec = act.estimatedTime
 
-      if (!fitsInDay(durationSec)) advanceToNextDay()
+      // Respect daily activity cap
+      if (activitiesToday >= params.maxActivitiesPerDay) {
+        resetToNextDay()
+      }
+
+      // Ensure we start on a quarter
+      cursor = cursor.roundUpToQuarter()
+
+      // If it does not fit today, move to next day
+      if (!fitsInActivityWindow(durationSec)) {
+        resetToNextDay()
+      }
 
       val start = cursor
-      val end = start.plusSeconds(durationSec.toLong())
+      val end = start.plusSeconds(durationSec.toLong()).roundUpToQuarter()
 
       val scheduled = act.copy(startDate = start.toTs(), endDate = end.toTs())
       elements += TripElement.TripActivity(scheduled)
 
-      cursor = end
+      activitiesToday += 1
+      cursor = end // next item starts *after* rounded end
     }
 
+    // Add travel segment to next location
     if (i < locs.lastIndex) {
-      val driveSec = segments[i]
-      if (!fitsInDay(driveSec.toInt())) advanceToNextDay()
+      val driveSec = segments[i].toInt()
+
+      // Pause after the last thing, then round
+      cursor = cursor.plusSeconds(params.pauseBetweenEachActivity.toLong()).roundUpToQuarter()
+
+      // If travel can't finish today (by travelEnd), move to next day (start at dayStart)
+      if (!fitsInTravelWindow(driveSec)) {
+        resetToNextDay()
+      }
 
       val segStart = cursor
-      val segEnd = segStart.plusSeconds(driveSec.toLong())
+      val segEnd = segStart.plusSeconds(driveSec.toLong()).roundUpToQuarter()
 
       val seg =
           RouteSegment(
               from = locs[i],
               to = locs[i + 1],
               distanceMeter = 0,
-              durationMinutes = driveSec.toInt() / 60,
+              durationMinutes = ceil(driveSec / 60.0).toInt(),
               path = emptyList(),
               transportMode = TransportMode.BUS,
               startDate = segStart.toTs(),
               endDate = segEnd.toTs())
       elements += TripElement.TripSegment(seg)
-      cursor = segEnd.plusSeconds(params.pauseBetweenEachActivity.toLong())
+
+      cursor = segEnd
     }
   }
 

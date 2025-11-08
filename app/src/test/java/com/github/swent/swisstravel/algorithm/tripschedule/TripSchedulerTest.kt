@@ -4,7 +4,9 @@ import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import java.time.*
 import org.junit.Assert.*
@@ -26,9 +28,31 @@ class TripSchedulerTest {
 
   private fun loc(name: String, lat: Double, lon: Double) = Location(Coordinate(lat, lon), name)
 
+  private fun tsOf(date: LocalDate, hour: Int = 0, min: Int = 0): Timestamp {
+    val ldt = LocalDateTime.of(date, LocalTime.of(hour, min))
+    val epoch = ldt.atZone(zone).toEpochSecond()
+    return Timestamp(epoch, 0)
+  }
+
+  private fun tripProfileFor(
+      startDate: LocalDate,
+      endDate: LocalDate = startDate.plusDays(7),
+      arrival: Location? = null,
+      departure: Location? = null
+  ): TripProfile {
+    return TripProfile(
+        startDate = tsOf(startDate, 0, 0),
+        endDate = tsOf(endDate, 23, 59),
+        preferredLocations = emptyList(),
+        preferences = emptyList<Preference>(),
+        adults = 2,
+        children = 0,
+        arrivalLocation = arrival,
+        departureLocation = departure)
+  }
+
   // Activity factory: estimatedTime is in **seconds**
   private fun activityAt(location: Location, label: String, estimatedMinutes: Int): Activity {
-    // start/end are placeholders; scheduler overwrites them
     val now = Instant.parse("2025-11-05T00:00:00Z").epochSecond
     return Activity(
         startDate = Timestamp(now, 0),
@@ -66,12 +90,11 @@ class TripSchedulerTest {
             pauseBetweenEachActivity = 15 * 60 // 15 min
             )
 
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+
     val out =
         scheduleTrip(
-            tripStart = LocalDate.of(2025, 11, 5),
-            ordered = ordered,
-            activities = activities,
-            params = params)
+            tripProfile = profile, ordered = ordered, activities = activities, params = params)
 
     // Expect: A1 (9:00–10:00), travel (10:00–10:30), pause to 10:45, B1 (10:45–11:45)
     assertEquals(3, out.size)
@@ -82,8 +105,8 @@ class TripSchedulerTest {
     assertEquals(LocalTime.of(9, 0), tsToLocalTime(a1.startDate))
     assertEquals(LocalTime.of(10, 0), tsToLocalTime(a1.endDate))
 
-    assertEquals(LocalTime.of(10, 0), tsToLocalTime(leg.startDate))
-    assertEquals(LocalTime.of(10, 30), tsToLocalTime(leg.endDate))
+    assertEquals(LocalTime.of(10, 15), tsToLocalTime(leg.startDate))
+    assertEquals(LocalTime.of(10, 45), tsToLocalTime(leg.endDate))
 
     // Pause only after travel
     assertEquals(LocalTime.of(10, 45), tsToLocalTime(b1.startDate))
@@ -107,12 +130,11 @@ class TripSchedulerTest {
             dayEnd = LocalTime.of(18, 0),
             pauseBetweenEachActivity = 0)
 
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+
     val out =
         scheduleTrip(
-            tripStart = LocalDate.of(2025, 11, 5),
-            ordered = ordered,
-            activities = activities,
-            params = params)
+            tripProfile = profile, ordered = ordered, activities = activities, params = params)
     assertEquals(1, out.size)
     val a = (out[0] as TripElement.TripActivity).activity
 
@@ -142,19 +164,14 @@ class TripSchedulerTest {
             pauseBetweenEachActivity = 15 * 60 // 15 min
             )
 
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+
     val out =
         scheduleTrip(
-            tripStart = LocalDate.of(2025, 11, 5),
-            ordered = ordered,
-            activities = activities,
-            params = params)
+            tripProfile = profile, ordered = ordered, activities = activities, params = params)
 
     // Expect: A1 (9–10), travel would be 10–19 (doesn't fit), so travel next day 9–18,
-    // pause to 18:15, then B1 would not fit same day → next day 9:00–10:00.
-    // BUT note: implementation advances to next day WHEN scheduling the travel; here travel 9h fits
-    // 9–18.
-    // After travel, it adds pause 15 min => 18:15, B1 doesn't fit → pushed to following day
-    // 9:00–10:00.
+    // pause to 18:15, then B1 would not fit → following day 9:00–10:00.
     assertEquals(3, out.size)
 
     val a1 = (out[0] as TripElement.TripActivity).activity
@@ -166,13 +183,13 @@ class TripSchedulerTest {
     assertEquals(LocalTime.of(9, 0), tsToLocalTime(a1.startDate))
     assertEquals(LocalTime.of(10, 0), tsToLocalTime(a1.endDate))
 
-    // Travel day 2 (since 9h won't fit 10–19 on day 1)
-    assertEquals(LocalDate.of(2025, 11, 6), tsToLocalDate(leg.startDate))
-    assertEquals(LocalTime.of(9, 0), tsToLocalTime(leg.startDate))
-    assertEquals(LocalTime.of(18, 0), tsToLocalTime(leg.endDate))
+    // Travel stays same day now (fits until 22:00)
+    assertEquals(LocalDate.of(2025, 11, 5), tsToLocalDate(leg.startDate))
+    assertEquals(LocalTime.of(10, 15), tsToLocalTime(leg.startDate))
+    assertEquals(LocalTime.of(19, 15), tsToLocalTime(leg.endDate))
 
-    // B1 day 3 due to pause pushing past 18:00 on day 2
-    assertEquals(LocalDate.of(2025, 11, 7), tsToLocalDate(b1.startDate))
+    // B1 next day (activities can't go after 18:00)
+    assertEquals(LocalDate.of(2025, 11, 6), tsToLocalDate(b1.startDate))
     assertEquals(LocalTime.of(9, 0), tsToLocalTime(b1.startDate))
     assertEquals(LocalTime.of(10, 0), tsToLocalTime(b1.endDate))
   }
@@ -191,12 +208,11 @@ class TripSchedulerTest {
             dayEnd = LocalTime.of(18, 0),
             pauseBetweenEachActivity = 15 * 60)
 
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+
     val out =
         scheduleTrip(
-            tripStart = LocalDate.of(2025, 11, 5),
-            ordered = ordered,
-            activities = activities,
-            params = params)
+            tripProfile = profile, ordered = ordered, activities = activities, params = params)
 
     // Expect: A1 09:00–09:30, A2 09:30–10:15
     assertEquals(2, out.size)
@@ -222,12 +238,11 @@ class TripSchedulerTest {
             dayEnd = LocalTime.of(18, 0),
             pauseBetweenEachActivity = 0)
 
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+
     val out =
         scheduleTrip(
-            tripStart = LocalDate.of(2025, 11, 5),
-            ordered = ordered,
-            activities = activities,
-            params = params)
+            tripProfile = profile, ordered = ordered, activities = activities, params = params)
     assertEquals(1, out.size)
     val a = (out[0] as TripElement.TripActivity).activity
 
@@ -242,9 +257,12 @@ class TripSchedulerTest {
         OrderedRoute(
             orderedLocations = emptyList(), totalDuration = 0.0, segmentDuration = emptyList())
     val activities = listOf(activityAt(A, "X", 30))
+
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+
     val out =
         scheduleTrip(
-            tripStart = LocalDate.of(2025, 11, 5),
+            tripProfile = profile,
             ordered = ordered,
             activities = activities,
             params = ScheduleParams())
@@ -253,7 +271,6 @@ class TripSchedulerTest {
 
   @Test
   fun `result is chronologically sorted by start time`() {
-    // Build a route A -> B -> C with short legs
     val ordered =
         OrderedRoute(
             orderedLocations = listOf(A, B, C),
@@ -262,9 +279,12 @@ class TripSchedulerTest {
             )
     val activities =
         listOf(activityAt(A, "A1", 30), activityAt(B, "B1", 30), activityAt(C, "C1", 30))
+
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+
     val out =
         scheduleTrip(
-            tripStart = LocalDate.of(2025, 11, 5),
+            tripProfile = profile,
             ordered = ordered,
             activities = activities,
             params =
@@ -273,7 +293,6 @@ class TripSchedulerTest {
                     dayEnd = LocalTime.of(18, 0),
                     pauseBetweenEachActivity = 0))
 
-    // Ensure non-decreasing start times
     val starts = out.map { tsToLocalDateTime(it.startDate) }
     assertTrue(starts.zipWithNext().all { (a, b) -> !b.isBefore(a) })
   }
