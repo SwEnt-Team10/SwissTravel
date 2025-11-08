@@ -36,7 +36,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 
@@ -61,11 +60,12 @@ object TripInfoTestTags {
 @Composable
 fun TripInfoScreen(
     uid: String?,
-    tripInfoViewModel: TripInfoViewModel = viewModel(),
+    tripInfoViewModel: TripInfoViewModel,
     onMyTrips: () -> Unit = {},
     onFullscreenClick: () -> Unit = {},
     onEditTrip: () -> Unit = {}
 ) {
+
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val tripInfoUIState by tripInfoViewModel.uiState.collectAsState()
@@ -93,7 +93,7 @@ fun TripInfoScreen(
             },
             navigationIcon = {
               IconButton(
-                  onClick = { showMap = false },
+                  onClick = { onMyTrips() },
                   modifier = Modifier.testTag(TripInfoTestTags.BACK_BUTTON)) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -135,7 +135,8 @@ fun TripInfoScreen(
                   shape = RoundedCornerShape(12.dp),
                   elevation = CardDefaults.cardElevation(defaultElevation = 6.dp)) {
                     if (showMap) {
-                      TripInfoZoomableMap(onFullscreenClick = onFullscreenClick)
+                      TripInfoZoomableMap(
+                          onFullscreenClick = onFullscreenClick, tripInfoUIState.locations)
                     }
                   }
             }
