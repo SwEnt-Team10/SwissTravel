@@ -68,7 +68,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
       _uiState.update { it.copy(selectedPreferences = sanitized) }
 
       try {
-        userRepository.updateUserPreferences(user.uid, selected)
+        userRepository.updateUserPreferences(user.uid, sanitized)
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error saving preferences: ${e.message}")
       }
