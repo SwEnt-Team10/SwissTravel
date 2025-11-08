@@ -48,7 +48,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
             profilePicUrl = loggedIn.profilePicUrl,
             name = loggedIn.name,
             email = loggedIn.email,
-            selectedPreferences = loggedIn.preferences)
+            selectedPreferences = sanitized)
   }
 
   fun clearErrorMsg() {
@@ -65,7 +65,7 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
       }
 
       val sanitized = PreferenceRules.enforceMutualExclusivity(selected)
-      _uiState.update { it.copy(selectedPreferences = selected) }
+      _uiState.update { it.copy(selectedPreferences = sanitized) }
 
       try {
         userRepository.updateUserPreferences(user.uid, selected)

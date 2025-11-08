@@ -197,7 +197,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
             .append("&facets=")
             .append(facetsParam)
             .append("&facet.filter=")
-            .append(facetFilters)
+            .append("[$facetFilters]")
             .toString()
 
     Log.d("URL", "Final MySwitzerland URL: $url")
