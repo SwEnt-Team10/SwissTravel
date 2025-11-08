@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapTestTags
@@ -21,7 +22,7 @@ class TripInfoMapScreenTest {
 
   @Test
   fun displayTopAppBarBackButtonAndMapContainer() {
-    composeRule.setContent { TripInfoMapScreen() }
+    composeRule.setContent { TripInfoMapScreen(tripInfoViewModel = viewModel()) }
 
     composeRule.onNodeWithTag(TripInfoMapTestTags.TOP_APP_BAR).assertIsDisplayed()
     composeRule.onNodeWithTag(TripInfoMapTestTags.BACK_BUTTON).assertIsDisplayed()
@@ -32,7 +33,9 @@ class TripInfoMapScreenTest {
   fun clickOnBackCallsOnBackAfterMapHides() {
     var called = false
 
-    composeRule.setContent { TripInfoMapScreen(onBack = { called = true }) }
+    composeRule.setContent {
+      TripInfoMapScreen(onBack = { called = true }, tripInfoViewModel = viewModel())
+    }
 
     // Perform click on back button
     composeRule.onNodeWithTag(TripInfoMapTestTags.BACK_BUTTON).performClick()

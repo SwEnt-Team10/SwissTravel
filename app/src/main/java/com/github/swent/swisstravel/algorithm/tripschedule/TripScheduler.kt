@@ -217,11 +217,41 @@ fun scheduleTrip(
 
   // Main scheduling loop
   for (i in locs.indices) {
-    // Activities at this location in provided order
-    activities.asSequence().filter { it.location == locs[i] }.forEach { scheduleActivity(it) }
+    val location = locs[i]
+    val activitiesHere = activities.filter { it.location == location }
 
-    // Travel to next location
-    if (i < locs.lastIndex) scheduleTravel(i)
+    for (act in activitiesHere) {
+      val durationSec = act.estimatedTime
+
+      if (!fitsInDay(durationSec)) advanceToNextDay()
+
+      val start = cursor
+      val end = start.plusSeconds(durationSec.toLong())
+
+      val scheduled = act.copy(startDate = start.toTs(), endDate = end.toTs())
+      elements += TripElement.TripActivity(scheduled)
+
+      cursor = end
+    }
+
+    if (i < locs.lastIndex) {
+      val driveSec = segments[i]
+      if (!fitsInDay(driveSec.toInt())) advanceToNextDay()
+
+      val segStart = cursor
+      val segEnd = segStart.plusSeconds(driveSec.toLong())
+
+      val seg =
+          RouteSegment(
+              from = locs[i],
+              to = locs[i + 1],
+              durationMinutes = driveSec.toInt() / 60,
+              transportMode = TransportMode.CAR,
+              startDate = segStart.toTs(),
+              endDate = segEnd.toTs())
+      elements += TripElement.TripSegment(seg)
+      cursor = segEnd.plusSeconds(params.pauseBetweenEachActivity.toLong())
+    }
   }
 
   return out.sortedBy { it.startDate.seconds }

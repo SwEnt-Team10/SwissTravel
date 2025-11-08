@@ -103,9 +103,8 @@ fun FirstDestinationScreen(
                           LazyColumn(
                               modifier = Modifier.fillMaxWidth(),
                               horizontalAlignment = Alignment.CenterHorizontally) {
-                                itemsIndexed(destinations, key = { index, _ -> index }) {
-                                    index,
-                                    destination ->
+                                itemsIndexed(destinations, key = { index, _ -> index }) { index, _
+                                  ->
                                   // Create a new ViewModel for each destination input field
                                   val destinationVm = destinationViewModelFactory(index)
                                   LocationAutocompleteTextField(

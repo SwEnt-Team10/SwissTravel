@@ -72,9 +72,7 @@ class TripsRepositoryFirestorePublicTest {
         mapOf(
             "from" to locationMap,
             "to" to locationMap,
-            "distanceMeter" to 100,
             "durationMinutes" to 10,
-            "path" to listOf(mapOf("latitude" to 3.0, "longitude" to 4.0)),
             "transportMode" to TransportMode.WALKING.name,
             "startDate" to Timestamp.now(),
             "endDate" to Timestamp.now())

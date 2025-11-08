@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.FavoriteButton
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoTestTags
@@ -26,6 +27,7 @@ class TripInfoScreenTest {
     composeRule.setContent {
       TripInfoScreen(
           uid = null,
+          viewModel(),
           onMyTrips = { pastClicked = true },
           onFullscreenClick = {},
           onEditTrip = { editClicked = true })
