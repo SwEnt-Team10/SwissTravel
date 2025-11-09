@@ -22,7 +22,7 @@ import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 
-/** A card displaying the step number and location name for a trip step. */
+/** Test tags for StepLocationCard composable. */
 object StepLocationCardTestTags {
   const val CARD = "StepLocationCard:Card"
   const val STEP_LABEL = "StepLocationCard:StepLabel"
@@ -31,11 +31,11 @@ object StepLocationCardTestTags {
 /**
  * A card displaying the step number and location name for a trip step.
  *
- * @param int The step number.
+ * @param stepNumber The step number.
  * @param location The location of the step.
  */
 @Composable
-fun StepLocationCard(int: Int, location: Location) {
+fun StepLocationCard(stepNumber: Int, location: Location) {
   Card(
       modifier =
           Modifier.fillMaxWidth()
@@ -52,7 +52,7 @@ fun StepLocationCard(int: Int, location: Location) {
                   horizontalAlignment = Alignment.Start,
                   modifier = Modifier) {
                     Text(
-                        text = "${stringResource(R.string.step_info)} $int",
+                        text = "${stringResource(R.string.step_info)} $stepNumber",
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.testTag(StepLocationCardTestTags.STEP_LABEL))

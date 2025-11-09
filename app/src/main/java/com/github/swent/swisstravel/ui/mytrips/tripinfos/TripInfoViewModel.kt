@@ -62,7 +62,7 @@ class TripInfoViewModel(
    *
    * @param errorMsg the error message to set
    */
-  private fun setErrorMsg(errorMsg: String) {
+  override fun setErrorMsg(errorMsg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 

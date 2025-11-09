@@ -15,4 +15,10 @@ interface TripInfoViewModelContract {
   fun toggleFavorite()
   /** Clears any error message in the UI state. */
   fun clearErrorMsg()
+  /**
+   * Sets an error message in the UI state.
+   *
+   * @param errorMsg The error message to set.
+   */
+  fun setErrorMsg(errorMsg: String)
 }

@@ -105,4 +105,8 @@ class FakeTripInfoViewModel {
             isFavorite = false,
             errorMsg = null)
   }
+
+  fun setErrorMsg(errorMsg: String) {
+    _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
+  }
 }

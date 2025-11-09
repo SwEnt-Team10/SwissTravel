@@ -15,4 +15,6 @@ class TestTripInfoViewModel(private val fake: FakeTripInfoViewModel) : TripInfoV
   override fun toggleFavorite() = fake.toggleFavorite()
 
   override fun clearErrorMsg() = fake.clearErrorMsg()
+
+  override fun setErrorMsg(errorMsg: String) = fake.setErrorMsg(errorMsg)
 }

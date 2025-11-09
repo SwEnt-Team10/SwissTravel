@@ -197,7 +197,7 @@ fun TripInfoScreen(
                   Box(
                       modifier =
                           Modifier.testTag(TripInfoScreenTestTags.stepLocationTag(idx + 2))) {
-                        StepLocationCard(int = idx + 2, location = location)
+                        StepLocationCard(stepNumber = idx + 2, location = location)
                       }
                 }
               }

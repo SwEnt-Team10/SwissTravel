@@ -28,7 +28,7 @@ class StepLocationTest {
   fun stepLabelAndLocationNameAreDisplayed() {
     val stepNumber = 2
     val location = Location(name = "Lausanne", coordinate = Coordinate(46.5197, 6.6323))
-    composeTestRule.setContent { StepLocationCard(int = stepNumber, location = location) }
+    composeTestRule.setContent { StepLocationCard(stepNumber = stepNumber, location = location) }
 
     val expectedStep = "${composeTestRule.activity.getString(R.string.step_info)} $stepNumber"
     composeTestRule.onNodeWithTag(StepLocationCardTestTags.CARD).assertIsDisplayed()
@@ -44,7 +44,7 @@ class StepLocationTest {
   fun stepAndLocationAreDisplayedUsingTags() {
     val stepNumber = 2
     val location = Location(name = "Lausanne", coordinate = Coordinate(46.5197, 6.6323))
-    composeTestRule.setContent { StepLocationCard(int = stepNumber, location = location) }
+    composeTestRule.setContent { StepLocationCard(stepNumber = stepNumber, location = location) }
 
     val expectedStep = "${composeTestRule.activity.getString(R.string.step_info)} $stepNumber"
     composeTestRule.onNodeWithTag(StepLocationCardTestTags.CARD).assertIsDisplayed()
@@ -61,9 +61,9 @@ class StepLocationTest {
     composeTestRule.setContent {
       Column {
         StepLocationCard(
-            int = 1, location = Location(name = "A", coordinate = Coordinate(0.0, 0.0)))
+            stepNumber = 1, location = Location(name = "A", coordinate = Coordinate(0.0, 0.0)))
         StepLocationCard(
-            int = 2, location = Location(name = "B", coordinate = Coordinate(0.0, 0.0)))
+            stepNumber = 2, location = Location(name = "B", coordinate = Coordinate(0.0, 0.0)))
       }
     }
 
@@ -74,7 +74,7 @@ class StepLocationTest {
   @Test
   fun emptyLocationNameRendersEmptyTextNode() {
     val location = Location(name = "", coordinate = Coordinate(0.0, 0.0))
-    composeTestRule.setContent { StepLocationCard(int = 0, location = location) }
+    composeTestRule.setContent { StepLocationCard(stepNumber = 0, location = location) }
 
     composeTestRule.onNodeWithTag(StepLocationCardTestTags.LOCATION_NAME).assertTextEquals("")
   }
