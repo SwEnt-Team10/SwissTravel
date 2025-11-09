@@ -20,7 +20,13 @@ class SignUpViewModel(private val repository: AuthRepository = AuthRepositoryFir
     _uiState.update { it.copy(errorMsg = null) }
   }
 
-  fun signUpWithEmailPassword(email: String, password: String, firstName : String, lastName : String, context: Context) {
+  fun signUpWithEmailPassword(
+      email: String,
+      password: String,
+      firstName: String,
+      lastName: String,
+      context: Context
+  ) {
     if (_uiState.value.isLoading) return
 
     viewModelScope.launch {

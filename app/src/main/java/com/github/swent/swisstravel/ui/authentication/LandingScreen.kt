@@ -32,10 +32,10 @@ import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 
 /** Test tags for the LandingScreen. */
 object LandingScreenTestTags {
-    const val APP_LOGO = "appLogo"
-    const val APP_NAME = "appName"
-    const val SIGN_UP_BUTTON = "signUpButton"
-    const val SIGN_IN_BUTTON = "signInButton"
+  const val APP_LOGO = "appLogo"
+  const val APP_NAME = "appName"
+  const val SIGN_UP_BUTTON = "signUpButton"
+  const val SIGN_IN_BUTTON = "signInButton"
 }
 
 /**
@@ -46,52 +46,53 @@ object LandingScreenTestTags {
  */
 @Composable
 fun LandingScreen(onSignInClick: () -> Unit = {}, onSignUpClick: () -> Unit = {}) {
-    Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
-        Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.swisstravel),
-                contentDescription = stringResource(R.string.app_logo_desc),
-                modifier =
-                    Modifier.size(240.dp)
-                        .clip(RoundedCornerShape(16.dp))
-                        .testTag(LandingScreenTestTags.APP_LOGO))
+  Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
+    Column(
+        modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
+    ) {
+      Image(
+          painter = painterResource(id = R.drawable.swisstravel),
+          contentDescription = stringResource(R.string.app_logo_desc),
+          modifier =
+              Modifier.size(240.dp)
+                  .clip(RoundedCornerShape(16.dp))
+                  .testTag(LandingScreenTestTags.APP_LOGO))
 
-            Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(16.dp))
 
-            Text(
-                modifier = Modifier.testTag(LandingScreenTestTags.APP_NAME),
-                text = stringResource(R.string.name_lower),
-                style = MaterialTheme.typography.headlineLarge.copy(fontSize = 45.sp, lineHeight = 52.sp),
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center)
+      Text(
+          modifier = Modifier.testTag(LandingScreenTestTags.APP_NAME),
+          text = stringResource(R.string.name_lower),
+          style = MaterialTheme.typography.headlineLarge.copy(fontSize = 45.sp, lineHeight = 52.sp),
+          fontWeight = FontWeight.Bold,
+          textAlign = TextAlign.Center)
 
-            Spacer(modifier = Modifier.height(48.dp))
+      Spacer(modifier = Modifier.height(48.dp))
 
-            // Sign Up button
-            Button(
-                onClick = onSignUpClick,
-                modifier =
-                    Modifier.fillMaxWidth().height(48.dp).testTag(LandingScreenTestTags.SIGN_UP_BUTTON)) {
-                Text("Sign Up", fontSize = 16.sp)
-            }
+      // Sign Up button
+      Button(
+          onClick = onSignUpClick,
+          modifier =
+              Modifier.fillMaxWidth().height(48.dp).testTag(LandingScreenTestTags.SIGN_UP_BUTTON)) {
+            Text("Sign Up", fontSize = 16.sp)
+          }
 
-            Spacer(modifier = Modifier.height(16.dp))
+      Spacer(modifier = Modifier.height(16.dp))
 
-            // Sign In button
-            TextButton(
-                onClick = onSignInClick, modifier = Modifier.testTag(LandingScreenTestTags.SIGN_IN_BUTTON)) {
-                Text("Already have an account? Sign In")
-            }
-        }
+      // Sign In button
+      TextButton(
+          onClick = onSignInClick,
+          modifier = Modifier.testTag(LandingScreenTestTags.SIGN_IN_BUTTON)) {
+            Text("Already have an account? Sign In")
+          }
     }
+  }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun LandingScreenPreview() {
-    SwissTravelTheme { LandingScreen() }
+  SwissTravelTheme { LandingScreen() }
 }
