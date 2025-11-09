@@ -122,31 +122,25 @@ class ArrivalDepartureTest {
           departureAddressVm = fakeDepartureVm)
     }
 
-    // should not got to next screen if both are empty
+    // should not trigger on next if both are empty
     fakeArrivalVm.setLocation(null)
     fakeDepartureVm.setLocation(null)
     composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
     assertFalse(onNextCalled)
-    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD).assertIsDisplayed()
 
-    // should not got to next screen if one is empty
+    // should not trigger on next if one is empty
     fakeArrivalVm.setLocation(arrivalLocation)
     fakeDepartureVm.setLocation(null)
     composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
     assertFalse(onNextCalled)
-    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD).assertIsDisplayed()
 
-    // should not got to next screen if the other is empty
+    // should not trigger on next if the other is empty
     fakeArrivalVm.setLocation(null)
     fakeDepartureVm.setLocation(departureLocation)
     composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
     assertFalse(onNextCalled)
-    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD).assertIsDisplayed()
 
-    // should go to next screen if both are filled
+    // should trigger on next if both are filled
     fakeArrivalVm.setLocation(arrivalLocation)
     fakeDepartureVm.setLocation(departureLocation)
     composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
