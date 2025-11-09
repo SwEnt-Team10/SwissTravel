@@ -20,11 +20,8 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
-import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
-import com.github.swent.swisstravel.ui.navigation.Tab
 
 object CurrentTripScreenTestTags {
   const val CREATE_TRIP_BUTTON = "createTripButton"
@@ -44,12 +41,6 @@ fun CurrentTripScreen(navigationActions: NavigationActions? = null, isLoggedIn: 
   }
 
   Scaffold(
-      bottomBar = {
-        BottomNavigationMenu(
-            selectedTab = Tab.CurrentTrip,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
-      },
       content = { pd ->
         Column(
             modifier =

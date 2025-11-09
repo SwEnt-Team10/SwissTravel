@@ -41,10 +41,8 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.github.swent.swisstravel.ui.navigation.Tab
 
 /**
  * Contains constants for test tags used within [PastTripsScreen].
@@ -129,12 +127,6 @@ fun PastTripsScreen(
             onFavoriteSelected = { pastTripsViewModel.toggleFavoriteForSelectedTrips() },
             onDeleteSelected = { showDeleteConfirmation = true },
             onSelectAll = { pastTripsViewModel.selectAllTrips() })
-      },
-      bottomBar = {
-        BottomNavigationMenu(
-            selectedTab = Tab.MyTrips,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { padding ->
         Column(
