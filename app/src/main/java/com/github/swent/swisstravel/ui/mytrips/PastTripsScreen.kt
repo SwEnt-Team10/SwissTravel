@@ -216,7 +216,7 @@ private fun PastTripsTopAppBar(
               onClick = onBack, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_BUTTON)) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back),
+                    contentDescription = stringResource(R.string.back_to_my_trips),
                     tint = MaterialTheme.colorScheme.onBackground)
               }
         }
