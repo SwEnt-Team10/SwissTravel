@@ -133,6 +133,8 @@ fun ArrivalDepartureScreen(
                 Button(
                     modifier = Modifier.testTag(NEXT_BUTTON),
                     onClick = {
+
+                      // check that both locations are set
                       if (departureState.selectedLocation == null) {
                         Toast.makeText(context, emptyDeparture, Toast.LENGTH_SHORT).show()
                         return@Button
@@ -140,9 +142,9 @@ fun ArrivalDepartureScreen(
                       if (arrivalState.selectedLocation == null) {
                         Toast.makeText(context, emptyArrival, Toast.LENGTH_SHORT).show()
                         return@Button
-                      } else {
-                        onNext()
                       }
+
+                      onNext()
                     },
                     colors =
                         ButtonDefaults.buttonColors(
