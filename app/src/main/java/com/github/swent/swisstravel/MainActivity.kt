@@ -160,7 +160,7 @@ fun SwissTravelApp(
               onTabSelected = { tab -> navigationActions.navigateTo(tab.destination) },
               modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
         }
-      }) { _ ->
+      }) { innerPadding ->
         NavHost(navController = navController, startDestination = startDestination) {
 
           // Sign-in screen
