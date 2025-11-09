@@ -164,6 +164,9 @@
     <string name="preference_wheelchair_accessible">Wheelchair Accessible</string>
     <string name="preference_public_transport">Public Transport Accessibility</string>
     <string name="preference_quick">Fast Trip</string>
+    <string name="preference_early_bird">Early Bird</string>
+    <string name="preference_night_owl">Night Owl</string>
+    <string name="preference_slow_pace">Slow Paced</string>
 
     <!-- Preference Categories -->
     <string name="preference_category_activity_type">Activity Type</string>

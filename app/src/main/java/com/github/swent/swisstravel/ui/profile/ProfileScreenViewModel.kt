@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.profile
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceRules
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,12 +42,13 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
   }
 
   fun autoFill(loggedIn: User) {
+    val sanitized = PreferenceRules.enforceMutualExclusivity(loggedIn.preferences)
     _uiState.value =
         ProfileScreenUIState(
             profilePicUrl = loggedIn.profilePicUrl,
             name = loggedIn.name,
             email = loggedIn.email,
-            selectedPreferences = loggedIn.preferences)
+            selectedPreferences = sanitized)
   }
 
   fun clearErrorMsg() {
@@ -62,10 +64,11 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
         return@launch
       }
 
-      _uiState.update { it.copy(selectedPreferences = selected) }
+      val sanitized = PreferenceRules.enforceMutualExclusivity(selected)
+      _uiState.update { it.copy(selectedPreferences = sanitized) }
 
       try {
-        userRepository.updateUserPreferences(user.uid, selected)
+        userRepository.updateUserPreferences(user.uid, sanitized)
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error saving preferences: ${e.message}")
       }
