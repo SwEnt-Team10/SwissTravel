@@ -9,7 +9,6 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,12 +17,11 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 /** UI state for the TripInfo screen */
 data class TripInfoUIState(
     val uid: String = "",
-    val name: String = "",
+    val name: String = "Trip Name",
     val ownerId: String = "",
     val locations: List<Location> = emptyList(),
     val routeSegments: List<RouteSegment> = emptyList(),
@@ -36,9 +34,9 @@ data class TripInfoUIState(
 @OptIn(FlowPreview::class)
 class TripInfoViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
-) : ViewModel() {
+) : ViewModel(), TripInfoViewModelContract {
   private val _uiState = MutableStateFlow(TripInfoUIState())
-  val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
+  override val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
 
   private val favoriteDebounceMs = 800L
   private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
@@ -55,7 +53,7 @@ class TripInfoViewModel(
   }
 
   /** Clears the error message in the UI state */
-  fun clearErrorMsg() {
+  override fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
@@ -64,25 +62,24 @@ class TripInfoViewModel(
    *
    * @param errorMsg the error message to set
    */
-  private fun setErrorMsg(errorMsg: String) {
+  override fun setErrorMsg(errorMsg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
   /**
    * Loads the trip information for the given trip ID
    *
-   * @param tripId the unique identifier of the trip
+   * @param uid the unique identifier of the trip
    */
-  fun loadTripInfo(tripId: String?) {
-    if (tripId.isNullOrBlank()) {
-      Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
+  override fun loadTripInfo(uid: String?) {
+    if (uid.isNullOrBlank()) {
+      Log.e("TripInfoViewModel", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
-
     viewModelScope.launch {
       try {
-        val trip = withContext(Dispatchers.IO) { tripsRepository.getTrip(tripId) }
+        val trip = tripsRepository.getTrip(uid)
         _uiState.value =
             TripInfoUIState(
                 uid = trip.uid,
@@ -94,7 +91,8 @@ class TripInfoViewModel(
                 tripProfile = trip.tripProfile,
                 isFavorite = trip.isFavorite)
       } catch (e: Exception) {
-        setErrorMsg("Unexpected error: ${e.message}")
+        Log.e("TripInfoViewModel", "Error loading trip info", e)
+        setErrorMsg("Failed to load trip info: ${e.message}")
       }
     }
   }
@@ -105,7 +103,7 @@ class TripInfoViewModel(
    * Updates the UI immediately and emits the new state to a debounced flow, which later persists
    * the change to the repository. Prevents redundant or rapid writes to the database.
    */
-  fun toggleFavorite() {
+  override fun toggleFavorite() {
     val current = _uiState.value
     if (current.uid.isBlank()) return
 
