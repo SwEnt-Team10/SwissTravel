@@ -24,7 +24,7 @@ class FakeAddressTextFieldViewModel : AddressTextFieldViewModel() {
     _state.value = _state.value.copy(locationQuery = query)
   }
 
-  override fun setLocation(location: Location) {
+  override fun setLocation(location: Location?) {
     _state.value = _state.value.copy(selectedLocation = location)
   }
 }

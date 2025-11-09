@@ -18,6 +18,8 @@ import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
@@ -101,5 +103,53 @@ class ArrivalDepartureTest {
     val finalTripProfile = tripSettingsViewModel.tripSettings.value.arrivalDeparture
     assertEquals(arrivalLocation, finalTripProfile.arrivalLocation)
     assertEquals(departureLocation, finalTripProfile.departureLocation)
+  }
+
+  @Test
+  fun arrivalAndDepartureAreMandatory() {
+    val fakeArrivalVm = FakeAddressTextFieldViewModel()
+    val fakeDepartureVm = FakeAddressTextFieldViewModel()
+    // Define the locations that will be "selected"
+    val arrivalLocation = Location(Coordinate(46.5197, 6.6323), "Lausanne")
+    val departureLocation = Location(Coordinate(46.2044, 6.1432), "Geneva")
+    var onNextCalled = false
+
+    composeTestRule.setContent {
+      ArrivalDepartureScreen(
+          viewModel = fakeTripSettingsViewModel,
+          onNext = { onNextCalled = true },
+          arrivalAddressVm = fakeArrivalVm,
+          departureAddressVm = fakeDepartureVm)
+    }
+
+    // should not got to next screen if both are empty
+    fakeArrivalVm.setLocation(null)
+    fakeDepartureVm.setLocation(null)
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
+    assertFalse(onNextCalled)
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD).assertIsDisplayed()
+
+    // should not got to next screen if one is empty
+    fakeArrivalVm.setLocation(arrivalLocation)
+    fakeDepartureVm.setLocation(null)
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
+    assertFalse(onNextCalled)
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD).assertIsDisplayed()
+
+    // should not got to next screen if the other is empty
+    fakeArrivalVm.setLocation(null)
+    fakeDepartureVm.setLocation(departureLocation)
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
+    assertFalse(onNextCalled)
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD).assertIsDisplayed()
+
+    // should go to next screen if both are filled
+    fakeArrivalVm.setLocation(arrivalLocation)
+    fakeDepartureVm.setLocation(departureLocation)
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
+    assertTrue(onNextCalled)
   }
 }

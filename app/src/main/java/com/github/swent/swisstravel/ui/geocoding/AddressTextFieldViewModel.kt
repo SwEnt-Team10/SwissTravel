@@ -30,7 +30,7 @@ interface AddressTextFieldViewModelContract {
    *
    * @param location The location to set as selected.
    */
-  fun setLocation(location: Location)
+  fun setLocation(location: Location?)
 
   /**
    * Updates the location query and fetches new location suggestions based on the query.
@@ -68,9 +68,13 @@ open class AddressTextFieldViewModel(
   private val _addressState = MutableStateFlow(AddressTextFieldState())
   override val addressState: StateFlow<AddressTextFieldState> = _addressState.asStateFlow()
 
-  override fun setLocation(location: Location) {
-    _addressState.value =
-        _addressState.value.copy(selectedLocation = location, locationQuery = location.name)
+  override fun setLocation(location: Location?) {
+    if (location == null) {
+      _addressState.value = _addressState.value.copy(selectedLocation = null, locationQuery = "")
+    } else {
+      _addressState.value =
+          _addressState.value.copy(selectedLocation = location, locationQuery = location.name)
+    }
   }
 
   override fun setLocationQuery(query: String) {
