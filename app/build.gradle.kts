@@ -259,8 +259,8 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         "**/Manifest*.*",
         "**/*Test*.*",
         "android/**/*.*",
-        "com/sun/**", // <-- Add this line
-        "jdk/internal/**" // <-- Add this line for good measure
+        "com/sun/**",
+        "jdk/internal/**"
     )
 
     val debugTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {

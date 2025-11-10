@@ -76,7 +76,7 @@ fun LandingScreen(onSignInClick: () -> Unit = {}, onSignUpClick: () -> Unit = {}
           onClick = onSignUpClick,
           modifier =
               Modifier.fillMaxWidth().height(48.dp).testTag(LandingScreenTestTags.SIGN_UP_BUTTON)) {
-            Text("Sign Up", fontSize = 16.sp)
+            Text(stringResource(R.string.sign_up_landing), fontSize = 16.sp)
           }
 
       Spacer(modifier = Modifier.height(16.dp))
@@ -85,7 +85,7 @@ fun LandingScreen(onSignInClick: () -> Unit = {}, onSignUpClick: () -> Unit = {}
       TextButton(
           onClick = onSignInClick,
           modifier = Modifier.testTag(LandingScreenTestTags.SIGN_IN_BUTTON)) {
-            Text("Already have an account? Sign In")
+            Text(stringResource(R.string.sign_in_landing))
           }
     }
   }

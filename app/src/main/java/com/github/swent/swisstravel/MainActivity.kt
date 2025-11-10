@@ -115,7 +115,7 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name // The Auth graph
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
       else Screen.CurrentTrip.name
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()

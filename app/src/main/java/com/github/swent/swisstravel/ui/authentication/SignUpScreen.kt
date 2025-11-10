@@ -11,6 +11,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
@@ -82,7 +83,7 @@ fun SignUpScreen(
             verticalArrangement = Arrangement.Center,
         ) {
           Text(
-              text = "Create Your Account",
+              text = stringResource(R.string.create_account),
               style = MaterialTheme.typography.headlineMedium,
               fontWeight = FontWeight.Bold,
               textAlign = TextAlign.Center,
@@ -94,7 +95,7 @@ fun SignUpScreen(
           OutlinedTextField(
               value = firstName,
               onValueChange = { firstName = it },
-              label = { Text("First Name") },
+              label = { stringResource(R.string.first_name) },
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.FIRST_NAME_FIELD))
 
@@ -104,7 +105,7 @@ fun SignUpScreen(
           OutlinedTextField(
               value = lastName,
               onValueChange = { lastName = it },
-              label = { Text("Last Name") },
+              label = { stringResource(R.string.last_name) },
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.LAST_NAME_FIELD))
 
@@ -114,7 +115,7 @@ fun SignUpScreen(
           OutlinedTextField(
               value = email,
               onValueChange = { email = it },
-              label = { Text("Email") },
+              label = { stringResource(R.string.email) },
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.EMAIL_FIELD))
 
@@ -124,7 +125,7 @@ fun SignUpScreen(
           OutlinedTextField(
               value = password,
               onValueChange = { password = it },
-              label = { Text("Password") },
+              label = { stringResource(R.string.password) },
               visualTransformation = PasswordVisualTransformation(),
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.PASSWORD_FIELD))
@@ -148,11 +149,11 @@ fun SignUpScreen(
                     Modifier.fillMaxWidth()
                         .height(48.dp)
                         .testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)) {
-                  Text("Sign Up", fontSize = 16.sp)
+                  Text(stringResource(R.string.sign_up_landing), fontSize = 16.sp)
                 }
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                "OR",
+                stringResource(R.string.or),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Gray)

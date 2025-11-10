@@ -137,7 +137,7 @@ fun SignInScreen(
           Spacer(modifier = Modifier.height(24.dp))
 
           Text(
-              text = "Sign in to your account",
+              text = stringResource(R.string.sign_in_account),
               style = MaterialTheme.typography.titleMedium,
               textAlign = TextAlign.Center,
               modifier = Modifier.fillMaxWidth())
@@ -147,7 +147,7 @@ fun SignInScreen(
           OutlinedTextField(
               value = email,
               onValueChange = { email = it },
-              label = { Text("Email") },
+              label = { stringResource(R.string.email) },
               modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.EMAIL_FIELD))
 
           Spacer(modifier = Modifier.height(16.dp))
@@ -155,7 +155,7 @@ fun SignInScreen(
           OutlinedTextField(
               value = password,
               onValueChange = { password = it },
-              label = { Text("Password") },
+              label = { stringResource(R.string.password) },
               visualTransformation = PasswordVisualTransformation(),
               modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.PASSWORD_FIELD))
 
@@ -172,11 +172,11 @@ fun SignInScreen(
                     Modifier.fillMaxWidth()
                         .height(48.dp)
                         .testTag(SignInScreenTestTags.LOGIN_BUTTON)) {
-                  Text("Sign In", fontSize = 16.sp)
+                  Text(stringResource(R.string.sign_in), fontSize = 16.sp)
                 }
             Spacer(modifier = Modifier.height(24.dp))
             Text(
-                "OR",
+                stringResource(R.string.or),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Gray)
