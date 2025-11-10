@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.trips.TripSortType
 
@@ -34,15 +35,19 @@ object SortMenuTestTags {
  * A composable that displays a sort icon button with a dropdown menu for sorting options.
  *
  * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
+ * @param selectedSortType The currently selected sorting option.
  */
 @Composable
-fun SortMenu(onClickDropDownMenu: (TripSortType) -> Unit = {}) {
+fun SortMenu(onClickDropDownMenu: (TripSortType) -> Unit = {}, selectedSortType: TripSortType) {
   var expanded by remember { mutableStateOf(false) }
+
   Box {
     IconButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.testTag(SortMenuTestTags.SORT_DROPDOWN_MENU)) {
-          Icon(Icons.AutoMirrored.Filled.Sort, contentDescription = stringResource(R.string.sort))
+          Icon(
+              imageVector = Icons.AutoMirrored.Filled.Sort,
+              contentDescription = stringResource(R.string.sort))
         }
 
     DropdownMenu(
@@ -59,11 +64,20 @@ fun SortMenu(onClickDropDownMenu: (TripSortType) -> Unit = {}) {
                   TripSortType.NAME_DESC to R.string.name_desc,
                   TripSortType.FAVORITES_FIRST to R.string.favorites_first)
           sortOptions.forEach { (type, resId) ->
+            val isSelected = type == selectedSortType
+
             DropdownMenuItem(
                 modifier =
                     Modifier.testTag(SortMenuTestTags.getTestTagSortOption(type)).semantics(
                         mergeDescendants = true) {},
-                text = { Text(stringResource(resId)) },
+                text = {
+                  Text(
+                      text = stringResource(resId),
+                      color =
+                          if (isSelected) MaterialTheme.colorScheme.primary
+                          else MaterialTheme.colorScheme.onBackground,
+                      fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal)
+                },
                 onClick = {
                   onClickDropDownMenu(type)
                   expanded = false
