@@ -10,6 +10,7 @@
     <!-- Authentication -->
     <string name="login_success">Login successful!</string>
     <string name="google_sign_in">Sign in with Google</string>
+    <string name="google_sign_up">Sign up with Google</string>
     <string name="app_logo_desc">App Logo</string>
     <string name="google_logo_desc">Google Logo</string>
     <string name="sign_out">Sign Out</string>
@@ -183,7 +184,6 @@
     <string name="no_preferences">No preferences</string>
     <string name="from_summary">From:</string>
     <string name="to_summary">To:</string>
-
 
 
 </resources>

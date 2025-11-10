@@ -69,7 +69,7 @@ fun LandingScreen(onSignInClick: () -> Unit = {}, onSignUpClick: () -> Unit = {}
           fontWeight = FontWeight.Bold,
           textAlign = TextAlign.Center)
 
-      Spacer(modifier = Modifier.height(48.dp))
+      Spacer(modifier = Modifier.height(60.dp))
 
       // Sign Up button
       Button(

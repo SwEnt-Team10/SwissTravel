@@ -58,6 +58,11 @@ object SignInScreenTestTags {
   const val NAME = "name"
 }
 
+enum class GoogleButtonType {
+  SIGN_UP,
+  SIGN_IN
+}
+
 /**
  * The Authentication screen.
  *
@@ -170,6 +175,7 @@ fun SignInScreen(
                 color = Color.Gray)
             Spacer(modifier = Modifier.height(24.dp))
             GoogleSignInButton(
+                type = GoogleButtonType.SIGN_IN,
                 onSignInClick = { authViewModel.signInWithGoogle(context, credentialManager) })
           }
         }
@@ -182,7 +188,7 @@ fun SignInScreen(
  * @param Callback to be invoked when the user click on the button.
  */
 @Composable
-fun GoogleSignInButton(onSignInClick: () -> Unit) {
+fun GoogleSignInButton(type: GoogleButtonType, onSignInClick: () -> Unit) {
   Button(
       onClick = onSignInClick,
       colors =
@@ -204,7 +210,13 @@ fun GoogleSignInButton(onSignInClick: () -> Unit) {
 
               // Text for the button
               Text(
-                  text = stringResource(R.string.google_sign_in),
+                  text =
+                      stringResource(
+                          id =
+                              when (type) {
+                                GoogleButtonType.SIGN_IN -> R.string.google_sign_in
+                                GoogleButtonType.SIGN_UP -> R.string.google_sign_up
+                              }),
                   color = Color.Gray,
                   fontSize = 16.sp,
                   fontWeight = FontWeight.Medium)

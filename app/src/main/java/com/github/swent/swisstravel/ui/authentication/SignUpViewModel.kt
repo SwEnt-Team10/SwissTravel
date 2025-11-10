@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.authentication
 
 import android.content.Context
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
@@ -57,5 +58,9 @@ class SignUpViewModel(private val repository: AuthRepository = AuthRepositoryFir
         }
       }
     }
+  }
+
+  fun signUpWithGoogle(context: Context, credentialManager: CredentialManager) {
+    SignInViewModel(repository).signInWithGoogle(context, credentialManager)
   }
 }

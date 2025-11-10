@@ -8,6 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -16,6 +17,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -37,7 +39,11 @@ object SignUpScreenTestTags {
  * @param onSignUpSuccess A callback to be invoked when the user successfully signs up.
  */
 @Composable
-fun SignUpScreen(signUpViewModel: SignUpViewModel = viewModel(), onSignUpSuccess: () -> Unit = {}) {
+fun SignUpScreen(
+    signUpViewModel: SignUpViewModel = viewModel(),
+    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
+    onSignUpSuccess: () -> Unit = {}
+) {
   val context = LocalContext.current
   val uiState by signUpViewModel.uiState.collectAsState()
   var firstName by remember { mutableStateOf("") }
@@ -136,6 +142,16 @@ fun SignUpScreen(signUpViewModel: SignUpViewModel = viewModel(), onSignUpSuccess
                     .testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)) {
               Text("Sign Up", fontSize = 16.sp)
             }
+        Spacer(modifier = Modifier.height(24.dp))
+        Text(
+            "OR",
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth(),
+            color = Color.Gray)
+        Spacer(modifier = Modifier.height(24.dp))
+        GoogleSignInButton(
+            type = GoogleButtonType.SIGN_UP,
+            onSignInClick = { signUpViewModel.signUpWithGoogle(context, credentialManager) })
       }
     }
   }
