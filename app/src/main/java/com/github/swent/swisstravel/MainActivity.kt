@@ -32,12 +32,7 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
-import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
-import com.github.swent.swisstravel.ui.mytrips.PastTripsScreen
-import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
-import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -46,6 +41,8 @@ import com.github.swent.swisstravel.ui.navigation.Tab
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoMapScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
@@ -53,6 +50,9 @@ import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripcreation.TripSummaryScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
+import com.github.swent.swisstravel.ui.trips.MyTripsScreen
+import com.github.swent.swisstravel.ui.trips.PastTripsScreen
+import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
