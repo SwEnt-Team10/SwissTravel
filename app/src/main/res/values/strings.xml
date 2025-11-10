@@ -191,6 +191,7 @@
     <string name="trip_name_required">Trip name required</string>
     <string name="departure_required">Departure required</string>
     <string name="arrival_required">Arrival required</string>
+    <string name="departure_and_arrival_required">Departure and Arrival required</string>
     <string name="no_wanted_places">No wanted places</string>
     <string name="no_preferences">No preferences</string>
     <string name="from_summary">From:</string>
