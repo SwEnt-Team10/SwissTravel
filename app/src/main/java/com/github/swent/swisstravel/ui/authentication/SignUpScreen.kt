@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.authentication
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -13,6 +14,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -95,7 +97,7 @@ fun SignUpScreen(
           OutlinedTextField(
               value = firstName,
               onValueChange = { firstName = it },
-              label = { stringResource(R.string.first_name) },
+              label = { Text(stringResource(R.string.first_name)) },
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.FIRST_NAME_FIELD))
 
@@ -105,7 +107,7 @@ fun SignUpScreen(
           OutlinedTextField(
               value = lastName,
               onValueChange = { lastName = it },
-              label = { stringResource(R.string.last_name) },
+              label = { Text(stringResource(R.string.last_name)) },
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.LAST_NAME_FIELD))
 
@@ -115,7 +117,7 @@ fun SignUpScreen(
           OutlinedTextField(
               value = email,
               onValueChange = { email = it },
-              label = { stringResource(R.string.email) },
+              label = { Text(stringResource(R.string.email)) },
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.EMAIL_FIELD))
 
@@ -125,7 +127,8 @@ fun SignUpScreen(
           OutlinedTextField(
               value = password,
               onValueChange = { password = it },
-              label = { stringResource(R.string.password) },
+              label = { Text(stringResource(R.string.password)) },
+              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
               visualTransformation = PasswordVisualTransformation(),
               singleLine = true,
               modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.PASSWORD_FIELD))

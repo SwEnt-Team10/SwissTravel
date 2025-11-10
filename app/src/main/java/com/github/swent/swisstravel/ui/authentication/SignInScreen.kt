@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -39,6 +40,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -147,7 +149,7 @@ fun SignInScreen(
           OutlinedTextField(
               value = email,
               onValueChange = { email = it },
-              label = { stringResource(R.string.email) },
+              label = { Text(stringResource(R.string.email)) },
               modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.EMAIL_FIELD))
 
           Spacer(modifier = Modifier.height(16.dp))
@@ -155,7 +157,8 @@ fun SignInScreen(
           OutlinedTextField(
               value = password,
               onValueChange = { password = it },
-              label = { stringResource(R.string.password) },
+              label = { Text(stringResource(R.string.password)) },
+              keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
               visualTransformation = PasswordVisualTransformation(),
               modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.PASSWORD_FIELD))
 
