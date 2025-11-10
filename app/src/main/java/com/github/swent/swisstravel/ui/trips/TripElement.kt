@@ -138,8 +138,7 @@ fun TripElement(
                                     if (isSelected) ToggleableState.On else ToggleableState.Off
                                 role = Role.Checkbox
                               })
-                }
-                if (noIcon) {
+                } else if (noIcon) {
                   if (isSelected) {
                     Icon(
                         Icons.Filled.Check,
