@@ -7,7 +7,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.APP_LOGO
+import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.NAME
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -32,6 +34,8 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
   }
+
+  val viewModel: SignInViewModel = SignInViewModel(AuthRepositoryFirebase(FirebaseEmulator.auth))
 
   @Test
   fun testSignInScreenDisplaysCorrectly() {
@@ -64,7 +68,9 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
 
     val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
 
-    composeTestRule.setContent { SignInScreen(credentialManager = fakeCredentialManager) }
-    composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed().performClick()
+    composeTestRule.setContent {
+      SignInScreen(viewModel, credentialManager = fakeCredentialManager)
+    }
+    composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertIsDisplayed().performClick()
   }
 }

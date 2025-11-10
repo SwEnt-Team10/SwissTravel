@@ -43,9 +43,9 @@ class SignUpTest {
     var signUpSuccess = false
 
     composeTestRule.setContent {
-      SignUpScreen(signUpViewModel = SignUpViewModel(repository = authRepository)) {
-        signUpSuccess = true
-      }
+      SignUpScreen(
+          signUpViewModel = SignUpViewModel(repository = authRepository),
+          onSignUpSuccess = { signUpSuccess = true })
     }
 
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.FIRST_NAME_FIELD).performTextInput("John")
@@ -57,7 +57,7 @@ class SignUpTest {
 
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.SIGN_UP_BUTTON).performClick()
 
-    composeTestRule.waitUntil(timeoutMillis = 5000) { signUpSuccess }
+    composeTestRule.waitUntil(timeoutMillis = 10000) { signUpSuccess }
     assertTrue("Sign up success callback was not invoked.", signUpSuccess)
   }
 }

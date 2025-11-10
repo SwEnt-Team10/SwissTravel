@@ -3,13 +3,11 @@ package com.github.swent.swisstravel.ui.navigation
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
-import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FirebaseEmulator

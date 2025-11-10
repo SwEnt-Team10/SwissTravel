@@ -8,7 +8,6 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
-import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
