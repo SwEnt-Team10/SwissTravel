@@ -59,7 +59,7 @@ fun TripInfoMapScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoViewMo
                   modifier = Modifier.testTag(TripInfoMapTestTags.BACK_BUTTON)) {
                     Icon(
                         Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back))
+                        contentDescription = stringResource(R.string.back_to_my_trips))
                   }
             },
             modifier = Modifier.testTag(TripInfoMapTestTags.TOP_APP_BAR))
