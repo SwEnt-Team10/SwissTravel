@@ -7,9 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.mytrips.TripElement
 
@@ -26,6 +24,7 @@ object TripListTestTags {
  * @param onLongPress Callback when a trip element is long-pressed.
  * @param isSelected Function to determine if a trip is selected.
  * @param isSelectionMode Whether the selection mode is active.
+ * @param emptyListString The string to display when the list is empty.
  */
 @Composable
 fun TripList(
@@ -34,6 +33,8 @@ fun TripList(
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
     isSelectionMode: Boolean = false,
+    noIconTripElement: Boolean = false,
+    emptyListString: String = "",
 ) {
   if (trips.isNotEmpty()) {
     LazyColumn(
@@ -46,12 +47,11 @@ fun TripList(
                 onClick = { onClickTripElement(trip) },
                 onLongPress = { onLongPress(trip) },
                 isSelected = isSelected(trip),
-                isSelectionMode = isSelectionMode)
+                isSelectionMode = isSelectionMode,
+                noIcon = noIconTripElement)
           }
         }
   } else {
-    Text(
-        text = stringResource(R.string.no_upcoming_trip),
-        modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
+    Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
   }
 }

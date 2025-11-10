@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.composable
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,7 @@ object SortedTripListTestTags {
   const val EMPTY_MESSAGE = TripListTestTags.EMPTY_MESSAGE
   const val SORT_DROPDOWN_MENU = SortMenuTestTags.SORT_DROPDOWN_MENU
   const val TITLE = "SortedTripListTitle"
+  const val SORTED_TRIP_LIST = "SortedTripList"
 
   fun getTestTagSortOption(type: TripSortType): String {
     return SortMenuTestTags.getTestTagSortOption(type)
@@ -39,6 +41,7 @@ object SortedTripListTestTags {
  * @param onLongPress Callback when a trip element is long-pressed.
  * @param isSelected Function to determine if a trip is selected.
  * @param isSelectionMode Whether the selection mode is active.
+ * @param emptyListString The string to display when the trip list is empty.
  */
 @Composable
 fun SortedTripList(
@@ -48,28 +51,34 @@ fun SortedTripList(
     onClickDropDownMenu: (TripSortType) -> Unit = {},
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false
+    isSelectionMode: Boolean = false,
+    noIconTripElement: Boolean = false,
+    emptyListString: String = ""
 ) {
-  Row(
-      modifier =
-          Modifier.fillMaxWidth()
-              .padding(top = 26.dp, bottom = 10.dp)
-              .testTag(SortedTripListTestTags.TITLE_BUTTON_ROW),
-      horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically) {
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            modifier = Modifier.testTag(SortedTripListTestTags.TITLE))
+  Column(modifier = Modifier.fillMaxWidth().testTag(SortedTripListTestTags.SORTED_TRIP_LIST)) {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(top = 26.dp, bottom = 10.dp)
+                .testTag(SortedTripListTestTags.TITLE_BUTTON_ROW),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = title,
+              style = MaterialTheme.typography.headlineLarge,
+              color = MaterialTheme.colorScheme.onBackground,
+              modifier = Modifier.testTag(SortedTripListTestTags.TITLE))
 
-        SortMenu(onClickDropDownMenu = onClickDropDownMenu)
-      }
+          SortMenu(onClickDropDownMenu = onClickDropDownMenu)
+        }
 
-  TripList(
-      trips = trips,
-      onClickTripElement = onClickTripElement,
-      onLongPress = onLongPress,
-      isSelected = isSelected,
-      isSelectionMode = isSelectionMode)
+    TripList(
+        trips = trips,
+        onClickTripElement = onClickTripElement,
+        onLongPress = onLongPress,
+        isSelected = isSelected,
+        isSelectionMode = isSelectionMode,
+        noIconTripElement = noIconTripElement,
+        emptyListString = emptyListString)
+  }
 }

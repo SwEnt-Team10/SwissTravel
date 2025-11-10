@@ -66,12 +66,11 @@ class UserRepositoryFirebase(
       val pref =
           try {
             Preference.valueOf(str)
-          } catch (e: IllegalArgumentException) {
-            // Fallback: if it's stored as the old displayString
-            Preference.values().find { it.displayString() == str }
+          } catch (_: IllegalArgumentException) {
+            throw IllegalArgumentException("Invalid preference string: $str")
           }
 
-      if (pref != null) prefs.add(pref)
+      prefs.add(pref)
     }
 
     return User(

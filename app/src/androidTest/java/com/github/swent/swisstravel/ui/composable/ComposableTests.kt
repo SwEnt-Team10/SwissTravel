@@ -19,6 +19,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.mytrips.TripElementTestTags
 import com.github.swent.swisstravel.ui.mytrips.TripSortType
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -57,7 +58,7 @@ class ComposableTests : SwissTravelTest() {
     }
     composeTestRule.onNodeWithTag("test" + DateSelectorTestTags.DATE_SELECTOR).assertIsDisplayed()
     composeTestRule.onNodeWithTag(DateSelectorTestTags.DATE).performClick()
-    assert(clicked.value)
+    assertTrue(clicked.value)
   }
 
   @Test
@@ -140,7 +141,7 @@ class ComposableTests : SwissTravelTest() {
     }
     composeTestRule.onNodeWithTag("test" + SwitchTestTags.SWITCH_CONTAINER).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SwitchTestTags.SWITCH).performClick()
-    assert(checked.value)
+    assertTrue(checked.value)
   }
 
   @Test
@@ -151,9 +152,9 @@ class ComposableTests : SwissTravelTest() {
     }
     composeTestRule.onNodeWithTag("test" + ToggleTestTags.TOGGLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ToggleTestTags.YES).performClick()
-    assert(value.value)
+    assertTrue(value.value)
     composeTestRule.onNodeWithTag(ToggleTestTags.NO).performClick()
-    assert(!value.value)
+    assertTrue(!value.value)
   }
 
   @Test
@@ -171,7 +172,7 @@ class ComposableTests : SwissTravelTest() {
     composeTestRule
         .onNodeWithTag(SortMenuTestTags.getTestTagSortOption(TripSortType.START_DATE_ASC))
         .performClick()
-    assert(selectedSortType == TripSortType.START_DATE_ASC)
+    assertTrue(selectedSortType == TripSortType.START_DATE_ASC)
   }
 
   @Test
@@ -207,16 +208,18 @@ class ComposableTests : SwissTravelTest() {
     var sortClicked = false
 
     composeTestRule.setContent {
-      SortedTripList(
-          title = "My Trips",
-          trips = tripList,
-          onClickTripElement = { clickedTrip = it },
-          onLongPress = { longPressedTrip = it },
-          onClickDropDownMenu = { sortClicked = true },
-          isSelectionMode = false)
+      SwissTravelTheme {
+        SortedTripList(
+            title = "My Trips",
+            trips = tripList,
+            onClickTripElement = { clickedTrip = it },
+            onLongPress = { longPressedTrip = it },
+            onClickDropDownMenu = { sortClicked = true },
+            isSelectionMode = false)
+      }
     }
 
-    composeTestRule.checkSortedTripListIsDisplayed()
+    composeTestRule.checkSortedTripListNotEmptyIsDisplayed()
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip1)).performClick()
     assertEquals(trip1, clickedTrip)
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip2)).performTouchInput {
@@ -224,18 +227,20 @@ class ComposableTests : SwissTravelTest() {
     }
     assertEquals(trip2, longPressedTrip)
     composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
-    // For some reason it doesn't work because it can't find the node,
-    // Tried multiple things like changing the location of the test tag, changing the semantics
-    // and other things but nothing worked
-    //        composeTestRule.waitForIdle()
-    //
-    // composeTestRule.onNodeWithTag(SortedTripListTestTags.getTestTagSortOption(TripSortType.END_DATE_DESC)).performClick()
-    //        assert(sortClicked)
+
+    composeTestRule
+        .onNodeWithTag(
+            SortedTripListTestTags.getTestTagSortOption(TripSortType.END_DATE_DESC),
+            useUnmergedTree = true)
+        .performClick()
+    assertTrue(sortClicked)
   }
 
   @Test
   fun sortedTripListEmptyTest() {
-    composeTestRule.setContent { SortedTripList(title = "My Trips", trips = emptyList()) }
+    composeTestRule.setContent {
+      SortedTripList(title = "test", trips = emptyList(), emptyListString = "test")
+    }
 
     composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
   }

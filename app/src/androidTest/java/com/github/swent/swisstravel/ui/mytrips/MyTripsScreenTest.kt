@@ -7,6 +7,7 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.*
+import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.SwissTravelTest
@@ -65,7 +66,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
         .assertIsDisplayed()
 
     // Check upcoming trip
-    composeTestRule.checkSortedTripListIsDisplayed()
+    composeTestRule.checkSortedTripListNotEmptyIsDisplayed()
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(upcomingTrip))
         .assertIsDisplayed()
@@ -287,11 +288,13 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).performClick()
 
     // AlertDialog should appear
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
 
     // Cancel deletion
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CANCEL_DELETE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON).performClick()
 
     // Selection should remain
     assertTrue(viewModel.uiState.value.selectedTrips.contains(trip1))
@@ -311,7 +314,7 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
 
     // Confirm deletion
     composeTestRule
-        .onNodeWithTag(MyTripsScreenTestTags.CONFIRM_DELETE_BUTTON)
+        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
         .performClick() // This triggers deleteSelectedTrips()
 
     // Verify selection cleared
@@ -443,5 +446,27 @@ class MyTripsScreenEmulatorTest : SwissTravelTest() {
 
     val updatedTrips = runBlocking { fakeRepo.getAllTrips() }
     assertTrue(updatedTrips.all { it.isFavorite }, "All selected trips should now be favorites")
+  }
+
+  @Test
+  fun pastTripsButton_clickNavigatesToPastTrips() {
+    var pastTripsClicked = false
+    val viewModel = MyTripsViewModel(FakeTripsRepository())
+
+    composeTestRule.setContent {
+      SwissTravelTheme {
+        MyTripsScreen(
+            myTripsViewModel = viewModel,
+            onPastTrips = { pastTripsClicked = true } // callback to test
+            )
+      }
+    }
+
+    // Perform click on the Past Trips button
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).performClick()
+
+    // Verify that the callback was triggered
+    assertTrue(
+        pastTripsClicked, "Clicking the Past Trips button should trigger the onPastTrips callback")
   }
 }

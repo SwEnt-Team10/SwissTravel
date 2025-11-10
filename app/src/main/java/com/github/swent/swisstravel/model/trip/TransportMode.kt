@@ -5,5 +5,6 @@ enum class TransportMode {
   TRAIN,
   BUS,
   TRAM,
+  CAR,
   UNKNOWN
 }

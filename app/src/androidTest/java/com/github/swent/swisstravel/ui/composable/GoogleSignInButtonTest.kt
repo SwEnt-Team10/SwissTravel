@@ -17,6 +17,7 @@ class GoogleSignInButtonTest {
   @Test
   fun googleSignInButton_displaysCorrectly_and_isClickable() {
     // Given
+    @Suppress("UNCHECKED_CAST")
     val onSignInClick: () -> Unit = Mockito.mock(Function0::class.java) as () -> Unit
 
     // When

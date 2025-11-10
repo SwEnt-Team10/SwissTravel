@@ -218,6 +218,5 @@ fun EditTripScreen(
 private fun SectionHeader(text: String) {
   Column {
     Text(text, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-    Divider(Modifier.padding(top = 6.dp))
   }
 }

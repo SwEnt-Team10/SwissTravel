@@ -7,8 +7,8 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
-import junit.framework.Assert.assertEquals
-import junit.framework.Assert.assertTrue
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -57,7 +57,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
         FakeJwtGenerator.createFakeGoogleIdToken("Existing User", "existing@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
-    val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
 
     val uid = Firebase.auth.currentUser!!.uid
     val existingData =
@@ -66,7 +66,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
             "name" to "Saved User",
             "email" to "existing@example.com",
             "profilePicUrl" to "http://example.com/avatar.png",
-            "preferences" to listOf("Hiking", "Sports"))
+            "preferences" to listOf("COUPLE", "FOODIE"))
     FirebaseEmulator.firestore.collection("users").document(uid).set(existingData).await()
 
     // TripActivity
@@ -84,10 +84,10 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Update User", "update@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
-    val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
-    val createUser = repository.getCurrentUser()
+    repository.getCurrentUser()
 
     // TripActivity
     val newPrefs = listOf(Preference.URBAN, Preference.SCENIC_VIEWS, Preference.NIGHTLIFE)
@@ -131,11 +131,11 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
               "uid" to uid,
               "name" to "Cached User",
               "email" to "cache@example.com",
-              "preferences" to listOf("Museums"))
+              "preferences" to listOf("COUPLE"))
       FirebaseEmulator.firestore.collection("users").document(uid).set(cachedData).await()
 
       // Build repo using same Firestore but simulate network/server failure
-      val repo = UserRepositoryFirebase(FirebaseEmulator.auth, Firebase.firestore)
+      val repo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
       FirebaseEmulator.firestore.disableNetwork().await()
 
       // TripActivity

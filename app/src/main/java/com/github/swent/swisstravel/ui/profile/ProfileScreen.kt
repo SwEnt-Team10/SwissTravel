@@ -53,11 +53,9 @@ import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
-import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
-import com.github.swent.swisstravel.ui.navigation.Tab
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -102,12 +100,6 @@ fun ProfileScreen(
         TopAppBar(
             title = { Text(stringResource(R.string.my_profile)) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
-      },
-      bottomBar = {
-        BottomNavigationMenu(
-            selectedTab = Tab.Profile,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       }) { pd ->
         if (uiState.isLoading) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -162,7 +154,7 @@ private fun ProfileScreenContent(
             isSignedIn = isSignedIn,
             onClick = {
               if (isSignedIn) authRepository.signOut()
-              navigationActions?.navigateTo(Screen.Auth)
+              navigationActions?.navigateTo(Screen.Auth, true)
             })
       }
 }

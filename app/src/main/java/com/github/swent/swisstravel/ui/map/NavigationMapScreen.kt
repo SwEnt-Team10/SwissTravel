@@ -1,92 +1,87 @@
 package com.github.swent.swisstravel.ui.map
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.offset
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.navigation.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.model.trip.Location
 import com.mapbox.geojson.Point
+import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
-import com.mapbox.navigation.base.ExperimentalPreviewMapboxNavigationAPI
+import com.mapbox.navigation.base.options.NavigationOptions
+import com.mapbox.navigation.core.MapboxNavigationProvider
+import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
+import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 
 object NavigationMapScreenTestTags {
-  const val ENTER_MAP_BUTTON = "enterMapButton"
-  const val EXIT_BUTTON = "exitButton"
   const val MAP = "map"
 }
 
-object LocationsHardCoded {
-  val EPFL_IC = Point.fromLngLat(6.563349085567107, 46.51823826885176)
-  val ZERMATT = Point.fromLngLat(7.747, 46.019)
-  val OLYMPIC_MUSEUM = Point.fromLngLat(6.6339, 46.5086)
-  val CHUV = Point.fromLngLat(6.6209, 46.5197)
-}
-
+/**
+ * Composable that displays a Mapbox map with navigation routes based on provided locations.
+ *
+ * @param locations List of Location objects representing the points to be displayed on the map.
+ */
 @Composable
-fun NavigationMapScreen(navigationActions: NavigationActions) {
-  Box(modifier = Modifier.fillMaxSize()) {
-    NavigationMap()
-    Button(
-        onClick = { navigationActions.navigateTo(Screen.MyTrips) },
-        modifier =
-            Modifier.align(Alignment.TopStart)
-                .offset(x = 4.dp, y = 26.dp)
-                .testTag(NavigationMapScreenTestTags.EXIT_BUTTON)) {
-          Icon(
-              imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = stringResource(R.string.exit_map_desc))
-        }
-  }
-}
-
-@OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
-@Composable
-fun NavigationMap() {
-
+fun NavigationMapScreen(
+    locations: List<Location>,
+    viewModel: NavigationMapViewModel = viewModel()
+) {
   val context = LocalContext.current
-  val viewModel =
-      NavigationMapViewModel(application = context.applicationContext as android.app.Application)
 
-  // get a route line view object (to display the route), and the data to draw the route
-  val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
-
-  val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
-  val routeDrawData by viewModel.routeLineDrawData.collectAsState()
-
-  // create a map and set the initial camera position to EPFL (hardcoded) to see the start of the
-  // hardcoded route
-  val mapViewportState = rememberMapViewportState()
-  LaunchedEffect(Unit) {
-    mapViewportState.setCameraOptions {
-      center(LocationsHardCoded.EPFL_IC)
-      zoom(14.0)
-    }
+  val appCtx = context.applicationContext
+  val mapboxNavigation = remember {
+    if (MapboxNavigationProvider.isCreated()) MapboxNavigationProvider.retrieve()
+    else MapboxNavigationProvider.create(NavigationOptions.Builder(appCtx).build())
   }
+  val routeLineApi = remember { MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build()) }
+  val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
+  val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
+
+  LaunchedEffect(Unit) { viewModel.attachMapObjects(mapboxNavigation, routeLineApi) }
+  LaunchedEffect(locations) { viewModel.updateLocations(locationsAsPoints(locations)) }
+
+  val ui by viewModel.uiState.collectAsState()
+  val mapViewportState = rememberMapViewportState()
+
+  var styleReady by remember { mutableStateOf(false) }
 
   MapboxMap(
       modifier = Modifier.fillMaxSize().testTag(NavigationMapScreenTestTags.MAP),
       mapViewportState = mapViewportState) {
-        MapEffect(routeDrawData) { mapView ->
-          // render route draw data provided by the ViewModel whenever available
-          val drawData = routeDrawData ?: return@MapEffect
+        MapEffect(Unit) { mapView ->
           mapView.mapboxMap.getStyle { style ->
-            routeLineView.renderRouteDrawData(style, drawData)
-            viewModel.setRouteRendered(true)
+            routeLineView.initializeLayers(style)
+            styleReady = true
+          }
+        }
+
+        MapEffect(ui.locationsList) {
+          val locations = ui.locationsList
+          if (locations.isNotEmpty()) {
+            val cameraOptions =
+                mapViewportState.cameraForCoordinates(
+                    locations, coordinatesPadding = EdgeInsets(100.0, 100.0, 100.0, 100.0))
+            mapViewportState.setCameraOptions(cameraOptions)
+          }
+        }
+
+        // Re-render whenever routes change AND style is ready
+        val renderKey by viewModel.routeRenderTick.collectAsState()
+        MapEffect(styleReady to renderKey) { mapView ->
+          if (!styleReady) return@MapEffect
+          val api = ui.routeLineApi ?: return@MapEffect
+          mapView.mapboxMap.getStyle { style ->
+            api.getRouteDrawData { drawData ->
+              routeLineView.renderRouteDrawData(style, drawData)
+              viewModel.setRouteRendered(true)
+            }
           }
         }
       }
@@ -98,3 +93,7 @@ fun NavigationMap() {
     }
   }
 }
+
+/** Convert a list of Location to a list of Mapbox Points */
+private fun locationsAsPoints(locations: List<Location>) =
+    locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }
