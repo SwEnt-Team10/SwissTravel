@@ -41,7 +41,8 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signOut()
   }
 
-  private val viewModel: SignInViewModel = SignInViewModel(AuthRepositoryFirebase(FirebaseEmulator.auth))
+  private val viewModel: SignInViewModel =
+      SignInViewModel(AuthRepositoryFirebase(FirebaseEmulator.auth))
 
   @Test
   fun testSignInScreenDisplaysCorrectly() {
@@ -57,20 +58,20 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
     val context = ApplicationProvider.getApplicationContext<Context>()
 
     val resourceId =
-      context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+        context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
 
     // Skip test if resource doesn't exist (useful for CI environments)
     assumeTrue("Google Sign-In not configured - skipping test", resourceId != 0)
 
     val clientId = context.getString(resourceId)
     assertTrue(
-      "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
+        "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
   }
 
   @Test
   fun canSignInWithGoogle() {
     val fakeGoogleIdToken =
-      FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
 
     val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
 
@@ -91,29 +92,21 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
 
     var signedIn = false
     composeTestRule.setContent {
-      SwissTravelTheme {
-        SignInScreen(
-          authViewModel = viewModel,
-          onSignedIn = { signedIn = true }
-        )
-      }
+      SwissTravelTheme { SignInScreen(authViewModel = viewModel, onSignedIn = { signedIn = true }) }
     }
 
     // Find UI elements and interact
-    composeTestRule.onNodeWithTag(EMAIL_FIELD)
-      .performTextInput(testEmail)
-    composeTestRule.onNodeWithTag(PASSWORD_FIELD)
-      .performTextInput(testPassword)
-    composeTestRule.onNodeWithTag(LOGIN_BUTTON)
-      .performClick()
+    composeTestRule.onNodeWithTag(EMAIL_FIELD).performTextInput(testEmail)
+    composeTestRule.onNodeWithTag(PASSWORD_FIELD).performTextInput(testPassword)
+    composeTestRule.onNodeWithTag(LOGIN_BUTTON).performClick()
 
     // Wait for async operations and assert
-    composeTestRule.waitUntil(timeoutMillis = 5000) {
-      signedIn
-    }
+    composeTestRule.waitUntil(timeoutMillis = 5000) { signedIn }
 
     assertTrue("User should be signed in after pressing the button", signedIn)
-    assertNotNull("Firebase auth current user should not be null", FirebaseEmulator.auth.currentUser)
-    assertEquals("Signed in user email should match", testEmail, FirebaseEmulator.auth.currentUser?.email)
+    assertNotNull(
+        "Firebase auth current user should not be null", FirebaseEmulator.auth.currentUser)
+    assertEquals(
+        "Signed in user email should match", testEmail, FirebaseEmulator.auth.currentUser?.email)
   }
 }
