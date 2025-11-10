@@ -41,7 +41,6 @@ import com.github.swent.swisstravel.ui.navigation.Tab
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
@@ -255,13 +254,7 @@ fun SwissTravelApp(
                   TripInfoScreen(
                       uid,
                       onMyTrips = { navigationActions.goBack() },
-                      onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
                       onEditTrip = { navigationActions.navigateToEditTrip(uid) })
-                }
-
-                // Map screen
-                composable(Screen.TripInfoMap.route) {
-                  TripInfoMapScreen(onBack = { navigationActions.goBack() }, viewModel())
                 }
 
                 // Edit Trip screen
