@@ -151,10 +151,12 @@ fun SwissTravelApp(
         SignInScreen(
             credentialManager = credentialManager,
             onSignedIn = { navigationActions.navigateTo(Screen.CurrentTrip) },
-        )
+            onPrevious = { navigationActions.goBack() })
       }
       composable(Screen.SignUp.route) {
-        SignUpScreen(onSignUpSuccess = { navigationActions.navigateTo(Screen.CurrentTrip) })
+        SignUpScreen(
+            onSignUpSuccess = { navigationActions.navigateTo(Screen.CurrentTrip) },
+            onPrevious = { navigationActions.goBack() })
       }
     }
 

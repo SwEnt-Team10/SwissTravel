@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.navigation.TopBar
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
 
 /** Test tags for integration and UI tests */
 object SignInScreenTestTags {
@@ -74,7 +76,8 @@ enum class GoogleButtonType {
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedIn: () -> Unit = {}
+    onSignedIn: () -> Unit = {},
+    onPrevious: () -> Unit = {}
 ) {
   val context = LocalContext.current
   val uiState by authViewModel.uiState.collectAsState()
@@ -100,6 +103,10 @@ fun SignInScreen(
   // The main container for the screen
   // A surface container using the 'background' color from the theme
   Scaffold(
+      topBar = {
+        TopBar(
+            onClick = { onPrevious() }, modifier = Modifier.fillMaxWidth().testTag(RETURN_BUTTON))
+      },
       modifier = Modifier.fillMaxSize(),
       content = { padding ->
         Column(

@@ -20,7 +20,9 @@ import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.navigation.TopBar
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
 
 /** Test tags for the SignUpScreen. */
 object SignUpScreenTestTags {
@@ -42,7 +44,8 @@ object SignUpScreenTestTags {
 fun SignUpScreen(
     signUpViewModel: SignUpViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignUpSuccess: () -> Unit = {}
+    onSignUpSuccess: () -> Unit = {},
+    onPrevious: () -> Unit = {}
 ) {
   val context = LocalContext.current
   val uiState by signUpViewModel.uiState.collectAsState()
@@ -67,94 +70,99 @@ fun SignUpScreen(
     }
   }
 
-  Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
-    Column(
-        modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-    ) {
-      Text(
-          text = "Create Your Account",
-          style = MaterialTheme.typography.headlineMedium,
-          fontWeight = FontWeight.Bold,
-          textAlign = TextAlign.Center,
-          modifier = Modifier.fillMaxWidth())
+  Scaffold(
+      modifier = Modifier.fillMaxSize(),
+      topBar = {
+        TopBar(
+            onClick = { onPrevious() }, modifier = Modifier.fillMaxWidth().testTag(RETURN_BUTTON))
+      }) { paddingValues ->
+        Column(
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+          Text(
+              text = "Create Your Account",
+              style = MaterialTheme.typography.headlineMedium,
+              fontWeight = FontWeight.Bold,
+              textAlign = TextAlign.Center,
+              modifier = Modifier.fillMaxWidth())
 
-      Spacer(modifier = Modifier.height(24.dp))
+          Spacer(modifier = Modifier.height(24.dp))
 
-      // First Name Field
-      OutlinedTextField(
-          value = firstName,
-          onValueChange = { firstName = it },
-          label = { Text("First Name") },
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.FIRST_NAME_FIELD))
+          // First Name Field
+          OutlinedTextField(
+              value = firstName,
+              onValueChange = { firstName = it },
+              label = { Text("First Name") },
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.FIRST_NAME_FIELD))
 
-      Spacer(modifier = Modifier.height(16.dp))
+          Spacer(modifier = Modifier.height(16.dp))
 
-      // Last Name Field
-      OutlinedTextField(
-          value = lastName,
-          onValueChange = { lastName = it },
-          label = { Text("Last Name") },
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.LAST_NAME_FIELD))
+          // Last Name Field
+          OutlinedTextField(
+              value = lastName,
+              onValueChange = { lastName = it },
+              label = { Text("Last Name") },
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.LAST_NAME_FIELD))
 
-      Spacer(modifier = Modifier.height(16.dp))
+          Spacer(modifier = Modifier.height(16.dp))
 
-      // Email Field
-      OutlinedTextField(
-          value = email,
-          onValueChange = { email = it },
-          label = { Text("Email") },
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.EMAIL_FIELD))
+          // Email Field
+          OutlinedTextField(
+              value = email,
+              onValueChange = { email = it },
+              label = { Text("Email") },
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.EMAIL_FIELD))
 
-      Spacer(modifier = Modifier.height(16.dp))
+          Spacer(modifier = Modifier.height(16.dp))
 
-      // Password Field
-      OutlinedTextField(
-          value = password,
-          onValueChange = { password = it },
-          label = { Text("Password") },
-          visualTransformation = PasswordVisualTransformation(),
-          singleLine = true,
-          modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.PASSWORD_FIELD))
+          // Password Field
+          OutlinedTextField(
+              value = password,
+              onValueChange = { password = it },
+              label = { Text("Password") },
+              visualTransformation = PasswordVisualTransformation(),
+              singleLine = true,
+              modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.PASSWORD_FIELD))
 
-      Spacer(modifier = Modifier.height(32.dp))
+          Spacer(modifier = Modifier.height(32.dp))
 
-      if (uiState.isLoading) {
-        CircularProgressIndicator(
-            modifier = Modifier.size(48.dp).testTag(SignUpScreenTestTags.LOADING_INDICATOR))
-      } else {
-        Button(
-            onClick = {
-              signUpViewModel.signUpWithEmailPassword(
-                  email = email.trim(),
-                  password = password,
-                  firstName = firstName.trim(),
-                  lastName = lastName.trim(),
-                  context = context)
-            },
-            modifier =
-                Modifier.fillMaxWidth()
-                    .height(48.dp)
-                    .testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)) {
-              Text("Sign Up", fontSize = 16.sp)
-            }
-        Spacer(modifier = Modifier.height(24.dp))
-        Text(
-            "OR",
-            textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth(),
-            color = Color.Gray)
-        Spacer(modifier = Modifier.height(24.dp))
-        GoogleSignInButton(
-            type = GoogleButtonType.SIGN_UP,
-            onSignInClick = { signUpViewModel.signUpWithGoogle(context, credentialManager) })
+          if (uiState.isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier.size(48.dp).testTag(SignUpScreenTestTags.LOADING_INDICATOR))
+          } else {
+            Button(
+                onClick = {
+                  signUpViewModel.signUpWithEmailPassword(
+                      email = email.trim(),
+                      password = password,
+                      firstName = firstName.trim(),
+                      lastName = lastName.trim(),
+                      context = context)
+                },
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .height(48.dp)
+                        .testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)) {
+                  Text("Sign Up", fontSize = 16.sp)
+                }
+            Spacer(modifier = Modifier.height(24.dp))
+            Text(
+                "OR",
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+                color = Color.Gray)
+            Spacer(modifier = Modifier.height(24.dp))
+            GoogleSignInButton(
+                type = GoogleButtonType.SIGN_UP,
+                onSignInClick = { signUpViewModel.signUpWithGoogle(context, credentialManager) })
+          }
+        }
       }
-    }
-  }
 }
 
 @Preview(showBackground = true)
