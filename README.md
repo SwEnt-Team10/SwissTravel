@@ -23,4 +23,4 @@ Do you struggle navigating a city you’ve never been to? We’ll make sure to g
 
 ## 📚 Resources
 
-- [Figma Design File](https://www.figma.com/design/0RQw690x6tWNhUetN93N2F/SwissTravel-v1?node-id=0-1&t=lu0Hw7SuTYEYTrBg-1)
+- [Figma Design File](https://www.figma.com/design/nHtmRuMa7ECwq9hGj1oGWT/M2?node-id=2-2&p=f&t=5ojAr4uWJb20oa8C-0)
