@@ -6,6 +6,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.SwissTravelApp
+import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
+import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
@@ -45,7 +47,9 @@ class E2EUserFlowTest : SwissTravelTest() {
 
     // Start app logged out
     composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
-    composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertExists().performClick()
+    composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
 
     // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
