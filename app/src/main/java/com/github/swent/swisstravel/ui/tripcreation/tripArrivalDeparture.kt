@@ -74,6 +74,7 @@ fun ArrivalDepartureScreen(
   val context = LocalContext.current
   val emptyDeparture = stringResource(R.string.departure_required)
   val emptyArrival = stringResource(R.string.arrival_required)
+  val emptyDepartureAndArrival = stringResource(R.string.departure_and_arrival_required)
 
   // A LaunchedEffect to synchronize the selected arrival location with the TripSettingsViewModel.
   // It triggers whenever the selected location in the arrivalAddressVm changes.
@@ -135,6 +136,11 @@ fun ArrivalDepartureScreen(
                     onClick = {
 
                       // check that both locations are set
+                      if (arrivalState.selectedLocation == null &&
+                          departureState.selectedLocation == null) {
+                        Toast.makeText(context, emptyDepartureAndArrival, Toast.LENGTH_SHORT).show()
+                        return@Button
+                      }
                       if (departureState.selectedLocation == null) {
                         Toast.makeText(context, emptyDeparture, Toast.LENGTH_SHORT).show()
                         return@Button
