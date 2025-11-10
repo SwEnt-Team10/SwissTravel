@@ -20,7 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.mytrips.TripSortType
+import com.github.swent.swisstravel.ui.trips.TripSortType
 
 object SortMenuTestTags {
   const val SORT_DROPDOWN_MENU = "SortMenuDropdownMenu"
