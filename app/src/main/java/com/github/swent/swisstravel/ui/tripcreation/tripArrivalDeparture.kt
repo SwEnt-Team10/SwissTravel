@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -69,6 +71,10 @@ fun ArrivalDepartureScreen(
   // Use different separate view models for arrival and departure
   val arrivalState by arrivalAddressVm.addressState.collectAsState()
   val departureState by departureAddressVm.addressState.collectAsState()
+  val context = LocalContext.current
+  val emptyDeparture = stringResource(R.string.departure_required)
+  val emptyArrival = stringResource(R.string.arrival_required)
+  val emptyDepartureAndArrival = stringResource(R.string.departure_and_arrival_required)
 
   // A LaunchedEffect to synchronize the selected arrival location with the TripSettingsViewModel.
   // It triggers whenever the selected location in the arrivalAddressVm changes.
@@ -127,7 +133,25 @@ fun ArrivalDepartureScreen(
                 // --- Done button ---
                 Button(
                     modifier = Modifier.testTag(NEXT_BUTTON),
-                    onClick = { onNext() },
+                    onClick = {
+
+                      // check that both locations are set
+                      if (arrivalState.selectedLocation == null &&
+                          departureState.selectedLocation == null) {
+                        Toast.makeText(context, emptyDepartureAndArrival, Toast.LENGTH_SHORT).show()
+                        return@Button
+                      }
+                      if (departureState.selectedLocation == null) {
+                        Toast.makeText(context, emptyDeparture, Toast.LENGTH_SHORT).show()
+                        return@Button
+                      }
+                      if (arrivalState.selectedLocation == null) {
+                        Toast.makeText(context, emptyArrival, Toast.LENGTH_SHORT).show()
+                        return@Button
+                      }
+
+                      onNext()
+                    },
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary)) {
