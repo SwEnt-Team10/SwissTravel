@@ -9,13 +9,16 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -35,8 +38,11 @@ import com.github.swent.swisstravel.ui.mytrips.MyTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.PastTripsScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.mytrips.tripinfos.TripInfoScreen
+import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
+import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.navigation.Tab
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -113,6 +119,14 @@ fun SwissTravelApp(
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route
 
+  val showBottomBar =
+      when (currentRoute) {
+        Screen.CurrentTrip.route,
+        Screen.MyTrips.route,
+        Screen.Profile.route -> true
+        else -> false
+      }
+
   /* System back button handler */
   BackHandler {
     when {
@@ -133,182 +147,191 @@ fun SwissTravelApp(
     }
   }
 
-  NavHost(navController = navController, startDestination = startDestination) {
-
-    // Sign-in screen
-    navigation(
-        startDestination = Screen.Auth.route,
-        route = Screen.Auth.name,
-    ) {
-      composable(Screen.Auth.route) {
-        SignInScreen(
-            credentialManager = credentialManager,
-            onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
-      }
-    }
-
-    // Profile screen
-    navigation(
-        startDestination = Screen.Profile.route,
-        route = Screen.Profile.name,
-    ) {
-      composable(Screen.Profile.route) {
-        ProfileScreen(
-            profileScreenViewModel =
-                ProfileScreenViewModel(userRepository = UserRepositoryFirebase()),
-            navigationActions = navigationActions)
-      }
-    }
-
-    // Current trip screen
-    navigation(
-        startDestination = Screen.CurrentTrip.route,
-        route = Screen.CurrentTrip.name,
-    ) {
-      composable(Screen.CurrentTrip.route) {
-        CurrentTripScreen(
-            navigationActions = navigationActions,
-            isLoggedIn = FirebaseAuth.getInstance().currentUser != null)
-      }
-    }
-
-    // My Trips screen
-    navigation(
-        startDestination = Screen.MyTrips.route,
-        route = Screen.MyTrips.name,
-    ) {
-      composable(Screen.MyTrips.route) {
-        MyTripsScreen(
-            onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-            onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
-            onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
-            onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
-            navigationActions = navigationActions)
-      }
-
-      composable(Screen.SetCurrentTrip.route) {
-        SetCurrentTripScreen(
-            title = context.getString(R.string.set_current_trip),
-            isSelected = { trip -> trip.isCurrentTrip },
-            onClose = { navigationActions.goBack() },
-            navigationActions = navigationActions)
-      }
-
-      composable(
-          route = Screen.EditTrip.route,
-          arguments = listOf(navArgument("tripId") { type = NavType.StringType })) {
-              navBackStackEntry ->
-            val tripId = requireNotNull(navBackStackEntry.arguments?.getString("tripId"))
-            EditTripScreen(
-                tripId = tripId,
-                onBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() },
-                onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
-          }
-    }
-
-    // Past Trips screen
-    navigation(
-        startDestination = Screen.PastTrips.route,
-        route = Screen.PastTrips.name,
-    ) {
-      composable(Screen.PastTrips.route) {
-        PastTripsScreen(
-            onBack = { navigationActions.goBack() },
-            onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-            navigationActions = navigationActions)
-      }
-
-      composable(
-          route = Screen.EditTrip.route,
-          arguments = listOf(navArgument("tripId") { type = NavType.StringType })) {
-              navBackStackEntry ->
-            val tripId = requireNotNull(navBackStackEntry.arguments?.getString("tripId"))
-            EditTripScreen(
-                tripId = tripId,
-                onBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() },
-                onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
-          }
-    }
-
-    // Trip info screen
-    navigation(
-        startDestination = Screen.TripInfo.route,
-        route = Screen.TripInfo.name,
-    ) {
-      composable(Screen.TripInfo.route) { naveBackStackEntry ->
-        val uid = naveBackStackEntry.arguments?.getString("uid")
-        if (uid == null) {
-          Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
-          navigationActions.navigateTo(Screen.MyTrips)
-          return@composable
+  Scaffold(
+      bottomBar = {
+        if (showBottomBar) {
+          BottomNavigationMenu(
+              selectedTab =
+                  when (currentRoute) {
+                    Screen.CurrentTrip.route -> Tab.CurrentTrip
+                    Screen.MyTrips.route -> Tab.MyTrips
+                    Screen.Profile.route -> Tab.Profile
+                    else -> Tab.CurrentTrip
+                  },
+              onTabSelected = { tab -> navigationActions.navigateTo(tab.destination) },
+              modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
         }
-        TripInfoScreen(
-            uid,
-            onMyTrips = { navigationActions.goBack() },
-            onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
-            onEditTrip = { navigationActions.navigateToEditTrip(uid) })
-      }
-    }
-    navigation(
-        startDestination = Screen.TripInfoMap.route,
-        route = Screen.TripInfoMap.name,
-    ) {
-      composable(Screen.TripInfoMap.route) {
-        TripInfoMapScreen(onBack = { navigationActions.goBack() }, viewModel())
-      }
-    }
+      }) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(innerPadding)) {
 
-    // Map location screen
-    navigation(
-        startDestination = Screen.Map.route,
-        route = Screen.Map.name,
-    ) {
-      composable(Screen.Map.route) { MapLocationScreen() }
-    }
+              // Sign-in screen
+              navigation(
+                  startDestination = Screen.Auth.route,
+                  route = Screen.Auth.name,
+              ) {
+                composable(Screen.Auth.route) {
+                  SignInScreen(
+                      credentialManager = credentialManager,
+                      onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
+                }
+              }
 
-    // Trip settings screens
-    navigation(
-        startDestination = Screen.TripSettings1.route,
-        route = Screen.TripSettings1.name,
-    ) {
-      composable(Screen.TripSettings1.route) {
-        TripDateScreen(
-            viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
-            onPrevious = { navigationActions.goBack() })
+              // Profile screen
+              navigation(
+                  startDestination = Screen.Profile.route,
+                  route = Screen.Profile.name,
+              ) {
+                composable(Screen.Profile.route) {
+                  ProfileScreen(
+                      profileScreenViewModel =
+                          ProfileScreenViewModel(userRepository = UserRepositoryFirebase()),
+                      navigationActions = navigationActions)
+                }
+              }
+
+              // Current trip screen
+              navigation(
+                  startDestination = Screen.CurrentTrip.route,
+                  route = Screen.CurrentTrip.name,
+              ) {
+                composable(Screen.CurrentTrip.route) {
+                  CurrentTripScreen(
+                      navigationActions = navigationActions,
+                      isLoggedIn = FirebaseAuth.getInstance().currentUser != null)
+                }
+              }
+
+              // My Trips screen
+              navigation(
+                  startDestination = Screen.MyTrips.route,
+                  route = Screen.MyTrips.name,
+              ) {
+                composable(Screen.MyTrips.route) {
+                  MyTripsScreen(
+                      onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+                      onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
+                      onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
+                      onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
+                      navigationActions = navigationActions)
+                }
+                // Set Current Trip Screen
+                composable(Screen.SetCurrentTrip.route) {
+                  SetCurrentTripScreen(
+                      title = context.getString(R.string.set_current_trip),
+                      isSelected = { trip -> trip.isCurrentTrip },
+                      onClose = { navigationActions.goBack() },
+                      navigationActions = navigationActions)
+                }
+              }
+
+              // Past Trips Screen
+              navigation(
+                  startDestination = Screen.PastTrips.route,
+                  route = Screen.PastTrips.name,
+              ) {
+                composable(Screen.PastTrips.route) {
+                  PastTripsScreen(
+                      onBack = { navigationActions.goBack() },
+                      onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+                      navigationActions = navigationActions)
+                }
+              }
+
+              // Trip Info screen
+              navigation(
+                  startDestination = Screen.TripInfo.route,
+                  route = Screen.TripInfo.name,
+              ) {
+                composable(Screen.TripInfo.route) { naveBackStackEntry ->
+                  val uid = naveBackStackEntry.arguments?.getString("uid")
+                  if (uid == null) {
+                    Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
+                    navigationActions.navigateTo(Screen.MyTrips)
+                    return@composable
+                  }
+                  TripInfoScreen(
+                      uid,
+                      onMyTrips = { navigationActions.goBack() },
+                      onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
+                      onEditTrip = { navigationActions.navigateToEditTrip(uid) })
+                }
+
+                // Map screen
+                composable(Screen.TripInfoMap.route) {
+                  TripInfoMapScreen(onBack = { navigationActions.goBack() }, viewModel())
+                }
+
+                // Edit Trip screen
+                composable(
+                    route = Screen.EditTrip.route,
+                    arguments = listOf(navArgument("tripId") { type = NavType.StringType })) {
+                        navBackStackEntry ->
+                      val tripId = requireNotNull(navBackStackEntry.arguments?.getString("tripId"))
+                      EditTripScreen(
+                          tripId = tripId,
+                          onBack = { navController.popBackStack() },
+                          onSaved = { navController.popBackStack() },
+                          onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
+                    }
+              }
+
+              // Map location screen
+              navigation(
+                  startDestination = Screen.Map.route,
+                  route = Screen.Map.name,
+              ) {
+                composable(Screen.Map.route) { MapLocationScreen() }
+              }
+
+              // Trip settings screens
+              navigation(
+                  startDestination = Screen.TripSettings1.route,
+                  route = Screen.TripSettings1.name,
+              ) {
+                composable(Screen.TripSettings1.route) {
+                  TripDateScreen(
+                      viewModel = tripSettingsViewModel(navController),
+                      onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
+                      onPrevious = { navigationActions.goBack() })
+                }
+                composable(Screen.TripSettings2.route) {
+                  TripTravelersScreen(
+                      viewModel = tripSettingsViewModel(navController),
+                      onNext = { navigationActions.navigateTo(Screen.TripSettings3) },
+                      onPrevious = { navigationActions.goBack() })
+                }
+                composable(Screen.TripSettings3.route) {
+                  TripPreferencesScreen(
+                      viewModel = tripSettingsViewModel(navController),
+                      onNext = {
+                        navigationActions.navigateTo(Screen.TripSettingsArrivalDeparture)
+                      },
+                      onPrevious = { navigationActions.goBack() })
+                }
+                composable(Screen.TripSettingsArrivalDeparture.route) {
+                  ArrivalDepartureScreen(
+                      viewModel = tripSettingsViewModel(navController),
+                      onNext = {
+                        navigationActions.navigateTo(Screen.TripSettingsFirstDestination)
+                      },
+                      onPrevious = { navigationActions.goBack() })
+                }
+                composable(Screen.TripSettingsFirstDestination.route) {
+                  FirstDestinationScreen(
+                      viewModel = tripSettingsViewModel(navController),
+                      onNext = { navigationActions.navigateTo(Screen.TripSummary) },
+                      onPrevious = { navigationActions.goBack() })
+                }
+                composable(Screen.TripSummary.route) {
+                  TripSummaryScreen(
+                      viewModel = tripSettingsViewModel(navController),
+                      onNext = { navigationActions.navigateTo(Screen.MyTrips, true) },
+                      onPrevious = { navigationActions.goBack() })
+                }
+              }
+            }
       }
-      composable(Screen.TripSettings2.route) {
-        TripTravelersScreen(
-            viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettings3) },
-            onPrevious = { navigationActions.goBack() })
-      }
-      composable(Screen.TripSettings3.route) {
-        TripPreferencesScreen(
-            viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettingsArrivalDeparture) },
-            onPrevious = { navigationActions.goBack() })
-      }
-      composable(Screen.TripSettingsArrivalDeparture.route) {
-        ArrivalDepartureScreen(
-            viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSettingsFirstDestination) },
-            onPrevious = { navigationActions.goBack() })
-      }
-      composable(Screen.TripSettingsFirstDestination.route) {
-        FirstDestinationScreen(
-            viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.TripSummary) },
-            onPrevious = { navigationActions.goBack() })
-      }
-      composable(Screen.TripSummary.route) {
-        TripSummaryScreen(
-            viewModel = tripSettingsViewModel(navController),
-            onNext = { navigationActions.navigateTo(Screen.MyTrips, true) },
-            onPrevious = { navigationActions.goBack() })
-      }
-    }
-  }
 }
