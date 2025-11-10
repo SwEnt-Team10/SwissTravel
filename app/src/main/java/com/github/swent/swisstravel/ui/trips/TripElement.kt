@@ -37,6 +37,7 @@ import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
@@ -109,10 +110,14 @@ fun TripElement(
                           color = MaterialTheme.colorScheme.onSecondary)
                     }
                 Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = trip.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface)
+                Box(modifier = Modifier.fillMaxWidth(if (trip.isFavorite) 0.75f else 0.9f)) {
+                  Text(
+                      text = trip.name,
+                      style = MaterialTheme.typography.bodyLarge,
+                      color = MaterialTheme.colorScheme.onSurface,
+                      maxLines = 1,
+                      overflow = TextOverflow.Ellipsis)
+                }
               }
               Row(verticalAlignment = Alignment.CenterVertically) {
                 if (trip.isFavorite) {
