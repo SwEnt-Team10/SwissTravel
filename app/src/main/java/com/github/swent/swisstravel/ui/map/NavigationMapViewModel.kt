@@ -34,6 +34,7 @@ data class NavigationMapUIState(
     val locationsList: List<Point>,
     val mapboxNavigation: MapboxNavigation?,
     val routeLineApi: MapboxRouteLineApi?,
+    val permissionGranted: Boolean = false
 )
 
 /**
@@ -143,6 +144,15 @@ class NavigationMapViewModel : ViewModel() {
    */
   fun setRouteRendered(isRendered: Boolean) {
     _uiState.value = _uiState.value.copy(isRouteRendered = isRendered)
+  }
+
+  /**
+   * Update the permission state.
+   *
+   * @param granted True if location permission is granted, false otherwise.
+   */
+  fun setPermissionGranted(granted: Boolean) {
+    _uiState.value = _uiState.value.copy(permissionGranted = granted)
   }
 
   /** Cleanup: unregisters routes observer when ViewModel is cleared */
