@@ -269,4 +269,30 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
     val activities = fetchActivitiesFromUrl(url)
     return activities
   }
+
+  /**
+   * Get activities near the given coordinate with the given preferences.
+   *
+   * @param preferences The preferences to use.
+   * @param coordinate The coordinate to get activities near.
+   * @param radiusMeters The radius in meters to search for activities.
+   * @param limit The limit of the number of activities to return.
+   * @return A list of activities near the given coordinate with the given preferences.
+   */
+  override suspend fun getActivitiesNearWithPreference(
+      preferences: List<Preference>,
+      coordinate: Coordinate,
+      radiusMeters: Int,
+      limit: Int
+  ): List<Activity> {
+
+    val url =
+        computeUrlWithPreferences(preferences, limit)
+            .newBuilder()
+            .addQueryParameter(
+                "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
+            .build()
+
+    return fetchActivitiesFromUrl(url)
+  }
 }
