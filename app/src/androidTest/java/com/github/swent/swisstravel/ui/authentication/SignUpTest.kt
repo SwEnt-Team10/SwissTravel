@@ -39,7 +39,7 @@ class SignUpTest {
   }
 
   @Test
-  fun testSignUpScreen() {
+  fun signUpEndsWithSuccess() {
     var signUpSuccess = false
 
     composeTestRule.setContent {

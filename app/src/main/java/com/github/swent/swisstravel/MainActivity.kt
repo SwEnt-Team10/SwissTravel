@@ -115,7 +115,7 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.Landing.name
       else Screen.CurrentTrip.name
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -174,7 +174,7 @@ fun SwissTravelApp(
               // The starting screen inside this graph is Screen.Landing.route ("landing")
               navigation(
                   startDestination = Screen.Landing.route,
-                  route = Screen.Auth.name,
+                  route = Screen.Landing.name,
               ) {
                 composable(Screen.Landing.route) {
                   LandingScreen(
