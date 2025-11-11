@@ -30,7 +30,9 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
+import com.github.swent.swisstravel.ui.authentication.SignUpScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
@@ -113,7 +115,7 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.Landing.name
       else Screen.CurrentTrip.name
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -131,7 +133,7 @@ fun SwissTravelApp(
   BackHandler {
     when {
       /* If the current route is authentication then quit the app */
-      currentRoute == Screen.Auth.route -> {
+      currentRoute == Screen.Landing.route -> {
         (context as? ComponentActivity)?.finish()
       }
 
@@ -167,15 +169,28 @@ fun SwissTravelApp(
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)) {
 
-              // Sign-in screen
+              // Combined Authentication Graph
+              // The route for the whole graph is Screen.Auth.name ("Auth")
+              // The starting screen inside this graph is Screen.Landing.route ("landing")
               navigation(
-                  startDestination = Screen.Auth.route,
-                  route = Screen.Auth.name,
+                  startDestination = Screen.Landing.route,
+                  route = Screen.Landing.name,
               ) {
+                composable(Screen.Landing.route) {
+                  LandingScreen(
+                      onSignInClick = { navigationActions.navigateTo(Screen.Auth) },
+                      onSignUpClick = { navigationActions.navigateTo(Screen.SignUp) })
+                }
                 composable(Screen.Auth.route) {
                   SignInScreen(
                       credentialManager = credentialManager,
-                      onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
+                      onSignedIn = { navigationActions.navigateTo(Screen.CurrentTrip) },
+                      onPrevious = { navigationActions.navigateTo(Screen.Landing) })
+                }
+                composable(Screen.SignUp.route) {
+                  SignUpScreen(
+                      onSignUpSuccess = { navigationActions.navigateTo(Screen.CurrentTrip) },
+                      onPrevious = { navigationActions.navigateTo(Screen.Landing) })
                 }
               }
 

@@ -18,6 +18,10 @@ sealed class Screen(
     val name: String,
     val isTopLevelDestination: Boolean = false
 ) {
+  object Landing : Screen(route = "landing", name = "Landing")
+
+  object SignUp : Screen(route = "signup", name = "Sign up")
+
   object Auth : Screen(route = "auth", name = "Authentication")
 
   object Profile : Screen(route = "profile", name = "Profile", isTopLevelDestination = true)

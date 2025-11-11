@@ -48,10 +48,6 @@ class ActivityRepositoryMockTest {
     unmockkAll()
   }
 
-  // ---------------------------------------------------------------------------
-  //  URL builder coverage
-  // --------------------------------------------------------------------------
-
   @Test
   fun `computeUrlWithPreferences builds expected url`() {
     val prefs = listOf(Preference.FOODIE, Preference.MUSEUMS)
@@ -68,10 +64,6 @@ class ActivityRepositoryMockTest {
         repo.invokePrivate("computeUrlWithPreferences", emptyList<Preference>(), 10) as HttpUrl
     assertTrue(url.toString().contains("expand=true"))
   }
-
-  // ---------------------------------------------------------------------------
-  //  JSON parsing coverage
-  // ---------------------------------------------------------------------------
 
   @Test
   fun `parseActivitiesFromJson sets estimatedTime from neededtime`() {
