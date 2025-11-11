@@ -22,8 +22,8 @@ import kotlinx.coroutines.launch
  * @property isLoading `true` if an authentication operation is in progress.
  * @property user The currently signed-in [FirebaseUser], or `null` if not authenticated.
  * @property errorMsg A specific error message to display, or `null` if there's no error.
- * @property signedOut `true` if the user is not authenticated or a sign-out has just occurred.
- * This can be used to trigger navigation events.
+ * @property signedOut `true` if the user is not authenticated or a sign-out has just occurred. This
+ *   can be used to trigger navigation events.
  */
 data class AuthUiState(
     val isLoading: Boolean = false,
@@ -35,14 +35,15 @@ data class AuthUiState(
 /**
  * An abstract base ViewModel that provides common authentication functionality.
  *
- * This class encapsulates shared logic for both sign-in and sign-up processes,
- * including UI state management (`AuthUiState`) and the Google Sign-In flow.
- * It is designed to be extended by concrete ViewModels like [SignInViewModel] and [SignUpViewModel].
+ * This class encapsulates shared logic for both sign-in and sign-up processes, including UI state
+ * management (`AuthUiState`) and the Google Sign-In flow. It is designed to be extended by concrete
+ * ViewModels like [SignInViewModel] and [SignUpViewModel].
  *
  * @param repository The [AuthRepository] implementation used for authentication operations.
  */
-abstract class BaseAuthViewModel(protected val repository: AuthRepository = AuthRepositoryFirebase()) :
-    ViewModel() {
+abstract class BaseAuthViewModel(
+    protected val repository: AuthRepository = AuthRepositoryFirebase()
+) : ViewModel() {
 
   protected val _uiState = MutableStateFlow(AuthUiState())
   val uiState: StateFlow<AuthUiState> = _uiState
@@ -119,9 +120,9 @@ abstract class BaseAuthViewModel(protected val repository: AuthRepository = Auth
 /**
  * The ViewModel for the Sign-In screen.
  *
- * This class extends [BaseAuthViewModel] and provides the specific logic for signing in
- * with an email and password. It interacts with the [AuthRepository] to perform the
- * sign-in operation and updates the [AuthUiState] accordingly.
+ * This class extends [BaseAuthViewModel] and provides the specific logic for signing in with an
+ * email and password. It interacts with the [AuthRepository] to perform the sign-in operation and
+ * updates the [AuthUiState] accordingly.
  *
  * @param repository The [AuthRepository] implementation to use for authentication.
  */
@@ -131,9 +132,8 @@ class SignInViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
   /**
    * Initiates the email and password sign-in flow.
    *
-   * It updates the UI state to indicate loading, then calls the repository to perform the
-   * sign-in. The UI state is updated with the user information on success or an error
-   * message on failure.
+   * It updates the UI state to indicate loading, then calls the repository to perform the sign-in.
+   * The UI state is updated with the user information on success or an error message on failure.
    *
    * @param email The user's email.
    * @param password The user's password.

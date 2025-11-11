@@ -11,9 +11,9 @@ import kotlinx.coroutines.launch
 /**
  * The ViewModel for the Sign-Up screen.
  *
- * This class extends [BaseAuthViewModel] and provides the specific logic for signing up
- * with an email and password. It interacts with the [AuthRepository] to perform the
- * sign-up operation and updates the [AuthUiState] accordingly.
+ * This class extends [BaseAuthViewModel] and provides the specific logic for signing up with an
+ * email and password. It interacts with the [AuthRepository] to perform the sign-up operation and
+ * updates the [AuthUiState] accordingly.
  *
  * @param repository The [AuthRepository] implementation to use for authentication.
  */
@@ -23,9 +23,8 @@ class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
   /**
    * Initiates the email and password sign-up flow.
    *
-   * It updates the UI state to indicate loading, then calls the repository to perform the
-   * sign-up. The UI state is updated with the user information on success or an error
-   * message on failure.
+   * It updates the UI state to indicate loading, then calls the repository to perform the sign-up.
+   * The UI state is updated with the user information on success or an error message on failure.
    *
    * @param email The user's email.
    * @param password The user's password.
