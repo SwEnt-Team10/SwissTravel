@@ -32,7 +32,6 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
-import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -269,14 +268,6 @@ fun SwissTravelApp(
                           onSaved = { navController.popBackStack() },
                           onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
                     }
-              }
-
-              // Map location screen
-              navigation(
-                  startDestination = Screen.Map.route,
-                  route = Screen.Map.name,
-              ) {
-                composable(Screen.Map.route) { MapLocationScreen() }
               }
 
               // Trip settings screens
