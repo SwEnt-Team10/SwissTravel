@@ -6,9 +6,9 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
-import java.lang.Thread.sleep
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
+import kotlinx.coroutines.delay
 
 /**
  * Time in milliseconds to wait between consecutive API calls to avoid exceeding rate limits. The
@@ -79,7 +79,7 @@ class SelectActivities(
               // Update progress after each API call.
               completedSteps++
               onProgress(completedSteps.toFloat() / totalSteps)
-              sleep(API_CALL_DELAY_MS) // Respect API rate limit.
+              delay(API_CALL_DELAY_MS) // Respect API rate limit.
             }
           }
           // Remove duplicate activities that may have been fetched for different preferences.
@@ -95,7 +95,7 @@ class SelectActivities(
             // Update progress after each API call.
             completedSteps++
             onProgress(completedSteps.toFloat() / totalSteps)
-            sleep(API_CALL_DELAY_MS) // Respect API rate limit.
+            delay(API_CALL_DELAY_MS) // Respect API rate limit.
           }
           allFetchedActivities.distinct()
         }

@@ -196,7 +196,9 @@
     <string name="no_preferences">No preferences</string>
     <string name="from_summary">From:</string>
     <string name="to_summary">To:</string>
-    <string name="loading_trip">We are travelling for you...</string>
+
+    <!-- Loading -->
+    <string name="loading_trip">We are travelling for you…</string>
 
 
 </resources>
