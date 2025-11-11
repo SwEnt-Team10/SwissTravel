@@ -107,16 +107,14 @@
     <string name="fullscreen">Fullscreen</string>
     <string name="favorite_icon_empty">Favorite Trip</string>
     <string name="unfavorite_icon">Unfavorite Trip</string>
-    <string name="enter_map">Enter Map</string>
     <string name="no_locations_available">No locations available</string>
     <string name="current_step">Current Step</string>
-    <string name="step_info">Step</string>
-    <string name="computing_schedule">Computing trip schedule…</string>
-    <string name="itinerary">Itinerary</string>
-    <string name="reset_route">Reset route</string>
+    <string name="step_info">Step %d</string>
     <string name="about_minutes">About %1$d min</string>
-    <string name="trip_schedule_title">Schedule: %1$s</string>
-    <string name="no_schedule_available">No schedule available</string>
+    <string name="previous_step">Previous step</string>
+    <string name="next_step">Next step</string>
+    <string name="icon">Attraction Material 3 Icon</string>
+    <string name="image">Activity Image</string>
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>

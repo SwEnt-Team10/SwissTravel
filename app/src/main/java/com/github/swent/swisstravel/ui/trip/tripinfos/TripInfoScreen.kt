@@ -1,31 +1,33 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
 import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Attractions
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.algorithm.orderlocations.orderLocations
 import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
 import com.github.swent.swisstravel.model.trip.Location
@@ -33,7 +35,8 @@ import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.NavigationMapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.google.firebase.Timestamp
-import java.time.*
+import java.time.Instant
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /** Test tags for TripInfoScreen composable */
@@ -45,16 +48,13 @@ object TripInfoScreenTestTags {
   const val LAZY_COLUMN = "tripInfoScreenLazyColumn"
   const val NO_LOCATIONS = "tripInfoScreenNoLocations"
   const val CURRENT_STEP = "tripInfoScreenCurrentStep"
-  const val FIRST_LOCATION_BOX = "tripInfoScreenFirstLocationBox"
   const val LOCATION_NAME = "tripInfoScreenLocationName"
   const val MAP_CARD = "tripInfoScreenMapCard"
   const val MAP_CONTAINER = "tripInfoScreenMapContainer"
-  const val MAP_BOX = "tripInfoScreenMapBox"
-  const val RESET_CHIP = "tripInfoScreenResetChip"
-
-  private const val STEP_PREFIX = "tripInfoScreenStep_"
-
-  fun stepTag(index: Int) = "$STEP_PREFIX$index"
+  const val FULLSCREEN_BUTTON = "fullscreenToggle"
+  const val LOADING = "loading"
+  const val FULLSCREEN_MAP = "fullScreenMap"
+  const val FULLSCREEN_EXIT = "fullScreenExit"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -73,14 +73,11 @@ fun TripInfoScreen(
   var showMap by remember { mutableStateOf(true) }
   var fullscreen by rememberSaveable { mutableStateOf(false) }
 
-  // schedule + ordering state
   var isComputing by remember { mutableStateOf(false) }
-  var orderedRoute by remember { mutableStateOf<OrderedRoute?>(null) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
   var computeError by remember { mutableStateOf<String?>(null) }
 
-  // map preview state (when null → show full trip route)
-  var previewLocations by remember { mutableStateOf<List<Location>?>(null) }
+  var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
 
   // handle VM error toasts
   LaunchedEffect(ui.errorMsg) {
@@ -90,20 +87,26 @@ fun TripInfoScreen(
     }
   }
 
+  LaunchedEffect(computeError) {
+    computeError?.let {
+      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+      computeError = null
+    }
+  }
+
   // compute schedule once trip data available
   LaunchedEffect(ui.locations, ui.activities, ui.tripProfile) {
     if (ui.locations.isEmpty() || ui.tripProfile == null) return@LaunchedEffect
     isComputing = true
     computeError = null
     schedule = emptyList()
-    orderedRoute = null
+    currentStepIndex = 0
 
-    val unique = ui.locations.distinctBy { it.coordinate }
+    val unique = (ui.activities.map { it.location } + ui.locations).distinctBy { it.coordinate }
     val start = unique.first()
     val end = unique.last()
 
     orderLocations(context, unique, start, end) { ordered ->
-      orderedRoute = ordered
       if (ordered.totalDuration < 0) {
         computeError = "Failed to compute route order."
         isComputing = false
@@ -115,6 +118,7 @@ fun TripInfoScreen(
                 tripProfile = requireNotNull(ui.tripProfile),
                 ordered = ordered,
                 activities = ui.activities)
+        currentStepIndex = 0
       } catch (e: Exception) {
         computeError = "Failed to schedule trip: ${e.message}"
       } finally {
@@ -123,12 +127,11 @@ fun TripInfoScreen(
     }
   }
 
-  // map locations to feed (preview if set, else all trip locations)
-  val mapLocations: List<Location> = previewLocations ?: ui.locations
+  val mapLocations: List<Location> =
+      remember(schedule, currentStepIndex) { mapLocationsForStep(schedule, currentStepIndex) }
 
   LaunchedEffect(showMap) {
     if (!showMap) {
-      withFrameNanos {}
       onMyTrips()
     }
   }
@@ -160,7 +163,7 @@ fun TripInfoScreen(
                 FavoriteButton(
                     isFavorite = isFavorite,
                     onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
-                    testTag = TripInfoScreenTestTags.FAVORITE_BUTTON)
+                )
                 IconButton(
                     onClick = { onEditTrip() },
                     modifier = Modifier.testTag(TripInfoScreenTestTags.EDIT_BUTTON)) {
@@ -184,75 +187,72 @@ fun TripInfoScreen(
                         modifier = Modifier.testTag(TripInfoScreenTestTags.NO_LOCATIONS))
                   }
                 } else {
-                  // Title + first location (as before)
                   item {
-                    Text(
-                        text = stringResource(R.string.current_step),
+                    Column(
                         modifier =
                             Modifier.fillMaxWidth()
-                                .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)
-                                .testTag(TripInfoScreenTestTags.CURRENT_STEP),
-                        style = MaterialTheme.typography.displaySmall)
-                  }
-                  item {
-                    Box(
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(horizontal = 16.dp)
-                                .testTag(TripInfoScreenTestTags.FIRST_LOCATION_BOX)) {
-                          if (ui.locations.isNotEmpty()) {
+                                .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)) {
+                          Text(
+                              text = stringResource(R.string.current_step),
+                              modifier = Modifier.testTag(TripInfoScreenTestTags.CURRENT_STEP),
+                              style = MaterialTheme.typography.displaySmall)
+
+                          Text(
+                              text =
+                                  "Step ${if (schedule.isEmpty()) 0 else currentStepIndex + 1}: " +
+                                      currentStepTitle(schedule, currentStepIndex),
+                              modifier =
+                                  Modifier.padding(top = 4.dp)
+                                      .testTag(TripInfoScreenTestTags.LOCATION_NAME),
+                              style = MaterialTheme.typography.headlineMedium)
+
+                          val timeLabel = currentStepTime(schedule, currentStepIndex)
+                          if (timeLabel != "—") {
                             Text(
-                                text = ui.locations[0].name,
-                                modifier =
-                                    Modifier.align(Alignment.CenterStart)
-                                        .testTag(TripInfoScreenTestTags.LOCATION_NAME),
-                                style = MaterialTheme.typography.headlineMedium)
+                                text = timeLabel,
+                                modifier = Modifier.padding(top = 2.dp),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                           }
                         }
                   }
 
-                  // Inline map card
                   if (!fullscreen) {
+                    // Map card
                     item {
                       Card(
                           modifier =
                               Modifier.fillMaxWidth()
                                   .padding(horizontal = 20.dp, vertical = 12.dp)
                                   .testTag(TripInfoScreenTestTags.MAP_CARD),
-                          shape = RoundedCornerShape(12.dp)) {
+                          shape = RoundedCornerShape(12.dp),
+                          colors =
+                              CardDefaults.cardColors(
+                                  containerColor = MaterialTheme.colorScheme.surface),
+                          elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
                             Box(
                                 modifier =
                                     Modifier.fillMaxWidth()
                                         .height(200.dp)
                                         .testTag(TripInfoScreenTestTags.MAP_CONTAINER)) {
-                                  if (showMap) {
-                                    NavigationMapScreen(
-                                        locations = mapLocations.ifEmpty { ui.locations })
+                                  if (isComputing || schedule.isEmpty()) {
+                                    Box(
+                                        Modifier.fillMaxSize()
+                                            .testTag(TripInfoScreenTestTags.LOADING),
+                                        contentAlignment = Alignment.Center) {
+                                          CircularProgressIndicator()
+                                        }
+                                  } else if (showMap) {
+                                    NavigationMapScreen(locations = mapLocations)
                                   }
 
-                                  // Reset preview chip (shows only when a preview is active)
-                                  if (previewLocations != null) {
-                                    AssistChip(
-                                        onClick = { previewLocations = null },
-                                        label = { Text(stringResource(R.string.reset_route)) },
-                                        leadingIcon = {
-                                          Icon(
-                                              imageVector = Icons.Outlined.Refresh,
-                                              contentDescription = null)
-                                        },
-                                        modifier =
-                                            Modifier.align(Alignment.TopStart)
-                                                .padding(12.dp)
-                                                .testTag(TripInfoScreenTestTags.RESET_CHIP))
-                                  }
-
-                                  // Fullscreen button (bottom-right)
+                                  // Fullscreen button
                                   IconButton(
                                       onClick = { fullscreen = true },
                                       modifier =
                                           Modifier.align(Alignment.BottomEnd)
                                               .padding(12.dp)
-                                              .testTag("fullscreenToggle")) {
+                                              .testTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON)) {
                                         Icon(
                                             imageVector = Icons.Filled.Fullscreen,
                                             contentDescription =
@@ -262,114 +262,125 @@ fun TripInfoScreen(
                                 }
                           }
                     }
-                  }
 
-                  // Schedule block header / loading / error
-                  item {
-                    when {
-                      isComputing -> {
-                        Row(
-                            modifier =
-                                Modifier.fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                            verticalAlignment = Alignment.CenterVertically) {
-                              CircularProgressIndicator(
-                                  strokeWidth = 2.dp, modifier = Modifier.size(18.dp))
-                              Spacer(Modifier.width(8.dp))
-                              Text(stringResource(R.string.computing_schedule))
-                            }
-                      }
-                      computeError != null -> {
-                        Text(
-                            text = computeError!!,
-                            color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-                      }
-                      schedule.isNotEmpty() -> {
-                        Text(
-                            text = stringResource(R.string.itinerary),
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
-                      }
+                    // Step controls
+                    item {
+                      Row(
+                          modifier =
+                              Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                          horizontalArrangement = Arrangement.SpaceBetween,
+                          verticalAlignment = Alignment.CenterVertically) {
+                            OutlinedButton(
+                                onClick = { if (currentStepIndex > 0) currentStepIndex-- },
+                                enabled = !isComputing && currentStepIndex > 0) {
+                                  Text(stringResource(R.string.previous_step))
+                                }
+
+                            Spacer(Modifier.width(8.dp))
+
+                            Button(
+                                onClick = {
+                                  if (currentStepIndex < schedule.lastIndex) currentStepIndex++
+                                },
+                                enabled =
+                                    !isComputing &&
+                                        schedule.isNotEmpty() &&
+                                        currentStepIndex < schedule.lastIndex) {
+                                  Text(stringResource(R.string.next_step))
+                                }
+                          }
                     }
                   }
+                }
 
-                  // Steps list (each row advances the “next step”)
-                  items(schedule, key = { it.hashCode() }) { el ->
-                    when (el) {
-                      is TripElement.TripActivity -> {
-                        StepRow(
-                            title = el.activity.location.name,
-                            subtitle = el.activity.description,
-                            timeRange =
-                                "${fmtTime(el.activity.startDate)} – ${fmtTime(el.activity.endDate)}",
-                            onClick = {
-                              // preview just this activity’s location
-                              previewLocations = listOf(el.activity.location)
-                            })
-                      }
-                      is TripElement.TripSegment -> {
-                        StepRow(
-                            title = "${el.route.from.name} → ${el.route.to.name}",
-                            subtitle =
-                                stringResource(R.string.about_minutes, el.route.durationMinutes),
-                            timeRange =
-                                "${fmtTime(el.route.startDate)} – ${fmtTime(el.route.endDate)}",
-                            leadingIcon = { Icon(Icons.Filled.Route, contentDescription = null) },
-                            onClick = {
-                              // preview only the current segment on the map
-                              previewLocations = listOf(el.route.from, el.route.to)
-                            })
-                      }
+                // Steps list
+                itemsIndexed(schedule, key = { idx, el -> el.hashCode() }) { idx, el ->
+                  val stepNo = idx + 1
+                  when (el) {
+                    is TripElement.TripActivity -> {
+                      StepRow(
+                          stepNumber = stepNo,
+                          subtitle =
+                              el.activity.location.name +
+                                  (if (el.activity.description.isBlank()) ""
+                                  else " — ${el.activity.description}"),
+                          timeRange =
+                              "${fmtTime(el.activity.startDate)} – ${fmtTime(el.activity.endDate)}",
+                          leadingIcon = {
+                            ThumbnailOrIcon(
+                                url = el.activity.imageUrls.firstOrNull(),
+                                fallbackIcon = Icons.Filled.Attractions,
+                                contentDescription =
+                                    if (el.activity.imageUrls.isEmpty())
+                                        stringResource(R.string.icon)
+                                    else stringResource(R.string.image))
+                          })
+                    }
+                    is TripElement.TripSegment -> {
+                      StepRow(
+                          stepNumber = stepNo,
+                          subtitle = "${el.route.from.name} → ${el.route.to.name}",
+                          timeRange =
+                              stringResource(R.string.about_minutes, el.route.durationMinutes) +
+                                  " • " +
+                                  "${fmtTime(el.route.startDate)} – ${fmtTime(el.route.endDate)}",
+                          leadingIcon = { Icon(Icons.Filled.Route, contentDescription = null) })
                     }
                   }
                 }
               }
+        }
 
-          // Fullscreen overlay uses SAME preview as inline
-          if (fullscreen) {
-            Box(modifier = Modifier.fillMaxSize().testTag("FullScreenMap")) {
-              NavigationMapScreen(locations = mapLocations.ifEmpty { ui.locations })
+        // Fullscreen overlay
+        if (fullscreen) {
+          Box(modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.FULLSCREEN_MAP)) {
+            NavigationMapScreen(locations = mapLocations)
 
-              // Exit fullscreen arrow (TOP-LEFT)
-              IconButton(
-                  onClick = { fullscreen = false },
-                  modifier =
-                      Modifier.align(Alignment.TopStart).padding(16.dp).testTag("exitFullscreen")) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back_to_my_trips),
-                        tint = MaterialTheme.colorScheme.onBackground)
-                  }
-
-              // Reset preview in fullscreen too (TOP-RIGHT)
-              if (previewLocations != null) {
-                AssistChip(
-                    onClick = { previewLocations = null },
-                    label = { Text(stringResource(R.string.reset_route)) },
-                    leadingIcon = {
-                      Icon(imageVector = Icons.Outlined.Refresh, contentDescription = null)
-                    },
-                    modifier = Modifier.align(Alignment.TopEnd).padding(16.dp))
-              }
-            }
+            // Exit fullscreen arrow
+            IconButton(
+                onClick = { fullscreen = false },
+                modifier =
+                    Modifier.align(Alignment.TopStart)
+                        .padding(16.dp)
+                        .testTag(TripInfoScreenTestTags.FULLSCREEN_EXIT)) {
+                  Icon(
+                      imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                      contentDescription = stringResource(R.string.back_to_my_trips),
+                      tint = MaterialTheme.colorScheme.onBackground)
+                }
           }
         }
       }
 }
 
-/* ---------- Reusable Step row ---------- */
+/* ---------- Helpers to decide which locations to show on the map ---------- */
+
+private fun mapLocationsForStep(schedule: List<TripElement>, idx: Int): List<Location> {
+  if (schedule.isEmpty()) return emptyList()
+  val i = idx.coerceIn(0, schedule.lastIndex)
+  return when (val el = schedule[i]) {
+    is TripElement.TripSegment -> listOf(el.route.from, el.route.to)
+    is TripElement.TripActivity -> {
+      // Show the next segment if any (activity → upcoming travel)
+      val nextSeg =
+          schedule.drop(i + 1).firstOrNull { it is TripElement.TripSegment }
+              as? TripElement.TripSegment
+      nextSeg?.let { listOf(it.route.from, it.route.to) } ?: listOf(el.activity.location)
+    }
+  }
+}
+
+/* ---------- Non-clickable Step row ---------- */
 
 @Composable
 private fun StepRow(
-    title: String,
+    stepNumber: Int,
     subtitle: String,
     timeRange: String,
-    leadingIcon: (@Composable () -> Unit)? = null,
-    onClick: () -> Unit
+    leadingIcon: (@Composable () -> Unit)? = null
 ) {
   ListItem(
-      headlineContent = { Text(title) },
+      headlineContent = { stringResource(R.string.step_info, stepNumber) },
       supportingContent = {
         Column {
           Text(subtitle, style = MaterialTheme.typography.bodyMedium)
@@ -380,18 +391,18 @@ private fun StepRow(
         }
       },
       leadingContent = leadingIcon,
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp).clickableWithRipple(onClick))
+      modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp))
 }
 
+/** A button to mark/unmark a trip as favorite. */
 @Composable
 private fun FavoriteButton(
     isFavorite: Boolean,
     onToggleFavorite: () -> Unit,
-    testTag: String? = null
 ) {
   IconButton(
       onClick = onToggleFavorite,
-      modifier = if (testTag != null) Modifier.testTag(testTag) else Modifier) {
+      modifier = Modifier.testTag(TripInfoScreenTestTags.FAVORITE_BUTTON)) {
         if (isFavorite) {
           Icon(
               imageVector = Icons.Filled.Star,
@@ -406,12 +417,23 @@ private fun FavoriteButton(
       }
 }
 
-/* ---------- Small helpers ---------- */
-
 @Composable
-private fun Modifier.clickableWithRipple(onClick: () -> Unit): Modifier =
-    this.then(
-        Modifier.padding(vertical = 2.dp).let { base -> clickable(onClick = onClick).then(base) })
+private fun ThumbnailOrIcon(
+    url: String?,
+    fallbackIcon: ImageVector,
+    contentDescription: String? = null
+) {
+  if (url.isNullOrBlank()) {
+    Icon(imageVector = fallbackIcon, contentDescription = contentDescription)
+  } else {
+    AsyncImage(
+        model = url,
+        contentDescription = contentDescription,
+        modifier = Modifier.size(32.dp).clip(CircleShape))
+  }
+}
+
+/* ---------- Small helpers ---------- */
 
 private fun fmtTime(ts: Timestamp?): String {
   val dt =
@@ -420,5 +442,24 @@ private fun fmtTime(ts: Timestamp?): String {
             .atZone(ZoneId.systemDefault())
             .toLocalDateTime()
       } ?: return "–"
-  return dt.format(DateTimeFormatter.ofPattern("HH:mm"))
+  return dt.format(DateTimeFormatter.ofPattern("dd LLL yyyy HH:mm"))
+}
+
+private fun currentStepTitle(schedule: List<TripElement>, idx: Int): String {
+  if (schedule.isEmpty()) return "—"
+  val i = idx.coerceIn(0, schedule.lastIndex)
+  return when (val el = schedule[i]) {
+    is TripElement.TripSegment -> "${el.route.from.name} → ${el.route.to.name}"
+    is TripElement.TripActivity -> el.activity.location.name
+  }
+}
+
+private fun currentStepTime(schedule: List<TripElement>, idx: Int): String {
+  if (schedule.isEmpty()) return "—"
+  val i = idx.coerceIn(0, schedule.lastIndex)
+  return when (val el = schedule[i]) {
+    is TripElement.TripSegment -> "${fmtTime(el.route.startDate)} – ${fmtTime(el.route.endDate)}"
+    is TripElement.TripActivity ->
+        "${fmtTime(el.activity.startDate)} – ${fmtTime(el.activity.endDate)}"
+  }
 }
