@@ -47,7 +47,7 @@ class SignUpTest {
           signUpViewModel = SignUpViewModel(repository = authRepository),
           onSignUpSuccess = { signUpSuccess = true })
     }
-
+    // load the text fields with the correct credentials
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.FIRST_NAME_FIELD).performTextInput("John")
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.LAST_NAME_FIELD).performTextInput("Doe")
     composeTestRule
@@ -56,7 +56,7 @@ class SignUpTest {
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.PASSWORD_FIELD).performTextInput("password")
 
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.SIGN_UP_BUTTON).performClick()
-
+    // checks whether the log in leads to a success -> it should pass
     composeTestRule.waitUntil(timeoutMillis = 10000) { signUpSuccess }
     assertTrue("Sign up success callback was not invoked.", signUpSuccess)
   }

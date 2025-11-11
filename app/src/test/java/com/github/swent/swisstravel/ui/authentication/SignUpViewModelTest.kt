@@ -36,14 +36,15 @@ class SignUpViewModelTest {
   fun `signUpWithEmailPassword success updates state`() =
       runTest(testDispatcher) {
         val mockUser: FirebaseUser = mockk()
+        // bring the test to a success value
         coEvery { mockAuthRepository.signUpWithEmailPassword(any(), any(), any(), any()) } returns
             Result.success(mockUser)
-
+        // load the fake viewModel with the credentials
         viewModel.signUpWithEmailPassword(
             "test@example.com", "password", "John", "Doe", mockContext)
 
         advanceUntilIdle()
-
+        // make sure that the state is updated correctly
         val uiState = viewModel.uiState.value
         assertFalse(uiState.isLoading)
         assertEquals(mockUser, uiState.user)
@@ -54,15 +55,16 @@ class SignUpViewModelTest {
   @Test
   fun `signUpWithEmailPassword failure updates state with error`() =
       runTest(testDispatcher) {
+        // bring the test to a failure value
         val exception = IllegalStateException("Sign up failed")
         coEvery { mockAuthRepository.signUpWithEmailPassword(any(), any(), any(), any()) } returns
             Result.failure(exception)
-
+        // load up the viewModel with the credentials
         viewModel.signUpWithEmailPassword(
             "test@example.com", "password", "John", "Doe", mockContext)
 
         advanceUntilIdle()
-
+        // make sure that the sign up fails correctly
         val uiState = viewModel.uiState.value
         assertFalse(uiState.isLoading)
         assertEquals("Sign up failed", uiState.errorMsg)
@@ -79,10 +81,10 @@ class SignUpViewModelTest {
 
         viewModel.signUpWithEmailPassword(
             "test@example.com", "password", "John", "Doe", mockContext)
-
+        // sets up the error message to see whether the Toast appears
         advanceUntilIdle()
         viewModel.clearErrorMsg()
-
+        // make sure the error message is gone
         val uiState = viewModel.uiState.value
         assertNull(uiState.errorMsg)
       }
