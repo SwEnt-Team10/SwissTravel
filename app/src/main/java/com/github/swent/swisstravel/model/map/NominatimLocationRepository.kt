@@ -36,6 +36,9 @@ class NominatimLocationRepository(
                 .addQueryParameter("format", "json")
                 .addQueryParameter("countrycodes", "ch")
                 .addQueryParameter("layer", "poi")
+                .addQueryParameter("addressdetails", "1") // adds full address fields
+                // .addQueryParameter("namedetails", "1")    // adds multilingual names
+                .addQueryParameter("limit", "10") // controls how many results
                 .build()
 
         val request =
@@ -57,12 +60,39 @@ class NominatimLocationRepository(
    * @param body The JSON response body as a string.
    * @return A list of Location objects parsed from the response.
    */
+  // done with the help of AI
   private fun parseBody(body: String): List<Location> {
     val jsonArray = JSONArray(body)
     return List(jsonArray.length()) { i ->
       val obj = jsonArray.getJSONObject(i)
+
+      val address = obj.optJSONObject("address")
+      val amenity = address?.optString("amenity") ?: obj.optString("name", "")
+      val road = address?.optString("road").orEmpty()
+      val houseNumber = address?.optString("house_number").orEmpty()
+      val postcode = address?.optString("postcode").orEmpty()
+      val city = address?.optString("city").orEmpty()
+      val state = address?.optString("state").orEmpty()
+
+      // Build custom name
+      val nameParts = mutableListOf<String>()
+      if (amenity.isNotBlank()) nameParts.add(amenity)
+      if (road.isNotBlank() || houseNumber.isNotBlank()) {
+        nameParts.add("$road $houseNumber".trim())
+      }
+      if (postcode.isNotBlank() || city.isNotBlank()) {
+        nameParts.add("$postcode $city".trim())
+      }
+      if (state.isNotBlank()) nameParts.add(state)
+
+      val name = nameParts.joinToString(", ")
+
       Location(
-          Coordinate(obj.getDouble("lat"), obj.getDouble("lon")), obj.getString("display_name"))
+          coordinate = Coordinate(obj.getDouble("lat"), obj.getDouble("lon")),
+          name =
+              name.ifBlank {
+                obj.getString("display_name")
+              }) // If the address can't be built, use display_name
     }
   }
 }
