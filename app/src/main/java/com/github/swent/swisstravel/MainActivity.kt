@@ -335,7 +335,10 @@ fun SwissTravelApp(
                 composable(Screen.Loading.route) {
                   val viewModel = tripSettingsViewModel(navController)
                   val loadingProgress by viewModel.loadingProgress.collectAsState()
-                  LoadingScreen(progress = loadingProgress)
+                  LoadingScreen(
+                      progress = loadingProgress,
+                      viewModel = viewModel,
+                      navigationActions = navigationActions)
                 }
               }
             }
