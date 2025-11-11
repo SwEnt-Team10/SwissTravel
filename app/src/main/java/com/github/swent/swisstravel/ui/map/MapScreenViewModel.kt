@@ -46,7 +46,7 @@ data class NavigationMapUIState(
  * - Observing route updates via RoutesObserver
  * - Exposing reactive state to the UI for route drawing and camera updates
  */
-class NavigationMapViewModel : ViewModel() {
+class MapScreenViewModel : ViewModel() {
 
   private val _routeRenderTick = MutableStateFlow(0)
 

@@ -33,7 +33,7 @@ import com.github.swent.swisstravel.algorithm.orderlocations.orderLocations
 import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
-import com.github.swent.swisstravel.ui.map.NavigationMapScreen
+import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.google.firebase.Timestamp
 import java.time.Instant
@@ -245,7 +245,7 @@ fun TripInfoScreen(
                                                   Modifier.testTag(TripInfoScreenTestTags.LOADING))
                                         }
                                   } else if (showMap) {
-                                    NavigationMapScreen(locations = mapLocations)
+                                    MapScreen(locations = mapLocations)
                                   }
 
                                   // Fullscreen button
@@ -336,7 +336,7 @@ fun TripInfoScreen(
         // Fullscreen overlay
         if (fullscreen) {
           Box(modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.FULLSCREEN_MAP)) {
-            NavigationMapScreen(locations = mapLocations)
+            MapScreen(locations = mapLocations)
 
             // Exit fullscreen arrow
             IconButton(

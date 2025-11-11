@@ -18,7 +18,7 @@ import junit.framework.TestCase.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-class NavigationMapScreenTest {
+class MapScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
   @get:Rule
@@ -30,7 +30,7 @@ class NavigationMapScreenTest {
   @Test
   fun mapIsDisplayed() {
     composeRule.setContent {
-      NavigationMapScreen(
+      MapScreen(
           locations =
               listOf(
                   Location(Coordinate(46.0, 6.6), "A"),
@@ -38,13 +38,13 @@ class NavigationMapScreenTest {
               ))
     }
 
-    composeRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
+    composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
   }
 
   /** Check the VM updates the state correctly */
   @Test
   fun setRouteRenderedUpdatesState() {
-    val vm = NavigationMapViewModel()
+    val vm = MapScreenViewModel()
     assertTrue(!vm.uiState.value.isRouteRendered)
 
     vm.setRouteRendered(true)
@@ -57,7 +57,7 @@ class NavigationMapScreenTest {
   /** Check 'updateLocations' modifies the list in the uiState */
   @Test
   fun updateLocationsChangesUiState() {
-    val vm = NavigationMapViewModel()
+    val vm = MapScreenViewModel()
     val points =
         listOf(
             com.mapbox.geojson.Point.fromLngLat(6.6, 46.5),
@@ -70,7 +70,7 @@ class NavigationMapScreenTest {
   /** Check 'attachMapObjects' configures the MapboxNavigation and the RouteLineApi correctly */
   @Test
   fun attachMapObjectsUpdatesUiState() {
-    val vm = NavigationMapViewModel()
+    val vm = MapScreenViewModel()
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val nav =
         com.mapbox.navigation.core.MapboxNavigationProvider.create(
@@ -89,7 +89,7 @@ class NavigationMapScreenTest {
   @Test
   fun mapIsVisible_andFollowPuckButtonIsShown_whenPermissionGranted() {
     composeRule.setContent {
-      NavigationMapScreen(
+      MapScreen(
           locations =
               listOf(
                   Location(Coordinate(46.0, 6.6), "A"),
@@ -98,7 +98,7 @@ class NavigationMapScreenTest {
     }
 
     // Map surface
-    composeRule.onNodeWithTag(NavigationMapScreenTestTags.MAP).assertIsDisplayed()
+    composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
 
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val cd = context.getString(R.string.allow_location)
@@ -108,7 +108,7 @@ class NavigationMapScreenTest {
   @Test
   fun followPuckButton_isClickable() {
     composeRule.setContent {
-      NavigationMapScreen(
+      MapScreen(
           locations =
               listOf(
                   Location(Coordinate(46.0, 6.6), "A"),
@@ -124,7 +124,7 @@ class NavigationMapScreenTest {
 
   @Test
   fun dispose_resetsRouteRenderedFlag() {
-    val vm = NavigationMapViewModel()
+    val vm = MapScreenViewModel()
 
     // Pre-set the flag to true so we can observe the reset on dispose
     vm.setRouteRendered(true)
@@ -132,8 +132,7 @@ class NavigationMapScreenTest {
     var show by mutableStateOf(true)
     composeRule.setContent {
       if (show) {
-        NavigationMapScreen(
-            locations = listOf(Location(Coordinate(46.2, 6.7), "OnlyOne")), viewModel = vm)
+        MapScreen(locations = listOf(Location(Coordinate(46.2, 6.7), "OnlyOne")), viewModel = vm)
       }
     }
 

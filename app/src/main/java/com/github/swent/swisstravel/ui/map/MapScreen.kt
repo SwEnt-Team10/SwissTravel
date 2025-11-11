@@ -13,7 +13,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButtonDefaults.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -40,7 +39,7 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineViewOptions
 
-object NavigationMapScreenTestTags {
+object MapScreenTestTags {
   const val MAP = "map"
 }
 
@@ -51,10 +50,7 @@ object NavigationMapScreenTestTags {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NavigationMapScreen(
-    locations: List<Location>,
-    viewModel: NavigationMapViewModel = viewModel()
-) {
+fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewModel()) {
   val context = LocalContext.current
   val appCtx = context.applicationContext
 
@@ -94,7 +90,7 @@ fun NavigationMapScreen(
   Scaffold { padding ->
     Box(Modifier.fillMaxSize().padding(padding)) {
       MapboxMap(
-          modifier = Modifier.fillMaxSize().testTag(NavigationMapScreenTestTags.MAP),
+          modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
           mapViewportState = mapViewportState) {
             // Init layers
             MapEffect(Unit) { mapView ->
