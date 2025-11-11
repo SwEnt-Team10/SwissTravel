@@ -1,10 +1,5 @@
 package com.github.swent.swisstravel.ui.authentication
 
-/**
- * ViewModel for the Sign-In view.
- *
- * This file is largely adapted from the bootcamp solution.
- */
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -37,13 +32,17 @@ data class AuthUiState(
 )
 
 /**
- * ViewModel for the Sign-In view.
+ * Base ViewModel for authentication screens.
+ *
+ * This abstract class provides the common functionality for both sign-in and sign-up ViewModels,
+ * including state management and the Google sign-in flow.
  *
  * @property repository The repository used to perform authentication operations.
  */
-class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFirebase()) :
+abstract class BaseAuthViewModel(protected val repository: AuthRepository = AuthRepositoryFirebase()) :
     ViewModel() {
-  private val _uiState = MutableStateFlow(AuthUiState())
+
+  protected val _uiState = MutableStateFlow(AuthUiState())
   val uiState: StateFlow<AuthUiState> = _uiState
 
   /** Clears the error message in the UI state. */
@@ -76,10 +75,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
       val signInRequest = signInRequest(signInOptions)
 
       try {
-        // Launch Credential Manager UI safely
         val credential = getCredential(context, signInRequest, credentialManager)
-
-        // Pass the credential to the repository
         repository.signInWithGoogle(credential).fold({ user ->
           _uiState.update {
             it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
@@ -94,12 +90,10 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
           }
         }
       } catch (e: GetCredentialCancellationException) {
-        // User cancelled the sign-in flow
         _uiState.update {
-          it.copy(isLoading = false, errorMsg = "Sign-in cancelled", signedOut = true, user = null)
+          it.copy(isLoading = false, errorMsg = "Log in cancelled", signedOut = true, user = null)
         }
       } catch (e: Exception) {
-        // Unexpected errors
         _uiState.update {
           it.copy(
               isLoading = false,
@@ -110,6 +104,15 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
       }
     }
   }
+}
+
+/**
+ * ViewModel for the Sign-In view.
+ *
+ * @property repository The repository used to perform authentication operations.
+ */
+class SignInViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
+    BaseAuthViewModel(repository) {
 
   /** Initiates the email/password sign-in flow and updates the UI state on success or failure. */
   fun signInWithEmailPassword(email: String, password: String, context: Context) {
@@ -133,7 +136,6 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
           }
         }
       } catch (e: Exception) {
-        // Unexpected errors
         _uiState.update {
           it.copy(
               isLoading = false,

@@ -1,14 +1,10 @@
 package com.github.swent.swisstravel.ui.authentication
 
 import android.content.Context
-import androidx.credentials.CredentialManager
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -22,15 +18,8 @@ import kotlinx.coroutines.launch
  * @param repository The authentication repository used to interact with the authentication service.
  *   Defaults to an instance of [AuthRepositoryFirebase].
  */
-class SignUpViewModel(private val repository: AuthRepository = AuthRepositoryFirebase()) :
-    ViewModel() {
-  private val _uiState = MutableStateFlow(AuthUiState())
-  val uiState: StateFlow<AuthUiState> = _uiState
-
-  /** Clears any existing error message from the UI state. */
-  fun clearErrorMsg() {
-    _uiState.update { it.copy(errorMsg = null) }
-  }
+class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
+    BaseAuthViewModel(repository) {
 
   /**
    * Initiates the sign-up process with an email, password, and user's name.
@@ -81,17 +70,5 @@ class SignUpViewModel(private val repository: AuthRepository = AuthRepositoryFir
         }
       }
     }
-  }
-  /**
-   * Initiates the sign-up/sign-in process using Google.
-   *
-   * This method delegates the Google sign-in flow to a new instance of [SignInViewModel]. This is
-   * because the underlying Google sign-in process is identical for both signing in and signing up.
-   *
-   * @param context The Android context for the sign-in operation.
-   * @param credentialManager The [CredentialManager] instance used to handle Google sign-in.
-   */
-  fun signUpWithGoogle(context: Context, credentialManager: CredentialManager) {
-    SignInViewModel(repository).signInWithGoogle(context, credentialManager)
   }
 }
