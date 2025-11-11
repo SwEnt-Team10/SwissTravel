@@ -214,8 +214,7 @@ fun SwissTravelApp(
                       onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
                       onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
                       onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
-                      onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
-                      navigationActions = navigationActions)
+                      onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) })
                 }
                 // Set Current Trip Screen
                 composable(Screen.SetCurrentTrip.route) {
@@ -235,8 +234,7 @@ fun SwissTravelApp(
                 composable(Screen.PastTrips.route) {
                   PastTripsScreen(
                       onBack = { navigationActions.goBack() },
-                      onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-                      navigationActions = navigationActions)
+                      onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) })
                 }
               }
 
