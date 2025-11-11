@@ -85,14 +85,29 @@ class NominatimLocationRepository(
       }
       if (state.isNotBlank()) nameParts.add(state)
 
-      val name = nameParts.joinToString(", ")
+      val customName = nameParts.joinToString(", ")
 
-      Location(
-          coordinate = Coordinate(obj.getDouble("lat"), obj.getDouble("lon")),
-          name =
-              name.ifBlank {
-                obj.getString("display_name")
-              }) // If the address can't be built, use display_name
+      // Decide whether to use customName or full display_name
+      val type = obj.optString("type") // e.g., "aeroway", "hospital"
+      val classType = obj.optString("class") // e.g., "aeroway", "amenity"
+
+      val typesRequiringFullName =
+          setOf(
+              "aeroway", // airports
+              "hospital", // hospitals
+              "station", // train/bus stations
+              "amenity", // general amenities
+              "highway" // major highways
+              )
+
+      val name =
+          if (typesRequiringFullName.contains(type) || typesRequiringFullName.contains(classType)) {
+            obj.getString("display_name")
+          } else {
+            customName.ifBlank { obj.getString("display_name") }
+          }
+
+      Location(coordinate = Coordinate(obj.getDouble("lat"), obj.getDouble("lon")), name = name)
     }
   }
 }
