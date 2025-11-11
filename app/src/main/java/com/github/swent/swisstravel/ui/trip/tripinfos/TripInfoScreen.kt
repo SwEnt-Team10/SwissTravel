@@ -112,7 +112,7 @@ fun TripInfoScreen(
             },
             navigationIcon = {
 
-                // don't show back button (that goes to MyTripsScreen) when on current trip screen
+              // don't show back button (that goes to MyTripsScreen) when on current trip screen
               if (!isOnCurrentTripScreen) {
                 IconButton(
                     onClick = { showMap = false },

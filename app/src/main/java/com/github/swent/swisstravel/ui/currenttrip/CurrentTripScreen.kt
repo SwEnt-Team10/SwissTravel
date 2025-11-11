@@ -73,7 +73,7 @@ fun CurrentTripScreen(
                 Spacer(modifier = Modifier.height(72.dp))
                 // Create a new trip
                 Button(
-                    onClick = { navigationActions?.navigateTo(Screen.TripSettings1) },
+                    onClick = { navigationActions.navigateTo(Screen.TripSettings1) },
                     enabled = isLoggedIn,
                     modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                       Text(
