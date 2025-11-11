@@ -13,10 +13,10 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
-import com.github.swent.swisstravel.ui.currenttrip.SetCurrentTripScreenTestTags
-import com.github.swent.swisstravel.ui.mytrips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
+import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreenTestTags
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import junit.framework.TestCase.assertEquals

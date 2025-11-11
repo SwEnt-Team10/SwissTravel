@@ -153,11 +153,7 @@ class TripsRepositoryFirestore(
     val from = mapToLocation(fromMap) ?: return null
     val to = mapToLocation(toMap) ?: return null
 
-    val distanceMeter = (map["distanceMeter"] as? Number)?.toInt() ?: return null
     val durationMinutes = (map["durationMinutes"] as? Number)?.toInt() ?: return null
-
-    val pathList =
-        (map["path"] as? List<*>)?.mapNotNull { mapToCoordinate(it as Map<*, *>) } ?: emptyList()
 
     val transportMode =
         (map["transportMode"] as? String)?.let { TransportMode.valueOf(it) } ?: return null
@@ -165,8 +161,7 @@ class TripsRepositoryFirestore(
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
 
-    return RouteSegment(
-        from, to, distanceMeter, durationMinutes, pathList, transportMode, startDate, endDate)
+    return RouteSegment(from, to, durationMinutes, transportMode, startDate, endDate)
   }
 
   /**

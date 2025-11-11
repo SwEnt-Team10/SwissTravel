@@ -108,6 +108,9 @@
     <string name="favorite_icon_empty">Favorite Trip</string>
     <string name="unfavorite_icon">Unfavorite Trip</string>
     <string name="enter_map">Enter Map</string>
+    <string name="no_locations_available">No locations available</string>
+    <string name="current_step">Current Step</string>
+    <string name="step_info">Step</string>
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
     <string name="travelers">Travelers</string>
@@ -133,7 +136,6 @@
     <string name="my_trips_tab">My trips</string>
     <string name="current_trip_tab">Current Trip</string>
     <string name="profile_tab">Profile</string>
-    <string name="back">Go back</string>
 
     <!-- Profile -->
     <string name="my_profile">My Profile</string>
@@ -162,6 +164,9 @@
     <string name="preference_wheelchair_accessible">Wheelchair Accessible</string>
     <string name="preference_public_transport">Public Transport Accessibility</string>
     <string name="preference_quick">Fast Trip</string>
+    <string name="preference_early_bird">Early Bird</string>
+    <string name="preference_night_owl">Night Owl</string>
+    <string name="preference_slow_pace">Slow Paced</string>
 
     <!-- Preference Categories -->
     <string name="preference_category_activity_type">Activity Type</string>
@@ -186,9 +191,11 @@
     <string name="trip_name_required">Trip name required</string>
     <string name="departure_required">Departure required</string>
     <string name="arrival_required">Arrival required</string>
+    <string name="departure_and_arrival_required">Departure and Arrival required</string>
     <string name="no_wanted_places">No wanted places</string>
     <string name="no_preferences">No preferences</string>
     <string name="from_summary">From:</string>
     <string name="to_summary">To:</string>
+
 
 </resources>

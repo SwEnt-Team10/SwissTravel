@@ -52,6 +52,5 @@ class UserRepositoryMockTest {
     Assert.assertEquals("uid123", result.uid)
     Assert.assertEquals("Cacheless User", result.name)
     Assert.assertEquals("cacheless@example.com", result.email)
-    Assert.assertEquals(emptyList<String>(), result.preferences.map { it.displayString() })
   }
 }

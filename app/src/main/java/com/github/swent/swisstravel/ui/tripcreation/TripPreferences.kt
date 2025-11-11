@@ -25,7 +25,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceRules
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.navigation.TopBar
 import kotlinx.coroutines.flow.collectLatest
@@ -103,7 +103,8 @@ fun TripPreferencesScreen(
                       PreferenceSelector(
                           isChecked = { pref -> prefs.contains(pref) },
                           onCheckedChange = { preference ->
-                            viewModel.updatePreferences(prefs.toggle(preference))
+                            val next = PreferenceRules.toggleWithExclusivity(prefs, preference)
+                            viewModel.updatePreferences(next)
                           })
                     }
 
@@ -124,11 +125,4 @@ fun TripPreferencesScreen(
                   }
             }
       }
-}
-
-/** Toggles the given [preference] in the list. Adds it if it's not present, removes it if it is. */
-private fun List<Preference>.toggle(preference: Preference): List<Preference> {
-  return this.toMutableList().apply {
-    if (!this.contains(preference)) add(preference) else remove(preference)
-  }
 }
