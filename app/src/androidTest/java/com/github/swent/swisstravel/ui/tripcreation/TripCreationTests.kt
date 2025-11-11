@@ -72,9 +72,9 @@ class TripCreationTests : SwissTravelTest() {
     for (preference in Preference.values()) {
       val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
       composeTestRule
-          .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+          .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
           .performScrollToNode(hasTestTag(tag))
-      composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(tag, useUnmergedTree = true).assertIsDisplayed()
     }
     /* Done button */
     composeTestRule
