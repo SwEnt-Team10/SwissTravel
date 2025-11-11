@@ -9,7 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.ui.mytrips.TripElement
+import com.github.swent.swisstravel.ui.trips.TripElement
 
 object TripListTestTags {
   const val TRIP_LIST = "TripListLazyColumn"
