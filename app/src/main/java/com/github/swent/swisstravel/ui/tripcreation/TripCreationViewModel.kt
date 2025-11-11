@@ -23,9 +23,6 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-// Wait before fetching new data to avoid overwhelming the api
-private const val SLEEP = 1000.toLong()
-
 /** * Data class representing the start and end dates of a trip. */
 data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = null)
 
@@ -76,7 +73,6 @@ class TripSettingsViewModel(
   val validationEvents = _validationEventChannel.receiveAsFlow()
 
   private val _isLoading = MutableStateFlow(false)
-  val isLoading = _isLoading.asStateFlow()
 
   private val _loadingProgress = MutableStateFlow(0f)
   val loadingProgress = _loadingProgress.asStateFlow()
@@ -135,8 +131,9 @@ class TripSettingsViewModel(
         val selectActivities =
             SelectActivities(tripSettings.value) { progress -> _loadingProgress.value = progress }
         val selectedActivities = selectActivities.addActivities()
-        val activities = selectedActivities.activities
-        setDestinations(selectedActivities.destinations)
+        setDestinations(selectedActivities.map { it.location })
+
+        // TODO Run trip scheduler to organize activities
 
         val settings = _tripSettings.value
         val newUid = tripsRepository.getNewUid()
@@ -173,7 +170,7 @@ class TripSettingsViewModel(
                 ownerId = user.uid,
                 locations = settings.destinations,
                 routeSegments = emptyList(),
-                activities = activities,
+                activities = selectedActivities,
                 tripProfile = tripProfile,
                 isFavorite = false,
                 isCurrentTrip = false)

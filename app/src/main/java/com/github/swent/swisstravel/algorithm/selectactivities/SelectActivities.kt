@@ -11,14 +11,6 @@ import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
 
 /**
- * Data class to hold the result of the activity selection process.
- *
- * @param activities The list of selected activities.
- * @param destinations The list of unique locations derived from the selected activities.
- */
-data class SelectedActivities(val activities: List<Activity>, val destinations: List<Location>)
-
-/**
  * Time in milliseconds to wait between consecutive API calls to avoid exceeding rate limits. The
  * MySwitzerland API allows a maximum of 1 request per second (with bursts up to 10/s).
  */
@@ -47,10 +39,9 @@ class SelectActivities(
   /**
    * Fetches and selects activities based on the trip settings.
    *
-   * @return A [SelectedActivities] object containing the lists of selected activities and their
-   *   unique locations.
+   * @return A list of [Activity] based on the user preferences and points of interest
    */
-  suspend fun addActivities(): SelectedActivities {
+  suspend fun addActivities(): List<Activity> {
     val activityRepository = ActivityRepositoryMySwitzerland()
     val allDestinations = buildDestinationList()
     val userPreferences = tripSettings.preferences.toMutableList()
@@ -114,10 +105,7 @@ class SelectActivities(
     // Signal that the operation is complete.
     onProgress(1f)
 
-    // The destinations for the trip are the unique locations of the selected activities.
-    val finalDestinations = filteredActivities.map { it.location }.distinct()
-
-    return SelectedActivities(activities = filteredActivities, destinations = finalDestinations)
+    return filteredActivities
   }
 
   /**
