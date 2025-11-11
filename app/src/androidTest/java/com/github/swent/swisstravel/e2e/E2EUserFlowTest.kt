@@ -76,7 +76,7 @@ class E2EUserFlowTest : SwissTravelTest() {
     // Navigate to Profile and verify
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForIdle()
-    Thread.sleep(500)
+    Thread.sleep(5000)
     composeTestRule.checkCurrentTripScreenIsNotDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsDisplayed()
