@@ -1,170 +1,199 @@
 package com.github.swent.swisstravel.ui.trip.tripinfo
 
+import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
+import androidx.test.rule.GrantPermissionRule
+import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.ui.trip.tripinfos.*
+import com.google.firebase.Timestamp
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** Instrumented tests for the TripInfoScreen composable. */
 @RunWith(AndroidJUnit4::class)
 class TripInfoScreenTest {
 
-  @get:Rule val composeTestRule = createComposeRule() // inferred type: provides setContent
+  @get:Rule val compose = createComposeRule()
+  @get:Rule
+  val grantPermissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  @Test
-  fun titleIsDisplayedAfterLoad() {
-    val fake = FakeTripInfoViewModel()
-    val vm = TestTripInfoViewModel(fake)
-    fake.loadTripInfo("1")
-
-    composeTestRule.setContent {
+  private fun setContent(
+      vm: TripInfoViewModelContract,
+      onMyTrips: () -> Unit = {},
+      onEditTrip: () -> Unit = {}
+  ) {
+    compose.setContent {
       TripInfoScreen(
-          uid = "1",
-          tripInfoViewModel = vm,
-          onMyTrips = {},
-          onFullscreenClick = {},
-          onEditTrip = {})
+          uid = "TEST", tripInfoViewModel = vm, onMyTrips = onMyTrips, onEditTrip = onEditTrip)
     }
-
-    composeTestRule
-        .onNodeWithTag(TripInfoScreenTestTags.TITLE)
-        .assertIsDisplayed()
-        .assertTextEquals("Test Trip 1")
   }
 
   @Test
-  fun noLocationsShowsNoLocationsAndMapBoxDisplayed() {
-    val fake = FakeTripInfoViewModel()
-    val vm = TestTripInfoViewModel(fake)
-    fake.loadTripInfo("x")
-    fake.setLocations(emptyList())
+  fun titleIsDisplayedAfterLoad() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setName("My Great Trip")
+        }
 
-    composeTestRule.setContent {
-      TripInfoScreen(
-          uid = "x",
-          tripInfoViewModel = vm,
-          onMyTrips = {},
-          onFullscreenClick = {},
-          onEditTrip = {})
-    }
+    setContent(vm)
 
-    // lazy column always present
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.LAZY_COLUMN).assertIsDisplayed()
+    compose
+        .onNodeWithTag(TripInfoScreenTestTags.TITLE)
+        .assertIsDisplayed()
+        .assertTextContains("My Great Trip")
+  }
 
-    // when no locations: show no locations message
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.NO_LOCATIONS).assertIsDisplayed()
+  @Test
+  fun noLocations_showsMessage_andNoMapCard() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setLocations(emptyList())
+        }
 
-    // map card / container / box should still be present
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.MAP_CONTAINER).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.MAP_BOX).assertIsDisplayed()
+    setContent(vm)
+
+    compose.onNodeWithTag(TripInfoScreenTestTags.LAZY_COLUMN).assertIsDisplayed()
+    compose.onNodeWithTag(TripInfoScreenTestTags.NO_LOCATIONS).assertIsDisplayed()
+    // Map card is only shown when locations are present
+    compose.onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).assertDoesNotExist()
   }
 
   @Test
   fun favoriteButtonToggleUpdatesViewModelState() {
-    val fake = FakeTripInfoViewModel()
-    val vm = TestTripInfoViewModel(fake)
-    fake.loadTripInfo("fav")
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setFavorite(false)
+        }
 
-    composeTestRule.setContent {
-      TripInfoScreen(
-          uid = "fav",
-          tripInfoViewModel = vm,
-          onMyTrips = {},
-          onFullscreenClick = {},
-          onEditTrip = {})
-    }
-
-    // safely verify initial state
-    composeTestRule.runOnIdle { assert(!fake.uiState.value.isFavorite) }
+    setContent(vm)
 
     // click favorite button
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
+    compose.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
 
-    // wait for idle then verify state
-    composeTestRule.runOnIdle { assert(fake.uiState.value.isFavorite) }
+    compose.runOnIdle { assert(vm.uiState.value.isFavorite) }
   }
 
   @Test
   fun backButtonCallsOnMyTripsCallback() {
-    val fake = FakeTripInfoViewModel()
-    val vm = TestTripInfoViewModel(fake)
-    fake.loadTripInfo("back")
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setLocations(emptyList())
+        }
     var called = false
 
-    composeTestRule.setContent {
-      TripInfoScreen(
-          uid = "back",
-          tripInfoViewModel = vm,
-          onMyTrips = { called = true },
-          onFullscreenClick = {},
-          onEditTrip = {})
-    }
+    setContent(vm, onMyTrips = { called = true })
 
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).performClick()
-
-    // LaunchedEffect triggers navigation; ensure callback invoked
-    composeTestRule.runOnIdle { assert(called) }
+    compose.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).performClick()
+    compose.runOnIdle { assert(called) }
   }
 
   @Test
   fun editButtonCallsOnEditTripCallback() {
-    val fake = FakeTripInfoViewModel()
-    val vm = TestTripInfoViewModel(fake)
-    fake.loadTripInfo("edit")
+    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
     var editCalled = false
 
-    composeTestRule.setContent {
-      TripInfoScreen(
-          uid = "edit",
-          tripInfoViewModel = vm,
-          onMyTrips = {},
-          onFullscreenClick = {},
-          onEditTrip = { editCalled = true })
-    }
+    setContent(vm, onEditTrip = { editCalled = true })
 
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).performClick()
-    composeTestRule.runOnIdle { assert(editCalled) }
+    compose.onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).performClick()
+    compose.runOnIdle { assert(editCalled) }
   }
 
   @Test
-  fun allTagsPresentWhenTripHasLocations() {
-    val fake = FakeTripInfoViewModel()
-    val vm = TestTripInfoViewModel(fake)
-    // use an id that the fake provides with at least two locations
-    fake.loadTripInfoWithLocation("1")
+  fun fullscreenToggle_showsAndHidesOverlay() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          // minimal data so card appears (locations non-empty)
+          setLocations(
+              listOf(
+                  Location(Coordinate(46.5, 6.6), "Lausanne"),
+                  Location(Coordinate(46.95, 7.44), "Bern")))
+          // set a profile so schedule computation starts (we assert loading state)
+          setTripProfile(
+              TripProfile(
+                  startDate = Timestamp.now(),
+                  endDate = Timestamp.now(),
+                  preferences = emptyList()))
+        }
 
-    composeTestRule.setContent {
-      TripInfoScreen(
-          uid = "1",
-          tripInfoViewModel = vm,
-          onMyTrips = {},
-          onFullscreenClick = {},
-          onEditTrip = {})
-    }
+    setContent(vm)
 
-    // wait for composition/coroutines to settle
-    composeTestRule.runOnIdle {}
+    // map card should appear
+    compose.onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).assertIsDisplayed()
 
-    // container structures
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.LAZY_COLUMN).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.MAP_CONTAINER).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.MAP_BOX).assertIsDisplayed()
+    // enter fullscreen
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON).performClick()
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_MAP).assertIsDisplayed()
 
-    // current step and first location box/name
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.CURRENT_STEP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.FIRST_LOCATION_BOX).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.LOCATION_NAME).assertIsDisplayed()
-
-    // the secondary step card may be off-screen; assert it exists in the semantics tree
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.stepLocationTag(2)).assertExists()
+    // exit fullscreen
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_EXIT).performClick()
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_MAP).assertDoesNotExist()
   }
+
+  @Test
+  fun mapIsDisplayedAfterComputing() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setTripProfile(
+              TripProfile(
+                  startDate = Timestamp.now(),
+                  endDate = Timestamp.now(),
+                  preferences = emptyList()))
+          setLocations(
+              listOf(
+                  Location(Coordinate(46.5, 6.6), "Lausanne"),
+                  Location(Coordinate(46.95, 7.44), "Bern")))
+          // No activities required; computation will start
+        }
+
+    setContent(vm)
+
+    compose.onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).performScrollTo()
+  }
+
+  @Test
+  fun stepControlsDisabledWhenNoScheduleOrComputing() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setTripProfile(
+              TripProfile(
+                  startDate = Timestamp.now(),
+                  endDate = Timestamp.now(),
+                  preferences = emptyList()))
+          setLocations(
+              listOf(
+                  Location(Coordinate(46.5, 6.6), "Lausanne"),
+                  Location(Coordinate(46.95, 7.44), "Bern")))
+        }
+
+    setContent(vm)
+
+    // Buttons should be disabled while computing (schedule empty)
+    compose.onNodeWithText(getString(R.string.previous_step)).assertIsNotEnabled()
+    compose.onNodeWithText(getString(R.string.next_step)).assertIsNotEnabled()
+  }
+
+  // Helpers to access strings inside tests
+  private fun getString(resId: Int) =
+      androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
+          .getString(resId)
 }

@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -237,10 +238,11 @@ fun TripInfoScreen(
                                         .testTag(TripInfoScreenTestTags.MAP_CONTAINER)) {
                                   if (isComputing || schedule.isEmpty()) {
                                     Box(
-                                        Modifier.fillMaxSize()
-                                            .testTag(TripInfoScreenTestTags.LOADING),
+                                        Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center) {
-                                          CircularProgressIndicator()
+                                          CircularProgressIndicator(
+                                              modifier =
+                                                  Modifier.testTag(TripInfoScreenTestTags.LOADING))
                                         }
                                   } else if (showMap) {
                                     NavigationMapScreen(locations = mapLocations)
@@ -342,11 +344,13 @@ fun TripInfoScreen(
                 modifier =
                     Modifier.align(Alignment.TopStart)
                         .padding(16.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
                         .testTag(TripInfoScreenTestTags.FULLSCREEN_EXIT)) {
                   Icon(
                       imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                       contentDescription = stringResource(R.string.back_to_my_trips),
-                      tint = MaterialTheme.colorScheme.onBackground)
+                      tint = MaterialTheme.colorScheme.onPrimary)
                 }
           }
         }

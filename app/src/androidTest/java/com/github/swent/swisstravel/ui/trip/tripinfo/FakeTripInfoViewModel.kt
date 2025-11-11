@@ -1,112 +1,69 @@
 package com.github.swent.swisstravel.ui.trip.tripinfo
 
-import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.RouteSegment
+import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoUIState
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 
-/**
- * Fake ViewModel used in androidTest to drive TripInfoScreen UI.
- *
- * Public API mirrors the real ViewModel enough for UI tests:
- * - exposes uiState as a StateFlow
- * - provides loadTripInfo, toggleFavorite and clearErrorMsg
- * - helper methods allow tests to inject locations / errors deterministically
- */
-class FakeTripInfoViewModel {
-  // Backing mutable state for tests to observe
-  private val _uiState =
+class FakeTripInfoViewModel : TripInfoViewModelContract {
+
+  private val _ui =
       MutableStateFlow(
           TripInfoUIState(
               uid = "",
-              name = "Test Trip",
-              ownerId = "owner_test",
+              name = "Trip",
+              ownerId = "",
               locations = emptyList(),
               routeSegments = emptyList(),
               activities = emptyList(),
               tripProfile = null,
               isFavorite = false,
               errorMsg = null))
-  // Public read-only stateflow (same shape as production ViewModel)
-  val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
 
-  /**
-   * Simulate loading trip info. If uid is null or blank, set an error message; otherwise update
-   * name and uid.
-   */
-  fun loadTripInfoWithLocation(uid: String?) {
-    if (uid.isNullOrBlank()) {
-      _uiState.value = _uiState.value.copy(errorMsg = "Trip ID is invalid")
-      return
-    }
-    // Populate minimal predictable test data; tests can further modify via helpers
-    generateFakeLocations()
-    _uiState.value =
-        _uiState.value.copy(
-            uid = uid,
-            name = "Test Trip $uid",
-            ownerId = "owner_$uid",
-            isFavorite = false,
-            errorMsg = null)
+  override val uiState: StateFlow<TripInfoUIState> = _ui
+
+  override fun loadTripInfo(uid: String?) {
+    _ui.value = _ui.value.copy(uid = uid ?: "")
   }
 
-  /**
-   * Toggle favorite immediately in UI state. Persistence is not simulated here; tests can assert UI
-   * changes directly.
-   */
-  fun toggleFavorite() {
-    val current = _uiState.value
-    _uiState.value = current.copy(isFavorite = !current.isFavorite)
+  override fun clearErrorMsg() {
+    _ui.value = _ui.value.copy(errorMsg = null)
   }
 
-  /** Clear visible error message. */
-  fun clearErrorMsg() {
-    _uiState.value = _uiState.value.copy(errorMsg = null)
+  override fun setErrorMsg(errorMsg: String) {
+    _ui.value = _ui.value.copy(errorMsg = errorMsg)
   }
 
-  /**
-   * Helper for tests: set locations list (use real `Location` instances from production models).
-   * This lets tests exercise the branches rendering location names and steps.
-   */
-  fun setLocations(locations: List<Location>) {
-    _uiState.value = _uiState.value.copy(locations = locations)
+  override fun toggleFavorite() {
+    _ui.value = _ui.value.copy(isFavorite = !_ui.value.isFavorite)
   }
 
-  /** Helper to inject an error message for UI error handling tests. */
-  fun emitError(message: String) {
-    _uiState.value = _uiState.value.copy(errorMsg = message)
-  }
-  /** Generate some fake locations and set them in the UI state. */
-  private fun generateFakeLocations() {
-    val locations =
-        listOf(
-            Location(name = "Location 1", coordinate = Coordinate(46.9481, 7.4474)),
-            Location(name = "Location 2", coordinate = Coordinate(47.3769, 8.5417)),
-            Location(name = "Location 3", coordinate = Coordinate(46.2044, 6.1432)))
-    setLocations(locations)
-  }
-  /**
-   * Simulate loading trip info. If uid is null or blank, set an error message; otherwise update
-   * name and uid.
-   */
-  fun loadTripInfo(uid: String?) {
-    if (uid.isNullOrBlank()) {
-      _uiState.value = _uiState.value.copy(errorMsg = "Trip ID is invalid")
-      return
-    }
-    // Populate minimal predictable test data; tests can further modify via helpers
-    _uiState.value =
-        _uiState.value.copy(
-            uid = uid,
-            name = "Test Trip $uid",
-            ownerId = "owner_$uid",
-            isFavorite = false,
-            errorMsg = null)
+  // ——— convenience setters for tests ———
+  fun setName(name: String) {
+    _ui.value = _ui.value.copy(name = name)
   }
 
-  fun setErrorMsg(errorMsg: String) {
-    _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
+  fun setLocations(locs: List<Location>) {
+    _ui.value = _ui.value.copy(locations = locs)
+  }
+
+  fun setActivities(acts: List<Activity>) {
+    _ui.value = _ui.value.copy(activities = acts)
+  }
+
+  fun setTripProfile(profile: TripProfile?) {
+    _ui.value = _ui.value.copy(tripProfile = profile)
+  }
+
+  fun setFavorite(value: Boolean) {
+    _ui.value = _ui.value.copy(isFavorite = value)
+  }
+
+  fun setRouteSegments(segments: List<RouteSegment>) {
+    _ui.value = _ui.value.copy(routeSegments = segments)
   }
 }
