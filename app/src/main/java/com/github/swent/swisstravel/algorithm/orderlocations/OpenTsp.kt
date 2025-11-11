@@ -7,7 +7,7 @@ package com.github.swent.swisstravel.algorithm.orderlocations
  * the starting point. TSP because needs to find a route that visits all cities exactly once and
  * minimize the travel time.
  *
- * Unfortunately, the TSP problem as a NP-hard complexity. Therefore we will use a heuristic
+ * Unfortunately, the TSP problem has a NP-hard complexity. Therefore we will use a heuristic
  * (Greedy + Local search) to solve it and find a good enough order.
  */
 class OpenTsp {
