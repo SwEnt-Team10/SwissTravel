@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -45,6 +46,7 @@ import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoMapScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
+import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
@@ -88,7 +90,7 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
 
   val parentEntry =
       remember(currentEntry) {
-        runCatching { navController.getBackStackEntry(Screen.TripSettings1.name) }.getOrNull()
+        runCatching { navController.getBackStackEntry(Screen.TripSettingsDates.name) }.getOrNull()
       }
 
   return if (parentEntry != null) {
@@ -213,7 +215,7 @@ fun SwissTravelApp(
                   MyTripsScreen(
                       onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
                       onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
-                      onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
+                      onCreateTrip = { navigationActions.navigateTo(Screen.TripSettingsDates) },
                       onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
                       navigationActions = navigationActions)
                 }
@@ -288,22 +290,21 @@ fun SwissTravelApp(
 
               // Trip settings screens
               navigation(
-                  startDestination = Screen.TripSettings1.route,
-                  route = Screen.TripSettings1.name,
+                  startDestination = Screen.TripSettingsDates.route,
+                  route = Screen.TripSettingsDates.name,
               ) {
-                composable(Screen.TripSettings1.route) {
+                composable(Screen.TripSettingsDates.route) {
                   TripDateScreen(
                       viewModel = tripSettingsViewModel(navController),
-                      onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
-                      onPrevious = { navigationActions.goBack() })
+                      onNext = { navigationActions.navigateTo(Screen.TripSettingsTravelers) })
                 }
-                composable(Screen.TripSettings2.route) {
+                composable(Screen.TripSettingsTravelers.route) {
                   TripTravelersScreen(
                       viewModel = tripSettingsViewModel(navController),
-                      onNext = { navigationActions.navigateTo(Screen.TripSettings3) },
+                      onNext = { navigationActions.navigateTo(Screen.TripSettingsPreferences) },
                       onPrevious = { navigationActions.goBack() })
                 }
-                composable(Screen.TripSettings3.route) {
+                composable(Screen.TripSettingsPreferences.route) {
                   TripPreferencesScreen(
                       viewModel = tripSettingsViewModel(navController),
                       onNext = {
@@ -321,15 +322,20 @@ fun SwissTravelApp(
                 }
                 composable(Screen.TripSettingsFirstDestination.route) {
                   FirstDestinationScreen(
-                      viewModel = tripSettingsViewModel(navController),
                       onNext = { navigationActions.navigateTo(Screen.TripSummary) },
-                      onPrevious = { navigationActions.goBack() })
+                      onPrevious = { navigationActions.goBack() },
+                      viewModel = tripSettingsViewModel(navController))
                 }
                 composable(Screen.TripSummary.route) {
                   TripSummaryScreen(
                       viewModel = tripSettingsViewModel(navController),
-                      onNext = { navigationActions.navigateTo(Screen.MyTrips, true) },
+                      onNext = { navigationActions.navigateTo(Screen.Loading) },
                       onPrevious = { navigationActions.goBack() })
+                }
+                composable(Screen.Loading.route) {
+                  val viewModel = tripSettingsViewModel(navController)
+                  val loadingProgress by viewModel.loadingProgress.collectAsState()
+                  LoadingScreen(progress = loadingProgress)
                 }
               }
             }

@@ -3,23 +3,22 @@ package com.github.swent.swisstravel.ui.tripcreation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
-import com.github.swent.swisstravel.model.trip.activity.Activity
-import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Timestamp
-import java.lang.Thread.sleep
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -76,6 +75,12 @@ class TripSettingsViewModel(
   private val _validationEventChannel = Channel<ValidationEvent>()
   val validationEvents = _validationEventChannel.receiveAsFlow()
 
+  private val _isLoading = MutableStateFlow(false)
+  val isLoading = _isLoading.asStateFlow()
+
+  private val _loadingProgress = MutableStateFlow(0f)
+  val loadingProgress = _loadingProgress.asStateFlow()
+
   fun updateName(name: String) {
     _tripSettings.update { it.copy(name = name) }
   }
@@ -116,71 +121,22 @@ class TripSettingsViewModel(
     }
   }
 
-  /** Select activities near predetermined stops and with user preferences. */
-  private suspend fun addActivities(): List<Activity> {
-    val activityRepository = ActivityRepositoryMySwitzerland()
-    val output = mutableListOf<Activity>()
-    val destinations =
-        _tripSettings.value.destinations.toMutableList() // TODO add locations along the route
-    val arrivalDeparture = _tripSettings.value.arrivalDeparture
-    destinations.add(arrivalDeparture.arrivalLocation!!)
-    destinations.add(arrivalDeparture.departureLocation!!)
-
-    // Get activities near stops
-    val allActivitiesNear = mutableListOf<Activity>()
-    for (place in destinations) {
-      val activities = activityRepository.getActivitiesNear(place.coordinate, 15000, 20)
-      allActivitiesNear.addAll(activities)
-      sleep(SLEEP)
-    }
-    output.addAll(allActivitiesNear.distinct())
-
-    // Get activities with preferences
-    val preferences = _tripSettings.value.preferences.toMutableList()
-    if (preferences.isNotEmpty()) {
-      val allActivitiesPref = mutableListOf<Activity>()
-
-      val wheelChair = preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE)
-      val publicTransport = preferences.contains(Preference.PUBLIC_TRANSPORT)
-
-      // Mandatory filters
-      val always = mutableListOf<Preference>()
-
-      if (wheelChair) {
-        preferences.remove(Preference.WHEELCHAIR_ACCESSIBLE)
-        always.add(Preference.WHEELCHAIR_ACCESSIBLE)
-      }
-      if (publicTransport) {
-        preferences.remove(Preference.PUBLIC_TRANSPORT)
-        always.add(Preference.PUBLIC_TRANSPORT)
-      }
-
-      for (preference in preferences) {
-        val activities = activityRepository.getActivitiesByPreferences(always + preference, 100)
-        allActivitiesPref.addAll(activities)
-        sleep(SLEEP)
-      }
-      allActivitiesPref.distinct()
-
-      // Select activities that are near and respects user preferences
-      output.filter { activity -> allActivitiesPref.contains(activity) }
-    }
-
-    setDestinations(destinations + output.map { it.location })
-
-    return output
-  }
-
   /**
    * Saves the current trip settings as a new Trip in the repository.
    *
    * Trip should be saved once an internet connection is available.
    */
-  fun saveTrip() { // TODO Set loading screen until failure or success if success continue as
-    // before, if failure continue as before
+  fun saveTrip() {
+    if (_isLoading.value) return
     viewModelScope.launch {
+      _isLoading.value = true
+      _loadingProgress.value = 0f
       try {
-        val activities = addActivities()
+        val selectActivities =
+            SelectActivities(tripSettings.value) { progress -> _loadingProgress.value = progress }
+        val selectedActivities = selectActivities.addActivities()
+        val activities = selectedActivities.activities
+        setDestinations(selectedActivities.destinations)
 
         val settings = _tripSettings.value
         val newUid = tripsRepository.getNewUid()
@@ -227,6 +183,8 @@ class TripSettingsViewModel(
       } catch (e: Exception) {
         _validationEventChannel.send(
             ValidationEvent.SaveError(e.message ?: "An unknown error occurred"))
+      } finally {
+        _isLoading.value = false
       }
     }
   }
