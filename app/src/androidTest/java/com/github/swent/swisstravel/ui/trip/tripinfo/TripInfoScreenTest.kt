@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.trip.tripinfo
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -166,5 +167,11 @@ class TripInfoScreenTest {
 
     // the secondary step card may be off-screen; assert it exists in the semantics tree
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.stepLocationTag(2)).assertExists()
+  }
+
+  @Test
+  fun backButtonNotShownOnCurrentTripScreen() {
+    composeTestRule.setContent { TripInfoScreen(uid = "whatever", isOnCurrentTripScreen = true) }
+    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).isNotDisplayed()
   }
 }
