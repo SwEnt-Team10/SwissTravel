@@ -10,11 +10,21 @@
     <!-- Authentication -->
     <string name="login_success">Login successful!</string>
     <string name="google_sign_in">Sign in with Google</string>
+    <string name="google_sign_up">Sign up with Google</string>
     <string name="app_logo_desc">App Logo</string>
     <string name="google_logo_desc">Google Logo</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in">Sign In</string>
-
+    <string name="signup_success">Thank you for joining Swisstravel !</string>
+    <string name="sign_up_landing">Sign Up</string>
+    <string name="sign_in_landing">Already have an account? Sign In</string>
+    <string name="or">Or</string>
+    <string name="create_account">Create Your Account</string>
+    <string name="first_name">First Name</string>
+    <string name="last_name">Last Name</string>
+    <string name="Email">Email</string>
+    <string name="password">Password</string>
+    <string name="sign_in_account">Sign in to your account</string>
     <!-- General -->
     <string name="yes">Yes</string>
     <string name="no">No</string>

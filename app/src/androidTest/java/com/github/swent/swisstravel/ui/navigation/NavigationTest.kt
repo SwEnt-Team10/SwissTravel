@@ -3,12 +3,11 @@ package com.github.swent.swisstravel.ui.navigation
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.github.swent.swisstravel.SwissTravelApp
-import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
+import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FirebaseEmulator
@@ -113,14 +112,9 @@ class NavigationTest : SwissTravelTest() {
         .performScrollTo()
         .performClick()
 
-    // 3. Wait for navigation and verify we are on the login screen
-    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-      composeTestRule
-          .onAllNodesWithTag(SignInScreenTestTags.LOGIN_BUTTON)
-          .fetchSemanticsNodes()
-          .size == 1
-    }
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOGIN_BUTTON).assertIsDisplayed()
+    // 3. Wait for navigation and verify we are on the landing screen
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(LandingScreenTestTags.SIGN_UP_BUTTON).assertIsDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
 
     // 4. Press the back button and assert that the activity finishes
