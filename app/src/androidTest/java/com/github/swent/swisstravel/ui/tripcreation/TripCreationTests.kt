@@ -66,14 +66,12 @@ class TripCreationTests : SwissTravelTest() {
         .assertIsDisplayed()
     composeTestRule.checkTopBarIsDisplayed()
     /* Preference Selector */
-    composeTestRule
-        .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
-        .assertIsDisplayed()
+    val preferenceSelector =
+        composeTestRule.onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+    preferenceSelector.assertIsDisplayed()
     for (preference in Preference.values()) {
       val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
-      composeTestRule
-          .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
-          .performScrollToNode(hasTestTag(tag))
+      preferenceSelector.performScrollToNode(hasTestTag(tag))
       composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
     }
     /* Done button */
