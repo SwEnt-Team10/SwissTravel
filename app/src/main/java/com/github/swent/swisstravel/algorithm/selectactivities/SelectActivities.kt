@@ -131,7 +131,7 @@ class SelectActivities(
     // TODO: Implement logic to add locations along the route between destinations.
     tripSettings.arrivalDeparture.arrivalLocation?.let { allDestinations.add(it) }
     tripSettings.arrivalDeparture.departureLocation?.let { allDestinations.add(it) }
-    return allDestinations.distinct() // Ensure all locations are unique.
+    return allDestinations.distinctBy { it.coordinate } // Ensure all locations are unique.
   }
 
   /**
