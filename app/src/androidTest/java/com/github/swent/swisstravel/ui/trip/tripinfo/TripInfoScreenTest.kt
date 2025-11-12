@@ -192,6 +192,76 @@ class TripInfoScreenTest {
     compose.onNodeWithText(getString(R.string.next_step)).assertIsNotEnabled()
   }
 
+  @Test
+  fun topBarHidden_inFullscreen_andShownAfterExit() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setName("Trip")
+          setLocations(
+              listOf(
+                  Location(Coordinate(46.5, 6.6), "Lausanne"),
+                  Location(Coordinate(46.95, 7.44), "Bern")))
+          setTripProfile(TripProfile(Timestamp.now(), Timestamp.now(), emptyList()))
+        }
+    setContent(vm)
+
+    // Top bar present initially
+    compose.onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed()
+
+    // Enter fullscreen
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON).performClick()
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_MAP).assertIsDisplayed()
+    // Top bar should be gone in fullscreen
+    compose.onNodeWithTag(TripInfoScreenTestTags.TITLE).assertDoesNotExist()
+
+    // Exit fullscreen
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_EXIT).performClick()
+    compose.onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed()
+  }
+
+  @Test
+  fun noLocations_hidesFullscreenAndMapContainer() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setLocations(emptyList())
+        }
+    setContent(vm)
+
+    compose.onNodeWithTag(TripInfoScreenTestTags.MAP_CONTAINER).assertDoesNotExist()
+    compose.onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON).assertDoesNotExist()
+  }
+
+  @Test
+  fun stepButtons_disabledWhenScheduleEmpty() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          // present locations but no profile -> no schedule computed
+          setLocations(listOf(Location(Coordinate(1.0, 1.0), "OnlyOne")))
+        }
+    setContent(vm)
+
+    compose.onNodeWithText(getString(R.string.previous_step)).assertIsNotEnabled()
+    compose.onNodeWithText(getString(R.string.next_step)).assertIsNotEnabled()
+  }
+
+  @Test
+  fun backButton_callsOnMyTripsOnce() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setLocations(emptyList())
+        }
+    var calls = 0
+    setContent(vm, onMyTrips = { calls++ })
+
+    compose.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).performClick()
+    compose.waitForIdle()
+    compose.runOnIdle { assert(calls == 1) }
+  }
+
   // Helpers to access strings inside tests
   private fun getString(resId: Int) =
       androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()

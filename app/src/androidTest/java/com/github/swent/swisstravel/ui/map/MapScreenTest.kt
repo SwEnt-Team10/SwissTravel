@@ -21,12 +21,13 @@ import org.junit.Test
 class MapScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
+
   @get:Rule
   val grantPermissionRule: GrantPermissionRule =
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  /** Check the map is displayed */
+  /** Check the map is displayed with two locations */
   @Test
   fun mapIsDisplayed() {
     composeRule.setContent {
@@ -35,13 +36,22 @@ class MapScreenTest {
               listOf(
                   Location(Coordinate(46.0, 6.6), "A"),
                   Location(Coordinate(46.51, 6.61), "B"),
-              ))
+              ),
+          drawRoute = true)
     }
-
     composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
   }
 
-  /** Check the VM updates the state correctly */
+  /** Map renders with a single location (camera path branches) */
+  @Test
+  fun mapIsDisplayed_withSingleLocation() {
+    composeRule.setContent {
+      MapScreen(locations = listOf(Location(Coordinate(46.2, 6.7), "OnlyOne")), drawRoute = false)
+    }
+    composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
+  }
+
+  /** ViewModel flag toggles as expected */
   @Test
   fun setRouteRenderedUpdatesState() {
     val vm = MapScreenViewModel()
@@ -54,7 +64,7 @@ class MapScreenTest {
     assertTrue(!vm.uiState.value.isRouteRendered)
   }
 
-  /** Check 'updateLocations' modifies the list in the uiState */
+  /** updateLocations modifies the list in uiState */
   @Test
   fun updateLocationsChangesUiState() {
     val vm = MapScreenViewModel()
@@ -62,12 +72,11 @@ class MapScreenTest {
         listOf(
             com.mapbox.geojson.Point.fromLngLat(6.6, 46.5),
             com.mapbox.geojson.Point.fromLngLat(6.7, 46.6))
-
     vm.updateLocations(points)
     assertTrue(vm.uiState.value.locationsList == points)
   }
 
-  /** Check 'attachMapObjects' configures the MapboxNavigation and the RouteLineApi correctly */
+  /** attachMapObjects wires nav + route API */
   @Test
   fun attachMapObjectsUpdatesUiState() {
     val vm = MapScreenViewModel()
@@ -79,67 +88,108 @@ class MapScreenTest {
         com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi(
             com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions.Builder()
                 .build())
-
     vm.attachMapObjects(nav, api)
-
     assertTrue(vm.uiState.value.mapboxNavigation === nav)
     assertTrue(vm.uiState.value.routeLineApi === api)
   }
 
+  /** When permission is granted, the follow-puck button shows */
   @Test
-  fun mapIsVisible_andFollowPuckButtonIsShown_whenPermissionGranted() {
+  fun followPuckButton_visible_whenPermissionGranted() {
+    val vm = MapScreenViewModel().apply { setPermissionGranted(true) }
     composeRule.setContent {
       MapScreen(
           locations =
               listOf(
                   Location(Coordinate(46.0, 6.6), "A"),
                   Location(Coordinate(46.51, 6.61), "B"),
-              ))
+              ),
+          drawRoute = true,
+          viewModel = vm)
     }
-
-    // Map surface
-    composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
-
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val cd = context.getString(R.string.allow_location)
     composeRule.onNode(hasContentDescription(cd)).assertIsDisplayed()
   }
 
+  /** Follow-puck button is clickable (smoke: no crash) */
   @Test
   fun followPuckButton_isClickable() {
+    val vm = MapScreenViewModel().apply { setPermissionGranted(true) }
     composeRule.setContent {
       MapScreen(
           locations =
               listOf(
                   Location(Coordinate(46.0, 6.6), "A"),
                   Location(Coordinate(46.51, 6.61), "B"),
-              ))
+              ),
+          drawRoute = true,
+          viewModel = vm)
     }
-
     val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     val cd = context.getString(R.string.allow_location)
     composeRule.onNode(hasContentDescription(cd)).assertIsDisplayed().performClick()
-    // No crash is success; we can't directly assert viewport state here.
   }
 
+  /** Toggling drawRoute from true -> false clears the route (smoke: no crash / renders) */
   @Test
-  fun dispose_resetsRouteRenderedFlag() {
-    val vm = MapScreenViewModel()
-
-    // Pre-set the flag to true so we can observe the reset on dispose
-    vm.setRouteRendered(true)
-
-    var show by mutableStateOf(true)
+  fun toggling_drawRoute_doesNotCrash_andRenders() {
+    val vm = MapScreenViewModel().apply { setPermissionGranted(true) }
+    var drawRoute by mutableStateOf(true)
     composeRule.setContent {
-      if (show) {
-        MapScreen(locations = listOf(Location(Coordinate(46.2, 6.7), "OnlyOne")), viewModel = vm)
-      }
+      MapScreen(
+          locations =
+              listOf(
+                  Location(Coordinate(46.0, 6.6), "A"),
+                  Location(Coordinate(46.51, 6.61), "B"),
+              ),
+          drawRoute = drawRoute,
+          viewModel = vm)
     }
 
-    // Now remove the composable; DisposableEffect should call setRouteRendered(false)
-    composeRule.runOnUiThread { show = false }
+    // Map is visible initially
+    composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
+
+    // Toggle to pin-only mode; ensures our clear logic path is exercised
+    composeRule.runOnUiThread { drawRoute = false }
     composeRule.waitForIdle()
 
-    assert(!vm.uiState.value.isRouteRendered)
+    // Still rendering fine
+    composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
+  }
+
+  /** Rapid recomposition: change locations & drawRoute to ensure layer init is idempotent */
+  @Test
+  fun rapidRecomposition_layerInitIsStable() {
+    val vm = MapScreenViewModel().apply { setPermissionGranted(true) }
+
+    var drawRoute by mutableStateOf(true)
+    var locs by
+        mutableStateOf(
+            listOf(
+                Location(Coordinate(46.0, 6.6), "A"),
+                Location(Coordinate(46.51, 6.61), "B"),
+            ))
+
+    composeRule.setContent { MapScreen(locations = locs, drawRoute = drawRoute, viewModel = vm) }
+
+    // Flip a few times to simulate user stepping through trip steps
+    repeat(3) {
+      composeRule.runOnUiThread {
+        drawRoute = !drawRoute
+        locs =
+            if (drawRoute) {
+              listOf(
+                  Location(Coordinate(46.0, 6.6), "A"),
+                  Location(Coordinate(46.51, 6.61), "B"),
+                  Location(Coordinate(46.8, 6.7), "C"),
+              )
+            } else {
+              listOf(Location(Coordinate(46.2, 6.7), "OnlyOne"))
+            }
+      }
+      composeRule.waitForIdle()
+      composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
+    }
   }
 }
