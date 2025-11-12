@@ -141,6 +141,7 @@ class TripSettingsViewModel(
         val selectedActivities = selectActivities.addActivities()
         setDestinations(selectedActivities.map { it.location })
 
+        Log.d("TripSettingsViewModel", "Selected activities: $selectedActivities")
         // TODO Run trip scheduler to organize activities
 
         val settings = _tripSettings.value

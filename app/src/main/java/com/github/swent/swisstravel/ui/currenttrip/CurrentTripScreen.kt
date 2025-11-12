@@ -52,7 +52,6 @@ fun CurrentTripScreen(
   if (currentTrip != null) {
     TripInfoScreen(
         currentTrip.uid,
-        onFullscreenClick = { navigationActions?.navigateTo(Screen.TripInfoMap) },
         onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
         isOnCurrentTripScreen = true)
   } else {

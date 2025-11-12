@@ -136,21 +136,26 @@ class TripsRepositoryFirestore(
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
     val locationMap = map["location"] as? Map<*, *> ?: return null
-    val description = map["description"] as? String ?: return null
     val location = mapToLocation(locationMap) ?: return null
-    val estimatedTime = map["estimatedTime"] as? Int ?: return null
-    val imageUrls =
+    val description = map["description"] as? String ?: return null
+    val estimatedTime = (map["estimatedTime"] as? Number)?.toInt() ?: 0
+    val imageUrls: List<String> =
         when (val raw = map["imageUrls"]) {
-          is List<*> -> {
-            val strings = raw.filterIsInstance<String>()
-            if (strings.size == raw.size) strings else return null
-          }
+          is List<*> -> raw.mapNotNull { it as? String }
           is String -> listOf(raw)
-          null -> emptyList()
-          else -> return null
+          null -> return null
+          else -> emptyList()
         }
 
-    return Activity(startDate, endDate, location, description, imageUrls, estimatedTime)
+    val act =
+        Activity(
+            startDate = startDate,
+            endDate = endDate,
+            location = location,
+            description = description,
+            imageUrls = imageUrls,
+            estimatedTime = estimatedTime)
+    return act
   }
 
   /**

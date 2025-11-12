@@ -12,7 +12,6 @@ import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.directions.session.RoutesObserver
-import com.mapbox.navigation.core.directions.session.RoutesUpdatedResult
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLineError
 import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
@@ -34,6 +33,7 @@ data class NavigationMapUIState(
     val locationsList: List<Point>,
     val mapboxNavigation: MapboxNavigation?,
     val routeLineApi: MapboxRouteLineApi?,
+    val permissionGranted: Boolean = false
 )
 
 /**
@@ -45,7 +45,7 @@ data class NavigationMapUIState(
  * - Observing route updates via RoutesObserver
  * - Exposing reactive state to the UI for route drawing and camera updates
  */
-class NavigationMapViewModel : ViewModel() {
+class MapScreenViewModel : ViewModel() {
 
   private val _routeRenderTick = MutableStateFlow(0)
 
@@ -53,19 +53,16 @@ class NavigationMapViewModel : ViewModel() {
   val routeRenderTick: StateFlow<Int> = _routeRenderTick
 
   /** Internal routes observer that updates the route line API when routes change */
-  private val routesObserver =
-      object : RoutesObserver {
-        override fun onRoutesChanged(result: RoutesUpdatedResult) {
-          val nav = _uiState.value.mapboxNavigation ?: return
-          val api = _uiState.value.routeLineApi ?: return
-          val alt = nav.getAlternativeMetadataFor(result.navigationRoutes)
-          api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
-            if (drawData.value != null) {
-              _routeRenderTick.value = _routeRenderTick.value + 1
-            }
-          }
-        }
+  private val routesObserver = RoutesObserver { result ->
+    val nav = _uiState.value.mapboxNavigation ?: return@RoutesObserver
+    val alt = nav.getAlternativeMetadataFor(result.navigationRoutes)
+    val api = _uiState.value.routeLineApi ?: return@RoutesObserver
+    api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
+      if (drawData.value != null) {
+        _routeRenderTick.value = _routeRenderTick.value + 1
       }
+    }
+  }
 
   /** Backing state for the UI */
   private val _uiState =
@@ -122,7 +119,9 @@ class NavigationMapViewModel : ViewModel() {
     nav.requestRoutes(
         routeOptions,
         object : NavigationRouterCallback {
-          override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {}
+          override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {
+            // no-op should never happen
+          }
 
           override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
             Log.e("NAV_MAP_VM", "requestRoute failure: $reasons")
@@ -143,6 +142,15 @@ class NavigationMapViewModel : ViewModel() {
    */
   fun setRouteRendered(isRendered: Boolean) {
     _uiState.value = _uiState.value.copy(isRouteRendered = isRendered)
+  }
+
+  /**
+   * Update the permission state.
+   *
+   * @param granted True if location permission is granted, false otherwise.
+   */
+  fun setPermissionGranted(granted: Boolean) {
+    _uiState.value = _uiState.value.copy(permissionGranted = granted)
   }
 
   /** Cleanup: unregisters routes observer when ViewModel is cleared */

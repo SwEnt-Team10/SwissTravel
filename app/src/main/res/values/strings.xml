@@ -71,7 +71,6 @@
     <string name="address">Address</string>
 
     <!-- Map -->
-    <string name="error_access_activity">Error: unable to access the activity.</string>
     <string name="location_required_to_display">Location is required to display your position on the map.</string>
     <string name="allow_location">Allow location</string>
     <string name="exit_map_desc">Exit Map Icon</string>
@@ -117,10 +116,13 @@
     <string name="fullscreen">Fullscreen</string>
     <string name="favorite_icon_empty">Favorite Trip</string>
     <string name="unfavorite_icon">Unfavorite Trip</string>
-    <string name="enter_map">Enter Map</string>
     <string name="no_locations_available">No locations available</string>
     <string name="current_step">Current Step</string>
-    <string name="step_info">Step</string>
+    <string name="step_info">Step %d</string>
+    <string name="about_minutes">About %1$d min</string>
+    <string name="previous_step">Previous step</string>
+    <string name="next_step">Next step</string>
+
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
     <string name="travelers">Travelers</string>
