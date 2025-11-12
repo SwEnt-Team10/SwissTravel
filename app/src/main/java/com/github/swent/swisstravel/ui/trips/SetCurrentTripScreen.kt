@@ -72,7 +72,7 @@ fun SetCurrentTripScreen(
             title = title,
             onClose = onClose,
             onClickDropDownMenu = { sortType -> viewModel.updateSortType(sortType) },
-        )
+            selectedSortType = uiState.sortType)
       },
       modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) { pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
@@ -102,13 +102,15 @@ fun SetCurrentTripScreen(
  * @param title The title to display in the top bar.
  * @param onClose Callback when the close button is clicked.
  * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu
+ * @param selectedSortType The currently selected sorting option
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopBarSetCurrentTrip(
     title: String = "",
     onClose: () -> Unit = {},
-    onClickDropDownMenu: (TripSortType) -> Unit
+    onClickDropDownMenu: (TripSortType) -> Unit,
+    selectedSortType: TripSortType
 ) {
   TopAppBar(
       modifier = Modifier.testTag(SetCurrentTripScreenTestTags.TOP_BAR),
@@ -128,5 +130,7 @@ fun TopBarSetCurrentTrip(
                   tint = MaterialTheme.colorScheme.onBackground)
             }
       },
-      actions = { SortMenu(onClickDropDownMenu = onClickDropDownMenu) })
+      actions = {
+        SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
+      })
 }

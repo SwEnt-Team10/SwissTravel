@@ -52,8 +52,8 @@ class TripCreationViewModelComposeTest {
   fun tripSettingsViewModelFindsParentEntryWhenTripSettingsNavHostIsPresent() {
     composeRule.setContent {
       val navController = rememberNavController()
-      NavHost(navController = navController, startDestination = Screen.TripSettings1.route) {
-        composable(Screen.TripSettings1.route) { Caller(navController = navController) }
+      NavHost(navController = navController, startDestination = Screen.TripSettingsDates.route) {
+        composable(Screen.TripSettingsDates.route) { Caller(navController = navController) }
       }
     }
 

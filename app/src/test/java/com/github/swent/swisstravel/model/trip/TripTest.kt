@@ -14,12 +14,16 @@ class TripTest {
               endDate = Timestamp(1734003600, 0), // 10:20
               location =
                   Location(name = "Jet d'eau de Genève", coordinate = Coordinate(46.2074, 6.1551)),
-              description = ""),
+              description = "",
+              imageUrls = emptyList(),
+              estimatedTime = 3600),
           Activity(
               startDate = Timestamp(1734012600, 0), // 13:10 (after travel + pause)
               endDate = Timestamp(1734016200, 0), // 14:10
               location = Location(name = "Zoo de Zurich", coordinate = Coordinate(47.3850, 8.5736)),
-              description = ""),
+              description = "",
+              imageUrls = emptyList(),
+              estimatedTime = 3600),
           Activity(
               startDate = Timestamp(1734028800, 0), // 17:20 (after 2 segments + pause)
               endDate = Timestamp(1734032400, 0), // 18:20
@@ -27,7 +31,9 @@ class TripTest {
                   Location(
                       name = "Musée des Transports de Lucerne",
                       coordinate = Coordinate(47.0502, 8.3103)),
-              description = ""))
+              description = "",
+              imageUrls = emptyList(),
+              estimatedTime = 3600))
 
   private val listRouteSegments =
       listOf(

@@ -381,7 +381,7 @@ private fun UpcomingTripsSection(
     onSelectTrip: (String) -> Unit,
     onToggleSelection: (Trip) -> Unit,
     onEnterSelectionMode: () -> Unit,
-    onSortSelected: (TripSortType) -> Unit
+    onSortSelected: (TripSortType) -> Unit,
 ) {
   SortedTripList(
       title = stringResource(R.string.upcoming_trips),
@@ -392,6 +392,7 @@ private fun UpcomingTripsSection(
         }
       },
       onClickDropDownMenu = { type -> onSortSelected(type) },
+      selectedSortType = uiState.sortType,
       onLongPress = {
         it?.let { trip ->
           onEnterSelectionMode()
