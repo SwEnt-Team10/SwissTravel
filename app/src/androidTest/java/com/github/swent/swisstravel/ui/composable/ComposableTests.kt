@@ -20,14 +20,14 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.github.swent.swisstravel.ui.trips.TripSortType
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 
-class ComposableTests : SwissTravelTest() {
+class ComposableTests : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 

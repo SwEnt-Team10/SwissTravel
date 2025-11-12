@@ -7,7 +7,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -17,7 +17,7 @@ import org.junit.Test
 
 /** The tests were human tests passed into chatGPT when the screen changed. */
 @OptIn(ExperimentalCoroutinesApi::class)
-class SetCurrentTripScreenTests : SwissTravelTest() {
+class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 

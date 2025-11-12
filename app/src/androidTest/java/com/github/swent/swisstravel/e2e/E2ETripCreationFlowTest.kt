@@ -39,7 +39,7 @@ import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
 import org.junit.After
 import org.junit.Before
@@ -70,7 +70,7 @@ import org.junit.Test
  * 20) Go to profile
  * 21) Log out
  */
-class E2ETripCreationFlowTest : SwissTravelTest() {
+class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -212,11 +212,11 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
         PreferenceCategories.Category.values().filter {
           it != PreferenceCategories.Category.DEFAULT
         }) {
-      val tag = PreferenceSelectorTestTags.getTestTagCategory(category)
+      val tagPref = PreferenceSelectorTestTags.getTestTagCategory(category)
       composeTestRule
           .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
-          .performScrollToNode(hasTestTag(tag))
-      composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
+          .performScrollToNode(hasTestTag(tagPref))
+      composeTestRule.onNodeWithTag(tagPref).assertIsDisplayed()
     }
     // Find the preferences from the list and click on them
     composeTestRule.performClickPreferences(newPreferences)
@@ -273,7 +273,6 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
         expectedChildren = tripE2E.tripProfile.children,
         expectedDeparture = tripE2E.tripProfile.departureLocation?.name!!,
         expectedArrival = tripE2E.tripProfile.arrivalLocation?.name!!,
-        expectedDestinations = tripE2E.tripProfile.preferredLocations.map { it.name },
         expectedPreferences = tripE2E.tripProfile.preferences,
         startDate = tripE2E.tripProfile.startDate,
         endDate = tripE2E.tripProfile.endDate)
@@ -294,25 +293,26 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
     composeTestRule.waitForIdle()
 
     //    // Back to my trips
-    //      composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
-    //          composeTestRule.onAllNodesWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
-    //              .fetchSemanticsNodes()
-    //              .isNotEmpty()
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+    composeTestRule.checkMyTripsScreenIsDisplayedWithNoCurrentTrips()
+
+    // Long click
+    //    val repo = repository
+    //    val savedTrip = runBlocking {
+    //      repeat(10) { attempt ->
+    //        val trips = repo.getAllTrips()
+    //        val found = trips.firstOrNull { it.name.trim() == tripE2E.name.trim() }
+    //        if (found != null) return@runBlocking found
+    //        println("Trip not found yet, waiting... (attempt $attempt)")
+    //        kotlinx.coroutines.delay(1000)
     //      }
-    //      composeTestRule.checkMyTripsScreenIsDisplayedWithNoCurrentTrips()
-    //
-    //    // Long click
-    //      val repo = TripsRepositoryFirestore()
-    //      val savedTrip = runBlocking {
-    //          repeat(10) { attempt ->
-    //              val trips = repo.getAllTrips()
-    //              val found = trips.firstOrNull { it.name.trim() == tripE2E.name.trim() }
-    //              if (found != null) return@runBlocking found
-    //              println("Trip not found yet, waiting... (attempt $attempt)")
-    //              kotlinx.coroutines.delay(1000)
-    //          }
-    //          null
-    //      }
+    //      null
+    //    }
     //
     //      checkNotNull(savedTrip) { "Trip not found in Firestore after creation" }
     //
@@ -355,6 +355,8 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
 
     // Compare the current step
 
+    // Click on isFavorite to remove
+
     // Click on edit trip
 
     // Edit trip screen
@@ -381,8 +383,6 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
 
     // Check that we are on landing screen
 
-    // TODO: assert that the preferences have been saved in the profile screen by looking that
-    // EARLY_BIRD is there but not NIGHT_OWL
   }
 
   @After

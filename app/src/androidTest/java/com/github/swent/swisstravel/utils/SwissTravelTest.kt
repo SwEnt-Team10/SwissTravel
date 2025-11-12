@@ -2,8 +2,6 @@ package com.github.swent.swisstravel.utils
 
 import android.content.Context
 import androidx.activity.ComponentActivity
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -24,6 +22,8 @@ import com.github.swent.swisstravel.HttpClientProvider
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.displayStringRes
@@ -73,12 +73,12 @@ const val E2E_WAIT_TIMEOUT = 15_000L
 abstract class SwissTravelTest {
 
   // TODO : Implement the repository here
-  // abstract fun createInitializedRepository(): SwissTravelRepository
+  abstract fun createInitializedRepository(): TripsRepository
 
   open fun initializeHTTPClient(): OkHttpClient = FakeHttpClient.getClient()
 
-  //    val repository: SwissTravelRepository
-  //        get() = SwissTravelRepository.repository
+  open val repository: TripsRepository
+    get() = TripsRepositoryProvider.repository
 
   val httpClient
     get() = HttpClientProvider.client
@@ -97,7 +97,7 @@ abstract class SwissTravelTest {
   @Before
   // TODO : Set up repository when it is implemented
   open fun setUp() {
-    // SwissTravelRepository.repository = createInitializedRepository()
+    TripsRepositoryProvider.repository = createInitializedRepository()
     HttpClientProvider.client = initializeHTTPClient()
     if (shouldSignInAnonymously) {
       runTest { FirebaseEmulator.auth.signInAnonymously().await() }
@@ -148,8 +148,6 @@ abstract class SwissTravelTest {
           isCurrentTrip = false)
 
   val tripList = listOf(trip1, trip2)
-
-  @Composable fun getStringResource(id: Int): String = stringResource(id)
 
   // TODO : Declare ComposeTestRules here
 
@@ -331,7 +329,6 @@ abstract class SwissTravelTest {
           "Café de Paris, 26 Rue du Mont-Blanc, 1201 Genève, Genève, Suisse",
       expectedArrival: String =
           "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne, Vaud, Suisse",
-      expectedDestinations: List<String> = emptyList(),
       expectedPreferences: List<Preference> = emptyList(),
       startDate: Timestamp = Timestamp.now(),
       endDate: Timestamp = Timestamp(Timestamp.now().seconds + 24 * 60 * 60, 0)

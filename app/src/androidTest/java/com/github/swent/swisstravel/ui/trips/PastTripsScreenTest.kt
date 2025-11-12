@@ -8,7 +8,7 @@ import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -40,7 +40,7 @@ class FakePastTripsRepository(private val trips: MutableList<Trip> = mutableList
 }
 
 /** Tests for the past trips screen. */
-class PastTripsScreenEmulatorTest : SwissTravelTest() {
+class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
   private val context: Context = InstrumentationRegistry.getInstrumentation().targetContext

@@ -11,7 +11,7 @@ import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FirebaseEmulator
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.github.swent.swisstravel.utils.UI_WAIT_TIMEOUT
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
@@ -19,7 +19,7 @@ import org.junit.Rule
 import org.junit.Test
 
 /** Inspired from the B3 of the SwEnt course at EPFL */
-class NavigationTest : SwissTravelTest() {
+class NavigationTest : InMemorySwissTravelTest() {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @Before

@@ -12,14 +12,14 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 
-class TripCreationTests : SwissTravelTest() {
+class TripCreationTests : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 

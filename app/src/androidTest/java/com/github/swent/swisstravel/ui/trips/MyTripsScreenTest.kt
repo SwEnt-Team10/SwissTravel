@@ -10,7 +10,7 @@ import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -42,7 +42,7 @@ class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()
   override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
 }
 
-class MyTripsScreenEmulatorTest : SwissTravelTest() {
+class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
   private val now = Timestamp.now()

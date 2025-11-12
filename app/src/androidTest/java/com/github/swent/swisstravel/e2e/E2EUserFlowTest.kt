@@ -13,7 +13,7 @@ import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -27,7 +27,7 @@ import org.junit.runner.RunWith
  * 3) See bottom navigation, navigate between tabs and assert screens
  */
 @RunWith(AndroidJUnit4::class)
-class E2EUserFlowTest : SwissTravelTest() {
+class E2EUserFlowTest : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 

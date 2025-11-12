@@ -2,11 +2,10 @@ package com.github.swent.swisstravel.model.user
 
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Firebase
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -15,14 +14,14 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class UserRepositoryEmulatorTest : SwissTravelTest() {
-  private lateinit var repository: UserRepositoryFirebase
+class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
+  private lateinit var repositoryUser: UserRepositoryFirebase
 
   @Before
   override fun setUp() {
     super.setUp()
     FirebaseEmulator.clearFirestoreEmulator()
-    repository = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
+    repositoryUser = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
   }
 
   @Test
@@ -38,7 +37,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     val uid = firebaseUser.uid
 
     // TripActivity
-    val user = repository.getCurrentUser()
+    val user = repositoryUser.getCurrentUser()
 
     // Assert
     assertEquals(uid, user.uid)
@@ -70,7 +69,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     FirebaseEmulator.firestore.collection("users").document(uid).set(existingData).await()
 
     // TripActivity
-    val user = repository.getCurrentUser()
+    val user = repositoryUser.getCurrentUser()
 
     // Assert
     assertEquals("Saved User", user.name)
@@ -87,11 +86,11 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     FirebaseEmulator.auth.signInWithCredential(credential).await()
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
-    repository.getCurrentUser()
+    repositoryUser.getCurrentUser()
 
     // TripActivity
     val newPrefs = listOf(Preference.URBAN, Preference.SCENIC_VIEWS, Preference.NIGHTLIFE)
-    repository.updateUserPreferences(uid, newPrefs)
+    repositoryUser.updateUserPreferences(uid, newPrefs)
 
     // Assert
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -106,7 +105,7 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     FirebaseEmulator.auth.signOut()
 
     // TripActivity
-    val user = repository.getCurrentUser()
+    val user = repositoryUser.getCurrentUser()
 
     // Assert
     assertEquals("guest", user.uid)
@@ -159,13 +158,13 @@ class UserRepositoryEmulatorTest : SwissTravelTest() {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     // TripActivity — no Firestore doc created yet
-    repository.updateUserPreferences(uid, listOf(Preference.MUSEUMS))
+    repositoryUser.updateUserPreferences(uid, listOf(Preference.MUSEUMS))
   }
 
   @Test
   fun updateUserPreferences_doesNothingForGuest() = runBlocking {
     // TripActivity
-    repository.updateUserPreferences("guest", listOf(Preference.SCENIC_VIEWS))
+    repositoryUser.updateUserPreferences("guest", listOf(Preference.SCENIC_VIEWS))
     // Assert — should not throw
     assertTrue(true)
   }
