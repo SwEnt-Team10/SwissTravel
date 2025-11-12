@@ -40,8 +40,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** Test tags for the LocationAutocompleteTextField composable. */
 object LocationTextTestTags {
-    const val INPUT_LOCATION = "inputLocation"
-    const val LOCATION_SUGGESTION = "locationSuggestion"
+  const val INPUT_LOCATION = "inputLocation"
+  const val LOCATION_SUGGESTION = "locationSuggestion"
 }
 /**
  * A composable that provides an address autocomplete text field using a dropdown menu.
@@ -58,7 +58,7 @@ object LocationTextTestTags {
  * @param clearOnSelect Whether to clear the text field after a location is selected.
  */
 
-//Parts of this code was written with the assistance of AI.
+// Parts of this code was written with the assistance of AI.
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun LocationAutocompleteTextField(
@@ -69,91 +69,91 @@ fun LocationAutocompleteTextField(
     name: String = "location",
     clearOnSelect: Boolean = false
 ) {
-    val state by addressTextFieldViewModel.addressState.collectAsState()
-    // Local text state. This is the single source of truth for what's visible in the text field.
-    var text by rememberSaveable { mutableStateOf(state.locationQuery) }
-    var expanded by remember { mutableStateOf(false) }
+  val state by addressTextFieldViewModel.addressState.collectAsState()
+  // Local text state. This is the single source of truth for what's visible in the text field.
+  var text by rememberSaveable { mutableStateOf(state.locationQuery) }
+  var expanded by remember { mutableStateOf(false) }
 
-    // Track if we're in the middle of a selection to prevent the text effect from triggering
-    var isSelecting by remember { mutableStateOf(false) }
+  // Track if we're in the middle of a selection to prevent the text effect from triggering
+  var isSelecting by remember { mutableStateOf(false) }
 
-    // This effect synchronizes the text field *from* the ViewModel *to* the UI.
-    // It runs ONLY when a selection is made in the ViewModel.
-    LaunchedEffect(state.selectedLocation) {
-        state.selectedLocation?.let { location ->
-            isSelecting = true
-            text = if (clearOnSelect) "" else location.name
-            // Small delay to ensure the text update is processed before we reset the flag
-            kotlinx.coroutines.delay(50)
-            isSelecting = false
+  // This effect synchronizes the text field *from* the ViewModel *to* the UI.
+  // It runs ONLY when a selection is made in the ViewModel.
+  LaunchedEffect(state.selectedLocation) {
+    state.selectedLocation?.let { location ->
+      isSelecting = true
+      text = if (clearOnSelect) "" else location.name
+      // Small delay to ensure the text update is processed before we reset the flag
+      kotlinx.coroutines.delay(50)
+      isSelecting = false
+    }
+  }
+
+  // This is the single effect that synchronizes user input *from* the UI *to* the ViewModel.
+  LaunchedEffect(Unit) {
+    snapshotFlow { text }
+        .distinctUntilChanged()
+        .debounce(700)
+        .collectLatest { currentText ->
+          // Skip processing if we're in the middle of a selection
+          if (isSelecting) return@collectLatest
+
+          // If text differs from selected location, it means user is typing
+          if (currentText != state.selectedLocation?.name) {
+            // Clear the selection first
+            addressTextFieldViewModel.clearSelectedLocation()
+
+            // Fetch suggestions (this API call will be cancelled if text changes again)
+            addressTextFieldViewModel.setLocationQuery(currentText)
+          }
         }
-    }
+  }
 
-    // This is the single effect that synchronizes user input *from* the UI *to* the ViewModel.
-    LaunchedEffect(Unit) {
-        snapshotFlow { text }
-            .distinctUntilChanged()
-            .debounce(700)
-            .collectLatest { currentText ->
-                // Skip processing if we're in the middle of a selection
-                if (isSelecting) return@collectLatest
+  ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
+    OutlinedTextField(
+        value = text,
+        // onValueChange remains lightweight and lag-free.
+        onValueChange = { newText ->
+          text = newText
+          expanded = true
+        },
+        modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
+        label = { Text(name) },
+        singleLine = true)
+    ExposedDropdownMenu(
+        expanded = expanded && state.locationSuggestions.isNotEmpty(),
+        onDismissRequest = { expanded = false }) {
+          val suggestions = state.locationSuggestions.take(3)
+          suggestions.forEachIndexed { index, location ->
+            DropdownMenuItem(
+                text = {
+                  Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (location.imageUrl != null) {
+                      AsyncImage(
+                          model = location.imageUrl,
+                          contentDescription = "${location.name} image",
+                          placeholder = painterResource(id = R.drawable.debug_placeholder),
+                          contentScale = ContentScale.Crop,
+                          modifier = Modifier.size(40.dp).clip(CircleShape))
+                      Spacer(modifier = Modifier.width(16.dp))
+                    }
+                    Text(location.name, modifier = Modifier.weight(1f))
+                  }
+                },
+                onClick = {
+                  addressTextFieldViewModel.setLocation(location)
+                  onLocationSelected(location)
+                  expanded = false
+                },
+                modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION))
 
-                // If text differs from selected location, it means user is typing
-                if (currentText != state.selectedLocation?.name) {
-                    // Clear the selection first
-                    addressTextFieldViewModel.clearSelectedLocation()
-
-                    // Fetch suggestions (this API call will be cancelled if text changes again)
-                    addressTextFieldViewModel.setLocationQuery(currentText)
-                }
+            if (index < suggestions.lastIndex) {
+              HorizontalDivider(
+                  modifier = Modifier.fillMaxWidth(),
+                  thickness = 1.dp,
+                  color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
-    }
-
-    ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-        OutlinedTextField(
-            value = text,
-            // onValueChange remains lightweight and lag-free.
-            onValueChange = { newText ->
-                text = newText
-                expanded = true
-            },
-            modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
-            label = { Text(name) },
-            singleLine = true)
-        ExposedDropdownMenu(
-            expanded = expanded && state.locationSuggestions.isNotEmpty(),
-            onDismissRequest = { expanded = false }) {
-            val suggestions = state.locationSuggestions.take(3)
-            suggestions.forEachIndexed { index, location ->
-                DropdownMenuItem(
-                    text = {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            if (location.imageUrl != null) {
-                                AsyncImage(
-                                    model = location.imageUrl,
-                                    contentDescription = "${location.name} image",
-                                    placeholder = painterResource(id = R.drawable.debug_placeholder),
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier.size(40.dp).clip(CircleShape))
-                                Spacer(modifier = Modifier.width(16.dp))
-                            }
-                            Text(location.name, modifier = Modifier.weight(1f))
-                        }
-                    },
-                    onClick = {
-                        addressTextFieldViewModel.setLocation(location)
-                        onLocationSelected(location)
-                        expanded = false
-                    },
-                    modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION))
-
-                if (index < suggestions.lastIndex) {
-                    HorizontalDivider(
-                        modifier = Modifier.fillMaxWidth(),
-                        thickness = 1.dp,
-                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-                }
-            }
+          }
         }
-    }
+  }
 }
