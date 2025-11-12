@@ -11,14 +11,15 @@ import com.google.firebase.Timestamp
  * @property location The location of the activity.
  * @property description The description of the activity.
  * @property imageUrls The image URLs of the activity.
+ * @property estimatedTime The estimated time of the activity.
  */
 data class Activity(
     val startDate: Timestamp,
     val endDate: Timestamp,
     val location: Location,
     val description: String,
-    val imageUrls: List<String> = emptyList(),
-    val estimatedTime: Int = 0
+    val imageUrls: List<String>,
+    val estimatedTime: Int
 ) {
   /** Gets the name of the activity */
   fun getName(): String {
@@ -26,11 +27,11 @@ data class Activity(
   }
 
   /**
-   * Computes the estimated time of an activity
+   * Returns the estimated duration of the activity in minutes.
    *
    * @return The duration of the activity in minutes.
    */
   fun estimatedTime(): Int {
-    return ((endDate.seconds - startDate.seconds) / 60).toInt()
+    return (estimatedTime / 60)
   }
 }
