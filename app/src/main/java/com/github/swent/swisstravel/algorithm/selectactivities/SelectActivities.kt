@@ -70,22 +70,32 @@ class SelectActivities(
           // Fetch all activities that match any of the optional preferences for each destination.
           val allFetchedActivities = mutableListOf<Activity>()
           for (destination in allDestinations) {
-            for (preference in optionalPrefs) {
+            if (optionalPrefs.isNotEmpty()) {
+              for (preference in optionalPrefs) {
+                val fetched =
+                    activityRepository.getActivitiesNearWithPreference(
+                        mandatoryPrefs + preference,
+                        destination.coordinate,
+                        NEAR,
+                        numberOfActivityToFetchPerStep)
+                allFetchedActivities.addAll(fetched)
+                // Update progress after each API call.
+                completedSteps++
+                onProgress(completedSteps.toFloat() / totalSteps)
+                delay(API_CALL_DELAY_MS) // Respect API rate limit.
+              }
+            } else {
               val fetched =
                   activityRepository.getActivitiesNearWithPreference(
-                      mandatoryPrefs + preference,
-                      destination.coordinate,
-                      NEAR,
-                      numberOfActivityToFetchPerStep)
+                      mandatoryPrefs, destination.coordinate, NEAR, numberOfActivityToFetchPerStep)
               allFetchedActivities.addAll(fetched)
-              // Update progress after each API call.
               completedSteps++
               onProgress(completedSteps.toFloat() / totalSteps)
               delay(API_CALL_DELAY_MS) // Respect API rate limit.
             }
           }
           // Remove duplicate activities that may have been fetched for different preferences.
-          allFetchedActivities.distinct()
+          allFetchedActivities.distinctBy { it.location }
         } else {
           // If no preferences are set, fetch general activities near each destination.
           val allFetchedActivities = mutableListOf<Activity>()
@@ -99,7 +109,7 @@ class SelectActivities(
             onProgress(completedSteps.toFloat() / totalSteps)
             delay(API_CALL_DELAY_MS) // Respect API rate limit.
           }
-          allFetchedActivities.distinct()
+          allFetchedActivities.distinctBy { it.location }
         }
 
     Log.d("SelectActivities", "Found ${filteredActivities.size} activities: $filteredActivities")
