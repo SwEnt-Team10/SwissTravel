@@ -61,8 +61,7 @@ fun CurrentTripScreen(
           Column(
               modifier =
                   Modifier.fillMaxSize()
-                      .padding(pd)
-                      .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 4.dp),
+                      .padding(pd),
               verticalArrangement = Arrangement.Center,
               horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
