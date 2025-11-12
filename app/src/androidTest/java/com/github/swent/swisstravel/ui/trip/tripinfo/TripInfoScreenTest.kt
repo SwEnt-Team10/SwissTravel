@@ -270,7 +270,7 @@ class TripInfoScreenTest {
 
   @Test
   fun backButtonNotShownOnCurrentTripScreen() {
-    composeTestRule.setContent { TripInfoScreen(uid = "whatever", isOnCurrentTripScreen = true) }
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).isNotDisplayed()
+    compose.setContent { TripInfoScreen(uid = "whatever", isOnCurrentTripScreen = true) }
+    compose.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).isNotDisplayed()
   }
 }
