@@ -8,22 +8,31 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.SwissTravelApp
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
+import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripSummaryTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersTestTags
 import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
@@ -32,9 +41,6 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -107,7 +113,7 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
     composeTestRule.waitForIdle()
     Thread.sleep(
         5000) // Otherwise it is checks too fast the screen so it doesn't have time to pull the
-              // elements
+    // elements
     composeTestRule.checkProfileScreenIsDisplayed()
 
     // Open preferences
@@ -199,8 +205,7 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
             Preference.GROUP,
             Preference.CHILDREN_FRIENDLY,
             Preference.MUSEUMS, // Remove museums since already activated in the profile
-            Preference.EARLY_BIRD // should remove NIGHT_OWL
-            )
+        )
     composeTestRule.checkTripPreferencesIsDisplayed()
     // Assert that all categories exist
     for (category in
@@ -227,30 +232,125 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
     composeTestRule
         .onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON)
         .performClick() // should do nothing
+    composeTestRule.waitForIdle()
     composeTestRule.checkArrivalDepartureScreenIsDisplayed() // still on the same screen
 
+    // Fill the text fields
+    composeTestRule
+        .onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD, useUnmergedTree = true)
+        .performTextInput("epfl")
+    composeTestRule.performClickOnLocationSuggestion()
+
+    composeTestRule
+        .onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD, useUnmergedTree = true)
+        .performTextInput("cafe de paris")
+    composeTestRule.performClickOnLocationSuggestion()
+
+    composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
+    composeTestRule.waitForIdle()
+
     // Destination (using MySwitzerland)
+    composeTestRule.checkDestinationScreenIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION)
+        .performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(LocationTextTestTags.INPUT_LOCATION).performTextInput("zermatt")
+    composeTestRule.performClickOnLocationSuggestion()
+    composeTestRule.onNodeWithTag(TripFirstDestinationsTestTags.NEXT_BUTTON).performClick()
+    composeTestRule.waitForIdle()
 
     // Trip Summary
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+    val tripE2E = createSampleTrip()
+    composeTestRule.checkTripSummaryScreenIsDisplayed(
+        expectedAdults = tripE2E.tripProfile.adults,
+        expectedChildren = tripE2E.tripProfile.children,
+        expectedDeparture = tripE2E.tripProfile.departureLocation?.name!!,
+        expectedArrival = tripE2E.tripProfile.arrivalLocation?.name!!,
+        expectedDestinations = tripE2E.tripProfile.preferredLocations.map { it.name },
+        expectedPreferences = tripE2E.tripProfile.preferences,
+        startDate = tripE2E.tripProfile.startDate,
+        endDate = tripE2E.tripProfile.endDate)
+    // Write the name
+    composeTestRule
+        .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
+        .performScrollToNode(hasTestTag(TripSummaryTestTags.TRIP_NAME_FIELD))
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(TripSummaryTestTags.TRIP_NAME_FIELD)
+        .performTextInput(tripE2E.name)
+    composeTestRule.onNodeWithTag(TripSummaryTestTags.TRIP_NAME_FIELD).performImeAction()
 
-    // Back to my trips
+    composeTestRule
+        .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
+        .performScrollToNode(hasTestTag(TripSummaryTestTags.CREATE_TRIP_BUTTON))
+    composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
+    composeTestRule.waitForIdle()
 
-    // Long click
-
-    // Selection mode
-
-    // Save as favorite
-
-    // Edit current trip
-
-    // Set current trip screen
-
-    // Set as current trip
-
-    // Back to my trips
-
-    // Click on the trip
-
+    //    // Back to my trips
+    //      composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+    //          composeTestRule.onAllNodesWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
+    //              .fetchSemanticsNodes()
+    //              .isNotEmpty()
+    //      }
+    //      composeTestRule.checkMyTripsScreenIsDisplayedWithNoCurrentTrips()
+    //
+    //    // Long click
+    //      val repo = TripsRepositoryFirestore()
+    //      val savedTrip = runBlocking {
+    //          repeat(10) { attempt ->
+    //              val trips = repo.getAllTrips()
+    //              val found = trips.firstOrNull { it.name.trim() == tripE2E.name.trim() }
+    //              if (found != null) return@runBlocking found
+    //              println("Trip not found yet, waiting... (attempt $attempt)")
+    //              kotlinx.coroutines.delay(1000)
+    //          }
+    //          null
+    //      }
+    //
+    //      checkNotNull(savedTrip) { "Trip not found in Firestore after creation" }
+    //
+    //      val trip = runBlocking { repo.getTrip(savedTrip.uid) }
+    //
+    //      composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip))
+    //          .assertIsDisplayed().performTouchInput { longClick() }
+    //      composeTestRule.waitForIdle()
+    //
+    //    // Selection mode
+    //      composeTestRule.checkMyTripsInSelectionMode()
+    //
+    //      // Save as favorite
+    //
+    // composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
+    //      composeTestRule.waitForIdle()
+    //      composeTestRule.checkMyTripsNotInSelectionMode()
+    //
+    //    // Edit current trip
+    //
+    // composeTestRule.onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON).performClick()
+    //      composeTestRule.waitForIdle()
+    //
+    //    // Set current trip screen
+    //      composeTestRule.checkSetCurrentTripIsDisplayed()
+    //
+    //    // Set as current trip
+    //
+    // composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip)).performClick()
+    //      composeTestRule.waitForIdle()
+    //
+    //    // Back to my trips
+    //      composeTestRule.checkMyTripsWithATripAsCurrent(listOf(trip))
+    //
+    //    // Click on the trip
+    //
+    // composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip)).performClick()
+    //        composeTestRule.waitForIdle()
     // Trip info screen
 
     // Compare the current step
@@ -291,15 +391,64 @@ class E2ETripCreationFlowTest : SwissTravelTest() {
   }
 
   /**
-   * Done using AI Returns a Firebase Timestamp representing midnight (00:00) of the same day as the
-   * given [timestamp] in the system default time zone.
+   * Method that returns a hardcoded trip that should correspond to the one created in the test
+   * (Helped by AI)
    */
-  private fun getMidnightTimestamp(
-      timestamp: Timestamp,
-      zone: ZoneId = ZoneId.systemDefault()
-  ): Timestamp {
-    val localDate: LocalDate = Instant.ofEpochSecond(timestamp.seconds).atZone(zone).toLocalDate()
-    val midnightInstant = localDate.atStartOfDay(zone).toInstant()
-    return Timestamp(midnightInstant.epochSecond, midnightInstant.nano)
+  private fun createSampleTrip(): Trip {
+    val startTimestamp = Timestamp.now() // today
+    val endTimestamp = Timestamp(startTimestamp.seconds + 24 * 60 * 60, 0) // tomorrow
+
+    // Locations
+    val arrivalLocation =
+        Location(
+            coordinate = Coordinate(46.5191, 6.5668),
+            name =
+                "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne, Vaud",
+            imageUrl = null)
+
+    val departureLocation =
+        Location(
+            coordinate = Coordinate(46.2095, 6.1432),
+            name = "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève, Genève",
+            imageUrl = null)
+
+    val zermattLocation =
+        Location(
+            coordinate = Coordinate(46.0207, 7.7491),
+            name = "Zermatt",
+            imageUrl = "https://example.com/zermatt1.jpg")
+
+    val locations = listOf(departureLocation, zermattLocation, arrivalLocation)
+
+    // Trip profile
+    val tripProfile =
+        TripProfile(
+            adults = 2,
+            children = 2,
+            departureLocation = departureLocation,
+            arrivalLocation = arrivalLocation,
+            startDate = startTimestamp,
+            endDate = endTimestamp,
+            preferences =
+                listOf(
+                    Preference.GROUP,
+                    Preference.CHILDREN_FRIENDLY,
+                    Preference.HIKE,
+                    Preference.NIGHTLIFE,
+                    Preference.SHOPPING,
+                    Preference.WHEELCHAIR_ACCESSIBLE,
+                    Preference.EARLY_BIRD))
+
+    // Create the trip
+    return Trip(
+        uid = "unvalid", // cannot be changed and is random
+        name = "trip-E2E-1",
+        ownerId = "unvalid", // cannot be changed and is random
+        locations = locations,
+        routeSegments = emptyList(), // empty for now
+        activities = emptyList(), // no activities yet
+        tripProfile = tripProfile,
+        isFavorite = false,
+        isCurrentTrip = false)
   }
 }

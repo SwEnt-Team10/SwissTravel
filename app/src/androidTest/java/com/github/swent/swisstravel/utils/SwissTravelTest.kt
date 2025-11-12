@@ -1,38 +1,55 @@
 package com.github.swent.swisstravel.utils
 
+import android.content.Context
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
+import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
+import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripPreferenceIconTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesTestTags
+import com.github.swent.swisstravel.ui.tripcreation.TripSummaryTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersTestTags
 import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreenTestTags
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -98,21 +115,6 @@ abstract class SwissTravelTest {
   /** Two examples trips for testing purposes */
   private val now = Timestamp.now()
 
-  val tripE2E1 = // TODO
-      Trip(
-          "e2e-trip-1", // This is wrong but needed to avoid conflicts in E2E tests
-          "E2E Trip 1",
-          "ownerE2E", // This is wrong but needed to avoid conflicts in E2E tests
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(
-              startDate = Timestamp(now.seconds - 7200, 0),
-              endDate = Timestamp(now.seconds + 7200, 0),
-              preferredLocations = emptyList(),
-              preferences = emptyList()),
-          isFavorite = false,
-          isCurrentTrip = false)
   val trip1 =
       Trip(
           "1",
@@ -271,12 +273,15 @@ abstract class SwissTravelTest {
     onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
   }
 
+  // Trip creation screens
   fun ComposeTestRule.checkTripDateScreenIsDisplayed() {
+    checkTopBarIsDisplayed()
     onNodeWithTag(TripDateTestTags.TRIP_DATE_SCREEN).assertIsDisplayed()
     onNodeWithTag(TripDateTestTags.NEXT).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkTripTravelersIsDisplayed(adultsLabel: String, childrenLabel: String) {
+    checkTopBarIsDisplayed()
     onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertIsDisplayed()
     onNodeWithTag(TripTravelersTestTags.NEXT).assertIsDisplayed()
     onNodeWithTag(adultsLabel + CounterTestTags.COUNTER).assertIsDisplayed()
@@ -290,6 +295,7 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkTripPreferencesIsDisplayed() {
+    checkTopBarIsDisplayed()
     onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertIsDisplayed()
     onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE).assertIsDisplayed()
     onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT).assertIsDisplayed()
@@ -311,6 +317,80 @@ abstract class SwissTravelTest {
     onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).assertIsDisplayed()
   }
 
+  fun ComposeTestRule.checkDestinationScreenIsDisplayed() {
+    onNodeWithTag(TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE).assertIsDisplayed()
+    onNodeWithTag(TripFirstDestinationsTestTags.NEXT_BUTTON).assertIsDisplayed()
+    onNodeWithTag(TripFirstDestinationsTestTags.NEXT_BUTTON).assertIsDisplayed()
+  }
+
+  // Done with the help of AI
+  fun ComposeTestRule.checkTripSummaryScreenIsDisplayed(
+      expectedAdults: Int = 1,
+      expectedChildren: Int = 0,
+      expectedDeparture: String =
+          "Café de Paris, 26 Rue du Mont-Blanc, 1201 Genève, Genève, Suisse",
+      expectedArrival: String =
+          "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne, Vaud, Suisse",
+      expectedDestinations: List<String> = emptyList(),
+      expectedPreferences: List<Preference> = emptyList(),
+      startDate: Timestamp = Timestamp.now(),
+      endDate: Timestamp = Timestamp(Timestamp.now().seconds + 24 * 60 * 60, 0)
+  ) {
+    onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN).assertIsDisplayed()
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    val adultSingular = context.getString(R.string.adult)
+    val adultPlural = context.getString(R.string.adults)
+    val childSingular = context.getString(R.string.child)
+    val childPlural = context.getString(R.string.children)
+    val fromDate = context.getString(R.string.from_summary)
+    val toDate = context.getString(R.string.to_summary)
+    // Dates: today and tomorrow
+    val zone = ZoneId.systemDefault()
+    val startLocalDate = Instant.ofEpochSecond(startDate.seconds).atZone(zone).toLocalDate()
+    val endLocalDate = Instant.ofEpochSecond(endDate.seconds).atZone(zone).toLocalDate()
+
+    val formatter = DateTimeFormatter.ofPattern("d MMM yyyy", Locale.FRANCE)
+    val fromDateStr = startLocalDate.format(formatter)
+    val toDateStr = endLocalDate.format(formatter)
+
+    // Dates
+    onNodeWithTag(TripSummaryTestTags.FROM_DATE)
+        .assertIsDisplayed()
+        .assertTextEquals("$fromDate $fromDateStr")
+    onNodeWithTag(TripSummaryTestTags.TO_DATE)
+        .assertIsDisplayed()
+        .assertTextEquals("$toDate $toDateStr")
+
+    // Travelers
+    onNodeWithTag(TripSummaryTestTags.ADULTS_COUNT)
+        .assertIsDisplayed()
+        .assertTextEquals(
+            "$expectedAdults ${if (expectedAdults == 1) adultSingular else adultPlural}")
+    onNodeWithTag(TripSummaryTestTags.CHILDREN_COUNT)
+        .assertIsDisplayed()
+        .assertTextEquals(
+            "$expectedChildren ${if (expectedChildren == 1) childSingular else childPlural}")
+
+    // Preferences
+    for (preference in expectedPreferences) {
+      val tag = TripPreferenceIconTestTags.getTestTag(preference)
+      onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN).performScrollToNode(hasTestTag(tag))
+      val textTag = context.getString(preference.displayStringRes())
+      onNodeWithText(textTag).assertIsDisplayed()
+    }
+
+    // Departure / Arrival
+    val departureTag = "${TripSummaryTestTags.DEPARTURE_LABEL}_value"
+    onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
+        .performScrollToNode(hasTestTag(departureTag))
+    onNodeWithTag(departureTag).assertIsDisplayed().assertTextEquals(expectedDeparture)
+
+    val arrivalTag = "${TripSummaryTestTags.ARRIVAL_LABEL}_value"
+    onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
+        .performScrollToNode(hasTestTag(arrivalTag))
+    onNodeWithTag(arrivalTag).assertIsDisplayed().assertTextEquals(expectedArrival)
+  }
+
   fun ComposeTestRule.performClickPreferences(preferenceList: List<Preference>) {
     for (preference in preferenceList) {
       val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
@@ -319,6 +399,14 @@ abstract class SwissTravelTest {
       onNodeWithTag(tag).assertIsDisplayed()
       onNodeWithTag(tag).performClick()
     }
+  }
+
+  fun ComposeTestRule.performClickOnLocationSuggestion() {
+    waitUntil(E2E_WAIT_TIMEOUT) {
+      onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION).fetchSemanticsNodes().isNotEmpty()
+    }
+
+    onAllNodesWithTag(LocationTextTestTags.LOCATION_SUGGESTION).onFirst().performClick()
   }
 
   fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
