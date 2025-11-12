@@ -9,6 +9,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
+import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -48,6 +49,49 @@ class AuthRepositoryFirebase(
     } catch (e: Exception) {
       Result.failure(
           IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+    }
+  }
+
+  override suspend fun signInWithEmailPassword(
+      email: String,
+      password: String
+  ): Result<FirebaseUser> {
+    return try {
+      val user =
+          auth.signInWithEmailAndPassword(email, password).await().user
+              ?: return Result.failure(
+                  IllegalStateException("Login failed: Could not retrieve user information"))
+      Result.success(user)
+    } catch (e: Exception) {
+      Result.failure(
+          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+    }
+  }
+
+  override suspend fun signUpWithEmailPassword(
+      email: String,
+      password: String,
+      firstName: String,
+      lastName: String
+  ): Result<FirebaseUser> {
+    return try {
+      val userCredential = auth.createUserWithEmailAndPassword(email, password).await()
+      val user =
+          userCredential.user
+              ?: return Result.failure(
+                  IllegalStateException("Sign up failed: Could not retrieve user information"))
+
+      // After creation, update the user's profile with their name
+      val profileUpdates = userProfileChangeRequest { displayName = "$firstName $lastName" }
+      user.updateProfile(profileUpdates).await()
+
+      // In a real application, you would also create a document in your Firestore 'users'
+      // collection here to store additional information like first name, last name, etc.
+
+      Result.success(user)
+    } catch (e: Exception) {
+      Result.failure(
+          IllegalStateException("Sign up failed: ${e.localizedMessage ?: "Unexpected error"}"))
     }
   }
 

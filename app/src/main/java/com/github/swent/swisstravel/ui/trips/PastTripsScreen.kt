@@ -41,7 +41,6 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
 /**
@@ -74,9 +73,8 @@ object PastTripsScreenTestTags {
  * error messages, and trip selection.
  *
  * @param pastTripsViewModel The [PastTripsViewModel] providing state and business logic.
+ * @param onBack Callback invoked when the back button is pressed.
  * @param onSelectTrip Callback invoked when a trip is selected (normal mode).
- * @param navigationActions Optional [NavigationActions] for handling bottom navigation and screen
- *   transitions.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -84,7 +82,6 @@ fun PastTripsScreen(
     pastTripsViewModel: PastTripsViewModel = viewModel(),
     onBack: () -> Unit = {},
     onSelectTrip: (String) -> Unit = {},
-    navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
   val uiState by pastTripsViewModel.uiState.collectAsState()

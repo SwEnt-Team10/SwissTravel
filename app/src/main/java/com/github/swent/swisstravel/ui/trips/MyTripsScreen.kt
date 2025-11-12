@@ -53,7 +53,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripList
-import com.github.swent.swisstravel.ui.navigation.NavigationActions
 
 /**
  * Contains constants for test tags used within [MyTripsScreen].
@@ -94,8 +93,6 @@ object MyTripsScreenTestTags {
  * @param onPastTrips Callback invoked when the "Past Trips" button is pressed.
  * @param onCreateTrip Callback invoked when the "Create Trip" button is pressed.
  * @param onEditCurrentTrip Callback invoked when the "Edit Current Trip" button is pressed.
- * @param navigationActions Optional [NavigationActions] for handling bottom navigation and screen
- *   transitions.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -104,8 +101,7 @@ fun MyTripsScreen(
     onSelectTrip: (String) -> Unit = {},
     onPastTrips: () -> Unit = {},
     onCreateTrip: () -> Unit = {},
-    onEditCurrentTrip: () -> Unit = {},
-    navigationActions: NavigationActions? = null,
+    onEditCurrentTrip: () -> Unit = {}
 ) {
   val context = LocalContext.current
   val uiState by myTripsViewModel.uiState.collectAsState()
