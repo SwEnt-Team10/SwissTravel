@@ -60,8 +60,8 @@ object LocationTextTestTags {
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun LocationAutocompleteTextField(
-    onLocationSelected: (Location) -> Unit = {},
     modifier: Modifier = Modifier,
+    onLocationSelected: (Location) -> Unit = {},
     addressTextFieldViewModel: AddressTextFieldViewModelContract =
         viewModel<DestinationTextFieldViewModel>(),
     name: String = "location",
