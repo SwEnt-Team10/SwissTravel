@@ -150,6 +150,8 @@ private fun ProfileScreenContent(
               profileScreenViewModel.savePreferences(if (pref in sel) sel - pref else sel + pref)
             })
 
+        Spacer(Modifier.height(24.dp))
+
         AuthButton(
             isSignedIn = isSignedIn,
             onClick = {
