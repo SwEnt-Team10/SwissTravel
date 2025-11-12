@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.*
 import io.mockk.*
+import kotlin.collections.emptyList
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -81,7 +82,9 @@ class TripsRepositoryFirestorePublicTest {
             "startDate" to Timestamp.now(),
             "endDate" to Timestamp.now(),
             "location" to locationMap,
-            "description" to "Activity")
+            "description" to "Activity",
+            "imageUrls" to emptyList<String>(),
+            "estimatedTime" to 3600)
     val tripProfileMap =
         mapOf(
             "startDate" to Timestamp.now(),
