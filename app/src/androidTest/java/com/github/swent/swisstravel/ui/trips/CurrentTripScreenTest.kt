@@ -14,10 +14,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Rule
 import org.junit.Test
 
-/** Tests for the [CurrentTripScreen] composable
+/**
+ * Tests for the [CurrentTripScreen] composable
  *
- * First, tests that the current trip is displayed when it exists, and that the create trip buttons are not displayed.
- * Second, tests that the current trip is not displayed when it does not exist, and that the create trip buttons are displayed.
+ * First, tests that the current trip is displayed when it exists, and that the create trip buttons
+ * are not displayed. Second, tests that the current trip is not displayed when it does not exist,
+ * and that the create trip buttons are displayed.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CurrentTripScreenTest {
