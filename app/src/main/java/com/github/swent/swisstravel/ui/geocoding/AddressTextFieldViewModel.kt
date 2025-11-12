@@ -38,6 +38,9 @@ interface AddressTextFieldViewModelContract {
    * @param query The new location query input by the user.
    */
   fun setLocationQuery(query: String)
+
+  /** Resets the selected location, indicating the user is typing a new query. */
+  fun clearSelectedLocation()
 }
 /**
  * Data class representing the state of the address text field.
@@ -95,5 +98,11 @@ open class AddressTextFieldViewModel(
     } else {
       _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
     }
+  }
+
+  override fun clearSelectedLocation() {
+    // When the user starts typing after a selection, clear the selection.
+    // This signals that a new search is being initiated.
+    _addressState.value = _addressState.value.copy(selectedLocation = null)
   }
 }
