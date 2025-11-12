@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.composable
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.ui.authentication.GoogleButtonType
 import com.github.swent.swisstravel.ui.authentication.GoogleSignInButton
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
@@ -21,7 +22,9 @@ class GoogleSignInButtonTest {
 
     // When
     composeTestRule.setContent {
-      SwissTravelTheme { GoogleSignInButton(onSignInClick = onSignInClick) }
+      SwissTravelTheme {
+        GoogleSignInButton(type = GoogleButtonType.SIGN_IN, onSignInClick = onSignInClick)
+      }
     }
 
     // Then

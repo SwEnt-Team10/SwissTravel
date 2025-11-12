@@ -14,6 +14,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -30,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
@@ -43,6 +45,7 @@ import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
+import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripDateScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
@@ -86,7 +89,7 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
 
   val parentEntry =
       remember(currentEntry) {
-        runCatching { navController.getBackStackEntry(Screen.TripSettings1.name) }.getOrNull()
+        runCatching { navController.getBackStackEntry(Screen.TripSettingsDates.name) }.getOrNull()
       }
 
   return if (parentEntry != null) {
@@ -111,7 +114,7 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Auth.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.Landing.name
       else Screen.CurrentTrip.name
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -129,7 +132,7 @@ fun SwissTravelApp(
   BackHandler {
     when {
       /* If the current route is authentication then quit the app */
-      currentRoute == Screen.Auth.route -> {
+      currentRoute == Screen.Landing.route -> {
         (context as? ComponentActivity)?.finish()
       }
 
@@ -165,11 +168,18 @@ fun SwissTravelApp(
             startDestination = startDestination,
             modifier = Modifier.padding(innerPadding)) {
 
-              // Sign-in screen
+              // Combined Authentication Graph
+              // The route for the whole graph is Screen.Auth.name ("Auth")
+              // The starting screen inside this graph is Screen.Landing.route ("landing")
               navigation(
-                  startDestination = Screen.Auth.route,
-                  route = Screen.Auth.name,
+                  startDestination = Screen.Landing.route,
+                  route = Screen.Landing.name,
               ) {
+                composable(Screen.Landing.route) {
+                  LandingScreen(
+                      onSignInClick = { navigationActions.navigateTo(Screen.Auth) },
+                      onSignUpClick = { navigationActions.navigateTo(Screen.SignUp) })
+                }
                 composable(Screen.Auth.route) {
                   SignInScreen(
                       credentialManager = credentialManager,
@@ -211,9 +221,8 @@ fun SwissTravelApp(
                   MyTripsScreen(
                       onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
                       onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
-                      onCreateTrip = { navigationActions.navigateTo(Screen.TripSettings1) },
-                      onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) },
-                      navigationActions = navigationActions)
+                      onCreateTrip = { navigationActions.navigateTo(Screen.TripSettingsDates) },
+                      onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) })
                 }
                 // Set Current Trip Screen
                 composable(Screen.SetCurrentTrip.route) {
@@ -233,8 +242,7 @@ fun SwissTravelApp(
                 composable(Screen.PastTrips.route) {
                   PastTripsScreen(
                       onBack = { navigationActions.goBack() },
-                      onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-                      navigationActions = navigationActions)
+                      onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) })
                 }
               }
 
@@ -272,22 +280,21 @@ fun SwissTravelApp(
 
               // Trip settings screens
               navigation(
-                  startDestination = Screen.TripSettings1.route,
-                  route = Screen.TripSettings1.name,
+                  startDestination = Screen.TripSettingsDates.route,
+                  route = Screen.TripSettingsDates.name,
               ) {
-                composable(Screen.TripSettings1.route) {
+                composable(Screen.TripSettingsDates.route) {
                   TripDateScreen(
                       viewModel = tripSettingsViewModel(navController),
-                      onNext = { navigationActions.navigateTo(Screen.TripSettings2) },
-                      onPrevious = { navigationActions.goBack() })
+                      onNext = { navigationActions.navigateTo(Screen.TripSettingsTravelers) })
                 }
-                composable(Screen.TripSettings2.route) {
+                composable(Screen.TripSettingsTravelers.route) {
                   TripTravelersScreen(
                       viewModel = tripSettingsViewModel(navController),
-                      onNext = { navigationActions.navigateTo(Screen.TripSettings3) },
+                      onNext = { navigationActions.navigateTo(Screen.TripSettingsPreferences) },
                       onPrevious = { navigationActions.goBack() })
                 }
-                composable(Screen.TripSettings3.route) {
+                composable(Screen.TripSettingsPreferences.route) {
                   TripPreferencesScreen(
                       viewModel = tripSettingsViewModel(navController),
                       onNext = {
@@ -312,8 +319,19 @@ fun SwissTravelApp(
                 composable(Screen.TripSummary.route) {
                   TripSummaryScreen(
                       viewModel = tripSettingsViewModel(navController),
-                      onNext = { navigationActions.navigateTo(Screen.MyTrips, true) },
+                      onNext = { navigationActions.navigateTo(Screen.Loading) },
                       onPrevious = { navigationActions.goBack() })
+                }
+                composable(Screen.Loading.route) {
+                  val viewModel = tripSettingsViewModel(navController)
+                  val loadingProgress by viewModel.loadingProgress.collectAsState()
+                  LoadingScreen(
+                      progress = loadingProgress,
+                      viewModel = viewModel,
+                      onSuccess = {
+                        navigationActions.navigateTo(Screen.MyTrips, clearBackStack = true)
+                      },
+                      onFailure = { navigationActions.goBack() })
                 }
               }
             }

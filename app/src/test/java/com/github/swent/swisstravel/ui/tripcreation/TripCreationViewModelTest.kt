@@ -25,6 +25,7 @@ class TripCreationViewModelTest {
   private val testDispatcher = StandardTestDispatcher()
   private lateinit var fakeRepo: FakeTripsRepository
   private lateinit var fakeUserRepo: FakeUserRepository
+  private lateinit var fakeActivityRepo: FakeActivityRepository
   private lateinit var viewModel: TripSettingsViewModel
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,7 +34,12 @@ class TripCreationViewModelTest {
     Dispatchers.setMain(testDispatcher)
     fakeRepo = FakeTripsRepository()
     fakeUserRepo = FakeUserRepository()
-    viewModel = TripSettingsViewModel(tripsRepository = fakeRepo, userRepository = fakeUserRepo)
+    fakeActivityRepo = FakeActivityRepository()
+    viewModel =
+        TripSettingsViewModel(
+            tripsRepository = fakeRepo,
+            userRepository = fakeUserRepo,
+            activityRepository = fakeActivityRepo)
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -152,8 +158,7 @@ class TripCreationViewModelTest {
     viewModel.saveTrip()
 
     // Assert
-    val event = viewModel.validationEvents.first()
-    when (event) {
+    when (val event = viewModel.validationEvents.first()) {
       is ValidationEvent.SaveError -> {
         assertTrue(event.message.contains("boom"))
       }

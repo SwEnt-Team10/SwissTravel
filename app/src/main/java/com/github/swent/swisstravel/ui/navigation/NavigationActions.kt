@@ -18,6 +18,10 @@ sealed class Screen(
     val name: String,
     val isTopLevelDestination: Boolean = false
 ) {
+  object Landing : Screen(route = "landing", name = "Landing")
+
+  object SignUp : Screen(route = "signup", name = "Sign up")
+
   object Auth : Screen(route = "auth", name = "Authentication")
 
   object Profile : Screen(route = "profile", name = "Profile", isTopLevelDestination = true)
@@ -31,11 +35,13 @@ sealed class Screen(
   object CurrentTrip :
       Screen(route = "current_trip", name = "Current trip", isTopLevelDestination = true)
 
-  object TripSettings1 : Screen(route = "trip_settings_1", name = "Trip Settings 1")
+  object TripSettingsDates : Screen(route = "trip_settings_dates", name = "Trip Settings Dates")
 
-  object TripSettings2 : Screen(route = "trip_settings_2", name = "Trip Settings 2")
+  object TripSettingsTravelers :
+      Screen(route = "trip_settings_travelers", name = "Trip Settings Travelers")
 
-  object TripSettings3 : Screen(route = "trip_settings_3", name = "Trip Settings 3")
+  object TripSettingsPreferences :
+      Screen(route = "trip_settings_preferences", name = "Trip Settings Preferences")
 
   data class TripInfo(val uid: String) : Screen(route = "trip_info/${uid}", name = "Trip Info") {
     companion object {
@@ -55,6 +61,8 @@ sealed class Screen(
   }
 
   object TripSummary : Screen(route = "trip_summary", name = "Trip Summary")
+
+  object Loading : Screen(route = "loading", name = "Loading")
 
   // TODO change this when there is a new screen
 }

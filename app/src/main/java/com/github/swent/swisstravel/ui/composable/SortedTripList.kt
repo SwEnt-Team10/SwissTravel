@@ -36,6 +36,7 @@ object SortedTripListTestTags {
  * @param trips The list of trips to display.
  * @param onClickTripElement Callback when a trip element is clicked.
  * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
+ * @param selectedSortType The currently selected sorting option.
  * @param onLongPress Callback when a trip element is long-pressed.
  * @param isSelected Function to determine if a trip is selected.
  * @param isSelectionMode Whether the selection mode is active.
@@ -47,6 +48,7 @@ fun SortedTripList(
     trips: List<Trip> = emptyList(),
     onClickTripElement: (Trip?) -> Unit = {},
     onClickDropDownMenu: (TripSortType) -> Unit = {},
+    selectedSortType: TripSortType,
     onLongPress: (Trip?) -> Unit = {},
     isSelected: (Trip) -> Boolean = { false },
     isSelectionMode: Boolean = false,
@@ -67,7 +69,7 @@ fun SortedTripList(
               color = MaterialTheme.colorScheme.onBackground,
               modifier = Modifier.testTag(SortedTripListTestTags.TITLE))
 
-          SortMenu(onClickDropDownMenu = onClickDropDownMenu)
+          SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
         }
 
     TripList(

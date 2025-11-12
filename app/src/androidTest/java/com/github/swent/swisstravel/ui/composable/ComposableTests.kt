@@ -162,7 +162,11 @@ class ComposableTests : SwissTravelTest() {
     val context = ApplicationProvider.getApplicationContext<Context>()
     var selectedSortType: TripSortType? = null
 
-    composeTestRule.setContent { SortMenu(onClickDropDownMenu = { selectedSortType = it }) }
+    composeTestRule.setContent {
+      SortMenu(
+          onClickDropDownMenu = { selectedSortType = it },
+          selectedSortType = TripSortType.START_DATE_ASC)
+    }
 
     composeTestRule
         .onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU)
@@ -172,7 +176,7 @@ class ComposableTests : SwissTravelTest() {
     composeTestRule
         .onNodeWithTag(SortMenuTestTags.getTestTagSortOption(TripSortType.START_DATE_ASC))
         .performClick()
-    assertTrue(selectedSortType == TripSortType.START_DATE_ASC)
+    assertEquals(selectedSortType, TripSortType.START_DATE_ASC)
   }
 
   @Test
@@ -215,6 +219,7 @@ class ComposableTests : SwissTravelTest() {
             onClickTripElement = { clickedTrip = it },
             onLongPress = { longPressedTrip = it },
             onClickDropDownMenu = { sortClicked = true },
+            selectedSortType = TripSortType.END_DATE_ASC,
             isSelectionMode = false)
       }
     }
@@ -239,7 +244,11 @@ class ComposableTests : SwissTravelTest() {
   @Test
   fun sortedTripListEmptyTest() {
     composeTestRule.setContent {
-      SortedTripList(title = "test", trips = emptyList(), emptyListString = "test")
+      SortedTripList(
+          title = "test",
+          trips = emptyList(),
+          emptyListString = "test",
+          selectedSortType = TripSortType.START_DATE_ASC)
     }
 
     composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()

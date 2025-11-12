@@ -48,10 +48,6 @@ class ActivityRepositoryMockTest {
     unmockkAll()
   }
 
-  // ---------------------------------------------------------------------------
-  //  URL builder coverage
-  // --------------------------------------------------------------------------
-
   @Test
   fun `computeUrlWithPreferences builds expected url`() {
     val prefs = listOf(Preference.FOODIE, Preference.MUSEUMS)
@@ -68,10 +64,6 @@ class ActivityRepositoryMockTest {
         repo.invokePrivate("computeUrlWithPreferences", emptyList<Preference>(), 10) as HttpUrl
     assertTrue(url.toString().contains("expand=true"))
   }
-
-  // ---------------------------------------------------------------------------
-  //  JSON parsing coverage
-  // ---------------------------------------------------------------------------
 
   @Test
   fun `parseActivitiesFromJson sets estimatedTime from neededtime`() {
@@ -390,6 +382,31 @@ class ActivityRepositoryMockTest {
 
     assertNotNull(result)
     assertTrue(result.isEmpty())
+  }
+
+  @Test
+  fun `getActivitiesNearWithPreference executes safely and builds correct url`() = runTest {
+    val slot = slot<Request>()
+    every { mockClient.newCall(capture(slot)) } returns mockCall
+    every { mockCall.execute() } returns mockResponse
+    every { mockResponse.isSuccessful } returns true
+    every { mockResponse.body } returns
+        "{\"data\":[]}".toResponseBody("application/json".toMediaType())
+    every { mockResponse.close() } just Runs
+
+    val prefs = listOf(Preference.PUBLIC_TRANSPORT)
+    val coord = Coordinate(46.5, 7.5)
+    val result = repo.getActivitiesNearWithPreference(prefs, coord, 500, 5)
+
+    assertNotNull(result)
+    assertTrue(result.isEmpty())
+
+    // Verify the URL was built correctly
+    val capturedUrl = slot.captured.url
+    assertTrue(capturedUrl.toString().contains("hitsPerPage=5"))
+    assertTrue(capturedUrl.toString().contains("facets=reachabilitylocation&facet.filter"))
+    assertTrue(capturedUrl.toString().contains("reachabilitylocation:closetopublictransport"))
+    assertTrue(capturedUrl.toString().contains("geo.dist=46.5%2C7.5%2C500"))
   }
 
   // ---------------------------------------------------------------------------
