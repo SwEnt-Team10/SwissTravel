@@ -85,33 +85,4 @@ fun CurrentTripScreen(
               }
         })
   }
-
-  Scaffold(
-      content = { pd ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(pd)
-                    .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 4.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              Text(
-                  text = stringResource(R.string.create_trip),
-                  style = MaterialTheme.typography.displayLarge,
-                  color = MaterialTheme.colorScheme.onBackground,
-                  modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT))
-              Spacer(modifier = Modifier.height(72.dp))
-              // Create a new trip
-              Button(
-                  onClick = { navigationActions?.navigateTo(Screen.TripSettingsDates) },
-                  enabled = isLoggedIn,
-                  modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
-                    Text(
-                        text = stringResource(R.string.where_starting),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onPrimary,
-                    )
-                  }
-            }
-      })
 }
