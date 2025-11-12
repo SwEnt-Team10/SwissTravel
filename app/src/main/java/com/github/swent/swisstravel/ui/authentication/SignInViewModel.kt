@@ -1,10 +1,5 @@
 package com.github.swent.swisstravel.ui.authentication
 
-/**
- * ViewModel for the Sign-In view.
- *
- * This file is largely adapted from the bootcamp solution.
- */
 import android.content.Context
 import androidx.credentials.CredentialManager
 import androidx.credentials.GetCredentialRequest
@@ -22,12 +17,13 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * Represents the UI state for authentication.
+ * Represents the UI state for authentication screens.
  *
- * @property isLoading Whether an authentication operation is in progress.
- * @property user The currently signed-in [FirebaseUser], or null if not signed in.
- * @property errorMsg An error message to display, or null if there is no error.
- * @property signedOut True if a signed-out operation has completed.
+ * @property isLoading `true` if an authentication operation is in progress.
+ * @property user The currently signed-in [FirebaseUser], or `null` if not authenticated.
+ * @property errorMsg A specific error message to display, or `null` if there's no error.
+ * @property signedOut `true` if the user is not authenticated or a sign-out has just occurred. This
+ *   can be used to trigger navigation events.
  */
 data class AuthUiState(
     val isLoading: Boolean = false,
@@ -37,16 +33,22 @@ data class AuthUiState(
 )
 
 /**
- * ViewModel for the Sign-In view.
+ * An abstract base ViewModel that provides common authentication functionality.
  *
- * @property repository The repository used to perform authentication operations.
+ * This class encapsulates shared logic for both sign-in and sign-up processes, including UI state
+ * management (`AuthUiState`) and the Google Sign-In flow. It is designed to be extended by concrete
+ * ViewModels like [SignInViewModel] and [SignUpViewModel].
+ *
+ * @param repository The [AuthRepository] implementation used for authentication operations.
  */
-class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFirebase()) :
-    ViewModel() {
-  private val _uiState = MutableStateFlow(AuthUiState())
+abstract class BaseAuthViewModel(
+    protected val repository: AuthRepository = AuthRepositoryFirebase()
+) : ViewModel() {
+
+  protected val _uiState = MutableStateFlow(AuthUiState())
   val uiState: StateFlow<AuthUiState> = _uiState
 
-  /** Clears the error message in the UI state. */
+  /** Clears any error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
   }
@@ -65,7 +67,15 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
       credentialManager: CredentialManager
   ) = credentialManager.getCredential(context, request).credential
 
-  /** Initiates the Google sign-in flow and updates the UI state on success or failure. */
+  /**
+   * Initiates the Google sign-in flow.
+   *
+   * This function handles the entire process of signing in with Google, from displaying the
+   * credential manager to updating the UI state based on the outcome (success or failure).
+   *
+   * @param context The application context.
+   * @param credentialManager The [CredentialManager] to use for the Google Sign-In request.
+   */
   fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
     if (_uiState.value.isLoading) return
 
@@ -76,10 +86,7 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
       val signInRequest = signInRequest(signInOptions)
 
       try {
-        // Launch Credential Manager UI safely
         val credential = getCredential(context, signInRequest, credentialManager)
-
-        // Pass the credential to the repository
         repository.signInWithGoogle(credential).fold({ user ->
           _uiState.update {
             it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
@@ -94,12 +101,10 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
           }
         }
       } catch (e: GetCredentialCancellationException) {
-        // User cancelled the sign-in flow
         _uiState.update {
           it.copy(isLoading = false, errorMsg = "Sign-in cancelled", signedOut = true, user = null)
         }
       } catch (e: Exception) {
-        // Unexpected errors
         _uiState.update {
           it.copy(
               isLoading = false,
@@ -110,8 +115,30 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
       }
     }
   }
+}
 
-  /** Initiates the email/password sign-in flow and updates the UI state on success or failure. */
+/**
+ * The ViewModel for the Sign-In screen.
+ *
+ * This class extends [BaseAuthViewModel] and provides the specific logic for signing in with an
+ * email and password. It interacts with the [AuthRepository] to perform the sign-in operation and
+ * updates the [AuthUiState] accordingly.
+ *
+ * @param repository The [AuthRepository] implementation to use for authentication.
+ */
+class SignInViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
+    BaseAuthViewModel(repository) {
+
+  /**
+   * Initiates the email and password sign-in flow.
+   *
+   * It updates the UI state to indicate loading, then calls the repository to perform the sign-in.
+   * The UI state is updated with the user information on success or an error message on failure.
+   *
+   * @param email The user's email.
+   * @param password The user's password.
+   * @param context The application context, used for retrieving error string resources.
+   */
   fun signInWithEmailPassword(email: String, password: String, context: Context) {
     if (_uiState.value.isLoading) return
 
@@ -133,7 +160,6 @@ class SignInViewModel(private val repository: AuthRepository = AuthRepositoryFir
           }
         }
       } catch (e: Exception) {
-        // Unexpected errors
         _uiState.update {
           it.copy(
               isLoading = false,
