@@ -20,10 +20,10 @@ enum class Preference {
   SCENIC_VIEWS,
   PUBLIC_TRANSPORT,
   QUICK,
+  SLOW_PACE,
   WHEELCHAIR_ACCESSIBLE,
   EARLY_BIRD,
-  NIGHT_OWL,
-  SLOW_PACE
+  NIGHT_OWL
 }
 
 /** Object containing utility functions and mappings related to preference categories. */
@@ -33,6 +33,7 @@ object PreferenceCategories {
     ACTIVITY_TYPE,
     TRAVEL_COMPANION,
     ENVIRONMENT,
+    TRAVEL_STYLE,
     ACCESSIBILITY,
     DEFAULT // Should never have preferences in the default category
   }
@@ -49,6 +50,7 @@ object PreferenceCategories {
         Category.ACTIVITY_TYPE -> R.string.preference_category_activity_type
         Category.TRAVEL_COMPANION -> R.string.preference_category_travel_companion
         Category.ENVIRONMENT -> R.string.preference_category_environment
+        Category.TRAVEL_STYLE -> R.string.preference_category_travel_style
         Category.ACCESSIBILITY -> R.string.preference_category_accessibility
         else -> R.string.preference_category_default
       }
@@ -69,12 +71,12 @@ object PreferenceCategories {
         Preference.URBAN -> Category.ENVIRONMENT
         Preference.NIGHTLIFE -> Category.ENVIRONMENT
         Preference.SCENIC_VIEWS -> Category.ENVIRONMENT
+        Preference.QUICK -> Category.TRAVEL_STYLE
+        Preference.EARLY_BIRD -> Category.TRAVEL_STYLE
+        Preference.NIGHT_OWL -> Category.TRAVEL_STYLE
+        Preference.SLOW_PACE -> Category.TRAVEL_STYLE
         Preference.PUBLIC_TRANSPORT -> Category.ACCESSIBILITY
-        Preference.QUICK -> Category.ACCESSIBILITY
         Preference.WHEELCHAIR_ACCESSIBLE -> Category.ACCESSIBILITY
-        Preference.EARLY_BIRD -> Category.ACCESSIBILITY
-        Preference.NIGHT_OWL -> Category.ACCESSIBILITY
-        Preference.SLOW_PACE -> Category.ACCESSIBILITY
       }
 
   /** Lists of preferences grouped by their categories. */
@@ -83,6 +85,7 @@ object PreferenceCategories {
   val travelCompanionPreferences =
       Preference.values().filter { it.category() == Category.TRAVEL_COMPANION }
   val environmentPreferences = Preference.values().filter { it.category() == Category.ENVIRONMENT }
+  val travelStylePreferences = Preference.values().filter { it.category() == Category.TRAVEL_STYLE }
   val accessibilityPreferences =
       Preference.values().filter { it.category() == Category.ACCESSIBILITY }
   // Should always be empty
@@ -98,6 +101,7 @@ object PreferenceCategories {
       Category.ACTIVITY_TYPE -> activityTypePreferences
       Category.TRAVEL_COMPANION -> travelCompanionPreferences
       Category.ENVIRONMENT -> environmentPreferences
+      Category.TRAVEL_STYLE -> travelStylePreferences
       Category.ACCESSIBILITY -> accessibilityPreferences
       else -> defaultPreferences
     }
@@ -109,6 +113,7 @@ object PreferenceCategories {
       Category.ACTIVITY_TYPE -> "activityType"
       Category.TRAVEL_COMPANION -> "travelCompanion"
       Category.ENVIRONMENT -> "environment"
+      Category.TRAVEL_STYLE -> "travelStyle"
       Category.ACCESSIBILITY -> "accessibility"
       else -> "default"
     }
@@ -139,9 +144,9 @@ fun Preference.displayStringRes(): Int {
     Preference.WHEELCHAIR_ACCESSIBLE -> R.string.preference_wheelchair_accessible
     Preference.PUBLIC_TRANSPORT -> R.string.preference_public_transport
     Preference.QUICK -> R.string.preference_quick
+    Preference.SLOW_PACE -> R.string.preference_slow_pace
     Preference.EARLY_BIRD -> R.string.preference_early_bird
     Preference.NIGHT_OWL -> R.string.preference_night_owl
-    Preference.SLOW_PACE -> R.string.preference_slow_pace
   }
 }
 
@@ -168,9 +173,9 @@ fun Preference.toTestTagString(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "wheelchairAccessible"
     Preference.PUBLIC_TRANSPORT -> "publicTransport"
     Preference.QUICK -> "quick"
+    Preference.SLOW_PACE -> "slowPace"
     Preference.EARLY_BIRD -> "earlyBird"
     Preference.NIGHT_OWL -> "nightOwl"
-    Preference.SLOW_PACE -> "slowPace"
   }
 }
 
@@ -197,9 +202,9 @@ fun Preference.toSwissTourismFacet(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "wheelchairaccessibleclassifications"
     Preference.PUBLIC_TRANSPORT -> "reachabilitylocation"
     Preference.QUICK -> ""
+    Preference.SLOW_PACE -> ""
     Preference.EARLY_BIRD -> ""
     Preference.NIGHT_OWL -> ""
-    Preference.SLOW_PACE -> ""
   }
 }
 
@@ -226,9 +231,9 @@ fun Preference.toSwissTourismFacetFilter(): String {
     Preference.WHEELCHAIR_ACCESSIBLE -> "%2A"
     Preference.PUBLIC_TRANSPORT -> "closetopublictransport"
     Preference.QUICK -> ""
+    Preference.SLOW_PACE -> ""
     Preference.EARLY_BIRD -> ""
     Preference.NIGHT_OWL -> ""
-    Preference.SLOW_PACE -> ""
   }
 }
 
