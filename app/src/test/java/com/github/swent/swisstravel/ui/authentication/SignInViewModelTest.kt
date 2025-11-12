@@ -53,7 +53,7 @@ class SignInViewModelTest {
       mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
     } returns mockk(relaxed = true)
 
-    viewModel.signIn(mockContext, mockCredentialManager)
+    viewModel.signInWithGoogle(mockContext, mockCredentialManager)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val uiState = viewModel.uiState.value
@@ -72,7 +72,7 @@ class SignInViewModelTest {
       mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
     } returns mockk(relaxed = true)
 
-    viewModel.signIn(mockContext, mockCredentialManager)
+    viewModel.signInWithGoogle(mockContext, mockCredentialManager)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val uiState = viewModel.uiState.value
@@ -88,7 +88,7 @@ class SignInViewModelTest {
       mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
     } throws GetCredentialCancellationException()
 
-    viewModel.signIn(mockContext, mockCredentialManager)
+    viewModel.signInWithGoogle(mockContext, mockCredentialManager)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val uiState = viewModel.uiState.value
@@ -107,7 +107,7 @@ class SignInViewModelTest {
     coEvery {
       mockCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
     } returns mockk(relaxed = true)
-    viewModel.signIn(mockContext, mockCredentialManager)
+    viewModel.signInWithGoogle(mockContext, mockCredentialManager)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // When
@@ -125,7 +125,7 @@ class SignInViewModelTest {
         val loadingState = AuthUiState(isLoading = true)
         every { viewModelSpy.uiState } returns MutableStateFlow(loadingState)
 
-        viewModelSpy.signIn(mockContext, mockCredentialManager)
+        viewModelSpy.signInWithGoogle(mockContext, mockCredentialManager)
         testDispatcher.scheduler.advanceUntilIdle()
 
         coVerify(exactly = 0) { mockAuthRepository.signInWithGoogle(any()) }
