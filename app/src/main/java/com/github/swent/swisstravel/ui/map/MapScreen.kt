@@ -8,12 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,8 +24,10 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
+import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
+import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.generated.circleLayer
@@ -55,11 +52,6 @@ object MapScreenTestTags {
   const val MAP = "map"
 }
 
-/**
- * Composable that displays a Mapbox map with navigation routes based on provided locations.
- *
- * @param locations List of Location objects representing the points to be displayed on the map.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
@@ -70,6 +62,7 @@ fun MapScreen(
   val context = LocalContext.current
   val appCtx = context.applicationContext
 
+  // Mapbox + route line objects
   val mapboxNavigation = remember {
     if (MapboxNavigationProvider.isCreated()) MapboxNavigationProvider.retrieve()
     else MapboxNavigationProvider.create(NavigationOptions.Builder(appCtx).build())
@@ -78,20 +71,19 @@ fun MapScreen(
   val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
   val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
 
-  // Attach once
   LaunchedEffect(Unit) { viewModel.attachMapObjects(mapboxNavigation, routeLineApi) }
   LaunchedEffect(locations) { viewModel.updateLocations(locationsAsPoints(locations)) }
 
   val ui by viewModel.uiState.collectAsState()
   val mapViewportState = rememberMapViewportState()
 
-  val PINS_SOURCE_ID = remember { "step-pins-source" }
-  val PINS_LAYER_ID = remember { "step-pins-layer" }
+  val pinsSourceId = remember { "step-pins-source" }
+  val pinsLayerId = remember { "step-pins-layer" }
 
   var styleReady by remember { mutableStateOf(false) }
-  // NEW: track whether route-line layers have been initialized for the current style
   var routeLayersInitialized by remember { mutableStateOf(false) }
 
+  // Permission launcher
   val permissionLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res
         ->
@@ -109,117 +101,189 @@ fun MapScreen(
 
   Scaffold { padding ->
     Box(Modifier.fillMaxSize().padding(padding)) {
-      MapboxMap(
-          modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
-          mapViewportState = mapViewportState) {
-            MapEffect(Unit) { mapView ->
-              mapView.mapboxMap.getStyle { style ->
-                if (!routeLayersInitialized) {
-                  routeLineView.initializeLayers(style)
-                  routeLayersInitialized = true
-                }
-                style.getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
-                    ?: geoJsonSource(PINS_SOURCE_ID) {}.also(style::addSource)
+      MapContent(
+          mapViewportState = mapViewportState,
+          drawRoute = drawRoute,
+          ui = ui,
+          pinsSourceId = pinsSourceId,
+          pinsLayerId = pinsLayerId,
+          routeLineView = routeLineView,
+          routeLayersInitialized = routeLayersInitialized,
+          onRouteLayersInitialized = { routeLayersInitialized = it },
+          styleReady = styleReady,
+          onStyleReady = { styleReady = it },
+          locations = locations)
+      MapOverlays(permissionGranted = ui.permissionGranted, mapViewportState = mapViewportState)
+    }
+  }
+}
 
-                if (style.getLayer(PINS_LAYER_ID) == null) {
-                  style.addLayer(
-                      circleLayer(PINS_LAYER_ID, PINS_SOURCE_ID) {
-                        circleRadius(6.0)
-                        circleColor("#00FF00")
-                        circleStrokeColor("#FFFFFF")
-                        circleStrokeWidth(2.0)
-                      })
-                }
-                styleReady = true
-              }
-            }
+/* --------------------------- Split-out content blocks --------------------------- */
 
-            MapEffect(styleReady to drawRoute) { mapView ->
-              if (!styleReady || drawRoute) return@MapEffect
-              val api = ui.routeLineApi ?: return@MapEffect
-              val clearValue = api.clearRouteLine()
-              mapView.mapboxMap.getStyle { style ->
-                routeLineView.renderClearRouteLineValue(style, clearValue)
-              }
-            }
-
-            val renderKey by viewModel.routeRenderTick.collectAsState()
-            MapEffect(styleReady to drawRoute to renderKey) { mapView ->
-              if (!styleReady || !drawRoute) return@MapEffect
-              val api = ui.routeLineApi ?: return@MapEffect
-              mapView.mapboxMap.getStyle { style ->
-                api.getRouteDrawData { drawData ->
-                  routeLineView.renderRouteDrawData(style, drawData)
-                }
-              }
-            }
-
-            MapEffect(styleReady to ui.locationsList to drawRoute) { mapView ->
-              if (!styleReady) return@MapEffect
-              mapView.mapboxMap.getStyle { style ->
-                style
-                    .getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
-                    ?.featureCollection(
-                        FeatureCollection.fromFeatures(
-                            if (!drawRoute) ui.locationsList.map { Feature.fromGeometry(it) }
-                            else emptyList()))
-                style
-                    .getLayer(PINS_LAYER_ID)
-                    ?.visibility(if (drawRoute) Visibility.NONE else Visibility.VISIBLE)
-              }
-            }
-
-            var lastFitHash by remember { mutableStateOf<Int?>(null) }
-            val points =
-                remember(locations) {
-                  locations.map {
-                    Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude)
-                  }
-                }
-
-            MapEffect(points to drawRoute) {
-              if (points.isEmpty()) return@MapEffect
-              if (!drawRoute && points.size == 1) {
-                mapViewportState.setCameraOptions(
-                    CameraOptions.Builder().center(points.first()).zoom(12.0).build())
-                lastFitHash = null
-              } else {
-                val h = points.hashCode()
-                if (lastFitHash != h) {
-                  lastFitHash = h
-                  val cam =
-                      mapViewportState.cameraForCoordinates(
-                          points, coordinatesPadding = EdgeInsets(200.0, 200.0, 200.0, 200.0))
-                  mapViewportState.setCameraOptions(cam)
-                }
-              }
-            }
-
-            MapEffect(ui.permissionGranted) { mapView ->
-              mapView.location.updateSettings {
-                enabled = ui.permissionGranted
-                if (ui.permissionGranted) {
-                  locationPuck = createDefault2DPuck(withBearing = true)
-                  puckBearing = PuckBearing.COURSE
-                  puckBearingEnabled = true
-                }
-              }
-            }
-          }
-      if (ui.permissionGranted) {
-        IconButton(
-            onClick = { mapViewportState.transitionToFollowPuckState() },
-            modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
-              Icon(
-                  imageVector = Icons.Filled.LocationOn,
-                  contentDescription = stringResource(R.string.allow_location),
-                  tint = MaterialTheme.colorScheme.onBackground)
-            }
-      } else {
-        Text(
-            text = stringResource(R.string.location_required_to_display),
-            modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
+@Composable
+private fun MapContent(
+    mapViewportState: MapViewportState,
+    drawRoute: Boolean,
+    ui: NavigationMapUIState,
+    pinsSourceId: String,
+    pinsLayerId: String,
+    routeLineView: MapboxRouteLineView,
+    routeLayersInitialized: Boolean,
+    onRouteLayersInitialized: (Boolean) -> Unit,
+    styleReady: Boolean,
+    onStyleReady: (Boolean) -> Unit,
+    locations: List<Location>
+) {
+  val renderKey by viewModel<MapScreenViewModel>().routeRenderTick.collectAsState()
+  var lastFitHash by remember { mutableStateOf<Int?>(null) }
+  val points =
+      remember(locations) {
+        locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }
       }
+
+  MapboxMap(
+      modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
+      mapViewportState = mapViewportState) {
+        // 1) Style/init
+        MapEffect(Unit) { mapView ->
+          mapView.mapboxMap.getStyle { style ->
+            initRouteLayersOnce(
+                style, routeLineView, routeLayersInitialized, onRouteLayersInitialized)
+            ensurePinsSourceAndLayer(style, pinsSourceId, pinsLayerId)
+            onStyleReady(true)
+          }
+        }
+
+        // 2) Clear route when switching to pins
+        MapEffect(styleReady to drawRoute) { mapView ->
+          if (!styleReady || drawRoute) return@MapEffect
+          val api = ui.routeLineApi ?: return@MapEffect
+          val clearValue = api.clearRouteLine()
+          mapView.mapboxMap.getStyle { style ->
+            routeLineView.renderClearRouteLineValue(style, clearValue)
+          }
+        }
+
+        // 3) Render route when needed
+        MapEffect(styleReady to drawRoute to renderKey) { mapView ->
+          if (!styleReady || !drawRoute) return@MapEffect
+          val api = ui.routeLineApi ?: return@MapEffect
+          mapView.mapboxMap.getStyle { style ->
+            api.getRouteDrawData { drawData -> routeLineView.renderRouteDrawData(style, drawData) }
+          }
+        }
+
+        // 4) Update pins source + visibility
+        MapEffect(styleReady to ui.locationsList to drawRoute) { mapView ->
+          if (!styleReady) return@MapEffect
+          mapView.mapboxMap.getStyle { style ->
+            updatePins(style, pinsSourceId, pinsLayerId, ui.locationsList, drawRoute)
+          }
+        }
+
+        // 5) Camera fitting
+        MapEffect(points to drawRoute) {
+          fitCamera(mapViewportState, points, drawRoute, lastFitHash) { lastFitHash = it }
+        }
+
+        // 6) Location puck
+        MapEffect(ui.permissionGranted) { mapView -> updatePuck(mapView, ui.permissionGranted) }
+      }
+}
+
+@Composable
+private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewportState) {
+  Box(Modifier.fillMaxSize()) {
+    if (permissionGranted) {
+      IconButton(
+          onClick = { mapViewportState.transitionToFollowPuckState() },
+          modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+            Icon(
+                imageVector = Icons.Filled.LocationOn,
+                contentDescription = stringResource(R.string.allow_location),
+                tint = MaterialTheme.colorScheme.onBackground)
+          }
+    } else {
+      Text(
+          text = stringResource(R.string.location_required_to_display),
+          modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
+    }
+  }
+}
+
+/* --------------------------- Small, focused helpers --------------------------- */
+
+private fun initRouteLayersOnce(
+    style: Style,
+    routeLineView: MapboxRouteLineView,
+    alreadyInitialized: Boolean,
+    setInitialized: (Boolean) -> Unit
+) {
+  if (alreadyInitialized) return
+  routeLineView.initializeLayers(style)
+  setInitialized(true)
+}
+
+private fun ensurePinsSourceAndLayer(style: Style, pinsSourceId: String, pinsLayerId: String) {
+  style.getSourceAs<GeoJsonSource>(pinsSourceId)
+      ?: geoJsonSource(pinsSourceId) {}.also(style::addSource)
+  if (style.getLayer(pinsLayerId) == null) {
+    style.addLayer(
+        circleLayer(pinsLayerId, pinsSourceId) {
+          circleRadius(6.0)
+          circleColor("#00FF00") // green
+          circleStrokeColor("#FFFFFF")
+          circleStrokeWidth(2.0)
+        })
+  }
+}
+
+private fun updatePins(
+    style: Style,
+    pinsSourceId: String,
+    pinsLayerId: String,
+    locationsList: List<Point>,
+    drawRoute: Boolean
+) {
+  style
+      .getSourceAs<GeoJsonSource>(pinsSourceId)
+      ?.featureCollection(
+          FeatureCollection.fromFeatures(
+              if (!drawRoute) locationsList.map { Feature.fromGeometry(it) } else emptyList()))
+  style.getLayer(pinsLayerId)?.visibility(if (drawRoute) Visibility.NONE else Visibility.VISIBLE)
+}
+
+private suspend fun fitCamera(
+    mapViewportState: MapViewportState,
+    points: List<Point>,
+    drawRoute: Boolean,
+    lastHash: Int?,
+    setHash: (Int?) -> Unit
+) {
+  if (points.isEmpty()) return
+  if (!drawRoute && points.size == 1) {
+    mapViewportState.setCameraOptions(
+        CameraOptions.Builder().center(points.first()).zoom(12.0).build())
+    setHash(null)
+    return
+  }
+  val h = points.hashCode()
+  if (lastHash != h) {
+    setHash(h)
+    val cam =
+        mapViewportState.cameraForCoordinates(
+            points, coordinatesPadding = EdgeInsets(200.0, 200.0, 200.0, 200.0))
+    mapViewportState.setCameraOptions(cam)
+  }
+}
+
+private fun updatePuck(mapView: com.mapbox.maps.MapView, permissionGranted: Boolean) {
+  mapView.location.updateSettings {
+    enabled = permissionGranted
+    if (permissionGranted) {
+      locationPuck = createDefault2DPuck(withBearing = true)
+      puckBearing = PuckBearing.COURSE
+      puckBearingEnabled = true
     }
   }
 }

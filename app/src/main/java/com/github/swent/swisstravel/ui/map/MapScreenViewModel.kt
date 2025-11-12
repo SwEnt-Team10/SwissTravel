@@ -12,7 +12,6 @@ import com.mapbox.navigation.base.route.NavigationRouterCallback
 import com.mapbox.navigation.base.route.RouterFailure
 import com.mapbox.navigation.core.MapboxNavigation
 import com.mapbox.navigation.core.directions.session.RoutesObserver
-import com.mapbox.navigation.core.directions.session.RoutesUpdatedResult
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLineError
 import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
@@ -54,19 +53,16 @@ class MapScreenViewModel : ViewModel() {
   val routeRenderTick: StateFlow<Int> = _routeRenderTick
 
   /** Internal routes observer that updates the route line API when routes change */
-  private val routesObserver =
-      object : RoutesObserver {
-        override fun onRoutesChanged(result: RoutesUpdatedResult) {
-          val nav = _uiState.value.mapboxNavigation ?: return
-          val api = _uiState.value.routeLineApi ?: return
-          val alt = nav.getAlternativeMetadataFor(result.navigationRoutes)
-          api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
-            if (drawData.value != null) {
-              _routeRenderTick.value = _routeRenderTick.value + 1
-            }
-          }
-        }
+  private val routesObserver = RoutesObserver { result ->
+    val nav = _uiState.value.mapboxNavigation ?: return@RoutesObserver
+    val api = _uiState.value.routeLineApi ?: return@RoutesObserver
+    val alt = nav.getAlternativeMetadataFor(result.navigationRoutes)
+    api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
+      if (drawData.value != null) {
+        _routeRenderTick.value = _routeRenderTick.value + 1
       }
+    }
+  }
 
   /** Backing state for the UI */
   private val _uiState =
@@ -123,7 +119,9 @@ class MapScreenViewModel : ViewModel() {
     nav.requestRoutes(
         routeOptions,
         object : NavigationRouterCallback {
-          override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {}
+          override fun onCanceled(routeOptions: RouteOptions, routerOrigin: String) {
+            // no-op should never happen
+          }
 
           override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
             Log.e("NAV_MAP_VM", "requestRoute failure: $reasons")
