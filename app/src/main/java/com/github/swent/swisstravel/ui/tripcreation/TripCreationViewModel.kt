@@ -9,6 +9,8 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
@@ -60,10 +62,13 @@ sealed interface ValidationEvent {
  * ViewModel managing the state and logic for trip settings.
  *
  * @property tripsRepository Repository for managing trip data.
+ * @property userRepository Repository for managing user data.
+ * @property activityRepository Repository for managing activity data.
  */
 class TripSettingsViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
-    private val userRepository: UserRepository = UserRepositoryFirebase()
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) : ViewModel() {
 
   private val _tripSettings = MutableStateFlow(TripSettings())
@@ -129,7 +134,10 @@ class TripSettingsViewModel(
       _loadingProgress.value = 0f
       try {
         val selectActivities =
-            SelectActivities(tripSettings.value) { progress -> _loadingProgress.value = progress }
+            SelectActivities(
+                tripSettings = tripSettings.value,
+                onProgress = { progress -> _loadingProgress.value = progress },
+                activityRepository = activityRepository)
         val selectedActivities = selectActivities.addActivities()
         setDestinations(selectedActivities.map { it.location })
 

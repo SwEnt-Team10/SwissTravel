@@ -5,6 +5,10 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.trips.FakeTripsRepository
 import org.junit.Assert.assertFalse
@@ -18,7 +22,10 @@ class TripSummaryTest {
 
   private fun setContent(
       viewModel: TripSettingsViewModel =
-          TripSettingsViewModel(FakeTripsRepository(), FakeUserRepository()),
+          TripSettingsViewModel(
+              tripsRepository = FakeTripsRepository(),
+              userRepository = FakeUserRepository(),
+              activityRepository = FakeActivityRepository()),
       onNext: () -> Unit = {},
       onPrevious: () -> Unit = {}
   ) {
@@ -69,5 +76,31 @@ class TripSummaryTest {
     composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
     assertFalse(
         "onNext must not be called when departure/arrival locations are missing", nextCalled)
+  }
+
+  /** A fake implementation of ActivityRepository for UI testing. Avoids real API calls. */
+  private class FakeActivityRepository : ActivityRepository {
+    override suspend fun getMostPopularActivities(limit: Int, page: Int): List<Activity> =
+        emptyList()
+
+    override suspend fun getActivitiesNear(
+        coordinate: Coordinate,
+        radiusMeters: Int,
+        limit: Int
+    ): List<Activity> = emptyList()
+
+    override suspend fun getActivitiesByPreferences(
+        preferences: List<Preference>,
+        limit: Int
+    ): List<Activity> = emptyList()
+
+    override suspend fun searchDestinations(query: String, limit: Int): List<Activity> = emptyList()
+
+    override suspend fun getActivitiesNearWithPreference(
+        preferences: List<Preference>,
+        coordinate: Coordinate,
+        radiusMeters: Int,
+        limit: Int
+    ): List<Activity> = emptyList()
   }
 }
