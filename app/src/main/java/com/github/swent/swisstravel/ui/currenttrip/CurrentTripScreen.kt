@@ -74,7 +74,7 @@ fun CurrentTripScreen(
                     enabled = isLoggedIn,
                     modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                       Text(
-                          text = stringResource(R.string.where_starting),
+                          text = stringResource(R.string.when_travelling),
                           style = MaterialTheme.typography.titleMedium,
                           color = MaterialTheme.colorScheme.onPrimary,
                       )
