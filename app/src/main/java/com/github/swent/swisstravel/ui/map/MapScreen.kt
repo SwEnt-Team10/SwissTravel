@@ -24,20 +24,28 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
+import com.mapbox.geojson.Feature
+import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.style.layers.addLayer
+import com.mapbox.maps.extension.style.layers.generated.circleLayer
+import com.mapbox.maps.extension.style.layers.getLayer
+import com.mapbox.maps.extension.style.layers.properties.generated.Visibility
+import com.mapbox.maps.extension.style.sources.addSource
+import com.mapbox.maps.extension.style.sources.generated.GeoJsonSource
+import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
+import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.PuckBearing
-import com.mapbox.maps.plugin.annotation.annotations
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.core.MapboxNavigationProvider
+import com.mapbox.navigation.ui.maps.route.line.MapboxRouteLineApiExtensions.clearRouteLine
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineView
 import com.mapbox.navigation.ui.maps.route.line.model.MapboxRouteLineApiOptions
@@ -54,7 +62,11 @@ object MapScreenTestTags {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewModel()) {
+fun MapScreen(
+    locations: List<Location>,
+    drawRoute: Boolean,
+    viewModel: MapScreenViewModel = viewModel()
+) {
   val context = LocalContext.current
   val appCtx = context.applicationContext
 
@@ -66,24 +78,19 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
   val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
   val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
 
+  // Attach once
   LaunchedEffect(Unit) { viewModel.attachMapObjects(mapboxNavigation, routeLineApi) }
   LaunchedEffect(locations) { viewModel.updateLocations(locationsAsPoints(locations)) }
 
   val ui by viewModel.uiState.collectAsState()
   val mapViewportState = rememberMapViewportState()
 
-  // Use the same points everywhere
-  val points =
-      remember(locations) {
-        locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }
-      }
+  val PINS_SOURCE_ID = remember { "step-pins-source" }
+  val PINS_LAYER_ID = remember { "step-pins-layer" }
 
   var styleReady by remember { mutableStateOf(false) }
-
-  // Remember a single annotation manager for pins
-  var pointAnnotationManager by remember {
-    mutableStateOf<com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager?>(null)
-  }
+  // NEW: track whether route-line layers have been initialized for the current style
+  var routeLayersInitialized by remember { mutableStateOf(false) }
 
   val permissionLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res
@@ -100,8 +107,6 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
             Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
   }
 
-  var lastFitHash by remember { mutableStateOf<Int?>(null) }
-
   Scaffold { padding ->
     Box(Modifier.fillMaxSize().padding(padding)) {
       MapboxMap(
@@ -109,23 +114,74 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
           mapViewportState = mapViewportState) {
             MapEffect(Unit) { mapView ->
               mapView.mapboxMap.getStyle { style ->
-                routeLineView.initializeLayers(style)
-                if (pointAnnotationManager == null) {
-                  pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
+                if (!routeLayersInitialized) {
+                  routeLineView.initializeLayers(style)
+                  routeLayersInitialized = true
+                }
+                style.getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
+                    ?: geoJsonSource(PINS_SOURCE_ID) {}.also(style::addSource)
+
+                if (style.getLayer(PINS_LAYER_ID) == null) {
+                  style.addLayer(
+                      circleLayer(PINS_LAYER_ID, PINS_SOURCE_ID) {
+                        circleRadius(6.0)
+                        circleColor("#00FF00")
+                        circleStrokeColor("#FFFFFF")
+                        circleStrokeWidth(2.0)
+                      })
                 }
                 styleReady = true
               }
             }
 
-            // Camera behavior:
-            // - 1 point  -> center + closer zoom (pin mode)
-            // - 2+ points -> fit to coordinates (route mode)
-            MapEffect(points) {
+            MapEffect(styleReady to drawRoute) { mapView ->
+              if (!styleReady || drawRoute) return@MapEffect
+              val api = ui.routeLineApi ?: return@MapEffect
+              val clearValue = api.clearRouteLine()
+              mapView.mapboxMap.getStyle { style ->
+                routeLineView.renderClearRouteLineValue(style, clearValue)
+              }
+            }
+
+            val renderKey by viewModel.routeRenderTick.collectAsState()
+            MapEffect(styleReady to drawRoute to renderKey) { mapView ->
+              if (!styleReady || !drawRoute) return@MapEffect
+              val api = ui.routeLineApi ?: return@MapEffect
+              mapView.mapboxMap.getStyle { style ->
+                api.getRouteDrawData { drawData ->
+                  routeLineView.renderRouteDrawData(style, drawData)
+                }
+              }
+            }
+
+            MapEffect(styleReady to ui.locationsList to drawRoute) { mapView ->
+              if (!styleReady) return@MapEffect
+              mapView.mapboxMap.getStyle { style ->
+                style
+                    .getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
+                    ?.featureCollection(
+                        FeatureCollection.fromFeatures(
+                            if (!drawRoute) ui.locationsList.map { Feature.fromGeometry(it) }
+                            else emptyList()))
+                style
+                    .getLayer(PINS_LAYER_ID)
+                    ?.visibility(if (drawRoute) Visibility.NONE else Visibility.VISIBLE)
+              }
+            }
+
+            var lastFitHash by remember { mutableStateOf<Int?>(null) }
+            val points =
+                remember(locations) {
+                  locations.map {
+                    Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude)
+                  }
+                }
+
+            MapEffect(points to drawRoute) {
               if (points.isEmpty()) return@MapEffect
-              if (points.size == 1) {
-                val p = points.first()
+              if (!drawRoute && points.size == 1) {
                 mapViewportState.setCameraOptions(
-                    CameraOptions.Builder().center(p).zoom(12.0).build())
+                    CameraOptions.Builder().center(points.first()).zoom(12.0).build())
                 lastFitHash = null
               } else {
                 val h = points.hashCode()
@@ -133,13 +189,12 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
                   lastFitHash = h
                   val cam =
                       mapViewportState.cameraForCoordinates(
-                          points, coordinatesPadding = EdgeInsets(100.0, 100.0, 100.0, 100.0))
+                          points, coordinatesPadding = EdgeInsets(200.0, 200.0, 200.0, 200.0))
                   mapViewportState.setCameraOptions(cam)
                 }
               }
             }
 
-            // Enable/disable location puck based on permission
             MapEffect(ui.permissionGranted) { mapView ->
               mapView.location.updateSettings {
                 enabled = ui.permissionGranted
@@ -150,31 +205,7 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
                 }
               }
             }
-
-            // Render route line **only when we have 2+ points**
-            val renderKey by viewModel.routeRenderTick.collectAsState()
-            MapEffect(styleReady to renderKey to points.size) { mapView ->
-              if (!styleReady) return@MapEffect
-              if (points.size < 2) return@MapEffect
-              val api = ui.routeLineApi ?: return@MapEffect
-              mapView.mapboxMap.getStyle { style ->
-                api.getRouteDrawData { drawData ->
-                  routeLineView.renderRouteDrawData(style, drawData)
-                  viewModel.setRouteRendered(true)
-                }
-              }
-            }
-
-            MapEffect(styleReady to points) { _ ->
-              val mgr = pointAnnotationManager ?: return@MapEffect
-              mgr.deleteAll()
-              if (styleReady && points.size == 1) {
-                val opts = PointAnnotationOptions().withPoint(points.first())
-                mgr.create(opts)
-              }
-            }
           }
-
       if (ui.permissionGranted) {
         IconButton(
             onClick = { mapViewportState.transitionToFollowPuckState() },
@@ -184,21 +215,11 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
                   contentDescription = stringResource(R.string.allow_location),
                   tint = MaterialTheme.colorScheme.onBackground)
             }
-      }
-
-      if (!ui.permissionGranted) {
+      } else {
         Text(
             text = stringResource(R.string.location_required_to_display),
             modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
       }
-    }
-  }
-
-  DisposableEffect(Unit) {
-    onDispose {
-      routeLineView.cancel()
-      pointAnnotationManager?.deleteAll()
-      viewModel.setRouteRendered(false)
     }
   }
 }

@@ -21,13 +21,11 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.orderlocations.orderLocations
 import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
@@ -80,6 +78,11 @@ fun TripInfoScreen(
 
   var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
 
+  val mapLocations: List<Location> =
+      remember(schedule, currentStepIndex) { mapLocationsForStep(schedule, currentStepIndex) }
+
+  val drawRoute: Boolean = mapLocations.size >= 2
+
   // handle VM error toasts
   LaunchedEffect(ui.errorMsg) {
     ui.errorMsg?.let {
@@ -127,9 +130,6 @@ fun TripInfoScreen(
       }
     }
   }
-
-  val mapLocations: List<Location> =
-      remember(schedule, currentStepIndex) { mapLocationsForStep(schedule, currentStepIndex) }
 
   LaunchedEffect(showMap) {
     if (!showMap) {
@@ -245,7 +245,7 @@ fun TripInfoScreen(
                                                   Modifier.testTag(TripInfoScreenTestTags.LOADING))
                                         }
                                   } else if (showMap) {
-                                    MapScreen(locations = mapLocations)
+                                    MapScreen(locations = mapLocations, drawRoute = drawRoute)
                                   }
 
                                   // Fullscreen button
@@ -309,13 +309,7 @@ fun TripInfoScreen(
                           timeRange =
                               "${fmtTime(el.activity.startDate)} – ${fmtTime(el.activity.endDate)}",
                           leadingIcon = {
-                            ThumbnailOrIcon(
-                                url = el.activity.imageUrls.firstOrNull(),
-                                fallbackIcon = Icons.Filled.Attractions,
-                                contentDescription =
-                                    if (el.activity.imageUrls.isEmpty())
-                                        stringResource(R.string.icon)
-                                    else stringResource(R.string.image))
+                            Icon(imageVector = Icons.Filled.Attractions, contentDescription = null)
                           })
                     }
                     is TripElement.TripSegment -> {
@@ -336,7 +330,7 @@ fun TripInfoScreen(
         // Fullscreen overlay
         if (fullscreen) {
           Box(modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.FULLSCREEN_MAP)) {
-            MapScreen(locations = mapLocations)
+            MapScreen(locations = mapLocations, drawRoute = drawRoute)
 
             // Exit fullscreen arrow
             IconButton(
@@ -415,22 +409,6 @@ private fun FavoriteButton(
       }
 }
 
-@Composable
-private fun ThumbnailOrIcon(
-    url: String?,
-    fallbackIcon: ImageVector,
-    contentDescription: String? = null
-) {
-  if (url.isNullOrBlank()) {
-    Icon(imageVector = fallbackIcon, contentDescription = contentDescription)
-  } else {
-    AsyncImage(
-        model = url,
-        contentDescription = contentDescription,
-        modifier = Modifier.size(32.dp).clip(CircleShape))
-  }
-}
-
 /* ---------- Small helpers ---------- */
 
 private fun fmtTime(ts: Timestamp?): String {
@@ -450,6 +428,12 @@ private fun currentStepTitle(schedule: List<TripElement>, idx: Int): String {
     is TripElement.TripSegment -> "${el.route.from.name} → ${el.route.to.name}"
     is TripElement.TripActivity -> el.activity.location.name
   }
+}
+
+private fun shouldDrawRouteForStep(schedule: List<TripElement>, idx: Int): Boolean {
+  if (schedule.isEmpty()) return false
+  val i = idx.coerceIn(0, schedule.lastIndex)
+  return schedule[i] is TripElement.TripSegment
 }
 
 private fun currentStepTime(schedule: List<TripElement>, idx: Int): String {

@@ -90,6 +90,7 @@ class TripInfoViewModel(
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,
                 isFavorite = trip.isFavorite)
+        Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
         Log.e("TripInfoViewModel", "Error loading trip info", e)
         setErrorMsg("Failed to load trip info: ${e.message}")
