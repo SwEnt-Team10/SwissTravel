@@ -57,6 +57,8 @@ object LocationTextTestTags {
  * @param name The label for the text field.
  * @param clearOnSelect Whether to clear the text field after a location is selected.
  */
+
+//Parts of this code was written with the assistance of AI.
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun LocationAutocompleteTextField(
@@ -116,7 +118,8 @@ fun LocationAutocompleteTextField(
                 expanded = true
             },
             modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
-            label = { Text(name) })
+            label = { Text(name) },
+            singleLine = true)
         ExposedDropdownMenu(
             expanded = expanded && state.locationSuggestions.isNotEmpty(),
             onDismissRequest = { expanded = false }) {
