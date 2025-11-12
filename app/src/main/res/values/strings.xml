@@ -71,7 +71,6 @@
     <string name="address">Address</string>
 
     <!-- Map -->
-    <string name="error_access_activity">Error: unable to access the activity.</string>
     <string name="location_required_to_display">Location is required to display your position on the map.</string>
     <string name="allow_location">Allow location</string>
     <string name="exit_map_desc">Exit Map Icon</string>
@@ -123,8 +122,6 @@
     <string name="about_minutes">About %1$d min</string>
     <string name="previous_step">Previous step</string>
     <string name="next_step">Next step</string>
-    <string name="icon">Attraction Material 3 Icon</string>
-    <string name="image">Activity Image</string>
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>

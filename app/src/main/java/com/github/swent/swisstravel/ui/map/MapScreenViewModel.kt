@@ -55,8 +55,8 @@ class MapScreenViewModel : ViewModel() {
   /** Internal routes observer that updates the route line API when routes change */
   private val routesObserver = RoutesObserver { result ->
     val nav = _uiState.value.mapboxNavigation ?: return@RoutesObserver
-    val api = _uiState.value.routeLineApi ?: return@RoutesObserver
     val alt = nav.getAlternativeMetadataFor(result.navigationRoutes)
+    val api = _uiState.value.routeLineApi ?: return@RoutesObserver
     api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
       if (drawData.value != null) {
         _routeRenderTick.value = _routeRenderTick.value + 1

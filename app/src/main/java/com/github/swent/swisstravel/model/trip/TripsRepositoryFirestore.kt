@@ -137,13 +137,13 @@ class TripsRepositoryFirestore(
     val endDate = map["endDate"] as? Timestamp ?: return null
     val locationMap = map["location"] as? Map<*, *> ?: return null
     val location = mapToLocation(locationMap) ?: return null
-    val description = map["description"] as? String ?: ""
+    val description = map["description"] as? String ?: return null
     val estimatedTime = (map["estimatedTime"] as? Number)?.toInt() ?: 0
     val imageUrls: List<String> =
         when (val raw = map["imageUrls"]) {
           is List<*> -> raw.mapNotNull { it as? String }
           is String -> listOf(raw)
-          null -> emptyList()
+          null -> return null
           else -> emptyList()
         }
 

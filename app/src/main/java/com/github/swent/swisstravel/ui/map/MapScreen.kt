@@ -24,6 +24,7 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Point
 import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
+import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -52,6 +53,23 @@ object MapScreenTestTags {
   const val MAP = "map"
 }
 
+private const val PINS_SOURCE_ID = "step-pins-source"
+private const val PINS_LAYER_ID = "step-pins-layer"
+private const val CIRCLE_COLOR = "#00FF00" // green
+private const val CIRCLE_STROKE_COLOR = "#FFFFFF"
+private const val CIRCLE_RADIUS = 6.0
+private const val CIRCLE_STROKE_WIDTH = 2.0
+private const val DEFAULT_ZOOM = 12.0
+private val edgeInsets = EdgeInsets(200.0, 200.0, 200.0, 200.0)
+
+/**
+ * Shows a full map with the user's location puck, and supports pins and routes drawing
+ *
+ * @param locations The locations to draw the routes
+ * @param drawRoute Whether to draw a route from the first location to the last
+ * @param viewModel The view model associated to the map screen
+ */
+@Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
@@ -62,14 +80,12 @@ fun MapScreen(
   val context = LocalContext.current
   val appCtx = context.applicationContext
 
-  // Mapbox + route line objects
+  // Mapbox + route line objects that belong to the screen scope
   val mapboxNavigation = remember {
     if (MapboxNavigationProvider.isCreated()) MapboxNavigationProvider.retrieve()
     else MapboxNavigationProvider.create(NavigationOptions.Builder(appCtx).build())
   }
   val routeLineApi = remember { MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build()) }
-  val routeLineViewOptions = remember { MapboxRouteLineViewOptions.Builder(context).build() }
-  val routeLineView = remember { MapboxRouteLineView(routeLineViewOptions) }
 
   LaunchedEffect(Unit) { viewModel.attachMapObjects(mapboxNavigation, routeLineApi) }
   LaunchedEffect(locations) { viewModel.updateLocations(locationsAsPoints(locations)) }
@@ -77,13 +93,7 @@ fun MapScreen(
   val ui by viewModel.uiState.collectAsState()
   val mapViewportState = rememberMapViewportState()
 
-  val pinsSourceId = remember { "step-pins-source" }
-  val pinsLayerId = remember { "step-pins-layer" }
-
-  var styleReady by remember { mutableStateOf(false) }
-  var routeLayersInitialized by remember { mutableStateOf(false) }
-
-  // Permission launcher
+  // Permission launcher unchanged
   val permissionLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res
         ->
@@ -92,7 +102,6 @@ fun MapScreen(
                 res[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         viewModel.setPermissionGranted(granted)
       }
-
   LaunchedEffect(Unit) {
     permissionLauncher.launch(
         arrayOf(
@@ -101,18 +110,7 @@ fun MapScreen(
 
   Scaffold { padding ->
     Box(Modifier.fillMaxSize().padding(padding)) {
-      MapContent(
-          mapViewportState = mapViewportState,
-          drawRoute = drawRoute,
-          ui = ui,
-          pinsSourceId = pinsSourceId,
-          pinsLayerId = pinsLayerId,
-          routeLineView = routeLineView,
-          routeLayersInitialized = routeLayersInitialized,
-          onRouteLayersInitialized = { routeLayersInitialized = it },
-          styleReady = styleReady,
-          onStyleReady = { styleReady = it },
-          locations = locations)
+      MapContent(mapViewportState = mapViewportState, drawRoute = drawRoute, ui = ui)
       MapOverlays(permissionGranted = ui.permissionGranted, mapViewportState = mapViewportState)
     }
   }
@@ -120,26 +118,34 @@ fun MapScreen(
 
 /* --------------------------- Split-out content blocks --------------------------- */
 
+/**
+ * The inner content of the map screen.
+ *
+ * @param mapViewportState The state of the map viewport
+ * @param drawRoute Whether to draw a route from the first location to the last
+ * @param ui The UI state of the map screen
+ */
 @Composable
 private fun MapContent(
     mapViewportState: MapViewportState,
     drawRoute: Boolean,
-    ui: NavigationMapUIState,
-    pinsSourceId: String,
-    pinsLayerId: String,
-    routeLineView: MapboxRouteLineView,
-    routeLayersInitialized: Boolean,
-    onRouteLayersInitialized: (Boolean) -> Unit,
-    styleReady: Boolean,
-    onStyleReady: (Boolean) -> Unit,
-    locations: List<Location>
+    ui: NavigationMapUIState
 ) {
-  val renderKey by viewModel<MapScreenViewModel>().routeRenderTick.collectAsState()
+  val context = LocalContext.current
+  val routeLineView = remember {
+    val opts = MapboxRouteLineViewOptions.Builder(context).build()
+    MapboxRouteLineView(opts)
+  }
+
+  // Internal state: not exposed to parent
+  var styleReady by remember { mutableStateOf(false) }
+  var routeLayersInitialized by remember { mutableStateOf(false) }
+
+  val vm: MapScreenViewModel = viewModel()
+  val renderKey by vm.routeRenderTick.collectAsState()
+
   var lastFitHash by remember { mutableStateOf<Int?>(null) }
-  val points =
-      remember(locations) {
-        locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }
-      }
+  val points: List<Point> = ui.locationsList
 
   MapboxMap(
       modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
@@ -148,9 +154,12 @@ private fun MapContent(
         MapEffect(Unit) { mapView ->
           mapView.mapboxMap.getStyle { style ->
             initRouteLayersOnce(
-                style, routeLineView, routeLayersInitialized, onRouteLayersInitialized)
-            ensurePinsSourceAndLayer(style, pinsSourceId, pinsLayerId)
-            onStyleReady(true)
+                style = style,
+                routeLineView = routeLineView,
+                alreadyInitialized = routeLayersInitialized,
+                setInitialized = { routeLayersInitialized = it })
+            ensurePinsSourceAndLayer(style)
+            styleReady = true
           }
         }
 
@@ -174,11 +183,9 @@ private fun MapContent(
         }
 
         // 4) Update pins source + visibility
-        MapEffect(styleReady to ui.locationsList to drawRoute) { mapView ->
+        MapEffect(styleReady to points to drawRoute) { mapView ->
           if (!styleReady) return@MapEffect
-          mapView.mapboxMap.getStyle { style ->
-            updatePins(style, pinsSourceId, pinsLayerId, ui.locationsList, drawRoute)
-          }
+          mapView.mapboxMap.getStyle { style -> updatePins(style, points, drawRoute) }
         }
 
         // 5) Camera fitting
@@ -191,6 +198,12 @@ private fun MapContent(
       }
 }
 
+/**
+ * The map overlays (i.e the buttons)
+ *
+ * @param permissionGranted Whether the location permission is granted
+ * @param mapViewportState The state of the map viewport
+ */
 @Composable
 private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewportState) {
   Box(Modifier.fillMaxSize()) {
@@ -211,8 +224,16 @@ private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewpor
   }
 }
 
-/* --------------------------- Small, focused helpers --------------------------- */
+/* --------------------------- Small helpers --------------------------- */
 
+/**
+ * A function to initialize the routing layers
+ *
+ * @param style The style to add to the layers
+ * @param routeLineView The route line view to initialize
+ * @param alreadyInitialized Whether the layers are already initialized
+ * @param setInitialized A callback to set the layers as initialized
+ */
 private fun initRouteLayersOnce(
     style: Style,
     routeLineView: MapboxRouteLineView,
@@ -224,35 +245,50 @@ private fun initRouteLayersOnce(
   setInitialized(true)
 }
 
-private fun ensurePinsSourceAndLayer(style: Style, pinsSourceId: String, pinsLayerId: String) {
-  style.getSourceAs<GeoJsonSource>(pinsSourceId)
-      ?: geoJsonSource(pinsSourceId) {}.also(style::addSource)
-  if (style.getLayer(pinsLayerId) == null) {
+/**
+ * A function to create the necessary layers for the pins
+ *
+ * @param style The style to add to the layers
+ */
+private fun ensurePinsSourceAndLayer(style: Style) {
+  style.getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
+      ?: geoJsonSource(PINS_SOURCE_ID) {}.also(style::addSource)
+  if (style.getLayer(PINS_LAYER_ID) == null) {
     style.addLayer(
-        circleLayer(pinsLayerId, pinsSourceId) {
-          circleRadius(6.0)
-          circleColor("#00FF00") // green
-          circleStrokeColor("#FFFFFF")
-          circleStrokeWidth(2.0)
+        circleLayer(PINS_LAYER_ID, PINS_SOURCE_ID) {
+          circleRadius(CIRCLE_RADIUS)
+          circleColor(CIRCLE_COLOR)
+          circleStrokeColor(CIRCLE_STROKE_COLOR)
+          circleStrokeWidth(CIRCLE_STROKE_WIDTH)
         })
   }
 }
 
-private fun updatePins(
-    style: Style,
-    pinsSourceId: String,
-    pinsLayerId: String,
-    locationsList: List<Point>,
-    drawRoute: Boolean
-) {
+/**
+ * A function to update the state of the pins
+ *
+ * @param style The style to update
+ * @param locationsList The list of locations to update
+ * @param drawRoute Whether to draw a route
+ */
+private fun updatePins(style: Style, locationsList: List<Point>, drawRoute: Boolean) {
   style
-      .getSourceAs<GeoJsonSource>(pinsSourceId)
+      .getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
       ?.featureCollection(
           FeatureCollection.fromFeatures(
               if (!drawRoute) locationsList.map { Feature.fromGeometry(it) } else emptyList()))
-  style.getLayer(pinsLayerId)?.visibility(if (drawRoute) Visibility.NONE else Visibility.VISIBLE)
+  style.getLayer(PINS_LAYER_ID)?.visibility(if (drawRoute) Visibility.NONE else Visibility.VISIBLE)
 }
 
+/**
+ * A function to fit the camera depending on the points and if the routes are drawn
+ *
+ * @param mapViewportState The state of the map viewport
+ * @param points The list of points to fit
+ * @param drawRoute Whether to draw a route
+ * @param lastHash The last hash of the points
+ * @param setHash A callback to set the hash of the points
+ */
 private suspend fun fitCamera(
     mapViewportState: MapViewportState,
     points: List<Point>,
@@ -263,21 +299,24 @@ private suspend fun fitCamera(
   if (points.isEmpty()) return
   if (!drawRoute && points.size == 1) {
     mapViewportState.setCameraOptions(
-        CameraOptions.Builder().center(points.first()).zoom(12.0).build())
+        CameraOptions.Builder().center(points.first()).zoom(DEFAULT_ZOOM).build())
     setHash(null)
     return
   }
   val h = points.hashCode()
   if (lastHash != h) {
     setHash(h)
-    val cam =
-        mapViewportState.cameraForCoordinates(
-            points, coordinatesPadding = EdgeInsets(200.0, 200.0, 200.0, 200.0))
+    val cam = mapViewportState.cameraForCoordinates(points, coordinatesPadding = edgeInsets)
     mapViewportState.setCameraOptions(cam)
   }
 }
 
-private fun updatePuck(mapView: com.mapbox.maps.MapView, permissionGranted: Boolean) {
+/**
+ * A function to update the location puck
+ *
+ * @param mapView The map view to update
+ */
+private fun updatePuck(mapView: MapView, permissionGranted: Boolean) {
   mapView.location.updateSettings {
     enabled = permissionGranted
     if (permissionGranted) {

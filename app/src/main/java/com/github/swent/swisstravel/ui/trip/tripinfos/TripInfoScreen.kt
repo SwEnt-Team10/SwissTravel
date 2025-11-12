@@ -56,6 +56,15 @@ object TripInfoScreenTestTags {
   const val FULLSCREEN_EXIT = "fullScreenExit"
 }
 
+/**
+ * A composable that shows a trip's info. It shows the next step the user should do and shows the
+ * itinerary on the map It also shows the activities the user has fetched during creation.
+ *
+ * @param uid The trip's ID.
+ * @param tripInfoViewModel The view model to use.
+ * @param onMyTrips Called when the user clicks the back button.
+ * @param onEditTrip Called when the user clicks the edit button.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoScreen(
@@ -229,8 +238,7 @@ fun TripInfoScreen(
                           shape = RoundedCornerShape(12.dp),
                           colors =
                               CardDefaults.cardColors(
-                                  containerColor = MaterialTheme.colorScheme.surface),
-                          elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
+                                  containerColor = MaterialTheme.colorScheme.surface)) {
                             Box(
                                 modifier =
                                     Modifier.fillMaxWidth()
@@ -411,6 +419,11 @@ private fun FavoriteButton(
 
 /* ---------- Small helpers ---------- */
 
+/**
+ * Formats the time into a readable string.
+ *
+ * @param ts The timestamp to format.
+ */
 private fun fmtTime(ts: Timestamp?): String {
   val dt =
       ts?.let {
@@ -421,6 +434,12 @@ private fun fmtTime(ts: Timestamp?): String {
   return dt.format(DateTimeFormatter.ofPattern("dd LLL yyyy HH:mm"))
 }
 
+/**
+ * Computes the title of the current step in the schedule.
+ *
+ * @param schedule The schedule to use.
+ * @param idx The index of the current step.
+ */
 private fun currentStepTitle(schedule: List<TripElement>, idx: Int): String {
   if (schedule.isEmpty()) return "—"
   val i = idx.coerceIn(0, schedule.lastIndex)
@@ -430,12 +449,12 @@ private fun currentStepTitle(schedule: List<TripElement>, idx: Int): String {
   }
 }
 
-private fun shouldDrawRouteForStep(schedule: List<TripElement>, idx: Int): Boolean {
-  if (schedule.isEmpty()) return false
-  val i = idx.coerceIn(0, schedule.lastIndex)
-  return schedule[i] is TripElement.TripSegment
-}
-
+/**
+ * Computes the time range of the current step in the schedule.
+ *
+ * @param schedule The schedule to use.
+ * @param idx The index of the current step.
+ */
 private fun currentStepTime(schedule: List<TripElement>, idx: Int): String {
   if (schedule.isEmpty()) return "—"
   val i = idx.coerceIn(0, schedule.lastIndex)
