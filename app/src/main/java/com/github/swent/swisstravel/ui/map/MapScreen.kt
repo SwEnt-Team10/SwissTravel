@@ -25,11 +25,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.mapbox.geojson.Point
+import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
 import com.mapbox.maps.plugin.PuckBearing
+import com.mapbox.maps.plugin.annotation.annotations
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.createPointAnnotationManager
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.navigation.base.options.NavigationOptions
@@ -68,7 +72,18 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
   val ui by viewModel.uiState.collectAsState()
   val mapViewportState = rememberMapViewportState()
 
+  // Use the same points everywhere
+  val points =
+      remember(locations) {
+        locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }
+      }
+
   var styleReady by remember { mutableStateOf(false) }
+
+  // Remember a single annotation manager for pins
+  var pointAnnotationManager by remember {
+    mutableStateOf<com.mapbox.maps.plugin.annotation.generated.PointAnnotationManager?>(null)
+  }
 
   val permissionLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { res
@@ -92,23 +107,33 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
       MapboxMap(
           modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
           mapViewportState = mapViewportState) {
-            // Init layers
             MapEffect(Unit) { mapView ->
               mapView.mapboxMap.getStyle { style ->
                 routeLineView.initializeLayers(style)
+                if (pointAnnotationManager == null) {
+                  pointAnnotationManager = mapView.annotations.createPointAnnotationManager()
+                }
                 styleReady = true
               }
             }
 
-            MapEffect(ui.locationsList) {
-              val pts = ui.locationsList
-              if (pts.isNotEmpty()) {
-                val h = pts.hashCode()
+            // Camera behavior:
+            // - 1 point  -> center + closer zoom (pin mode)
+            // - 2+ points -> fit to coordinates (route mode)
+            MapEffect(points) {
+              if (points.isEmpty()) return@MapEffect
+              if (points.size == 1) {
+                val p = points.first()
+                mapViewportState.setCameraOptions(
+                    CameraOptions.Builder().center(p).zoom(12.0).build())
+                lastFitHash = null
+              } else {
+                val h = points.hashCode()
                 if (lastFitHash != h) {
                   lastFitHash = h
                   val cam =
                       mapViewportState.cameraForCoordinates(
-                          pts, coordinatesPadding = EdgeInsets(100.0, 100.0, 100.0, 100.0))
+                          points, coordinatesPadding = EdgeInsets(100.0, 100.0, 100.0, 100.0))
                   mapViewportState.setCameraOptions(cam)
                 }
               }
@@ -126,15 +151,26 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
               }
             }
 
+            // Render route line **only when we have 2+ points**
             val renderKey by viewModel.routeRenderTick.collectAsState()
-            MapEffect(styleReady to renderKey) { mapView ->
+            MapEffect(styleReady to renderKey to points.size) { mapView ->
               if (!styleReady) return@MapEffect
+              if (points.size < 2) return@MapEffect
               val api = ui.routeLineApi ?: return@MapEffect
               mapView.mapboxMap.getStyle { style ->
                 api.getRouteDrawData { drawData ->
                   routeLineView.renderRouteDrawData(style, drawData)
                   viewModel.setRouteRendered(true)
                 }
+              }
+            }
+
+            MapEffect(styleReady to points) { _ ->
+              val mgr = pointAnnotationManager ?: return@MapEffect
+              mgr.deleteAll()
+              if (styleReady && points.size == 1) {
+                val opts = PointAnnotationOptions().withPoint(points.first())
+                mgr.create(opts)
               }
             }
           }
@@ -161,6 +197,7 @@ fun MapScreen(locations: List<Location>, viewModel: MapScreenViewModel = viewMod
   DisposableEffect(Unit) {
     onDispose {
       routeLineView.cancel()
+      pointAnnotationManager?.deleteAll()
       viewModel.setRouteRendered(false)
     }
   }

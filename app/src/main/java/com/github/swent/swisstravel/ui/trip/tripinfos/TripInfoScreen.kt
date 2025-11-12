@@ -296,7 +296,7 @@ fun TripInfoScreen(
                 }
 
                 // Steps list
-                itemsIndexed(schedule, key = { idx, el -> el.hashCode() }) { idx, el ->
+                itemsIndexed(schedule) { idx, el ->
                   val stepNo = idx + 1
                   when (el) {
                     is TripElement.TripActivity -> {
@@ -364,13 +364,7 @@ private fun mapLocationsForStep(schedule: List<TripElement>, idx: Int): List<Loc
   val i = idx.coerceIn(0, schedule.lastIndex)
   return when (val el = schedule[i]) {
     is TripElement.TripSegment -> listOf(el.route.from, el.route.to)
-    is TripElement.TripActivity -> {
-      // Show the next segment if any (activity → upcoming travel)
-      val nextSeg =
-          schedule.drop(i + 1).firstOrNull { it is TripElement.TripSegment }
-              as? TripElement.TripSegment
-      nextSeg?.let { listOf(it.route.from, it.route.to) } ?: listOf(el.activity.location)
-    }
+    is TripElement.TripActivity -> listOf(el.activity.location)
   }
 }
 
