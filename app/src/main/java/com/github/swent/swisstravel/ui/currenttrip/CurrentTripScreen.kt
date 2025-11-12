@@ -59,9 +59,7 @@ fun CurrentTripScreen(
     Scaffold(
         content = { pd ->
           Column(
-              modifier =
-                  Modifier.fillMaxSize()
-                      .padding(pd),
+              modifier = Modifier.fillMaxSize().padding(pd),
               verticalArrangement = Arrangement.Center,
               horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
