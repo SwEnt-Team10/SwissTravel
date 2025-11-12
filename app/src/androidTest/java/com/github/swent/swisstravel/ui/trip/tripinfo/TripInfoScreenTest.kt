@@ -4,7 +4,6 @@ import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -268,6 +267,7 @@ class TripInfoScreenTest {
   private fun getString(resId: Int) =
       androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
           .getString(resId)
+
   @Test
   fun backButtonNotShownOnCurrentTripScreen() {
     composeTestRule.setContent { TripInfoScreen(uid = "whatever", isOnCurrentTripScreen = true) }

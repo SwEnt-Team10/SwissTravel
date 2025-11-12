@@ -72,6 +72,7 @@ fun TripInfoScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
+    isOnCurrentTripScreen: Boolean = false
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
@@ -159,14 +160,16 @@ fun TripInfoScreen(
                     color = MaterialTheme.colorScheme.onBackground)
               },
               navigationIcon = {
-                IconButton(
-                    onClick = { showMap = false },
-                    modifier = Modifier.testTag(TripInfoScreenTestTags.BACK_BUTTON)) {
-                      Icon(
-                          imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                          contentDescription = stringResource(R.string.back_to_my_trips),
-                          tint = MaterialTheme.colorScheme.onBackground)
-                    }
+                if (!isOnCurrentTripScreen) {
+                  IconButton(
+                      onClick = { showMap = false },
+                      modifier = Modifier.testTag(TripInfoScreenTestTags.BACK_BUTTON)) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.back_to_my_trips),
+                            tint = MaterialTheme.colorScheme.onBackground)
+                      }
+                }
               },
               actions = {
                 val isFavorite = ui.isFavorite
