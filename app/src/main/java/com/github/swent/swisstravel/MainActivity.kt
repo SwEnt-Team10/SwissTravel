@@ -33,6 +33,7 @@ import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
+import com.github.swent.swisstravel.ui.authentication.SignUpScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.map.MapLocationScreen
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
@@ -186,6 +187,11 @@ fun SwissTravelApp(
                   SignInScreen(
                       credentialManager = credentialManager,
                       onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
+                }
+                composable(Screen.SignUp.route) {
+                  SignUpScreen(
+                      onSignUpSuccess = { navigationActions.navigateTo(Screen.MyTrips) },
+                      onPrevious = { navigationActions.navigateTo(Screen.Landing) })
                 }
               }
 
