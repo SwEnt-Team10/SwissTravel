@@ -51,14 +51,7 @@ class SelectActivities(
     val totalNbActivities = (NB_ACTIVITIES_PER_DAY * days).toDouble()
 
     // Calculate the total number of steps for progress reporting.
-    val totalSteps =
-        if (userPreferences.isNotEmpty()) {
-          // Each destination-preference pair counts as a step.
-          userPreferences.size * allDestinations.size
-        } else {
-          // If no preferences, each destination counts as one step.
-          allDestinations.size
-        }
+    val totalSteps = totalSteps(allDestinations.size, userPreferences.size)
 
     val numberOfActivityToFetchPerStep = ceil(totalNbActivities / totalSteps).toInt()
     var completedSteps = 0
@@ -118,6 +111,22 @@ class SelectActivities(
     onProgress(1f)
 
     return filteredActivities
+  }
+
+  /**
+   * Calculates the total number of steps based on the number of destinations and preferences.
+   *
+   * @param nbDestinations The number of destinations.
+   * @param nbPreferences The number of user preferences.
+   */
+  private fun totalSteps(nbDestinations: Int, nbPreferences: Int): Int {
+    return if (nbPreferences > 0) {
+      // Each destination-preference pair counts as a step.
+      nbPreferences * nbDestinations
+    } else {
+      // If no preferences, each destination counts as one step.
+      nbDestinations
+    }
   }
 
   /**
