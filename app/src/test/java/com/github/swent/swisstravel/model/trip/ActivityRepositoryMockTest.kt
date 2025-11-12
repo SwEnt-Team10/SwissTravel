@@ -403,7 +403,6 @@ class ActivityRepositoryMockTest {
 
     // Verify the URL was built correctly
     val capturedUrl = slot.captured.url
-    println(capturedUrl)
     assertTrue(capturedUrl.toString().contains("hitsPerPage=5"))
     assertTrue(capturedUrl.toString().contains("facets=reachabilitylocation&facet.filter"))
     assertTrue(capturedUrl.toString().contains("reachabilitylocation:closetopublictransport"))
