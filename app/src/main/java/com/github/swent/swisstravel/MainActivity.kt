@@ -338,7 +338,10 @@ fun SwissTravelApp(
                   LoadingScreen(
                       progress = loadingProgress,
                       viewModel = viewModel,
-                      navigationActions = navigationActions)
+                      onSuccess = {
+                        navigationActions.navigateTo(Screen.MyTrips, clearBackStack = true)
+                      },
+                      onFailure = { navigationActions.goBack() })
                 }
               }
             }
