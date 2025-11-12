@@ -124,6 +124,99 @@ class TripsRepositoryFirestorePublicTest {
   }
 
   @Test
+  fun `getTrip handles singleton imageUrls by treating as singleton list`() = runTest {
+    val doc = mockk<DocumentSnapshot>()
+    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("tripImgUrls").get() } returns
+        Tasks.forResult(doc)
+    every { doc.id } returns "tripImgUrls"
+    every { doc.getString("name") } returns "TripImageUrls"
+    every { doc.getString("ownerId") } returns "owner1"
+
+    val locationMap =
+        mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
+    val activityMap =
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "location" to locationMap,
+            "description" to "ImageUrls Activity",
+            "imageUrls" to "http://example.com/solo.jpg",
+            "estimatedTime" to 900)
+
+    every { doc.get("activities") } returns listOf(activityMap)
+    every { doc.get("locations") } returns listOf(locationMap)
+    every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
+    every { doc.get("tripProfile") } returns
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "preferredLocations" to listOf(locationMap),
+            "preferences" to emptyList<Map<String, Any>>(),
+            "adults" to 1L,
+            "children" to 0L)
+    every { doc.getBoolean("favorite") } returns false
+    every { doc.getBoolean("currentTrip") } returns false
+
+    val trip = repo.getTrip("tripImgUrls")
+
+    assertEquals(1, trip.activities.size)
+    assertTrue(!trip.activities.first().imageUrls.isEmpty())
+  }
+
+  @Test
+  fun `getTrip skips invalid activities gracefully`() = runTest {
+    val doc = mockk<DocumentSnapshot>()
+    every {
+      mockDb.collection(TRIPS_COLLECTION_PATH).document("tripWithBadActivities").get()
+    } returns Tasks.forResult(doc)
+    every { doc.id } returns "tripWithBadActivities"
+    every { doc.getString("name") } returns "TripWithBadActivities"
+    every { doc.getString("ownerId") } returns "owner1"
+
+    // One valid activity, one invalid (missing location)
+    val validActivityMap =
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "location" to
+                mapOf(
+                    "name" to "ValidPlace",
+                    "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0)),
+            "description" to "Valid activity",
+            "imageUrls" to listOf("img1", "img2"),
+            "estimatedTime" to 1800)
+    val invalidActivityMap =
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            // Missing location entirely — mapToActivity should return null
+            "description" to "Invalid activity",
+            "imageUrls" to listOf("x"),
+            "estimatedTime" to 1200)
+
+    every { doc.get("activities") } returns listOf(validActivityMap, invalidActivityMap)
+    every { doc.get("locations") } returns emptyList<Map<String, Any>>()
+    every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
+    every { doc.get("tripProfile") } returns
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "preferredLocations" to emptyList<Map<String, Any>>(),
+            "preferences" to emptyList<Map<String, Any>>(),
+            "adults" to 1L,
+            "children" to 0L)
+    every { doc.getBoolean("favorite") } returns false
+    every { doc.getBoolean("currentTrip") } returns false
+
+    val trip = repo.getTrip("tripWithBadActivities")
+
+    // Then
+    assertEquals("tripWithBadActivities", trip.uid)
+    assertEquals(1, trip.activities.size) // invalid one skipped
+    assertEquals("Valid activity", trip.activities.first().description)
+  }
+
+  @Test
   fun `getTrip handles empty optional lists`() = runTest {
     val doc = mockk<DocumentSnapshot>()
     every { mockDb.collection(TRIPS_COLLECTION_PATH).document("tripEmpty").get() } returns
