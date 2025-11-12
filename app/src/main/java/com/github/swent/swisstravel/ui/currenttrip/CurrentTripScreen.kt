@@ -35,7 +35,7 @@ object CurrentTripScreenTestTags {
 
 @Composable
 fun CurrentTripScreen(
-    navigationActions: NavigationActions,
+    navigationActions: NavigationActions? = null,
     isLoggedIn: Boolean = false,
     myTripsViewModel: MyTripsViewModel = viewModel(),
 ) {
@@ -52,8 +52,8 @@ fun CurrentTripScreen(
   if (currentTrip != null) {
     TripInfoScreen(
         currentTrip.uid,
-        onFullscreenClick = { navigationActions.navigateTo(Screen.TripInfoMap) },
-        onEditTrip = { navigationActions.navigateToEditTrip(currentTrip.uid) },
+        onFullscreenClick = { navigationActions?.navigateTo(Screen.TripInfoMap) },
+        onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
         isOnCurrentTripScreen = true)
   } else {
     Scaffold(
@@ -73,7 +73,7 @@ fun CurrentTripScreen(
                 Spacer(modifier = Modifier.height(72.dp))
                 // Create a new trip
                 Button(
-                    onClick = { navigationActions.navigateTo(Screen.TripSettings1) },
+                    onClick = { navigationActions?.navigateTo(Screen.TripSettings1) },
                     enabled = isLoggedIn,
                     modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                       Text(
