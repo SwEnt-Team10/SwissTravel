@@ -34,20 +34,21 @@ class ComposableTests : SwissTravelTest() {
   @Test
   fun counterTest() {
     val count = mutableStateOf(0)
+    val label = "test"
     composeTestRule.setContent {
       Counter(
-          label = "test",
+          label = label,
           count = count.value,
           onIncrement = { count.value++ },
           onDecrement = { count.value-- },
           enableButton = count.value > 0)
     }
-    composeTestRule.onNodeWithTag("test" + CounterTestTags.COUNTER).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(CounterTestTags.DECREMENT).performClick()
+    composeTestRule.onNodeWithTag(label + CounterTestTags.COUNTER).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(label + CounterTestTags.DECREMENT).performClick()
     assertEquals(0, count.value)
-    composeTestRule.onNodeWithTag(CounterTestTags.INCREMENT).performClick()
+    composeTestRule.onNodeWithTag(label + CounterTestTags.INCREMENT).performClick()
     assertEquals(1, count.value)
-    composeTestRule.onNodeWithTag(CounterTestTags.COUNT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(label + CounterTestTags.COUNT).assertIsDisplayed()
   }
 
   @Test

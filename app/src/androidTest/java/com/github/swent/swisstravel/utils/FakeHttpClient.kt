@@ -4,6 +4,7 @@ import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -28,6 +29,45 @@ object FakeHttpClient {
         assertEquals("json", request.url.queryParameter("format"))
       }
       // TO-DO : parse the code so that the response looks like the actual API response
+      val fakeJson =
+          when {
+            url.contains("nominatim", ignoreCase = true) ->
+                """
+          [
+            {
+              "display_name": "Café de Paris, 26 Rue du Mont-Blanc, 1201 Genève, Genève, Suisse",
+              "lat": "46.2095",
+              "lon": "6.1432",
+              "address": {
+                "amenity": "Café de Paris",
+                "house_number": "26",
+                "road": "Rue du Mont-Blanc",
+                "postcode": "1201",
+                "city": "Genève",
+                "state": "Genève",
+                "country": "Suisse",
+                "country_code": "ch"
+              }
+            },
+            {
+              "display_name": "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne, Vaud, Suisse",
+              "lat": "46.5191",
+              "lon": "6.5668",
+              "address": {
+                "amenity": "École Polytechnique Fédérale de Lausanne (EPFL)",
+                "road": "Route Cantonale",
+                "postcode": "1015",
+                "city": "Lausanne",
+                "state": "Vaud",
+                "country": "Suisse",
+                "country_code": "ch"
+              }
+            }
+          ]
+        """
+                    .trimIndent()
+            else -> """{"result":"ok"}"""
+          }
 
       return Response.Builder() // you should change this code to adapt it to the APIs
           .code(200)

@@ -96,7 +96,6 @@ class NominatimLocationRepository(
               "aeroway", // airports
               "hospital", // hospitals
               "station", // train/bus stations
-              "amenity", // general amenities
               "highway" // major highways
               )
 

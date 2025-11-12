@@ -11,6 +11,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 
+object TravelersSelectorTestTag {
+  const val ADULT_INCREMENT = "adultIncrement"
+  const val ADULT_DECREMENT = "adultDecrement"
+  const val CHILD_INCREMENT = "childIncrement"
+  const val CHILD_DECREMENT = "childDecrement"
+}
+
 /**
  * A composable that displays a selector for the number of adults and children.
  *
