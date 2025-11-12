@@ -14,11 +14,22 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Tests for the [CurrentTripScreen] composable
+ *
+ * First, tests that the current trip is displayed when it exists, and that the create trip buttons
+ * are not displayed. Second, tests that the current trip is not displayed when it does not exist,
+ * and that the create trip buttons are displayed.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class CurrentTripScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
 
+  /**
+   * Tests that the current trip is displayed on the current trip tab (when there is a current
+   * trip), and also checks that the buttons to create a trip are not displayed.
+   */
   @Test
   fun currentTripIsDisplayedWhenItExists() {
     val currentTrip =
@@ -50,6 +61,10 @@ class CurrentTripScreenTest {
     composeTestRule.onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT).assertIsNotDisplayed()
   }
 
+  /**
+   * Tests that the current trip is not displayed on the current trip tab when there is no current
+   * trip, and also checks that the buttons to create a trip are in fact displayed.
+   */
   @Test
   fun currentTripIsNotDisplayedWhenItDoesNotExist() {
     val notCurrentTrip =
