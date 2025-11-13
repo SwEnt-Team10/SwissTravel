@@ -3,11 +3,14 @@ package com.github.swent.swisstravel.ui.tripcreation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
@@ -17,6 +20,7 @@ import java.time.ZoneId
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -58,10 +62,13 @@ sealed interface ValidationEvent {
  * ViewModel managing the state and logic for trip settings.
  *
  * @property tripsRepository Repository for managing trip data.
+ * @property userRepository Repository for managing user data.
+ * @property activityRepository Repository for managing activity data.
  */
 class TripSettingsViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
-    private val userRepository: UserRepository = UserRepositoryFirebase()
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) : ViewModel() {
 
   private val _tripSettings = MutableStateFlow(TripSettings())
@@ -70,14 +77,17 @@ class TripSettingsViewModel(
   private val _validationEventChannel = Channel<ValidationEvent>()
   val validationEvents = _validationEventChannel.receiveAsFlow()
 
+  private val _isLoading = MutableStateFlow(false)
+
+  private val _loadingProgress = MutableStateFlow(0f)
+  val loadingProgress = _loadingProgress.asStateFlow()
+
   fun updateName(name: String) {
     _tripSettings.update { it.copy(name = name) }
   }
 
   fun updateDates(start: LocalDate, end: LocalDate) {
-    _tripSettings.update {
-      it.copy(name = "Trip from ${start.toString()}", date = TripDate(start, end))
-    }
+    _tripSettings.update { it.copy(name = "Trip from $start", date = TripDate(start, end)) }
   }
 
   fun updateTravelers(adults: Int, children: Int) {
@@ -118,8 +128,22 @@ class TripSettingsViewModel(
    * Trip should be saved once an internet connection is available.
    */
   fun saveTrip() {
+    if (_isLoading.value) return
     viewModelScope.launch {
+      _isLoading.value = true
+      _loadingProgress.value = 0f
       try {
+        val selectActivities =
+            SelectActivities(
+                tripSettings = tripSettings.value,
+                onProgress = { progress -> _loadingProgress.value = progress },
+                activityRepository = activityRepository)
+        val selectedActivities = selectActivities.addActivities()
+        setDestinations(selectedActivities.map { it.location })
+
+        Log.d("TripSettingsViewModel", "Selected activities: $selectedActivities")
+        // TODO Run trip scheduler to organize activities
+
         val settings = _tripSettings.value
         val newUid = tripsRepository.getNewUid()
         val user = userRepository.getCurrentUser()
@@ -135,7 +159,7 @@ class TripSettingsViewModel(
 
         val startTs = Timestamp(start.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
         val endTs = Timestamp(end.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
-        val finalName = settings.name.ifBlank { "Trip from ${settings.date.startDate.toString()}" }
+        val finalName = settings.name.ifBlank { "Trip from ${settings.date.startDate}" }
 
         val tripProfile =
             TripProfile(
@@ -155,7 +179,7 @@ class TripSettingsViewModel(
                 ownerId = user.uid,
                 locations = settings.destinations,
                 routeSegments = emptyList(),
-                activities = emptyList(),
+                activities = selectedActivities,
                 tripProfile = tripProfile,
                 isFavorite = false,
                 isCurrentTrip = false)
@@ -165,6 +189,8 @@ class TripSettingsViewModel(
       } catch (e: Exception) {
         _validationEventChannel.send(
             ValidationEvent.SaveError(e.message ?: "An unknown error occurred"))
+      } finally {
+        _isLoading.value = false
       }
     }
   }

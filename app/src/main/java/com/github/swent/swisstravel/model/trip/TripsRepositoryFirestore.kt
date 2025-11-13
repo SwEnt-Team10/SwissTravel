@@ -128,16 +128,34 @@ class TripsRepositoryFirestore(
   /**
    * Converts a Firestore map into an [Activity] object.
    *
-   * @param map The Firestore map expected to contain "startDate", "endDate", and "location".
+   * @param map The Firestore map expected to contain "startDate", "endDate", "location",
+   *   "description", "imageUrls", and "estimatedTime" keys.
    * @return An [Activity] if all required fields are valid, or `null` otherwise.
    */
   private fun mapToActivity(map: Map<*, *>): Activity? {
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
     val locationMap = map["location"] as? Map<*, *> ?: return null
-    val description = map["description"] as? String ?: return null
     val location = mapToLocation(locationMap) ?: return null
-    return Activity(startDate, endDate, location, description)
+    val description = map["description"] as? String ?: return null
+    val estimatedTime = (map["estimatedTime"] as? Number)?.toInt() ?: 0
+    val imageUrls: List<String> =
+        when (val raw = map["imageUrls"]) {
+          is List<*> -> raw.mapNotNull { it as? String }
+          is String -> listOf(raw)
+          null -> return null
+          else -> emptyList()
+        }
+
+    val act =
+        Activity(
+            startDate = startDate,
+            endDate = endDate,
+            location = location,
+            description = description,
+            imageUrls = imageUrls,
+            estimatedTime = estimatedTime)
+    return act
   }
 
   /**

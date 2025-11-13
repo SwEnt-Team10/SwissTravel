@@ -57,6 +57,8 @@ object LocationTextTestTags {
  * @param name The label for the text field.
  * @param clearOnSelect Whether to clear the text field after a location is selected.
  */
+
+// Parts of this code was written with the assistance of AI.
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun LocationAutocompleteTextField(
@@ -68,21 +70,56 @@ fun LocationAutocompleteTextField(
     clearOnSelect: Boolean = false
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
-  // Local text state to avoid immediate writes to the ViewModel on every keystroke.
-  // This prevents frequent state updates that can cause recomposition/focus loss.
+  // Local text state. This is the single source of truth for what's visible in the text field.
   var text by rememberSaveable { mutableStateOf(state.locationQuery) }
   var expanded by remember { mutableStateOf(false) }
+
+  // Track if we're in the middle of a selection to prevent the text effect from triggering
+  var isSelecting by remember { mutableStateOf(false) }
+
+  // This effect synchronizes the text field *from* the ViewModel *to* the UI.
+  // It runs ONLY when a selection is made in the ViewModel.
+  LaunchedEffect(state.selectedLocation) {
+    state.selectedLocation?.let { location ->
+      isSelecting = true
+      text = if (clearOnSelect) "" else location.name
+      // Small delay to ensure the text update is processed before we reset the flag
+      kotlinx.coroutines.delay(50)
+      isSelecting = false
+    }
+  }
+
+  // This is the single effect that synchronizes user input *from* the UI *to* the ViewModel.
+  LaunchedEffect(Unit) {
+    snapshotFlow { text }
+        .distinctUntilChanged()
+        .debounce(700)
+        .collectLatest { currentText ->
+          // Skip processing if we're in the middle of a selection
+          if (isSelecting) return@collectLatest
+
+          // If text differs from selected location, it means user is typing
+          if (currentText != state.selectedLocation?.name) {
+            // Clear the selection first
+            addressTextFieldViewModel.clearSelectedLocation()
+
+            // Fetch suggestions (this API call will be cancelled if text changes again)
+            addressTextFieldViewModel.setLocationQuery(currentText)
+          }
+        }
+  }
 
   ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
     OutlinedTextField(
         value = text,
-        onValueChange = {
-          text = it
-          // open the dropdown while typing
+        // onValueChange remains lightweight and lag-free.
+        onValueChange = { newText ->
+          text = newText
           expanded = true
         },
         modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
-        label = { Text(name) })
+        label = { Text(name) },
+        singleLine = true)
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
         onDismissRequest = { expanded = false }) {
@@ -91,63 +128,31 @@ fun LocationAutocompleteTextField(
             DropdownMenuItem(
                 text = {
                   Row(verticalAlignment = Alignment.CenterVertically) {
-                    // Display the image if the URL is not null
                     if (location.imageUrl != null) {
                       AsyncImage(
                           model = location.imageUrl,
                           contentDescription = "${location.name} image",
-                          // It's good practice to at least keep contentScale
                           placeholder = painterResource(id = R.drawable.debug_placeholder),
                           contentScale = ContentScale.Crop,
-                          modifier =
-                              Modifier.size(40.dp) // Set a fixed size for the image
-                                  .clip(CircleShape) // Clip it to a circle
-                          )
+                          modifier = Modifier.size(40.dp).clip(CircleShape))
                       Spacer(modifier = Modifier.width(16.dp))
                     }
                     Text(location.name, modifier = Modifier.weight(1f))
                   }
                 },
                 onClick = {
-                  // Update both ViewModel (selected) and local text state
                   addressTextFieldViewModel.setLocation(location)
-                  text = if (clearOnSelect) "" else location.name
                   onLocationSelected(location)
                   expanded = false
                 },
                 modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION))
 
-            // Add a divider between items for clarity (but not after the last item)
             if (index < suggestions.lastIndex) {
               HorizontalDivider(
                   modifier = Modifier.fillMaxWidth(),
                   thickness = 1.dp,
                   color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
-          }
-        }
-  }
-
-  // When the selectedLocation from the ViewModel changes (e.g., setLocation called
-  // from elsewhere), update the local text to reflect it.
-  LaunchedEffect(state.selectedLocation) {
-    state.selectedLocation?.let {
-      if (!clearOnSelect) {
-        text = it.name
-      }
-    }
-  }
-
-  // Debounce user input and call the ViewModel only after the user stops typing.
-  LaunchedEffect(Unit) {
-    snapshotFlow { text }
-        .debounce(1000)
-        .distinctUntilChanged()
-        .collectLatest { query ->
-          // Only call the view model when the query changed and is different from
-          // the current ViewModel state to avoid unnecessary network calls.
-          if (query != state.locationQuery) {
-            addressTextFieldViewModel.setLocationQuery(query)
           }
         }
   }

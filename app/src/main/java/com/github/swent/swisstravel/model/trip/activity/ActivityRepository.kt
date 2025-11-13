@@ -51,4 +51,20 @@ interface ActivityRepository {
    *   empty if no matches are found or if the request fails.
    */
   suspend fun searchDestinations(query: String, limit: Int = 3): List<Activity>
+
+  /**
+   * Get activities near the given coordinate with the given preferences.
+   *
+   * @param preferences The preferences to use.
+   * @param coordinate The coordinate to get activities near.
+   * @param radiusMeters The radius in meters to search for activities.
+   * @param limit The limit of the number of activities to return.
+   * @return A list of activities near the given coordinate with the given preferences.
+   */
+  suspend fun getActivitiesNearWithPreference(
+      preferences: List<Preference>,
+      coordinate: Coordinate,
+      radiusMeters: Int,
+      limit: Int
+  ): List<Activity>
 }

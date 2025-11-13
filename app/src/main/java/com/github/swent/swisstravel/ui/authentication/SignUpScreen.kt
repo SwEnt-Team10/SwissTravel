@@ -163,7 +163,7 @@ fun SignUpScreen(
             Spacer(modifier = Modifier.height(24.dp))
             GoogleSignInButton(
                 type = GoogleButtonType.SIGN_UP,
-                onSignInClick = { signUpViewModel.signUpWithGoogle(context, credentialManager) })
+                onSignInClick = { signUpViewModel.signInWithGoogle(context, credentialManager) })
           }
         }
       }

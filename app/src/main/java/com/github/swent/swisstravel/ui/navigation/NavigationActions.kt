@@ -32,16 +32,16 @@ sealed class Screen(
 
   object PastTrips : Screen(route = "past_trips", name = "Past trips")
 
-  object Map : Screen(route = "map", name = "Map", isTopLevelDestination = true)
-
   object CurrentTrip :
       Screen(route = "current_trip", name = "Current trip", isTopLevelDestination = true)
 
-  object TripSettings1 : Screen(route = "trip_settings_1", name = "Trip Settings 1")
+  object TripSettingsDates : Screen(route = "trip_settings_dates", name = "Trip Settings Dates")
 
-  object TripSettings2 : Screen(route = "trip_settings_2", name = "Trip Settings 2")
+  object TripSettingsTravelers :
+      Screen(route = "trip_settings_travelers", name = "Trip Settings Travelers")
 
-  object TripSettings3 : Screen(route = "trip_settings_3", name = "Trip Settings 3")
+  object TripSettingsPreferences :
+      Screen(route = "trip_settings_preferences", name = "Trip Settings Preferences")
 
   data class TripInfo(val uid: String) : Screen(route = "trip_info/${uid}", name = "Trip Info") {
     companion object {
@@ -50,21 +50,19 @@ sealed class Screen(
     }
   }
 
-  object TripInfoMap : Screen(route = "trip_info_map", name = "Trip Info Map")
-
   object TripSettingsArrivalDeparture :
       Screen(route = "arrival_departure", name = "Arrival_Departure")
 
   object TripSettingsFirstDestination :
       Screen(route = "first_destination", name = "First destination")
 
-  object TripSettingsName : Screen(route = "trip_name", name = "Name your trip")
-
   object EditTrip : Screen(route = "edit_trip/{tripId}", name = "Edit trip") {
     fun createRoute(tripId: String) = "edit_trip/${URLEncoder.encode(tripId, "UTF-8")}"
   }
 
   object TripSummary : Screen(route = "trip_summary", name = "Trip Summary")
+
+  object Loading : Screen(route = "loading", name = "Loading")
 
   // TODO change this when there is a new screen
 }

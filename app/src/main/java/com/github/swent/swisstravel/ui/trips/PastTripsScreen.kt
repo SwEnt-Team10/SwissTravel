@@ -247,7 +247,7 @@ private fun PastTripsTopAppBar(
                     modifier = Modifier.testTag(PastTripsScreenTestTags.SELECT_ALL_BUTTON))
               }
         } else {
-          SortMenu(onClickDropDownMenu = onClickDropDownMenu)
+          SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = uiState.sortType)
         }
       },
       colors =

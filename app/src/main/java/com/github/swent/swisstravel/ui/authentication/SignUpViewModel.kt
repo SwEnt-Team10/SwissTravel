@@ -1,48 +1,36 @@
 package com.github.swent.swisstravel.ui.authentication
 
 import android.content.Context
-import androidx.credentials.CredentialManager
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel for the Sign-Up screen.
+ * The ViewModel for the Sign-Up screen.
  *
- * This ViewModel handles the business logic for user registration, including sign-up with
- * email/password and Google. It communicates with the provided [AuthRepository] to perform
- * authentication operations and updates the UI state accordingly.
+ * This class extends [BaseAuthViewModel] and provides the specific logic for signing up with an
+ * email and password. It interacts with the [AuthRepository] to perform the sign-up operation and
+ * updates the [AuthUiState] accordingly.
  *
- * @param repository The authentication repository used to interact with the authentication service.
- *   Defaults to an instance of [AuthRepositoryFirebase].
+ * @param repository The [AuthRepository] implementation to use for authentication.
  */
-class SignUpViewModel(private val repository: AuthRepository = AuthRepositoryFirebase()) :
-    ViewModel() {
-  private val _uiState = MutableStateFlow(AuthUiState())
-  val uiState: StateFlow<AuthUiState> = _uiState
-
-  /** Clears any existing error message from the UI state. */
-  fun clearErrorMsg() {
-    _uiState.update { it.copy(errorMsg = null) }
-  }
+class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
+    BaseAuthViewModel(repository) {
 
   /**
-   * Initiates the sign-up process with an email, password, and user's name.
+   * Initiates the email and password sign-up flow.
    *
-   * It sets the UI state to loading, calls the repository's `signUpWithEmailPassword` method, and
-   * updates the UI state with the result (either the signed-in user or an error message).
+   * It updates the UI state to indicate loading, then calls the repository to perform the sign-up.
+   * The UI state is updated with the user information on success or an error message on failure.
    *
-   * @param email The user's email address.
-   * @param password The user's chosen password.
+   * @param email The user's email.
+   * @param password The user's password.
    * @param firstName The user's first name.
    * @param lastName The user's last name.
-   * @param context The Android context, used for retrieving string resources for error messages.
+   * @param context The application context, used for retrieving error string resources.
    */
   fun signUpWithEmailPassword(
       email: String,
@@ -81,17 +69,5 @@ class SignUpViewModel(private val repository: AuthRepository = AuthRepositoryFir
         }
       }
     }
-  }
-  /**
-   * Initiates the sign-up/sign-in process using Google.
-   *
-   * This method delegates the Google sign-in flow to a new instance of [SignInViewModel]. This is
-   * because the underlying Google sign-in process is identical for both signing in and signing up.
-   *
-   * @param context The Android context for the sign-in operation.
-   * @param credentialManager The [CredentialManager] instance used to handle Google sign-in.
-   */
-  fun signUpWithGoogle(context: Context, credentialManager: CredentialManager) {
-    SignInViewModel(repository).signInWithGoogle(context, credentialManager)
   }
 }
