@@ -36,16 +36,16 @@ class E2EUserFlowTest : InMemorySwissTravelTest() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
-  }
-
-  @Test
-  fun user_can_sign_in_and_navigate_across_tabs() {
     val fakeGoogleIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
     val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
 
     // Start app logged out
     composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
+  }
+
+  @Test
+  fun user_can_sign_in_and_navigate_across_tabs() {
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
