@@ -218,4 +218,6 @@ val surfaceContainerDarkHighContrast = Color(0xFF392E2C)
 val surfaceContainerHighDarkHighContrast = Color(0xFF443937)
 val surfaceContainerHighestDarkHighContrast = Color(0xFF504442)
 
-val navBarItemBackground = Color(0xFFFF7C69)
+/* - Custom Colors - */
+/** Color for the "Favorite Trip" icon. */
+val favoriteIcon = Color(0xFFFFC107)

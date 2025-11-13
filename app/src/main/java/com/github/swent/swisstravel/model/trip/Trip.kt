@@ -26,6 +26,8 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  * @property routeSegments The list of route segments of the trip.
  * @property activities The list of activities of the trip.
  * @property tripProfile The profile of the trip.
+ * @property isFavorite Whether the trip is a favorite or not.
+ * @property isCurrentTrip Whether the trip is the current trip or not.
  */
 data class Trip(
     val uid: String,
@@ -34,5 +36,7 @@ data class Trip(
     val locations: List<Location>,
     val routeSegments: List<RouteSegment>,
     val activities: List<Activity>,
-    val tripProfile: TripProfile
+    val tripProfile: TripProfile,
+    val isFavorite: Boolean,
+    val isCurrentTrip: Boolean
 )

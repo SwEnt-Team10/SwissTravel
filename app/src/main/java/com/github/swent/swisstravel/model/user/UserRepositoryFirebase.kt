@@ -58,15 +58,27 @@ class UserRepositoryFirebase(
   }
 
   private fun createUser(doc: DocumentSnapshot, uid: String): User {
+    val rawList = (doc["preferences"] as? List<*>) ?: emptyList<Any>()
+    val prefs = mutableListOf<Preference>()
+
+    for (item in rawList) {
+      val str = item?.toString() ?: continue
+      val pref =
+          try {
+            Preference.valueOf(str)
+          } catch (_: IllegalArgumentException) {
+            throw IllegalArgumentException("Invalid preference string: $str")
+          }
+
+      prefs.add(pref)
+    }
+
     return User(
         uid = uid,
         name = doc.getString("name") ?: "",
         email = doc.getString("email") ?: "",
         profilePicUrl = doc.getString("profilePicUrl") ?: "",
-        preferences =
-            (doc.get("preferences") as? List<*>)?.mapNotNull { str ->
-              enumValues<Preference>().find { it.displayString() == str }
-            } ?: emptyList())
+        preferences = prefs)
   }
 
   private suspend fun retrieveUser(firebaseUser: FirebaseUser, uid: String): User {
@@ -81,14 +93,15 @@ class UserRepositoryFirebase(
     return newUser
   }
 
-  override suspend fun updateUserPreferences(uid: String, preferences: List<String>) {
+  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {
     if (uid == "guest") return
-
-    val userDoc = db.collection("users").document(uid).get().await()
-    if (userDoc.exists()) {
-      db.collection("users").document(uid).update("preferences", preferences).await()
-    } else {
+    val docRef = db.collection("users").document(uid)
+    val userDoc = docRef.get().await()
+    check(userDoc.exists()) {
       throw IllegalStateException("User document does not exist for uid: $uid")
     }
+
+    val names = preferences.map { it.name }
+    docRef.update("preferences", names).await()
   }
 }

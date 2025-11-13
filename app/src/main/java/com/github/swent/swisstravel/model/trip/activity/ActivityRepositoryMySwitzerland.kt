@@ -25,14 +25,22 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
 
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseHttpUrl: HttpUrl =
-      "https://opendata.myswitzerland.io/v1/attractions/"
-          .toHttpUrl()
-          .newBuilder()
-          .addQueryParameter("lang", "en")
-          .addQueryParameter("page", "0")
-          .addQueryParameter("striphtml", "true")
-          .addQueryParameter("expand", "true")
-          .build()
+      urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", "en")
+  private val destinationHttpUrl: HttpUrl =
+      urlBuilder("https://opendata.myswitzerland.io/v1/destinations/", "en")
+
+  private fun urlBuilder(url: String, language: String): HttpUrl {
+    val newUrl: HttpUrl =
+        url.toHttpUrl()
+            .newBuilder()
+            .addQueryParameter("lang", language)
+            .addQueryParameter("page", "0")
+            .addQueryParameter("striphtml", "true")
+            .addQueryParameter("expand", "true")
+            .build()
+    return newUrl
+  }
+
   private val client: OkHttpClient by lazy {
     OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
@@ -93,16 +101,16 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       val name = item.optString("name", "Unknown Activity")
       val description = item.optString("abstract", "No description")
 
+      // Fetches latitude and longitude of the activity
       val geo = item.optJSONObject("geo")
       if (geo != null) {
         val lat = geo.optDouble("latitude", Double.NaN)
         val lon = geo.optDouble("longitude", Double.NaN)
 
         if (!lat.isNaN() && !lon.isNaN()) {
-          val coordinate = Coordinate(lat, lon)
-          val location = Location(coordinate, name)
           val imageArray = item.optJSONArray("image")
           val imageUrls = mutableListOf<String>()
+
           if (imageArray != null) {
             for (j in 0 until imageArray.length()) {
               val imgObj = imageArray.optJSONObject(j)
@@ -112,18 +120,55 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
               }
             }
           }
+          val coordinate = Coordinate(lat, lon)
+          val photo = item.optString("photo")
+          val location = Location(coordinate, name, photo)
 
-          // Dummy start/end times for now
-          // TODO add start/end times
-          val start = Timestamp.now()
-          val end = Timestamp(start.seconds + 3600, 0)
+          // Fetches the neededtime object from the activity, in order to estimate the visit time
+          var time = ""
+          val classification = item.optJSONArray("classification")
+          if (classification != null) {
+            for (k in 0 until classification.length()) {
+              val obj = classification.optJSONObject(k)
+              if (obj.optString("name") == "neededtime") {
+                val values = obj.optJSONArray("values")
+                if (values != null) {
+                  time = values.optJSONObject(0).optString("name")
+                }
+              }
+            }
+          }
 
-          activities.add(Activity(start, end, location, description, imageUrls))
+          val estimatedTime = mapToTime(time)
+
+          activities.add(
+              Activity(
+                  Timestamp.now(),
+                  Timestamp.now(),
+                  location,
+                  description,
+                  imageUrls,
+                  estimatedTime))
         }
       }
     }
 
     return activities
+  }
+
+  /**
+   * Maps the given time string from the SwissTourism API to a time in seconds.
+   *
+   * @param time The time string to map.
+   * @return The time in seconds.
+   */
+  private fun mapToTime(time: String): Int {
+    return when (time) {
+      "2to4hourshalfday" -> 3600 * 4
+      "4to8hoursfullday" -> 3600 * 8
+      "between12hours" -> 3600 * 2
+      else -> 0
+    }
   }
 
   /**
@@ -152,7 +197,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
             .append("&facets=")
             .append(facetsParam)
             .append("&facet.filter=")
-            .append(facetFilters)
+            .append("[$facetFilters]")
             .toString()
 
     Log.d("URL", "Final MySwitzerland URL: $url")
@@ -212,5 +257,42 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
       limit: Int
   ): List<Activity> {
     return fetchActivitiesFromUrl(computeUrlWithPreferences(preferences, limit))
+  }
+  /** Searches for destinations based on a text query. */
+  override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {
+    val url =
+        destinationHttpUrl
+            .newBuilder()
+            .addQueryParameter("hitsPerPage", limit.toString())
+            .addQueryParameter("query", query)
+            .build()
+    val activities = fetchActivitiesFromUrl(url)
+    return activities
+  }
+
+  /**
+   * Get activities near the given coordinate with the given preferences.
+   *
+   * @param preferences The preferences to use.
+   * @param coordinate The coordinate to get activities near.
+   * @param radiusMeters The radius in meters to search for activities.
+   * @param limit The limit of the number of activities to return.
+   * @return A list of activities near the given coordinate with the given preferences.
+   */
+  override suspend fun getActivitiesNearWithPreference(
+      preferences: List<Preference>,
+      coordinate: Coordinate,
+      radiusMeters: Int,
+      limit: Int
+  ): List<Activity> {
+
+    val url =
+        computeUrlWithPreferences(preferences, limit)
+            .newBuilder()
+            .addQueryParameter(
+                "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
+            .build()
+
+    return fetchActivitiesFromUrl(url)
   }
 }

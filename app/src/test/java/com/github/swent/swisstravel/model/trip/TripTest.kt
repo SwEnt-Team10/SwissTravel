@@ -4,7 +4,6 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.google.firebase.Timestamp
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import org.mockito.kotlin.description
 
 class TripTest {
 
@@ -15,12 +14,16 @@ class TripTest {
               endDate = Timestamp(1734003600, 0), // 10:20
               location =
                   Location(name = "Jet d'eau de Genève", coordinate = Coordinate(46.2074, 6.1551)),
-              description = ""),
+              description = "",
+              imageUrls = emptyList(),
+              estimatedTime = 3600),
           Activity(
               startDate = Timestamp(1734012600, 0), // 13:10 (after travel + pause)
               endDate = Timestamp(1734016200, 0), // 14:10
               location = Location(name = "Zoo de Zurich", coordinate = Coordinate(47.3850, 8.5736)),
-              description = ""),
+              description = "",
+              imageUrls = emptyList(),
+              estimatedTime = 3600),
           Activity(
               startDate = Timestamp(1734028800, 0), // 17:20 (after 2 segments + pause)
               endDate = Timestamp(1734032400, 0), // 18:20
@@ -28,7 +31,9 @@ class TripTest {
                   Location(
                       name = "Musée des Transports de Lucerne",
                       coordinate = Coordinate(47.0502, 8.3103)),
-              description = ""))
+              description = "",
+              imageUrls = emptyList(),
+              estimatedTime = 3600))
 
   private val listRouteSegments =
       listOf(
@@ -36,9 +41,7 @@ class TripTest {
           RouteSegment(
               from = listActivities[0].location,
               to = listActivities[1].location,
-              distanceMeter = 278000, // ~278 km
               durationMinutes = 140,
-              path = listOf(Coordinate(46.2074, 6.1551), Coordinate(47.3850, 8.5736)),
               transportMode = TransportMode.TRAIN,
               startDate = Timestamp(1734005400, 0), // 10:30 (30 min after Geneva activity)
               endDate = Timestamp(1734011400, 0) // 12:10
@@ -48,9 +51,7 @@ class TripTest {
           RouteSegment(
               from = listActivities[1].location,
               to = Location(name = "Lucerne Station", coordinate = Coordinate(47.0503, 8.3102)),
-              distanceMeter = 52000, // ~52 km
               durationMinutes = 45,
-              path = listOf(Coordinate(47.3850, 8.5736), Coordinate(47.0503, 8.3102)),
               transportMode = TransportMode.TRAIN,
               startDate = Timestamp(1734017400, 0), // 14:30 (after Zurich activity + 20 min pause)
               endDate = Timestamp(1734020100, 0) // 15:15
@@ -60,9 +61,7 @@ class TripTest {
           RouteSegment(
               from = Location(name = "Lucerne Station", coordinate = Coordinate(47.0503, 8.3102)),
               to = listActivities[2].location,
-              distanceMeter = 2200,
               durationMinutes = 20,
-              path = listOf(Coordinate(47.0503, 8.3102), Coordinate(47.0502, 8.3103)),
               transportMode = TransportMode.BUS,
               startDate = Timestamp(1734021900, 0), // 15:45 (after 30-min pause)
               endDate = Timestamp(1734023100, 0) // 16:05
@@ -93,7 +92,9 @@ class TripTest {
           locations = emptyList(),
           routeSegments = listRouteSegments,
           activities = listActivities,
-          tripProfile = tripProfile)
+          tripProfile = tripProfile,
+          isFavorite = false,
+          isCurrentTrip = false)
 
   @Test
   fun testGetAllTripElementsOrdered() {

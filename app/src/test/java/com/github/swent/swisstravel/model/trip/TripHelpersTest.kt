@@ -42,7 +42,9 @@ class TripHelpersTest {
             locations = emptyList(),
             routeSegments = emptyList(),
             activities = emptyList(),
-            tripProfile = tripProfile)
+            tripProfile = tripProfile,
+            isFavorite = false,
+            isCurrentTrip = false)
 
     assertTrue(trip.isUpcoming())
     assertFalse(trip.isCurrent())
@@ -50,7 +52,7 @@ class TripHelpersTest {
   }
 
   @Test
-  fun `isCurrent returns true when now is between start and end inclusive`() {
+  fun `isCurrent returns true when it is set as such`() {
     val start = Instant.now().minus(1, ChronoUnit.DAYS)
     val end = Instant.now().plus(1, ChronoUnit.DAYS)
     val tripProfile =
@@ -67,7 +69,9 @@ class TripHelpersTest {
             locations = emptyList(),
             routeSegments = emptyList(),
             activities = emptyList(),
-            tripProfile = tripProfile)
+            tripProfile = tripProfile,
+            isFavorite = false,
+            isCurrentTrip = true)
 
     assertTrue(trip.isCurrent())
     assertFalse(trip.isUpcoming())
@@ -92,7 +96,9 @@ class TripHelpersTest {
             locations = emptyList(),
             routeSegments = emptyList(),
             activities = emptyList(),
-            tripProfile = tripProfile)
+            tripProfile = tripProfile,
+            isFavorite = false,
+            isCurrentTrip = false)
 
     assertTrue(trip.isPast())
     assertFalse(trip.isCurrent())

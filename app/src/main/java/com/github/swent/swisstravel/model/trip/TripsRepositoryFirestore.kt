@@ -41,6 +41,10 @@ class TripsRepositoryFirestore(
     db.collection(TRIPS_COLLECTION_PATH).document(trip.uid).set(trip).await()
   }
 
+  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+    db.collection(TRIPS_COLLECTION_PATH).document(tripId).set(updatedTrip).await()
+  }
+
   override suspend fun deleteTrip(tripId: String) {
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
   }
@@ -76,6 +80,10 @@ class TripsRepositoryFirestore(
       val tripProfile =
           (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
 
+      val isFavorite = document.getBoolean("favorite") ?: false
+
+      val isCurrentTrip = document.getBoolean("currentTrip") ?: false
+
       Trip(
           uid = uid,
           name = name,
@@ -83,7 +91,9 @@ class TripsRepositoryFirestore(
           locations = locations,
           routeSegments = routeSegments,
           activities = activities,
-          tripProfile = tripProfile)
+          tripProfile = tripProfile,
+          isFavorite = isFavorite,
+          isCurrentTrip = isCurrentTrip)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null
@@ -118,16 +128,34 @@ class TripsRepositoryFirestore(
   /**
    * Converts a Firestore map into an [Activity] object.
    *
-   * @param map The Firestore map expected to contain "startDate", "endDate", and "location".
+   * @param map The Firestore map expected to contain "startDate", "endDate", "location",
+   *   "description", "imageUrls", and "estimatedTime" keys.
    * @return An [Activity] if all required fields are valid, or `null` otherwise.
    */
   private fun mapToActivity(map: Map<*, *>): Activity? {
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
     val locationMap = map["location"] as? Map<*, *> ?: return null
-    val description = map["description"] as? String ?: return null
     val location = mapToLocation(locationMap) ?: return null
-    return Activity(startDate, endDate, location, description)
+    val description = map["description"] as? String ?: return null
+    val estimatedTime = (map["estimatedTime"] as? Number)?.toInt() ?: 0
+    val imageUrls: List<String> =
+        when (val raw = map["imageUrls"]) {
+          is List<*> -> raw.mapNotNull { it as? String }
+          is String -> listOf(raw)
+          null -> return null
+          else -> emptyList()
+        }
+
+    val act =
+        Activity(
+            startDate = startDate,
+            endDate = endDate,
+            location = location,
+            description = description,
+            imageUrls = imageUrls,
+            estimatedTime = estimatedTime)
+    return act
   }
 
   /**
@@ -143,11 +171,7 @@ class TripsRepositoryFirestore(
     val from = mapToLocation(fromMap) ?: return null
     val to = mapToLocation(toMap) ?: return null
 
-    val distanceMeter = (map["distanceMeter"] as? Number)?.toInt() ?: return null
     val durationMinutes = (map["durationMinutes"] as? Number)?.toInt() ?: return null
-
-    val pathList =
-        (map["path"] as? List<*>)?.mapNotNull { mapToCoordinate(it as Map<*, *>) } ?: emptyList()
 
     val transportMode =
         (map["transportMode"] as? String)?.let { TransportMode.valueOf(it) } ?: return null
@@ -155,8 +179,7 @@ class TripsRepositoryFirestore(
     val startDate = map["startDate"] as? Timestamp ?: return null
     val endDate = map["endDate"] as? Timestamp ?: return null
 
-    return RouteSegment(
-        from, to, distanceMeter, durationMinutes, pathList, transportMode, startDate, endDate)
+    return RouteSegment(from, to, durationMinutes, transportMode, startDate, endDate)
   }
 
   /**
