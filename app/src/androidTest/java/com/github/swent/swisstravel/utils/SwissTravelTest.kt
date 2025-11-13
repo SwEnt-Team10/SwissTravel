@@ -17,6 +17,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
@@ -281,10 +283,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(TripDateTestTags.NEXT).assertIsDisplayed()
   }
 
-  fun ComposeTestRule.checkTripTravelersIsDisplayed(adultsLabel: String, childrenLabel: String) {
-    checkTopBarIsDisplayed()
-    onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertIsDisplayed()
-    onNodeWithTag(TripTravelersTestTags.NEXT).assertIsDisplayed()
+  fun ComposeTestRule.checkTravelerCounterIsDisplayed(adultsLabel: String, childrenLabel: String) {
     onNodeWithTag(adultsLabel + CounterTestTags.COUNTER).assertIsDisplayed()
     onNodeWithTag(adultsLabel + CounterTestTags.INCREMENT).assertIsDisplayed()
     onNodeWithTag(adultsLabel + CounterTestTags.DECREMENT).assertIsDisplayed()
@@ -295,12 +294,14 @@ abstract class SwissTravelTest {
     onNodeWithTag(childrenLabel + CounterTestTags.DECREMENT).assertIsDisplayed()
   }
 
-  fun ComposeTestRule.checkTripPreferencesIsDisplayed() {
+  fun ComposeTestRule.checkTripTravelersIsDisplayed(adultsLabel: String, childrenLabel: String) {
     checkTopBarIsDisplayed()
-    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertIsDisplayed()
-    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE).assertIsDisplayed()
-    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT).assertIsDisplayed()
-    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
+    onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertIsDisplayed()
+    onNodeWithTag(TripTravelersTestTags.NEXT).assertIsDisplayed()
+    checkTravelerCounterIsDisplayed(adultsLabel, childrenLabel)
+  }
+
+  fun ComposeTestRule.checkPreferenceSelectorIsDisplayed() {
     for (category in
         PreferenceCategories.Category.values().filter {
           it != PreferenceCategories.Category.DEFAULT
@@ -310,6 +311,21 @@ abstract class SwissTravelTest {
           .performScrollToNode(hasTestTag(tag))
       onNodeWithTag(tag).assertIsDisplayed()
     }
+    for (preferences in Preference.values()) {
+      val tag = PreferenceSelectorTestTags.getTestTagButton(preferences)
+      onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+          .performScrollToNode(hasTestTag(tag))
+      onNodeWithTag(tag).assertIsDisplayed()
+    }
+  }
+
+  fun ComposeTestRule.checkTripPreferencesIsDisplayed() {
+    checkTopBarIsDisplayed()
+    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertIsDisplayed()
+    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE).assertIsDisplayed()
+    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT).assertIsDisplayed()
+    onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
+    checkPreferenceSelectorIsDisplayed()
   }
 
   fun ComposeTestRule.checkArrivalDepartureScreenIsDisplayed() {
@@ -331,8 +347,32 @@ abstract class SwissTravelTest {
     onNodeWithTag(LandingScreenTestTags.SIGN_UP_BUTTON).assertIsDisplayed()
   }
 
+  fun ComposeTestRule.checkTripInfoScreenIsDisplayed() {
+    onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
+
+    onNodeWithTag(TripInfoScreenTestTags.LAZY_COLUMN).assertIsDisplayed()
+    // If there are no locations the screen shows a no-locations message; usually not visible for
+    // populated trips.
+    onNodeWithTag(TripInfoScreenTestTags.NO_LOCATIONS).assertIsNotDisplayed()
+
+    onNodeWithTag(TripInfoScreenTestTags.CURRENT_STEP).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.LOCATION_NAME).assertIsDisplayed()
+
+    // Map related elements
+    onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.MAP_CONTAINER).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON).assertIsDisplayed()
+
+    // Fullscreen map / exit should not be visible by default
+    onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_MAP).assertDoesNotExist()
+    onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_EXIT).assertDoesNotExist()
+  }
+
   // Done with AI
-  fun ComposeTestRule.checkTripInfoScreenIsDisplayed(
+  fun ComposeTestRule.checkTripInfoScreenIsDisplayedWithTrip(
       trip: Trip,
       context: Context = ApplicationProvider.getApplicationContext<Context>()
   ) {
@@ -372,6 +412,39 @@ abstract class SwissTravelTest {
 
     // --- Map fullscreen button ---
     onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkEditTripScreenIsDisplayed(
+      trip: Trip,
+      adultsLabel: String,
+      childrenLabel: String
+  ) {
+    onNodeWithTag(EditTripScreenTestTags.SCREEN).assertIsDisplayed()
+
+    onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed().assertTextEquals(trip.name)
+    onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).assertIsDisplayed()
+    onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).assertIsDisplayed()
+    onNodeWithTag(EditTripScreenTestTags.DELETE).assertIsDisplayed()
+
+    checkTravelerCounterIsDisplayed(adultsLabel, childrenLabel)
+
+    checkPreferenceSelectorIsDisplayed()
+  }
+
+  // Made with AI
+  fun ComposeTestRule.changeTripNameAndSaveInEditTrip(newName: String) {
+    // Wait until loading spinner disappears
+    onNodeWithTag(EditTripScreenTestTags.LOADING).assertDoesNotExist()
+
+    // Change text field value
+    onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed().performTextClearance()
+    onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).performTextInput(newName)
+
+    // Verify text updated
+    onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertTextEquals(newName)
+
+    // Click confirm (top bar)
+    onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).assertIsDisplayed().performClick()
   }
 
   // Done with the help of AI

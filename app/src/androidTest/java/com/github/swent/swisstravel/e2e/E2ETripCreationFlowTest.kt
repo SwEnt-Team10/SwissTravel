@@ -358,7 +358,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForIdle()
 
     // Trip info screen
-    composeTestRule.checkTripInfoScreenIsDisplayed(tripE2E)
+    composeTestRule.checkTripInfoScreenIsDisplayedWithTrip(tripE2E)
 
     // Click on isFavorite to remove
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
@@ -369,12 +369,21 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     assertFalse(tripE2E.isFavorite, "The trip is still favorited")
 
     // Click on edit trip
+    composeTestRule.checkTripInfoScreenIsDisplayed()
+    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).performClick()
+    composeTestRule.waitForIdle()
 
     // Edit trip screen
+    composeTestRule.checkEditTripScreenIsDisplayed(tripE2E, adultsLabel, childrenLabel)
 
-    // Verify all the infos
-
+    val newName = "trip-e2e-new-name"
     // Change some data (name because easier to test)
+    composeTestRule.changeTripNameAndSaveInEditTrip(newName)
+    composeTestRule.waitForIdle()
+    Thread.sleep(1000)
+    // Getting the trip
+    tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
+    assertEquals(newName, tripE2E.name)
 
     // Save
 
@@ -408,15 +417,10 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
           .isNotEmpty()
     }
 
+    // Check that we arrive on "Current Trip" Screen
     // Verify bottom navigation visible
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
-
-    // Verify that we are on the profile screen
-    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    composeTestRule.waitForIdle()
-    Thread.sleep(5000)
-
-    // Check that we arrive on "Current Trip" Screen
+    composeTestRule.checkCurrentTripScreenIsDisplayed()
 
     // Go to My Trips and check that the previously created a trip is still there
 
