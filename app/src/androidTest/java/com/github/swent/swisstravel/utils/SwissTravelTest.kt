@@ -27,6 +27,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.displayStringRes
+import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
@@ -318,6 +319,13 @@ abstract class SwissTravelTest {
     onNodeWithTag(TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE).assertIsDisplayed()
     onNodeWithTag(TripFirstDestinationsTestTags.NEXT_BUTTON).assertIsDisplayed()
     onNodeWithTag(TripFirstDestinationsTestTags.NEXT_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkLandingScreenIsDisplayed() {
+    onNodeWithTag(LandingScreenTestTags.APP_LOGO).assertIsDisplayed()
+    onNodeWithTag(LandingScreenTestTags.APP_NAME).assertIsDisplayed()
+    onNodeWithTag(LandingScreenTestTags.SIGN_IN_BUTTON).assertIsDisplayed()
+    onNodeWithTag(LandingScreenTestTags.SIGN_UP_BUTTON).assertIsDisplayed()
   }
 
   // Done with the help of AI
