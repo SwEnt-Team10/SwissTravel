@@ -100,6 +100,7 @@ class NavigationActions(
         }
         restoreState = true
       }
+      launchSingleTop = true
     }
   }
 
@@ -123,5 +124,14 @@ class NavigationActions(
   /** Get the current route */
   fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
+  }
+
+  /**
+   * Resets the navigation graph by clearing the entire back stack.
+   *
+   * @param destination the destination to reset the navigation graph to.
+   */
+  fun resetTo(destination: Screen) {
+    navController.popBackStack(destination.route, inclusive = true)
   }
 }
