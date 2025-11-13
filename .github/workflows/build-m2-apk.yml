@@ -35,6 +35,9 @@ jobs:
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
 
+      - name: Decode MAPBOX_DOWNLOADS_TOKEN
+        run: echo "MAPBOX_DOWNLOADS_TOKEN=${{ secrets.MAP_BOX_DOWNLOAD_SECRET }}" >> $GITHUB_ENV
+
       # Build the release APK
       - name: Build Release APK
         run: ./gradlew assembleRelease
