@@ -27,6 +27,7 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
+import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -417,8 +418,44 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
     composeTestRule.checkCurrentTripScreenIsDisplayed()
 
-    // Go to My Trips and check that the previously created a trip is still there
+    // Go to My Trips
+    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.checkMyTripsScreenIsDisplayed()
 
+    // Check that the previously created a trip is still there
+    val trips2ndCheck = runBlocking { repository.getAllTrips() }
+    assertEquals(1, trips.size)
+    val trip2ndCheck = trips2ndCheck.elementAt(0)
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip2ndCheck))
+        .assertIsDisplayed()
+
+    // Long click (Selection Mode)
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip2ndCheck))
+        .performTouchInput { longClick() }
+    composeTestRule.waitForIdle()
+    composeTestRule.checkMyTripsInSelectionMode()
+
+    // Delete Trip
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).performClick()
+    // AlertDialog should appear
+    composeTestRule
+        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
+    // Confirm deletion
+    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON).performClick()
+    composeTestRule.waitForIdle()
+    // Thread.sleep(500)
+    composeTestRule.checkMyTripsNotInSelectionMode()
+
+    // Check that the Trip is actually deleted (backend and frontend)
+    runBlocking { repository.getAllTrips() }
+    assertEquals(0, trips.size)
+    composeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips()
   }
 
   @After
