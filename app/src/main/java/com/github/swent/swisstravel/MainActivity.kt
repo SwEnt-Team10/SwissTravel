@@ -292,7 +292,8 @@ fun SwissTravelApp(
                 composable(Screen.TripSettingsDates.route) {
                   TripDateScreen(
                       viewModel = tripSettingsViewModel(navController),
-                      onNext = { navigationActions.navigateTo(Screen.TripSettingsTravelers) })
+                      onNext = { navigationActions.navigateTo(Screen.TripSettingsTravelers) },
+                      onPrevious = { navigationActions.goBack() })
                 }
                 composable(Screen.TripSettingsTravelers.route) {
                   TripTravelersScreen(
@@ -334,9 +335,7 @@ fun SwissTravelApp(
                   LoadingScreen(
                       progress = loadingProgress,
                       viewModel = viewModel,
-                      onSuccess = {
-                        navigationActions.navigateTo(Screen.MyTrips, clearBackStack = true)
-                      },
+                      onSuccess = { navigationActions.navigateTo(Screen.MyTrips, true) },
                       onFailure = { navigationActions.goBack() })
                 }
               }

@@ -100,6 +100,7 @@ class NavigationActions(
         }
         restoreState = true
       }
+      launchSingleTop = true
     }
   }
 
