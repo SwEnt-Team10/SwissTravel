@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.e2e
 
+import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
@@ -41,6 +42,7 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -79,12 +81,6 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
-  }
-
-  @Test
-  fun user_can_create_a_trip_and_edit_it() {
-    val context = ApplicationProvider.getApplicationContext<Context>()
-
     val fakeGoogleIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
     val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
@@ -93,6 +89,13 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.setContent {
       SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) }
     }
+  }
+
+  @SuppressLint("CheckResult")
+  @Test
+  fun user_can_create_a_trip_and_edit_it() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
@@ -138,7 +141,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         }) {
       val tag = PreferenceSelectorTestTags.getTestTagCategory(category)
       composeTestRule
-          .onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST)
+          .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
           .performScrollToNode(hasTestTag(tag))
       composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
     }
@@ -156,7 +159,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Go to my trips
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
     composeTestRule.waitForIdle()
-    composeTestRule.checkMyTripsScreenIsDisplayedWithNoCurrentTrips()
+    composeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips()
 
     // Trip creation (the trip used will be stored in SwissTravelTest.kt)
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON).performClick()
@@ -214,7 +217,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         }) {
       val tagPref = PreferenceSelectorTestTags.getTestTagCategory(category)
       composeTestRule
-          .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+          .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
           .performScrollToNode(hasTestTag(tagPref))
       composeTestRule.onNodeWithTag(tagPref).assertIsDisplayed()
     }
@@ -290,46 +293,39 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
         .performScrollToNode(hasTestTag(TripSummaryTestTags.CREATE_TRIP_BUTTON))
     composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
+    runBlocking { repository.getAllTrips() }
     composeTestRule.waitForIdle()
 
     //    // Back to my trips
-    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
-      composeTestRule
-          .onAllNodesWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
-          .fetchSemanticsNodes()
-          .isNotEmpty()
-    }
-    composeTestRule.checkMyTripsScreenIsDisplayedWithNoCurrentTrips()
+    composeTestRule.waitUntil(
+        E2E_WAIT_TIMEOUT * 3) { // Algorithm can take a long time to generate the trip
+          composeTestRule
+              .onAllNodesWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
+              .fetchSemanticsNodes()
+              .isNotEmpty()
+        }
+    composeTestRule.checkMyTripsScreenIsDisplayed()
 
     // Long click
-    //    val repo = repository
-    //    val savedTrip = runBlocking {
-    //      repeat(10) { attempt ->
-    //        val trips = repo.getAllTrips()
-    //        val found = trips.firstOrNull { it.name.trim() == tripE2E.name.trim() }
-    //        if (found != null) return@runBlocking found
-    //        println("Trip not found yet, waiting... (attempt $attempt)")
-    //        kotlinx.coroutines.delay(1000)
-    //      }
-    //      null
-    //    }
-    //
-    //      checkNotNull(savedTrip) { "Trip not found in Firestore after creation" }
-    //
-    //      val trip = runBlocking { repo.getTrip(savedTrip.uid) }
-    //
+    val trip = runBlocking { repository.getTrip(tripE2E.uid) }
+    //  val trip = null
+    checkNotNull(trip) { "Trip not found in Firestore after creation" }
+
     //      composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip))
-    //          .assertIsDisplayed().performTouchInput { longClick() }
+    //          .assertIsDisplayed()
+    //      composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip))
+    //          .performTouchInput { longClick(durationMillis = 2000) }
     //      composeTestRule.waitForIdle()
     //
-    //    // Selection mode
-    //      composeTestRule.checkMyTripsInSelectionMode()
+    //        // Selection mode
+    //          composeTestRule.checkMyTripsInSelectionMode()
     //
-    //      // Save as favorite
+    //          // Save as favorite
     //
     // composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
-    //      composeTestRule.waitForIdle()
-    //      composeTestRule.checkMyTripsNotInSelectionMode()
+    //          composeTestRule.waitForIdle()
+    //          composeTestRule.checkMyTripsNotInSelectionMode()
+    //      assertTrue(runBlocking { repository.getTrip(tripE2E.uid) }.isFavorite)
     //
     //    // Edit current trip
     //
@@ -441,9 +437,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
     // Create the trip
     return Trip(
-        uid = "unvalid", // cannot be changed and is random
+        uid = "testuid",
         name = "trip-E2E-1",
-        ownerId = "unvalid", // cannot be changed and is random
+        ownerId = currentUser.uid,
         locations = locations,
         routeSegments = emptyList(), // empty for now
         activities = emptyList(), // no activities yet

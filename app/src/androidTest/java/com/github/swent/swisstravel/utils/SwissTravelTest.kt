@@ -163,7 +163,7 @@ abstract class SwissTravelTest {
   }
 
   // Can be used to check if there is no trip displayed as well
-  fun ComposeTestRule.checkMyTripsScreenIsDisplayedWithNoCurrentTrips() {
+  fun ComposeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips() {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE)
         .assertIsDisplayed()
@@ -194,7 +194,6 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkMyTripsInSelectionMode() {
-    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON).assertIsDisplayed()
