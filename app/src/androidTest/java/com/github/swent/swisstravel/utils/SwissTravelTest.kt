@@ -2,7 +2,6 @@ package com.github.swent.swisstravel.utils
 
 import android.content.Context
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -205,11 +204,15 @@ abstract class SwissTravelTest {
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).assertDoesNotExist()
   }
 
-  fun ComposeTestRule.checkCurrentTripScreenIsDisplayed() {
+  fun ComposeTestRule.checkCurrentTripScreenEmptyIsDisplayed() {
     onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT)
         .assertIsDisplayed()
         .assertTextContains("Create a trip", substring = false, ignoreCase = true)
     onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkCurrentTripScreenIsDisplayed(trip: Trip) {
+    checkTripInfoScreenIsDisplayedWithTrip(trip)
   }
 
   fun ComposeTestRule.checkCurrentTripScreenIsNotDisplayed() {

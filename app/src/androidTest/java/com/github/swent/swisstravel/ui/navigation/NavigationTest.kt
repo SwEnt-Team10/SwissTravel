@@ -72,7 +72,7 @@ class NavigationTest : InMemorySwissTravelTest() {
   @Test
   fun navigationBetweenTabsWorks() {
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
@@ -84,7 +84,7 @@ class NavigationTest : InMemorySwissTravelTest() {
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
   }
@@ -96,7 +96,7 @@ class NavigationTest : InMemorySwissTravelTest() {
     composeTestRule.checkCurrentTripScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
     pressBack(shouldFinish = false)
-    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
   }

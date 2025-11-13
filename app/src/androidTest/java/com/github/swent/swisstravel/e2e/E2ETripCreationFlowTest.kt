@@ -61,26 +61,32 @@ import org.junit.Test
  * End-to-end trip creation flow:
  * 1) Start logged out, see login button
  * 2) Click Google sign-in (mocked)
- * 3) See bottom navigation and should be on profile screen
- * 4) Change preferences in profile
- * 5) Navigate to my trips which should be empty
- * 6) Click on the create trip button (bottom right)
- * 7) Fill the trip creation form
- * 8) Submit and see the newly created trip in my trips list
- * 9) Click on it and see trip details
- * 10) Edit the trip
- * 11) Save and go back to my trips
- * 12) Long click on the trip
- * 13) Favorite trip
- * 14) Click on the edit button and set as current trip
- * 15) Click on the trip and change some information
- * 16) Save and go back to trip info
- * 19) Go back to my trips
- * 20) Go to profile
- * 21) Log out
+ * 3) See bottom navigation and should be on current trip screen
+ * 4) Navigate to Profile
+ * 5) Change preferences in profile
+ * 6) Navigate to My Trips which should be empty
+ * 7) Click on the create trip button (bottom right)
+ * 8) Fill the trip creation form
+ * 9) Submit
+ * 10) Check that the trip is on My Trips
+ * 11) Long click on the trip
+ * 12) Favorite the trip
+ * 13) Click on the trip
+ * 14) Unfavorite trip
+ * 15) Click on edit trip
+ * 16) Change name
+ * 17) Save and go back to trip info
+ * 18) Go back to My Trips
+ * 19) Go to Profile
+ * 20) Log out
+ * 21) Check we are on landing screen
  * 22) Log back in
- * 23) Check that we are on Current Trip Screen
- * 24) Navigate to My Trips and check that the previously created a trip is still there
+ * 23) Check that we are on current trip screen
+ * 24) Go to my trips
+ * 25) Check that the trip is there
+ * 26) Open selection mode and delete the trip
+ * 27) Verify that the trip is deleted (To find all the steps in the code you can do ctrl + f with
+ *     "step_number)" )
  */
 class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
@@ -111,8 +117,10 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
   fun user_can_create_a_trip_and_edit_it() {
     val context = ApplicationProvider.getApplicationContext<Context>()
 
+    /* 1) */
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
     composeTestRule.waitForIdle()
+    /* 2) */
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
 
     // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
@@ -123,17 +131,24 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
           .isNotEmpty()
     }
 
+    /* 3) */
     // Verify bottom navigation visible
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
+    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
 
+    /* 4) */
     // Verify that we are on the profile screen
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForIdle()
-    Thread.sleep(
-        5000) // Otherwise it is checks too fast the screen so it doesn't have time to pull the
-    // elements
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(ProfileScreenTestTags.PROFILE_PIC)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
     composeTestRule.checkProfileScreenIsDisplayed()
 
+    /* 5) */
     // Open preferences
     composeTestRule
         .onNodeWithTag(ProfileScreenTestTags.PREFERENCES)
@@ -171,15 +186,18 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
     composeTestRule.onNodeWithTag(tag).performClick()
 
+    /* 6) */
     // Go to my trips
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
     composeTestRule.waitForIdle()
     composeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips()
 
-    // Trip creation (the trip used will be stored in SwissTravelTest.kt)
+    /* 7) */
+    // Trip creation
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON).performClick()
 
     composeTestRule.waitForIdle()
+    /* 8) */
     // Trip date
     composeTestRule.checkTripDateScreenIsDisplayed()
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
@@ -306,11 +324,13 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         .performTextInput(tripE2E.name)
     composeTestRule.onNodeWithTag(TripSummaryTestTags.TRIP_NAME_FIELD).performImeAction()
 
+    /* 9) */
     composeTestRule
         .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
         .performScrollToNode(hasTestTag(TripSummaryTestTags.CREATE_TRIP_BUTTON))
     composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
 
+    /* 10) */
     // Back to my trips
     composeTestRule.waitUntil(
         E2E_WAIT_TIMEOUT * 3) { // Algorithm can take a long time to generate the trip
@@ -326,6 +346,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     val trip = trips.elementAt(0)
     tripE2E = trip
 
+    /* 11) */
     // Long click
     composeTestRule.waitForIdle()
     composeTestRule
@@ -339,6 +360,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Selection mode
     composeTestRule.checkMyTripsInSelectionMode()
 
+    /* 12) */
     // Save as favorite
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
     Thread.sleep(500)
@@ -347,6 +369,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
     assertTrue(tripE2E.isFavorite, "The trip is not favorited")
 
+    /* 13) */
     // Click on the trip
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(tripE2E)).performClick()
     composeTestRule.waitForIdle()
@@ -354,7 +377,8 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Trip info screen
     composeTestRule.checkTripInfoScreenIsDisplayedWithTrip(tripE2E)
 
-    // Click on isFavorite to remove
+    /* 14) */
+    // Unfavorite trip
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
     composeTestRule.waitForIdle()
     Thread.sleep(1500)
@@ -362,6 +386,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
     assertFalse(tripE2E.isFavorite, "The trip is still favorited")
 
+    /* 15) */
     // Click on edit trip
     composeTestRule.checkTripInfoScreenIsDisplayed()
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).performClick()
@@ -370,8 +395,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Edit trip screen
     composeTestRule.checkEditTripScreenIsDisplayed(tripE2E, adultsLabel, childrenLabel)
 
+    /* 16), 17) */
     val newName = "trip-e2e-new-name"
-    // Change some data (name because easier to test)
+    // Change the name
     composeTestRule.changeTripNameAndSaveInEditTrip(newName)
     composeTestRule.waitForIdle()
     Thread.sleep(1000)
@@ -386,20 +412,25 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).performClick()
     composeTestRule.waitForIdle()
 
+    /* 18) */
     // Back to my trips
     composeTestRule.checkMyTripsScreenIsDisplayed()
 
+    /* 19) */
     // Go back to profile
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForIdle()
 
+    /* 20) */
     // Log out
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.LOGOUT_BUTTON).performClick()
     composeTestRule.waitForIdle()
 
+    /* 21) */
     // Check that we are on landing screen
     composeTestRule.checkLandingScreenIsDisplayed()
 
+    /* 22) */
     // Sign In
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
     composeTestRule.waitForIdle()
@@ -413,16 +444,19 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
           .isNotEmpty()
     }
 
+    /* 23) */
     // Check that we arrive on "Current Trip" Screen
     // Verify bottom navigation visible
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
-    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed() // Because no current trip in my trips
 
+    /* 24) */
     // Go to My Trips
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
     composeTestRule.waitForIdle()
     composeTestRule.checkMyTripsScreenIsDisplayed()
 
+    /* 25) */
     // Check that the previously created a trip is still there
     val trips2ndCheck = runBlocking { repository.getAllTrips() }
     assertEquals(1, trips.size)
@@ -432,6 +466,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip2ndCheck))
         .assertIsDisplayed()
 
+    /* 26) */
     // Long click (Selection Mode)
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip2ndCheck))
@@ -449,12 +484,13 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Confirm deletion
     composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON).performClick()
     composeTestRule.waitForIdle()
-    // Thread.sleep(500)
     composeTestRule.checkMyTripsNotInSelectionMode()
 
+    /* 27) */
     // Check that the Trip is actually deleted (backend and frontend)
-    runBlocking { repository.getAllTrips() }
-    assertEquals(0, trips.size)
+    Thread.sleep(2000)
+    val emptyTrips = runBlocking { repository.getAllTrips() }
+    assertEquals(0, emptyTrips.size)
     composeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips()
   }
 
@@ -550,7 +586,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
   /**
    * Helper function that add a predetermined activity in zermatt to the trip and saves it on the
-   * repository
+   * repository (Helped by AI)
    *
    * @param trip trip to edit
    * @return trip with the new activity in it

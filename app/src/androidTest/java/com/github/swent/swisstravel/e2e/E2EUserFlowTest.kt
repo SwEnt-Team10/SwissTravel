@@ -63,7 +63,7 @@ class E2EUserFlowTest : InMemorySwissTravelTest() {
 
     // Navigate to Current Trip and verify
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
 
