@@ -5,6 +5,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
@@ -92,6 +93,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.SPORTS))
         .assertExists()
+        .performScrollTo()
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.SPORTS))
         .performClick()
@@ -99,6 +101,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.MUSEUMS))
         .assertExists()
+        .performScrollTo()
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.MUSEUMS))
         .performClick()
@@ -106,7 +109,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
 
     val tag = PreferenceSelectorTestTags.getTestTagButton(Preference.WHEELCHAIR_ACCESSIBLE)
     composeTestRule
-        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+        .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
         .performScrollToNode(hasTestTag(tag))
     composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
     composeTestRule.onNodeWithTag(tag).performClick()
