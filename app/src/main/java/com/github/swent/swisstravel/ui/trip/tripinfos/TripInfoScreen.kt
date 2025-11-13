@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -80,7 +81,8 @@ fun TripInfoScreen(
   val context = LocalContext.current
 
   var showMap by remember { mutableStateOf(true) }
-  var fullscreen by rememberSaveable { mutableStateOf(false) }
+
+  BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
   var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
@@ -150,7 +152,7 @@ fun TripInfoScreen(
   Scaffold(
       containerColor = MaterialTheme.colorScheme.background,
       topBar = {
-        if (!fullscreen) {
+        if (!ui.fullscreen) {
           TopAppBar(
               title = {
                 Text(
@@ -230,7 +232,7 @@ fun TripInfoScreen(
                         }
                   }
 
-                  if (!fullscreen) {
+                  if (!ui.fullscreen) {
                     // Map card
                     item {
                       Card(
@@ -261,7 +263,7 @@ fun TripInfoScreen(
 
                                   // Fullscreen button
                                   IconButton(
-                                      onClick = { fullscreen = true },
+                                      onClick = { tripInfoViewModel.toggleFullscreen(true) },
                                       modifier =
                                           Modifier.align(Alignment.BottomEnd)
                                               .padding(12.dp)
@@ -339,13 +341,13 @@ fun TripInfoScreen(
         }
 
         // Fullscreen overlay
-        if (fullscreen) {
+        if (ui.fullscreen) {
           Box(modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.FULLSCREEN_MAP)) {
             MapScreen(locations = mapLocations, drawRoute = drawRoute)
 
             // Exit fullscreen arrow
             IconButton(
-                onClick = { fullscreen = false },
+                onClick = { tripInfoViewModel.toggleFullscreen(false) },
                 modifier =
                     Modifier.align(Alignment.TopStart)
                         .padding(16.dp)

@@ -28,7 +28,8 @@ data class TripInfoUIState(
     val activities: List<Activity> = emptyList(),
     val tripProfile: TripProfile? = null,
     val isFavorite: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val fullscreen: Boolean = false,
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -141,5 +142,14 @@ class TripInfoViewModel(
       // Rollback to last known correct state
       _uiState.value = current.copy(isFavorite = !newFavorite)
     }
+  }
+
+  /**
+   * Toggles the fullscreen mode of the map.
+   *
+   * @param fullscreen whether to set fullscreen mode or not
+   */
+  override fun toggleFullscreen(fullscreen: Boolean) {
+    _uiState.value = _uiState.value.copy(fullscreen = fullscreen)
   }
 }

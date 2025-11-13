@@ -21,4 +21,11 @@ interface TripInfoViewModelContract {
    * @param errorMsg The error message to set.
    */
   fun setErrorMsg(errorMsg: String)
+
+  /**
+   * Toggles the fullscreen mode of the map.
+   *
+   * @param fullscreen The new fullscreen mode state.
+   */
+  fun toggleFullscreen(fullscreen: Boolean)
 }
