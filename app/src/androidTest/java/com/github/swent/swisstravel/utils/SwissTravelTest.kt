@@ -11,6 +11,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -36,6 +37,7 @@ import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -202,6 +204,7 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkMyTripsNotInSelectionMode() {
+    waitForIdle()
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsNotDisplayed()
@@ -326,6 +329,49 @@ abstract class SwissTravelTest {
     onNodeWithTag(LandingScreenTestTags.APP_NAME).assertIsDisplayed()
     onNodeWithTag(LandingScreenTestTags.SIGN_IN_BUTTON).assertIsDisplayed()
     onNodeWithTag(LandingScreenTestTags.SIGN_UP_BUTTON).assertIsDisplayed()
+  }
+
+  // Done with AI
+  fun ComposeTestRule.checkTripInfoScreenIsDisplayed(
+      trip: Trip,
+      context: Context = ApplicationProvider.getApplicationContext<Context>()
+  ) {
+    // --- Top App Bar ---
+    onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed().assertTextEquals(trip.name)
+
+    onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+
+    onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
+
+    onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
+
+    val context = ApplicationProvider.getApplicationContext<Context>()
+    // --- Current Step section ---
+    onNodeWithTag(TripInfoScreenTestTags.CURRENT_STEP)
+        .assertIsDisplayed()
+        .assertTextContains(context.getString(R.string.current_step), substring = true)
+
+    onNodeWithTag(TripInfoScreenTestTags.NEXT_STEP).assertIsDisplayed()
+
+    // --- Map card ---
+    onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).assertIsDisplayed()
+
+    // Map container itself
+    onNodeWithTag(TripInfoScreenTestTags.MAP_CONTAINER).assertIsDisplayed()
+
+    // --- Lazy column with steps ---
+    onNodeWithTag(TripInfoScreenTestTags.LAZY_COLUMN).assertIsDisplayed()
+
+    Thread.sleep(3000)
+    // The trip has at least two locations, find them and test
+    trip.locations.take(2).forEach { location ->
+      onAllNodesWithText(location.name, substring = true)
+          .onFirst()
+          .assertExists("Expected location '${location.name}' to be shown in TripInfoScreen")
+    }
+
+    // --- Map fullscreen button ---
+    onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON).assertIsDisplayed()
   }
 
   // Done with the help of AI

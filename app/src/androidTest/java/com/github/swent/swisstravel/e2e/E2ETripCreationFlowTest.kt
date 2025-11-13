@@ -14,6 +14,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
+import androidx.test.rule.GrantPermissionRule
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.Coordinate
@@ -31,6 +32,7 @@ import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -38,6 +40,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripSummaryTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersTestTags
 import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
+import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
@@ -45,6 +48,7 @@ import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -82,6 +86,12 @@ import org.junit.Test
 class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
+
+  @get:Rule
+  val permissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          android.Manifest.permission.ACCESS_FINE_LOCATION,
+          android.Manifest.permission.ACCESS_COARSE_LOCATION)
 
   @Before
   override fun setUp() {
@@ -311,18 +321,16 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
               .isNotEmpty()
         }
     composeTestRule.checkMyTripsScreenIsDisplayed()
-    // runBlocking { repository.getAllTrips() }
     val trips = runBlocking { repository.getAllTrips() } // Make sure that edit updated the UI too
     assertEquals(1, trips.size)
     val trip = trips.elementAt(0)
+    tripE2E = tripE2E.copy(uid = trip.uid)
 
-    // Discard non deterministic activities given by the algorithm
-    runBlocking { repository.editTrip(trip.uid, tripE2E.copy(activities = emptyList())) }
+    runBlocking { repository.editTrip(trip.uid, tripE2E) }
     // Put deterministic activity instead
-    tripE2E = runBlocking { addZermattActivityToTrip(trip) }
+    tripE2E = runBlocking { addZermattActivityToTrip(trip) } // Also get the trip at the same time
 
     // Long click
-
     composeTestRule.waitForIdle()
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripE2E))
@@ -337,40 +345,28 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
     // Save as favorite
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
-    composeTestRule.waitForIdle()
-    Thread.sleep(5000)
+    Thread.sleep(500)
     composeTestRule.checkMyTripsNotInSelectionMode()
-    runBlocking { repository.getAllTrips() }
+    // runBlocking { repository.getAllTrips() }
 
     tripE2E = runBlocking { repository.getTrip(trip.uid) }
     assertTrue(tripE2E.isFavorite, "The trip is not favorited")
     assertEquals(trip.uid, tripE2E.uid)
-    //
-    //    // Edit current trip
-    //
-    // composeTestRule.onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON).performClick()
-    //      composeTestRule.waitForIdle()
-    //
-    //    // Set current trip screen
-    //      composeTestRule.checkSetCurrentTripIsDisplayed()
-    //
-    //    // Set as current trip
-    //
-    // composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip)).performClick()
-    //      composeTestRule.waitForIdle()
-    //
-    //    // Back to my trips
-    //      composeTestRule.checkMyTripsWithATripAsCurrent(listOf(trip))
-    //
-    //    // Click on the trip
-    //
-    // composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip)).performClick()
-    //        composeTestRule.waitForIdle()
-    // Trip info screen
 
-    // Compare the current step
+    // Click on the trip
+    composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(tripE2E)).performClick()
+    composeTestRule.waitForIdle()
+
+    // Trip info screen
+    composeTestRule.checkTripInfoScreenIsDisplayed(tripE2E)
 
     // Click on isFavorite to remove
+    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
+    composeTestRule.waitForIdle()
+    Thread.sleep(1000)
+
+    tripE2E = runBlocking { repository.getTrip(trip.uid) }
+    assertFalse(tripE2E.isFavorite, "The trip is still favorited")
 
     // Click on edit trip
 
@@ -470,6 +466,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
             arrivalLocation = arrivalLocation,
             startDate = startTimestamp,
             endDate = endTimestamp,
+            preferredLocations = locations,
             preferences =
                 listOf(Preference.GROUP, Preference.WHEELCHAIR_ACCESSIBLE, Preference.EARLY_BIRD))
     // Create the trip
@@ -483,6 +480,36 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         tripProfile = tripProfile,
         isFavorite = false,
         isCurrentTrip = false)
+  }
+
+  /**
+   * Copy of the trip with the original locations from createSampleTrip()
+   *
+   * @param trip the trip we want to update
+   * @return a copy of the trip with the locations by default
+   */
+  private fun resetLocations(trip: Trip): Trip {
+    // Locations
+    val arrivalLocation =
+        Location(
+            coordinate = Coordinate(46.5191, 6.5668),
+            name =
+                "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne, Vaud",
+            imageUrl = null)
+
+    val departureLocation =
+        Location(
+            coordinate = Coordinate(46.2095, 6.1432),
+            name = "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève, Genève",
+            imageUrl = null)
+
+    val zermattLocation =
+        Location(
+            coordinate = Coordinate(46.0207, 7.7491),
+            name = "Zermatt",
+            imageUrl = "https://example.com/zermatt1.jpg")
+    val locations = listOf(departureLocation, zermattLocation, arrivalLocation)
+    return trip.copy(locations = locations)
   }
 
   /**
