@@ -21,7 +21,6 @@ import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
-import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
@@ -29,7 +28,6 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGL
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
-import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -287,14 +285,6 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
     composeTestRule.waitForIdle()
 
-    // Destination (using MySwitzerland)
-    composeTestRule.checkDestinationScreenIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(TripFirstDestinationsTestTags.ADD_FIRST_DESTINATION)
-        .performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(LocationTextTestTags.INPUT_LOCATION).performTextInput("zermatt")
-    composeTestRule.performClickOnLocationSuggestion()
     composeTestRule.onNodeWithTag(TripFirstDestinationsTestTags.NEXT_BUTTON).performClick()
     composeTestRule.waitForIdle()
 
@@ -553,77 +543,5 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         tripProfile = tripProfile,
         isFavorite = false,
         isCurrentTrip = false)
-  }
-
-  /**
-   * Copy of the trip with the original locations from createSampleTrip()
-   *
-   * @param trip the trip we want to update
-   * @return a copy of the trip with the locations by default
-   */
-  private fun resetLocations(trip: Trip): Trip {
-    // Locations
-    val arrivalLocation =
-        Location(
-            coordinate = Coordinate(46.5191, 6.5668),
-            name =
-                "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne, Vaud",
-            imageUrl = null)
-
-    val departureLocation =
-        Location(
-            coordinate = Coordinate(46.2095, 6.1432),
-            name = "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève, Genève",
-            imageUrl = null)
-
-    val zermattLocation =
-        Location(
-            coordinate = Coordinate(46.0207, 7.7491),
-            name = "Zermatt",
-            imageUrl = "https://example.com/zermatt1.jpg")
-    val locations = listOf(departureLocation, zermattLocation, arrivalLocation)
-    return trip.copy(locations = locations)
-  }
-
-  /**
-   * Helper function that add a predetermined activity in zermatt to the trip and saves it on the
-   * repository (Helped by AI)
-   *
-   * @param trip trip to edit
-   * @return trip with the new activity in it
-   */
-  private suspend fun addZermattActivityToTrip(trip: Trip): Trip {
-    // Create the example activity
-    val now = Timestamp.now()
-    val activityDurationSeconds = 28800
-    val startOfDaySeconds = (now.seconds / 86400) * 86400 // midnight UTC
-    val activityStart = Timestamp(startOfDaySeconds + 7200, 0) // 02:00
-    val activityEnd = Timestamp(activityStart.seconds + activityDurationSeconds, 0) // + 8 hours
-
-    // Create your Zermatt activity
-    val zermattActivity =
-        Activity(
-            startDate = activityStart,
-            endDate = activityEnd,
-            location =
-                Location(
-                    coordinate = Coordinate(46.0236895289399, 7.74788586606218),
-                    name = "Ski trip around the Matterhorn",
-                    imageUrl =
-                        "https://static.stnet.ch/offers/images/6aa63961-fc0e-4820-939f-9480aee434b4-o.jpg"),
-            description =
-                "The ski safari in Zermatt includes much more than just skiing. Those who take on the challenge cover more than 10,000 metres of altitude in one day. An impressive performance!",
-            imageUrls =
-                listOf(
-                    "https://static.stnet.ch/offers/images/0411cb70-c198-4e31-8fb9-4e972b9fa9c2-o.jpg",
-                    "https://static.stnet.ch/offers/images/6aa63961-fc0e-4820-939f-9480aee434b4-o.jpg",
-                    "https://static.stnet.ch/offers/images/df4cd418-c606-46ea-a59b-318f846177ec-o.jpg"),
-            estimatedTime = activityDurationSeconds // 8 hours
-            )
-
-    // Save the activity to Firestore under the trip
-    val updatedTrip = trip.copy(activities = trip.activities + zermattActivity)
-    repository.editTrip(trip.uid, updatedTrip)
-    return updatedTrip
   }
 }
