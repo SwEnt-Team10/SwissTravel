@@ -66,9 +66,20 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: List APK outputs
+        run: ls -R app/build/outputs
+
       # Rename the built APK
+           # Find the built release APK and rename it
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/swiss-travel.apk
+        run: |
+          APK_PATH=$(find app/build/outputs/apk -name "*release*.apk" -print -quit)
+          echo "Found APK at: $APK_PATH"
+          if [ -z "$APK_PATH" ]; then
+            echo "No release APK found!"
+            exit 1
+          fi
+          mv "$APK_PATH" app/build/outputs/apk/release/swiss-travel.apk
 
       # Upload the renamed APK as artifact
       - name: Upload APK
