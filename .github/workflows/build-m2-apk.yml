@@ -29,11 +29,34 @@ jobs:
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
 
-      # Decode google-services.json
-      - name: Decode Google Services JSON
-        run: echo "$GOOGLE_SERVICES" | base64 --decode > app/google-services.json
+
+      - name: Decode MAPBOX_DOWNLOADS_TOKEN
+        run: echo "MAPBOX_DOWNLOADS_TOKEN=${{ secrets.MAP_BOX_DOWNLOAD_SECRET }}" >> $GITHUB_ENV
+
+        # Load google-services.json and local.properties from the secrets
+      - name: Decode secrets
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
+          LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
+          MAP_BOX_SECRET: ${{ secrets.MAP_BOX_SECRET }}
+        run: |
+          if [ -n "$GOOGLE_SERVICES" ]; then
+            echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
+          else
+            echo "::warning::GOOGLE_SERVICES secret is not set."
+          fi
+          
+          if [ -n "$LOCAL_PROPERTIES" ]; then
+            echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
+          else
+            echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
+          fi
+          
+          if [ -n "$MAP_BOX_SECRET" ]; then
+            echo "$MAP_BOX_SECRET" | base64 --decode > ./app/src/main/res/values/developer-config.xml
+          else
+            echo "::warning::MAP_BOX_SECRET secret is not set. developper-config.xml will not be created."
+          fi
 
       # Build the release APK
       - name: Build Release APK
@@ -43,9 +66,20 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: List APK outputs
+        run: ls -R app/build/outputs
+
       # Rename the built APK
+           # Find the built release APK and rename it
       - name: Rename APK
-        run: mv app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/release/swiss-travel.apk
+        run: |
+          APK_PATH=$(find app/build/outputs/apk -name "*release*.apk" -print -quit)
+          echo "Found APK at: $APK_PATH"
+          if [ -z "$APK_PATH" ]; then
+            echo "No release APK found!"
+            exit 1
+          fi
+          mv "$APK_PATH" app/build/outputs/apk/release/swiss-travel.apk
 
       # Upload the renamed APK as artifact
       - name: Upload APK
