@@ -77,7 +77,7 @@ const val E2E_WAIT_TIMEOUT = 15_000L
  */
 abstract class SwissTravelTest {
 
-  // TODO : Implement the repository here
+  /** Creates and returns an initialized in-memory repository for testing. */
   abstract fun createInitializedRepository(): TripsRepository
 
   open fun initializeHTTPClient(): OkHttpClient = FakeHttpClient.getClient()
@@ -236,6 +236,9 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkNavigationMenuIsDisplayed() {
     onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkTopBarIsDisplayed() {
@@ -274,10 +277,8 @@ abstract class SwissTravelTest {
     onNodeWithTag(adultsLabel + CounterTestTags.COUNTER).assertIsDisplayed()
     onNodeWithTag(adultsLabel + CounterTestTags.INCREMENT).assertIsDisplayed()
     onNodeWithTag(adultsLabel + CounterTestTags.DECREMENT).assertIsDisplayed()
-    onNodeWithTag(adultsLabel + CounterTestTags.DECREMENT).assertIsDisplayed()
     onNodeWithTag(childrenLabel + CounterTestTags.COUNTER).assertIsDisplayed()
     onNodeWithTag(childrenLabel + CounterTestTags.INCREMENT).assertIsDisplayed()
-    onNodeWithTag(childrenLabel + CounterTestTags.DECREMENT).assertIsDisplayed()
     onNodeWithTag(childrenLabel + CounterTestTags.DECREMENT).assertIsDisplayed()
   }
 

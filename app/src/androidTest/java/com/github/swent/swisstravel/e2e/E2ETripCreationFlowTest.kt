@@ -86,7 +86,7 @@ import org.junit.Test
  * 25) Check that the trip is there
  * 26) Open selection mode and delete the trip
  * 27) Verify that the trip is deleted (To find all the steps in the code you can do ctrl + f with
- *     "step_number)" )
+ *     "step_number)")
  */
 class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
@@ -133,7 +133,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
     /* 3) */
     // Verify bottom navigation visible
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
+    composeTestRule.checkNavigationMenuIsDisplayed()
     composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
 
     /* 4) */
@@ -239,9 +239,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     val newPreferences =
         listOf(
             Preference.GROUP,
-            Preference.HIKE,
-            Preference.NIGHTLIFE,
-            Preference.SHOPPING,
+            Preference.HIKE, // Remove hike since already activated in the profile
+            Preference.NIGHTLIFE, // Remove nightlife since already activated in the profile
+            Preference.SHOPPING, // Remove shopping since already activated in the profile
             Preference.MUSEUMS, // Remove museums since already activated in the profile
         )
     composeTestRule.checkTripPreferencesIsDisplayed()
@@ -423,6 +423,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
     /* 20) */
     // Log out
+    Thread.sleep(2000)
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.LOGOUT_BUTTON).performClick()
     composeTestRule.waitForIdle()
 
@@ -447,7 +448,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     /* 23) */
     // Check that we arrive on "Current Trip" Screen
     // Verify bottom navigation visible
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
+    composeTestRule.checkNavigationMenuIsDisplayed()
     composeTestRule.checkCurrentTripScreenEmptyIsDisplayed() // Because no current trip in my trips
 
     /* 24) */
