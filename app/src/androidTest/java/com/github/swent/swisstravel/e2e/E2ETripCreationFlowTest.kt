@@ -1,17 +1,18 @@
 package com.github.swent.swisstravel.e2e
 
-import android.annotation.SuppressLint
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
 import androidx.test.core.app.ApplicationProvider
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.SwissTravelApp
@@ -19,6 +20,7 @@ import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
@@ -42,6 +44,8 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -58,19 +62,16 @@ import org.junit.Test
  * 6) Click on the create trip button (bottom right)
  * 7) Fill the trip creation form
  * 8) Submit and see the newly created trip in my trips list
- * 9) Click on it and see trip details
- * 10) Edit the trip
- * 11) Save and go back to my trips
- * 12) Long click on the trip
- * 13) Favorite trip
- * 14) Click on the edit button and set as current trip
- * 15) Click on the trip and change some information
- * 16) Save and go back to trip info
- * 17) Click on edit trip
- * 18) Delete trip
- * 19) Go back to my trips and assert that the trip is gone and that the edit button isn't available
- * 20) Go to profile
- * 21) Log out
+ * 9) Long click on the trip
+ * 10) Favorite trip
+ * 11) Click on the edit button and set as current trip
+ * 12) Click on the trip and change some information
+ * 13) Save and go back to trip info
+ * 14) Click on edit trip
+ * 15) Delete trip
+ * 16) Go back to my trips and assert that the trip is gone and that the edit button isn't available
+ * 17) Go to profile
+ * 18) Log out
  */
 class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
@@ -91,7 +92,6 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     }
   }
 
-  @SuppressLint("CheckResult")
   @Test
   fun user_can_create_a_trip_and_edit_it() {
     val context = ApplicationProvider.getApplicationContext<Context>()
@@ -206,7 +206,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     val newPreferences =
         listOf(
             Preference.GROUP,
-            Preference.CHILDREN_FRIENDLY,
+            Preference.HIKE,
+            Preference.NIGHTLIFE,
+            Preference.SHOPPING,
             Preference.MUSEUMS, // Remove museums since already activated in the profile
         )
     composeTestRule.checkTripPreferencesIsDisplayed()
@@ -270,7 +272,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
           .fetchSemanticsNodes()
           .isNotEmpty()
     }
-    val tripE2E = createSampleTrip()
+    var tripE2E = createSampleTrip()
     composeTestRule.checkTripSummaryScreenIsDisplayed(
         expectedAdults = tripE2E.tripProfile.adults,
         expectedChildren = tripE2E.tripProfile.children,
@@ -293,10 +295,8 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
         .performScrollToNode(hasTestTag(TripSummaryTestTags.CREATE_TRIP_BUTTON))
     composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
-    runBlocking { repository.getAllTrips() }
-    composeTestRule.waitForIdle()
 
-    //    // Back to my trips
+    // Back to my trips
     composeTestRule.waitUntil(
         E2E_WAIT_TIMEOUT * 3) { // Algorithm can take a long time to generate the trip
           composeTestRule
@@ -305,27 +305,40 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
               .isNotEmpty()
         }
     composeTestRule.checkMyTripsScreenIsDisplayed()
+    // runBlocking { repository.getAllTrips() }
+    val trips = runBlocking { repository.getAllTrips() } // Make sure that edit updated the UI too
+    assertEquals(1, trips.size)
+    val trip = trips.elementAt(0)
+
+    // Discard non deterministic activities given by the algorithm
+    runBlocking { repository.editTrip(trip.uid, tripE2E.copy(activities = emptyList())) }
+    // Put deterministic activity instead
+    tripE2E = runBlocking { addZermattActivityToTrip(trip) }
 
     // Long click
-    val trip = runBlocking { repository.getTrip(tripE2E.uid) }
-    //  val trip = null
-    checkNotNull(trip) { "Trip not found in Firestore after creation" }
 
-    //      composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip))
-    //          .assertIsDisplayed()
-    //      composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip))
-    //          .performTouchInput { longClick(durationMillis = 2000) }
-    //      composeTestRule.waitForIdle()
-    //
-    //        // Selection mode
-    //          composeTestRule.checkMyTripsInSelectionMode()
-    //
-    //          // Save as favorite
-    //
-    // composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
-    //          composeTestRule.waitForIdle()
-    //          composeTestRule.checkMyTripsNotInSelectionMode()
-    //      assertTrue(runBlocking { repository.getTrip(tripE2E.uid) }.isFavorite)
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripE2E))
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip)).performTouchInput {
+      longClick()
+    }
+    composeTestRule.waitForIdle()
+
+    // Selection mode
+    composeTestRule.checkMyTripsInSelectionMode()
+
+    // Save as favorite
+    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
+    composeTestRule.waitForIdle()
+    Thread.sleep(5000)
+    composeTestRule.checkMyTripsNotInSelectionMode()
+    runBlocking { repository.getAllTrips() }
+
+    tripE2E = runBlocking { repository.getTrip(trip.uid) }
+    assertTrue(tripE2E.isFavorite, "The trip is not favorited")
+    assertEquals(trip.uid, tripE2E.uid)
     //
     //    // Edit current trip
     //
@@ -426,15 +439,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
             startDate = startTimestamp,
             endDate = endTimestamp,
             preferences =
-                listOf(
-                    Preference.GROUP,
-                    Preference.CHILDREN_FRIENDLY,
-                    Preference.HIKE,
-                    Preference.NIGHTLIFE,
-                    Preference.SHOPPING,
-                    Preference.WHEELCHAIR_ACCESSIBLE,
-                    Preference.EARLY_BIRD))
-
+                listOf(Preference.GROUP, Preference.WHEELCHAIR_ACCESSIBLE, Preference.EARLY_BIRD))
     // Create the trip
     return Trip(
         uid = "testuid",
@@ -446,5 +451,47 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         tripProfile = tripProfile,
         isFavorite = false,
         isCurrentTrip = false)
+  }
+
+  /**
+   * Helper function that add a predetermined activity in zermatt to the trip and saves it on the
+   * repository
+   *
+   * @param trip trip to edit
+   * @return trip with the new activity in it
+   */
+  private suspend fun addZermattActivityToTrip(trip: Trip): Trip {
+    // Create the example activity
+    val now = Timestamp.now()
+    val activityDurationSeconds = 28800
+    val startOfDaySeconds = (now.seconds / 86400) * 86400 // midnight UTC
+    val activityStart = Timestamp(startOfDaySeconds + 7200, 0) // 02:00
+    val activityEnd = Timestamp(activityStart.seconds + activityDurationSeconds, 0) // + 8 hours
+
+    // Create your Zermatt activity
+    val zermattActivity =
+        Activity(
+            startDate = activityStart,
+            endDate = activityEnd,
+            location =
+                Location(
+                    coordinate = Coordinate(46.0236895289399, 7.74788586606218),
+                    name = "Ski trip around the Matterhorn",
+                    imageUrl =
+                        "https://static.stnet.ch/offers/images/6aa63961-fc0e-4820-939f-9480aee434b4-o.jpg"),
+            description =
+                "The ski safari in Zermatt includes much more than just skiing. Those who take on the challenge cover more than 10,000 metres of altitude in one day. An impressive performance!",
+            imageUrls =
+                listOf(
+                    "https://static.stnet.ch/offers/images/0411cb70-c198-4e31-8fb9-4e972b9fa9c2-o.jpg",
+                    "https://static.stnet.ch/offers/images/6aa63961-fc0e-4820-939f-9480aee434b4-o.jpg",
+                    "https://static.stnet.ch/offers/images/df4cd418-c606-46ea-a59b-318f846177ec-o.jpg"),
+            estimatedTime = activityDurationSeconds // 8 hours
+            )
+
+    // Save the activity to Firestore under the trip
+    val updatedTrip = trip.copy(activities = trip.activities + zermattActivity)
+    repository.editTrip(trip.uid, updatedTrip)
+    return updatedTrip
   }
 }
