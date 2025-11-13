@@ -39,7 +39,7 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
   }
 
   override fun toggleFullscreen(fullscreen: Boolean) {
-    /* no op for testing */
+    _ui.value = _ui.value.copy(fullscreen = fullscreen)
   }
 
   override fun toggleFavorite() {
