@@ -71,6 +71,9 @@ import org.junit.Test
  * 19) Go back to my trips and assert that the trip is gone and that the edit button isn't available
  * 20) Go to profile
  * 21) Log out
+ * 22) Log back in
+ * 23) Check that we are on Current Trip Screen
+ * 24) Navigate to My Trips and check that the previously created a trip is still there
  */
 class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
@@ -378,6 +381,32 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Log out
 
     // Check that we are on landing screen
+    composeTestRule.checkLandingScreenIsDisplayed()
+
+    // Sign In
+    composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
+
+    // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+
+    // Verify bottom navigation visible
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
+
+    // Verify that we are on the profile screen
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.waitForIdle()
+    Thread.sleep(5000)
+
+    // Check that we arrive on "Current Trip" Screen
+
+    // Go to My Trips and check that the previously created a trip is still there
 
   }
 
