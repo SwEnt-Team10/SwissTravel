@@ -412,15 +412,10 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
           .isNotEmpty()
     }
 
+    // Check that we arrive on "Current Trip" Screen
     // Verify bottom navigation visible
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
-
-    // Verify that we are on the profile screen
-    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    composeTestRule.waitForIdle()
-    Thread.sleep(5000)
-
-    // Check that we arrive on "Current Trip" Screen
+    composeTestRule.checkCurrentTripScreenIsDisplayed()
 
     // Go to My Trips and check that the previously created a trip is still there
 

@@ -36,6 +36,7 @@ import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -326,6 +327,30 @@ abstract class SwissTravelTest {
     onNodeWithTag(LandingScreenTestTags.APP_NAME).assertIsDisplayed()
     onNodeWithTag(LandingScreenTestTags.SIGN_IN_BUTTON).assertIsDisplayed()
     onNodeWithTag(LandingScreenTestTags.SIGN_UP_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkTripInfoScreenIsDisplayed() {
+    onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
+
+    onNodeWithTag(TripInfoScreenTestTags.LAZY_COLUMN).assertIsDisplayed()
+    // If there are no locations the screen shows a no-locations message; usually not visible for
+    // populated trips.
+    onNodeWithTag(TripInfoScreenTestTags.NO_LOCATIONS).assertIsNotDisplayed()
+
+    onNodeWithTag(TripInfoScreenTestTags.CURRENT_STEP).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.LOCATION_NAME).assertIsDisplayed()
+
+    // Map related elements
+    onNodeWithTag(TripInfoScreenTestTags.MAP_CARD).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.MAP_CONTAINER).assertIsDisplayed()
+    onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON).assertIsDisplayed()
+
+    // Fullscreen map / exit should not be visible by default
+    onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_MAP).assertDoesNotExist()
+    onNodeWithTag(TripInfoScreenTestTags.FULLSCREEN_EXIT).assertDoesNotExist()
   }
 
   // Done with the help of AI
