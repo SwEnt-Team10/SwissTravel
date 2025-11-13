@@ -16,6 +16,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -179,23 +180,6 @@ abstract class SwissTravelTest {
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
     onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).assertIsDisplayed()
-  }
-
-  fun ComposeTestRule.checkMyTripsWithATripAsCurrent(tripList: List<Trip>) {
-    onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertIsDisplayed()
-    for (trip in tripList) {
-      onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip)).assertIsDisplayed()
-    }
-    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.TITLE)
-        .assertIsDisplayed()
-        .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
-        .assertIsDisplayed()
-        .assertTextContains("Current Trip", substring = false, ignoreCase = true)
-    onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON).assertIsDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).assertIsNotDisplayed()
   }
 
   fun ComposeTestRule.checkMyTripsInSelectionMode() {
@@ -385,7 +369,6 @@ abstract class SwissTravelTest {
 
     onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
 
-    val context = ApplicationProvider.getApplicationContext<Context>()
     // --- Current Step section ---
     onNodeWithTag(TripInfoScreenTestTags.CURRENT_STEP)
         .assertIsDisplayed()
@@ -424,11 +407,12 @@ abstract class SwissTravelTest {
     onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed().assertTextEquals(trip.name)
     onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).assertIsDisplayed()
     onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).assertIsDisplayed()
-    onNodeWithTag(EditTripScreenTestTags.DELETE).assertIsDisplayed()
 
     checkTravelerCounterIsDisplayed(adultsLabel, childrenLabel)
 
     checkPreferenceSelectorIsDisplayed()
+
+    onNodeWithTag(EditTripScreenTestTags.DELETE).performScrollTo().assertIsDisplayed()
   }
 
   // Made with AI
@@ -437,7 +421,10 @@ abstract class SwissTravelTest {
     onNodeWithTag(EditTripScreenTestTags.LOADING).assertDoesNotExist()
 
     // Change text field value
-    onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed().performTextClearance()
+    onNodeWithTag(EditTripScreenTestTags.TRIP_NAME)
+        .performScrollTo()
+        .assertIsDisplayed()
+        .performTextClearance()
     onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).performTextInput(newName)
 
     // Verify text updated

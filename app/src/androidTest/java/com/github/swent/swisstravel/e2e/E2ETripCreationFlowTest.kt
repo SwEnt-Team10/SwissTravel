@@ -74,9 +74,7 @@ import org.junit.Test
  * 14) Click on the edit button and set as current trip
  * 15) Click on the trip and change some information
  * 16) Save and go back to trip info
- * 17) Click on edit trip
- * 18) Delete trip
- * 19) Go back to my trips and assert that the trip is gone and that the edit button isn't available
+ * 19) Go back to my trips
  * 20) Go to profile
  * 21) Log out
  * 22) Log back in
@@ -316,7 +314,8 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.waitUntil(
         E2E_WAIT_TIMEOUT * 3) { // Algorithm can take a long time to generate the trip
           composeTestRule
-              .onAllNodesWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
+              .onAllNodesWithTag(
+                  MyTripsScreenTestTags.CREATE_TRIP_BUTTON) // random element on my trips screen
               .fetchSemanticsNodes()
               .isNotEmpty()
         }
@@ -324,20 +323,16 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     val trips = runBlocking { repository.getAllTrips() } // Make sure that edit updated the UI too
     assertEquals(1, trips.size)
     val trip = trips.elementAt(0)
-    tripE2E = tripE2E.copy(uid = trip.uid)
-
-    runBlocking { repository.editTrip(trip.uid, tripE2E) }
-    // Put deterministic activity instead
-    tripE2E = runBlocking { addZermattActivityToTrip(trip) } // Also get the trip at the same time
+    tripE2E = trip
 
     // Long click
     composeTestRule.waitForIdle()
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripE2E))
         .assertIsDisplayed()
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip)).performTouchInput {
-      longClick()
-    }
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(tripE2E))
+        .performTouchInput { longClick() }
     composeTestRule.waitForIdle()
 
     // Selection mode
@@ -347,11 +342,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
     Thread.sleep(500)
     composeTestRule.checkMyTripsNotInSelectionMode()
-    // runBlocking { repository.getAllTrips() }
 
-    tripE2E = runBlocking { repository.getTrip(trip.uid) }
+    tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
     assertTrue(tripE2E.isFavorite, "The trip is not favorited")
-    assertEquals(trip.uid, tripE2E.uid)
 
     // Click on the trip
     composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(tripE2E)).performClick()
@@ -363,9 +356,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Click on isFavorite to remove
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
     composeTestRule.waitForIdle()
-    Thread.sleep(1000)
+    Thread.sleep(1500)
 
-    tripE2E = runBlocking { repository.getTrip(trip.uid) }
+    tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
     assertFalse(tripE2E.isFavorite, "The trip is still favorited")
 
     // Click on edit trip
@@ -381,25 +374,27 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.changeTripNameAndSaveInEditTrip(newName)
     composeTestRule.waitForIdle()
     Thread.sleep(1000)
+
     // Getting the trip
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
     assertEquals(newName, tripE2E.name)
 
-    // Save
-
     // Back to the trip info screen
+    composeTestRule.checkTripInfoScreenIsDisplayed()
 
-    // Click on edit trip
-
-    // Delete the trip
+    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.waitForIdle()
 
     // Back to my trips
-
-    // Assert no trips
+    composeTestRule.checkMyTripsScreenIsDisplayed()
 
     // Go back to profile
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.waitForIdle()
 
     // Log out
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.LOGOUT_BUTTON).performClick()
+    composeTestRule.waitForIdle()
 
     // Check that we are on landing screen
     composeTestRule.checkLandingScreenIsDisplayed()
