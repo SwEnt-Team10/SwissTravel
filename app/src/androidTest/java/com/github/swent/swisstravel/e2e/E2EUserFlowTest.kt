@@ -38,7 +38,7 @@ class E2EUserFlowTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
     val fakeGoogleIdToken =
-        FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
+        FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User 2", email = "test2@example.com")
     val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
 
     // Start app logged out
