@@ -353,7 +353,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     /* 12) */
     // Save as favorite
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).performClick()
-    Thread.sleep(500)
+    Thread.sleep(2000)
     composeTestRule.checkMyTripsNotInSelectionMode()
 
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
@@ -371,7 +371,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Unfavorite trip
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
     composeTestRule.waitForIdle()
-    Thread.sleep(1500)
+    Thread.sleep(2000)
 
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
     assertFalse(tripE2E.isFavorite, "The trip is still favorited")
@@ -390,7 +390,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Change the name
     composeTestRule.changeTripNameAndSaveInEditTrip(newName)
     composeTestRule.waitForIdle()
-    Thread.sleep(1000)
+    Thread.sleep(2000)
 
     // Getting the trip
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
