@@ -14,7 +14,7 @@ import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
-import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
+import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -28,7 +28,7 @@ import org.junit.runner.RunWith
  * 3) See bottom navigation, navigate between tabs and assert screens
  */
 @RunWith(AndroidJUnit4::class)
-class E2EUserFlowTest : InMemorySwissTravelTest() {
+class E2EUserFlowTest : FirestoreSwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -54,7 +54,7 @@ class E2EUserFlowTest : InMemorySwissTravelTest() {
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
 
     // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
-    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT * 2) {
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule
           .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
           .fetchSemanticsNodes()
