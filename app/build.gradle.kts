@@ -208,6 +208,7 @@ dependencies {
     androidTestImplementation(libs.mockk.android)
     androidTestImplementation(libs.mockk.agent)
     testImplementation(libs.mockk)
+    testImplementation(libs.mockwebserver)
     testImplementation(libs.json)
     testImplementation(libs.coroutines.kotlin)
     testImplementation(libs.credentials)
@@ -258,6 +259,8 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         "**/Manifest*.*",
         "**/*Test*.*",
         "android/**/*.*",
+        "com/sun/**",
+        "jdk/internal/**"
     )
 
     val debugTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {

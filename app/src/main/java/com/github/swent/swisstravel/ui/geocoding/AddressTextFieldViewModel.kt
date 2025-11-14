@@ -30,7 +30,7 @@ interface AddressTextFieldViewModelContract {
    *
    * @param location The location to set as selected.
    */
-  fun setLocation(location: Location)
+  fun setLocation(location: Location?)
 
   /**
    * Updates the location query and fetches new location suggestions based on the query.
@@ -38,6 +38,9 @@ interface AddressTextFieldViewModelContract {
    * @param query The new location query input by the user.
    */
   fun setLocationQuery(query: String)
+
+  /** Resets the selected location, indicating the user is typing a new query. */
+  fun clearSelectedLocation()
 }
 /**
  * Data class representing the state of the address text field.
@@ -60,7 +63,7 @@ data class AddressTextFieldState(
  *
  * @param locationRepository The repository used to fetch location suggestions.
  */
-class AddressTextFieldViewModel(
+open class AddressTextFieldViewModel(
     private val locationRepository: LocationRepository =
         NominatimLocationRepository(HttpClientProvider.client)
 ) : ViewModel(), AddressTextFieldViewModelContract {
@@ -68,9 +71,13 @@ class AddressTextFieldViewModel(
   private val _addressState = MutableStateFlow(AddressTextFieldState())
   override val addressState: StateFlow<AddressTextFieldState> = _addressState.asStateFlow()
 
-  override fun setLocation(location: Location) {
-    _addressState.value =
-        _addressState.value.copy(selectedLocation = location, locationQuery = location.name)
+  override fun setLocation(location: Location?) {
+    if (location == null) {
+      _addressState.value = _addressState.value.copy(selectedLocation = null, locationQuery = "")
+    } else {
+      _addressState.value =
+          _addressState.value.copy(selectedLocation = location, locationQuery = location.name)
+    }
   }
 
   override fun setLocationQuery(query: String) {
@@ -82,6 +89,7 @@ class AddressTextFieldViewModel(
           val results = locationRepository.search(query)
           _addressState.value = _addressState.value.copy(locationSuggestions = results)
         } catch (e: Exception) {
+          // Log, doesn't need a string resource
           Log.e(AddressTextFieldViewModelTags.TAG, "Error fetching location suggestions", e)
 
           _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
@@ -90,5 +98,11 @@ class AddressTextFieldViewModel(
     } else {
       _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
     }
+  }
+
+  override fun clearSelectedLocation() {
+    // When the user starts typing after a selection, clear the selection.
+    // This signals that a new search is being initiated.
+    _addressState.value = _addressState.value.copy(selectedLocation = null)
   }
 }
