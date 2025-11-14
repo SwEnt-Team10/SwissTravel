@@ -9,11 +9,12 @@ import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -27,7 +28,7 @@ import org.junit.runner.RunWith
  * 3) See bottom navigation, navigate between tabs and assert screens
  */
 @RunWith(AndroidJUnit4::class)
-class E2EUserFlowTest : SwissTravelTest() {
+class E2EUserFlowTest : FirestoreSwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -36,16 +37,18 @@ class E2EUserFlowTest : SwissTravelTest() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User 2", email = "test2@example.com")
+    val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
+
+    // Start app logged out
+    composeTestRule.setContent {
+      SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) }
+    }
   }
 
   @Test
   fun user_can_sign_in_and_navigate_across_tabs() {
-    val fakeGoogleIdToken =
-        FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
-    val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
-
-    // Start app logged out
-    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
@@ -63,7 +66,7 @@ class E2EUserFlowTest : SwissTravelTest() {
 
     // Navigate to Current Trip and verify
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    composeTestRule.checkCurrentTripScreenIsDisplayed()
+    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
     composeTestRule.checkMyTripsScreenIsNotDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
 

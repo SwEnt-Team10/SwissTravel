@@ -17,10 +17,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.displayStringRes
+import com.github.swent.swisstravel.model.user.toTestTagString
 
 /** Test tags for UI tests to identify components. */
 object TripPreferenceIconTestTags {
   const val TRIP_PREFERENCE_ICON = "tripPreferenceIcon"
+
+  fun getTestTag(preference: Preference): String {
+    return TRIP_PREFERENCE_ICON + preference.toTestTagString()
+  }
 }
 
 /**
@@ -40,7 +45,7 @@ fun TripPreferenceIcon(preference: Preference, modifier: Modifier = Modifier) {
   Box(
       modifier =
           modifier
-              .testTag(TripPreferenceIconTestTags.TRIP_PREFERENCE_ICON)
+              .testTag(TripPreferenceIconTestTags.getTestTag(preference))
               .border(BorderStroke(borderWidth, borderColor), shape = shape)
               .background(containerColor, shape = shape)
               .padding(horizontal = 12.dp, vertical = 8.dp),

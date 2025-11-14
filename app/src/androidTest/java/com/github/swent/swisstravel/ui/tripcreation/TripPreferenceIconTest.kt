@@ -28,7 +28,7 @@ class TripPreferenceIconTest {
     }
 
     composeTestRule
-        .onNodeWithTag(TripPreferenceIconTestTags.TRIP_PREFERENCE_ICON)
+        .onNodeWithTag(TripPreferenceIconTestTags.getTestTag(Preference.PUBLIC_TRANSPORT))
         .assertIsDisplayed()
   }
 

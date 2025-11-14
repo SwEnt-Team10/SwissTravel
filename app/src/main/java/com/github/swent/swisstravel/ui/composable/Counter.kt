@@ -67,18 +67,19 @@ fun Counter(
                   text = "–",
                   onClick = onDecrement,
                   enabled = enableButton,
-                  testTag = CounterTestTags.DECREMENT)
+                  testTag = (label + CounterTestTags.DECREMENT))
 
               Text(
                   text = count.toString(),
-                  modifier = Modifier.padding(horizontal = 24.dp).testTag(CounterTestTags.COUNT),
+                  modifier =
+                      Modifier.padding(horizontal = 24.dp).testTag(label + CounterTestTags.COUNT),
                   style =
                       MaterialTheme.typography.headlineMedium.copy(
                           fontWeight = FontWeight.Bold,
                           color = MaterialTheme.colorScheme.onBackground))
 
               RoundIconButton(
-                  text = "+", onClick = onIncrement, testTag = CounterTestTags.INCREMENT)
+                  text = "+", onClick = onIncrement, testTag = (label + CounterTestTags.INCREMENT))
             }
       }
 }

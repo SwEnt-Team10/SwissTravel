@@ -2,7 +2,7 @@ package com.github.swent.swisstravel.model.trip
 
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
-import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlin.test.assertEquals
@@ -13,9 +13,9 @@ import kotlinx.coroutines.tasks.await
 import org.junit.Before
 import org.junit.Test
 
-class TripsRepositoryEmulatorTest : SwissTravelTest() {
+class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
 
-  private lateinit var repository: TripsRepositoryFirestore
+  override lateinit var repository: TripsRepositoryFirestore
 
   @Before
   override fun setUp() {
@@ -25,7 +25,7 @@ class TripsRepositoryEmulatorTest : SwissTravelTest() {
     FirebaseEmulator.clearAuthEmulator()
 
     // Initialize repository using emulator Firestore + Auth
-    repository = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
+    repository = createInitializedRepository() as TripsRepositoryFirestore
   }
 
   @Test

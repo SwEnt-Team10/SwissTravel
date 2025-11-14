@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -28,8 +30,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
@@ -57,6 +61,7 @@ object TripSummaryTestTags {
   const val DESTINATIONS_EMPTY_LIST = "destinationsList"
   const val DESTINATION_ITEM = "destinationItem"
   const val CREATE_TRIP_BUTTON = "createTripButton"
+  const val TRIP_SUMMARY_SCREEN = "tripSummaryScreen"
 }
 
 /**
@@ -100,6 +105,7 @@ fun TripSummaryScreen(
   val fromDate = stringResource(R.string.from_summary)
   val toDate = stringResource(R.string.to_summary)
   val listState = rememberLazyListState()
+  val focusManager = LocalFocusManager.current
 
   Scaffold(
       topBar = {
@@ -114,7 +120,10 @@ fun TripSummaryScreen(
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
           LazyColumn(
               state = listState,
-              modifier = Modifier.fillMaxSize().padding(pd),
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(pd)
+                      .testTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN),
           ) {
             item {
               OutlinedTextField(
@@ -124,7 +133,9 @@ fun TripSummaryScreen(
                   modifier =
                       Modifier.fillMaxWidth()
                           .padding(16.dp)
-                          .testTag(TripSummaryTestTags.TRIP_NAME_FIELD))
+                          .testTag(TripSummaryTestTags.TRIP_NAME_FIELD),
+                  keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
+                  keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }))
             }
             // Summary of dates
             item {

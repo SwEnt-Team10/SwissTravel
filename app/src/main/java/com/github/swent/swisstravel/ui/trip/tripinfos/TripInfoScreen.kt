@@ -55,6 +55,8 @@ object TripInfoScreenTestTags {
   const val LOADING = "loading"
   const val FULLSCREEN_MAP = "fullScreenMap"
   const val FULLSCREEN_EXIT = "fullScreenExit"
+  const val PREVIOUS_STEP = "previousStep"
+  const val NEXT_STEP = "nextStep"
 }
 
 /**
@@ -286,6 +288,7 @@ fun TripInfoScreen(
                           horizontalArrangement = Arrangement.SpaceBetween,
                           verticalAlignment = Alignment.CenterVertically) {
                             OutlinedButton(
+                                modifier = Modifier.testTag(TripInfoScreenTestTags.PREVIOUS_STEP),
                                 onClick = { if (currentStepIndex > 0) currentStepIndex-- },
                                 enabled = !isComputing && currentStepIndex > 0) {
                                   Text(stringResource(R.string.previous_step))
@@ -294,6 +297,7 @@ fun TripInfoScreen(
                             Spacer(Modifier.width(8.dp))
 
                             Button(
+                                modifier = Modifier.testTag(TripInfoScreenTestTags.NEXT_STEP),
                                 onClick = {
                                   if (currentStepIndex < schedule.lastIndex) currentStepIndex++
                                 },

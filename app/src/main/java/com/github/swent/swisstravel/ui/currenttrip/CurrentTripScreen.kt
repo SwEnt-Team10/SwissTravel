@@ -27,12 +27,13 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
 
+/** Object for test tags */
 object CurrentTripScreenTestTags {
   const val CREATE_TRIP_BUTTON = "createTripButton"
   const val CREATE_TRIP_TEXT = "createTripText"
-  const val LOG_IN_TEXT = "logInText"
 }
 
+/**  */
 @Composable
 fun CurrentTripScreen(
     navigationActions: NavigationActions? = null,
