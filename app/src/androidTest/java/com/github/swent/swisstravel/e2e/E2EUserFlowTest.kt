@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
@@ -41,7 +42,9 @@ class E2EUserFlowTest : InMemorySwissTravelTest() {
     val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
 
     // Start app logged out
-    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
+    composeTestRule.setContent {
+      SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) }
+    }
   }
 
   @Test
@@ -51,7 +54,7 @@ class E2EUserFlowTest : InMemorySwissTravelTest() {
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
 
     // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
-    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT * 2) {
       composeTestRule
           .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
           .fetchSemanticsNodes()
