@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performImeAction
@@ -390,7 +391,12 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Change the name
     composeTestRule.changeTripNameAndSaveInEditTrip(newName)
     composeTestRule.waitForIdle()
-    Thread.sleep(3000)
+
+    // Wait until the UI is back to the trip info screen and the name is updated
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      composeTestRule.onAllNodesWithText(newName).fetchSemanticsNodes().isNotEmpty()
+    }
+    composeTestRule.waitForIdle()
 
     // Getting the trip
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }

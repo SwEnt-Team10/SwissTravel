@@ -2,18 +2,31 @@ package com.github.swent.swisstravel.ui.trip.edittrip
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceRules
+import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
+import com.github.swent.swisstravel.ui.tripcreation.TripDate
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
+import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class EditTripUiState(
     val isLoading: Boolean = true,
+    val isSaving: Boolean = false,
+    val savingProgress: Float = 0f,
     val errorMsg: String? = null,
     val tripId: String = "",
     val tripName: String = "",
@@ -23,12 +36,16 @@ data class EditTripUiState(
 )
 
 class EditTripScreenViewModel(
-    private val tripRepository: TripsRepository = TripsRepositoryFirestore()
+    private val tripRepository: TripsRepository = TripsRepositoryFirestore(),
+    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(EditTripUiState())
   val state: StateFlow<EditTripUiState> = _uiState
   private lateinit var originalTrip: Trip
+
+  private val _validationEventChannel = Channel<ValidationEvent>()
+  val validationEvents = _validationEventChannel.receiveAsFlow()
 
   /**
    * Loads a trip from the repository and fills the UI
@@ -82,22 +99,74 @@ class EditTripScreenViewModel(
       }
 
   /**
-   * Saves the current trip with the edited information.
-   *
-   * @throws Exception if the trip could not be saved.
+   * Saves the current trip with the edited information. This will re-calculate activities based on
+   * the new preferences.
    */
   fun save() {
     viewModelScope.launch {
+      _uiState.update { it.copy(isSaving = true, savingProgress = 0f) }
       try {
         val state = _uiState.value
-        val sanitized = PreferenceRules.enforceMutualExclusivity(state.selectedPrefs)
+        val sanitizedPrefs = PreferenceRules.enforceMutualExclusivity(state.selectedPrefs)
+
+        // Create a temporary TripSettings object to pass to SelectActivities
+        val tempTripSettings =
+            TripSettings(
+                name = state.tripName,
+                date =
+                    TripDate(
+                        originalTrip.tripProfile.startDate
+                            .toDate()
+                            .toInstant()
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate(),
+                        originalTrip.tripProfile.endDate
+                            .toDate()
+                            .toInstant()
+                            .atZone(java.time.ZoneId.systemDefault())
+                            .toLocalDate()),
+                travelers = TripTravelers(state.adults, state.children),
+                preferences = sanitizedPrefs.toList(),
+                arrivalDeparture =
+                    TripArrivalDeparture(
+                        originalTrip.tripProfile.arrivalLocation,
+                        originalTrip.tripProfile.departureLocation),
+                destinations = originalTrip.locations)
+
+        val selectActivities =
+            SelectActivities(
+                tripSettings = tempTripSettings,
+                onProgress = { progress -> _uiState.update { it.copy(savingProgress = progress) } },
+                activityRepository = activityRepository)
+        val selectedActivities = selectActivities.addActivities()
+
         val updatedTripProfile =
             originalTrip.tripProfile.copy(
-                adults = state.adults, children = state.children, preferences = sanitized)
-        val updatedTrip = originalTrip.copy(name = state.tripName, tripProfile = updatedTripProfile)
+                adults = state.adults,
+                children = state.children,
+                preferences = sanitizedPrefs.toList(),
+            )
+
+        val newLocation = mutableListOf<Location>()
+        newLocation.add(originalTrip.tripProfile.arrivalLocation!!)
+        newLocation.addAll(selectedActivities.map { it.location })
+        newLocation.add(originalTrip.tripProfile.departureLocation!!)
+
+        val updatedTrip =
+            originalTrip.copy(
+                name = state.tripName,
+                tripProfile = updatedTripProfile,
+                activities = selectedActivities,
+                locations = newLocation)
+
         tripRepository.editTrip(state.tripId, updatedTrip)
+        _validationEventChannel.send(ValidationEvent.SaveSuccess)
       } catch (e: Exception) {
-        _uiState.update { it.copy(errorMsg = e.message ?: "Failed to save trip") }
+        val errorMsg = e.message ?: "Failed to save trip"
+        _uiState.update { it.copy(errorMsg = errorMsg) }
+        _validationEventChannel.send(ValidationEvent.SaveError(errorMsg))
+      } finally {
+        _uiState.update { it.copy(isSaving = false) }
       }
     }
   }
