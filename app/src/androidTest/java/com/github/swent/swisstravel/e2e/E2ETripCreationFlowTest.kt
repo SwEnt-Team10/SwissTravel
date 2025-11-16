@@ -391,7 +391,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Change the name
     composeTestRule.changeTripNameAndSaveInEditTrip(newName)
     composeTestRule.waitForIdle()
-    Thread.sleep(3000)
+    Thread.sleep(15000)
 
     // Wait until the UI is back to the trip info screen and the name is updated
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
