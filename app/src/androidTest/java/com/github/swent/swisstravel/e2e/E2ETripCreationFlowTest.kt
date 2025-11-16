@@ -381,7 +381,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Click on edit trip
     composeTestRule.checkTripInfoScreenIsDisplayed()
     composeTestRule.onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).performClick()
+    Thread.sleep(3000)
     composeTestRule.waitForIdle()
+    Thread.sleep(3000)
 
     // Edit trip screen
     composeTestRule.checkEditTripScreenIsDisplayed(tripE2E, adultsLabel, childrenLabel)
@@ -391,7 +393,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Change the name
     composeTestRule.changeTripNameAndSaveInEditTrip(newName)
     composeTestRule.waitForIdle()
-    Thread.sleep(15000)
+    Thread.sleep(3000)
 
     // Wait until the UI is back to the trip info screen and the name is updated
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
