@@ -108,37 +108,45 @@ class EditTripScreenViewModel(
       try {
         val state = _uiState.value
         val sanitizedPrefs = PreferenceRules.enforceMutualExclusivity(state.selectedPrefs)
+        var selectedActivities = originalTrip.activities
 
-        // Create a temporary TripSettings object to pass to SelectActivities
-        val tempTripSettings =
-            TripSettings(
-                name = state.tripName,
-                date =
-                    TripDate(
-                        originalTrip.tripProfile.startDate
-                            .toDate()
-                            .toInstant()
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDate(),
-                        originalTrip.tripProfile.endDate
-                            .toDate()
-                            .toInstant()
-                            .atZone(java.time.ZoneId.systemDefault())
-                            .toLocalDate()),
-                travelers = TripTravelers(state.adults, state.children),
-                preferences = sanitizedPrefs.toList(),
-                arrivalDeparture =
-                    TripArrivalDeparture(
-                        originalTrip.tripProfile.arrivalLocation,
-                        originalTrip.tripProfile.departureLocation),
-                destinations = originalTrip.locations)
+        // Updates the activities only if the preferences have changed.
+        if (sanitizedPrefs ==
+            PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences)) {
+          // Create a temporary TripSettings object to pass to SelectActivities
+          val tempTripSettings =
+              TripSettings(
+                  name = state.tripName,
+                  date =
+                      TripDate(
+                          originalTrip.tripProfile.startDate
+                              .toDate()
+                              .toInstant()
+                              .atZone(java.time.ZoneId.systemDefault())
+                              .toLocalDate(),
+                          originalTrip.tripProfile.endDate
+                              .toDate()
+                              .toInstant()
+                              .atZone(java.time.ZoneId.systemDefault())
+                              .toLocalDate()),
+                  travelers = TripTravelers(state.adults, state.children),
+                  preferences = sanitizedPrefs.toList(),
+                  arrivalDeparture =
+                      TripArrivalDeparture(
+                          originalTrip.tripProfile.arrivalLocation,
+                          originalTrip.tripProfile.departureLocation),
+                  destinations = originalTrip.locations)
 
-        val selectActivities =
-            SelectActivities(
-                tripSettings = tempTripSettings,
-                onProgress = { progress -> _uiState.update { it.copy(savingProgress = progress) } },
-                activityRepository = activityRepository)
-        val selectedActivities = selectActivities.addActivities()
+          val selectActivities =
+              SelectActivities(
+                  tripSettings = tempTripSettings,
+                  onProgress = { progress ->
+                    _uiState.update { it.copy(savingProgress = progress) }
+                  },
+                  activityRepository = activityRepository)
+
+          selectedActivities = selectActivities.addActivities()
+        }
 
         val updatedTripProfile =
             originalTrip.tripProfile.copy(
