@@ -8,11 +8,14 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthCredential
+import com.google.firebase.auth.UserProfileChangeRequest
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
 import junit.framework.TestCase.assertEquals
+import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -21,9 +24,9 @@ import org.junit.Test
 class AuthRepositoryFirebaseTest {
 
   private lateinit var authRepository: AuthRepositoryFirebase
-  private val mockAuth: FirebaseAuth = mockk()
+  private val mockAuth: FirebaseAuth = mockk(relaxed = true) // Relaxed to avoid mocking all calls
   private val mockHelper: GoogleSignInHelper = mockk()
-  private val mockUser: FirebaseUser = mockk()
+  private val mockUser: FirebaseUser = mockk(relaxed = true)
   private val mockCredential: CustomCredential = mockk()
   private val mockIdTokenCredential: GoogleIdTokenCredential = mockk()
   private val mockFirebaseCredential: GoogleAuthCredential = mockk()
@@ -87,6 +90,167 @@ class AuthRepositoryFirebaseTest {
     assertEquals("Login failed: Firebase error", result.exceptionOrNull()?.message)
   }
 
+  @Test
+  fun signUpWithEmailPassword_Success() = runTest {
+    // ARRANGE
+    coEvery { mockAuth.createUserWithEmailAndPassword(any(), any()) } returns
+        Tasks.forResult(mockAuthResult)
+    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
+    coEvery { mockUser.updateProfile(any<UserProfileChangeRequest>()) } returns
+        Tasks.forResult(null)
+    coEvery { mockUser.sendEmailVerification() } returns Tasks.forResult(null)
+
+    // ACT
+    val result =
+        authRepository.signUpWithEmailPassword("test@example.com", "password", "John", "Doe")
+
+    // ASSERT
+    assertTrue(result.isSuccess)
+    assertEquals(mockUser, result.getOrNull())
+    coVerify { mockUser.updateProfile(any<UserProfileChangeRequest>()) }
+    coVerify { mockUser.sendEmailVerification() }
+  }
+
+  @Test
+  fun signUpWithEmailPassword_Failure_UserNull() = runTest {
+    // Arrange
+    every { mockAuthResult.user } returns null
+    coEvery { mockAuth.createUserWithEmailAndPassword(any(), any()) } returns
+        Tasks.forResult(mockAuthResult)
+
+    // Act
+    val result =
+        authRepository.signUpWithEmailPassword("test@example.com", "password", "John", "Doe")
+
+    // Assert
+    assertTrue(result.isFailure)
+    assertEquals(
+        "Sign up failed: Could not retrieve user information", result.exceptionOrNull()?.message)
+  }
+
+  @Test
+  fun signUpWithEmailPassword_Failure_FirebaseFails() = runTest {
+    // Arrange
+    val exception = Exception("Firebase error")
+    coEvery { mockAuth.createUserWithEmailAndPassword(any(), any()) } returns
+        Tasks.forException(exception)
+
+    // Act
+    val result =
+        authRepository.signUpWithEmailPassword("test@example.com", "password", "John", "Doe")
+
+    // Assert
+    assertTrue(result.isFailure)
+    assertEquals("Sign up failed: Firebase error", result.exceptionOrNull()?.message)
+  }
+
+  // --- NEW TESTS FOR signInWithEmailPassword ---
+  @Test
+  fun signInWithEmailPassword_Success() = runTest {
+    // Arrange
+    coEvery { mockAuth.signInWithEmailAndPassword(any(), any()) } returns
+        Tasks.forResult(mockAuthResult)
+
+    // Act
+    val result = authRepository.signInWithEmailPassword("test@example.com", "password")
+
+    // Assert
+    assertTrue(result.isSuccess)
+    assertEquals(mockUser, result.getOrNull())
+  }
+
+  @Test
+  fun signInWithEmailPassword_Failure_FirebaseFails() = runTest {
+    // Arrange
+    val exception = Exception("Firebase error")
+    coEvery { mockAuth.signInWithEmailAndPassword(any(), any()) } returns
+        Tasks.forException(exception)
+
+    // Act
+    val result = authRepository.signInWithEmailPassword("test@example.com", "password")
+
+    // Assert
+    assertTrue(result.isFailure)
+    assertEquals("Login failed: Firebase error", result.exceptionOrNull()?.message)
+  }
+
+  // --- NEW TESTS FOR reloadAndCheckVerification ---
+  @Test
+  fun reloadAndCheckVerification_Success_UserVerified() = runTest {
+    // Arrange
+    every { mockAuth.currentUser } returns mockUser
+    every { mockUser.isEmailVerified } returns true
+    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
+    coEvery { mockUser.reload() } returns Tasks.forResult(null)
+
+    // Act
+    val result = authRepository.reloadAndCheckVerification()
+
+    // Assert
+    assertTrue(result.isSuccess)
+    assertTrue(result.getOrThrow())
+    coVerify { mockUser.reload() } // Verify that reload was called
+  }
+
+  @Test
+  fun reloadAndCheckVerification_Success_UserNotVerified() = runTest {
+    // Arrange
+    every { mockAuth.currentUser } returns mockUser
+    every { mockUser.isEmailVerified } returns false
+    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
+    coEvery { mockUser.reload() } returns Tasks.forResult(null)
+
+    // Act
+    val result = authRepository.reloadAndCheckVerification()
+
+    // Assert
+    assertTrue(result.isSuccess)
+    assertFalse(result.getOrThrow())
+  }
+
+  @Test
+  fun reloadAndCheckVerification_Failure_NoUser() = runTest {
+    // Arrange
+    every { mockAuth.currentUser } returns null
+
+    // Act
+    val result = authRepository.reloadAndCheckVerification()
+
+    // Assert
+    assertTrue(result.isFailure)
+    assertEquals("No user is currently signed in.", result.exceptionOrNull()?.message)
+  }
+
+  // --- NEW TESTS FOR resendVerificationEmail ---
+  @Test
+  fun resendVerificationEmail_Success() = runTest {
+    // Arrange
+    every { mockAuth.currentUser } returns mockUser
+    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
+    coEvery { mockUser.sendEmailVerification() } returns Tasks.forResult(null)
+
+    // Act
+    val result = authRepository.resendVerificationEmail()
+
+    // Assert
+    assertTrue(result.isSuccess)
+    coVerify { mockUser.sendEmailVerification() }
+  }
+
+  @Test
+  fun resendVerificationEmail_Failure_NoUser() = runTest {
+    // Arrange
+    every { mockAuth.currentUser } returns null
+
+    // Act
+    val result = authRepository.resendVerificationEmail()
+
+    // Assert
+    assertTrue(result.isFailure)
+    assertEquals("No user is currently signed in.", result.exceptionOrNull()?.message)
+  }
+
+  // --- Existing Sign Out Tests ---
   @Test
   fun signOut_Success() {
     every { mockAuth.signOut() } returns Unit
