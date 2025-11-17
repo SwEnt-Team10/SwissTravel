@@ -13,12 +13,13 @@ import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 
 /**
- * A Firebase implementation of [AuthRepository].
+ * A Firebase implementation of the [AuthRepository] interface.
  *
- * Retrieves a Google ID token via Credential Manager and authenticates the user with Firebase. Also
- * handles sign-out and credential state clearing.
+ * This class handles all authentication logic using the Firebase Authentication SDK. It supports
+ * signing in with Google, signing in with email/password, creating new users, and managing email
+ * verification states.
  *
- * @param auth The [FirebaseAuth] instance for Firebase authentication.
+ * @param auth The [FirebaseAuth] instance used for all Firebase authentication operations.
  * @param helper A [GoogleSignInHelper] to extract Google ID token credentials and convert them to
  *   Firebase credentials.
  */
@@ -27,9 +28,27 @@ class AuthRepositoryFirebase(
     private val helper: GoogleSignInHelper = DefaultGoogleSignInHelper()
 ) : AuthRepository {
 
+  /**
+   * Constructs a [GetSignInWithGoogleOption] to be used with the Credential Manager API.
+   *
+   * This is a helper function specific to the Firebase implementation and is not part of the
+   * [AuthRepository] interface.
+   *
+   * @param serverClientId The Web client ID from the Google Cloud console.
+   * @return A [GetSignInWithGoogleOption] configured for signing in with Google.
+   */
   fun getGoogleSignInOption(serverClientId: String) =
       GetSignInWithGoogleOption.Builder(serverClientId = serverClientId).build()
 
+  /**
+   * Signs a user in with Google using a credential from the Credential Manager.
+   *
+   * It extracts the ID token from the [Credential], converts it to a Firebase credential, and signs
+   * the user into Firebase Authentication.
+   *
+   * @param credential The [Credential] object, expected to be a Google ID Token credential.
+   * @return A [Result] containing the [FirebaseUser] on success, or an exception on failure.
+   */
   override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
     return try {
       if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
@@ -52,6 +71,13 @@ class AuthRepositoryFirebase(
     }
   }
 
+  /**
+   * Signs a user in with their email and password.
+   *
+   * @param email The user's email address.
+   * @param password The user's password.
+   * @return A [Result] containing the [FirebaseUser] on success, or an exception on failure.
+   */
   override suspend fun signInWithEmailPassword(
       email: String,
       password: String
@@ -68,6 +94,19 @@ class AuthRepositoryFirebase(
     }
   }
 
+  /**
+   * Creates a new user account with the given email, password, and name.
+   *
+   * After creating the user, it updates their Firebase profile with the provided first and last
+   * name and sends a verification email.
+   *
+   * @param email The new user's email address.
+   * @param password The new user's chosen password.
+   * @param firstName The user's first name.
+   * @param lastName The user's last name.
+   * @return A [Result] containing the newly created [FirebaseUser] on success, or an exception on
+   *   failure.
+   */
   override suspend fun signUpWithEmailPassword(
       email: String,
       password: String,
@@ -95,7 +134,14 @@ class AuthRepositoryFirebase(
           IllegalStateException("Sign up failed: ${e.localizedMessage ?: "Unexpected error"}"))
     }
   }
-  // New function to resend the verification email
+
+  /**
+   * Resends the verification email to the currently signed-in user.
+   *
+   * Fails if no user is currently authenticated.
+   *
+   * @return A [Result] indicating success ([Unit]) or an exception on failure.
+   */
   override suspend fun resendVerificationEmail(): Result<Unit> {
     return try {
       val user = auth.currentUser
@@ -109,7 +155,16 @@ class AuthRepositoryFirebase(
       Result.failure(IllegalStateException("Failed to resend email: ${e.localizedMessage}"))
     }
   }
-  // New function to reload the user and check if their email is verified
+
+  /**
+   * Checks the verification status of the current user's email.
+   *
+   * It is crucial that this method reloads the user's state from the Firebase backend before
+   * checking the `isEmailVerified` property, as the local token may be stale.
+   *
+   * @return A [Result] containing `true` if the email is verified and `false` otherwise. Fails if
+   *   no user is signed in.
+   */
   override suspend fun reloadAndCheckVerification(): Result<Boolean> {
     return try {
       val user = auth.currentUser
@@ -125,6 +180,11 @@ class AuthRepositoryFirebase(
     }
   }
 
+  /**
+   * Signs out the currently authenticated user from Firebase.
+   *
+   * @return A [Result] indicating success ([Unit]) or an exception on failure.
+   */
   override fun signOut(): Result<Unit> {
     return try {
       // Firebase sign out
