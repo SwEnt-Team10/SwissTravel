@@ -39,7 +39,18 @@ interface AuthRepository {
    */
   fun signOut(): Result<Unit>
 
+  /**
+   * Reloads the current user's state from the server and checks if their email is verified.
+   *
+   * @return A [Result] containing `true` if the email is verified, `false` otherwise, or an
+   *   exception on failure.
+   */
   suspend fun reloadAndCheckVerification(): Result<Boolean>
 
+  /**
+   * Resends the email verification link to the currently signed-in user.
+   *
+   * @return A [Result] indicating success or failure.
+   */
   suspend fun resendVerificationEmail(): Result<Unit>
 }

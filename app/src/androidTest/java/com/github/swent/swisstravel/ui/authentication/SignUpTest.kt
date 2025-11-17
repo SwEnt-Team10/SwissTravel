@@ -50,7 +50,7 @@ class SignUpTest {
     // Verify that the Pending Verification screen is now displayed
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.PENDING_VERIFICATION_SCREEN).assertExists()
-    // Also assert the original sign-up button is gone
+    // Assert the original sign-up button is gone
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.SIGN_UP_BUTTON).assertDoesNotExist()
   }
 
@@ -67,10 +67,10 @@ class SignUpTest {
     // Configure the mock: The next check will return `false` (not verified)
     mockAuthRepository.checkVerificationResult = Result.success(false)
 
-    // Click the "Done" button
+    // Click the done button
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.DONE_BUTTON).performClick()
 
-    // The success callback should NOT have been called
+    // Success callback should NOT have been called
     composeTestRule.waitForIdle()
     assertFalse("onSignUpSuccess should not be called when email is not verified.", signUpSuccess)
   }
@@ -89,7 +89,7 @@ class SignUpTest {
     // Should return true
     mockAuthRepository.checkVerificationResult = Result.success(true)
 
-    // Click the "Done" button
+    // Click the done button
     composeTestRule.onNodeWithTag(SignUpScreenTestTags.DONE_BUTTON).performClick()
 
     // The success callback should be called
