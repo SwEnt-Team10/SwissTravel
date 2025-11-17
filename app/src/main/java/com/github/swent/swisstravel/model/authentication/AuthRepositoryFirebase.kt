@@ -84,6 +84,7 @@ class AuthRepositoryFirebase(
       // After creation, update the user's profile with their name
       val profileUpdates = userProfileChangeRequest { displayName = "$firstName $lastName" }
       user.updateProfile(profileUpdates).await()
+      user.sendEmailVerification().await()
 
       // In a real application, you would also create a document in your Firestore 'users'
       // collection here to store additional information like first name, last name, etc.
@@ -92,6 +93,35 @@ class AuthRepositoryFirebase(
     } catch (e: Exception) {
       Result.failure(
           IllegalStateException("Sign up failed: ${e.localizedMessage ?: "Unexpected error"}"))
+    }
+  }
+  // New function to resend the verification email
+  override suspend fun resendVerificationEmail(): Result<Unit> {
+    return try {
+      val user = auth.currentUser
+      if (user == null) {
+        Result.failure(IllegalStateException("No user is currently signed in."))
+      } else {
+        user.sendEmailVerification().await()
+        Result.success(Unit)
+      }
+    } catch (e: Exception) {
+      Result.failure(IllegalStateException("Failed to resend email: ${e.localizedMessage}"))
+    }
+  }
+  // New function to reload the user and check if their email is verified
+  override suspend fun reloadAndCheckVerification(): Result<Boolean> {
+    return try {
+      val user = auth.currentUser
+      if (user == null) {
+        Result.failure(IllegalStateException("No user is currently signed in."))
+      } else {
+        // IMPORTANT: You must reload the user's state from Firebase
+        user.reload().await()
+        Result.success(user.isEmailVerified)
+      }
+    } catch (e: Exception) {
+      Result.failure(IllegalStateException("Failed to check verification: ${e.localizedMessage}"))
     }
   }
 
