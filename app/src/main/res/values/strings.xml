@@ -25,6 +25,7 @@
     <string name="Email">Email</string>
     <string name="password">Password</string>
     <string name="sign_in_account">Sign in to your account</string>
+    <string name="no_email_received">Didn\'t receive an email? Resend</string>
     <!-- General -->
     <string name="yes">Yes</string>
     <string name="no">No</string>

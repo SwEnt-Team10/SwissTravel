@@ -24,12 +24,16 @@ import kotlinx.coroutines.launch
  * @property errorMsg A specific error message to display, or `null` if there's no error.
  * @property signedOut `true` if the user is not authenticated or a sign-out has just occurred. This
  *   can be used to trigger navigation events.
+ * @property signUpStage The current stage of the sign-up process.
+ * @property isEmailVerified `true` if the user's email is verified, `false` otherwise.
  */
 data class AuthUiState(
     val isLoading: Boolean = false,
     val user: FirebaseUser? = null,
     val errorMsg: String? = null,
-    val signedOut: Boolean = false
+    val signedOut: Boolean = false,
+    val signUpStage: SignUpStage = SignUpStage.FILLING_FORM,
+    val isEmailVerified: Boolean = false
 )
 
 /**
