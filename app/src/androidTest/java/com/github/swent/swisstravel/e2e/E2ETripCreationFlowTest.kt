@@ -475,6 +475,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Confirm deletion
     composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON).performClick()
     composeTestRule.waitForIdle()
+    Thread.sleep(5000)
     composeTestRule.checkMyTripsNotInSelectionMode()
 
     /* 27) */
