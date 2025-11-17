@@ -38,4 +38,8 @@ interface AuthRepository {
    * @return A [Result] indicating success or failure.
    */
   fun signOut(): Result<Unit>
+
+  suspend fun reloadAndCheckVerification(): Result<Boolean>
+
+  suspend fun resendVerificationEmail(): Result<Unit>
 }
