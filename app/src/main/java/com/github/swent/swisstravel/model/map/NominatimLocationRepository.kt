@@ -102,7 +102,6 @@ class NominatimLocationRepository(
 
       val address = obj.optJSONObject("address")
 
-      // helper to read address fields safely
       fun a(key: String): String = address?.optString(key)?.takeIf { it.isNotBlank() } ?: ""
 
       val houseNumber = a("house_number")
@@ -110,13 +109,13 @@ class NominatimLocationRepository(
       val postcode = a("postcode")
       val city = a("city").ifBlank { a("town").ifBlank { a("village").ifBlank { a("hamlet") } } }
       val state = a("state")
-      val amenity = a("amenity") // <- restaurant name, bar, university, etc.
+      val amenity = a("amenity")
 
       val type = obj.optString("type")
       val classType = obj.optString("class").ifBlank { obj.optString("category") }
       val importance = obj.optDouble("importance", 0.0)
 
-      // ---------- build COMPACT label, but keep POI names ----------
+      // ---------- label ----------
       val label: String =
           when {
             // City / town / village → "Lausanne, Vaud"
@@ -134,7 +133,7 @@ class NominatimLocationRepository(
                   .ifBlank { displayName }
             }
 
-            // Other POIs / addresses → "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève"
+            // Other POIs / addresses → keep amenity/name + compact address
             else -> {
               val streetPart =
                   listOf(road, houseNumber).filter { it.isNotBlank() }.joinToString(" ").trim()
@@ -142,7 +141,6 @@ class NominatimLocationRepository(
               val cityPart =
                   listOf(postcode, city).filter { it.isNotBlank() }.joinToString(" ").trim()
 
-              // primary name = amenity if present, else 'name', else nothing
               val primary =
                   when {
                     amenity.isNotBlank() -> amenity
@@ -152,14 +150,19 @@ class NominatimLocationRepository(
 
               val parts = mutableListOf<String>()
               if (primary.isNotBlank()) parts += primary
-              if (streetPart.isNotBlank()) parts += streetPart
+
+              // 🔴 avoid duplicating when streetPart == primary (Chemin de Gachet 1 case)
+              val streetDiffersFromPrimary =
+                  streetPart.isNotBlank() && !streetPart.equals(primary, ignoreCase = true)
+
+              if (streetDiffersFromPrimary) parts += streetPart
               if (cityPart.isNotBlank()) parts += cityPart
 
               parts.joinToString(", ").ifBlank { displayName }
             }
           }
 
-      // ---------- scoring / ranking ----------
+      // ---------- scoring ----------
       var score = importance * 10.0
 
       if (classType == "place" && type in setOf("city", "town")) {
