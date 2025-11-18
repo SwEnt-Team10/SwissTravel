@@ -193,7 +193,11 @@ class NominatimLocationRepository(
       isCityLike(classType, type) ->
           buildCityLabel(addressFields.city, addressFields.state, displayName)
       isAirport(classType, type) ->
-          buildAirportLabel(mainName, addressFields.municipality, displayName)
+          buildAirportLabel(
+              mainName = mainName,
+              city = addressFields.city,
+              municipality = addressFields.municipality,
+              displayName = displayName)
       else ->
           buildGenericLabel(
               mainName = mainName, displayName = displayName, addressFields = addressFields)
@@ -237,15 +241,20 @@ class NominatimLocationRepository(
    * Helper function to build an airport label.
    *
    * @param mainName The main name of the location.
+   * @param city The city name.
    * @param municipality The municipality name.
    * @param displayName The display name of the location.
    */
   private fun buildAirportLabel(
       mainName: String,
+      city: String,
       municipality: String,
       displayName: String
   ): String {
-    val parts = listOf(mainName, municipality).filter { it.isNotBlank() }
+    val area = city.ifBlank { municipality }
+
+    val parts = listOf(mainName, area).filter { it.isNotBlank() }
+
     return parts.joinToString(", ").ifBlank { displayName }
   }
 
