@@ -7,7 +7,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -230,7 +231,7 @@ private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewpor
           onClick = { mapViewportState.transitionToFollowPuckState() },
           modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
             Icon(
-                imageVector = Icons.Filled.LocationOn,
+                imageVector = Icons.Outlined.MyLocation,
                 contentDescription = stringResource(R.string.allow_location),
                 tint = MaterialTheme.colorScheme.onBackground)
           }

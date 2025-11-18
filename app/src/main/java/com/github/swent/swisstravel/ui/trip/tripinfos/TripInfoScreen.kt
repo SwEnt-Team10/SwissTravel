@@ -6,22 +6,22 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Attractions
-import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ZoomInMap
+import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.NearMe
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -92,10 +92,14 @@ fun TripInfoScreen(
   var computeError by remember { mutableStateOf<String?>(null) }
   var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
   var currentGpsPoint by remember { mutableStateOf<Point?>(null) }
+  var drawFromCurrentPosition by remember { mutableStateOf(false) }
   val mapLocations: List<Location> =
-      remember(schedule, currentStepIndex, currentGpsPoint) {
+      remember(schedule, currentStepIndex, currentGpsPoint, drawFromCurrentPosition) {
         mapLocationsForStep(
-            schedule = schedule, idx = currentStepIndex, currentGps = currentGpsPoint)
+            schedule = schedule,
+            idx = currentStepIndex,
+            currentGps = currentGpsPoint,
+            drawFromCurrentPosition = drawFromCurrentPosition)
       }
   val drawRoute: Boolean = mapLocations.size >= 2
 
@@ -268,6 +272,13 @@ fun TripInfoScreen(
                                         onUserLocationUpdate = { p -> currentGpsPoint = p })
                                   }
 
+                                  NavigationModeToggle(
+                                      drawFromCurrentPosition = drawFromCurrentPosition,
+                                      onToggleNavMode = {
+                                        drawFromCurrentPosition = !drawFromCurrentPosition
+                                      },
+                                      modifier = Modifier.align(Alignment.TopEnd))
+
                                   // Fullscreen button
                                   IconButton(
                                       onClick = { tripInfoViewModel.toggleFullscreen(true) },
@@ -276,7 +287,7 @@ fun TripInfoScreen(
                                               .padding(12.dp)
                                               .testTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON)) {
                                         Icon(
-                                            imageVector = Icons.Filled.Fullscreen,
+                                            imageVector = Icons.Filled.ZoomOutMap,
                                             contentDescription =
                                                 stringResource(R.string.fullscreen),
                                             tint = MaterialTheme.colorScheme.onBackground)
@@ -357,61 +368,25 @@ fun TripInfoScreen(
                 drawRoute = drawRoute,
                 onUserLocationUpdate = { p -> currentGpsPoint = p })
 
-            // Exit fullscreen arrow
+            NavigationModeToggle(
+                drawFromCurrentPosition = drawFromCurrentPosition,
+                onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
+                modifier = Modifier.align(Alignment.TopEnd))
+
+            // Exit fullscreen
             IconButton(
                 onClick = { tripInfoViewModel.toggleFullscreen(false) },
                 modifier =
-                    Modifier.align(Alignment.TopStart)
+                    Modifier.align(Alignment.BottomEnd)
                         .padding(16.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
                         .testTag(TripInfoScreenTestTags.FULLSCREEN_EXIT)) {
                   Icon(
-                      imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                      contentDescription = stringResource(R.string.back_to_my_trips),
-                      tint = MaterialTheme.colorScheme.onPrimary)
+                      imageVector = Icons.Filled.ZoomInMap,
+                      contentDescription = stringResource(R.string.back_to_my_trips))
                 }
           }
         }
       }
-}
-
-/**
- * Builds the list of locations that should be displayed on the map for the currently active step in
- * the trip schedule.
- *
- * For a TripSegment, if the user's current GPS position is available, the route will start from the
- * GPS location and end at the segment's destination. Otherwise, the original segment "from → to"
- * route is used.
- *
- * For a TripActivity, only the activity's location is returned.
- *
- * @param schedule The full list of trip elements forming the schedule.
- * @param idx The index of the currently selected step.
- * @param currentGps The current GPS position of the user, or null if unavailable.
- * @return A list of one or two locations describing what should be drawn on the map.
- */
-private fun mapLocationsForStep(
-    schedule: List<TripElement>,
-    idx: Int,
-    currentGps: Point?
-): List<Location> {
-  if (schedule.isEmpty()) return emptyList()
-  val i = idx.coerceIn(0, schedule.lastIndex)
-
-  return when (val el = schedule[i]) {
-    is TripElement.TripSegment -> {
-      val gpsLocation =
-          currentGps?.let {
-            Location(
-                coordinate = Coordinate(latitude = it.latitude(), longitude = it.longitude()),
-                name = "Your position")
-          }
-      if (gpsLocation != null) listOf(gpsLocation, el.route.to)
-      else listOf(el.route.from, el.route.to) // fallback if no GPS
-    }
-    is TripElement.TripActivity -> listOf(el.activity.location)
-  }
 }
 
 /**
@@ -470,6 +445,72 @@ private fun FavoriteButton(
               tint = MaterialTheme.colorScheme.onBackground)
         }
       }
+}
+
+/**
+ * A button to toggle the navigation mode.
+ *
+ * @param drawFromCurrentPosition Whether the route should start from the current GPS position
+ * @param onToggleNavMode Called when the user clicks the button.
+ * @param modifier The modifier to apply.
+ */
+@Composable
+private fun NavigationModeToggle(
+    drawFromCurrentPosition: Boolean,
+    onToggleNavMode: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+  IconButton(onClick = { onToggleNavMode() }, modifier = modifier.padding(12.dp)) {
+    Icon(
+        imageVector = if (drawFromCurrentPosition) Icons.Filled.Route else Icons.Outlined.NearMe,
+        contentDescription =
+            if (drawFromCurrentPosition) stringResource(R.string.draw_from_current_position)
+            else stringResource(R.string.draw_from_previous_step),
+        tint = MaterialTheme.colorScheme.onBackground)
+  }
+}
+
+/**
+ * Builds the list of locations that should be displayed on the map for the currently active step in
+ * the trip schedule.
+ *
+ * For a TripSegment, if the user's current GPS position is available, the route will start from the
+ * GPS location and end at the segment's destination. Otherwise, the original segment "from → to"
+ * route is used.
+ *
+ * For a TripActivity, only the activity's location is returned.
+ *
+ * @param schedule The full list of trip elements forming the schedule.
+ * @param idx The index of the currently selected step.
+ * @param currentGps The current GPS position of the user, or null if unavailable.
+ * @param drawFromCurrentPosition Whether the route should start from the current GPS position.
+ * @return A list of one or two locations describing what should be drawn on the map.
+ */
+private fun mapLocationsForStep(
+    schedule: List<TripElement>,
+    idx: Int,
+    currentGps: Point?,
+    drawFromCurrentPosition: Boolean
+): List<Location> {
+  if (schedule.isEmpty()) return emptyList()
+  val i = idx.coerceIn(0, schedule.lastIndex)
+
+  return when (val el = schedule[i]) {
+    is TripElement.TripSegment -> {
+      val startLocation =
+          if (drawFromCurrentPosition) {
+            currentGps?.let {
+              Location(
+                  coordinate = Coordinate(latitude = it.latitude(), longitude = it.longitude()),
+                  name = "Your position")
+            } ?: el.route.from
+          } else {
+            el.route.from
+          }
+      listOf(startLocation, el.route.to)
+    }
+    is TripElement.TripActivity -> listOf(el.activity.location)
+  }
 }
 
 /* ---------- Small helpers ---------- */
