@@ -118,13 +118,10 @@ class NominatimLocationRepository(
       // ---------- label ----------
       val label: String =
           when {
-            // City / town / village → "Lausanne, Vaud"
             classType == "place" &&
                 type in setOf("city", "town", "village", "hamlet", "suburb") -> {
               if (state.isNotBlank()) "$city, $state" else city.ifBlank { displayName }
             }
-
-            // Airport → "Aéroport international de Genève, Le Grand-Saconnex"
             classType == "aeroway" && type == "aerodrome" -> {
               val municipality = city.ifBlank { a("municipality") }
               listOf(mainName, municipality)
@@ -132,8 +129,6 @@ class NominatimLocationRepository(
                   .joinToString(", ")
                   .ifBlank { displayName }
             }
-
-            // Other POIs / addresses → keep amenity/name + compact address
             else -> {
               val streetPart =
                   listOf(road, houseNumber).filter { it.isNotBlank() }.joinToString(" ").trim()
@@ -151,7 +146,6 @@ class NominatimLocationRepository(
               val parts = mutableListOf<String>()
               if (primary.isNotBlank()) parts += primary
 
-              // 🔴 avoid duplicating when streetPart == primary (Chemin de Gachet 1 case)
               val streetDiffersFromPrimary =
                   streetPart.isNotBlank() && !streetPart.equals(primary, ignoreCase = true)
 
