@@ -504,13 +504,13 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         Location(
             coordinate = Coordinate(46.5191, 6.5668),
             name =
-                "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne, Vaud",
+                "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne",
             imageUrl = null)
 
     val departureLocation =
         Location(
             coordinate = Coordinate(46.2095, 6.1432),
-            name = "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève, Genève",
+            name = "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève",
             imageUrl = null)
 
     val zermattLocation =
