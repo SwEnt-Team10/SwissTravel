@@ -30,11 +30,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.orderlocations.orderLocations
 import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.google.firebase.Timestamp
+import com.mapbox.geojson.Point
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -82,19 +84,19 @@ fun TripInfoScreen(
   val ui by tripInfoViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
-  var showMap by remember { mutableStateOf(true) }
-
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
+  var showMap by remember { mutableStateOf(true) }
   var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
   var computeError by remember { mutableStateOf<String?>(null) }
-
   var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
-
+  var currentGpsPoint by remember { mutableStateOf<Point?>(null) }
   val mapLocations: List<Location> =
-      remember(schedule, currentStepIndex) { mapLocationsForStep(schedule, currentStepIndex) }
-
+      remember(schedule, currentStepIndex, currentGpsPoint) {
+        mapLocationsForStep(
+            schedule = schedule, idx = currentStepIndex, currentGps = currentGpsPoint)
+      }
   val drawRoute: Boolean = mapLocations.size >= 2
 
   // handle VM error toasts
@@ -260,7 +262,10 @@ fun TripInfoScreen(
                                                   Modifier.testTag(TripInfoScreenTestTags.LOADING))
                                         }
                                   } else if (showMap) {
-                                    MapScreen(locations = mapLocations, drawRoute = drawRoute)
+                                    MapScreen(
+                                        locations = mapLocations,
+                                        drawRoute = drawRoute,
+                                        onUserLocationUpdate = { p -> currentGpsPoint = p })
                                   }
 
                                   // Fullscreen button
@@ -347,7 +352,10 @@ fun TripInfoScreen(
         // Fullscreen overlay
         if (ui.fullscreen) {
           Box(modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.FULLSCREEN_MAP)) {
-            MapScreen(locations = mapLocations, drawRoute = drawRoute)
+            MapScreen(
+                locations = mapLocations,
+                drawRoute = drawRoute,
+                onUserLocationUpdate = { p -> currentGpsPoint = p })
 
             // Exit fullscreen arrow
             IconButton(
@@ -368,19 +376,52 @@ fun TripInfoScreen(
       }
 }
 
-/* ---------- Helpers to decide which locations to show on the map ---------- */
-
-private fun mapLocationsForStep(schedule: List<TripElement>, idx: Int): List<Location> {
+/**
+ * Builds the list of locations that should be displayed on the map for the currently active step in
+ * the trip schedule.
+ *
+ * For a TripSegment, if the user's current GPS position is available, the route will start from the
+ * GPS location and end at the segment's destination. Otherwise, the original segment "from → to"
+ * route is used.
+ *
+ * For a TripActivity, only the activity's location is returned.
+ *
+ * @param schedule The full list of trip elements forming the schedule.
+ * @param idx The index of the currently selected step.
+ * @param currentGps The current GPS position of the user, or null if unavailable.
+ * @return A list of one or two locations describing what should be drawn on the map.
+ */
+private fun mapLocationsForStep(
+    schedule: List<TripElement>,
+    idx: Int,
+    currentGps: Point?
+): List<Location> {
   if (schedule.isEmpty()) return emptyList()
   val i = idx.coerceIn(0, schedule.lastIndex)
+
   return when (val el = schedule[i]) {
-    is TripElement.TripSegment -> listOf(el.route.from, el.route.to)
+    is TripElement.TripSegment -> {
+      val gpsLocation =
+          currentGps?.let {
+            Location(
+                coordinate = Coordinate(latitude = it.latitude(), longitude = it.longitude()),
+                name = "Your position")
+          }
+      if (gpsLocation != null) listOf(gpsLocation, el.route.to)
+      else listOf(el.route.from, el.route.to) // fallback if no GPS
+    }
     is TripElement.TripActivity -> listOf(el.activity.location)
   }
 }
 
-/* ---------- Non-clickable Step row ---------- */
-
+/**
+ * Shows a non-clickable row in the step list.
+ *
+ * @param stepNumber The step number.
+ * @param subtitle The subtitle.
+ * @param timeRange The time range.
+ * @param leadingIcon The leading icon.
+ */
 @Composable
 private fun StepRow(
     stepNumber: Int,
@@ -403,7 +444,12 @@ private fun StepRow(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp))
 }
 
-/** A button to mark/unmark a trip as favorite. */
+/**
+ * A button to mark/unmark a trip as favorite.
+ *
+ * @param isFavorite Whether the trip is favorite.
+ * @param onToggleFavorite Called when the user clicks the button.
+ */
 @Composable
 private fun FavoriteButton(
     isFavorite: Boolean,

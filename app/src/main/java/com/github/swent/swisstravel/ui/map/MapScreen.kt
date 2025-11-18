@@ -75,6 +75,7 @@ private val edgeInsets = EdgeInsets(200.0, 200.0, 200.0, 200.0)
 fun MapScreen(
     locations: List<Location>,
     drawRoute: Boolean,
+    onUserLocationUpdate: (Point) -> Unit = {},
     viewModel: MapScreenViewModel = viewModel()
 ) {
   val context = LocalContext.current
@@ -110,7 +111,11 @@ fun MapScreen(
 
   Scaffold { padding ->
     Box(Modifier.fillMaxSize().padding(padding)) {
-      MapContent(mapViewportState = mapViewportState, drawRoute = drawRoute, ui = ui)
+      MapContent(
+          mapViewportState = mapViewportState,
+          drawRoute = drawRoute,
+          ui = ui,
+          onUserLocationUpdate = onUserLocationUpdate)
       MapOverlays(permissionGranted = ui.permissionGranted, mapViewportState = mapViewportState)
     }
   }
@@ -124,12 +129,14 @@ fun MapScreen(
  * @param mapViewportState The state of the map viewport
  * @param drawRoute Whether to draw a route from the first location to the last
  * @param ui The UI state of the map screen
+ * @param onUserLocationUpdate A callback to update the user location
  */
 @Composable
 private fun MapContent(
     mapViewportState: MapViewportState,
     drawRoute: Boolean,
-    ui: NavigationMapUIState
+    ui: NavigationMapUIState,
+    onUserLocationUpdate: (Point) -> Unit = {}
 ) {
   val context = LocalContext.current
   val routeLineView = remember {
@@ -150,7 +157,18 @@ private fun MapContent(
   MapboxMap(
       modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
       mapViewportState = mapViewportState) {
-        // 1) Style/init
+        // Pass location to an external function
+        MapEffect(ui.permissionGranted) { mapView ->
+          if (!ui.permissionGranted) {
+            return@MapEffect
+          } else {
+            mapView.location.addOnIndicatorPositionChangedListener { point ->
+              onUserLocationUpdate(point)
+            }
+          }
+        }
+
+        // Style/init
         MapEffect(Unit) { mapView ->
           mapView.mapboxMap.getStyle { style ->
             initRouteLayersOnce(
@@ -163,7 +181,7 @@ private fun MapContent(
           }
         }
 
-        // 2) Clear route when switching to pins
+        // Clear route when switching to pins
         MapEffect(styleReady to drawRoute) { mapView ->
           if (!styleReady || drawRoute) return@MapEffect
           val api = ui.routeLineApi ?: return@MapEffect
@@ -173,7 +191,7 @@ private fun MapContent(
           }
         }
 
-        // 3) Render route when needed
+        // Render route when needed
         MapEffect(styleReady to drawRoute to renderKey) { mapView ->
           if (!styleReady || !drawRoute) return@MapEffect
           val api = ui.routeLineApi ?: return@MapEffect
@@ -182,18 +200,18 @@ private fun MapContent(
           }
         }
 
-        // 4) Update pins source + visibility
+        // Update pins source + visibility
         MapEffect(styleReady to points to drawRoute) { mapView ->
           if (!styleReady) return@MapEffect
           mapView.mapboxMap.getStyle { style -> updatePins(style, points, drawRoute) }
         }
 
-        // 5) Camera fitting
+        // Camera fitting
         MapEffect(points to drawRoute) {
           fitCamera(mapViewportState, points, drawRoute, lastFitHash) { lastFitHash = it }
         }
 
-        // 6) Location puck
+        // Location puck
         MapEffect(ui.permissionGranted) { mapView -> updatePuck(mapView, ui.permissionGranted) }
       }
 }
