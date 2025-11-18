@@ -26,7 +26,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -49,7 +48,10 @@ object LandingScreenTestTags {
 fun LandingScreen(onSignInClick: () -> Unit = {}, onSignUpClick: () -> Unit = {}) {
   Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
     Column(
-        modifier = Modifier.fillMaxSize().padding(paddingValues).padding(horizontal = 32.dp),
+        modifier =
+            Modifier.fillMaxSize()
+                .padding(paddingValues)
+                .padding(horizontal = dimensionResource(R.dimen.medium_padding)),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {

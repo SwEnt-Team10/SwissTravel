@@ -44,7 +44,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -212,7 +211,7 @@ fun GoogleSignInButton(type: GoogleButtonType, onSignInClick: () -> Unit) {
               containerColor = MaterialTheme.colorScheme.surfaceVariant,
               contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(50),
-      border = BorderStroke(1.dp, Color.LightGray),
+      border = BorderStroke(dimensionResource(R.dimen.google_button_border), Color.LightGray),
       modifier =
           Modifier.fillMaxWidth()
               .height(dimensionResource(R.dimen.medium_button_height))

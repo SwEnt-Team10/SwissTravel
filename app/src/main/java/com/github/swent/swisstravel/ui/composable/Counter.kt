@@ -21,7 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 
 /** Test tags for UI tests to identify components. */
@@ -115,7 +114,7 @@ fun RoundIconButton(
                   if (enabled) MaterialTheme.colorScheme.onPrimary
                   else MaterialTheme.colorScheme.onSurfaceVariant),
       modifier = Modifier.size(dimensionResource(R.dimen.medium_button_height)).testTag(testTag),
-      contentPadding = PaddingValues(0.dp)) {
+      contentPadding = PaddingValues(dimensionResource(R.dimen.empty))) {
         Text(
             text = text,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
