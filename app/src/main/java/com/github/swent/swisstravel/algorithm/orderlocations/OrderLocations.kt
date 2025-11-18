@@ -82,9 +82,12 @@ fun orderLocations(
     }
 
     // Compute the shortest path between the start and end locations
-    val startIndex = unique.indexOf(start)
-    val endIndex = unique.indexOf(end)
-
+    val startIndex = unique.indexOfFirst { it.coordinate == start.coordinate }
+    val endIndex = unique.indexOfFirst { it.coordinate == end.coordinate }
+    if (startIndex == -1 || endIndex == -1) {
+      onResult(OrderedRoute(locations, -1.0, emptyList()))
+      return@getDurations
+    }
     val order =
         if (startIndex == endIndex) {
           val tsp = ClosedTsp()
