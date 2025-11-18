@@ -277,7 +277,7 @@ fun TripInfoScreen(
                                       onToggleNavMode = {
                                         drawFromCurrentPosition = !drawFromCurrentPosition
                                       },
-                                      modifier = Modifier.align(Alignment.TopEnd))
+                                      modifier = Modifier.align(Alignment.TopStart))
 
                                   // Fullscreen button
                                   IconButton(
@@ -371,7 +371,7 @@ fun TripInfoScreen(
             NavigationModeToggle(
                 drawFromCurrentPosition = drawFromCurrentPosition,
                 onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
-                modifier = Modifier.align(Alignment.TopEnd))
+                modifier = Modifier.align(Alignment.TopStart))
 
             // Exit fullscreen
             IconButton(
