@@ -55,7 +55,14 @@ class OpenTsp {
 
     // Add the end node
     route.add(end)
-
+    // A check to ensure all nodes are in the route if n > 1
+    if (n > 1 && route.size != n) {
+      // This case can happen if the graph is not fully connected,
+      // or if there's an issue with the filtering.
+      // Reconstruct the route to ensure all nodes are present.
+      val missingNodes = (0 until n).filterNot { route.contains(it) }
+      route.addAll(route.size - 1, missingNodes)
+    }
     return twoOpt(route, dist)
   }
 
