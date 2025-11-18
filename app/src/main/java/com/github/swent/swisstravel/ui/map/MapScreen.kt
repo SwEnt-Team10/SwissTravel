@@ -14,8 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
@@ -210,7 +210,9 @@ private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewpor
     if (permissionGranted) {
       IconButton(
           onClick = { mapViewportState.transitionToFollowPuckState() },
-          modifier = Modifier.align(Alignment.BottomStart).padding(16.dp)) {
+          modifier =
+              Modifier.align(Alignment.BottomStart)
+                  .padding(dimensionResource(R.dimen.map_overlay_padding))) {
             Icon(
                 imageVector = Icons.Filled.LocationOn,
                 contentDescription = stringResource(R.string.allow_location),
@@ -219,7 +221,9 @@ private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewpor
     } else {
       Text(
           text = stringResource(R.string.location_required_to_display),
-          modifier = Modifier.align(Alignment.BottomCenter).padding(16.dp))
+          modifier =
+              Modifier.align(Alignment.BottomCenter)
+                  .padding(dimensionResource(R.dimen.map_overlay_padding)))
     }
   }
 }

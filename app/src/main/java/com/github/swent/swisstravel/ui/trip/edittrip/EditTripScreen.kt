@@ -13,9 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
@@ -106,9 +106,13 @@ fun EditTripScreen(
             modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
       },
       bottomBar = {
-        Surface(tonalElevation = 2.dp) {
+        Surface(tonalElevation = dimensionResource(R.dimen.tiny_tonal_elevation)) {
           Box(
-              modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(
+                          horizontal = dimensionResource(R.dimen.mid_padding),
+                          vertical = dimensionResource(R.dimen.smaller_padding)),
               contentAlignment = Alignment.Center) {
                 Button(
                     onClick = {
@@ -117,12 +121,12 @@ fun EditTripScreen(
                       onSaved()
                     },
                     enabled = !state.isLoading,
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.big_button_radius)),
                     modifier =
                         Modifier.fillMaxWidth(0.9f)
                             .testTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR)) {
                       Icon(Icons.Filled.Edit, contentDescription = null)
-                      Spacer(Modifier.width(8.dp))
+                      Spacer(modifier = Modifier.width(dimensionResource(R.dimen.tiny_spacer)))
                       Text(stringResource(R.string.confirm_changes))
                     }
               }
@@ -142,14 +146,18 @@ fun EditTripScreen(
                 Modifier.padding(inner)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.mid_padding),
+                        vertical = dimensionResource(R.dimen.small_padding)),
+            verticalArrangement =
+                Arrangement.spacedBy(dimensionResource(R.dimen.edit_screen_vertical_arrangement))) {
               SectionHeader(stringResource(R.string.name))
               OutlinedTextField(
                   value = state.tripName,
                   onValueChange = editTripViewModel::editTripName,
                   modifier = Modifier.fillMaxWidth().testTag(EditTripScreenTestTags.TRIP_NAME),
-                  shape = RoundedCornerShape(12.dp),
+                  shape =
+                      RoundedCornerShape(dimensionResource(R.dimen.edit_screen_textfield_radius)),
                   singleLine = true)
 
               SectionHeader(stringResource(R.string.travelers))
@@ -168,12 +176,12 @@ fun EditTripScreen(
                   onClick = { showDeleteDialog = true },
                   colors =
                       ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                  shape = RoundedCornerShape(28.dp),
+                  shape = RoundedCornerShape(dimensionResource(R.dimen.edit_screen_big_radius)),
                   modifier =
                       Modifier.align(Alignment.CenterHorizontally)
                           .testTag(EditTripScreenTestTags.DELETE)) {
                     Icon(Icons.Filled.Delete, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
                     Text(stringResource(R.string.delete_trip))
                   }
 

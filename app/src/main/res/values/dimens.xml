@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="empty">0dp</dimen>
+    <!-- Landing Screen -->
+    <dimen name="main_logo_size">240dp</dimen>
+    <dimen name="main_logo_corner">16dp</dimen>
+
+    <!-- Sign In Screen -->
+    <dimen name="sign_in_logo_size">120dp</dimen>
+    <dimen name="sign_in_loading">48dp</dimen>
+
+    <!-- Map Screen -->
+    <dimen name="map_overlay_padding">16dp</dimen>
+
+    <!--Date selector -->
+    <dimen name="date_button_height">56dp</dimen>
+    <dimen name="date_button_radius">16dp</dimen>
+    <dimen name="date_done_button_radius">24dp</dimen>
+
+    <!--Trip Preference Icon -->
+    <dimen name="trip_preference_border_width">1.5dp</dimen>
+    <dimen name="trip_preference_horizontal_padding">12dp</dimen>
+    <dimen name="trip_preference_vertical_padding">8dp</dimen>
+
+    <!--Profile Screen -->
+    <dimen name="profile_logo_size">100dp</dimen>
+
+    <!--Edit Trip Screen -->
+    <dimen name="edit_screen_vertical_arrangement">24dp</dimen>
+    <dimen name="edit_screen_textfield_radius">12dp</dimen>
+    <dimen name="edit_screen_big_radius">28dp</dimen>
+
+    <!-- Loading Screen -->
+    <dimen name="loading_padding">16dp</dimen>
+
+    <!-- Arrival Departure Screen -->
+    <dimen name="arrival_departure_padding">24dp</dimen>
+
+    <!-- Trip Preferences -->
+    <dimen name="trip_preference_spacing">24dp</dimen>
+
+    <!-- Trip Summary -->
+    <dimen name="trip_summary_padding_horizontal">16dp</dimen>
+    <dimen name="trip_summary_padding_vertical">8dp</dimen>
+    <dimen name="trip_summary_padding">16dp</dimen>
+    <dimen name="trip_summary_horizontal_arrangement">6dp</dimen>
+    <dimen name="trip_summary_vertical_arrangement">10dp</dimen>
+
+    <!-- Trip Travelers -->
+    <dimen name="trip_travelers_padding_horizontal">24dp</dimen>
+    <dimen name="trip_travelers_padding_vertical">32dp</dimen>
+    <dimen name="trip_travelers_button_radius">24dp</dimen>
+
+    <!-- My Trip Screen -->
+    <dimen name="my_trip_padding_start_end">16dp</dimen>
+    <dimen name="my_trip_padding_top_bottom">4dp</dimen>
+    <dimen name="my_trip_current_top_padding">8dp</dimen>
+    <dimen name="my_trip_current_bottom_padding">10dp</dimen>
+
+    <!-- Past Trips Screen -->
+    <dimen name="past_trips_padding_start_end">16dp</dimen>
+    <dimen name="past_trips_padding_top_bottom">4dp</dimen>
+
+    <!-- Trip Element -->
+    <dimen name="trip_element_padding">16dp</dimen>
+    <dimen name="trip_element_radius">16dp</dimen>
+    <dimen name="trip_element_height">56dp</dimen>
+    <dimen name="trip_element_border">3dp</dimen>
+    <dimen name="trip_element_width">16dp</dimen>
+    <dimen name="trip_top_circle_size">40dp</dimen>
+
+    <!--Button dimension -->
+    <dimen name="medium_button_height">48dp</dimen>
+    <dimen name="google_button_logo">24dp</dimen>
+    <dimen name="google_button_padding">8dp</dimen>
+    <dimen name="big_button_radius">28dp</dimen>
+
+    <!-- Spacer -->
+    <dimen name="tiny_spacer">8dp</dimen>
+    <dimen name="smaller_spacer">12dp</dimen>
+    <dimen name="small_spacer">16dp</dimen>
+    <dimen name="mid_spacer">24dp</dimen>
+    <dimen name="medium_spacer">32dp</dimen>
+    <dimen name="medium_large_spacer">48dp</dimen>
+    <dimen name="large_spacer">60dp</dimen>
+    <dimen name="big_spacer">96dp</dimen>
+
+    <!-- Padding values -->
+    <dimen name="tiny_padding">8dp</dimen>
+    <dimen name="smaller_padding">12dp</dimen>
+    <dimen name="small_padding">16dp</dimen>
+    <dimen name="mid_padding">24dp</dimen>
+    <dimen name="medium_padding">32dp</dimen>
+
+    <!-- Tonal Elevation -->
+    <dimen name="tiny_tonal_elevation">2dp</dimen>
+</resources>

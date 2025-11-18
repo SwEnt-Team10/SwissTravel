@@ -7,10 +7,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.TravelersSelector
@@ -50,7 +50,13 @@ fun TripTravelersScreen(
             modifier = Modifier.fillMaxSize().padding(pd),
             color = MaterialTheme.colorScheme.background) {
               Column(
-                  modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
+                  modifier =
+                      Modifier.fillMaxSize()
+                          .padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_travelers_padding_horizontal),
+                              vertical =
+                                  dimensionResource(R.dimen.trip_travelers_padding_vertical)),
                   horizontalAlignment = Alignment.CenterHorizontally,
                   verticalArrangement = Arrangement.SpaceBetween) {
 
@@ -63,7 +69,7 @@ fun TripTravelersScreen(
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onBackground))
 
-                    Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
                     // --- Travelers selectors ---
                     TravelersSelector(
@@ -78,7 +84,9 @@ fun TripTravelersScreen(
                         colors =
                             ButtonDefaults.buttonColors(
                                 containerColor = MaterialTheme.colorScheme.primary),
-                        shape = RoundedCornerShape(24.dp),
+                        shape =
+                            RoundedCornerShape(
+                                dimensionResource(R.dimen.trip_travelers_button_radius)),
                         modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
                           Text(
                               text = stringResource(R.string.next),

@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -24,7 +25,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
@@ -73,15 +73,15 @@ fun TripElement(
           Modifier.testTag(TripElementTestTags.getTestTagForTrip(trip))
               .combinedClickable(onClick = onClick, onLongClick = onLongPress)
               .fillMaxWidth()
-              .height(56.dp)
+              .height(dimensionResource(R.dimen.trip_element_height))
               .border(
-                  width = if (isSelected) 3.dp else 0.dp,
+                  width = if (isSelected) dimensionResource(R.dimen.trip_element_border) else dimensionResource(R.dimen.empty),
                   color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
-                  shape = RoundedCornerShape(16.dp)),
+                  shape = RoundedCornerShape(dimensionResource(R.dimen.trip_element_radius))),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
       shape = MaterialTheme.shapes.large) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxSize().padding(horizontal = dimensionResource(R.dimen.trip_element_padding)),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
               TripNameSection(trip = trip)
@@ -103,7 +103,7 @@ fun TripElement(
 private fun TripNameSection(trip: Trip) {
   Row(verticalAlignment = Alignment.CenterVertically) {
     TripCircle(tripName = trip.name)
-    Spacer(modifier = Modifier.width(16.dp))
+    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
     Box(modifier = Modifier.fillMaxWidth(if (trip.isFavorite) 0.75f else 0.9f)) {
       Text(
           text = trip.name,
@@ -123,7 +123,7 @@ private fun TripNameSection(trip: Trip) {
 @Composable
 private fun TripCircle(tripName: String) {
   Box(
-      modifier = Modifier.size(40.dp).background(MaterialTheme.colorScheme.secondary, CircleShape),
+      modifier = Modifier.size(dimensionResource(R.dimen.trip_top_circle_size)).background(MaterialTheme.colorScheme.secondary, CircleShape),
       contentAlignment = Alignment.Center) {
         Text(tripName.first().toString(), color = MaterialTheme.colorScheme.onSecondary)
       }
@@ -151,7 +151,7 @@ private fun TripStatusSection(
           Icons.Default.Star,
           contentDescription = stringResource(R.string.favorite_icon),
           tint = favoriteIcon)
-      Spacer(modifier = Modifier.width(16.dp))
+      Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
     }
 
     when {

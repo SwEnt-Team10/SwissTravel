@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -145,7 +146,8 @@ private fun SignUpForm(
   var password by remember { mutableStateOf("") }
 
   Column(
-      modifier = modifier.fillMaxSize().padding(horizontal = 32.dp),
+      modifier =
+          modifier.fillMaxSize().padding(horizontal = dimensionResource(R.dimen.medium_padding)),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center,
   ) {
@@ -156,7 +158,7 @@ private fun SignUpForm(
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth())
 
-    Spacer(modifier = Modifier.height(24.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
     // First Name Field
     OutlinedTextField(
@@ -166,7 +168,7 @@ private fun SignUpForm(
         singleLine = true,
         modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.FIRST_NAME_FIELD))
 
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
     // Last Name Field
     OutlinedTextField(
@@ -176,7 +178,7 @@ private fun SignUpForm(
         singleLine = true,
         modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.LAST_NAME_FIELD))
 
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
     // Email Field
     OutlinedTextField(
@@ -186,7 +188,7 @@ private fun SignUpForm(
         singleLine = true,
         modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.EMAIL_FIELD))
 
-    Spacer(modifier = Modifier.height(16.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
     // Password Field
     OutlinedTextField(
@@ -198,25 +200,29 @@ private fun SignUpForm(
         singleLine = true,
         modifier = Modifier.fillMaxWidth().testTag(SignUpScreenTestTags.PASSWORD_FIELD))
 
-    Spacer(modifier = Modifier.height(32.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
     if (uiState.isLoading) {
       CircularProgressIndicator(
-          modifier = Modifier.size(48.dp).testTag(SignUpScreenTestTags.LOADING_INDICATOR))
+          modifier =
+              Modifier.size(dimensionResource(R.dimen.sign_in_loading))
+                  .testTag(SignUpScreenTestTags.LOADING_INDICATOR))
     } else {
       Button(
           onClick = { onSignUp(email.trim(), password, firstName.trim(), lastName.trim()) },
           modifier =
-              Modifier.fillMaxWidth().height(48.dp).testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)) {
+              Modifier.fillMaxWidth()
+                  .height(dimensionResource(R.dimen.medium_button_height))
+                  .testTag(SignUpScreenTestTags.SIGN_UP_BUTTON)) {
             Text(stringResource(R.string.sign_up_landing), fontSize = 16.sp)
           }
-      Spacer(modifier = Modifier.height(24.dp))
+      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
       Text(
           stringResource(R.string.or),
           textAlign = TextAlign.Center,
           modifier = Modifier.fillMaxWidth(),
           color = Color.Gray)
-      Spacer(modifier = Modifier.height(24.dp))
+      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
       GoogleSignInButton(type = GoogleButtonType.SIGN_UP, onSignInClick = { onGoogleSignUp() })
     }
   }
@@ -242,7 +248,7 @@ fun PendingVerificationScreen(
       modifier =
           modifier
               .fillMaxSize()
-              .padding(horizontal = 32.dp)
+              .padding(horizontal = dimensionResource(R.dimen.medium_padding))
               .testTag(SignUpScreenTestTags.PENDING_VERIFICATION_SCREEN),
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.Center) {
@@ -252,7 +258,7 @@ fun PendingVerificationScreen(
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center)
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
         Text(
             text =
@@ -260,16 +266,20 @@ fun PendingVerificationScreen(
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge)
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
         if (uiState.isLoading) {
           CircularProgressIndicator(
-              modifier = Modifier.size(48.dp).testTag(SignUpScreenTestTags.LOADING_INDICATOR))
+              modifier =
+                  Modifier.size(dimensionResource(R.dimen.sign_in_loading))
+                      .testTag(SignUpScreenTestTags.LOADING_INDICATOR))
         } else {
           Button(
               onClick = onDoneClick,
               modifier =
-                  Modifier.fillMaxWidth().height(48.dp).testTag(SignUpScreenTestTags.DONE_BUTTON)) {
+                  Modifier.fillMaxWidth()
+                      .height(dimensionResource(R.dimen.medium_button_height))
+                      .testTag(SignUpScreenTestTags.DONE_BUTTON)) {
                 Text(stringResource(R.string.done), fontSize = 16.sp)
               }
 
