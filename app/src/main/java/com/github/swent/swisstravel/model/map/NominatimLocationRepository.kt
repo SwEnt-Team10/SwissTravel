@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.map
 
+import android.util.Log
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import java.io.IOException
@@ -10,6 +11,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
+import org.json.JSONObject
 
 /**
  * Implementation of [LocationRepository] using the Nominatim API. Note: Nominatim has usage
@@ -25,88 +27,171 @@ class NominatimLocationRepository(
     private val baseUrl: String = "https://nominatim.openstreetmap.org"
 ) : LocationRepository {
 
-  override suspend fun search(query: String): List<Location> =
-      withContext(Dispatchers.IO) {
-        val url =
-            HttpUrl.Builder()
-                .scheme("https")
-                .host(baseUrl.toHttpUrl().host)
-                .addPathSegment("search")
-                .addQueryParameter("q", query)
-                .addQueryParameter("format", "json")
-                .addQueryParameter("countrycodes", "ch")
-                .addQueryParameter("layer", "poi")
-                .addQueryParameter("addressdetails", "1") // adds full address fields
-                // .addQueryParameter("namedetails", "1")    // adds multilingual names
-                .addQueryParameter("limit", "10") // controls how many results
-                .build()
+    override suspend fun search(query: String): List<Location> =
+        withContext(Dispatchers.IO) {
+            val trimmed = query.trim()
+            if (trimmed.length < 2) return@withContext emptyList()
 
-        val request =
-            Request.Builder()
-                .url(url)
-                .header("User-Agent", "SwissTravel/1.0 (swisstravel.epfl@proton.me)")
-                .build()
+            val lower = trimmed.lowercase()
+            val hasDigit = lower.any { it.isDigit() }
 
-        client.newCall(request).execute().use { response ->
-          if (!response.isSuccessful) throw IOException("Unexpected code $response")
-          val body = response.body?.string() ?: return@withContext emptyList()
-          parseBody(body)
+            val airportKeywords = listOf("airport", "aéroport", "flughafen", "airp", "aero")
+            val looksLikeAirport = airportKeywords.any { lower.contains(it) }
+
+            // City mode
+            val cityMode = !hasDigit && trimmed.length <= 3 && !looksLikeAirport
+
+            val urlBuilder =
+                HttpUrl.Builder()
+                    .scheme("https")
+                    .host(baseUrl.toHttpUrl().host)
+                    .addPathSegment("search")
+                    .addQueryParameter("q", trimmed)
+                    .addQueryParameter("format", "jsonv2")
+                    .addQueryParameter("countrycodes", "ch")
+                    .addQueryParameter("addressdetails", "1")
+                    .addQueryParameter("limit", "10")
+
+            if (cityMode) {
+                urlBuilder.addQueryParameter("featureType", "settlement")
+            } else {
+                urlBuilder.addQueryParameter("layer", "address,poi")
+            }
+
+            val url = urlBuilder.build()
+
+            val request =
+                Request.Builder()
+                    .url(url)
+                    .header("User-Agent", "SwissTravel/1.0 (swisstravel.epfl@proton.me)")
+                    .build()
+
+            client.newCall(request).execute().use { response ->
+                if (!response.isSuccessful) throw IOException("Unexpected code $response")
+                val body = response.body?.string() ?: return@withContext emptyList()
+                parseBody(body, trimmed)
+            }
         }
-      }
 
-  /**
-   * Parses the JSON response body from the Nominatim API into a list of Location objects.
-   *
-   * @param body The JSON response body as a string.
-   * @return A list of Location objects parsed from the response.
-   */
-  // done with the help of AI
-  private fun parseBody(body: String): List<Location> {
-    val jsonArray = JSONArray(body)
-    return List(jsonArray.length()) { i ->
-      val obj = jsonArray.getJSONObject(i)
+    /**
+     * Parses the JSON response body from the Nominatim API into a list of Location objects. It uses
+     * a custom ranking system to determine the relevance of each location.
+     *
+     * @param body The JSON response body as a string.
+     * @param query The original query used for the search.
+     * @return A list of Location objects parsed from the response.
+     */
+    // done with the help of AI
+    private fun parseBody(body: String, query: String): List<Location> {
+        val jsonArray = JSONArray(body)
+        if (jsonArray.length() == 0) return emptyList()
 
-      val address = obj.optJSONObject("address")
-      val amenity = address?.optString("amenity") ?: obj.optString("name", "")
-      val road = address?.optString("road").orEmpty()
-      val houseNumber = address?.optString("house_number").orEmpty()
-      val postcode = address?.optString("postcode").orEmpty()
-      val city = address?.optString("city").orEmpty()
-      val state = address?.optString("state").orEmpty()
+        val lowerQuery = query.lowercase()
+        val airportKeywords = listOf("airport", "aéroport", "flughafen", "airp", "aero")
 
-      // Build custom name
-      val nameParts = mutableListOf<String>()
-      if (amenity.isNotBlank()) nameParts.add(amenity)
-      if (road.isNotBlank() || houseNumber.isNotBlank()) {
-        nameParts.add("$road $houseNumber".trim())
-      }
-      if (postcode.isNotBlank() || city.isNotBlank()) {
-        nameParts.add("$postcode $city".trim())
-      }
-      if (state.isNotBlank()) nameParts.add(state)
+        data class ScoredLocation(
+            val score: Double,
+            val location: Location
+        )
 
-      val customName = nameParts.joinToString(", ")
+        val scored = mutableListOf<ScoredLocation>()
 
-      // Decide whether to use customName or full display_name
-      val type = obj.optString("type") // e.g., "aeroway", "hospital"
-      val classType = obj.optString("class") // e.g., "aeroway", "amenity"
+        for (i in 0 until jsonArray.length()) {
+            val obj = jsonArray.getJSONObject(i)
 
-      val typesRequiringFullName =
-          setOf(
-              "aeroway", // airports
-              "hospital", // hospitals
-              "station", // train/bus stations
-              "highway" // major highways
-              )
+            val lat = obj.getDouble("lat")
+            val lon = obj.getDouble("lon")
 
-      val name =
-          if (typesRequiringFullName.contains(type) || typesRequiringFullName.contains(classType)) {
-            obj.getString("display_name")
-          } else {
-            customName.ifBlank { obj.getString("display_name") }
-          }
+            val displayName = obj.optString("display_name")
+            val mainName = obj.optString("name", displayName)
 
-      Location(coordinate = Coordinate(obj.getDouble("lat"), obj.getDouble("lon")), name = name)
+            val address = obj.optJSONObject("address")
+
+            // address fields
+            fun a(key: String): String =
+                address?.optString(key)?.takeIf { it.isNotBlank() } ?: ""
+
+            val houseNumber = a("house_number")
+            val road        = a("road")
+            val postcode    = a("postcode")
+            val city        = a("city").ifBlank {
+                a("town").ifBlank {
+                    a("village").ifBlank { a("hamlet") }
+                }
+            }
+            val state       = a("state")
+
+            val type = obj.optString("type")
+            val classType = obj.optString("class")
+                .ifBlank { obj.optString("category") }
+            val importance = obj.optDouble("importance", 0.0)
+
+            val label: String = when {
+                classType == "place" && type in setOf("city", "town", "village", "hamlet", "suburb") -> {
+                    if (state.isNotBlank()) "$city, $state" else city.ifBlank { displayName }
+                }
+
+                classType == "aeroway" && type == "aerodrome" -> {
+                    val municipality = city.ifBlank { a("municipality") }
+                    listOf(mainName, municipality)
+                        .filter { it.isNotBlank() }
+                        .joinToString(", ")
+                        .ifBlank { displayName }
+                }
+
+                else -> {
+                    val streetPart = listOf(road, houseNumber)
+                        .filter { it.isNotBlank() }
+                        .joinToString(" ")
+                        .trim()
+
+                    val cityPart = listOf(postcode, city)
+                        .filter { it.isNotBlank() }
+                        .joinToString(" ")
+                        .trim()
+
+                    listOf(streetPart, cityPart)
+                        .filter { it.isNotBlank() }
+                        .joinToString(", ")
+                        .ifBlank { displayName }
+                }
+            }
+
+            var score = importance * 10.0
+
+            if (classType == "place" && type in setOf("city", "town")) {
+                score += 60.0
+            } else if (classType == "place") {
+                score += 40.0
+            }
+
+            if (classType == "aeroway" && type == "aerodrome") {
+                score += 30.0
+                if (airportKeywords.any { lowerQuery.contains(it) }) {
+                    score += 60.0
+                }
+            }
+
+            if (classType == "amenity") score += 10.0
+
+            val lowerName = mainName.lowercase()
+            if (lowerName.startsWith(lowerQuery)) {
+                score += 20.0
+            } else if (lowerName.contains(lowerQuery)) {
+                score += 10.0
+            }
+
+            scored += ScoredLocation(
+                score = score,
+                location = Location(
+                    coordinate = Coordinate(lat, lon),
+                    name = label
+                )
+            )
+        }
+
+        return scored
+            .sortedByDescending { it.score }
+            .map { it.location }
     }
-  }
 }
