@@ -74,7 +74,9 @@ fun SetCurrentTripScreen(
             onClickDropDownMenu = { sortType -> viewModel.updateSortType(sortType) },
             selectedSortType = uiState.sortType)
       },
-      modifier = Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.small_padding))) { pd ->
+      modifier =
+          Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.small_padding))) {
+          pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
           TripList(
               trips = trips,

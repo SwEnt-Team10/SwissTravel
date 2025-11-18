@@ -75,13 +75,17 @@ fun TripElement(
               .fillMaxWidth()
               .height(dimensionResource(R.dimen.trip_element_height))
               .border(
-                  width = if (isSelected) dimensionResource(R.dimen.trip_element_border) else dimensionResource(R.dimen.empty),
+                  width =
+                      if (isSelected) dimensionResource(R.dimen.trip_element_border)
+                      else dimensionResource(R.dimen.empty),
                   color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
                   shape = RoundedCornerShape(dimensionResource(R.dimen.trip_element_radius))),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
       shape = MaterialTheme.shapes.large) {
         Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = dimensionResource(R.dimen.trip_element_padding)),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(horizontal = dimensionResource(R.dimen.trip_element_padding)),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
               TripNameSection(trip = trip)
@@ -123,7 +127,9 @@ private fun TripNameSection(trip: Trip) {
 @Composable
 private fun TripCircle(tripName: String) {
   Box(
-      modifier = Modifier.size(dimensionResource(R.dimen.trip_top_circle_size)).background(MaterialTheme.colorScheme.secondary, CircleShape),
+      modifier =
+          Modifier.size(dimensionResource(R.dimen.trip_top_circle_size))
+              .background(MaterialTheme.colorScheme.secondary, CircleShape),
       contentAlignment = Alignment.Center) {
         Text(tripName.first().toString(), color = MaterialTheme.colorScheme.onSecondary)
       }
