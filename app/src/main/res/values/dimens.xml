@@ -38,6 +38,8 @@
 
     <!-- Trip Preferences -->
     <dimen name="trip_preference_spacing">24dp</dimen>
+    <dimen name="trip_preference_icon_horizontal_padding">12dp</dimen>
+    <dimen name="trip_preference_icon_vertical_padding">8dp</dimen>
 
     <!-- Trip Summary -->
     <dimen name="trip_summary_padding_horizontal">16dp</dimen>
