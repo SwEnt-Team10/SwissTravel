@@ -153,14 +153,14 @@ jobs:
       - name: Run instrumentation tests
         uses: reactivecircus/android-emulator-runner@v2
         with:
-          api-level: 34
+          api-level: 36
           target: google_apis
           arch: x86_64
           avd-name: github
           force-avd-creation: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1080x2400
           disable-animations: true
-          script: ./gradlew connectedCheck --parallel --build-cache --console=plain --info
+          script: ./gradlew connectedCheck --parallel --build-cache --console=plain
 
       # Upload the test results to the artifacts
       - name: Upload Test Results
@@ -173,7 +173,7 @@ jobs:
 
       - name: Run tests
         run: |
-          ./gradlew check --parallel --build-cache --info
+          ./gradlew check --parallel --build-cache
           
       # This step generates the coverage report
       - name: Generate Coverage Report
@@ -193,4 +193,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./gradlew sonar --parallel --build-cache -Dsonar.coverage.exclusionsOnCoverageType=branch
+        run: ./gradlew sonar --parallel --build-cache
