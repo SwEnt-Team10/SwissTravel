@@ -40,6 +40,33 @@
     <dimen name="trip_preference_spacing">24dp</dimen>
     <dimen name="trip_preference_icon_horizontal_padding">12dp</dimen>
     <dimen name="trip_preference_icon_vertical_padding">8dp</dimen>
+    <!-- Trip Preference Selector -->
+    <dimen name="preference_selector_border_width">1.5dp</dimen>
+    <dimen name="preference_selector_divider_thickness">1dp</dimen>
+    <dimen name="preference_flow_horizontal_arrangement">6dp</dimen>
+    <dimen name="preference_flow_vertical_arrangement">10dp</dimen>
+    <dimen name="preference_selector_vertical_arrangement">20dp</dimen>
+
+    <!-- Slider -->
+    <dimen name="slider_padding">12dp</dimen>
+    <dimen name="slider_divider_thickness">2dp</dimen>
+
+    <!-- Toggle -->
+    <dimen name="toggle_vertical_padding">12dp</dimen>
+    <dimen name="toggle_horizontal_padding">8dp</dimen>
+    <dimen name="toggle_start_padding">8dp</dimen>
+    <dimen name="toggle_tiny_spacer">8dp</dimen>
+    <dimen name="toggle_mid_spacer">24dp</dimen>
+    <dimen name="toggle_horizontal_divider_thickness">2dp</dimen>
+    <!-- Sorted Trip List -->
+    <dimen name="sorted_trip_list_top_padding">26dp</dimen>
+    <dimen name="sorted_trip_list_bottom_padding">1odp</dimen>
+
+    <!-- Switch -->
+    <dimen name="switch_padding">8dp</dimen>
+
+    <!-- Trip List -->
+    <dimen name="trip_list_vertical_arrangement">12dp</dimen>
 
     <!-- Trip Summary -->
     <dimen name="trip_summary_padding_horizontal">16dp</dimen>
