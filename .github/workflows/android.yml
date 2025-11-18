@@ -112,6 +112,13 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
+      - name: Cache Firebase emulators
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/firebase/emulators
+          key: ${{ runner.os }}-firebase-emulators
+          restore-keys: ${{ runner.os }}-firebase-emulators
+          
       - name: KTFmt Check
         run: |
           # To run the CI with debug informations, add --info
@@ -122,11 +129,6 @@ jobs:
         run: |
           # To run the CI with debug information, add --info
           ./gradlew assembleDebug lint --parallel --build-cache
-
-      - name: Run tests
-        run: |
-          # To run the CI with debug information, add --info
-          ./gradlew check --parallel --build-cache
 
       # Start Firebase emulators for instrumentation tests
       - name: Start Firebase emulators
@@ -158,7 +160,7 @@ jobs:
           force-avd-creation: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1080x2400
           disable-animations: true
-          script: ./gradlew connectedCheck --parallel --build-cache
+          script: ./gradlew connectedCheck --parallel --build-cache --console=plain --info
 
       # Upload the test results to the artifacts
       - name: Upload Test Results
@@ -169,7 +171,11 @@ jobs:
             path: app/build/reports/androidTests/connected/debug/
             retention-days: 1
 
-      # This step generates the coverage report which will be used later in the semster for monitoring purposes
+      - name: Run tests
+        run: |
+          ./gradlew check --parallel --build-cache --info
+          
+      # This step generates the coverage report
       - name: Generate Coverage Report
         run: |
           ./gradlew jacocoTestReport
