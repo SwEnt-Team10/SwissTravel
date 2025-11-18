@@ -102,7 +102,7 @@ class NominatimLocationRepository(
 
       val address = obj.optJSONObject("address")
 
-      // address fields
+      // helper to read address fields safely
       fun a(key: String): String = address?.optString(key)?.takeIf { it.isNotBlank() } ?: ""
 
       val houseNumber = a("house_number")
@@ -110,17 +110,22 @@ class NominatimLocationRepository(
       val postcode = a("postcode")
       val city = a("city").ifBlank { a("town").ifBlank { a("village").ifBlank { a("hamlet") } } }
       val state = a("state")
+      val amenity = a("amenity") // <- restaurant name, bar, university, etc.
 
       val type = obj.optString("type")
       val classType = obj.optString("class").ifBlank { obj.optString("category") }
       val importance = obj.optDouble("importance", 0.0)
 
+      // ---------- build COMPACT label, but keep POI names ----------
       val label: String =
           when {
+            // City / town / village → "Lausanne, Vaud"
             classType == "place" &&
                 type in setOf("city", "town", "village", "hamlet", "suburb") -> {
               if (state.isNotBlank()) "$city, $state" else city.ifBlank { displayName }
             }
+
+            // Airport → "Aéroport international de Genève, Le Grand-Saconnex"
             classType == "aeroway" && type == "aerodrome" -> {
               val municipality = city.ifBlank { a("municipality") }
               listOf(mainName, municipality)
@@ -128,6 +133,8 @@ class NominatimLocationRepository(
                   .joinToString(", ")
                   .ifBlank { displayName }
             }
+
+            // Other POIs / addresses → "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève"
             else -> {
               val streetPart =
                   listOf(road, houseNumber).filter { it.isNotBlank() }.joinToString(" ").trim()
@@ -135,13 +142,24 @@ class NominatimLocationRepository(
               val cityPart =
                   listOf(postcode, city).filter { it.isNotBlank() }.joinToString(" ").trim()
 
-              listOf(streetPart, cityPart)
-                  .filter { it.isNotBlank() }
-                  .joinToString(", ")
-                  .ifBlank { displayName }
+              // primary name = amenity if present, else 'name', else nothing
+              val primary =
+                  when {
+                    amenity.isNotBlank() -> amenity
+                    mainName.isNotBlank() && !mainName.equals(road, ignoreCase = true) -> mainName
+                    else -> ""
+                  }
+
+              val parts = mutableListOf<String>()
+              if (primary.isNotBlank()) parts += primary
+              if (streetPart.isNotBlank()) parts += streetPart
+              if (cityPart.isNotBlank()) parts += cityPart
+
+              parts.joinToString(", ").ifBlank { displayName }
             }
           }
 
+      // ---------- scoring / ranking ----------
       var score = importance * 10.0
 
       if (classType == "place" && type in setOf("city", "town")) {
