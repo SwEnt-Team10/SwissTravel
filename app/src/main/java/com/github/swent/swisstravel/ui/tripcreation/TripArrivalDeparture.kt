@@ -133,7 +133,9 @@ fun ArrivalDepartureScreen(
                 // --- Done button ---
                 Button(
                     modifier = Modifier.testTag(NEXT_BUTTON),
-                    enabled = arrivalState.selectedLocation != null && departureState.selectedLocation != null,
+                    enabled =
+                        arrivalState.selectedLocation != null &&
+                            departureState.selectedLocation != null,
                     onClick = {
 
                       // check that both locations are set

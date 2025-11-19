@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -120,16 +121,14 @@ fun LocationAutocompleteTextField(
         modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) },
         singleLine = true,
-        isError = expanded && ((text.isEmpty()) || (state.selectedLocation == null)),
+        isError =
+            (text.isNotEmpty() && state.selectedLocation == null) || (expanded && text.isEmpty()),
         supportingText = {
-            if (expanded) {
-                if (text.isEmpty()) {
-                    Text("$name ${R.string.cannot_be_empty}")
-                } else if (state.selectedLocation == null) {
-                    val dropdownText = R.string.dropdown_menu_choose
-                    Text(text = "$dropdownText")
-                }
-            }
+          if (expanded && text.isEmpty()) {
+            Text("$name ${stringResource(R.string.cannot_be_empty)}")
+          } else if (text.isNotEmpty() && state.selectedLocation == null) {
+            Text(text = stringResource(R.string.dropdown_menu_choose))
+          }
         })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),

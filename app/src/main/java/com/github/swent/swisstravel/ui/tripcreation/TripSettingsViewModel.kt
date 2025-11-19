@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.tripcreation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
@@ -24,7 +25,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import com.github.swent.swisstravel.R
 
 /** * Data class representing the start and end dates of a trip. */
 data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = null)
@@ -85,7 +85,9 @@ class TripSettingsViewModel(
   val loadingProgress = _loadingProgress.asStateFlow()
 
   fun updateName(name: String) {
-      _tripSettings.value = _tripSettings.value.copy(name = name, invalidNameMsg = if (name.isBlank()) R.string.name_empty else null)
+    _tripSettings.value =
+        _tripSettings.value.copy(
+            name = name, invalidNameMsg = if (name.isBlank()) R.string.name_empty else null)
   }
 
   fun updateDates(start: LocalDate, end: LocalDate) {

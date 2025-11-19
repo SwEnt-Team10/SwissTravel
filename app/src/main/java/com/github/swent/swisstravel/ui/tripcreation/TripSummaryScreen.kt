@@ -121,15 +121,11 @@ fun TripSummaryScreen(
             item {
               OutlinedTextField(
                   value = state.name,
-                  onValueChange = {viewModel.updateName(it)},
+                  onValueChange = { viewModel.updateName(it) },
                   label = { Text(tripNameLabel) },
                   isError = state.invalidNameMsg != null,
                   supportingText =
-                      state.invalidNameMsg?.let {
-                          {
-                              Text(stringResource(R.string.name_empty))
-                          }
-                      },
+                      state.invalidNameMsg?.let { { Text(stringResource(R.string.name_empty)) } },
                   modifier =
                       Modifier.fillMaxWidth()
                           .padding(16.dp)
@@ -293,9 +289,9 @@ fun TripSummaryScreen(
                     Button(
                         enabled = state.name.isNotBlank(),
                         onClick = {
-                            viewModel.saveTrip()
-                            Toast.makeText(context, createTripLabel, Toast.LENGTH_SHORT).show()
-                            onNext()
+                          viewModel.saveTrip()
+                          Toast.makeText(context, createTripLabel, Toast.LENGTH_SHORT).show()
+                          onNext()
                         },
                         colors =
                             ButtonDefaults.buttonColors(
