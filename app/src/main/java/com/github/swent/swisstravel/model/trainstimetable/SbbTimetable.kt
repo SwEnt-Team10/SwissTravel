@@ -4,14 +4,9 @@ package com.github.swent.swisstravel.model.trainstimetable
 
 import android.util.Log
 import com.github.swent.swisstravel.BuildConfig
-import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
-import com.github.swent.swisstravel.model.trip.TransportMode
-import com.google.firebase.Timestamp
 import java.time.Duration
-import java.time.ZonedDateTime
-import java.util.Date
 import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -43,10 +38,14 @@ class SbbTimetable() : TrainTimetable {
         HttpLoggingInterceptor { message -> Log.d("OJP_API", message) }
             .setLevel(HttpLoggingInterceptor.Level.BODY)
     val client = OkHttpClient.Builder().addInterceptor(logging).build()
+
+    val serializer = Persister(AnnotationStrategy())
+
     Retrofit.Builder()
         .baseUrl("https://api.opentransportdata.swiss/")
         .client(client)
-        .addConverterFactory(SimpleXmlConverterFactory.create(Persister(AnnotationStrategy())))
+        // Pass the namespace-aware serializer to the factory
+        .addConverterFactory(SimpleXmlConverterFactory.create(serializer))
         .build()
         .create(OjpApiService::class.java)
   }
@@ -59,58 +58,32 @@ class SbbTimetable() : TrainTimetable {
    *
    * @param from The starting [Location].
    * @param to The destination [Location].
-   * @return A list of [RouteSegment] for the fastest trip, or `null` if the API call fails or no
-   *   route is found.
+   * @return An int indicating the duration of the fastest route in seconds. Returns -1 on failure.
    */
-  override suspend fun getFastestRoute(from: Location, to: Location): List<RouteSegment>? {
+  override suspend fun getFastestRoute(from: Location, to: Location): Int {
     val requestBody = createOjpTripRequest(from, to).toRequestBody("application/xml".toMediaType())
     return try {
       val response = api.getTrip("Bearer $ojpToken", requestBody)
-      response.ojpDeliver?.ojpTripDelivery?.tripResults?.firstOrNull()?.trip?.tripLegs?.map { leg ->
-        // This conversion logic is crucial.
-        val startLocation =
-            Location(
-                name = leg.legStart?.locationName?.text ?: "Unknown Start",
-                coordinate =
-                    leg.legStart?.geoPosition?.let { Coordinate(it.latitude, it.longitude) }
-                        ?: from.coordinate)
-        val endLocation =
-            Location(
-                name = leg.legEnd?.locationName?.text ?: "Unknown End",
-                coordinate =
-                    leg.legEnd?.geoPosition?.let { Coordinate(it.latitude, it.longitude) }
-                        ?: to.coordinate)
 
-        val startTime =
-            Timestamp(Date.from(ZonedDateTime.parse(leg.legStart?.depArrTime).toInstant()))
-        val endTime = Timestamp(Date.from(ZonedDateTime.parse(leg.legEnd?.depArrTime).toInstant()))
-        val durationMinutes =
-            Duration.between(startTime.toDate().toInstant(), endTime.toDate().toInstant())
-                .toMinutes()
-                .toInt()
+      val durationString =
+          response.ojpResponse
+              ?.serviceDelivery
+              ?.ojpTripDelivery
+              ?.tripResults
+              ?.firstOrNull()
+              ?.trip
+              ?.duration
 
-        val transportMode =
-            when (leg.service?.mode?.name?.text?.lowercase()) {
-              "train" -> TransportMode.TRAIN
-              "bus" -> TransportMode.BUS
-              "tram" -> TransportMode.TRAM
-              "car" -> TransportMode.CAR
-              "walk" -> TransportMode.WALKING
-              // Add other modes as needed
-              else -> TransportMode.UNKNOWN // Default or from other leg info
-            }
-
-        RouteSegment(
-            from = startLocation,
-            to = endLocation,
-            durationMinutes = durationMinutes,
-            transportMode = transportMode,
-            startDate = startTime,
-            endDate = endTime)
+      if (durationString != null) {
+        Duration.parse(durationString).toSeconds().toInt()
+      } else {
+        Log.d("SbbTimetable", "Duration string was null in the response.")
+        -1
       }
     } catch (e: Exception) {
-      Log.d("SbbTimetable", "Error fetching timetable: ${e.message}")
-      null
+      // Log the full exception to get more details on the parsing error
+      Log.e("SbbTimetable", "Error fetching or parsing timetable", e)
+      -1
     }
   }
 
@@ -136,8 +109,8 @@ class SbbTimetable() : TrainTimetable {
         if (i == j) continue
 
         // Fetch duration for the current pair
-        val duration = getDurationInSeconds(locations[i], locations[j])
-        durationMatrix[i][j] = duration
+        val duration = getFastestRoute(locations[i], locations[j])
+        durationMatrix[i][j] = duration.toDouble()
 
         // Delay to respect the API rate limit (50 calls/min -> 1 call every 1.2s)
         delay(API_LIMIT)
@@ -145,27 +118,5 @@ class SbbTimetable() : TrainTimetable {
     }
 
     return durationMatrix
-  }
-
-  /**
-   * Calculates the total travel duration in seconds for the fastest route between two locations.
-   *
-   * This helper function reuses [getFastestRoute] to find the trip and then calculates the total
-   * duration from the start of the first segment to the end of the last segment.
-   *
-   * @param from The starting [Location].
-   * @param to The destination [Location].
-   * @return The total travel time in seconds as a [Double]. If no route is found or an error
-   *   occurs, it returns -1.0.
-   */
-  private suspend fun getDurationInSeconds(from: Location, to: Location): Double {
-    val fastestRoute = getFastestRoute(from, to)
-    return if (fastestRoute != null && fastestRoute.isNotEmpty()) {
-      val startInstant = fastestRoute.first().startDate.toDate().toInstant()
-      val endInstant = fastestRoute.last().endDate.toDate().toInstant()
-      Duration.between(startInstant, endInstant).seconds.toDouble()
-    } else {
-      -1.0 // Return -1.0 for Double on failure
-    }
   }
 }

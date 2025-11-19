@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.model.trainstimetable
 
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.RouteSegment
 
 /** Interface for fetching train timetable information. */
 interface TrainTimetable {
@@ -11,9 +10,9 @@ interface TrainTimetable {
    *
    * @param from The starting location.
    * @param to The destination location.
-   * @return A list of [RouteSegment] representing the fastest route, or null if no route is found.
+   * @return The time needed to travel in seconds, or -1 if no route is found.
    */
-  suspend fun getFastestRoute(from: Location, to: Location): List<RouteSegment>?
+  suspend fun getFastestRoute(from: Location, to: Location): Int?
 
   /**
    * Computes the duration matrix for a list of locations. The duration from A to B is the time of
