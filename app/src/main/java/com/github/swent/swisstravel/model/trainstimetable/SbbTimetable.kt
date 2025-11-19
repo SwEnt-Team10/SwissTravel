@@ -18,8 +18,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.simplexml.SimpleXmlConverterFactory
 
 const val API_LIMIT = 1_200L
-const val SEC_IN_MIN = 60
-const val MIN_IN_HOUR = 60
 
 /**
  * An implementation of the [TrainTimetable] interface that fetches data from the Swiss Open
