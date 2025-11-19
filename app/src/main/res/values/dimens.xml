@@ -60,7 +60,7 @@
     <dimen name="toggle_horizontal_divider_thickness">2dp</dimen>
     <!-- Sorted Trip List -->
     <dimen name="sorted_trip_list_top_padding">26dp</dimen>
-    <dimen name="sorted_trip_list_bottom_padding">1odp</dimen>
+    <dimen name="sorted_trip_list_bottom_padding">10dp</dimen>
 
     <!-- Switch -->
     <dimen name="switch_padding">8dp</dimen>
