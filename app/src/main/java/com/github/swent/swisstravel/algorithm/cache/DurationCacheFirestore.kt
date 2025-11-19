@@ -65,7 +65,7 @@ class DurationCacheFirestore(
       Log.d("DurationCache", "Saved: $key")
       currentSize +=
           4 // Adding more to make sure that the cache will be looked at more frequently since there
-            // are multiple users that can be using it at the same time
+      // are multiple users that can be using it at the same time
       // Check if we should try to evict
       if (currentSize >= maxCacheSize) {
         // Current size is updated so that if we had to enforce LRU, it becomes the maxCacheSize
