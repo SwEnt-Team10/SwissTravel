@@ -111,7 +111,7 @@ class EditTripScreenViewModel(
         var selectedActivities = originalTrip.activities
 
         // Updates the activities only if the preferences have changed.
-        if (sanitizedPrefs ==
+        if (sanitizedPrefs !=
             PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences)) {
           // Create a temporary TripSettings object to pass to SelectActivities
           val tempTripSettings =
