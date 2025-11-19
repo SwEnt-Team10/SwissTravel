@@ -1,11 +1,10 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
-import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import io.mockk.*
@@ -36,12 +35,17 @@ class EditTripScreenViewModelTest {
           name = "Swiss Alps",
           adults = 2,
           children = 1,
-          prefs = listOf(Preference.FOODIE, Preference.SPORTS))
+          prefs = listOf(Preference.FOODIE, Preference.SPORTS),
+          arrivalLocation = Location(Coordinate(0.0, 0.0), ""),
+          departureLocation = Location(Coordinate(0.0, 0.0), ""))
 
   @Before
   fun setUp() {
     repo = mockk(relaxed = true)
-    vm = EditTripScreenViewModel(tripRepository = repo)
+    // Relaxed mock for ActivityRepository to avoid mocking every call in `save`
+    val activityRepo: com.github.swent.swisstravel.model.trip.activity.ActivityRepository =
+        mockk(relaxed = true)
+    vm = EditTripScreenViewModel(tripRepository = repo, activityRepository = activityRepo)
   }
 
   @After
@@ -145,6 +149,7 @@ class EditTripScreenViewModelTest {
     advanceUntilIdle()
 
     // change some values
+    vm.editTripName("Alps Adventure")
     vm.setAdults(4)
     vm.setChildren(0)
     vm.togglePref(Preference.FOODIE) // remove FOODIE
@@ -163,9 +168,10 @@ class EditTripScreenViewModelTest {
     assertEquals(0, sentTrip.tripProfile.children)
     assertTrue(sentTrip.tripProfile.preferences.contains(Preference.MUSEUMS))
     assertFalse(sentTrip.tripProfile.preferences.contains(Preference.FOODIE))
+    // Check that trip name is updated
+    assertEquals("Alps Adventure", sentTrip.name)
     // Unchanged fields stay the same
     assertEquals(sampleTrip.uid, sentTrip.uid)
-    assertEquals(sampleTrip.name, sentTrip.name)
   }
 
   @Test
@@ -218,14 +224,14 @@ class EditTripScreenViewModelTest {
   // -------------------------
   @Test
   fun `clearErrorMsg clears error state`() = runTest {
-    vm.clearErrorMsg()
-    assertNull(vm.state.value.errorMsg)
-
-    // Set an error then clear
-    vm.loadTrip(sampleTripId)
     coEvery { repo.getTrip(sampleTripId) } throws RuntimeException("x")
+    vm.loadTrip(sampleTripId)
     advanceUntilIdle()
 
+    // Error is now set
+    assertNotNull(vm.state.value.errorMsg)
+
+    // Clear it
     vm.clearErrorMsg()
     assertNull(vm.state.value.errorMsg)
   }
@@ -237,7 +243,9 @@ class EditTripScreenViewModelTest {
       name: String,
       adults: Int,
       children: Int,
-      prefs: List<Preference>
+      prefs: List<Preference>,
+      arrivalLocation: Location,
+      departureLocation: Location
   ): Trip {
     val now = Timestamp.now()
     val profile =
@@ -247,14 +255,16 @@ class EditTripScreenViewModelTest {
             preferredLocations = emptyList(),
             preferences = prefs,
             adults = adults,
-            children = children)
+            children = children,
+            arrivalLocation = arrivalLocation,
+            departureLocation = departureLocation)
     return Trip(
         uid = uid,
         name = name,
         ownerId = "owner-1",
-        locations = emptyList<Location>(),
-        routeSegments = emptyList<RouteSegment>(),
-        activities = emptyList<Activity>(),
+        locations = emptyList(),
+        routeSegments = emptyList(),
+        activities = emptyList(),
         tripProfile = profile,
         isFavorite = false,
         isCurrentTrip = false)
