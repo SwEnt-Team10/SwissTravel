@@ -30,10 +30,6 @@ import kotlinx.serialization.json.Json
  */
 class DurationCacheLocal(private val context: Context, private val maxCacheSize: Int = 50000) :
     DurationCache() {
-
-  override val roundingPrecision: Int
-    get() = 3
-
   private val json = Json { prettyPrint = true }
   private val mutex = Mutex()
 
@@ -75,12 +71,13 @@ class DurationCacheLocal(private val context: Context, private val maxCacheSize:
   }
 
   /** LRU eviction. Caller **must hold the mutex**. */
-  private fun enforceLRUUnsafe() {
-    if (cache.size <= maxCacheSize) return
+  private fun enforceLRUUnsafe(): Boolean {
+    if (cache.size <= maxCacheSize) return false
     val excess = cache.size - maxCacheSize
     val oldest = cache.entries.sortedBy { it.value.lastUpdateTimestamp }.take(excess)
     oldest.forEach { cache.remove(it.key) }
     Log.d("DurationCacheLocal", "Evicted $excess entries (LRU)")
+    return true
   }
 
   override suspend fun getDuration(
@@ -129,7 +126,9 @@ class DurationCacheLocal(private val context: Context, private val maxCacheSize:
     }
   }
 
-  override suspend fun enforceLRU() {
-    mutex.withLock { enforceLRUUnsafe() }
+  override suspend fun enforceLRU(): Boolean {
+    var result = false
+    mutex.withLock { result = enforceLRUUnsafe() }
+    return result
   }
 }

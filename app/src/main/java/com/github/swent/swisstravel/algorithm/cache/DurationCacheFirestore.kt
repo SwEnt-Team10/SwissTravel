@@ -24,10 +24,9 @@ const val CACHE_COLLECTION_PATH = "durationCache"
 class DurationCacheFirestore(
     private val db: FirebaseFirestore,
     private val cacheCollection: String = CACHE_COLLECTION_PATH,
-    private val maxCacheSize: Int = 50000
+    private val maxCacheSize: Int = 10000
 ) : DurationCache() {
-  override val roundingPrecision: Int
-    get() = 3
+  private var currentSize = 0
 
   override suspend fun getDuration(
       start: Coordinate,
@@ -64,18 +63,26 @@ class DurationCacheFirestore(
     try {
       db.collection(cacheCollection).document(key).set(entry).await()
       Log.d("DurationCache", "Saved: $key")
-
-      // Check if we need to evict
-      val currentSize = db.collection(cacheCollection).get().await().size()
-      if (currentSize > maxCacheSize) {
-        enforceLRU()
+      currentSize +=
+          4 // Adding more to make sure that the cache will be looked at more frequently since there
+            // are multiple users that can be using it at the same time
+      // Check if we should try to evict
+      if (currentSize >= maxCacheSize) {
+        // Current size is updated so that if we had to enforce LRU, it becomes the maxCacheSize
+        // and if it didn't had to use LRU, it fetches the
+        currentSize =
+            if (enforceLRU()) {
+              maxCacheSize
+            } else {
+              db.collection(cacheCollection).get().await().size()
+            }
       }
     } catch (e: Exception) {
       Log.e("DurationCache", "Error saving $key", e)
     }
   }
 
-  override suspend fun enforceLRU() {
+  override suspend fun enforceLRU(): Boolean {
     try {
       val snapshot =
           db.collection(cacheCollection)
@@ -93,9 +100,12 @@ class DurationCacheFirestore(
         // Delete the oldest entries
         toDelete.forEach { doc -> doc.reference.delete().await() }
         Log.d("DurationCacheFirestore", "Evicted $excess old entries")
+        return true
       }
+      return false
     } catch (e: Exception) {
       Log.e("DurationCacheFirestore", "Failed to enforce LRU", e)
     }
+    return false
   }
 }

@@ -7,7 +7,7 @@ plugins {
     alias(libs.plugins.sonar)
     alias(libs.plugins.gms)
 
-    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10" // add this
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
     id("jacoco")
 }
 

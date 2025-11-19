@@ -10,7 +10,7 @@ import kotlinx.serialization.Serializable
 // Done with the help of AI
 /** Abstract class defining what a cache for trips durations should look like */
 abstract class DurationCache {
-  abstract val roundingPrecision: Int
+  val roundingPrecision: Int = 3
 
   /**
    * Data class representing a cached duration entry.
@@ -86,6 +86,10 @@ abstract class DurationCache {
       mode: TransportMode
   )
 
-  /** Enforces LRU eviction if the cache grows too large. */
-  abstract suspend fun enforceLRU()
+  /**
+   * Enforces LRU eviction if the cache grows too large.
+   *
+   * @return true if it evicted something, false otherwise
+   */
+  abstract suspend fun enforceLRU(): Boolean
 }

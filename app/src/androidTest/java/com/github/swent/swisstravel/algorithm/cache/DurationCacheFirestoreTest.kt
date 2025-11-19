@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -43,6 +44,8 @@ class DurationCacheFirestoreTest : FirestoreSwissTravelTest() {
     val end = Coordinate(46.9480, 7.4474) // Bern
 
     val duration = 3500.0
+    val fail = cache.getDuration(start, end, TransportMode.CAR)
+    assertNull(fail, "The cache should be empty")
 
     cache.saveDuration(start, end, duration, TransportMode.CAR)
 
