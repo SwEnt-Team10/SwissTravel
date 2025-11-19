@@ -214,5 +214,8 @@
     <!-- Loading -->
     <string name="loading_trip">We are travelling for you…</string>
 
+    <!-- Activity Infos -->
+    <string name="activity_image_content_description">Activity Image</string>
+
 
 </resources>
