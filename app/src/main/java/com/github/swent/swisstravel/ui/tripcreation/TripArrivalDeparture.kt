@@ -149,7 +149,7 @@ fun ArrivalDepartureScreen(
                         Toast.makeText(context, emptyArrival, Toast.LENGTH_SHORT).show()
                         return@Button
                       }
-
+                        //textComment
                       onNext()
                     },
                     colors =
