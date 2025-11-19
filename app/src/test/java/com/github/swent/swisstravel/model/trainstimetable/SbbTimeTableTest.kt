@@ -2,7 +2,6 @@ package com.github.swent.swisstravel.model.trainstimetable
 
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import java.io.InputStreamReader
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -10,6 +9,38 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+
+const val ZH_BE =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+        "<OJP xmlns:siri=\"http://www.siri.org.uk/siri\" version=\"2.0\" xmlns=\"http://www.vdv.de/ojp\">\n" +
+        "    <OJPResponse>\n" +
+        "        <siri:ServiceDelivery>\n" +
+        "            <OJPTripDelivery>\n" +
+        "                <TripResponseContext/>\n" +
+        "                <TripResult>\n" +
+        "                    <Trip>\n" +
+        "                        <!-- The only value needed by the tests -->\n" +
+        "                        <Duration>PT56M</Duration>\n" +
+        "                    </Trip>\n" +
+        "                </TripResult>\n" +
+        "            </OJPTripDelivery>\n" +
+        "        </siri:ServiceDelivery>\n" +
+        "    </OJPResponse>\n" +
+        "</OJP>\n"
+const val ERR =
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+        "<OJP xmlns:siri=\"http://www.siri.org.uk/siri\" version=\"2.0\" xmlns=\"http://www.vdv.de/ojp\">\n" +
+        "    <OJPResponse>\n" +
+        "        <siri:ServiceDelivery>\n" +
+        "            <siri:Status>false</siri:Status>\n" +
+        "            <siri:ErrorCondition>\n" +
+        "                <siri:Description>\n" +
+        "                    <Text>No results found.</Text>\n" +
+        "                </siri:Description>\n" +
+        "            </siri:ErrorCondition>\n" +
+        "        </siri:ServiceDelivery>\n" +
+        "    </OJPResponse>\n" +
+        "</OJP>\n"
 
 /**
  * Unit tests for SbbTimetable using MockWebServer to fake API responses.
@@ -43,23 +74,9 @@ class SbbTimetableTest {
     mockWebServer.shutdown()
   }
 
-  /**
-   * Helper function to read a mock response file from the test resources for a local JVM test.
-   *
-   * @param fileName The name of the file in the resource directory (e.g.,
-   *   "sbb/zurich-bern-mock.xml").
-   * @return The content of the file as a String.
-   */
-  private fun readResourceFile(fileName: String): String {
-    // Use the class loader to get the resource stream, which works in local JVM tests
-    val inputStream = this.javaClass.classLoader?.getResourceAsStream(fileName)
-    return InputStreamReader(inputStream).use { it.readText() }
-  }
-
   @Test
   fun getFastestRoute_withValidLocations_returnsCorrectDuration() = runBlocking {
-    val mockResponse =
-        MockResponse().setResponseCode(200).setBody(readResourceFile("sbb/zurich-bern-mock.xml"))
+    val mockResponse = MockResponse().setResponseCode(200).setBody(ZH_BE)
     mockWebServer.enqueue(mockResponse)
 
     val durationSeconds = timetable.getFastestRoute(zurichHB, bern)
@@ -74,7 +91,7 @@ class SbbTimetableTest {
     val mockResponse =
         MockResponse()
             .setResponseCode(200) // The API can return 200 OK but with an error payload
-            .setBody(readResourceFile("sbb/error-response.xml"))
+            .setBody(ERR)
     mockWebServer.enqueue(mockResponse)
 
     val durationSeconds = timetable.getFastestRoute(zurichHB, invalidLocation)
@@ -95,7 +112,7 @@ class SbbTimetableTest {
   @Test
   fun getDurationMatrix_computesCorrectly() = runBlocking {
     // Prepare mock responses for all required calls in the matrix
-    val successResponse = readResourceFile("sbb/zurich-bern-mock.xml")
+    val successResponse = ZH_BE
 
     // Mock API calls for a 2x2 matrix:
     // 0 -> 0 (skipped)
