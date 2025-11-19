@@ -12,7 +12,7 @@ import retrofit2.http.POST
  *
  * This interface was written with the help of Gemini.
  */
-interface OjpApiService {
+fun interface OjpApiService {
   /**
    * Fetches trip information based on an OJP XML request.
    *
