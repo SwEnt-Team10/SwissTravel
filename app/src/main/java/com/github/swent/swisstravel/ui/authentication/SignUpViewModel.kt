@@ -8,6 +8,11 @@ import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class SignUpStage {
+  FILLING_FORM,
+  PENDING_VERIFICATION,
+}
+
 /**
  * The ViewModel for the Sign-Up screen.
  *
@@ -45,19 +50,29 @@ class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
       _uiState.update { it.copy(isLoading = true, errorMsg = null) }
 
       try {
-        repository.signUpWithEmailPassword(email, password, firstName, lastName).fold({ user ->
-          _uiState.update {
-            it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
-          }
-        }) { failure ->
-          _uiState.update {
-            it.copy(
-                isLoading = false,
-                errorMsg = failure.localizedMessage,
-                signedOut = true,
-                user = null)
-          }
-        }
+        repository
+            .signUpWithEmailPassword(email, password, firstName, lastName)
+            .fold(
+                onSuccess = { user ->
+                  // Sign up successful, email sent. Now wait for verification.
+                  _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        user = user, // Keep user info
+                        signUpStage = SignUpStage.PENDING_VERIFICATION, // << CHANGE HERE
+                        errorMsg = null,
+                        signedOut = false)
+                  }
+                },
+                onFailure = { failure ->
+                  _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMsg = failure.localizedMessage,
+                        signedOut = true,
+                        user = null)
+                  }
+                })
       } catch (e: Exception) {
         // Unexpected errors
         _uiState.update {
@@ -68,6 +83,59 @@ class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
               user = null)
         }
       }
+    }
+  }
+
+  /**
+   * Checks if the current user's email has been verified. This is called when the user clicks the
+   * "Done" button.
+   */
+  fun checkVerificationStatus() {
+    if (_uiState.value.isLoading) return
+    viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true, errorMsg = null) }
+
+      repository
+          .reloadAndCheckVerification()
+          .fold(
+              onSuccess = { isVerified ->
+                if (isVerified) {
+                  // Success -> Set the flag to trigger navigation.
+                  _uiState.update { it.copy(isLoading = false, isEmailVerified = true) }
+                } else {
+                  // Not verified yet. Inform the user.
+                  _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMsg =
+                            "Email not verified. Please check your inbox and click the link.")
+                  }
+                }
+              },
+              onFailure = { failure ->
+                _uiState.update { it.copy(isLoading = false, errorMsg = failure.localizedMessage) }
+              })
+    }
+  }
+
+  /**
+   * Resends the verification email to the user. This is called when the user clicks the "Resend
+   * Email" button.
+   */
+  fun resendVerificationEmail() {
+    if (_uiState.value.isLoading) return
+    viewModelScope.launch {
+      // We don't need a full loading indicator, just a confirmation message.
+      repository
+          .resendVerificationEmail()
+          .fold(
+              onSuccess = {
+                // Use the error message channel to send a confirmation toast.
+                _uiState.update { it.copy(errorMsg = "New verification email sent.") }
+              },
+              onFailure = { failure ->
+                _uiState.update { it.copy(errorMsg = failure.localizedMessage) }
+              })
     }
   }
 }
