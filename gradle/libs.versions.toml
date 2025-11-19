@@ -121,11 +121,11 @@ play-services-auth = { module = "com.google.android.gms:play-services-auth", ver
 
 ## OkHTTP packages
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
+interceptor = { module = "com.squareup.okhttp3:logging-interceptor", version.ref = "okhttp" }
 
 ## SBB API
 retrofit = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }
 xmlconverter = { module = "com.squareup.retrofit2:converter-simplexml", version.ref = "retrofit" }
-xml = { module = "org.simpleframework.xml:simple-xml" }
 
 ## MapBox packages
 mapbox-maps = {module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox"}

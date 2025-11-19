@@ -16,6 +16,7 @@ import kotlinx.coroutines.delay
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import okhttp3.logging.HttpLoggingInterceptor
 import org.simpleframework.xml.convert.AnnotationStrategy
 import org.simpleframework.xml.core.Persister
 import retrofit2.Retrofit
@@ -38,9 +39,13 @@ class SbbTimetable() : TrainTimetable {
   private val ojpToken = BuildConfig.OPEN_TRANSPORT_DATA_TOKEN
 
   private val api: OjpApiService by lazy {
+    val logging =
+        HttpLoggingInterceptor { message -> Log.d("OJP_API", message) }
+            .setLevel(HttpLoggingInterceptor.Level.BODY)
+    val client = OkHttpClient.Builder().addInterceptor(logging).build()
     Retrofit.Builder()
         .baseUrl("https://api.opentransportdata.swiss/")
-        .client(OkHttpClient.Builder().build())
+        .client(client)
         .addConverterFactory(SimpleXmlConverterFactory.create(Persister(AnnotationStrategy())))
         .build()
         .create(OjpApiService::class.java)

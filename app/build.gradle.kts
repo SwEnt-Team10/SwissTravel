@@ -206,10 +206,10 @@ dependencies {
 
     //---------    Networking with OkHttp   --------
     implementation(libs.okhttp)
+    implementation(libs.interceptor)
 
     //---------    Networking with Retrofit   -----
     implementation(libs.retrofit)
-    implementation(libs.xml)
     implementation(libs.xmlconverter)
 
     //----- Test units ----------------

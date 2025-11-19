@@ -33,6 +33,7 @@ fun createOjpTripRequest(
                     <siri:RequestorRef>$requestorRef</siri:RequestorRef>
                     <OJPTripRequest>
                         <siri:RequestTimestamp>$now</siri:RequestTimestamp>
+                        <siri:MessageIdentifier>msg-$now</siri:MessageIdentifier>
                         <Origin>
                             <PlaceRef>
                                 <GeoPosition>
@@ -52,9 +53,8 @@ fun createOjpTripRequest(
                         </Destination>
                         <Params>
                             <NumberOfResults>1</NumberOfResults>
-                            <IncludeTrackSections>true</IncludeTrackSections>
-                            <IncludeLegProjection>true</IncludeLegProjection>
-                            <IncludeIntermediateStops>true</IncludeIntermediateStops>
+                            <UseRealtimeData>none</UseRealtimeData>
+                            <IncludeIntermediateStops>false</IncludeIntermediateStops>
                         </Params>
                     </OJPTripRequest>
                 </siri:ServiceRequest>
