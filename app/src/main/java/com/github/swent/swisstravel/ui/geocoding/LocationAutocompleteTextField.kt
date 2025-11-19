@@ -119,7 +119,18 @@ fun LocationAutocompleteTextField(
         },
         modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) },
-        singleLine = true)
+        singleLine = true,
+        isError = expanded && ((text.isEmpty()) || (state.selectedLocation == null)),
+        supportingText = {
+            if (expanded) {
+                if (text.isEmpty()) {
+                    Text("$name ${R.string.cannot_be_empty}")
+                } else if (state.selectedLocation == null) {
+                    val dropdownText = R.string.dropdown_menu_choose
+                    Text(text = "$dropdownText")
+                }
+            }
+        })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
         onDismissRequest = { expanded = false }) {
