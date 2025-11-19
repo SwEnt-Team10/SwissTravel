@@ -29,7 +29,8 @@ const val API_LIMIT = 1_200L
  * for building requests, parsing responses, and converting them into the data models used by the
  * application, such as [RouteSegment] and a travel duration matrix.
  */
-class SbbTimetable() : TrainTimetable {
+class SbbTimetable(private val baseUrl: String = "https://api.opentransportdata.swiss/") :
+    TrainTimetable {
 
   private val ojpToken = BuildConfig.OPEN_TRANSPORT_DATA_TOKEN
 
@@ -42,7 +43,7 @@ class SbbTimetable() : TrainTimetable {
     val serializer = Persister(AnnotationStrategy())
 
     Retrofit.Builder()
-        .baseUrl("https://api.opentransportdata.swiss/")
+        .baseUrl(baseUrl)
         .client(client)
         // Pass the namespace-aware serializer to the factory
         .addConverterFactory(SimpleXmlConverterFactory.create(serializer))
