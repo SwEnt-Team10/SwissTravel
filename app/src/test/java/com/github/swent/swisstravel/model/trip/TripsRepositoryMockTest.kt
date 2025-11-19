@@ -90,7 +90,10 @@ class TripsRepositoryFirestorePublicTest {
             "startDate" to Timestamp.now(),
             "endDate" to Timestamp.now(),
             "preferredLocations" to listOf(locationMap),
-            "preferences" to listOf(mapOf("preference" to Preference.FOODIE.name)))
+            "preferences" to listOf(mapOf("preference" to Preference.FOODIE.name)),
+            "arrivalLocation" to locationMap,
+            "departureLocation" to locationMap,
+        )
 
     every { doc.get("locations") } returns listOf(locationMap)
     every { doc.get("routeSegments") } returns listOf(routeSegmentMap)
@@ -153,7 +156,9 @@ class TripsRepositoryFirestorePublicTest {
             "preferredLocations" to listOf(locationMap),
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
-            "children" to 0L)
+            "children" to 0L,
+            "arrivalLocation" to locationMap,
+            "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
 
@@ -166,6 +171,8 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip skips invalid activities gracefully`() = runTest {
     val doc = mockk<DocumentSnapshot>()
+    val locationMap =
+        mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
     every {
       mockDb.collection(TRIPS_COLLECTION_PATH).document("tripWithBadActivities").get()
     } returns Tasks.forResult(doc)
@@ -204,7 +211,9 @@ class TripsRepositoryFirestorePublicTest {
             "preferredLocations" to emptyList<Map<String, Any>>(),
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
-            "children" to 0L)
+            "children" to 0L,
+            "arrivalLocation" to locationMap,
+            "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
 
@@ -219,6 +228,8 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip handles empty optional lists`() = runTest {
     val doc = mockk<DocumentSnapshot>()
+    val locationMap =
+        mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
     every { mockDb.collection(TRIPS_COLLECTION_PATH).document("tripEmpty").get() } returns
         Tasks.forResult(doc)
     every { doc.id } returns "tripEmpty"
@@ -234,7 +245,9 @@ class TripsRepositoryFirestorePublicTest {
             "preferredLocations" to emptyList<Map<String, Any>>(),
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
-            "children" to 0L)
+            "children" to 0L,
+            "arrivalLocation" to locationMap,
+            "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
 
@@ -253,6 +266,8 @@ class TripsRepositoryFirestorePublicTest {
     val mockQuery = mockk<Query>()
     val mockQuerySnapshot = mockk<QuerySnapshot>(relaxed = true)
     val doc = mockk<QueryDocumentSnapshot>(relaxed = true)
+    val locationMap =
+        mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
 
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.uid } returns "owner123"
@@ -277,7 +292,9 @@ class TripsRepositoryFirestorePublicTest {
             "preferredLocations" to emptyList<Map<String, Any>>(),
             "preferences" to emptyList<Map<String, Any>>(),
             "adults" to 1L,
-            "children" to 0L)
+            "children" to 0L,
+            "arrivalLocation" to locationMap,
+            "departureLocation" to locationMap)
     every { doc.getBoolean("isFavorite") } returns false
 
     val trips = repo.getAllTrips()
