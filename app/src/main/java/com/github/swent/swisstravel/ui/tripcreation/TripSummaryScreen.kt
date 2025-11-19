@@ -24,9 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -80,7 +77,6 @@ fun TripSummaryScreen(
 ) {
   val state by viewModel.tripSettings.collectAsState()
   val context = LocalContext.current
-  var tripName by rememberSaveable { mutableStateOf("") }
   val startDate = state.date.startDate
   val endDate = state.date.endDate
   val departure = state.arrivalDeparture.departureLocation?.name ?: ""
@@ -98,9 +94,6 @@ fun TripSummaryScreen(
   val departureLabel = stringResource(R.string.departure)
   val placesLabel = stringResource(R.string.places)
   val createTripLabel = stringResource(R.string.create_trip_summary)
-  val emptyNameToast = stringResource(R.string.trip_name_required)
-  val emptyDeparture = stringResource(R.string.departure_required)
-  val emptyArrival = stringResource(R.string.arrival_required)
   val noWantedPlaces = stringResource(R.string.no_wanted_places)
   val fromDate = stringResource(R.string.from_summary)
   val toDate = stringResource(R.string.to_summary)
@@ -127,9 +120,16 @@ fun TripSummaryScreen(
           ) {
             item {
               OutlinedTextField(
-                  value = tripName,
-                  onValueChange = { new -> tripName = new },
+                  value = state.name,
+                  onValueChange = {viewModel.updateName(it)},
                   label = { Text(tripNameLabel) },
+                  isError = state.invalidNameMsg != null,
+                  supportingText =
+                      state.invalidNameMsg?.let {
+                          {
+                              Text(stringResource(R.string.name_empty))
+                          }
+                      },
                   modifier =
                       Modifier.fillMaxWidth()
                           .padding(16.dp)
@@ -291,21 +291,11 @@ fun TripSummaryScreen(
                   modifier = Modifier.fillMaxWidth().padding(16.dp),
                   contentAlignment = Alignment.Center) {
                     Button(
+                        enabled = state.name.isNotBlank(),
                         onClick = {
-                          if (tripName.isBlank()) {
-                            Toast.makeText(context, emptyNameToast, Toast.LENGTH_SHORT).show()
-                            return@Button
-                          } else if (departure == "") {
-                            Toast.makeText(context, emptyDeparture, Toast.LENGTH_SHORT).show()
-                            return@Button
-                          } else if (arrival == "") {
-                            Toast.makeText(context, emptyArrival, Toast.LENGTH_SHORT).show()
-                          } else {
-                            viewModel.updateName(tripName)
                             viewModel.saveTrip()
                             Toast.makeText(context, createTripLabel, Toast.LENGTH_SHORT).show()
                             onNext()
-                          }
                         },
                         colors =
                             ButtonDefaults.buttonColors(

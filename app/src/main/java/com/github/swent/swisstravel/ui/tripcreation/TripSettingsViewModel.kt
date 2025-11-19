@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import com.github.swent.swisstravel.R
 
 /** * Data class representing the start and end dates of a trip. */
 data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = null)
@@ -44,7 +45,8 @@ data class TripSettings(
     val travelers: TripTravelers = TripTravelers(),
     val preferences: List<Preference> = emptyList(),
     val arrivalDeparture: TripArrivalDeparture = TripArrivalDeparture(),
-    val destinations: List<Location> = emptyList()
+    val destinations: List<Location> = emptyList(),
+    val invalidNameMsg: Int? = null
 )
 
 /** Sealed interface representing various validation events during trip settings. */
@@ -83,7 +85,7 @@ class TripSettingsViewModel(
   val loadingProgress = _loadingProgress.asStateFlow()
 
   fun updateName(name: String) {
-    _tripSettings.update { it.copy(name = name) }
+      _tripSettings.value = _tripSettings.value.copy(name = name, invalidNameMsg = if (name.isBlank()) R.string.name_empty else null)
   }
 
   fun updateDates(start: LocalDate, end: LocalDate) {
