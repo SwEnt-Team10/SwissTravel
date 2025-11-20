@@ -120,14 +120,16 @@ fun ArrivalDepartureScreen(
                   LocationAutocompleteTextField(
                       addressTextFieldViewModel = arrivalAddressVm,
                       modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
-                      name = stringResource(R.string.arrival_location))
+                      name = stringResource(R.string.arrival_location),
+                      showImages = false)
                   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.large_spacer)))
 
                   // --- Departure Destination (autocomplete) ---
                   LocationAutocompleteTextField(
                       addressTextFieldViewModel = departureAddressVm,
                       modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
-                      name = stringResource(R.string.departure_location))
+                      name = stringResource(R.string.departure_location),
+                      showImages = false)
 
                   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
                 }
