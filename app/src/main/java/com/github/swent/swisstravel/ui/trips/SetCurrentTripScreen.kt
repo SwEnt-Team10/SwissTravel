@@ -20,8 +20,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
@@ -74,7 +74,9 @@ fun SetCurrentTripScreen(
             onClickDropDownMenu = { sortType -> viewModel.updateSortType(sortType) },
             selectedSortType = uiState.sortType)
       },
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)) { pd ->
+      modifier =
+          Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.small_padding))) {
+          pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
           TripList(
               trips = trips,

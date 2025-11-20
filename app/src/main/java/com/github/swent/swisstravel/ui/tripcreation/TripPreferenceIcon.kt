@@ -12,9 +12,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.toTestTagString
@@ -36,7 +37,7 @@ object TripPreferenceIconTestTags {
  */
 @Composable
 fun TripPreferenceIcon(preference: Preference, modifier: Modifier = Modifier) {
-  val borderWidth = 1.5.dp
+  val borderWidth = dimensionResource(R.dimen.trip_preference_border_width)
   val shape = RoundedCornerShape(50)
   val containerColor = MaterialTheme.colorScheme.background
   val textColor = MaterialTheme.colorScheme.onBackground
@@ -48,7 +49,9 @@ fun TripPreferenceIcon(preference: Preference, modifier: Modifier = Modifier) {
               .testTag(TripPreferenceIconTestTags.getTestTag(preference))
               .border(BorderStroke(borderWidth, borderColor), shape = shape)
               .background(containerColor, shape = shape)
-              .padding(horizontal = 12.dp, vertical = 8.dp),
+              .padding(
+                  horizontal = dimensionResource(R.dimen.trip_preference_icon_horizontal_padding),
+                  vertical = dimensionResource(R.dimen.trip_preference_icon_vertical_padding)),
       contentAlignment = Alignment.Center) {
         Text(text = stringResource(preference.displayStringRes()), color = textColor)
       }
