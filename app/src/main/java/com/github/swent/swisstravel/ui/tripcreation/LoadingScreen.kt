@@ -16,8 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 
@@ -69,8 +69,10 @@ fun LoadingScreen(
         Text(
             text = stringResource(id = R.string.loading_trip),
             style = MaterialTheme.typography.titleLarge,
-            modifier = Modifier.padding(16.dp).testTag(LoadingTestTags.LOADING_TEXT))
-        Spacer(modifier = Modifier.height(16.dp))
+            modifier =
+                Modifier.padding(dimensionResource(R.dimen.loading_padding))
+                    .testTag(LoadingTestTags.LOADING_TEXT))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
         LinearProgressIndicator(
             progress = { progress }, modifier = Modifier.testTag(LoadingTestTags.PROGRESS_BAR))
       }

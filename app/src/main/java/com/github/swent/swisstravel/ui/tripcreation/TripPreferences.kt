@@ -19,10 +19,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.PreferenceRules
@@ -79,11 +79,12 @@ fun TripPreferencesScreen(
             color = MaterialTheme.colorScheme.background) {
               LazyColumn(
                   modifier =
-                      Modifier.padding(horizontal = 24.dp, vertical = 24.dp)
+                      Modifier.padding(dimensionResource(R.dimen.mid_padding))
                           .fillMaxSize()
                           .testTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT),
                   horizontalAlignment = Alignment.CenterHorizontally,
-                  verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                  verticalArrangement =
+                      Arrangement.spacedBy(dimensionResource(R.dimen.trip_preference_spacing))) {
 
                     // --- Title ---
                     item {

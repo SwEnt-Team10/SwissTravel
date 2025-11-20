@@ -37,13 +37,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -112,7 +112,10 @@ fun SignInScreen(
       modifier = Modifier.fillMaxSize(),
       content = { padding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(padding).padding(horizontal = 32.dp),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(padding)
+                    .padding(dimensionResource(R.dimen.medium_padding)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
         ) {
@@ -121,11 +124,11 @@ fun SignInScreen(
               painter = painterResource(id = R.drawable.swisstravel),
               contentDescription = stringResource(R.string.app_logo_desc),
               modifier =
-                  Modifier.size(120.dp)
-                      .clip(RoundedCornerShape(16.dp))
+                  Modifier.size(dimensionResource(R.dimen.sign_in_logo_size))
+                      .clip(RoundedCornerShape(dimensionResource(R.dimen.main_logo_corner)))
                       .testTag(SignInScreenTestTags.APP_LOGO))
 
-          Spacer(modifier = Modifier.height(16.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
           // App Name
           Text(
@@ -136,7 +139,7 @@ fun SignInScreen(
               fontWeight = FontWeight.Bold,
               textAlign = TextAlign.Center)
 
-          Spacer(modifier = Modifier.height(24.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
           Text(
               text = stringResource(R.string.sign_in_account),
@@ -144,7 +147,7 @@ fun SignInScreen(
               textAlign = TextAlign.Center,
               modifier = Modifier.fillMaxWidth())
 
-          Spacer(modifier = Modifier.height(24.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
           OutlinedTextField(
               value = email,
@@ -152,7 +155,7 @@ fun SignInScreen(
               label = { Text(stringResource(R.string.email)) },
               modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.EMAIL_FIELD))
 
-          Spacer(modifier = Modifier.height(16.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
           OutlinedTextField(
               value = password,
@@ -162,28 +165,30 @@ fun SignInScreen(
               visualTransformation = PasswordVisualTransformation(),
               modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.PASSWORD_FIELD))
 
-          Spacer(modifier = Modifier.height(24.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
           // Authenticate With Google Button
           if (uiState.isLoading) {
             CircularProgressIndicator(
-                modifier = Modifier.size(48.dp).testTag(SignInScreenTestTags.LOADING_INDICATOR))
+                modifier =
+                    Modifier.size(dimensionResource(R.dimen.sign_in_loading))
+                        .testTag(SignInScreenTestTags.LOADING_INDICATOR))
           } else {
             Button(
                 onClick = { authViewModel.signInWithEmailPassword(email, password, context) },
                 modifier =
                     Modifier.fillMaxWidth()
-                        .height(48.dp)
+                        .height(dimensionResource(R.dimen.medium_button_height))
                         .testTag(SignInScreenTestTags.LOGIN_BUTTON)) {
                   Text(stringResource(R.string.sign_in), fontSize = 16.sp)
                 }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
             Text(
                 stringResource(R.string.or),
                 textAlign = TextAlign.Center,
                 modifier = Modifier.fillMaxWidth(),
                 color = Color.Gray)
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
             GoogleSignInButton(
                 type = GoogleButtonType.SIGN_IN,
                 onSignInClick = { authViewModel.signInWithGoogle(context, credentialManager) })
@@ -206,9 +211,11 @@ fun GoogleSignInButton(type: GoogleButtonType, onSignInClick: () -> Unit) {
               containerColor = MaterialTheme.colorScheme.surfaceVariant,
               contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(50),
-      border = BorderStroke(1.dp, Color.LightGray),
+      border = BorderStroke(dimensionResource(R.dimen.google_button_border), Color.LightGray),
       modifier =
-          Modifier.fillMaxWidth().height(48.dp).testTag(SignInScreenTestTags.GOOGLE_LOGIN_BUTTON)) {
+          Modifier.fillMaxWidth()
+              .height(dimensionResource(R.dimen.medium_button_height))
+              .testTag(SignInScreenTestTags.GOOGLE_LOGIN_BUTTON)) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center) {
@@ -216,7 +223,9 @@ fun GoogleSignInButton(type: GoogleButtonType, onSignInClick: () -> Unit) {
               Image(
                   painter = painterResource(id = R.drawable.google_logo),
                   contentDescription = stringResource(R.string.app_logo_desc),
-                  modifier = Modifier.size(24.dp).padding(end = 8.dp))
+                  modifier =
+                      Modifier.size(dimensionResource(R.dimen.google_button_logo))
+                          .padding(end = dimensionResource(R.dimen.google_button_padding)))
 
               // Text for the button
               Text(

@@ -32,9 +32,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
@@ -130,7 +130,10 @@ fun PastTripsScreen(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(padding)
-                    .padding(start = 16.dp, end = 16.dp, bottom = 4.dp)) {
+                    .padding(
+                        start = dimensionResource(R.dimen.past_trips_padding_start_end),
+                        end = dimensionResource(R.dimen.past_trips_padding_start_end),
+                        bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))) {
               TripList(
                   trips = uiState.tripsList,
                   onClickTripElement = {

@@ -10,10 +10,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.DateSelectorRow
@@ -103,7 +103,11 @@ fun TripDateScreen(
         modifier = Modifier.fillMaxSize().padding(pd),
         color = MaterialTheme.colorScheme.background) {
           Column(
-              modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(
+                          horizontal = dimensionResource(R.dimen.mid_padding),
+                          vertical = dimensionResource(R.dimen.medium_padding)),
               horizontalAlignment = Alignment.CenterHorizontally,
               verticalArrangement = Arrangement.SpaceBetween) {
 
@@ -116,7 +120,7 @@ fun TripDateScreen(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onBackground))
 
-                Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
                 // --- Date selectors ---
                 Column(
@@ -127,7 +131,9 @@ fun TripDateScreen(
                           dateText = startDate.format(formatter),
                           onClick = { startDatePicker.show() })
 
-                      Spacer(modifier = Modifier.height(48.dp))
+                      Spacer(
+                          modifier =
+                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
 
                       DateSelectorRow(
                           label = stringResource(R.string.end_date),
@@ -135,7 +141,7 @@ fun TripDateScreen(
                           onClick = { endDatePicker.show() })
                     }
 
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
                 // --- Done button ---
                 Button(
@@ -143,7 +149,7 @@ fun TripDateScreen(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary),
-                    shape = RoundedCornerShape(24.dp),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.date_done_button_radius)),
                     modifier = Modifier.testTag(TripDateTestTags.NEXT)) {
                       Text(
                           text = stringResource(R.string.next),
