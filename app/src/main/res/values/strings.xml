@@ -205,7 +205,6 @@
     <string name="departure">Departure</string>
     <string name="arrival">Arrival</string>
     <string name="places">Places you want to visit</string>
-    <string name="trip_name_required">Trip name required</string>
     <string name="departure_required">Departure required</string>
     <string name="arrival_required">Arrival required</string>
     <string name="departure_and_arrival_required">Departure and Arrival required</string>
