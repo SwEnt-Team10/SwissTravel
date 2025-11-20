@@ -6,7 +6,10 @@ import com.github.swent.swisstravel.model.trip.TransportMode
 import io.mockk.every
 import io.mockk.mockk
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.junit.Assert.*
 import org.junit.Before
@@ -65,22 +68,31 @@ class DurationCacheLocalTest {
     val baseStart = Coordinate(47.0, 8.0)
     val end = Coordinate(46.0, 7.0)
 
+    val cache = DurationCacheLocal(context, maxCacheSize = 3, cacheFile = cacheFile)
+
     for (i in 1..4) {
       cache.saveDuration(
           baseStart.copy(latitude = baseStart.latitude + i * 0.001),
           end,
           i * 100.0,
           TransportMode.CAR)
+      delay(1) // ensure unique timestamps
     }
 
-    val fresh = DurationCacheLocal(context, maxCacheSize = 3)
-    val text = cacheFile.readText()
-    println("Cache file contents: $text")
+    // The oldest entry (i=1) should have been evicted
+    val oldestEntry = cache.getDuration(baseStart.copy(latitude = 47.001), end, TransportMode.CAR)
+    assertNull(oldestEntry)
 
-    val loaded = fresh.getDuration(baseStart.copy(latitude = 47.0 + 0.001), end, TransportMode.CAR)
+    // Newest entries exist
+    for (i in 2..4) {
+      val entry =
+          cache.getDuration(
+              baseStart.copy(latitude = baseStart.latitude + i * 0.001), end, TransportMode.CAR)
+      assertNotNull(entry)
+    }
 
-    assertNull(loaded)
-
+    // Optional: check file
+    val text = withContext(Dispatchers.IO) { cacheFile.readText() }
     val map: Map<String, DurationCache.CacheEntry> = Json.decodeFromString(text)
     assertEquals(3, map.size)
   }
