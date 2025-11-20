@@ -11,6 +11,41 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 class WikiImageRepository(private val api: WikiImageApi) {
 
   /**
+   * Common search params for the WikiImageApi. (getImageByTitle)
+   *
+   * @param title Title of the page
+   */
+  private fun titleParams(title: String) =
+      mapOf(
+          "action" to "query",
+          "titles" to title,
+          "prop" to "pageimages",
+          "piprop" to "thumbnail",
+          "pithumbsize" to "800",
+          "format" to "json",
+          "formatversion" to "2",
+          "origin" to "*")
+
+  /**
+   * Common search parameters for the WikiImageApi. (getImagesByTitle)
+   *
+   * @param query Search query
+   * @param limit Maximum number of results
+   */
+  private fun searchParams(query: String, limit: Int) =
+      mapOf(
+          "action" to "query",
+          "generator" to "search",
+          "gsrsearch" to query,
+          "gsrlimit" to limit.toString(),
+          "prop" to "pageimages",
+          "piprop" to "thumbnail",
+          "pithumbsize" to "800",
+          "format" to "json",
+          "formatversion" to "2",
+          "origin" to "*")
+
+  /**
    * Function to get the image for a given name.
    *
    * @param name Name
@@ -18,7 +53,7 @@ class WikiImageRepository(private val api: WikiImageApi) {
    */
   suspend fun getImageByName(name: String): String? {
     return try {
-      val resp = api.getImageForTitle(title = name)
+      val resp = api.getImageForTitle(titleParams(name))
       val pages = resp.query?.pages ?: emptyList()
 
       pages.firstOrNull()?.thumbnail?.source
@@ -37,7 +72,7 @@ class WikiImageRepository(private val api: WikiImageApi) {
    */
   suspend fun getImagesByName(name: String, maxImages: Int = 3): List<String> {
     return try {
-      val resp = api.searchImages(query = name, limit = maxImages)
+      val resp = api.searchImages(searchParams(name, maxImages))
       val pages = resp.query?.pages ?: emptyList()
 
       pages.take(maxImages).mapNotNull { it.thumbnail?.source }

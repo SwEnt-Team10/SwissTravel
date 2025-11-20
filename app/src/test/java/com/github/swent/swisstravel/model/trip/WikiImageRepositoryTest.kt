@@ -23,35 +23,21 @@ private class FakeWikiImageApi : WikiImageApi {
 
   var throwOnGetImage: Boolean = false
   var throwOnSearchImages: Boolean = false
+  var lastGetImageParams: Map<String, String>? = null
+  var lastSearchImageParams: Map<String, String>? = null
 
-  override suspend fun getImageForTitle(
-      action: String,
-      title: String,
-      prop: String,
-      piprop: String,
-      thumbSize: Int,
-      format: String,
-      formatVersion: Int,
-      origin: String
-  ): WikiResponse {
+  override suspend fun getImageForTitle(params: Map<String, String>): WikiResponse {
+    lastGetImageParams = params
+
     if (throwOnGetImage) {
       throw RuntimeException("Fake getImageForTitle error")
     }
     return nextGetImageResponse ?: WikiResponse(WikiQuery(emptyList()))
   }
 
-  override suspend fun searchImages(
-      action: String,
-      generator: String,
-      query: String,
-      limit: Int,
-      prop: String,
-      piprop: String,
-      thumbSize: Int,
-      format: String,
-      formatVersion: Int,
-      origin: String
-  ): WikiResponse {
+  override suspend fun searchImages(params: Map<String, String>): WikiResponse {
+    lastSearchImageParams = params
+
     if (throwOnSearchImages) {
       throw RuntimeException("Fake searchImages error")
     }
