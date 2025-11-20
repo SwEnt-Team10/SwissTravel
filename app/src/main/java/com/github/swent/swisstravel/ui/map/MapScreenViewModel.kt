@@ -16,6 +16,7 @@ import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLineError
 import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
 import com.mapbox.search.ApiType
+import com.mapbox.search.QueryType
 import com.mapbox.search.ResponseInfo
 import com.mapbox.search.ReverseGeoOptions
 import com.mapbox.search.SearchCallback
@@ -79,21 +80,7 @@ class MapScreenViewModel : ViewModel() {
 
   private var searchRequestTask: AsyncOperationTask? = null
 
-  private val searchCallback =
-      object : SearchCallback {
-
-        override fun onResults(results: List<SearchResult>, responseInfo: ResponseInfo) {
-          if (results.isEmpty()) {
-            Log.d("SearchApiExample", "No reverse geocoding results")
-          } else {
-            Log.d("SearchApiExample", "Reverse geocoding results: $results")
-          }
-        }
-
-        override fun onError(e: Exception) {
-          Log.d("SearchApiExample", "Reverse geocoding error", e)
-        }
-      }
+  private var hasRetriedWithReverseGeo = false
 
   /** Backing state for the UI */
   private val _uiState =
@@ -156,6 +143,19 @@ class MapScreenViewModel : ViewModel() {
 
           override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
             Log.e("NAV_MAP_VM", "requestRoute failure: $reasons")
+            if (!hasRetriedWithReverseGeo) {
+              // First failure: try reverse geocoding
+              val last = _uiState.value.locationsList.lastOrNull()
+              if (last != null) {
+                hasRetriedWithReverseGeo = true
+                reverseGeoAndRetry(last)
+              }
+            } else {
+              // Second failure: show toast
+              _uiState.value.mapboxNavigation?.let {
+                Log.e("NAV_MAP_VM", "Route creation failed after fallback")
+              }
+            }
           }
 
           override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
@@ -189,8 +189,36 @@ class MapScreenViewModel : ViewModel() {
     _uiState.value.mapboxNavigation?.unregisterRoutesObserver(routesObserver)
   }
 
-  private fun reverseGeo(lng: Double, lat: Double) {
-    val options = ReverseGeoOptions(center = Point.fromLngLat(lng, lat), limit = 1)
-    searchRequestTask = searchEngine.search(options, searchCallback)
+  private fun reverseGeoAndRetry(point: Point) {
+    val options = ReverseGeoOptions(center = point, limit = 100, types = listOf(QueryType.ADDRESS))
+    searchRequestTask =
+        searchEngine.search(
+            options,
+            callback =
+                object : SearchCallback {
+                  override fun onResults(results: List<SearchResult>, responseInfo: ResponseInfo) {
+                    if (results.isEmpty()) {
+                      Log.d("REVERSE_GEO", "No reverse geocoding results")
+                      // todo Show toast via state (or callback)
+                    } else {
+                      Log.d("REVERSE_GEO", "$results")
+                      val nearestRoutable =
+                          results.firstNotNullOfOrNull { it.routablePoints?.firstOrNull()?.point }
+                      Log.d("REVERSE_GEO", "$nearestRoutable")
+                      if (nearestRoutable != null) {
+                        val newPoints = _uiState.value.locationsList.dropLast(1) + nearestRoutable
+                        updateLocations(newPoints)
+                      } else {
+                        Log.d("REVERSE_GEO", "No routable point, show toast")
+                        // todo Show toast via state
+                      }
+                    }
+                  }
+
+                  override fun onError(e: Exception) {
+                    Log.d("REVERSE_GEO", "Reverse geocoding error", e)
+                    // todo Show toast via state
+                  }
+                })
   }
 }
