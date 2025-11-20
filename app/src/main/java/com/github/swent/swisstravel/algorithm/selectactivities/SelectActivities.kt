@@ -55,7 +55,7 @@ class SelectActivities(
     userPreferences.remove(Preference.EARLY_BIRD)
     userPreferences.remove(Preference.NIGHT_OWL)
 
-    // add 1 day since the last day since is excluded
+    // add 1 day since the last day is excluded
     val days =
         ChronoUnit.DAYS.between(
             tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
