@@ -27,27 +27,35 @@ import kotlinx.serialization.json.Json
  *
  * @param context Android context used to access the app's internal storage.
  * @param maxCacheSize Maximum number of entries allowed before LRU eviction.
+ * @param cacheFile The file to which we write the cache entries, this is used mainly for testing
  */
-class DurationCacheLocal(private val context: Context, private val maxCacheSize: Int = 50000) :
-    DurationCache() {
+class DurationCacheLocal(
+    private val context: Context,
+    private val maxCacheSize: Int = 50000,
+    private val cacheFile: File? = null
+) : DurationCache() {
   private val json = Json { prettyPrint = true }
   private val mutex = Mutex()
 
-  private val cacheFile: File by lazy { File(context.cacheDir, "duration_cache.json") }
+  // Use provided file or default
+  private val actualCacheFile: File by lazy {
+    cacheFile ?: File(context.cacheDir, "duration_cache.json")
+  }
 
-  /** In-memory cache map */
   private var cache: MutableMap<String, CacheEntry> = mutableMapOf()
-
-  /** True once cache has been loaded from disk */
   private var isLoaded = false
 
-  /** Load cache from disk (lazy, only once) */
+  /**
+   * Loads the cache from the file if it has not been loaded yet. Uses a mutex to ensure
+   * thread-safety. If the cache file exists and is not empty, it decodes the JSON into the
+   * in-memory cache.
+   */
   private suspend fun loadIfNeeded() {
     mutex.withLock {
       if (isLoaded) return
-      if (cacheFile.exists()) {
+      if (actualCacheFile.exists()) {
         try {
-          val text = cacheFile.readText()
+          val text = actualCacheFile.readText()
           if (text.isNotEmpty()) {
             cache = json.decodeFromString(text)
             Log.d("DurationCacheLocal", "Loaded ${cache.size} entries")
@@ -60,17 +68,25 @@ class DurationCacheLocal(private val context: Context, private val maxCacheSize:
     }
   }
 
-  /** Persist cache to disk. Caller **must hold the mutex** to avoid deadlocks. */
+  /**
+   * Persists the in-memory cache to the file. Unsafe because it does not use a mutex; should only
+   * be called when safe to write. Logs an error if saving fails.
+   */
   private fun persistUnsafe() {
     try {
       val text = json.encodeToString(cache)
-      cacheFile.writeText(text)
+      actualCacheFile.writeText(text)
     } catch (e: Exception) {
       Log.e("DurationCacheLocal", "Failed to save cache", e)
     }
   }
 
-  /** LRU eviction. Caller **must hold the mutex**. */
+  /**
+   * Enforces the maximum cache size using a Least Recently Used (LRU) policy. Removes the oldest
+   * entries if the cache exceeds [maxCacheSize].
+   *
+   * @return true if any entries were evicted, false otherwise.
+   */
   private fun enforceLRUUnsafe(): Boolean {
     if (cache.size <= maxCacheSize) return false
     val excess = cache.size - maxCacheSize
@@ -86,12 +102,10 @@ class DurationCacheLocal(private val context: Context, private val maxCacheSize:
       mode: TransportMode
   ): CacheEntry? {
     loadIfNeeded()
-
     val key = buildKey(start, end, mode)
     return mutex.withLock {
       val entry = cache[key]
       if (entry != null) {
-        // update timestamp
         val updated = entry.copy(lastUpdateTimestamp = System.currentTimeMillis())
         cache[key] = updated
         persistUnsafe()
@@ -107,7 +121,6 @@ class DurationCacheLocal(private val context: Context, private val maxCacheSize:
       mode: TransportMode
   ) {
     loadIfNeeded()
-
     val key = buildKey(start, end, mode)
     val entry =
         CacheEntry(
