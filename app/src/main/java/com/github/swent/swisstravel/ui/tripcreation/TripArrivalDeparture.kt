@@ -23,11 +23,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
@@ -98,7 +98,9 @@ fun ArrivalDepartureScreen(
             color = MaterialTheme.colorScheme.background,
         ) {
           Column(
-              modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 24.dp),
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(dimensionResource(R.dimen.arrival_departure_padding)),
               horizontalAlignment = Alignment.CenterHorizontally,
               verticalArrangement = Arrangement.SpaceBetween) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -112,14 +114,14 @@ fun ArrivalDepartureScreen(
                               fontWeight = FontWeight.Bold,
                           ))
 
-                  Spacer(modifier = Modifier.height(32.dp))
+                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
                   // --- Arrival Destination (autocomplete) ---
                   LocationAutocompleteTextField(
                       addressTextFieldViewModel = arrivalAddressVm,
                       modifier = Modifier.testTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD),
                       name = stringResource(R.string.arrival_location))
-                  Spacer(modifier = Modifier.height(50.dp))
+                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.large_spacer)))
 
                   // --- Departure Destination (autocomplete) ---
                   LocationAutocompleteTextField(
@@ -127,7 +129,7 @@ fun ArrivalDepartureScreen(
                       modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
                       name = stringResource(R.string.departure_location))
 
-                  Spacer(modifier = Modifier.height(32.dp))
+                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
                 }
 
                 // --- Done button ---

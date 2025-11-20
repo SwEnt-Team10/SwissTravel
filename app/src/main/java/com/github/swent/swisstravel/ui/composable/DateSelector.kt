@@ -12,7 +12,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.dimensionResource
+import com.github.swent.swisstravel.R
 
 /** Test tags for UI tests to identify components. */
 object DateSelectorTestTags {
@@ -35,11 +36,14 @@ fun DateSelectorRow(label: String, dateText: String, onClick: () -> Unit) {
         style =
             MaterialTheme.typography.titleMedium.copy(
                 color = MaterialTheme.colorScheme.onBackground))
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
     OutlinedButton(
         onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(56.dp).testTag(DateSelectorTestTags.DATE),
-        shape = RoundedCornerShape(16.dp),
+        modifier =
+            Modifier.fillMaxWidth()
+                .height(dimensionResource(R.dimen.date_button_height))
+                .testTag(DateSelectorTestTags.DATE),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.date_button_radius)),
         border = ButtonDefaults.outlinedButtonBorder,
         colors =
             ButtonDefaults.outlinedButtonColors(

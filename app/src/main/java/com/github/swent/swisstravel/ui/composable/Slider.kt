@@ -11,8 +11,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 
 /** Test tags for UI tests to identify components. */
 object SliderTestTags {
@@ -34,14 +35,16 @@ fun PreferenceSlider(label: String, value: Int, onValueChange: (Int) -> Unit) {
   Column(
       modifier =
           Modifier.fillMaxWidth()
-              .padding(vertical = 12.dp)
+              .padding(vertical = dimensionResource(R.dimen.slider_padding))
               .testTag(label + SliderTestTags.SLIDER)) {
         Text(
             text = label,
             style =
                 MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium))
-        HorizontalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        HorizontalDivider(
+            thickness = dimensionResource(R.dimen.slider_divider_thickness),
+            color = MaterialTheme.colorScheme.outlineVariant)
         Slider(
             value = value.toFloat(),
             onValueChange = { onValueChange(it.toInt()) },

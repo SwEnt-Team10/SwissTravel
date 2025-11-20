@@ -7,8 +7,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 
 object TravelersSelectorTestTag {
@@ -43,7 +43,7 @@ fun TravelersSelector(
         onDecrement = { if (adults > 1) onAdultsChange(adults - 1) },
         enableButton = adults > 1)
 
-    Spacer(modifier = Modifier.height(50.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
 
     Counter(
         label = stringResource(R.string.nb_children),

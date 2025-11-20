@@ -35,6 +35,8 @@ import kotlinx.coroutines.flow.StateFlow
  * @property locationsList List of Points representing navigation locations.
  * @property mapboxNavigation The active MapboxNavigation instance.
  * @property routeLineApi The MapboxRouteLineApi instance used to render routes.
+ * @property permissionGranted True if location permission is granted, false otherwise.
+ * @property currentLocation The current location displayed on the map.
  */
 data class NavigationMapUIState(
     val routeLineDrawData: Expected<RouteLineError, RouteSetValue>? = null,
@@ -42,7 +44,8 @@ data class NavigationMapUIState(
     val locationsList: List<Point>,
     val mapboxNavigation: MapboxNavigation?,
     val routeLineApi: MapboxRouteLineApi?,
-    val permissionGranted: Boolean = false
+    val permissionGranted: Boolean = false,
+    val currentLocation: Point? = null
 )
 
 /**
@@ -68,7 +71,7 @@ class MapScreenViewModel : ViewModel() {
     val api = _uiState.value.routeLineApi ?: return@RoutesObserver
     api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
       if (drawData.value != null) {
-        _routeRenderTick.value = _routeRenderTick.value + 1
+        _routeRenderTick.value += 1
       }
     }
   }
