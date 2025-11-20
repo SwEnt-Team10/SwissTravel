@@ -44,6 +44,7 @@ playServicesAuth = "21.2.0"
 #MapBox
 mapbox = "11.15.2"
 mapboxNavigation = "3.16.0-beta.1"
+
 # Plugins
 json = "20240303"
 
