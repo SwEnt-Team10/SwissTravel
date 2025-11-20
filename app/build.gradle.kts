@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.sonar)
     alias(libs.plugins.gms)
 
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
     id("jacoco")
 }
 
@@ -200,6 +201,9 @@ dependencies {
 
     //---------    Networking with OkHttp   --------
     implementation(libs.okhttp)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
 
     //----- Test units ----------------
     // Testing Unit

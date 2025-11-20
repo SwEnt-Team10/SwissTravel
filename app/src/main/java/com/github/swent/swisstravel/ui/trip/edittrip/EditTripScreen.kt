@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -23,6 +25,8 @@ import com.github.swent.swisstravel.ui.composable.TravelersSelector
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.TopBarTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenViewModel
+import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
+import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
 
 object EditTripScreenTestTags {
   const val SCREEN = "editTripScreen"
@@ -55,16 +59,39 @@ fun EditTripScreen(
 ) {
   val context = LocalContext.current
   val state by editTripViewModel.state.collectAsState()
-
   var showDeleteDialog by remember { mutableStateOf(false) }
 
   LaunchedEffect(tripId) { editTripViewModel.loadTrip(tripId) }
 
+  // Observer for validation events (save success/error)
+  LaunchedEffect(key1 = Unit) {
+    editTripViewModel.validationEvents.collect { event ->
+      when (event) {
+        is ValidationEvent.SaveSuccess -> {
+          Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
+          onSaved()
+        }
+        is ValidationEvent.SaveError -> {
+          Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+        }
+        else -> {
+          // Ignore other events
+        }
+      }
+    }
+  }
+
+  // Handle general error messages
   LaunchedEffect(state.errorMsg) {
     state.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       editTripViewModel.clearErrorMsg()
     }
+  }
+
+  if (state.isSaving) {
+    LoadingScreen(progress = state.savingProgress)
+    return
   }
 
   Scaffold(
@@ -92,11 +119,7 @@ fun EditTripScreen(
             },
             actions = {
               Button(
-                  onClick = {
-                    editTripViewModel.save()
-                    Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-                    onSaved()
-                  },
+                  onClick = { editTripViewModel.save() },
                   enabled = !state.isLoading,
                   modifier = Modifier.testTag(EditTripScreenTestTags.CONFIRM_TOP_BAR),
               ) {
@@ -111,11 +134,7 @@ fun EditTripScreen(
               modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
               contentAlignment = Alignment.Center) {
                 Button(
-                    onClick = {
-                      editTripViewModel.save()
-                      Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-                      onSaved()
-                    },
+                    onClick = { editTripViewModel.save() },
                     enabled = !state.isLoading,
                     shape = RoundedCornerShape(28.dp),
                     modifier =

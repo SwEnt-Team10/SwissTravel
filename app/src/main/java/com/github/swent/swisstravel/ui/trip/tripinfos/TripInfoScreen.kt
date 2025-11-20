@@ -127,8 +127,8 @@ fun TripInfoScreen(
     currentStepIndex = 0
 
     val unique = (ui.activities.map { it.location } + ui.locations).distinctBy { it.coordinate }
-    val start = unique.first()
-    val end = unique.last()
+    val start = ui.locations.first()
+    val end = ui.locations.last()
 
     orderLocations(context, unique, start, end) { ordered ->
       if (ordered.totalDuration < 0) {
