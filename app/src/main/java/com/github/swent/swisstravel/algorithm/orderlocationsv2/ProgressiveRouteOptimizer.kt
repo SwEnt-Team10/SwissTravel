@@ -13,6 +13,7 @@ import kotlin.math.sqrt
 
 private const val LARGE_VALUE = 1e9
 private const val DEFAULT_K = 5
+private const val UNREACHABLE_LEG = LARGE_VALUE / 100
 
 // Done with the help of AI
 /**
@@ -64,6 +65,7 @@ class ProgressiveRouteOptimizer(
 
     // Pre-index activities by location coordinate for quick lookup
     val activityByCoord = activities.associateBy { it.location.coordinate }
+    val activitiesMap = activityByCoord.mapValues { it.value.estimatedTime() }
 
     // Main loop
     while (unvisited.isNotEmpty()) {
@@ -80,7 +82,7 @@ class ProgressiveRouteOptimizer(
           } else {
             // Regular logic: find k closest among non-visited, excluding the end for now
             unvisited
-                .filter { it != end }
+                .filter { sameLocation(it, end) }
                 .sortedBy { current.haversineDistanceTo(it) }
                 .take(k.coerceAtMost(unvisited.size))
           }
@@ -159,7 +161,7 @@ class ProgressiveRouteOptimizer(
                         unvisited.filter {
                           it != candidate && it != end
                         }, // remaining except candidate and end
-                    activities = activityByCoord.mapValues { it.value.estimatedTime() },
+                    activities = activitiesMap,
                     config = penaltyConfig)
             val score = travelSec + activitySec + penalty
             CandidateScore(candidate, score, travelSec)
@@ -232,7 +234,7 @@ class ProgressiveRouteOptimizer(
     val result =
         OrderedRoute(
             orderedLocations = ordered,
-            totalDuration = if (totalDuration >= LARGE_VALUE / 10) -1.0 else totalDuration,
+            totalDuration = if (totalDuration >= UNREACHABLE_LEG) -1.0 else totalDuration,
             segmentDuration = segmentDurations)
     return result
   }

@@ -38,27 +38,27 @@ class DurationMatrixHybridTest {
 
   @Test
   fun `fetchDurationsFromStart returns nulls when Mapbox call fails`() = runBlocking {
-    val start = Coordinate(1.0, 2.0)
-    val ends = listOf(Coordinate(3.0, 4.0), Coordinate(5.0, 6.0))
+    val start = Coordinate(48.0, 8.0)
+    val ends = listOf(Coordinate(48.1, 8.1), Coordinate(48.2, 8.2))
 
     val fakeMatrix = mockk<MapboxMatrix>()
     val fakeCall = mockk<Call<MatrixResponse>>()
 
-    // Mock enqueueCall to simulate failure
+    // Mock enqueueCall to immediately trigger onFailure
     every { fakeMatrix.enqueueCall(any()) } answers
         {
           val callback = firstArg<Callback<MatrixResponse>>()
-          callback.onFailure(fakeCall, RuntimeException("Simulated failure"))
+          callback.onFailure(fakeCall, RuntimeException("Simulated network failure"))
         }
 
-    // Override private buildClient to return our mock matrix
+    // Override private buildClient to return our mock
     every { durationMatrixHybrid["buildClient"](any<List<Point>>(), any<TransportMode>()) } returns
         fakeMatrix
 
     val result = durationMatrixHybrid.fetchDurationsFromStart(start, ends, TransportMode.CAR)
 
-    // All values should be null because the call "failed"
-    assertEquals(2, result.size)
+    // Assert that all durations are null because the request "failed"
+    assertEquals(ends.size, result.size)
     result.values.forEach { assertNull(it) }
   }
 
@@ -92,32 +92,9 @@ class DurationMatrixHybridTest {
 
     val result = durationMatrixHybrid.fetchDurationsFromStart(start, ends, TransportMode.CAR)
 
-    assertEquals(mapOf(Pair(start, ends[0]) to 10.0, Pair(start, ends[1]) to 20.0), result)
-  }
-
-  @Test
-  fun `fetchDurationsFromStart triggers onFailure callback`() = runBlocking {
-    val start = Coordinate(48.0, 8.0)
-    val ends = listOf(Coordinate(48.1, 8.1), Coordinate(48.2, 8.2))
-
-    val fakeMatrix = mockk<MapboxMatrix>()
-    val fakeCall = mockk<Call<MatrixResponse>>()
-
-    // Mock enqueueCall to immediately trigger onFailure
-    every { fakeMatrix.enqueueCall(any()) } answers
-        {
-          val callback = firstArg<Callback<MatrixResponse>>()
-          callback.onFailure(fakeCall, RuntimeException("Simulated network failure"))
-        }
-
-    // Override private buildClient to return our mock
-    every { durationMatrixHybrid["buildClient"](any<List<Point>>(), any<TransportMode>()) } returns
-        fakeMatrix
-
-    val result = durationMatrixHybrid.fetchDurationsFromStart(start, ends, TransportMode.CAR)
-
-    // Assert that all durations are null because the request "failed"
     assertEquals(2, result.size)
-    result.values.forEach { assertNull(it) }
+    assertEquals(10.0, result[Pair(start, ends[0])])
+    assertEquals(20.0, result[Pair(start, ends[1])])
+    assertEquals(mapOf(Pair(start, ends[0]) to 10.0, Pair(start, ends[1]) to 20.0), result)
   }
 }

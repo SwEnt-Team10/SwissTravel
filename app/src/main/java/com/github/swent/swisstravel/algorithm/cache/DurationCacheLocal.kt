@@ -5,8 +5,10 @@ import android.util.Log
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.TransportMode
 import java.io.File
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 
@@ -55,7 +57,7 @@ class DurationCacheLocal(
       if (isLoaded) return
       if (actualCacheFile.exists()) {
         try {
-          val text = actualCacheFile.readText()
+          val text = withContext(Dispatchers.IO) { actualCacheFile.readText() }
           if (text.isNotEmpty()) {
             cache = json.decodeFromString(text)
             Log.d("DurationCacheLocal", "Loaded ${cache.size} entries")
@@ -72,10 +74,10 @@ class DurationCacheLocal(
    * Persists the in-memory cache to the file. Unsafe because it does not use a mutex; should only
    * be called when safe to write. Logs an error if saving fails.
    */
-  private fun persistUnsafe() {
+  private suspend fun persistUnsafe() {
     try {
       val text = json.encodeToString(cache)
-      actualCacheFile.writeText(text)
+      withContext(Dispatchers.IO) { actualCacheFile.writeText(text) }
     } catch (e: Exception) {
       Log.e("DurationCacheLocal", "Failed to save cache", e)
     }
