@@ -11,7 +11,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.dimensionResource
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.TripSortType
 
@@ -59,7 +60,9 @@ fun SortedTripList(
     Row(
         modifier =
             Modifier.fillMaxWidth()
-                .padding(top = 26.dp, bottom = 10.dp)
+                .padding(
+                    top = dimensionResource(R.dimen.sorted_trip_list_top_padding),
+                    bottom = dimensionResource(R.dimen.sorted_trip_list_bottom_padding))
                 .testTag(SortedTripListTestTags.TITLE_BUTTON_ROW),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {

@@ -43,9 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
@@ -133,15 +133,19 @@ private fun ProfileScreenContent(
   val isSignedIn = Firebase.auth.currentUser != null
 
   Column(
-      modifier = modifier.fillMaxSize().padding(20.dp).verticalScroll(scrollState),
+      modifier =
+          modifier
+              .fillMaxSize()
+              .padding(dimensionResource(R.dimen.mid_padding))
+              .verticalScroll(scrollState),
       horizontalAlignment = Alignment.CenterHorizontally) {
         ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
         PersonalInfoSection(name = uiState.name, email = uiState.email)
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
         PreferencesSection(
             selected = uiState.selectedPreferences,
@@ -150,7 +154,7 @@ private fun ProfileScreenContent(
               profileScreenViewModel.savePreferences(if (pref in sel) sel - pref else sel + pref)
             })
 
-        Spacer(Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
         AuthButton(
             isSignedIn = isSignedIn,
@@ -172,11 +176,16 @@ private fun ProfileHeader(photoUrl: String, name: String) {
   AsyncImage(
       model = photoUrl.ifBlank { R.drawable.default_profile_pic },
       contentDescription = stringResource(R.string.profile_pic_desc),
-      modifier = Modifier.size(100.dp).clip(CircleShape).testTag(ProfileScreenTestTags.PROFILE_PIC))
+      modifier =
+          Modifier.size(dimensionResource(R.dimen.profile_logo_size))
+              .clip(CircleShape)
+              .testTag(ProfileScreenTestTags.PROFILE_PIC))
   Text(
       text = "${stringResource(R.string.hi)} ${name.ifBlank { "User" }}!",
       style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-      modifier = Modifier.padding(top = 12.dp).testTag(ProfileScreenTestTags.GREETING))
+      modifier =
+          Modifier.padding(top = dimensionResource(R.dimen.smaller_padding))
+              .testTag(ProfileScreenTestTags.GREETING))
 }
 
 /**
@@ -214,10 +223,10 @@ private fun PreferencesSection(selected: List<Preference>, onToggle: (Preference
   Column(
       modifier =
           Modifier.fillMaxWidth()
-              .padding(vertical = 8.dp)
+              .padding(vertical = dimensionResource(R.dimen.tiny_spacer))
               .clip(MaterialTheme.shapes.medium)
               .background(MaterialTheme.colorScheme.secondaryContainer)
-              .padding(16.dp)
+              .padding(dimensionResource(R.dimen.small_padding))
               .testTag(ProfileScreenTestTags.PREFERENCES_LIST)) {
         // Header row
         Row(
@@ -241,13 +250,13 @@ private fun PreferencesSection(selected: List<Preference>, onToggle: (Preference
             }
 
         if (expanded) {
-          Spacer(Modifier.height(12.dp))
+          Spacer(Modifier.height(dimensionResource(R.dimen.smaller_spacer)))
           Text(
               text = stringResource(R.string.default_pref_info),
               style =
                   MaterialTheme.typography.bodyMedium.copy(
                       color = MaterialTheme.colorScheme.onSurfaceVariant))
-          Spacer(Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.smaller_spacer)))
 
           PreferenceSelector(
               isChecked = { pref -> pref in selected },
@@ -268,7 +277,9 @@ private fun AuthButton(isSignedIn: Boolean, onClick: () -> Unit) {
   Button(
       onClick = onClick,
       modifier =
-          Modifier.fillMaxWidth(0.5f).height(50.dp).testTag(ProfileScreenTestTags.LOGOUT_BUTTON),
+          Modifier.fillMaxWidth(0.5f)
+              .height(dimensionResource(R.dimen.medium_button_height))
+              .testTag(ProfileScreenTestTags.LOGOUT_BUTTON),
       shape = CircleShape,
       colors =
           ButtonDefaults.buttonColors(
@@ -280,7 +291,7 @@ private fun AuthButton(isSignedIn: Boolean, onClick: () -> Unit) {
                 else Icons.AutoMirrored.Filled.Login,
             contentDescription =
                 stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in),
-            modifier = Modifier.padding(end = 8.dp))
+            modifier = Modifier.padding(end = dimensionResource(R.dimen.tiny_padding)))
         Text(stringResource(if (isSignedIn) R.string.sign_out else R.string.sign_in))
       }
 }
@@ -302,15 +313,15 @@ fun InfoSection(
       modifier =
           modifier
               .fillMaxWidth()
-              .padding(vertical = 8.dp)
+              .padding(vertical = dimensionResource(R.dimen.tiny_spacer))
               .clip(MaterialTheme.shapes.medium)
               .background(MaterialTheme.colorScheme.secondaryContainer)
-              .padding(16.dp)) {
+              .padding(dimensionResource(R.dimen.small_padding))) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
             color = MaterialTheme.colorScheme.onSecondaryContainer,
-            modifier = Modifier.padding(bottom = 12.dp))
+            modifier = Modifier.padding(bottom = dimensionResource(R.dimen.smaller_padding)))
         content()
       }
 }
@@ -324,16 +335,18 @@ fun InfoSection(
  */
 @Composable
 fun InfoItem(label: String, value: String, modifier: Modifier) {
-  Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-    Text(
-        text = label,
-        style =
-            MaterialTheme.typography.titleSmall.copy(
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)))
-    Text(
-        text = value.ifBlank { "-" },
-        style = MaterialTheme.typography.bodyLarge,
-        modifier = modifier)
-  }
+  Column(
+      modifier =
+          Modifier.fillMaxWidth().padding(bottom = dimensionResource(R.dimen.smaller_spacer))) {
+        Text(
+            text = label,
+            style =
+                MaterialTheme.typography.titleSmall.copy(
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)))
+        Text(
+            text = value.ifBlank { "-" },
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = modifier)
+      }
 }

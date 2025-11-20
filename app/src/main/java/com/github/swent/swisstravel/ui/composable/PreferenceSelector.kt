@@ -19,9 +19,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.PreferenceCategories.categoryToStringRes
@@ -66,7 +67,7 @@ fun PreferenceButton(
       if (isChecked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary
   val textColor =
       if (isChecked) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onBackground
-  val borderWidth = 1.5.dp
+  val borderWidth = dimensionResource(R.dimen.preference_selector_border_width)
   Button(
       onClick = { onCheckedChange(preference) },
       shape = RoundedCornerShape(50),
@@ -101,19 +102,21 @@ fun PreferenceSelectorCategory(
         modifier = Modifier.testTag(PreferenceSelectorTestTags.getTestTagCategory(category)),
         style = textStyle.copy(color = MaterialTheme.colorScheme.onBackground))
 
-    Spacer(modifier = Modifier.height(8.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
     HorizontalDivider(
         modifier = Modifier.fillMaxWidth(),
-        thickness = 1.dp,
+        thickness = dimensionResource(R.dimen.preference_selector_divider_thickness),
         color = MaterialTheme.colorScheme.onBackground)
 
-    Spacer(modifier = Modifier.height(10.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
     FlowRow(
         modifier = Modifier.testTag(PreferenceSelectorTestTags.CATEGORY_PREFERENCES),
-        horizontalArrangement = Arrangement.spacedBy(6.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        horizontalArrangement =
+            Arrangement.spacedBy(dimensionResource(R.dimen.preference_flow_horizontal_arrangement)),
+        verticalArrangement =
+            Arrangement.spacedBy(dimensionResource(R.dimen.preference_flow_vertical_arrangement))) {
           for (preference in category.getPreferences()) {
             PreferenceButton(
                 preference = preference,
@@ -139,7 +142,8 @@ fun PreferenceSelector(
     textStyle: TextStyle = MaterialTheme.typography.headlineMedium,
 ) {
   Column(
-      verticalArrangement = Arrangement.spacedBy(20.dp),
+      verticalArrangement =
+          Arrangement.spacedBy(dimensionResource(R.dimen.preference_selector_vertical_arrangement)),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)) {
         for (category in PreferenceCategories.Category.values()) {
           if (category == PreferenceCategories.Category.DEFAULT &&

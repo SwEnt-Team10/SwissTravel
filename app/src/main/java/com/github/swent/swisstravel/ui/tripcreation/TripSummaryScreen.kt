@@ -29,9 +29,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.TopBar
@@ -128,7 +128,7 @@ fun TripSummaryScreen(
                       state.invalidNameMsg?.let { { Text(stringResource(R.string.name_empty)) } },
                   modifier =
                       Modifier.fillMaxWidth()
-                          .padding(16.dp)
+                          .padding(dimensionResource(R.dimen.trip_summary_padding))
                           .testTag(TripSummaryTestTags.TRIP_NAME_FIELD),
                   keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                   keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }))
@@ -139,7 +139,10 @@ fun TripSummaryScreen(
                   text = "$fromDate ${formatDateForDisplay(startDate)}",
                   style = MaterialTheme.typography.headlineSmall,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.FROM_DATE))
             }
             item {
@@ -147,7 +150,10 @@ fun TripSummaryScreen(
                   text = "$toDate ${formatDateForDisplay(endDate)}",
                   style = MaterialTheme.typography.headlineSmall,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.TO_DATE))
             }
             // Summary of travelers
@@ -156,7 +162,10 @@ fun TripSummaryScreen(
                   text = numberOfTravelersLabel,
                   style = MaterialTheme.typography.headlineSmall,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.NUMBER_OF_TRAVELERS))
             }
             item {
@@ -166,7 +175,10 @@ fun TripSummaryScreen(
                   text = "$nAdults $stringAdult",
                   style = MaterialTheme.typography.bodyLarge,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.ADULTS_COUNT))
             }
             item {
@@ -176,7 +188,10 @@ fun TripSummaryScreen(
                   text = "$nChildren $stringChild",
                   style = MaterialTheme.typography.bodyLarge,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.CHILDREN_COUNT))
             }
             // Summary of travelling preferences
@@ -185,7 +200,10 @@ fun TripSummaryScreen(
                   text = travellingPreferencesLabel,
                   style = MaterialTheme.typography.headlineSmall,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.TRAVELLING_PREFERENCES_LABEL))
             }
             item {
@@ -194,7 +212,10 @@ fun TripSummaryScreen(
                 Text(
                     text = stringResource(R.string.no_preferences),
                     style = MaterialTheme.typography.bodyLarge,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+                    modifier =
+                        Modifier.padding(
+                            horizontal = dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                            vertical = dimensionResource(R.dimen.trip_summary_padding_vertical)))
               } else {
                 Box(
                     modifier =
@@ -202,8 +223,12 @@ fun TripSummaryScreen(
                             .testTag("${TripSummaryTestTags.PREFERENCE_ICON}_list"),
                     contentAlignment = Alignment.Center) {
                       FlowRow(
-                          horizontalArrangement = Arrangement.spacedBy(6.dp),
-                          verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                          horizontalArrangement =
+                              Arrangement.spacedBy(
+                                  dimensionResource(R.dimen.trip_summary_horizontal_arrangement)),
+                          verticalArrangement =
+                              Arrangement.spacedBy(
+                                  dimensionResource(R.dimen.trip_summary_vertical_arrangement))) {
                             prefs.forEachIndexed { idx, preference ->
                               Box(
                                   modifier =
@@ -222,7 +247,10 @@ fun TripSummaryScreen(
                   text = arrivalLabel,
                   style = MaterialTheme.typography.headlineSmall,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.ARRIVAL_LABEL))
             }
             item {
@@ -230,7 +258,10 @@ fun TripSummaryScreen(
                   text = arrival,
                   style = MaterialTheme.typography.bodyLarge,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag("${TripSummaryTestTags.ARRIVAL_LABEL}_value"))
             }
             item {
@@ -238,7 +269,10 @@ fun TripSummaryScreen(
                   text = departureLabel,
                   style = MaterialTheme.typography.headlineSmall,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.DEPARTURE_LABEL))
             }
             item {
@@ -246,7 +280,10 @@ fun TripSummaryScreen(
                   text = departure,
                   style = MaterialTheme.typography.bodyLarge,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag("${TripSummaryTestTags.DEPARTURE_LABEL}_value"))
             }
             // summary of places
@@ -255,7 +292,10 @@ fun TripSummaryScreen(
                   text = placesLabel,
                   style = MaterialTheme.typography.headlineSmall,
                   modifier =
-                      Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                      Modifier.padding(
+                              horizontal =
+                                  dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                              vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                           .testTag(TripSummaryTestTags.PLACES_LABEL))
             }
             val destinations = state.destinations
@@ -265,7 +305,10 @@ fun TripSummaryScreen(
                     text = noWantedPlaces,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier =
-                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        Modifier.padding(
+                                horizontal =
+                                    dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                                vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                             .testTag(TripSummaryTestTags.DESTINATIONS_EMPTY_LIST))
               }
             } else {
@@ -277,14 +320,19 @@ fun TripSummaryScreen(
                     text = loc.name,
                     style = MaterialTheme.typography.bodyLarge,
                     modifier =
-                        Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                        Modifier.padding(
+                                horizontal =
+                                    dimensionResource(R.dimen.trip_summary_padding_horizontal),
+                                vertical = dimensionResource(R.dimen.trip_summary_padding_vertical))
                             .testTag("${TripSummaryTestTags.DESTINATION_ITEM}_$index"))
               }
             }
             // Create trip button
             item {
               Box(
-                  modifier = Modifier.fillMaxWidth().padding(16.dp),
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(dimensionResource(R.dimen.trip_summary_padding)),
                   contentAlignment = Alignment.Center) {
                     Button(
                         enabled = state.name.isNotBlank(),

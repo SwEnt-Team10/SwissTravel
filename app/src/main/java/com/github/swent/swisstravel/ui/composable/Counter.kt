@@ -19,8 +19,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
+import com.github.swent.swisstravel.R
 
 /** Test tags for UI tests to identify components. */
 object CounterTestTags {
@@ -49,7 +50,7 @@ fun Counter(
   Column(
       modifier =
           Modifier.fillMaxWidth()
-              .padding(vertical = 12.dp)
+              .padding(vertical = dimensionResource(R.dimen.small_padding))
               .testTag(label + CounterTestTags.COUNTER)) {
         Text(
             text = label,
@@ -57,7 +58,7 @@ fun Counter(
                 MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.Medium))
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
         Row(
             modifier = Modifier.selectableGroup().fillMaxWidth(),
@@ -72,7 +73,8 @@ fun Counter(
               Text(
                   text = count.toString(),
                   modifier =
-                      Modifier.padding(horizontal = 24.dp).testTag(label + CounterTestTags.COUNT),
+                      Modifier.padding(dimensionResource(R.dimen.mid_padding))
+                          .testTag(label + CounterTestTags.COUNT),
                   style =
                       MaterialTheme.typography.headlineMedium.copy(
                           fontWeight = FontWeight.Bold,
@@ -111,8 +113,8 @@ fun RoundIconButton(
               contentColor =
                   if (enabled) MaterialTheme.colorScheme.onPrimary
                   else MaterialTheme.colorScheme.onSurfaceVariant),
-      modifier = Modifier.size(48.dp).testTag(testTag),
-      contentPadding = PaddingValues(0.dp)) {
+      modifier = Modifier.size(dimensionResource(R.dimen.medium_button_height)).testTag(testTag),
+      contentPadding = PaddingValues(dimensionResource(R.dimen.empty))) {
         Text(
             text = text,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))

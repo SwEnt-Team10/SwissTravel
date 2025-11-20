@@ -62,7 +62,7 @@
     <string name="add_first_destination">Add a destination</string>
     <string name="destination_limited">Destination limit attained</string>
     <string name="first_destinations_title">Select any location you already know you want to visit</string>
-    <string name="cannot_be_empty">Cannot be empty</string>
+    <string name="cannot_be_empty">cannot be empty</string>
     <string name="dropdown_menu_choose">Choose your location on the dropdown menu</string>
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>

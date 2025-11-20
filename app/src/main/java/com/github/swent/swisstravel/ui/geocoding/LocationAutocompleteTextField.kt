@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -144,8 +145,15 @@ fun LocationAutocompleteTextField(
                           contentDescription = "${location.name} image",
                           placeholder = painterResource(id = R.drawable.debug_placeholder),
                           contentScale = ContentScale.Crop,
-                          modifier = Modifier.size(40.dp).clip(CircleShape))
-                      Spacer(modifier = Modifier.width(16.dp))
+                          modifier =
+                              Modifier.size(
+                                      dimensionResource(
+                                          R.dimen.location_autocomplete_image_padding))
+                                  .clip(CircleShape))
+                      Spacer(
+                          modifier =
+                              Modifier.width(
+                                  dimensionResource(R.dimen.location_autocomplete_image_padding)))
                     }
                     Text(location.name, modifier = Modifier.weight(1f))
                   }

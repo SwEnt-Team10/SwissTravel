@@ -7,7 +7,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.dimensionResource
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.TripElement
 
@@ -38,7 +39,8 @@ fun TripList(
 ) {
   if (trips.isNotEmpty()) {
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement =
+            Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement)),
         modifier = Modifier.fillMaxWidth().testTag(TripListTestTags.TRIP_LIST)) {
           items(trips.size) { index ->
             val trip = trips[index]

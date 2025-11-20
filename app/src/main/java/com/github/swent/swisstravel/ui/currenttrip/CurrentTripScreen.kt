@@ -18,8 +18,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
@@ -67,7 +67,7 @@ fun CurrentTripScreen(
                     style = MaterialTheme.typography.displayLarge,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT))
-                Spacer(modifier = Modifier.height(72.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.big_spacer)))
                 // Create a new trip
                 Button(
                     onClick = { navigationActions?.navigateTo(Screen.TripSettingsDates) },
