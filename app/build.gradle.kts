@@ -152,7 +152,6 @@ dependencies {
     implementation(libs.mapbox.maps)
     implementation(libs.mapbox.maps.compose)
     implementation(libs.mapbox.maps.navigation)
-    implementation(libs.mapbox.search)
     testImplementation(libs.junit)
     globalTestImplementation(libs.androidx.junit)
     globalTestImplementation(libs.androidx.espresso.core)
