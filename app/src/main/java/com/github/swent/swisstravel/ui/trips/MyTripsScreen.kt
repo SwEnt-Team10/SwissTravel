@@ -43,9 +43,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -170,7 +170,10 @@ fun MyTripsScreen(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(padding)
-                    .padding(start = 16.dp, end = 16.dp, bottom = 4.dp)) {
+                    .padding(
+                        start = dimensionResource(R.dimen.my_trip_padding_start_end),
+                        end = dimensionResource(R.dimen.my_trip_padding_start_end),
+                        bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
               CurrentTripSection(
                   myTripsViewModel = myTripsViewModel,
                   onSelectTrip = onSelectTrip,
@@ -313,7 +316,7 @@ private fun CurrentTripSection(
 
   CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
 
-  Spacer(modifier = Modifier.height(4.dp))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
   currentTrip?.let {
     TripElement(
@@ -342,7 +345,11 @@ private fun CurrentTripSection(
 @Composable
 private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip: () -> Unit = {}) {
   Row(
-      modifier = Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(
+                  top = dimensionResource(R.dimen.my_trip_current_top_padding),
+                  bottom = dimensionResource(R.dimen.my_trip_current_bottom_padding)),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
         Text(
@@ -350,7 +357,8 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground,
             modifier =
-                Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).padding(bottom = 10.dp))
+                Modifier.testTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
+                    .padding(bottom = dimensionResource(R.dimen.my_trip_current_bottom_padding)))
         if (editButtonShown) {
           IconButton(
               onClick = onEditCurrentTrip,

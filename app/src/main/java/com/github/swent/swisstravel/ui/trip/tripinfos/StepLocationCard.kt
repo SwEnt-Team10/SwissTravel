@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -17,8 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 
@@ -39,12 +38,16 @@ fun StepLocationCard(stepNumber: Int, location: Location) {
   Card(
       modifier =
           Modifier.fillMaxWidth()
-              .padding(horizontal = 16.dp, vertical = 8.dp)
+              .padding(
+                  horizontal = dimensionResource(R.dimen.step_location_card_horizontal_padding),
+                  vertical = dimensionResource(R.dimen.step_location_card_vertical_padding))
               .testTag(StepLocationCardTestTags.CARD),
-      shape = RoundedCornerShape(8.dp),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.step_location_card_radius)),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.step_location_card_padding)),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start) {
               Column(
@@ -56,7 +59,10 @@ fun StepLocationCard(stepNumber: Int, location: Location) {
                         style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onBackground,
                         modifier = Modifier.testTag(StepLocationCardTestTags.STEP_LABEL))
-                    Spacer(modifier = Modifier.height(4.dp))
+                    Spacer(
+                        modifier =
+                            Modifier.height(
+                                dimensionResource(R.dimen.step_location_card_micro_spacer)))
                     Text(
                         text = location.name,
                         style = MaterialTheme.typography.bodyMedium,
@@ -65,8 +71,6 @@ fun StepLocationCard(stepNumber: Int, location: Location) {
                   }
 
               Spacer(modifier = Modifier.weight(1f))
-
-              Spacer(modifier = Modifier.width(24.dp))
             }
       }
 }
