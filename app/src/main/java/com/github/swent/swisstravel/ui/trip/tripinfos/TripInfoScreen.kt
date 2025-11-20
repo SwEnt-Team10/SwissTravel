@@ -2,26 +2,54 @@ package com.github.swent.swisstravel.ui.trip.tripinfos
 
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Attractions
-import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.filled.ZoomInMap
+import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.NearMe
 import androidx.compose.material.icons.outlined.StarOutline
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
@@ -30,11 +58,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.orderlocations.orderLocations
 import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.google.firebase.Timestamp
+import com.mapbox.geojson.Point
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -82,19 +112,23 @@ fun TripInfoScreen(
   val ui by tripInfoViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
-  var showMap by remember { mutableStateOf(true) }
-
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
+  var showMap by remember { mutableStateOf(true) }
   var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
   var computeError by remember { mutableStateOf<String?>(null) }
-
   var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
-
+  var currentGpsPoint by remember { mutableStateOf<Point?>(null) }
+  var drawFromCurrentPosition by remember { mutableStateOf(false) }
   val mapLocations: List<Location> =
-      remember(schedule, currentStepIndex) { mapLocationsForStep(schedule, currentStepIndex) }
-
+      remember(schedule, currentStepIndex, currentGpsPoint, drawFromCurrentPosition) {
+        mapLocationsForStep(
+            schedule = schedule,
+            idx = currentStepIndex,
+            currentGps = currentGpsPoint,
+            drawFromCurrentPosition = drawFromCurrentPosition)
+      }
   val drawRoute: Boolean = mapLocations.size >= 2
 
   // handle VM error toasts
@@ -260,8 +294,18 @@ fun TripInfoScreen(
                                                   Modifier.testTag(TripInfoScreenTestTags.LOADING))
                                         }
                                   } else if (showMap) {
-                                    MapScreen(locations = mapLocations, drawRoute = drawRoute)
+                                    MapScreen(
+                                        locations = mapLocations,
+                                        drawRoute = drawRoute,
+                                        onUserLocationUpdate = { p -> currentGpsPoint = p })
                                   }
+
+                                  NavigationModeToggle(
+                                      drawFromCurrentPosition = drawFromCurrentPosition,
+                                      onToggleNavMode = {
+                                        drawFromCurrentPosition = !drawFromCurrentPosition
+                                      },
+                                      modifier = Modifier.align(Alignment.TopStart))
 
                                   // Fullscreen button
                                   IconButton(
@@ -271,7 +315,7 @@ fun TripInfoScreen(
                                               .padding(12.dp)
                                               .testTag(TripInfoScreenTestTags.FULLSCREEN_BUTTON)) {
                                         Icon(
-                                            imageVector = Icons.Filled.Fullscreen,
+                                            imageVector = Icons.Filled.ZoomOutMap,
                                             contentDescription =
                                                 stringResource(R.string.fullscreen),
                                             tint = MaterialTheme.colorScheme.onBackground)
@@ -347,40 +391,40 @@ fun TripInfoScreen(
         // Fullscreen overlay
         if (ui.fullscreen) {
           Box(modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.FULLSCREEN_MAP)) {
-            MapScreen(locations = mapLocations, drawRoute = drawRoute)
+            MapScreen(
+                locations = mapLocations,
+                drawRoute = drawRoute,
+                onUserLocationUpdate = { p -> currentGpsPoint = p })
 
-            // Exit fullscreen arrow
+            NavigationModeToggle(
+                drawFromCurrentPosition = drawFromCurrentPosition,
+                onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
+                modifier = Modifier.align(Alignment.TopStart))
+
+            // Exit fullscreen
             IconButton(
                 onClick = { tripInfoViewModel.toggleFullscreen(false) },
                 modifier =
-                    Modifier.align(Alignment.TopStart)
+                    Modifier.align(Alignment.BottomEnd)
                         .padding(16.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
                         .testTag(TripInfoScreenTestTags.FULLSCREEN_EXIT)) {
                   Icon(
-                      imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                      contentDescription = stringResource(R.string.back_to_my_trips),
-                      tint = MaterialTheme.colorScheme.onPrimary)
+                      imageVector = Icons.Filled.ZoomInMap,
+                      contentDescription = stringResource(R.string.back_to_my_trips))
                 }
           }
         }
       }
 }
 
-/* ---------- Helpers to decide which locations to show on the map ---------- */
-
-private fun mapLocationsForStep(schedule: List<TripElement>, idx: Int): List<Location> {
-  if (schedule.isEmpty()) return emptyList()
-  val i = idx.coerceIn(0, schedule.lastIndex)
-  return when (val el = schedule[i]) {
-    is TripElement.TripSegment -> listOf(el.route.from, el.route.to)
-    is TripElement.TripActivity -> listOf(el.activity.location)
-  }
-}
-
-/* ---------- Non-clickable Step row ---------- */
-
+/**
+ * Shows a non-clickable row in the step list.
+ *
+ * @param stepNumber The step number.
+ * @param subtitle The subtitle.
+ * @param timeRange The time range.
+ * @param leadingIcon The leading icon.
+ */
 @Composable
 private fun StepRow(
     stepNumber: Int,
@@ -403,7 +447,12 @@ private fun StepRow(
       modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp))
 }
 
-/** A button to mark/unmark a trip as favorite. */
+/**
+ * A button to mark/unmark a trip as favorite.
+ *
+ * @param isFavorite Whether the trip is favorite.
+ * @param onToggleFavorite Called when the user clicks the button.
+ */
 @Composable
 private fun FavoriteButton(
     isFavorite: Boolean,
@@ -424,6 +473,72 @@ private fun FavoriteButton(
               tint = MaterialTheme.colorScheme.onBackground)
         }
       }
+}
+
+/**
+ * A button to toggle the navigation mode.
+ *
+ * @param drawFromCurrentPosition Whether the route should start from the current GPS position
+ * @param onToggleNavMode Called when the user clicks the button.
+ * @param modifier The modifier to apply.
+ */
+@Composable
+private fun NavigationModeToggle(
+    drawFromCurrentPosition: Boolean,
+    onToggleNavMode: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+  IconButton(onClick = { onToggleNavMode() }, modifier = modifier.padding(12.dp)) {
+    Icon(
+        imageVector = if (drawFromCurrentPosition) Icons.Filled.Route else Icons.Outlined.NearMe,
+        contentDescription =
+            if (drawFromCurrentPosition) stringResource(R.string.draw_from_current_position)
+            else stringResource(R.string.draw_from_previous_step),
+        tint = MaterialTheme.colorScheme.onBackground)
+  }
+}
+
+/**
+ * Builds the list of locations that should be displayed on the map for the currently active step in
+ * the trip schedule.
+ *
+ * For a TripSegment, if the user's current GPS position is available, the route will start from the
+ * GPS location and end at the segment's destination. Otherwise, the original segment "from → to"
+ * route is used.
+ *
+ * For a TripActivity, only the activity's location is returned.
+ *
+ * @param schedule The full list of trip elements forming the schedule.
+ * @param idx The index of the currently selected step.
+ * @param currentGps The current GPS position of the user, or null if unavailable.
+ * @param drawFromCurrentPosition Whether the route should start from the current GPS position.
+ * @return A list of one or two locations describing what should be drawn on the map.
+ */
+private fun mapLocationsForStep(
+    schedule: List<TripElement>,
+    idx: Int,
+    currentGps: Point?,
+    drawFromCurrentPosition: Boolean
+): List<Location> {
+  if (schedule.isEmpty()) return emptyList()
+  val i = idx.coerceIn(0, schedule.lastIndex)
+
+  return when (val el = schedule[i]) {
+    is TripElement.TripSegment -> {
+      val startLocation =
+          if (drawFromCurrentPosition) {
+            currentGps?.let {
+              Location(
+                  coordinate = Coordinate(latitude = it.latitude(), longitude = it.longitude()),
+                  name = "Your position")
+            } ?: el.route.from
+          } else {
+            el.route.from
+          }
+      listOf(startLocation, el.route.to)
+    }
+    is TripElement.TripActivity -> listOf(el.activity.location)
+  }
 }
 
 /* ---------- Small helpers ---------- */

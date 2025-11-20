@@ -124,6 +124,8 @@
     <string name="about_minutes">About %1$d min</string>
     <string name="previous_step">Previous step</string>
     <string name="next_step">Next step</string>
+    <string name="draw_from_current_position">Draw route from current position</string>
+    <string name="draw_from_previous_step">Draw route from previous step</string>
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
