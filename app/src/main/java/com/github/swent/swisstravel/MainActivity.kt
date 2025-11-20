@@ -14,9 +14,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -34,6 +37,7 @@ import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
+import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
@@ -257,18 +261,58 @@ fun SwissTravelApp(
                   startDestination = Screen.TripInfo.route,
                   route = Screen.TripInfo.name,
               ) {
-                composable(Screen.TripInfo.route) { naveBackStackEntry ->
-                  val uid = naveBackStackEntry.arguments?.getString("uid")
+                composable(Screen.TripInfo.route) { navBackStackEntry ->
+                  val uid = navBackStackEntry.arguments?.getString("uid")
                   if (uid == null) {
                     Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
                     navigationActions.navigateTo(Screen.MyTrips)
                     return@composable
                   }
+
+                  val vm = navigationActions.tripInfoViewModel(navController)
+
                   TripInfoScreen(
-                      uid,
+                      uid = uid,
+                      tripInfoViewModel = vm,
                       onMyTrips = { navigationActions.goBack() },
-                      onEditTrip = { navigationActions.navigateToEditTrip(uid) })
+                      onEditTrip = { navigationActions.navigateToEditTrip(uid) },
+                      onActivityClick = { tripActivity ->
+                        vm.selectActivity(tripActivity.activity)
+                        navigationActions.navigateToActivityInfo(uid)
+                      })
                 }
+
+                composable(
+                    route = Screen.ActivityInfo.route,
+                    arguments = listOf(navArgument("uid") { type = NavType.StringType })) {
+                        backStackEntry ->
+                      val tripId = backStackEntry.arguments?.getString("uid")
+                      if (tripId == null) {
+                        Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
+                        navigationActions.goBack()
+                        return@composable
+                      }
+
+                      val vm = navigationActions.tripInfoViewModel(navController)
+                      val ui by vm.uiState.collectAsState()
+                      val activity = ui.selectedActivity
+
+                      var hasChecked by remember { mutableStateOf(false) }
+
+                      LaunchedEffect(activity) {
+                        if (!hasChecked) {
+                          hasChecked = true
+                          if (activity == null) {
+                            Toast.makeText(context, "Activity not found", Toast.LENGTH_SHORT).show()
+                            navigationActions.goBack()
+                          }
+                        }
+                      }
+
+                      if (activity != null) {
+                        ActivityInfos(activity = activity, onBack = { navigationActions.goBack() })
+                      }
+                    }
 
                 // Edit Trip screen
                 composable(

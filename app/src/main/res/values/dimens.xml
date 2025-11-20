@@ -135,6 +135,9 @@
     <dimen name="mid_padding">24dp</dimen>
     <dimen name="medium_padding">32dp</dimen>
 
+    <!-- Activity Infos -->
+
+
     <!-- Tonal Elevation -->
     <dimen name="tiny_tonal_elevation">2dp</dimen>
 </resources>

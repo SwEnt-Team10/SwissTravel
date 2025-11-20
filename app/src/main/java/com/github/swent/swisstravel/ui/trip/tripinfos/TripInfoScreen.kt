@@ -1,7 +1,9 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -105,8 +107,11 @@ fun TripInfoScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
-    isOnCurrentTripScreen: Boolean = false
+    isOnCurrentTripScreen: Boolean = false,
+    onActivityClick: (TripElement.TripActivity) -> Unit = {},
 ) {
+  Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
+
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val ui by tripInfoViewModel.uiState.collectAsState()
@@ -114,7 +119,6 @@ fun TripInfoScreen(
 
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
-  var showMap by remember { mutableStateOf(true) }
   var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
   var computeError by remember { mutableStateOf<String?>(null) }
@@ -179,12 +183,6 @@ fun TripInfoScreen(
     }
   }
 
-  LaunchedEffect(showMap) {
-    if (!showMap) {
-      onMyTrips()
-    }
-  }
-
   Scaffold(
       containerColor = MaterialTheme.colorScheme.background,
       topBar = {
@@ -200,7 +198,7 @@ fun TripInfoScreen(
               navigationIcon = {
                 if (!isOnCurrentTripScreen) {
                   IconButton(
-                      onClick = { showMap = false },
+                      onClick = { onMyTrips() },
                       modifier = Modifier.testTag(TripInfoScreenTestTags.BACK_BUTTON)) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -293,7 +291,7 @@ fun TripInfoScreen(
                                               modifier =
                                                   Modifier.testTag(TripInfoScreenTestTags.LOADING))
                                         }
-                                  } else if (showMap) {
+                                  } else {
                                     MapScreen(
                                         locations = mapLocations,
                                         drawRoute = drawRoute,
@@ -371,7 +369,8 @@ fun TripInfoScreen(
                               "${fmtTime(el.activity.startDate)} – ${fmtTime(el.activity.endDate)}",
                           leadingIcon = {
                             Icon(imageVector = Icons.Filled.Attractions, contentDescription = null)
-                          })
+                          },
+                          onClick = { onActivityClick(el) })
                     }
                     is TripElement.TripSegment -> {
                       StepRow(
@@ -430,7 +429,8 @@ private fun StepRow(
     stepNumber: Int,
     subtitle: String,
     timeRange: String,
-    leadingIcon: (@Composable () -> Unit)? = null
+    leadingIcon: (@Composable () -> Unit)? = null,
+    onClick: (() -> Unit)? = null
 ) {
   ListItem(
       headlineContent = { stringResource(R.string.step_info, stepNumber) },
@@ -444,7 +444,10 @@ private fun StepRow(
         }
       },
       leadingContent = leadingIcon,
-      modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp))
+      modifier =
+          Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp).let { base ->
+            if (onClick != null) base.clickable(onClick = onClick) else base
+          })
 }
 
 /**
