@@ -393,59 +393,58 @@ class TripSchedulerTest {
         endTime >= LocalTime.of(21, 0))
   }
 
-    @Test
-    fun `nextDay is triggered by activity overflow, travel overflow, and maxActivitiesPerDay`() {
-        val ordered =
-            OrderedRoute(
-                orderedLocations = listOf(A, B, C),
-                totalDuration = 3600.0 * 13,
-                segmentDuration = listOf(3600.0, 3600.0 * 12) // 1h A→B, 12h B→C
+  @Test
+  fun `nextDay is triggered by activity overflow, travel overflow, and maxActivitiesPerDay`() {
+    val ordered =
+        OrderedRoute(
+            orderedLocations = listOf(A, B, C),
+            totalDuration = 3600.0 * 13,
+            segmentDuration = listOf(3600.0, 3600.0 * 12) // 1h A→B, 12h B→C
             )
 
-        val activities =
-            listOf(
-                activityAt(A, "A-short", 10 * 60), // 10h
-                activityAt(B, "B-long", 9 * 60),  // 9h
-                activityAt(C, "C-short", 30)      // 30 min
-        )
-
-        val params =
-            ScheduleParams(
-                dayStart = LocalTime.of(8, 0),
-                dayEnd = LocalTime.of(18, 0),
-                travelEnd = LocalTime.of(22, 0),
-                pauseBetweenEachActivity = 0,
-                maxActivitiesPerDay = 1
+    val activities =
+        listOf(
+            activityAt(A, "A-short", 10 * 60), // 10h
+            activityAt(B, "B-long", 9 * 60), // 9h
+            activityAt(C, "C-short", 30) // 30 min
             )
 
-        val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
+    val params =
+        ScheduleParams(
+            dayStart = LocalTime.of(8, 0),
+            dayEnd = LocalTime.of(18, 0),
+            travelEnd = LocalTime.of(22, 0),
+            pauseBetweenEachActivity = 0,
+            maxActivitiesPerDay = 1)
 
-        val out =
-            scheduleTrip(
-                tripProfile = profile, ordered = ordered, activities = activities, params = params)
+    val profile = tripProfileFor(LocalDate.of(2025, 11, 5))
 
-        // 3 locations and 2 travels
-        assertEquals(5, out.size)
+    val out =
+        scheduleTrip(
+            tripProfile = profile, ordered = ordered, activities = activities, params = params)
 
-        val a = out[0] as TripElement.TripActivity
-        val ab = out[1] as TripElement.TripSegment
-        val b = out[2] as TripElement.TripActivity
-        val bc = out[3] as TripElement.TripSegment
-        val c = out[4] as TripElement.TripActivity
+    // 3 locations and 2 travels
+    assertEquals(5, out.size)
 
-        // first activity scheduled on day 1 : 8h - 18h
-        assertEquals(LocalDate.of(2025, 11, 5), tsToLocalDate(a.startDate))
+    val a = out[0] as TripElement.TripActivity
+    val ab = out[1] as TripElement.TripSegment
+    val b = out[2] as TripElement.TripActivity
+    val bc = out[3] as TripElement.TripSegment
+    val c = out[4] as TripElement.TripActivity
 
-        // travel AB fits day 1 : 18h - 19h
-        assertEquals(LocalDate.of(2025, 11, 5), tsToLocalDate(ab.startDate))
+    // first activity scheduled on day 1 : 8h - 18h
+    assertEquals(LocalDate.of(2025, 11, 5), tsToLocalDate(a.startDate))
 
-        // activity max overflow (and time overflow) → day 2 : 8h - 17h
-        assertEquals(LocalDate.of(2025, 11, 6), tsToLocalDate(b.startDate))
+    // travel AB fits day 1 : 18h - 19h
+    assertEquals(LocalDate.of(2025, 11, 5), tsToLocalDate(ab.startDate))
 
-        // travel time overflow : BC does not fit same day → day 3 : 8h - 20h
-        assertEquals(LocalDate.of(2025, 11, 7), tsToLocalDate(bc.startDate))
+    // activity max overflow (and time overflow) → day 2 : 8h - 17h
+    assertEquals(LocalDate.of(2025, 11, 6), tsToLocalDate(b.startDate))
 
-        // activity time overflow (cannot start after 18h) → day 4 : 8h - 8h30
-        assertEquals(LocalDate.of(2025, 11, 8), tsToLocalDate(c.startDate))
-    }
+    // travel time overflow : BC does not fit same day → day 3 : 8h - 20h
+    assertEquals(LocalDate.of(2025, 11, 7), tsToLocalDate(bc.startDate))
+
+    // activity time overflow (cannot start after 18h) → day 4 : 8h - 8h30
+    assertEquals(LocalDate.of(2025, 11, 8), tsToLocalDate(c.startDate))
+  }
 }
