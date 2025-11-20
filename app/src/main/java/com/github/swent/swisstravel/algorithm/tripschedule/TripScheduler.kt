@@ -30,7 +30,7 @@ data class ScheduleParams(
     val dayStart: LocalTime = LocalTime.of(8, 0),
     val dayEnd: LocalTime = LocalTime.of(18, 0),
     val travelEnd: LocalTime = LocalTime.of(22, 0),
-    val maxActivitiesPerDay: Int = 4,
+    val maxActivitiesPerDay: Int = 3,
     val pauseBetweenEachActivity: Int = 60 * 15
 )
 
@@ -182,7 +182,7 @@ fun scheduleTrip(
   /** Schedules an activity. */
   fun scheduleActivity(act: Activity) {
     // Daily cap
-    if (activitiesToday >= eff.maxActivitiesPerDay) {
+    if (activitiesToday > eff.maxActivitiesPerDay) {
       if (currentDay == tripEndDay) return // cannot schedule more activities for the trip
       else nextDay()
     }
