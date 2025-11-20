@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.algorithm.orderlocationsv2
 
-import android.util.Log
 import com.github.swent.swisstravel.algorithm.cache.DurationCache
 import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.model.trip.Coordinate
@@ -51,192 +50,198 @@ class ProgressiveRouteOptimizer(
       end: Location,
       allLocations: List<Location>,
       activities: List<Activity> = emptyList(),
-      mode: TransportMode = TransportMode.CAR // default
+      mode: TransportMode = TransportMode.CAR
   ): OrderedRoute {
-    // Setup
-    val unvisited = allLocations.toMutableList()
-    // ensure start exists and remove it from unvisited
-    unvisited.removeAll { sameLocation(it, start) }
-    val ordered = mutableListOf<Location>()
-    ordered.add(start)
-    var current = start
+    val unvisited = allLocations.toMutableList().apply { removeAll { sameLocation(it, start) } }
+    val ordered = mutableListOf(start)
     val segmentDurations = mutableListOf<Double>()
     var totalDuration = 0.0
+    var current = start
 
-    // Pre-index activities by location coordinate for quick lookup
     val activityByCoord = activities.associateBy { it.location.coordinate }
     val activitiesMap = activityByCoord.mapValues { it.value.estimatedTime() }
 
-    // Main loop
-    while (unvisited.isNotEmpty()) {
-      // If we've reached end and want to stop, add end and break
-      if (sameLocation(current, end)) {
-        break
-      }
-
-      // 1) pick k closest unvisited to current by haversine
-      val candidates =
-          if (unvisited.size == 1 && unvisited.contains(end)) {
-            // Only endLocation remains — go straight there
-            listOf(end)
-          } else {
-            // Regular logic: find k closest among non-visited, excluding the end for now
-            unvisited
-                .filter { sameLocation(it, end) }
-                .sortedBy { current.haversineDistanceTo(it) }
-                .take(k.coerceAtMost(unvisited.size))
-          }
-
-      // 2) check cache for each candidate; gather missingRequests grouped by start (here start is
-      // current)
-      val durationsFromCache = mutableMapOf<Location, Double?>()
-      val missingEnds = mutableListOf<Location>()
-
-      for (candidate in candidates) {
-        val cached =
-            try {
-              cacheManager.getDuration(
-                  Coordinate(current.coordinate.latitude, current.coordinate.longitude),
-                  Coordinate(candidate.coordinate.latitude, candidate.coordinate.longitude),
-                  mode)
-            } catch (e: Exception) {
-              Log.w("ProgressiveRoute", "Cache read failed: ${e.message}")
-              null
-            }
-        if (cached != null && cached.duration >= 0) {
-          // update timestamp in cache asynchronously (we already implemented copy of timestamp in
-          // getDuration)
-          durationsFromCache[candidate] = cached.duration
-        } else {
-          missingEnds.add(candidate)
-        }
-      }
-
-      // 3) fetch missing ends in a single grouped call per current start
-      if (missingEnds.isNotEmpty()) {
-        val fetched =
-            try {
-              matrixHybrid.fetchDurationsFromStart(
-                  Coordinate(current.coordinate.latitude, current.coordinate.longitude),
-                  missingEnds.map { Coordinate(it.coordinate.latitude, it.coordinate.longitude) },
-                  mode)
-            } catch (e: Exception) {
-              Log.e("ProgressiveRoute", "Mapbox fetch failed: ${e.message}")
-              emptyMap<Pair<Coordinate, Coordinate>, Double?>()
-            }
-
-        // Map back fetched durations to the Location instances and save to cache
-        for (candidate in missingEnds) {
-          val key =
-              Pair(
-                  Coordinate(current.coordinate.latitude, current.coordinate.longitude),
-                  Coordinate(candidate.coordinate.latitude, candidate.coordinate.longitude))
-          val dur = fetched[key]
-          durationsFromCache[candidate] = dur
-          if (dur != null && dur >= 0) {
-            // Save to cache (fire-and-forget)
-            try {
-              cacheManager.saveDuration(key.first, key.second, dur, mode)
-            } catch (e: Exception) {
-              Log.w("ProgressiveRoute", "Cache save failed: ${e.message}")
-            }
-          }
-        }
-      }
-
-      // If no candidate had a valid duration (all null), we must pick something: fall back to
-      // nearest by haversine.
-      val scoredCandidates =
-          candidates.map { candidate ->
-            val travelSec = durationsFromCache[candidate] ?: LARGE_VALUE
-            val activityMins = activityByCoord[candidate.coordinate]?.estimatedTime() ?: 0
-            val activitySec = activityMins * 60.0
-            val previousLocation = if (ordered.size >= 2) ordered[ordered.size - 2] else null
-            val penalty =
-                computePenalty(
-                    from = current,
-                    to = candidate,
-                    previous = previousLocation,
-                    remaining =
-                        unvisited.filter {
-                          it != candidate && it != end
-                        }, // remaining except candidate and end
-                    activities = activitiesMap,
-                    config = penaltyConfig)
-            val score = travelSec + activitySec + penalty
-            CandidateScore(candidate, score, travelSec)
-          }
-
-      // ensure at least one reachable candidate exists; otherwise pick nearest by haversine and
-      // assign large travel
+    while (unvisited.isNotEmpty() && !sameLocation(current, end)) {
+      val candidates = selectCandidates(current, end, unvisited)
+      val durations = fetchDurations(current, candidates, mode)
       val best =
-          scoredCandidates.minByOrNull { it.score }
-              ?: run {
-                // fallback
-                val fallback = unvisited.minByOrNull { current.haversineDistanceTo(it) }!!
-                CandidateScore(
-                    fallback, LARGE_VALUE + current.haversineDistanceTo(fallback), LARGE_VALUE)
-              }
-
-      // Append chosen next
-      ordered.add(best.location)
-      segmentDurations.add(best.travelSeconds)
-      totalDuration += max(0.0, best.travelSeconds) // ignore negative durations
-      // Mark visited
-      unvisited.removeAll { sameLocation(it, best.location) }
-      // move current
+          pickBestCandidate(current, ordered, unvisited, candidates, durations, activitiesMap)
+      appendCandidate(best, ordered, segmentDurations, unvisited).also { totalDuration += it }
       current = best.location
-      // If the chosen is end and end should terminate, we can break - but we respect user's comment
-      // that start & end can be same
-      if (sameLocation(current, end)) break
     }
 
-    // If end is not included yet, ensure it's appended (try to fetch duration from last to end)
-    val last = ordered.last()
-    if (!sameLocation(last, end)) {
-      // try to get duration from cache / mapbox quickly
-      var finalDuration: Double? = null
-      try {
-        val cached =
-            cacheManager.getDuration(
-                Coordinate(last.coordinate.latitude, last.coordinate.longitude),
-                Coordinate(end.coordinate.latitude, end.coordinate.longitude),
-                mode)
-        if (cached != null && cached.duration >= 0) finalDuration = cached.duration
-        else {
-          val fetched =
-              matrixHybrid.fetchDurationsFromStart(
-                  Coordinate(last.coordinate.latitude, last.coordinate.longitude),
-                  listOf(Coordinate(end.coordinate.latitude, end.coordinate.longitude)),
-                  mode)
-          finalDuration =
-              fetched[
-                  Pair(
-                      Coordinate(last.coordinate.latitude, last.coordinate.longitude),
-                      Coordinate(end.coordinate.latitude, end.coordinate.longitude))]
-          if (finalDuration != null) {
-            cacheManager.saveDuration(
-                Coordinate(last.coordinate.latitude, last.coordinate.longitude),
-                Coordinate(end.coordinate.latitude, end.coordinate.longitude),
-                finalDuration,
-                mode)
+    if (!sameLocation(ordered.last(), end)) {
+      totalDuration += appendFinalEnd(current, end, ordered, segmentDurations, mode)
+    }
+
+    return OrderedRoute(
+        orderedLocations = ordered,
+        totalDuration = if (totalDuration >= UNREACHABLE_LEG) -1.0 else totalDuration,
+        segmentDuration = segmentDurations)
+  }
+
+  /**
+   * Select the k nearest unvisited candidate locations from the current location.
+   *
+   * @param current Current location.
+   * @param end Ending location.
+   * @param unvisited List of unvisited locations.
+   * @return List of candidate locations to consider next.
+   */
+  private fun selectCandidates(
+      current: Location,
+      end: Location,
+      unvisited: List<Location>
+  ): List<Location> {
+    return if (unvisited.size == 1 && unvisited.contains(end)) listOf(end)
+    else
+        unvisited
+            .filter { !sameLocation(it, end) }
+            .sortedBy { current.haversineDistanceTo(it) }
+            .take(k.coerceAtMost(unvisited.size))
+  }
+
+  /**
+   * Fetch durations from cache or the duration matrix for a list of candidate locations.
+   *
+   * @param current Starting location for durations.
+   * @param candidates Candidate locations to fetch durations to.
+   * @param mode Transport mode.
+   * @return Map of candidate locations to their travel duration in seconds (null if unreachable).
+   */
+  private suspend fun fetchDurations(
+      current: Location,
+      candidates: List<Location>,
+      mode: TransportMode
+  ): Map<Location, Double?> {
+    val durations = mutableMapOf<Location, Double?>()
+    val missing = mutableListOf<Location>()
+
+    for (c in candidates) {
+      val cached =
+          try {
+            cacheManager.getDuration(current.coordinate, c.coordinate, mode)
+          } catch (e: Exception) {
+            null
           }
-        }
-      } catch (e: Exception) {
-        Log.w("ProgressiveRoute", "Final leg retrieval failed: ${e.message}")
-      }
-
-      ordered.add(end)
-      segmentDurations.add(finalDuration ?: LARGE_VALUE)
-      totalDuration += finalDuration ?: LARGE_VALUE
+      if (cached?.duration != null && cached.duration >= 0) durations[c] = cached.duration
+      else missing.add(c)
     }
 
-    val result =
-        OrderedRoute(
-            orderedLocations = ordered,
-            totalDuration = if (totalDuration >= UNREACHABLE_LEG) -1.0 else totalDuration,
-            segmentDuration = segmentDurations)
-    return result
+    if (missing.isNotEmpty()) {
+      val fetched =
+          try {
+            matrixHybrid.fetchDurationsFromStart(
+                current.coordinate, missing.map { it.coordinate }, mode)
+          } catch (e: Exception) {
+            emptyMap<Pair<Coordinate, Coordinate>, Double?>()
+          }
+
+      for (c in missing) {
+        val dur = fetched[Pair(current.coordinate, c.coordinate)]
+        durations[c] = dur
+        if (dur != null && dur >= 0)
+            try {
+              cacheManager.saveDuration(current.coordinate, c.coordinate, dur, mode)
+            } catch (_: Exception) {}
+      }
+    }
+
+    return durations
+  }
+
+  /**
+   * Pick the best candidate location based on travel duration, activity time, and penalties.
+   *
+   * @param current Current location.
+   * @param ordered List of already ordered locations.
+   * @param unvisited List of remaining unvisited locations.
+   * @param candidates Candidate locations to consider.
+   * @param durations Map of candidate locations to their travel durations.
+   * @param activities Map of activity times keyed by coordinate.
+   * @return CandidateScore containing the best location and its computed score.
+   */
+  private fun pickBestCandidate(
+      current: Location,
+      ordered: List<Location>,
+      unvisited: List<Location>,
+      candidates: List<Location>,
+      durations: Map<Location, Double?>,
+      activities: Map<Coordinate, Int>
+  ): CandidateScore {
+    val scored =
+        candidates.map { candidate ->
+          val travelSec = durations[candidate] ?: LARGE_VALUE
+          val activitySec = (activities[candidate.coordinate] ?: 0) * 60.0
+          val previous = ordered.getOrNull(ordered.size - 2)
+          val penalty =
+              computePenalty(
+                  current,
+                  candidate,
+                  previous,
+                  unvisited.filter { it != candidate },
+                  activities,
+                  penaltyConfig)
+          CandidateScore(candidate, travelSec + activitySec + penalty, travelSec)
+        }
+    return scored.minByOrNull { it.score }
+        ?: run {
+          val fallback = unvisited.minByOrNull { current.haversineDistanceTo(it) }!!
+          CandidateScore(fallback, LARGE_VALUE + current.haversineDistanceTo(fallback), LARGE_VALUE)
+        }
+  }
+
+  /**
+   * Append the chosen candidate to the ordered route, update segment durations and unvisited list.
+   *
+   * @param best CandidateScore of the chosen location.
+   * @param ordered Mutable list of ordered locations.
+   * @param segmentDurations Mutable list of segment durations.
+   * @param unvisited Mutable list of unvisited locations.
+   * @return Travel duration to the appended candidate in seconds (non-negative).
+   */
+  private fun appendCandidate(
+      best: CandidateScore,
+      ordered: MutableList<Location>,
+      segmentDurations: MutableList<Double>,
+      unvisited: MutableList<Location>
+  ): Double {
+    ordered.add(best.location)
+    segmentDurations.add(best.travelSeconds)
+    unvisited.removeAll { sameLocation(it, best.location) }
+    return max(0.0, best.travelSeconds)
+  }
+
+  /**
+   * Append the final end location to the route, fetching duration if necessary.
+   *
+   * @param last Last location in the current route.
+   * @param end Final destination location.
+   * @param ordered Mutable list of ordered locations.
+   * @param segmentDurations Mutable list of segment durations.
+   * @param mode Transport mode.
+   * @return Travel duration to the final destination (LARGE_VALUE if unavailable).
+   */
+  private suspend fun appendFinalEnd(
+      last: Location,
+      end: Location,
+      ordered: MutableList<Location>,
+      segmentDurations: MutableList<Double>,
+      mode: TransportMode
+  ): Double {
+    var finalDuration: Double? = null
+    try {
+      val cached = cacheManager.getDuration(last.coordinate, end.coordinate, mode)
+      finalDuration =
+          cached?.duration
+              ?: matrixHybrid
+                  .fetchDurationsFromStart(last.coordinate, listOf(end.coordinate), mode)[
+                      Pair(last.coordinate, end.coordinate)]
+      finalDuration?.let { cacheManager.saveDuration(last.coordinate, end.coordinate, it, mode) }
+    } catch (_: Exception) {}
+    ordered.add(end)
+    segmentDurations.add(finalDuration ?: LARGE_VALUE)
+    return finalDuration ?: LARGE_VALUE
   }
 
   /**

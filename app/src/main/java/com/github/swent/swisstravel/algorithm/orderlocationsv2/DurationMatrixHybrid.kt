@@ -51,12 +51,7 @@ open class DurationMatrixHybrid(private val context: Context) {
   ): Map<Pair<Coordinate, Coordinate>, Double?> {
     if (ends.isEmpty()) return emptyMap()
 
-    // Build list of points: [start, end0, end1, ...]
-    val points = mutableListOf<Point>()
-    points.add(Point.fromLngLat(start.longitude, start.latitude))
-    ends.forEach { points.add(Point.fromLngLat(it.longitude, it.latitude)) }
-
-    // Reuse MapboxMatrix builder pattern from your old DurationMatrix
+    val points = buildPoints(start, ends)
     val client = buildClient(points, mode)
 
     return suspendCancellableCoroutine { cont ->
@@ -67,39 +62,7 @@ open class DurationMatrixHybrid(private val context: Context) {
                 response: Response<MatrixResponse>
             ) {
               try {
-                if (!response.isSuccessful) {
-                  Log.e(
-                      "DurationMatrixHybrid",
-                      "Matrix request failed: ${response.code()} ${response.message()}")
-                  // return nulls for each pair
-                  cont.resume(ends.associateWith { null }.mapKeys { Pair(start, it.key) })
-                  return
-                }
-                val body = response.body()
-                if (body == null || body.code() != "Ok") {
-                  Log.e(
-                      "DurationMatrixHybrid",
-                      "Matrix API returned error or empty body: ${response.message()}")
-                  cont.resume(ends.associateWith { null }.mapKeys { Pair(start, it.key) })
-                  return
-                }
-
-                val durations = body.durations()
-                if (durations == null || durations.isEmpty()) {
-                  cont.resume(ends.associateWith { null }.mapKeys { Pair(start, it.key) })
-                  return
-                }
-
-                // durations is a square matrix where index 0 corresponds to the start point
-                // Extract durations from row 0, columns 1..n (destination indices)
-                val row0 = durations[0]
-                val result = mutableMapOf<Pair<Coordinate, Coordinate>, Double?>()
-                for (i in ends.indices) {
-                  // row0 index i+1 corresponds to start -> ends[i]
-                  val value = row0.getOrNull(i + 1)
-                  result[Pair(start, ends[i])] = value?.toDouble()
-                }
-                cont.resume(result)
+                cont.resume(parseMatrixResponse(start, ends, response))
               } catch (e: Exception) {
                 cont.resumeWithException(e)
               }
@@ -107,10 +70,48 @@ open class DurationMatrixHybrid(private val context: Context) {
 
             override fun onFailure(call: Call<MatrixResponse>, t: Throwable) {
               Log.e("DurationMatrixHybrid", "Matrix request failed.", t)
-              cont.resume(ends.associateWith { null }.mapKeys { Pair(start, it.key) })
+              cont.resume(emptyDurations(start, ends))
             }
           })
     }
+  }
+
+  /** Build Mapbox Points from start and destination coordinates. */
+  private fun buildPoints(start: Coordinate, ends: List<Coordinate>): List<Point> =
+      listOf(Point.fromLngLat(start.longitude, start.latitude)) +
+          ends.map { Point.fromLngLat(it.longitude, it.latitude) }
+
+  /** Return a map of (start -> end) pairs all mapped to null (used on failure). */
+  private fun emptyDurations(
+      start: Coordinate,
+      ends: List<Coordinate>
+  ): Map<Pair<Coordinate, Coordinate>, Double?> =
+      ends.associateWith { null }.mapKeys { Pair(start, it.key) }
+
+  /** Parse the MatrixResponse into a map of durations from start to each end. */
+  private fun parseMatrixResponse(
+      start: Coordinate,
+      ends: List<Coordinate>,
+      response: Response<MatrixResponse>
+  ): Map<Pair<Coordinate, Coordinate>, Double?> {
+    if (!response.isSuccessful) {
+      Log.e(
+          "DurationMatrixHybrid", "Matrix request failed: ${response.code()} ${response.message()}")
+      return emptyDurations(start, ends)
+    }
+
+    val body = response.body()
+    if (body == null || body.code() != "Ok") {
+      Log.e(
+          "DurationMatrixHybrid", "Matrix API returned error or empty body: ${response.message()}")
+      return emptyDurations(start, ends)
+    }
+
+    val durations = body.durations()
+    if (durations.isNullOrEmpty()) return emptyDurations(start, ends)
+
+    val row0 = durations[0]
+    return ends.indices.associate { i -> Pair(start, ends[i]) to row0.getOrNull(i + 1)?.toDouble() }
   }
 
   /**
