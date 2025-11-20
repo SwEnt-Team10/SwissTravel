@@ -20,11 +20,11 @@ import kotlin.math.ceil
  * the parameters dayStart and dayEnd could be freely modified depending on which preferences the
  * user has.
  *
- * @property dayStart the day start
- * @property dayEnd the day end
+ * @property dayStart the start of a day (first moment of the day when activities can start)
+ * @property dayEnd the end of a day (last moment of the day when activities can end)
  * @property pauseBetweenEachActivity the pause between each activity
  * @property maxActivitiesPerDay the maximum activities per day
- * @property travelEnd the travel end
+ * @property travelEnd the travel end (last moment of the day when you can travel)
  */
 data class ScheduleParams(
     val dayStart: LocalTime = LocalTime.of(8, 0),
@@ -134,7 +134,8 @@ private fun applyPreferenceOverrides(profile: TripProfile, base: ScheduleParams)
  *
  * @param tripProfile Trip context (start date, preferences, etc.)
  * @param ordered Ordered route with segment durations in seconds.
- * @param activities Activities to place; `estimatedTime` is in seconds.
+ * @param activities Activities to place (all the activities of the trip); `estimatedTime` is in
+ *   seconds.
  * @param params Base constraints (may be tweaked by preferences).
  * @return A chronologically sorted list of [TripElement]s (activities and route segments) with
  *   Firebase [Timestamp]s for start and end.
@@ -157,7 +158,9 @@ fun scheduleTrip(
   var cursor: LocalDateTime = LocalDateTime.of(currentDay, eff.dayStart).roundUpToQuarter()
   var activitiesToday = 0
   val out = mutableListOf<TripElement>()
+  val tripEndDay = tripProfile.endDate.toInstant().atZone(zone).toLocalDate()!!
 
+  // all locations of the trip (user input + activities locations, all ordered)
   val locs = ordered.orderedLocations
   val legs = ordered.segmentDuration
 
@@ -179,10 +182,16 @@ fun scheduleTrip(
   /** Schedules an activity. */
   fun scheduleActivity(act: Activity) {
     // Daily cap
-    if (activitiesToday >= eff.maxActivitiesPerDay) nextDay()
+    if (activitiesToday >= eff.maxActivitiesPerDay) {
+      if (currentDay == tripEndDay) return // cannot schedule more activities for the trip
+      else nextDay()
+    }
 
     cursor = cursor.roundUpToQuarter()
-    if (!fitsActivity(act.estimatedTime)) nextDay()
+    if (!fitsActivity(act.estimatedTime)) {
+      if (currentDay == tripEndDay) return // cannot schedule this activity for the trip
+      else nextDay()
+    }
 
     val start = cursor
     val end = start.plusSeconds(act.estimatedTime.toLong()).roundUpToQuarter()
@@ -197,7 +206,10 @@ fun scheduleTrip(
     cursor = cursor.plusSeconds(eff.pauseBetweenEachActivity.toLong()).roundUpToQuarter()
 
     val driveSec = legs[fromIdx].toInt()
-    if (!fitsTravel(driveSec)) nextDay()
+    if (!fitsTravel(driveSec)) {
+      if (currentDay == tripEndDay) return // cannot schedule this travel for the trip
+      else nextDay()
+    }
 
     val start = cursor
     val end = start.plusSeconds(driveSec.toLong()).roundUpToQuarter()
@@ -215,10 +227,11 @@ fun scheduleTrip(
 
   // Main scheduling loop
   for (i in locs.indices) {
-    // Activities at this location in provided order
+    // Out of all activities of the trip, take the ones at this location (location i)
+    // in the provided order, and schedule them
     activities.asSequence().filter { it.location == locs[i] }.forEach { scheduleActivity(it) }
 
-    // Travel to next location
+    // If it is before the last location of the trip, schedule a travel to the next location
     if (i < locs.lastIndex) scheduleTravel(i)
   }
 
