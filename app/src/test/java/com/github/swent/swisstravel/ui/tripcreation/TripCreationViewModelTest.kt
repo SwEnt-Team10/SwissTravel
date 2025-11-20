@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
@@ -8,6 +9,7 @@ import com.github.swent.swisstravel.model.user.UserRepository
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -164,6 +166,16 @@ class TripCreationViewModelTest {
       }
       else -> throw AssertionError("Expected SaveError but got $event")
     }
+  }
+
+  @Test
+  fun updateNameWithDifferentString() = runTest {
+    val emptyString = ""
+    viewModel.updateName(emptyString)
+    assertEquals(viewModel.tripSettings.value.invalidNameMsg, R.string.name_empty)
+    val fakeName = "Test Trip"
+    viewModel.updateName(fakeName)
+    assertNull(viewModel.tripSettings.value.invalidNameMsg)
   }
 
   /** A fake repository that records added trips and can be made to throw on addTrip. */
