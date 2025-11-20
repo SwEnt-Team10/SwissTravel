@@ -7,14 +7,18 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
+/** Implementation of a [WikiImageApi]* */
 class WikiImageRepository(private val api: WikiImageApi) {
 
-  suspend fun getImageForActivityName(name: String): String? {
+  /**
+   * Function to get the image for a given name.
+   *
+   * @param name Name
+   * @return URL of the image or null if not found
+   */
+  suspend fun getImageByName(name: String): String? {
     return try {
-      // NEW: use getImageForTitle, not searchImage
       val resp = api.getImageForTitle(title = name)
-
-      // NEW: pages is a List<WikiPage>, not a Map
       val pages = resp.query?.pages ?: emptyList()
 
       pages.firstOrNull()?.thumbnail?.source
@@ -24,7 +28,14 @@ class WikiImageRepository(private val api: WikiImageApi) {
     }
   }
 
-  suspend fun getImagesForActivityName(name: String, maxImages: Int = 3): List<String> {
+  /**
+   * Function to get the images for a given name.
+   *
+   * @param name Name
+   * @param maxImages Maximum number of images to return
+   * @return List of URLs of the images
+   */
+  suspend fun getImagesByName(name: String, maxImages: Int = 3): List<String> {
     return try {
       val resp = api.searchImages(query = name, limit = maxImages)
       val pages = resp.query?.pages ?: emptyList()
@@ -36,6 +47,7 @@ class WikiImageRepository(private val api: WikiImageApi) {
     }
   }
 
+  /** Retrofit interface for the WikiImageApi. */
   companion object {
     fun default(): WikiImageRepository {
       val moshi = Moshi.Builder().add(KotlinJsonAdapterFactory()).build()
@@ -47,9 +59,7 @@ class WikiImageRepository(private val api: WikiImageApi) {
                     chain
                         .request()
                         .newBuilder()
-                        .header(
-                            "User-Agent",
-                            "SwissTravelApp/1.0 (https://example.com; youremail@example.com)")
+                        .header("User-Agent", "SwissTravelApp/1.0 (swisstravel.epfl@proton.me)")
                         .build()
                 chain.proceed(newReq)
               }
