@@ -40,7 +40,7 @@ class WikiImageRepository(private val api: WikiImageApi) {
       val resp = api.searchImages(query = name, limit = maxImages)
       val pages = resp.query?.pages ?: emptyList()
 
-      pages.mapNotNull { it.thumbnail?.source }
+      pages.take(maxImages).mapNotNull { it.thumbnail?.source }
     } catch (e: Exception) {
       e.printStackTrace()
       emptyList()
