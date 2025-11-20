@@ -15,6 +15,14 @@ import com.mapbox.navigation.core.directions.session.RoutesObserver
 import com.mapbox.navigation.ui.maps.route.line.api.MapboxRouteLineApi
 import com.mapbox.navigation.ui.maps.route.line.model.RouteLineError
 import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
+import com.mapbox.search.ApiType
+import com.mapbox.search.ResponseInfo
+import com.mapbox.search.ReverseGeoOptions
+import com.mapbox.search.SearchCallback
+import com.mapbox.search.SearchEngine
+import com.mapbox.search.SearchEngineSettings
+import com.mapbox.search.common.AsyncOperationTask
+import com.mapbox.search.result.SearchResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -63,6 +71,29 @@ class MapScreenViewModel : ViewModel() {
       }
     }
   }
+
+  private val searchEngine: SearchEngine by lazy {
+    SearchEngine.Companion.createSearchEngine(
+        apiType = ApiType.GEOCODING, settings = SearchEngineSettings())
+  }
+
+  private var searchRequestTask: AsyncOperationTask? = null
+
+  private val searchCallback =
+      object : SearchCallback {
+
+        override fun onResults(results: List<SearchResult>, responseInfo: ResponseInfo) {
+          if (results.isEmpty()) {
+            Log.d("SearchApiExample", "No reverse geocoding results")
+          } else {
+            Log.d("SearchApiExample", "Reverse geocoding results: $results")
+          }
+        }
+
+        override fun onError(e: Exception) {
+          Log.d("SearchApiExample", "Reverse geocoding error", e)
+        }
+      }
 
   /** Backing state for the UI */
   private val _uiState =
@@ -156,5 +187,10 @@ class MapScreenViewModel : ViewModel() {
   /** Cleanup: unregisters routes observer when ViewModel is cleared */
   override fun onCleared() {
     _uiState.value.mapboxNavigation?.unregisterRoutesObserver(routesObserver)
+  }
+
+  private fun reverseGeo(lng: Double, lat: Double) {
+    val options = ReverseGeoOptions(center = Point.fromLngLat(lng, lat), limit = 1)
+    searchRequestTask = searchEngine.search(options, searchCallback)
   }
 }

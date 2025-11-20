@@ -44,6 +44,8 @@ playServicesAuth = "21.2.0"
 #MapBox
 mapbox = "11.15.2"
 mapboxNavigation = "3.16.0-beta.1"
+mapbox-search = "2.15.0"
+
 # Plugins
 json = "20240303"
 
@@ -125,6 +127,8 @@ okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
 mapbox-maps = {module = "com.mapbox.maps:android-ndk27", version.ref = "mapbox"}
 mapbox-maps-compose = {module = "com.mapbox.extension:maps-compose-ndk27", version.ref ="mapbox"}
 mapbox-maps-navigation = {module = "com.mapbox.navigationcore:android-ndk27", version.ref ="mapboxNavigation"}
+mapbox-search = { module = "com.mapbox.search:mapbox-search-android", version.ref = "mapbox-search" }
+
 ## Testing Unit
 mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockitoCore" }
 mockito-kotlin = { module = "org.mockito.kotlin:mockito-kotlin" , version.ref="mockitoKotlin"}
