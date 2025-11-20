@@ -114,7 +114,8 @@ fun FirstDestinationScreen(
                                       },
                                       addressTextFieldViewModel = destinationVm,
                                       clearOnSelect = false,
-                                      name = "Destination ${index + 1}")
+                                      name = "Destination ${index + 1}",
+                                      showImages = true)
 
                                   Spacer(
                                       modifier =
