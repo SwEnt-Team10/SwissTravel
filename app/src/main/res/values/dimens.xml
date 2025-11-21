@@ -75,7 +75,7 @@
     <!-- Step Location Card -->
     <dimen name="step_location_card_horizontal_padding">16dp</dimen>
     <dimen name="step_location_card_vertical_padding">8dp</dimen>
-    <dimen name="step_location_card_radius">8dp</dimen>
+    <dimen name="step_location_card_radius">24dp</dimen>
     <dimen name="step_location_card_padding">12dp</dimen>
     <dimen name="step_location_card_micro_spacer">4dp</dimen>
 
