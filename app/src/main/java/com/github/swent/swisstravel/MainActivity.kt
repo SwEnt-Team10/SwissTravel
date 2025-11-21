@@ -272,7 +272,7 @@ fun SwissTravelApp(
                       onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos)}
                   )
                 }
-                  composable(Screen.AddPhotos.route) {
+                  composable(route = Screen.AddPhotos.route) {
                       AddPhotosScreen(onBack = {navigationActions.goBack()})
                   }
 
