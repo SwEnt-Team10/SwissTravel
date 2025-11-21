@@ -5,6 +5,7 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -21,8 +22,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 
@@ -74,6 +75,13 @@ fun AddPhotosScreen(
             item {
                 Text(
                     text = "You have ${addPhotosUIState.numberUri}"
+                )
+            }
+            items(addPhotosUIState.listUri) {
+                uri ->
+                AsyncImage(
+                    model = uri,
+                    contentDescription = null
                 )
             }
         }

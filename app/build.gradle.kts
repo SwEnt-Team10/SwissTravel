@@ -210,6 +210,9 @@ dependencies {
     implementation(libs.moshikotlin)
     implementation(libs.convertermoshi)
 
+    //---------    Coil       ---------
+    implementation("io.coil-kt:coil-compose:2.4.0")
+
     //----- Test units ----------------
     // Testing Unit
     testImplementation(libs.junit)
