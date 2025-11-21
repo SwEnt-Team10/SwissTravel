@@ -109,15 +109,21 @@ class MapScreenViewModel : ViewModel() {
   /**
    * Requests a navigation route from Mapbox for the current points. Private because it should only
    * be called internally when locations change or objects attach.
+   *
+   * @param profile The navigation profile to use (e.g. "driving-traffic")
    */
   @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
-  private fun requestRoute() {
+  private fun requestRoute(profile: String = "driving-traffic") {
     val nav = _uiState.value.mapboxNavigation ?: return
     val pts = _uiState.value.locationsList
     if (pts.size < 2) return
 
     val routeOptions =
-        RouteOptions.builder().applyDefaultNavigationOptions().coordinatesList(pts).build()
+        RouteOptions.builder()
+            .applyDefaultNavigationOptions()
+            .profile(profile)
+            .coordinatesList(pts)
+            .build()
 
     nav.requestRoutes(
         routeOptions,
@@ -128,9 +134,23 @@ class MapScreenViewModel : ViewModel() {
 
           override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
             Log.e("NAV_MAP_VM", "requestRoute failure: $reasons")
+            // Fallback to walking if driving fails
+            if (profile == "driving-traffic") {
+              Log.d("NAV_MAP_VM", "Trying walking route as fallback")
+              requestRoute("walking")
+            }
           }
 
           override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
+            if (routes.isEmpty()) {
+              Log.d("NAV_MAP_VM", "No route found for $profile")
+              // Fallback to walking if driving failed
+              if (profile == "driving-traffic") {
+                Log.d("NAV_MAP_VM", "Trying walking route as fallback")
+                requestRoute("walking")
+              }
+              return
+            }
             nav.setNavigationRoutes(routes)
           }
         })

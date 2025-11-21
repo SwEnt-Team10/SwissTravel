@@ -205,6 +205,11 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
 
+    //---------    Retrofit and Moshi       --------
+    implementation(libs.retrofit2)
+    implementation(libs.moshikotlin)
+    implementation(libs.convertermoshi)
+
     //----- Test units ----------------
     // Testing Unit
     testImplementation(libs.junit)
