@@ -154,6 +154,8 @@ fun TripInfoScreen(
     schedule = emptyList()
     currentStepIndex = 0
 
+    // all locations involved in the trip (input locations from user + locations from activities),
+    // without duplicates
     val unique = (ui.activities.map { it.location } + ui.locations).distinctBy { it.coordinate }
     val start = ui.locations.first()
     val end = ui.locations.last()
