@@ -44,6 +44,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -267,7 +268,9 @@ fun SwissTravelApp(
                   TripInfoScreen(
                       uid,
                       onMyTrips = { navigationActions.goBack() },
-                      onEditTrip = { navigationActions.navigateToEditTrip(uid) })
+                      onEditTrip = { navigationActions.navigateToEditTrip(uid) },
+                      onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos)}
+                  )
                 }
 
                 // Edit Trip screen
@@ -342,6 +345,14 @@ fun SwissTravelApp(
                       onFailure = { navigationActions.goBack() })
                 }
               }
+            navigation(
+                startDestination = Screen.AddPhotos.route,
+                route = Screen.AddPhotos.name,
+            ) {
+                composable(Screen.AddPhotos.route) {
+                    AddPhotosScreen(onBack = {navigationActions.goBack()})
+                }
+            }
             }
       }
 }

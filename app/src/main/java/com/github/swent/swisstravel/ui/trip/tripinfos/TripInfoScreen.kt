@@ -105,6 +105,7 @@ fun TripInfoScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
+    onAddPhotos: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
@@ -245,6 +246,9 @@ fun TripInfoScreen(
                         modifier =
                             Modifier.fillMaxWidth()
                                 .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)) {
+                        Button(
+                            onClick = onAddPhotos
+                        ) { }
                           Text(
                               text = stringResource(R.string.current_step),
                               modifier = Modifier.testTag(TripInfoScreenTestTags.CURRENT_STEP),

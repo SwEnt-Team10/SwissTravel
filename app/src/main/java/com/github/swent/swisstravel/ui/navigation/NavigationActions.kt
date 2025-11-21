@@ -64,6 +64,8 @@ sealed class Screen(
 
   object Loading : Screen(route = "loading", name = "Loading")
 
+  object AddPhotos : Screen(route = "add_photos", name = "Add Photos")
+
   // TODO change this when there is a new screen
 }
 
