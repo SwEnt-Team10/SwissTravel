@@ -47,6 +47,7 @@ object ActivityInfosTestTag {
 fun ActivityInfos(
     activity: Activity,
     onBack: () -> Unit = {},
+    wikiRepo: WikiImageRepository = WikiImageRepository.default()
 ) {
   val context = LocalContext.current
 
@@ -68,7 +69,6 @@ fun ActivityInfos(
             })
       }) { pd ->
         val scrollState = rememberScrollState()
-        val wikiRepo = WikiImageRepository.default()
         val minutes = activity.estimatedTime()
         val hours = minutes / 60
         val remainingMinutes = minutes % 60
@@ -201,13 +201,13 @@ fun ActivityInfos(
               Box(
                   modifier =
                       Modifier.fillMaxWidth()
-                          .padding(dimensionResource(R.dimen.activity_info_images_padding))
-                          .testTag(ActivityInfosTestTag.TIP),
+                          .padding(dimensionResource(R.dimen.activity_info_images_padding)),
                   contentAlignment = Alignment.CenterStart) {
                     Text(
                         text = stringResource(R.string.activity_tip),
                         style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.testTag(ActivityInfosTestTag.TIP))
                   }
             }
       }
