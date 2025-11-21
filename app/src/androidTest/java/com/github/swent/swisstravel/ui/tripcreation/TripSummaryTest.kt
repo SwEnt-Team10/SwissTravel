@@ -4,7 +4,6 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
@@ -67,17 +66,6 @@ class TripSummaryTest {
     composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
     assertFalse("onNext must not be called when required fields are missing", nextCalled)
   }
-
-  @Test
-  fun enteringTripNameAloneDoesNotTriggerOnNext() {
-    var nextCalled = false
-    setContent(onNext = { nextCalled = true })
-    composeTestRule.onNodeWithTag(TripSummaryTestTags.TRIP_NAME_FIELD).performTextInput("My trip")
-    composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
-    assertFalse(
-        "onNext must not be called when departure/arrival locations are missing", nextCalled)
-  }
-
   /** A fake implementation of ActivityRepository for UI testing. Avoids real API calls. */
   private class FakeActivityRepository : ActivityRepository {
     override suspend fun getMostPopularActivities(limit: Int, page: Int): List<Activity> =

@@ -30,6 +30,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -124,7 +126,16 @@ fun LocationAutocompleteTextField(
         },
         modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) },
-        singleLine = true)
+        singleLine = true,
+        isError =
+            (text.isNotEmpty() && state.selectedLocation == null) || (expanded && text.isEmpty()),
+        supportingText = {
+          if (expanded && text.isEmpty()) {
+            Text("$name ${stringResource(R.string.cannot_be_empty)}")
+          } else if (text.isNotEmpty() && state.selectedLocation == null) {
+            Text(text = stringResource(R.string.dropdown_menu_choose))
+          }
+        })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
         onDismissRequest = { expanded = false }) {
@@ -182,7 +193,7 @@ fun LocationAutocompleteTextField(
             if (index < suggestions.lastIndex) {
               HorizontalDivider(
                   modifier = Modifier.fillMaxWidth(),
-                  thickness = dimensionResource(R.dimen.location_autocomplete_divider_thickness),
+                  thickness = 1.dp,
                   color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
             }
           }
