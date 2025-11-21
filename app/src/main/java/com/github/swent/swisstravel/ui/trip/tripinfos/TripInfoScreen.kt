@@ -228,7 +228,23 @@ fun TripInfoScreen(
                     }
               })
         }
-      }) { pd ->
+      },
+      bottomBar = {
+          Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.Center
+          ) {
+              Button(
+                  onClick = onAddPhotos
+              ) {
+                  Text(
+                      text = "Add photos"
+                  )
+              }
+          }
+
+      }
+      ) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
           LazyColumn(
               modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.LAZY_COLUMN),
@@ -246,9 +262,6 @@ fun TripInfoScreen(
                         modifier =
                             Modifier.fillMaxWidth()
                                 .padding(start = 16.dp, top = 16.dp, bottom = 8.dp)) {
-                        Button(
-                            onClick = onAddPhotos
-                        ) { }
                           Text(
                               text = stringResource(R.string.current_step),
                               modifier = Modifier.testTag(TripInfoScreenTestTags.CURRENT_STEP),

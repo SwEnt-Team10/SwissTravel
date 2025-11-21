@@ -267,11 +267,14 @@ fun SwissTravelApp(
                   }
                   TripInfoScreen(
                       uid,
-                      onMyTrips = { navigationActions.goBack() },
+                      onMyTrips = { navigationActions.navigateTo(Screen.MyTrips) },
                       onEditTrip = { navigationActions.navigateToEditTrip(uid) },
                       onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos)}
                   )
                 }
+                  composable(Screen.AddPhotos.route) {
+                      AddPhotosScreen(onBack = {navigationActions.goBack()})
+                  }
 
                 // Edit Trip screen
                 composable(
@@ -345,14 +348,6 @@ fun SwissTravelApp(
                       onFailure = { navigationActions.goBack() })
                 }
               }
-            navigation(
-                startDestination = Screen.AddPhotos.route,
-                route = Screen.AddPhotos.name,
-            ) {
-                composable(Screen.AddPhotos.route) {
-                    AddPhotosScreen(onBack = {navigationActions.goBack()})
-                }
-            }
             }
       }
 }

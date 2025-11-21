@@ -17,7 +17,7 @@ class AddPhotosViewModel(
 ): ViewModel() {
     private val _uiState = MutableStateFlow(AddPhotosUIState())
     val uiState: StateFlow<AddPhotosUIState> = _uiState.asStateFlow()
-    fun addUri(uri: Uri) {
+    fun addUri(uri: List<Uri>) {
         _uiState.value = _uiState.value.copy(listUri = _uiState.value.listUri + uri, numberUri = _uiState.value.numberUri + 1)
     }
 }
