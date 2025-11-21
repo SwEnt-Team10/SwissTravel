@@ -363,10 +363,7 @@ fun TripInfoScreen(
                     is TripElement.TripActivity -> {
                       StepRow(
                           stepNumber = stepNo,
-                          subtitle =
-                              el.activity.location.name +
-                                  (if (el.activity.description.isBlank()) ""
-                                  else " — ${el.activity.description}"),
+                          subtitle = el.activity.location.name,
                           timeRange =
                               "${fmtTime(el.activity.startDate)} – ${fmtTime(el.activity.endDate)}",
                           leadingIcon = {

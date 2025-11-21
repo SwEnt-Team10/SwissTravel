@@ -72,10 +72,10 @@ class WikiImageRepository(private val api: WikiImageApi) {
    */
   suspend fun getImagesByName(name: String, maxImages: Int = 3): List<String> {
     return try {
-      val resp = api.searchImages(searchParams(name, maxImages))
+      val resp = api.searchImages(searchParams("$name Switzerland", maxImages))
       val pages = resp.query?.pages ?: emptyList()
 
-      pages.take(maxImages).mapNotNull { it.thumbnail?.source }
+      pages.take(maxImages).mapNotNull { it.thumbnail?.source }.reversed()
     } catch (e: Exception) {
       e.printStackTrace()
       emptyList()

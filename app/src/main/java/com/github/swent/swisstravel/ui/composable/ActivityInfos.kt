@@ -11,16 +11,26 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.trip.activity.WikiImageRepository
+import kotlin.collections.emptyList
 
 object ActivityInfosTestTag {
   const val TOP_BAR = "topBar"
@@ -28,6 +38,8 @@ object ActivityInfosTestTag {
   const val TITLE = "title"
   const val DESCRIPTION = "description"
   const val ESTIMATED_TIME = "estimatedTime"
+  const val IMAGES = "imagesList"
+  const val TIP = "tip"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,27 +47,45 @@ object ActivityInfosTestTag {
 fun ActivityInfos(
     activity: Activity,
     onBack: () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
   val context = LocalContext.current
 
   Scaffold(
       topBar = {
         TopAppBar(
-            title = { Text(activity.getName()) },
+            title = {
+              Text(activity.getName(), modifier = Modifier.testTag(ActivityInfosTestTag.TITLE))
+            },
+            modifier = Modifier.testTag(ActivityInfosTestTag.TOP_BAR),
             navigationIcon = {
-              IconButton(onClick = onBack, modifier = modifier) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onBackground)
-              }
+              IconButton(
+                  onClick = onBack, modifier = Modifier.testTag(ActivityInfosTestTag.BACK_BUTTON)) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = "Back",
+                        tint = MaterialTheme.colorScheme.onBackground)
+                  }
             })
       }) { pd ->
         val scrollState = rememberScrollState()
+        val wikiRepo = WikiImageRepository.default()
         val minutes = activity.estimatedTime()
         val hours = minutes / 60
         val remainingMinutes = minutes % 60
+        var activityUrls by remember { mutableStateOf<List<String>>(emptyList()) }
+        var isLoading by remember { mutableStateOf(false) }
+
+        LaunchedEffect(activity.getName()) {
+          isLoading = true
+          activityUrls =
+              try {
+                wikiRepo.getImagesByName(activity.getName())
+              } catch (_: Exception) {
+                emptyList()
+              } finally {
+                isLoading = false
+              }
+        }
 
         val durationText =
             when {
@@ -65,67 +95,117 @@ fun ActivityInfos(
             }
 
         Column(
-            modifier = modifier.fillMaxSize().verticalScroll(scrollState).padding(pd),
-            verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            modifier =
+                Modifier.fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(pd)
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.activity_info_main_col_padding)),
+            verticalArrangement =
+                Arrangement.spacedBy(
+                    space = dimensionResource(R.dimen.activity_info_main_col_padding))) {
 
               // Description
               if (activity.description.isNotBlank()) {
-                Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                  Text(
-                      text = "About this activity",
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.SemiBold)
-                  Text(
-                      text = activity.description,
-                      style = MaterialTheme.typography.bodyMedium,
-                  )
-                }
+                Column(
+                    verticalArrangement =
+                        Arrangement.spacedBy(dimensionResource(R.dimen.activity_info_desc_padding)),
+                    modifier = Modifier.testTag(ActivityInfosTestTag.DESCRIPTION)) {
+                      Text(
+                          text = stringResource(R.string.about_activity),
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.SemiBold)
+                      Text(
+                          text = activity.description,
+                          style = MaterialTheme.typography.bodyMedium,
+                      )
+                    }
               }
 
               AssistChip(
                   onClick = {},
+                  modifier = Modifier.testTag(ActivityInfosTestTag.ESTIMATED_TIME),
                   leadingIcon = {
                     Icon(imageVector = Icons.Filled.AccessTime, contentDescription = null)
                   },
-                  label = { Text("Estimated time: $durationText") })
+                  label = { Text(stringResource(R.string.estimated_time, durationText)) })
 
-              if (activity.imageUrls.isNotEmpty()) {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                  Text(
-                      text = "Images",
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.SemiBold)
-
-                  LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(activity.imageUrls) { url ->
-                      Card(
-                          shape = RoundedCornerShape(16.dp),
-                          modifier = Modifier.width(220.dp).height(150.dp)) {
-                            AsyncImage(
-                                model =
-                                    ImageRequest.Builder(context).data(url).crossfade(true).build(),
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(16.dp)),
-                                contentScale = ContentScale.Crop,
-                            )
-                          }
-                    }
-                  }
+              when {
+                isLoading -> {
+                  CircularProgressIndicator()
                 }
-              } else {
-                Text(
-                    text = "No images available for this activity.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                activityUrls.isNotEmpty() -> {
+                  Column(
+                      verticalArrangement =
+                          Arrangement.spacedBy(
+                              dimensionResource(R.dimen.activity_info_images_padding)),
+                      modifier = Modifier.testTag(ActivityInfosTestTag.IMAGES)) {
+                        Text(
+                            text = "Images",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold)
+
+                        LazyRow(
+                            horizontalArrangement =
+                                Arrangement.spacedBy(
+                                    dimensionResource(
+                                        R.dimen.activity_info_images_horizontal_padding))) {
+                              items(activityUrls) { url ->
+                                Card(
+                                    shape =
+                                        RoundedCornerShape(
+                                            dimensionResource(
+                                                R.dimen.activity_info_main_col_padding)),
+                                    modifier =
+                                        Modifier.width(
+                                                dimensionResource(
+                                                    R.dimen.activity_info_images_width))
+                                            .height(
+                                                dimensionResource(
+                                                    R.dimen.activity_info_images_height))) {
+                                      AsyncImage(
+                                          model =
+                                              ImageRequest.Builder(context)
+                                                  .data(url)
+                                                  .addHeader(
+                                                      "User-Agent",
+                                                      "SwissTravelApp/1.0 (swisstravel.epfl@proton.me)")
+                                                  .crossfade(true)
+                                                  .build(),
+                                          contentDescription = null,
+                                          modifier =
+                                              Modifier.fillMaxSize()
+                                                  .clip(
+                                                      RoundedCornerShape(
+                                                          size =
+                                                              dimensionResource(
+                                                                  R.dimen
+                                                                      .activity_info_main_col_padding))),
+                                          contentScale = ContentScale.Crop,
+                                      )
+                                    }
+                              }
+                            }
+                      }
+                }
+                else -> {
+                  Text(
+                      text = stringResource(R.string.no_image_fallback),
+                      style = MaterialTheme.typography.bodySmall,
+                      color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
               }
 
-              Spacer(Modifier.height(8.dp))
+              Spacer(Modifier.height(dimensionResource(R.dimen.activity_info_images_padding)))
 
               Box(
-                  modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(dimensionResource(R.dimen.activity_info_images_padding))
+                          .testTag(ActivityInfosTestTag.TIP),
                   contentAlignment = Alignment.CenterStart) {
                     Text(
-                        text = "Tip: Check weather & opening hours before going.",
+                        text = stringResource(R.string.activity_tip),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                   }
