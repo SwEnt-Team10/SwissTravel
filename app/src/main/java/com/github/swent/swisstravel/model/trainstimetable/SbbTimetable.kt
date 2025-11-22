@@ -35,19 +35,30 @@ class SbbTimetable(private val baseUrl: String = "https://api.opentransportdata.
   private val ojpToken = BuildConfig.OPEN_TRANSPORT_DATA_TOKEN
 
   private val api: OjpApiService by lazy {
+    // Create a logging interceptor to see request and response details in Logcat.
+    // Very useful for debugging network issues.
     val logging =
         HttpLoggingInterceptor { message -> Log.d("OJP_API", message) }
             .setLevel(HttpLoggingInterceptor.Level.BODY)
+
+    // Build an OkHttpClient and attach the logging interceptor.
     val client = OkHttpClient.Builder().addInterceptor(logging).build()
 
+    // Create a Persister from SimpleXML library with an AnnotationStrategy.
+    // Required to correctly parse the XML response from the OJP API.
     val serializer = Persister(AnnotationStrategy())
 
+    // Build the Retrofit instance.
     Retrofit.Builder()
+        // Set the base URL for all API endpoints.
         .baseUrl(baseUrl)
+        // Set the custom OkHttpClient to enable logging
         .client(client)
-        // Pass the namespace-aware serializer to the factory
+        // Add a converter factory to handle XML serialization and deserialization.
+        // We pass the custom serializer to ensure it can handle the OJP XML format.
         .addConverterFactory(SimpleXmlConverterFactory.create(serializer))
         .build()
+        // Create an implementation of our API interface.
         .create(OjpApiService::class.java)
   }
 

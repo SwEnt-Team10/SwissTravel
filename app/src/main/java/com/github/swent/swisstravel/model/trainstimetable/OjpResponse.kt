@@ -100,7 +100,6 @@ data class TripLeg(
 @Root(name = "LegStop", strict = false)
 @Namespace(reference = OJP_NS)
 data class LegStop(
-    // Change this field to use the new LocationElement
     @field:Element(name = "Location") var location: LocationElement? = null,
     @field:Element(name = "DepArrTime") var depArrTime: String? = null
 )
@@ -132,13 +131,13 @@ data class Mode(
  * @property latitude The latitude value.
  */
 @Root(name = "GeoPosition", strict = false)
-@Namespace(reference = OJP_NS) // Correct: The element itself is in the OJP namespace
+@Namespace(reference = OJP_NS)
 data class GeoPosition(
     @field:Element(name = "Longitude")
-    @field:Namespace(reference = SIRI_NS) // Correct: Its children are in the SIRI namespace
+    @field:Namespace(reference = SIRI_NS)
     var longitude: Double = 0.0,
     @field:Element(name = "Latitude")
-    @field:Namespace(reference = SIRI_NS) // Correct: Its children are in the SIRI namespace
+    @field:Namespace(reference = SIRI_NS)
     var latitude: Double = 0.0
 )
 
@@ -155,9 +154,7 @@ data class LocationElement(
  *
  * @property text The actual text content.
  */
-@Root(strict = false) // Keep strict = false, remove class-level namespace
+@Root(strict = false)
 data class TextElement(
-    @field:Element(name = "Text")
-    @field:Namespace(reference = OJP_NS) // Specify namespace on the element itself
-    var text: String? = null
+    @field:Element(name = "Text") @field:Namespace(reference = OJP_NS) var text: String? = null
 )
