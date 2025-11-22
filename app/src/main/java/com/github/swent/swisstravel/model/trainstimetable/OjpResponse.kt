@@ -135,10 +135,10 @@ data class Mode(
 data class GeoPosition(
     @field:Element(name = "Longitude")
     @field:Namespace(reference = SIRI_NS)
-    var longitude: Double = 0.0,
+    var longitude: Double? = null,
     @field:Element(name = "Latitude")
     @field:Namespace(reference = SIRI_NS)
-    var latitude: Double = 0.0
+    var latitude: Double? = null
 )
 
 /** Represents the <Location> wrapper element found inside a <LegStop>. */
