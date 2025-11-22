@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
+import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,6 +26,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -37,13 +39,20 @@ fun AddPhotosScreen(
     viewModel: AddPhotosViewModel = viewModel(),
     tripId: String = ""
 ) {
+    val context = LocalContext.current
     LaunchedEffect(tripId) {
         viewModel.loadPhotos(tripId)
     }
-
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uri ->
-        if (uri.isNotEmpty()) {
-            viewModel.addUri(uri)
+    //AI helped for the picker
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
+        if (uris.isNotEmpty()) {
+            uris.forEach { uri ->
+                context.contentResolver.takePersistableUriPermission(
+                    uri,
+                    Intent.FLAG_GRANT_READ_URI_PERMISSION
+                )
+            }
+            viewModel.addUri(uris)
         }
     }
     val addPhotosUIState by viewModel.uiState.collectAsState()
