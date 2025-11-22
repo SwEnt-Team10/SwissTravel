@@ -11,6 +11,9 @@ import org.mockito.MockitoAnnotations
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+/**
+ * Unit tests for TripRepositoryLocal (tests inspired by the bootcamp)
+ */
 class TripRepositoryLocalTest {
     private lateinit var tripRepositoryLocal: TripRepositoryLocal
     private val trip =

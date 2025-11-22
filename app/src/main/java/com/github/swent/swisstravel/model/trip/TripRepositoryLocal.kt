@@ -1,5 +1,8 @@
 package com.github.swent.swisstravel.model.trip
 
+/**
+ * A trip repository locally stored (inspiration taken from the bootcamp)
+ */
 class TripRepositoryLocal(
     private val trips: MutableList<Trip> = mutableListOf(),
     private var counter: Int = 0
