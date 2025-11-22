@@ -217,5 +217,11 @@
     <!-- Loading -->
     <string name="loading_trip">We are travelling for you…</string>
 
+    <!-- Activity Infos -->
+    <string name="about_activity">About this activity</string>
+    <string name="estimated_time">Estimated time: %1$s</string>
+    <string name="no_image_fallback">No images available for this activity.</string>
+    <string name="activity_tip">Tip: Check weather &amp; opening hours before going.</string>
+
 
 </resources>

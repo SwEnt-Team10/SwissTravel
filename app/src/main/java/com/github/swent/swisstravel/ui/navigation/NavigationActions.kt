@@ -1,7 +1,13 @@
 package com.github.swent.swisstravel.ui.navigation
 
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import java.net.URLEncoder
 
 /** Heavily inspired from the B3 of the SwEnt course at EPFL */
@@ -48,6 +54,10 @@ sealed class Screen(
       const val route = "trip_info/{uid}"
       const val name = "Trip Info"
     }
+  }
+
+  object ActivityInfo : Screen("activityInfo/{uid}", name = "Activity Infos") {
+    fun route(uid: String) = "activityInfo/$uid"
   }
 
   object TripSettingsArrivalDeparture :
@@ -113,6 +123,33 @@ class NavigationActions(
     navController.navigate(Screen.EditTrip.createRoute(tripId)) {
       launchSingleTop = true
       restoreState = true
+    }
+  }
+
+  fun navigateToActivityInfo(tripId: String) {
+    navController.navigate(Screen.ActivityInfo.route(tripId))
+  }
+
+  fun goBackToTripInfo(tripId: String): Boolean {
+    // trip_info/<real-uid>, not the pattern
+    val route = Screen.TripInfo(tripId).route // "trip_info/$tripId"
+    return navController.popBackStack(route = route, inclusive = false)
+  }
+
+  @Composable
+  fun tripInfoViewModel(navController: NavHostController): TripInfoViewModel {
+    val currentEntry by navController.currentBackStackEntryAsState()
+
+    // Scope the VM to the TripInfo navigation graph
+    val parentEntry =
+        remember(currentEntry) {
+          runCatching { navController.getBackStackEntry(Screen.TripInfo.name) }.getOrNull()
+        }
+
+    return if (parentEntry != null) {
+      viewModel(parentEntry) // shared between all composables in TripInfo graph
+    } else {
+      viewModel() // fallback, should rarely happen
     }
   }
 
