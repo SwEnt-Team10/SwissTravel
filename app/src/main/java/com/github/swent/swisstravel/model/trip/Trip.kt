@@ -40,5 +40,5 @@ data class Trip(
     val tripProfile: TripProfile,
     val isFavorite: Boolean,
     val isCurrentTrip: Boolean,
-    val listUri: List<Uri>
+    val listUri: List<Uri> = emptyList()
 )
