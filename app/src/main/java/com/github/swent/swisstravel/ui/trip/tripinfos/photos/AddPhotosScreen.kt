@@ -92,7 +92,7 @@ fun AddPhotosScreen(
                 }
                 Button(
                     onClick = {
-                        viewModel.savePhoto(tripId)
+                        viewModel.savePhotos(tripId)
                         onBack()
                     }
                 ) {
