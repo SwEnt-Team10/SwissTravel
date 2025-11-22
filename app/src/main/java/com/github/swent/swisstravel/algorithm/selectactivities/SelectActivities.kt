@@ -47,7 +47,18 @@ class SelectActivities(
   suspend fun addActivities(): List<Activity> {
     val allDestinations = buildDestinationList()
     val userPreferences = tripSettings.preferences.toMutableList()
-    val days = ChronoUnit.DAYS.between(tripSettings.date.startDate, tripSettings.date.endDate)
+
+    // Removes preferences that are not supported by mySwitzerland.
+    // Avoids unnecessary API calls.
+    userPreferences.remove(Preference.QUICK)
+    userPreferences.remove(Preference.SLOW_PACE)
+    userPreferences.remove(Preference.EARLY_BIRD)
+    userPreferences.remove(Preference.NIGHT_OWL)
+
+    // add 1 day since the last day is excluded
+    val days =
+        ChronoUnit.DAYS.between(
+            tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
     val totalNbActivities = (NB_ACTIVITIES_PER_DAY * days).toDouble()
 
     // Calculate the total number of steps for progress reporting.

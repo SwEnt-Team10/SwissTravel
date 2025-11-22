@@ -26,13 +26,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.activity.WikiImageRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.debounce
@@ -67,13 +72,15 @@ fun LocationAutocompleteTextField(
     addressTextFieldViewModel: AddressTextFieldViewModelContract =
         viewModel<DestinationTextFieldViewModel>(),
     name: String = "location",
-    clearOnSelect: Boolean = false
+    clearOnSelect: Boolean = false,
+    showImages: Boolean = false,
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
   // Local text state. This is the single source of truth for what's visible in the text field.
   var text by rememberSaveable { mutableStateOf(state.locationQuery) }
   var expanded by remember { mutableStateOf(false) }
 
+  val wikiRepo = remember(showImages) { if (showImages) WikiImageRepository.default() else null }
   // Track if we're in the middle of a selection to prevent the text effect from triggering
   var isSelecting by remember { mutableStateOf(false) }
 
@@ -119,7 +126,16 @@ fun LocationAutocompleteTextField(
         },
         modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) },
-        singleLine = true)
+        singleLine = true,
+        isError =
+            (text.isNotEmpty() && state.selectedLocation == null) || (expanded && text.isEmpty()),
+        supportingText = {
+          if (expanded && text.isEmpty()) {
+            Text("$name ${stringResource(R.string.cannot_be_empty)}")
+          } else if (text.isNotEmpty() && state.selectedLocation == null) {
+            Text(text = stringResource(R.string.dropdown_menu_choose))
+          }
+        })
     ExposedDropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
         onDismissRequest = { expanded = false }) {
@@ -128,15 +144,42 @@ fun LocationAutocompleteTextField(
             DropdownMenuItem(
                 text = {
                   Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (location.imageUrl != null) {
-                      AsyncImage(
-                          model = location.imageUrl,
-                          contentDescription = "${location.name} image",
-                          placeholder = painterResource(id = R.drawable.debug_placeholder),
-                          contentScale = ContentScale.Crop,
-                          modifier = Modifier.size(40.dp).clip(CircleShape))
-                      Spacer(modifier = Modifier.width(16.dp))
+                    if (showImages && wikiRepo != null) {
+                      var wikiImageUrl by remember(location.name) { mutableStateOf<String?>(null) }
+
+                      LaunchedEffect(location.name) {
+                        if (wikiImageUrl == null) {
+                          val result = wikiRepo.getImageByName(location.name)
+                          wikiImageUrl = result
+                        }
+                      }
+
+                      val context = LocalContext.current
+                      if (wikiImageUrl != null) {
+                        AsyncImage(
+                            model =
+                                ImageRequest.Builder(context)
+                                    .data(wikiImageUrl)
+                                    .addHeader(
+                                        "User-Agent",
+                                        "SwissTravelApp/1.0 (swisstravel.epfl@proton.me)")
+                                    .build(),
+                            contentDescription = "${location.name} image",
+                            placeholder = painterResource(id = R.drawable.debug_placeholder),
+                            error = painterResource(id = R.drawable.debug_placeholder),
+                            contentScale = ContentScale.Crop,
+                            modifier =
+                                Modifier.size(
+                                        dimensionResource(
+                                            R.dimen.location_autocomplete_image_padding))
+                                    .clip(CircleShape))
+                        Spacer(
+                            modifier =
+                                Modifier.width(
+                                    dimensionResource(R.dimen.location_autocomplete_image_padding)))
+                      }
                     }
+
                     Text(location.name, modifier = Modifier.weight(1f))
                   }
                 },

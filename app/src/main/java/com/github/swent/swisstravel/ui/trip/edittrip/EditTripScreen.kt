@@ -9,13 +9,15 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
@@ -23,6 +25,8 @@ import com.github.swent.swisstravel.ui.composable.TravelersSelector
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.TopBarTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenViewModel
+import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
+import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
 
 object EditTripScreenTestTags {
   const val SCREEN = "editTripScreen"
@@ -55,16 +59,39 @@ fun EditTripScreen(
 ) {
   val context = LocalContext.current
   val state by editTripViewModel.state.collectAsState()
-
   var showDeleteDialog by remember { mutableStateOf(false) }
 
   LaunchedEffect(tripId) { editTripViewModel.loadTrip(tripId) }
 
+  // Observer for validation events (save success/error)
+  LaunchedEffect(key1 = Unit) {
+    editTripViewModel.validationEvents.collect { event ->
+      when (event) {
+        is ValidationEvent.SaveSuccess -> {
+          Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
+          onSaved()
+        }
+        is ValidationEvent.SaveError -> {
+          Toast.makeText(context, event.message, Toast.LENGTH_LONG).show()
+        }
+        else -> {
+          // Ignore other events
+        }
+      }
+    }
+  }
+
+  // Handle general error messages
   LaunchedEffect(state.errorMsg) {
     state.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       editTripViewModel.clearErrorMsg()
     }
+  }
+
+  if (state.isSaving) {
+    LoadingScreen(progress = state.savingProgress)
+    return
   }
 
   Scaffold(
@@ -92,11 +119,7 @@ fun EditTripScreen(
             },
             actions = {
               Button(
-                  onClick = {
-                    editTripViewModel.save()
-                    Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-                    onSaved()
-                  },
+                  onClick = { editTripViewModel.save() },
                   enabled = !state.isLoading,
                   modifier = Modifier.testTag(EditTripScreenTestTags.CONFIRM_TOP_BAR),
               ) {
@@ -106,23 +129,23 @@ fun EditTripScreen(
             modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
       },
       bottomBar = {
-        Surface(tonalElevation = 2.dp) {
+        Surface(tonalElevation = dimensionResource(R.dimen.tiny_tonal_elevation)) {
           Box(
-              modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp),
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(
+                          horizontal = dimensionResource(R.dimen.mid_padding),
+                          vertical = dimensionResource(R.dimen.smaller_padding)),
               contentAlignment = Alignment.Center) {
                 Button(
-                    onClick = {
-                      editTripViewModel.save()
-                      Toast.makeText(context, R.string.trip_saved, Toast.LENGTH_SHORT).show()
-                      onSaved()
-                    },
+                    onClick = { editTripViewModel.save() },
                     enabled = !state.isLoading,
-                    shape = RoundedCornerShape(28.dp),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.big_button_radius)),
                     modifier =
                         Modifier.fillMaxWidth(0.9f)
                             .testTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR)) {
                       Icon(Icons.Filled.Edit, contentDescription = null)
-                      Spacer(Modifier.width(8.dp))
+                      Spacer(modifier = Modifier.width(dimensionResource(R.dimen.tiny_spacer)))
                       Text(stringResource(R.string.confirm_changes))
                     }
               }
@@ -142,14 +165,18 @@ fun EditTripScreen(
                 Modifier.padding(inner)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 24.dp, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.mid_padding),
+                        vertical = dimensionResource(R.dimen.small_padding)),
+            verticalArrangement =
+                Arrangement.spacedBy(dimensionResource(R.dimen.edit_screen_vertical_arrangement))) {
               SectionHeader(stringResource(R.string.name))
               OutlinedTextField(
                   value = state.tripName,
                   onValueChange = editTripViewModel::editTripName,
                   modifier = Modifier.fillMaxWidth().testTag(EditTripScreenTestTags.TRIP_NAME),
-                  shape = RoundedCornerShape(12.dp),
+                  shape =
+                      RoundedCornerShape(dimensionResource(R.dimen.edit_screen_textfield_radius)),
                   singleLine = true)
 
               SectionHeader(stringResource(R.string.travelers))
@@ -168,12 +195,12 @@ fun EditTripScreen(
                   onClick = { showDeleteDialog = true },
                   colors =
                       ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                  shape = RoundedCornerShape(28.dp),
+                  shape = RoundedCornerShape(dimensionResource(R.dimen.edit_screen_big_radius)),
                   modifier =
                       Modifier.align(Alignment.CenterHorizontally)
                           .testTag(EditTripScreenTestTags.DELETE)) {
                     Icon(Icons.Filled.Delete, contentDescription = null)
-                    Spacer(Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
                     Text(stringResource(R.string.delete_trip))
                   }
 

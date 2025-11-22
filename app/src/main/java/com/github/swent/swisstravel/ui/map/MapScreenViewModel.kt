@@ -26,6 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
  * @property locationsList List of Points representing navigation locations.
  * @property mapboxNavigation The active MapboxNavigation instance.
  * @property routeLineApi The MapboxRouteLineApi instance used to render routes.
+ * @property permissionGranted True if location permission is granted, false otherwise.
+ * @property currentLocation The current location displayed on the map.
  */
 data class NavigationMapUIState(
     val routeLineDrawData: Expected<RouteLineError, RouteSetValue>? = null,
@@ -33,7 +35,8 @@ data class NavigationMapUIState(
     val locationsList: List<Point>,
     val mapboxNavigation: MapboxNavigation?,
     val routeLineApi: MapboxRouteLineApi?,
-    val permissionGranted: Boolean = false
+    val permissionGranted: Boolean = false,
+    val currentLocation: Point? = null
 )
 
 /**
@@ -59,7 +62,7 @@ class MapScreenViewModel : ViewModel() {
     val api = _uiState.value.routeLineApi ?: return@RoutesObserver
     api.setNavigationRoutes(result.navigationRoutes, alt) { drawData ->
       if (drawData.value != null) {
-        _routeRenderTick.value = _routeRenderTick.value + 1
+        _routeRenderTick.value += 1
       }
     }
   }
@@ -106,15 +109,21 @@ class MapScreenViewModel : ViewModel() {
   /**
    * Requests a navigation route from Mapbox for the current points. Private because it should only
    * be called internally when locations change or objects attach.
+   *
+   * @param profile The navigation profile to use (e.g. "driving-traffic")
    */
   @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
-  private fun requestRoute() {
+  private fun requestRoute(profile: String = "driving-traffic") {
     val nav = _uiState.value.mapboxNavigation ?: return
     val pts = _uiState.value.locationsList
     if (pts.size < 2) return
 
     val routeOptions =
-        RouteOptions.builder().applyDefaultNavigationOptions().coordinatesList(pts).build()
+        RouteOptions.builder()
+            .applyDefaultNavigationOptions()
+            .profile(profile)
+            .coordinatesList(pts)
+            .build()
 
     nav.requestRoutes(
         routeOptions,
@@ -125,9 +134,23 @@ class MapScreenViewModel : ViewModel() {
 
           override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
             Log.e("NAV_MAP_VM", "requestRoute failure: $reasons")
+            // Fallback to walking if driving fails
+            if (profile == "driving-traffic") {
+              Log.d("NAV_MAP_VM", "Trying walking route as fallback")
+              requestRoute("walking")
+            }
           }
 
           override fun onRoutesReady(routes: List<NavigationRoute>, routerOrigin: String) {
+            if (routes.isEmpty()) {
+              Log.d("NAV_MAP_VM", "No route found for $profile")
+              // Fallback to walking if driving failed
+              if (profile == "driving-traffic") {
+                Log.d("NAV_MAP_VM", "Trying walking route as fallback")
+                requestRoute("walking")
+              }
+              return
+            }
             nav.setNavigationRoutes(routes)
           }
         })

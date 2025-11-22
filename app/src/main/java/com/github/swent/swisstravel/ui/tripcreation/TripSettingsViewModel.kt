@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.tripcreation
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
@@ -44,7 +45,8 @@ data class TripSettings(
     val travelers: TripTravelers = TripTravelers(),
     val preferences: List<Preference> = emptyList(),
     val arrivalDeparture: TripArrivalDeparture = TripArrivalDeparture(),
-    val destinations: List<Location> = emptyList()
+    val destinations: List<Location> = emptyList(),
+    val invalidNameMsg: Int? = null
 )
 
 /** Sealed interface representing various validation events during trip settings. */
@@ -83,7 +85,9 @@ class TripSettingsViewModel(
   val loadingProgress = _loadingProgress.asStateFlow()
 
   fun updateName(name: String) {
-    _tripSettings.update { it.copy(name = name) }
+    _tripSettings.value =
+        _tripSettings.value.copy(
+            name = name, invalidNameMsg = if (name.isBlank()) R.string.name_empty else null)
   }
 
   fun updateDates(start: LocalDate, end: LocalDate) {

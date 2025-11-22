@@ -209,7 +209,11 @@ class TripsRepositoryFirestore(
     val adults = (map["adults"] as? Long)?.toInt() ?: 1
     val children = (map["children"] as? Long)?.toInt() ?: 0
 
-    return TripProfile(startDate, endDate, preferredLocations, preferences, adults, children)
+    val arrival = mapToLocation(map["arrivalLocation"] as? Map<*, *> ?: return null)
+    val departure = mapToLocation(map["departureLocation"] as? Map<*, *> ?: return null)
+
+    return TripProfile(
+        startDate, endDate, preferredLocations, preferences, adults, children, arrival, departure)
   }
 
   /**

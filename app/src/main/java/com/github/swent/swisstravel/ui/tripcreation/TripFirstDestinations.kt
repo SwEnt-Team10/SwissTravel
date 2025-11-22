@@ -22,11 +22,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.map.MySwitzerlandLocationRepository
@@ -82,7 +82,7 @@ fun FirstDestinationScreen(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             color = MaterialTheme.colorScheme.background) {
               Column(
-                  modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp),
+                  modifier = Modifier.padding(dimensionResource(R.dimen.mid_padding)),
                   horizontalAlignment = Alignment.CenterHorizontally,
                   verticalArrangement = Arrangement.SpaceBetween) {
                     Column(
@@ -97,7 +97,8 @@ fun FirstDestinationScreen(
                                   MaterialTheme.typography.headlineMedium.copy(
                                       fontWeight = FontWeight.Bold))
 
-                          Spacer(modifier = Modifier.height(32.dp))
+                          Spacer(
+                              modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
                           // --- List of Destination Input Fields ---
                           LazyColumn(
@@ -113,13 +114,17 @@ fun FirstDestinationScreen(
                                       },
                                       addressTextFieldViewModel = destinationVm,
                                       clearOnSelect = false,
-                                      name = "Destination ${index + 1}")
+                                      name = "Destination ${index + 1}",
+                                      showImages = true)
 
-                                  Spacer(modifier = Modifier.height(8.dp))
+                                  Spacer(
+                                      modifier =
+                                          Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
                                 }
                               }
 
-                          Spacer(modifier = Modifier.height(16.dp))
+                          Spacer(
+                              modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
                           // --- Add Destination Button ---
                           Button(

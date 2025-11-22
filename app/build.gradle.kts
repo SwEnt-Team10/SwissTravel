@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.sonar)
     alias(libs.plugins.gms)
 
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.8.10"
     id("jacoco")
 }
 
@@ -211,6 +212,14 @@ dependencies {
     //---------    Networking with Retrofit   -----
     implementation(libs.retrofit)
     implementation(libs.xmlconverter)
+
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+
+    //---------    Retrofit and Moshi       --------
+    implementation(libs.retrofit2)
+    implementation(libs.moshikotlin)
+    implementation(libs.convertermoshi)
 
     //----- Test units ----------------
     // Testing Unit

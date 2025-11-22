@@ -40,6 +40,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     // Build trip
     val tripId = repository.getNewUid()
     val now = Timestamp.now()
+    val location = Location(Coordinate(0.0, 0.0), "")
     val trip =
         Trip(
             uid = tripId,
@@ -47,7 +48,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             ownerId = uid,
             locations = listOf(Location(Coordinate(46.52, 6.57), "EPFL")),
             activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList()),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isFavorite = true,
             isCurrentTrip = false)
@@ -72,6 +73,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     val now = Timestamp.now()
+    val location = Location(Coordinate(0.0, 0.0), "")
     val trip1 =
         Trip(
             uid = repository.getNewUid(),
@@ -79,7 +81,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             ownerId = uid,
             locations = listOf(Location(Coordinate(0.0, 0.0), "A")),
             activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList()),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isFavorite = false,
             isCurrentTrip = false)
@@ -90,7 +92,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             ownerId = uid,
             locations = listOf(Location(Coordinate(1.0, 1.0), "B")),
             activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList()),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isFavorite = false,
             isCurrentTrip = false)
