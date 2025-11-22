@@ -30,8 +30,14 @@ android {
         val props = Properties()
         val lp = rootProject.file("local.properties")
         if (lp.exists()) props.load(lp.inputStream())
+
+        // My Switzerland
         val apiKey = props.getProperty("MYSWITZERLAND_API_KEY") ?: ""
         buildConfigField("String", "MYSWITZERLAND_API_KEY", "\"$apiKey\"")
+
+        // Open transport data
+        val apiToken = props.getProperty("OPEN_TRANSPORT_DATA_TOKEN") ?: ""
+        buildConfigField("String", "OPEN_TRANSPORT_DATA_TOKEN", "\"$apiToken\"")
     }
 
     buildTypes {
@@ -201,6 +207,11 @@ dependencies {
 
     //---------    Networking with OkHttp   --------
     implementation(libs.okhttp)
+    implementation(libs.interceptor)
+
+    //---------    Networking with Retrofit   -----
+    implementation(libs.retrofit)
+    implementation(libs.xmlconverter)
 
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 

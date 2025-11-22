@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<OJP xmlns:siri="http://www.siri.org.uk/siri" version="2.0" xmlns="http://www.vdv.de/ojp">
+    <OJPResponse>
+        <siri:ServiceDelivery>
+            <OJPTripDelivery>
+                <TripResponseContext/>
+                <TripResult>
+                    <Trip>
+                        <!-- The only value needed by the tests -->
+                        <Duration>PT56M</Duration>
+                    </Trip>
+                </TripResult>
+            </OJPTripDelivery>
+        </siri:ServiceDelivery>
+    </OJPResponse>
+</OJP>
