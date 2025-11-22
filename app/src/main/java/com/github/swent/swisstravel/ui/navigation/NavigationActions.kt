@@ -63,8 +63,13 @@ sealed class Screen(
   object TripSummary : Screen(route = "trip_summary", name = "Trip Summary")
 
   object Loading : Screen(route = "loading", name = "Loading")
+    data class AddPhotos(val tripId: String) :
+    Screen(route = "add_photos/${tripId}", name = "Add Photos"){
+        companion object {
+            const val route = "add_photos/{tripId}"
+        }
+    }
 
-  object AddPhotos : Screen(route = "add_photos", name = "Add Photos")
 
   // TODO change this when there is a new screen
 }

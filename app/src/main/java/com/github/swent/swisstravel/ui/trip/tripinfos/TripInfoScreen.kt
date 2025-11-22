@@ -105,7 +105,7 @@ fun TripInfoScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
-    onAddPhotos: () -> Unit = {},
+    onAddPhotos: (String) -> Unit = {},
     isOnCurrentTripScreen: Boolean = false
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
@@ -235,7 +235,11 @@ fun TripInfoScreen(
               horizontalArrangement = Arrangement.Center
           ) {
               Button(
-                  onClick = onAddPhotos
+                  onClick = {
+                      if (uid != null) {
+                          onAddPhotos(uid)
+                      }
+                  }
               ) {
                   Text(
                       text = "Add photos"

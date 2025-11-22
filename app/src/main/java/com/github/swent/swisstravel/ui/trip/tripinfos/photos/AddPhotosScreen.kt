@@ -37,12 +37,10 @@ fun AddPhotosScreen(
     viewModel: AddPhotosViewModel = viewModel(),
     tripId: String = ""
 ) {
-    /*
     LaunchedEffect(tripId) {
         viewModel.loadPhotos(tripId)
     }
 
-     */
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uri ->
         if (uri.isNotEmpty()) {
             viewModel.addUri(uri)
@@ -86,6 +84,7 @@ fun AddPhotosScreen(
                 Button(
                     onClick = {
                         viewModel.savePhoto(tripId)
+                        onBack()
                     }
                 ) {
                     Text(

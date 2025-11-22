@@ -4,6 +4,7 @@ import EditTripScreen
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -269,11 +270,21 @@ fun SwissTravelApp(
                       uid,
                       onMyTrips = { navigationActions.navigateTo(Screen.MyTrips) },
                       onEditTrip = { navigationActions.navigateToEditTrip(uid) },
-                      onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos)}
+                      onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(it))}
                   )
                 }
-                  composable(route = Screen.AddPhotos.route) {
-                      AddPhotosScreen(onBack = {navigationActions.goBack()})
+                  composable(Screen.AddPhotos.route) { navBackStackEntry ->
+                      val tripId = navBackStackEntry.arguments?.getString("tripId")
+                      tripId?.let {
+                          AddPhotosScreen(
+                              onBack = {navigationActions.goBack()},
+                              tripId = tripId
+                          )
+                      }
+                          ?: run {
+                              Log.e("AddPhotosScreen", "TripId is null")
+                              Toast.makeText(LocalContext.current, "TripId is null", Toast.LENGTH_SHORT).show()
+                          }
                   }
 
                 // Edit Trip screen
