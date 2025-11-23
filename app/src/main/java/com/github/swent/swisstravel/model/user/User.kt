@@ -30,18 +30,16 @@ data class User(
  *
  * @property totalTrips Total number of trips the user has taken
  * @property totalTravelMinutes Total travel hours the user has taken
- * @property totalDistanceKm Total distance the user has traveled
  * @property uniqueLocations Number of unique locations the user has traveled to
  * @property mostUsedTransportMode Most used transport mode by the user
- * @property longestRouteSegmentKm Longest route segment the user has traveled
+ * @property longestRouteSegmentMin Longest route segment the user has traveled
  */
 data class UserStats(
     val totalTrips: Int = 0,
     val totalTravelMinutes: Int = 0,
-    val totalDistanceKm: Double = 0.0,
     val uniqueLocations: Int = 0,
     val mostUsedTransportMode: TransportMode? = null,
-    val longestRouteSegmentKm: Double = 0.0
+    val longestRouteSegmentMin: Int = 0
 )
 
 /**
