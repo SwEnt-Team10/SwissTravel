@@ -112,8 +112,14 @@ private class TripSchedulerState(
   private var activitiesToday = 0
   private val output = mutableListOf<TripElement>()
 
-  /** The main entry point to run the scheduling algorithm. */
-  fun buildSchedule(): List<TripElement> {
+  /**
+   * The main entry point to run the scheduling algorithm.
+   *
+   * @param onProgress Callback to report scheduling progress (0.0 to 1.0).
+   */
+  fun buildSchedule(onProgress: (Float) -> Unit): List<TripElement> {
+    var completedStep = 0
+    val totalSteps = ordered.orderedLocations.size
     // Main scheduling loop
     for (i in ordered.orderedLocations.indices) {
       // Schedule all activities for the current location
@@ -126,7 +132,10 @@ private class TripSchedulerState(
       if (i < ordered.orderedLocations.lastIndex) {
         scheduleTravel(i)
       }
+      completedStep++
+      onProgress(completedStep.toFloat() / totalSteps)
     }
+    onProgress(1f)
     return output.sortedBy { it.startDate.seconds }
   }
 
@@ -250,6 +259,7 @@ private class TripSchedulerState(
  * @param activities Activities to place (all the activities of the trip); `estimatedTime` is in
  *   seconds.
  * @param params Base constraints (may be tweaked by preferences).
+ * @param onProgress Callback to report scheduling progress (0.0 to 1.0).
  * @return A chronologically sorted list of [TripElement]s (activities and route segments) with
  *   Firebase [Timestamp]s for start and end.
  *
@@ -261,11 +271,13 @@ fun scheduleTrip(
     tripProfile: TripProfile,
     ordered: OrderedRoute,
     activities: List<Activity>,
-    params: ScheduleParams = ScheduleParams()
+    params: ScheduleParams = ScheduleParams(),
+    onProgress: (Float) -> Unit
 ): List<TripElement> {
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
   val effectiveParams = applyPreferenceOverrides(tripProfile, params)
 
-  return TripSchedulerState(tripProfile, ordered, activities, effectiveParams).buildSchedule()
+  return TripSchedulerState(tripProfile, ordered, activities, effectiveParams)
+      .buildSchedule(onProgress)
 }

@@ -238,7 +238,8 @@ class ProgressiveRouteOptimizerLocalTest {
             end = end,
             allLocations = allLocations,
             activities = activities,
-            mode = TransportMode.CAR)
+            mode = TransportMode.CAR,
+            onProgress = {})
 
     println("Ordered Route: ${result.orderedLocations.map { it.name }}")
     println("Segment Durations: ${result.segmentDuration}")

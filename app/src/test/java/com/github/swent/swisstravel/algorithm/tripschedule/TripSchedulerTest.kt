@@ -78,7 +78,11 @@ class TripSchedulerTest {
 
     val out =
         scheduleTrip(
-            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+            tripProfile = profile,
+            ordered = ordered,
+            activities = activities,
+            params = params,
+            onProgress = {})
 
     // Expect: A1 (9:00–10:00), travel (10:00–10:30), pause to 10:45, B1 (10:45–11:45)
     assertEquals(3, out.size)
@@ -118,7 +122,11 @@ class TripSchedulerTest {
 
     val out =
         scheduleTrip(
-            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+            tripProfile = profile,
+            ordered = ordered,
+            activities = activities,
+            params = params,
+            onProgress = {})
     assertEquals(1, out.size)
     val a = (out[0] as TripElement.TripActivity).activity
 
@@ -152,7 +160,11 @@ class TripSchedulerTest {
 
     val out =
         scheduleTrip(
-            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+            tripProfile = profile,
+            ordered = ordered,
+            activities = activities,
+            params = params,
+            onProgress = {})
 
     // Expect: A1 (9–10), travel would be 10–19 (doesn't fit), so travel next day 9–18,
     // pause to 18:15, then B1 would not fit → following day 9:00–10:00.
@@ -196,7 +208,11 @@ class TripSchedulerTest {
 
     val out =
         scheduleTrip(
-            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+            tripProfile = profile,
+            ordered = ordered,
+            activities = activities,
+            params = params,
+            onProgress = {})
 
     // Expect: A1 09:00–09:30, A2 09:30–10:15
     assertEquals(2, out.size)
@@ -226,7 +242,11 @@ class TripSchedulerTest {
 
     val out =
         scheduleTrip(
-            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+            tripProfile = profile,
+            ordered = ordered,
+            activities = activities,
+            params = params,
+            onProgress = {})
     assertEquals(1, out.size)
     val a = (out[0] as TripElement.TripActivity).activity
 
@@ -249,7 +269,8 @@ class TripSchedulerTest {
             tripProfile = profile,
             ordered = ordered,
             activities = activities,
-            params = ScheduleParams())
+            params = ScheduleParams(),
+            onProgress = {})
     assertTrue(out.isEmpty())
   }
 
@@ -275,7 +296,8 @@ class TripSchedulerTest {
                 ScheduleParams(
                     dayStart = LocalTime.of(9, 0),
                     dayEnd = LocalTime.of(18, 0),
-                    pauseBetweenEachActivity = 0))
+                    pauseBetweenEachActivity = 0),
+            onProgress = {})
 
     val starts = out.map { tsToLocalDateTime(it.startDate) }
     assertTrue(starts.zipWithNext().all { (a, b) -> !b.isBefore(a) })
@@ -294,7 +316,7 @@ class TripSchedulerTest {
     // 1️⃣ EARLY_BIRD
     val earlyBirdProfile =
         tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.EARLY_BIRD))
-    val earlyOut = scheduleTrip(earlyBirdProfile, ordered, activities)
+    val earlyOut = scheduleTrip(earlyBirdProfile, ordered, activities, onProgress = {})
     val earlyStart =
         tsToLocalTime((earlyOut.first() as TripElement.TripActivity).activity.startDate)
     assertTrue("Early bird should start before 8am", earlyStart <= LocalTime.of(6, 15))
@@ -303,7 +325,7 @@ class TripSchedulerTest {
     // Verify that scheduling still works and could extend up to the late window if needed.
     val nightOwlProfile =
         tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.NIGHT_OWL))
-    val nightOut = scheduleTrip(nightOwlProfile, ordered, activities)
+    val nightOut = scheduleTrip(nightOwlProfile, ordered, activities, onProgress = {})
     assertTrue("Night owl should schedule at least something", nightOut.isNotEmpty())
 
     // Last activity ends no later than the extended window (22:00) and not before it started
@@ -313,7 +335,7 @@ class TripSchedulerTest {
     // 3️⃣ SLOW_PACE adds a long pause before travel
     val slowProfile =
         tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.SLOW_PACE))
-    val slowOut = scheduleTrip(slowProfile, ordered, activities)
+    val slowOut = scheduleTrip(slowProfile, ordered, activities, onProgress = {})
     val a1 = (slowOut[0] as TripElement.TripActivity).activity
     val travel = (slowOut[1] as TripElement.TripSegment).route
     val pauseMinutes =
@@ -323,7 +345,7 @@ class TripSchedulerTest {
     // 4️⃣ QUICK removes pause before travel
     val quickProfile =
         tripProfileFor(LocalDate.of(2025, 11, 5)).copy(preferences = listOf(Preference.QUICK))
-    val quickOut = scheduleTrip(quickProfile, ordered, activities)
+    val quickOut = scheduleTrip(quickProfile, ordered, activities, onProgress = {})
     val qA1 = (quickOut[0] as TripElement.TripActivity).activity
     val qTravel = (quickOut[1] as TripElement.TripSegment).route
     val quickPauseMinutes =
@@ -381,7 +403,11 @@ class TripSchedulerTest {
 
     val out =
         scheduleTrip(
-            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+            tripProfile = profile,
+            ordered = ordered,
+            activities = activities,
+            params = params,
+            onProgress = {})
 
     // Last element should be the second activity, ending after 21:00 (expected 21:15)
     val lastAct = (out.last() as TripElement.TripActivity).activity
@@ -421,7 +447,11 @@ class TripSchedulerTest {
 
     val out =
         scheduleTrip(
-            tripProfile = profile, ordered = ordered, activities = activities, params = params)
+            tripProfile = profile,
+            ordered = ordered,
+            activities = activities,
+            params = params,
+            onProgress = {})
 
     // 3 locations and 2 travels
     assertEquals(5, out.size)

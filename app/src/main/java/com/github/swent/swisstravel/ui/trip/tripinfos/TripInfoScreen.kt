@@ -150,6 +150,7 @@ fun TripInfoScreen(
     }
   }
 
+  // TODO Change this (no need to call the algorithm, everything should be stored)
   // compute schedule once trip data available
   LaunchedEffect(ui.locations, ui.activities, ui.tripProfile) {
     if (ui.locations.isEmpty() || ui.tripProfile == null) return@LaunchedEffect
@@ -175,7 +176,8 @@ fun TripInfoScreen(
             scheduleTrip(
                 tripProfile = requireNotNull(ui.tripProfile),
                 ordered = ordered,
-                activities = ui.activities)
+                activities = ui.activities,
+                onProgress = {}) // TODO Change this later to show progress
         currentStepIndex = 0
       } catch (e: Exception) {
         computeError = "Failed to schedule trip: ${e.message}"
