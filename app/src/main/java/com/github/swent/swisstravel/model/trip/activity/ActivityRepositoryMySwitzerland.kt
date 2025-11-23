@@ -11,6 +11,7 @@ import com.google.firebase.Timestamp
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
@@ -20,16 +21,27 @@ import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** Implementation of a repository for activities. Uses the Swiss Tourism API. */
-class ActivityRepositoryMySwitzerland : ActivityRepository {
+/**
+ * Implementation of a repository for activities. Uses the Swiss Tourism API.
+ *
+ * @param ioDispatcher The CoroutineDispatcher for executing network requests. Defaults to
+ *   Dispatchers.IO.
+ */
+class ActivityRepositoryMySwitzerland(
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+) : ActivityRepository {
 
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
-  private val baseHttpUrl: HttpUrl =
-      urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", "en")
+  private val baseHttpUrl: HttpUrl = urlBuilder("https://opendata.myswitzerland.io/v1/attractions/")
   private val destinationHttpUrl: HttpUrl =
-      urlBuilder("https://opendata.myswitzerland.io/v1/destinations/", "en")
+      urlBuilder("https://opendata.myswitzerland.io/v1/destinations/")
 
-  private fun urlBuilder(url: String, language: String): HttpUrl {
+  /**
+   * Builds a URL with the given parameters.
+   *
+   * @param url The URL to build.
+   */
+  private fun urlBuilder(url: String, language: String = "en"): HttpUrl {
     val newUrl: HttpUrl =
         url.toHttpUrl()
             .newBuilder()
@@ -56,7 +68,7 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
    * @return A list of activities.
    */
   private suspend fun fetchActivitiesFromUrl(url: HttpUrl): List<Activity> {
-    return withContext(Dispatchers.IO) {
+    return withContext(ioDispatcher) {
       val request =
           Request.Builder()
               .url(url)
@@ -94,66 +106,69 @@ class ActivityRepositoryMySwitzerland : ActivityRepository {
     val root = JSONObject(json)
     val dataArray: JSONArray = root.optJSONArray("data") ?: return emptyList()
 
-    val activities = mutableListOf<Activity>()
+    return (0 until dataArray.length())
+        .mapNotNull { i -> dataArray.optJSONObject(i) }
+        .mapNotNull { jsonObject -> parseSingleActivity(jsonObject) }
+  }
 
-    for (i in 0 until dataArray.length()) {
-      val item = dataArray.getJSONObject(i)
-      val name = item.optString("name", "Unknown Activity")
-      val description = item.optString("abstract", "No description")
+  /**
+   * Parses a single JSONObject into an Activity.
+   *
+   * @param item The JSONObject representing one activity.
+   * @return An [Activity] object or null if parsing fails.
+   */
+  private fun parseSingleActivity(item: JSONObject): Activity? {
+    val geo = item.optJSONObject("geo") ?: return null
+    val lat = geo.optDouble("latitude", Double.NaN)
+    val lon = geo.optDouble("longitude", Double.NaN)
 
-      // Fetches latitude and longitude of the activity
-      val geo = item.optJSONObject("geo")
-      if (geo != null) {
-        val lat = geo.optDouble("latitude", Double.NaN)
-        val lon = geo.optDouble("longitude", Double.NaN)
+    if (lat.isNaN() || lon.isNaN()) return null
 
-        if (!lat.isNaN() && !lon.isNaN()) {
-          val imageArray = item.optJSONArray("image")
-          val imageUrls = mutableListOf<String>()
+    val name = item.optString("name", "Unknown Activity")
+    val description = item.optString("abstract", "No description")
 
-          if (imageArray != null) {
-            for (j in 0 until imageArray.length()) {
-              val imgObj = imageArray.optJSONObject(j)
-              val url = imgObj?.optString("url")
-              if (!url.isNullOrBlank()) {
-                imageUrls.add(url)
-              }
-            }
-          }
-          val coordinate = Coordinate(lat, lon)
-          val photo = item.optString("photo")
-          val location = Location(coordinate, name, photo)
+    val coordinate = Coordinate(lat, lon)
+    val photo = item.optString("photo")
+    val location = Location(coordinate, name, photo)
 
-          // Fetches the neededtime object from the activity, in order to estimate the visit time
-          var time = ""
-          val classification = item.optJSONArray("classification")
-          if (classification != null) {
-            for (k in 0 until classification.length()) {
-              val obj = classification.optJSONObject(k)
-              if (obj.optString("name") == "neededtime") {
-                val values = obj.optJSONArray("values")
-                if (values != null) {
-                  time = values.optJSONObject(0).optString("name")
-                }
-              }
-            }
-          }
+    val imageUrls = parseImageUrls(item.optJSONArray("image"))
+    val estimatedTime = parseEstimatedTime(item.optJSONArray("classification"))
 
-          val estimatedTime = mapToTime(time)
+    return Activity(
+        Timestamp.now(), Timestamp.now(), location, description, imageUrls, estimatedTime)
+  }
 
-          activities.add(
-              Activity(
-                  Timestamp.now(),
-                  Timestamp.now(),
-                  location,
-                  description,
-                  imageUrls,
-                  estimatedTime))
-        }
+  /**
+   * Extracts image URLs from a JSON array.
+   *
+   * @param imageArray The JSONArray containing image objects.
+   * @return A list of image URL strings.
+   */
+  private fun parseImageUrls(imageArray: JSONArray?): List<String> {
+    if (imageArray == null) return emptyList()
+    return (0 until imageArray.length())
+        .mapNotNull { j -> imageArray.optJSONObject(j)?.optString("url") }
+        .filter { it.isNotBlank() }
+  }
+
+  /**
+   * Parses the estimated time from the 'classification' JSON array.
+   *
+   * @param classificationArray The JSONArray for classifications.
+   * @return The estimated time in seconds.
+   */
+  private fun parseEstimatedTime(classificationArray: JSONArray?): Int {
+    if (classificationArray == null) return 0
+
+    for (k in 0 until classificationArray.length()) {
+      val obj = classificationArray.optJSONObject(k)
+      if (obj?.optString("name") == "neededtime") {
+        val values = obj.optJSONArray("values")
+        val timeName = values?.optJSONObject(0)?.optString("name") ?: ""
+        return mapToTime(timeName)
       }
     }
-
-    return activities
+    return 0
   }
 
   /**
