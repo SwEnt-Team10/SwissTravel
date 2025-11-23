@@ -76,6 +76,16 @@ class UserRepositoryFirebase(
   }
 
   /**
+   * Function to update the user's stats in Firestore.
+   *
+   * @param uid The UID of the user.
+   */
+  override suspend fun updateUserStats(uid: String, stats: UserStats) {
+    if (uid == "guest") return
+    db.collection("users").document(uid).update("stats", stats).await()
+  }
+
+  /**
    * Helper function to create a User object from a DocumentSnapshot.
    *
    * @param doc The DocumentSnapshot to create the User from.
