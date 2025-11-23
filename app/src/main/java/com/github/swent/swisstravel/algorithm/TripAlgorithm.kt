@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.algorithm
 
+import android.util.Log
 import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.algorithm.tripschedule.ScheduleParams
@@ -42,7 +43,7 @@ data class Progression(
 class TripAlgorithm(
     private val activitySelector: SelectActivities,
     private val routeOptimizer: ProgressiveRouteOptimizer,
-    private val scheduleParams: ScheduleParams,
+    private val scheduleParams: ScheduleParams = ScheduleParams(),
     private val progression: Progression =
         Progression(selectActivities = 0.20f, optimizeRoute = 0.40f, scheduleTrip = 0.40f)
 ) {
@@ -60,36 +61,76 @@ class TripAlgorithm(
       tripProfile: TripProfile,
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
-
-    // ---- STEP 1: Select activities ----
-    onProgress(0.0f)
-    val selectedActivities = activitySelector.addActivities()
-    onProgress(progression.selectActivities)
-
-    // ---- STEP 2: Optimize route based on time costs ----
-    val optimizedRoute =
-        routeOptimizer.optimize(
-            start = tripSettings.arrivalDeparture.arrivalLocation!!,
-            end = tripSettings.arrivalDeparture.departureLocation!!,
-            allLocations = tripSettings.destinations,
-            activities = selectedActivities,
-            mode =
-                if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
-                  TransportMode.TRAIN
-                } else TransportMode.CAR) { progress ->
-              onProgress(progression.selectActivities + progression.optimizeRoute * progress)
+    try {
+      // ---- STEP 1: Select activities ----
+      onProgress(0.0f)
+      val selectedActivities =
+          try {
+            activitySelector.addActivities { progress ->
+              onProgress(progression.selectActivities * progress)
             }
+          } catch (e: Exception) {
+            throw IllegalStateException("Failed to select activities: ${e.message}", e)
+          }
+      onProgress(progression.selectActivities)
+      val fullDestinationList = buildList {
+        tripSettings.arrivalDeparture.arrivalLocation?.let { add(it) }
+        addAll(selectedActivities.map { it.location })
+        tripSettings.arrivalDeparture.departureLocation?.let { add(it) }
+      }
 
-    // ---- STEP 3: Schedule trip ----
-    val schedule =
-        scheduleTrip(tripProfile, optimizedRoute, selectedActivities, scheduleParams) { progress ->
-          onProgress(
-              progression.selectActivities +
-                  progression.optimizeRoute +
-                  progression.scheduleTrip * progress)
-        }
+      // ---- STEP 2: Optimize route ----
+      val startLocation =
+          tripSettings.arrivalDeparture.arrivalLocation
+              ?: throw IllegalArgumentException("Arrival location must not be null")
+      val endLocation =
+          tripSettings.arrivalDeparture.departureLocation
+              ?: throw IllegalArgumentException("Departure location must not be null")
 
-    onProgress(1.0f)
-    return schedule
+      val optimizedRoute =
+          try {
+            routeOptimizer.optimize(
+                start = startLocation,
+                end = endLocation,
+                allLocations = fullDestinationList,
+                activities = selectedActivities,
+                mode =
+                    if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
+                      TransportMode.TRAIN
+                    } else TransportMode.CAR) { progress ->
+                  onProgress(progression.selectActivities + progression.optimizeRoute * progress)
+                }
+          } catch (e: Exception) {
+            throw IllegalStateException("Route optimization failed: ${e.message}", e)
+          }
+
+      if (optimizedRoute.totalDuration <= 0) {
+        throw IllegalStateException("Optimized route duration is zero or negative")
+      }
+
+      // ---- STEP 3: Schedule trip ----
+      val schedule =
+          try {
+            scheduleTrip(tripProfile, optimizedRoute, selectedActivities, scheduleParams) { progress
+              ->
+              onProgress(
+                  progression.selectActivities +
+                      progression.optimizeRoute +
+                      progression.scheduleTrip * progress)
+            }
+          } catch (e: Exception) {
+            throw IllegalStateException("Trip scheduling failed: ${e.message}", e)
+          }
+
+      if (schedule.isEmpty()) {
+        throw IllegalStateException("Scheduled trip is empty")
+      }
+
+      onProgress(1.0f)
+      return schedule
+    } catch (e: Exception) {
+      Log.e("TripAlgorithm", "Trip computation failed", e)
+      throw e
+    }
   }
 }

@@ -1,15 +1,23 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.algorithm.cache.DurationCacheLocal
+import com.github.swent.swisstravel.algorithm.orderlocationsv2.DurationMatrixHybrid
+import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
@@ -67,7 +75,7 @@ sealed interface ValidationEvent {
  * @property userRepository Repository for managing user data.
  * @property activityRepository Repository for managing activity data.
  */
-class TripSettingsViewModel(
+open class TripSettingsViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
     private val userRepository: UserRepository = UserRepositoryFirebase(),
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
@@ -127,28 +135,53 @@ class TripSettingsViewModel(
   }
 
   /**
+   * Runs the trip algorithm to compute a trip schedule based on the provided settings and profile.
+   *
+   * @param tripSettings The settings for the trip.
+   * @param tripProfile The profile of the trip.
+   * @param context The context used for initializing components that require it.
+   * @param onProgress A callback function to report the progress of the computation (from 0.0 to
+   *   1.0).
+   *     @return A list of [TripElement] representing the computed trip.
+   */
+  open suspend fun runTripAlgorithm(
+      tripSettings: TripSettings,
+      tripProfile: TripProfile,
+      context: Context,
+      onProgress: (Float) -> Unit
+  ): List<TripElement> {
+    val activitySelector =
+        SelectActivities(tripSettings = tripSettings, activityRepository = activityRepository)
+
+    val cacheManager = DurationCacheLocal(context)
+    val durationMatrix = DurationMatrixHybrid(context)
+    val penalty = ProgressiveRouteOptimizer.PenaltyConfig()
+    val optimizer =
+        ProgressiveRouteOptimizer(
+            cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
+
+    val tripAlgorithm =
+        TripAlgorithm(activitySelector = activitySelector, routeOptimizer = optimizer)
+
+    return tripAlgorithm.computeTrip(
+        tripSettings = tripSettings, tripProfile = tripProfile, onProgress = onProgress)
+  }
+
+  /**
    * Saves the current trip settings as a new Trip in the repository.
    *
    * Trip should be saved once an internet connection is available.
+   *
+   * @param context The context used for initializing components that require it.
    */
-  fun saveTrip() {
+  fun saveTrip(context: Context) {
     if (_isLoading.value) return
+
     viewModelScope.launch {
       _isLoading.value = true
       _loadingProgress.value = 0f
+
       try {
-        val selectActivities =
-            SelectActivities(
-                tripSettings = tripSettings.value,
-                onProgress = { progress ->
-                  _loadingProgress.value = progress
-                }, // TODO: Change this so that it is like a third or something
-                activityRepository = activityRepository)
-        val selectedActivities = selectActivities.addActivities()
-        setDestinations(selectedActivities.map { it.location })
-
-        Log.d("TripSettingsViewModel", "Selected activities: $selectedActivities")
-
         val settings = _tripSettings.value
         val newUid = tripsRepository.getNewUid()
         val user = userRepository.getCurrentUser()
@@ -170,22 +203,42 @@ class TripSettingsViewModel(
             TripProfile(
                 startDate = startTs,
                 endDate = endTs,
-                preferredLocations = settings.destinations, // Placeholder
+                preferredLocations = settings.destinations,
                 preferences = settings.preferences,
                 adults = settings.travelers.adults,
                 children = settings.travelers.children,
                 arrivalLocation = settings.arrivalDeparture.arrivalLocation,
                 departureLocation = settings.arrivalDeparture.departureLocation)
 
-        // TODO Put whole algorithm here
+        // Call the extracted algorithm function
+        val schedule =
+            runTripAlgorithm(
+                tripSettings = tripSettings.value, tripProfile = tripProfile, context = context) {
+                    progress ->
+                  _loadingProgress.value = progress
+                }
+
+        // Extract activities and route segments
+        val selectedActivities: List<Activity> =
+            schedule.filterIsInstance<TripElement.TripActivity>().map { it.activity }
+
+        val routeSegments: List<RouteSegment> =
+            schedule.filterIsInstance<TripElement.TripSegment>().map { it.route }
+
+        // Merge all locations from route segments and activities
+        // Done using AI
+        val allLocations =
+            (routeSegments.sortedBy { it.startDate }.flatMap { listOf(it.from, it.to) } +
+                    selectedActivities.sortedBy { it.startDate }.map { it.location })
+                .distinctBy { "${it.name}-${it.coordinate.latitude}-${it.coordinate.longitude}" }
 
         val trip =
             Trip(
                 uid = newUid,
                 name = finalName,
                 ownerId = user.uid,
-                locations = settings.destinations,
-                routeSegments = emptyList(),
+                locations = allLocations,
+                routeSegments = routeSegments,
                 activities = selectedActivities,
                 tripProfile = tripProfile,
                 isFavorite = false,

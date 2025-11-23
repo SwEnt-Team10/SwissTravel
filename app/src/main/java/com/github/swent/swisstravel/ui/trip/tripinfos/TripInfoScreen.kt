@@ -56,8 +56,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.algorithm.orderlocations.orderLocations
-import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
@@ -115,9 +113,7 @@ fun TripInfoScreen(
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
   var showMap by remember { mutableStateOf(true) }
-  var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
-  var computeError by remember { mutableStateOf<String?>(null) }
   var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
   var currentGpsPoint by remember { mutableStateOf<Point?>(null) }
   var drawFromCurrentPosition by remember { mutableStateOf(false) }
@@ -139,48 +135,15 @@ fun TripInfoScreen(
     }
   }
 
-  LaunchedEffect(computeError) {
-    computeError?.let {
-      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-      computeError = null
-    }
-  }
-
-  // TODO Change this (no need to call the algorithm, everything should be stored)
   // compute schedule once trip data available
   LaunchedEffect(ui.locations, ui.activities, ui.tripProfile) {
     if (ui.locations.isEmpty() || ui.tripProfile == null) return@LaunchedEffect
-    isComputing = true
-    computeError = null
-    schedule = emptyList()
+    val tripSegments = ui.routeSegments.map { it -> TripElement.TripSegment(it) }
+    val tripActivities = ui.activities.map { it -> TripElement.TripActivity(it) }
+
+    schedule = tripSegments + tripActivities
+    schedule = schedule.sortedBy { it.startDate }
     currentStepIndex = 0
-
-    // all locations involved in the trip (input locations from user + locations from activities),
-    // without duplicates
-    val unique = (ui.activities.map { it.location } + ui.locations).distinctBy { it.coordinate }
-    val start = ui.locations.first()
-    val end = ui.locations.last()
-
-    orderLocations(context, unique, start, end) { ordered ->
-      if (ordered.totalDuration < 0) {
-        computeError = "Failed to compute route order."
-        isComputing = false
-        return@orderLocations
-      }
-      try {
-        schedule =
-            scheduleTrip(
-                tripProfile = requireNotNull(ui.tripProfile),
-                ordered = ordered,
-                activities = ui.activities,
-                onProgress = {}) // TODO Change this later to show progress
-        currentStepIndex = 0
-      } catch (e: Exception) {
-        computeError = "Failed to schedule trip: ${e.message}"
-      } finally {
-        isComputing = false
-      }
-    }
   }
 
   LaunchedEffect(showMap) {
@@ -289,7 +252,7 @@ fun TripInfoScreen(
                                     Modifier.fillMaxWidth()
                                         .height(200.dp)
                                         .testTag(TripInfoScreenTestTags.MAP_CONTAINER)) {
-                                  if (isComputing || schedule.isEmpty()) {
+                                  if (schedule.isEmpty()) {
                                     Box(
                                         Modifier.fillMaxSize(),
                                         contentAlignment = Alignment.Center) {
@@ -338,7 +301,7 @@ fun TripInfoScreen(
                             OutlinedButton(
                                 modifier = Modifier.testTag(TripInfoScreenTestTags.PREVIOUS_STEP),
                                 onClick = { if (currentStepIndex > 0) currentStepIndex-- },
-                                enabled = !isComputing && currentStepIndex > 0) {
+                                enabled = currentStepIndex > 0) {
                                   Text(stringResource(R.string.previous_step))
                                 }
 
@@ -350,8 +313,7 @@ fun TripInfoScreen(
                                   if (currentStepIndex < schedule.lastIndex) currentStepIndex++
                                 },
                                 enabled =
-                                    !isComputing &&
-                                        schedule.isNotEmpty() &&
+                                    schedule.isNotEmpty() &&
                                         currentStepIndex < schedule.lastIndex) {
                                   Text(stringResource(R.string.next_step))
                                 }

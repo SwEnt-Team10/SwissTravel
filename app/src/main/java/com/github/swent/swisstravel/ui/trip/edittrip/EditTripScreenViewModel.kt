@@ -139,13 +139,12 @@ class EditTripScreenViewModel(
 
           val selectActivities =
               SelectActivities(
-                  tripSettings = tempTripSettings,
-                  onProgress = { progress ->
-                    _uiState.update { it.copy(savingProgress = progress) }
-                  },
-                  activityRepository = activityRepository)
+                  tripSettings = tempTripSettings, activityRepository = activityRepository)
 
-          selectedActivities = selectActivities.addActivities()
+          selectedActivities =
+              selectActivities.addActivities { progress ->
+                _uiState.update { it.copy(savingProgress = progress) }
+              }
         }
 
         val updatedTripProfile =

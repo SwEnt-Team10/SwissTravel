@@ -337,7 +337,7 @@ fun TripSummaryScreen(
                     Button(
                         enabled = state.name.isNotBlank(),
                         onClick = {
-                          viewModel.saveTrip()
+                          viewModel.saveTrip(context)
                           Toast.makeText(context, createTripLabel, Toast.LENGTH_SHORT).show()
                           onNext()
                         },
