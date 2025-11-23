@@ -3,7 +3,7 @@ package com.github.swent.swisstravel.model.map
 import com.github.swent.swisstravel.model.trip.Location
 
 /** Repository interface for searching locations. */
-interface LocationRepository {
+fun interface LocationRepository {
   /**
    * Searches for locations matching the given query.
    *
