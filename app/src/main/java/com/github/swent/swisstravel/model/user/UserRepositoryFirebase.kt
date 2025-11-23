@@ -50,7 +50,7 @@ class UserRepositoryFirebase(
         } else {
           createAndStoreNewUser(firebaseUser, uid)
         }
-      } catch (cacheException: Exception) {
+      } catch (e: Exception) {
         createAndStoreNewUser(firebaseUser, uid)
       }
     }
