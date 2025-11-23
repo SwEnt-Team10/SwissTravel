@@ -23,4 +23,28 @@ interface UserRepository {
    * @param uid The UID of the user.
    */
   suspend fun updateUserStats(uid: String, stats: UserStats)
+
+  /**
+   * Sends a friend request to the specified user.
+   *
+   * @param fromUid The UID of the user sending the request.
+   * @param toUid The UID of the user receiving the request.
+   */
+  suspend fun sendFriendRequest(fromUid: String, toUid: String)
+
+  /**
+   * Accepts a friend request from the specified user.
+   *
+   * @param currentUid The UID of the user accepting the request.
+   * @param fromUid The UID of the user sending the request.
+   */
+  suspend fun acceptFriendRequest(currentUid: String, fromUid: String)
+
+  /**
+   * Removes a friend from the user's friend list.
+   *
+   * @param uid The UID of the user.
+   * @param friendUid The UID of the friend to remove.
+   */
+  suspend fun removeFriend(uid: String, friendUid: String)
 }

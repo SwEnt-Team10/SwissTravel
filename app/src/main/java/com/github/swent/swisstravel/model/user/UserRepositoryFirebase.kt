@@ -85,6 +85,118 @@ class UserRepositoryFirebase(
     db.collection("users").document(uid).update("stats", stats).await()
   }
 
+  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
+    if (fromUid == "guest" || toUid == "guest" || fromUid == toUid) return
+
+    val usersRef = db.collection("users")
+    val fromUserRef = usersRef.document(fromUid)
+    val toUserRef = usersRef.document(toUid)
+
+    val fromUserDoc = fromUserRef.get().await()
+    val toUserDoc = toUserRef.get().await()
+
+    if (!fromUserDoc.exists() || !toUserDoc.exists()) {
+      return
+    }
+
+    val fromFriends = parseFriends(fromUserDoc).toMutableList()
+    val toFriends = parseFriends(toUserDoc).toMutableList()
+
+    val alreadyFrom = fromFriends.any { it.uid == toUid }
+    val alreadyTo = toFriends.any { it.uid == fromUid }
+
+    // Only add the friend request if it doesn't already exist
+    if (!alreadyFrom) {
+      fromFriends.add(Friend(uid = toUid, status = FriendStatus.PENDING))
+    }
+
+    if (!alreadyTo) {
+      toFriends.add(Friend(uid = fromUid, status = FriendStatus.PENDING))
+    }
+
+    // Update friends list for both users
+    fromUserRef.update("friends", fromFriends).await()
+    toUserRef.update("friends", toFriends).await()
+  }
+
+  /**
+   * Accepts a friend request from the specified user.
+   *
+   * @param currentUid The UID of the user accepting the request.
+   * @param fromUid The UID of the user sending the request.
+   */
+  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
+    if (currentUid == "guest" || fromUid == "guest" || fromUid == currentUid) return
+
+    val usersRef = db.collection("users")
+    val currentUserRef = usersRef.document(currentUid)
+    val fromUserRef = usersRef.document(fromUid)
+
+    // Load both users
+    val currentUserDoc = currentUserRef.get().await()
+    val fromUserDoc = fromUserRef.get().await()
+
+    if (!currentUserDoc.exists() || !fromUserDoc.exists()) {
+      return
+    }
+
+    val currentFriends = parseFriends(currentUserDoc).toMutableList()
+    val fromFriends = parseFriends(fromUserDoc).toMutableList()
+
+    // On current user: find friend entry for fromUid and set ACCEPTED
+    val idxCurrent = currentFriends.indexOfFirst { it.uid == fromUid }
+    if (idxCurrent >= 0) {
+      currentFriends[idxCurrent] = currentFriends[idxCurrent].copy(status = FriendStatus.ACCEPTED)
+    } else {
+      // If no entry yet, create accepted one
+      currentFriends.add(Friend(uid = fromUid, status = FriendStatus.ACCEPTED))
+    }
+
+    // Same for the other user
+    val idxFrom = fromFriends.indexOfFirst { it.uid == currentUid }
+    if (idxFrom >= 0) {
+      fromFriends[idxFrom] = fromFriends[idxFrom].copy(status = FriendStatus.ACCEPTED)
+    } else {
+      fromFriends.add(Friend(uid = currentUid, status = FriendStatus.ACCEPTED))
+    }
+
+    // Finally, update the lists
+    currentUserRef.update("friends", currentFriends).await()
+    fromUserRef.update("friends", fromFriends).await()
+  }
+
+  /**
+   * Removes a friend from the user's friend list.
+   *
+   * @param uid The UID of the user.
+   * @param friendUid The UID of the friend to remove.
+   */
+  override suspend fun removeFriend(uid: String, friendUid: String) {
+    if (uid == "guest" || friendUid == "guest" || uid == friendUid) return
+
+    val usersRef = db.collection("users")
+    val userRef = usersRef.document(uid)
+    val friendRef = usersRef.document(friendUid)
+
+    val userDoc = userRef.get().await()
+    val friendDoc = friendRef.get().await()
+
+    if (!userDoc.exists() || !friendDoc.exists()) {
+      return
+    }
+
+    // Remove each other from lists
+    val userFriends = parseFriends(userDoc).toMutableList()
+    val friendFriends = parseFriends(friendDoc).toMutableList()
+
+    userFriends.removeAll { it.uid == friendUid }
+    friendFriends.removeAll { it.uid == uid }
+
+    // Updates in the db
+    userRef.update("friends", userFriends).await()
+    friendRef.update("friends", friendFriends).await()
+  }
+
   /**
    * Helper function to create a User object from a DocumentSnapshot.
    *
