@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.user
 
+import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
@@ -167,6 +168,153 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     repositoryUser.updateUserPreferences("guest", listOf(Preference.SCENIC_VIEWS))
     // Assert — should not throw
     assertTrue(true)
+  }
+
+  @Test
+  fun updateUserStats_updatesFirestoreDocument() = runBlocking {
+    // Arrange: create and sign in a user
+    val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("Stats User", "stats@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    val authResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
+    val firebaseUser = authResult.user!!
+    val uid = firebaseUser.uid
+
+    // Ensure user doc exists
+    repositoryUser.getCurrentUser()
+
+    val stats =
+        UserStats(
+            totalTrips = 3,
+            totalTravelMinutes = 180,
+            uniqueLocations = 5,
+            mostUsedTransportMode = TransportMode.TRAIN,
+            longestRouteSegmentMin = 90)
+
+    // Act
+    repositoryUser.updateUserStats(uid, stats)
+
+    // Assert
+    val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
+    val statsMap = doc.get("stats") as Map<*, *>
+
+    assertEquals(3, (statsMap["totalTrips"] as Number).toInt())
+    assertEquals(180, (statsMap["totalTravelMinutes"] as Number).toInt())
+    assertEquals(5, (statsMap["uniqueLocations"] as Number).toInt())
+    assertEquals("TRAIN", statsMap["mostUsedTransportMode"])
+    assertEquals(90, (statsMap["longestRouteSegmentMin"] as Number).toInt())
+  }
+
+  @Test
+  fun sendFriendRequest_addsPendingFriendToCurrentUserOnly() = runBlocking {
+    // Arrange: create A (current user)
+    val tokenA = FakeJwtGenerator.createFakeGoogleIdToken("User A", "userA@example.com")
+    FirebaseEmulator.createGoogleUser(tokenA)
+    val credentialA = GoogleAuthProvider.getCredential(tokenA, null)
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
+    val userA = repositoryUser.getCurrentUser()
+    val uidA = userA.uid
+
+    // Create B (we just need a valid uid as target)
+    val tokenB = FakeJwtGenerator.createFakeGoogleIdToken("User B", "userB@example.com")
+    FirebaseEmulator.createGoogleUser(tokenB)
+    val credentialB = GoogleAuthProvider.getCredential(tokenB, null)
+    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
+    val userB = repositoryUser.getCurrentUser()
+    val uidB = userB.uid
+
+    // Back to A to send request (respects rules: A updates /users/uidA)
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
+
+    // Act
+    repositoryUser.sendFriendRequest(fromUid = uidA, toUid = uidB)
+
+    // Assert: A has a pending friend entry for B
+    val docA = FirebaseEmulator.firestore.collection("users").document(uidA).get().await()
+    val friendsA = docA.get("friends") as List<*>
+    assertEquals(1, friendsA.size)
+    val friendA = friendsA.first() as Map<*, *>
+    assertEquals(uidB, friendA["uid"])
+    assertEquals("PENDING", friendA["status"])
+  }
+
+  @Test
+  fun acceptFriendRequest_updatesStatusToAcceptedOnCurrentUserDoc() = runBlocking {
+    // Arrange: create B as current user
+    val tokenB = FakeJwtGenerator.createFakeGoogleIdToken("User B2", "userB2@example.com")
+    FirebaseEmulator.createGoogleUser(tokenB)
+    val credentialB = GoogleAuthProvider.getCredential(tokenB, null)
+    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
+    val userB = repositoryUser.getCurrentUser()
+    val uidB = userB.uid
+
+    // Create A (needed for uid)
+    val tokenA = FakeJwtGenerator.createFakeGoogleIdToken("User A2", "userA2@example.com")
+    FirebaseEmulator.createGoogleUser(tokenA)
+    val credentialA = GoogleAuthProvider.getCredential(tokenA, null)
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
+    val userA = repositoryUser.getCurrentUser()
+    val uidA = userA.uid
+
+    // Back to B, and simulate a pending entry for A
+    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
+    val pendingList = listOf(mapOf("uid" to uidA, "status" to "PENDING"))
+    FirebaseEmulator.firestore
+        .collection("users")
+        .document(uidB)
+        .update("friends", pendingList)
+        .await()
+
+    // Act: B accepts A
+    repositoryUser.acceptFriendRequest(currentUid = uidB, fromUid = uidA)
+
+    // Assert
+    val docB = FirebaseEmulator.firestore.collection("users").document(uidB).get().await()
+    val friendsB = docB.get("friends") as List<*>
+    val friendB = friendsB.first() as Map<*, *>
+    assertEquals(uidA, friendB["uid"])
+    assertEquals("ACCEPTED", friendB["status"])
+  }
+
+  @Test
+  fun removeFriend_removesFriendOnlyFromCurrentUserDoc() = runBlocking {
+    // Arrange: create A
+    val tokenA = FakeJwtGenerator.createFakeGoogleIdToken("User A3", "userA3@example.com")
+    FirebaseEmulator.createGoogleUser(tokenA)
+    val credentialA = GoogleAuthProvider.getCredential(tokenA, null)
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
+    val userA = repositoryUser.getCurrentUser()
+    val uidA = userA.uid
+
+    // Create B
+    val tokenB = FakeJwtGenerator.createFakeGoogleIdToken("User B3", "userB3@example.com")
+    FirebaseEmulator.createGoogleUser(tokenB)
+    val credentialB = GoogleAuthProvider.getCredential(tokenB, null)
+    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
+    val userB = repositoryUser.getCurrentUser()
+    val uidB = userB.uid
+
+    // Back to A: simulate ACCEPTED friendship with B
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
+    val acceptedList = listOf(mapOf("uid" to uidB, "status" to "ACCEPTED"))
+    FirebaseEmulator.firestore
+        .collection("users")
+        .document(uidA)
+        .update("friends", acceptedList)
+        .await()
+
+    // Act: A removes B
+    repositoryUser.removeFriend(uid = uidA, friendUid = uidB)
+
+    // Assert: A has no friends
+    val docA = FirebaseEmulator.firestore.collection("users").document(uidA).get().await()
+    val friendsA = docA.get("friends") as? List<*> ?: emptyList<Any>()
+    assertTrue(friendsA.isEmpty())
+
+    // B is unaffected
+    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
+    val docB = FirebaseEmulator.firestore.collection("users").document(uidB).get().await()
+    val friendsB = docB.get("friends") as? List<*> ?: emptyList<Any>()
   }
 
   @After

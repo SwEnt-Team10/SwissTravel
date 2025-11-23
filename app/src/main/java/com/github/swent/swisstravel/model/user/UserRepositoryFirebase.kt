@@ -85,38 +85,28 @@ class UserRepositoryFirebase(
     db.collection("users").document(uid).update("stats", stats).await()
   }
 
+  /**
+   * Sends a friend request to the specified user.
+   *
+   * @param fromUid The UID of the user sending the request.
+   * @param toUid The UID of the user receiving the request.
+   */
   override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-    if (fromUid == "guest" || toUid == "guest" || fromUid == toUid) return
+    val currentAuthUid = auth.currentUser?.uid
+    if (fromUid == "guest" || currentAuthUid == null || currentAuthUid != fromUid) return
 
-    val usersRef = db.collection("users")
-    val fromUserRef = usersRef.document(fromUid)
-    val toUserRef = usersRef.document(toUid)
+    val docRef = db.collection("users").document(fromUid)
+    val doc = docRef.get().await()
+    check(doc.exists()) { "User document does not exist for uid: $fromUid" }
 
-    val fromUserDoc = fromUserRef.get().await()
-    val toUserDoc = toUserRef.get().await()
+    val friends = parseFriends(doc).toMutableList()
 
-    if (!fromUserDoc.exists() || !toUserDoc.exists()) {
-      return
+    // Don't duplicate existing friend entry
+    val already = friends.any { it.uid == toUid }
+    if (!already) {
+      friends.add(Friend(uid = toUid, status = FriendStatus.PENDING))
+      docRef.update("friends", friends).await()
     }
-
-    val fromFriends = parseFriends(fromUserDoc).toMutableList()
-    val toFriends = parseFriends(toUserDoc).toMutableList()
-
-    val alreadyFrom = fromFriends.any { it.uid == toUid }
-    val alreadyTo = toFriends.any { it.uid == fromUid }
-
-    // Only add the friend request if it doesn't already exist
-    if (!alreadyFrom) {
-      fromFriends.add(Friend(uid = toUid, status = FriendStatus.PENDING))
-    }
-
-    if (!alreadyTo) {
-      toFriends.add(Friend(uid = fromUid, status = FriendStatus.PENDING))
-    }
-
-    // Update friends list for both users
-    fromUserRef.update("friends", fromFriends).await()
-    toUserRef.update("friends", toFriends).await()
   }
 
   /**
@@ -126,43 +116,24 @@ class UserRepositoryFirebase(
    * @param fromUid The UID of the user sending the request.
    */
   override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-    if (currentUid == "guest" || fromUid == "guest" || fromUid == currentUid) return
+    val currentAuthUid = auth.currentUser?.uid
+    if (currentUid == "guest" || currentAuthUid == null || currentAuthUid != currentUid) return
 
-    val usersRef = db.collection("users")
-    val currentUserRef = usersRef.document(currentUid)
-    val fromUserRef = usersRef.document(fromUid)
+    val docRef = db.collection("users").document(currentUid)
+    val doc = docRef.get().await()
+    check(doc.exists()) { "User document does not exist for uid: $currentUid" }
 
-    // Load both users
-    val currentUserDoc = currentUserRef.get().await()
-    val fromUserDoc = fromUserRef.get().await()
+    val friends = parseFriends(doc).toMutableList()
 
-    if (!currentUserDoc.exists() || !fromUserDoc.exists()) {
-      return
-    }
-
-    val currentFriends = parseFriends(currentUserDoc).toMutableList()
-    val fromFriends = parseFriends(fromUserDoc).toMutableList()
-
-    // On current user: find friend entry for fromUid and set ACCEPTED
-    val idxCurrent = currentFriends.indexOfFirst { it.uid == fromUid }
-    if (idxCurrent >= 0) {
-      currentFriends[idxCurrent] = currentFriends[idxCurrent].copy(status = FriendStatus.ACCEPTED)
+    val idx = friends.indexOfFirst { it.uid == fromUid }
+    if (idx >= 0) {
+      friends[idx] = friends[idx].copy(status = FriendStatus.ACCEPTED)
     } else {
-      // If no entry yet, create accepted one
-      currentFriends.add(Friend(uid = fromUid, status = FriendStatus.ACCEPTED))
+      // If no entry yet, just add it as ACCEPTED
+      friends.add(Friend(uid = fromUid, status = FriendStatus.ACCEPTED))
     }
 
-    // Same for the other user
-    val idxFrom = fromFriends.indexOfFirst { it.uid == currentUid }
-    if (idxFrom >= 0) {
-      fromFriends[idxFrom] = fromFriends[idxFrom].copy(status = FriendStatus.ACCEPTED)
-    } else {
-      fromFriends.add(Friend(uid = currentUid, status = FriendStatus.ACCEPTED))
-    }
-
-    // Finally, update the lists
-    currentUserRef.update("friends", currentFriends).await()
-    fromUserRef.update("friends", fromFriends).await()
+    docRef.update("friends", friends).await()
   }
 
   /**
@@ -172,29 +143,17 @@ class UserRepositoryFirebase(
    * @param friendUid The UID of the friend to remove.
    */
   override suspend fun removeFriend(uid: String, friendUid: String) {
-    if (uid == "guest" || friendUid == "guest" || uid == friendUid) return
+    val currentAuthUid = auth.currentUser?.uid
+    if (uid == "guest" || currentAuthUid == null || currentAuthUid != uid) return
 
-    val usersRef = db.collection("users")
-    val userRef = usersRef.document(uid)
-    val friendRef = usersRef.document(friendUid)
+    val docRef = db.collection("users").document(uid)
+    val doc = docRef.get().await()
+    if (!doc.exists()) return
 
-    val userDoc = userRef.get().await()
-    val friendDoc = friendRef.get().await()
+    val friends = parseFriends(doc).toMutableList()
+    friends.removeAll { it.uid == friendUid }
 
-    if (!userDoc.exists() || !friendDoc.exists()) {
-      return
-    }
-
-    // Remove each other from lists
-    val userFriends = parseFriends(userDoc).toMutableList()
-    val friendFriends = parseFriends(friendDoc).toMutableList()
-
-    userFriends.removeAll { it.uid == friendUid }
-    friendFriends.removeAll { it.uid == uid }
-
-    // Updates in the db
-    userRef.update("friends", userFriends).await()
-    friendRef.update("friends", friendFriends).await()
+    docRef.update("friends", friends).await()
   }
 
   /**

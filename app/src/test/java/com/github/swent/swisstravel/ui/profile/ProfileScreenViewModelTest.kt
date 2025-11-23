@@ -30,9 +30,11 @@ class ProfileScreenViewModelTest {
       User(
           uid = "123",
           name = "Lionel Hegetschweiler",
+          biography = "Biography",
           email = "lionel@example.com",
           profilePicUrl = "http://example.com/pic.jpg",
-          preferences = listOf(Preference.HIKE, Preference.FOODIE))
+          preferences = listOf(Preference.HIKE, Preference.FOODIE),
+          friends = emptyList())
 
   @Before
   fun setup() {
@@ -149,9 +151,11 @@ class ProfileScreenViewModelTest {
         User(
             uid = "guest",
             name = "Guest",
+            biography = "Guest",
             email = "Not signed in",
             profilePicUrl = "",
-            preferences = emptyList())
+            preferences = emptyList(),
+            friends = emptyList())
     coEvery { repository.getCurrentUser() } returns guestUser
 
     viewModel = ProfileScreenViewModel(repository)
