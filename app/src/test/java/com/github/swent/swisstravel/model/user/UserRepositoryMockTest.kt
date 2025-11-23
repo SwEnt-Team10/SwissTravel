@@ -19,13 +19,13 @@ import org.junit.Test
 class UserRepositoryMockTest {
 
   @Test
-  fun getCurrentUser_usesCacheAndFallsBackToDefaultWhenCacheDocMissing() = runTest {
+  fun getCurrentUser_usesFirebaseUserWhenNoDocExists() = runTest {
     // Mocks
     val auth = mockk<FirebaseAuth>()
     val user = mockk<FirebaseUser>()
     val db = mockk<FirebaseFirestore>(relaxed = true)
     val docRef = mockk<DocumentReference>()
-    val cacheDoc = mockk<DocumentSnapshot>()
+    val snapshot = mockk<DocumentSnapshot>()
 
     // Allow repo init to set Firestore settings
     every { db.firestoreSettings = any<FirebaseFirestoreSettings>() } just Runs
@@ -34,21 +34,23 @@ class UserRepositoryMockTest {
     every { user.uid } returns "uid123"
     every { user.displayName } returns "Cacheless User"
     every { user.email } returns "cacheless@example.com"
-    // Make sure the user is not anonymous
     every { user.isAnonymous } returns false
+    every { user.photoUrl } returns null
+
     every { db.collection("users").document("uid123") } returns docRef
 
-    // Simulate server failure, then cache hit with a doc that does NOT exist
-    every { docRef.get(Source.SERVER) } returns Tasks.forException(Exception("server down"))
-    every { docRef.get(Source.CACHE) } returns Tasks.forResult(cacheDoc)
-    every { cacheDoc.exists() } returns false
+    // Simulate DEFAULT source returning a non-existing doc
+    every { docRef.get(Source.DEFAULT) } returns Tasks.forResult(snapshot)
+    every { snapshot.exists() } returns false
+
+    every { docRef.set(any<User>()) } returns Tasks.forResult(null)
 
     val repo = UserRepositoryFirebase(auth, db)
 
-    // TripActivity
+    // Act
     val result: User = repo.getCurrentUser()
 
-    // Assert -> falls back to default built from FirebaseUser (covers the else branch)
+    // Assert: repo fell back to createAndStoreNewUser(firebaseUser, uid)
     Assert.assertEquals("uid123", result.uid)
     Assert.assertEquals("Cacheless User", result.name)
     Assert.assertEquals("cacheless@example.com", result.email)

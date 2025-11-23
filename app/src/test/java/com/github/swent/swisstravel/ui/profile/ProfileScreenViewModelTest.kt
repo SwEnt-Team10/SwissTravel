@@ -1,8 +1,9 @@
 package com.github.swent.swisstravel.ui.profile
 
+import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserRepository
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -23,7 +24,8 @@ import org.junit.Test
 class ProfileScreenViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var repository: UserRepositoryFirebase
+  private lateinit var repository: UserRepository
+  private lateinit var tripsRepository: TripsRepository
   private lateinit var viewModel: ProfileScreenViewModel
 
   private val fakeUser =
@@ -40,6 +42,9 @@ class ProfileScreenViewModelTest {
   fun setup() {
     Dispatchers.setMain(testDispatcher)
     repository = mockk()
+    tripsRepository = mockk(relaxed = true)
+
+    coEvery { repository.updateUserStats(any(), any()) } just Runs
   }
 
   @After
@@ -51,7 +56,7 @@ class ProfileScreenViewModelTest {
   fun initLoadsUserDataSuccessfully() = runTest {
     coEvery { repository.getCurrentUser() } returns fakeUser
 
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -66,7 +71,7 @@ class ProfileScreenViewModelTest {
   fun initSetsErrorMessageOnFailure() = runTest {
     coEvery { repository.getCurrentUser() } throws Exception("Network error")
 
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -76,7 +81,7 @@ class ProfileScreenViewModelTest {
   @Test
   fun autoFillUpdatesUiStateCorrectly() = runTest {
     coEvery { repository.getCurrentUser() } returns fakeUser
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
 
     viewModel.autoFill(fakeUser)
 
@@ -88,7 +93,7 @@ class ProfileScreenViewModelTest {
   @Test
   fun clearErrorMsgSetsErrorMsgToNull() = runTest {
     coEvery { repository.getCurrentUser() } throws Exception("Oops")
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     Assert.assertNotNull(viewModel.uiState.value.errorMsg)
@@ -102,7 +107,7 @@ class ProfileScreenViewModelTest {
     coEvery { repository.getCurrentUser() } returns fakeUser
     coEvery { repository.updateUserPreferences(fakeUser.uid, updatedPrefs) } just Runs
 
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
     viewModel.savePreferences(updatedPrefs)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -118,7 +123,7 @@ class ProfileScreenViewModelTest {
     coEvery { repository.getCurrentUser() } returns fakeUser
     coEvery { repository.updateUserPreferences(any(), any()) } throws Exception("Firestore error")
 
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
     viewModel.savePreferences(updatedPrefs)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -132,7 +137,7 @@ class ProfileScreenViewModelTest {
     // Arrange — repository throws so currentUser remains null
     coEvery { repository.getCurrentUser() } throws Exception("No user")
 
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity — try saving preferences with no user
@@ -158,7 +163,7 @@ class ProfileScreenViewModelTest {
             friends = emptyList())
     coEvery { repository.getCurrentUser() } returns guestUser
 
-    viewModel = ProfileScreenViewModel(repository)
+    viewModel = ProfileScreenViewModel(repository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity
