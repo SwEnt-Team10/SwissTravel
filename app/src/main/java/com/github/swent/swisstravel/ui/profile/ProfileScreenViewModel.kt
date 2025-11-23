@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceRules
@@ -27,7 +28,7 @@ data class ProfileScreenUIState(
 
 class ProfileScreenViewModel(
     private val userRepository: UserRepository,
-    private val tripsRepository: TripsRepository,
+    private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileScreenUIState())
