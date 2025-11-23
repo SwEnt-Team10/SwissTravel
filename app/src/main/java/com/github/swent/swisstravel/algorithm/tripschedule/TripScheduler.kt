@@ -137,6 +137,7 @@ private fun applyPreferenceOverrides(profile: TripProfile, base: ScheduleParams)
  * @param activities Activities to place (all the activities of the trip); `estimatedTime` is in
  *   seconds.
  * @param params Base constraints (may be tweaked by preferences).
+ * @param onProgress Callback to report scheduling progress (0.0 to 1.0).
  * @return A chronologically sorted list of [TripElement]s (activities and route segments) with
  *   Firebase [Timestamp]s for start and end.
  *
@@ -148,7 +149,8 @@ fun scheduleTrip(
     tripProfile: TripProfile,
     ordered: OrderedRoute,
     activities: List<Activity>,
-    params: ScheduleParams = ScheduleParams()
+    params: ScheduleParams = ScheduleParams(),
+    onProgress: (Float) -> Unit
 ): List<TripElement> {
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
@@ -225,6 +227,8 @@ fun scheduleTrip(
     cursor = end
   }
 
+  var completedStep = 0
+  val totalSteps = locs.size
   // Main scheduling loop
   for (i in locs.indices) {
     // Out of all activities of the trip, take the ones at this location (location i)
@@ -232,8 +236,13 @@ fun scheduleTrip(
     activities.asSequence().filter { it.location == locs[i] }.forEach { scheduleActivity(it) }
 
     // If it is before the last location of the trip, schedule a travel to the next location
-    if (i < locs.lastIndex) scheduleTravel(i)
+    if (i < locs.lastIndex) {
+      scheduleTravel(i)
+    }
+    completedStep++
+    onProgress(completedStep.toFloat() / totalSteps)
   }
+  onProgress(1f)
 
   return out.sortedBy { it.startDate.seconds }
 }
