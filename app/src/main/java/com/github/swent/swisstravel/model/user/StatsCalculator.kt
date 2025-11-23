@@ -5,8 +5,15 @@ import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.Trip
 import kotlin.math.roundToInt
 
+/** Calculates statistics for a list of trips. */
 object StatsCalculator {
 
+  /**
+   * Function to calculate statistics for a list of trips.
+   *
+   * @param trips The list of trips to calculate statistics for.
+   * @return A UserStats object containing the calculated statistics.
+   */
   fun computeStats(trips: List<Trip>): UserStats {
 
     if (trips.isEmpty()) {
