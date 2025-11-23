@@ -57,33 +57,146 @@ private fun LocalDateTime.roundUpToQuarter(): LocalDateTime {
  * @return the updated schedule parameters
  */
 private fun applyPreferenceOverrides(profile: TripProfile, base: ScheduleParams): ScheduleParams {
-  var eff = base
-
   val prefs = profile.preferences.toSet()
+  val hasNightOwl = Preference.NIGHTLIFE in prefs || Preference.NIGHT_OWL in prefs
+  val hasEarlyBird = Preference.EARLY_BIRD in prefs
 
-  if ((prefs.contains(Preference.NIGHTLIFE) || prefs.contains(Preference.NIGHT_OWL)) &&
-      prefs.contains(Preference.EARLY_BIRD)) {
-    eff =
-        eff.copy(
-            dayStart = LocalTime.of(6, 0), travelEnd = LocalTime.of(22, 0), maxActivitiesPerDay = 6)
-  } else if (prefs.contains(Preference.NIGHTLIFE) || prefs.contains(Preference.NIGHT_OWL)) {
-    eff =
-        eff.copy(
-            dayStart = LocalTime.of(10, 0),
-            dayEnd = LocalTime.of(22, 0),
-            travelEnd = LocalTime.of(23, 59))
-  } else if (prefs.contains(Preference.EARLY_BIRD)) {
-    eff =
-        eff.copy(
-            dayStart = LocalTime.of(6, 0), travelEnd = LocalTime.of(20, 0), maxActivitiesPerDay = 6)
-  }
+  // Apply time-related preferences
+  var eff =
+      when {
+        hasNightOwl && hasEarlyBird ->
+            base.copy(
+                dayStart = LocalTime.of(6, 0),
+                travelEnd = LocalTime.of(22, 0),
+                maxActivitiesPerDay = 6)
+        hasNightOwl ->
+            base.copy(
+                dayStart = LocalTime.of(10, 0),
+                dayEnd = LocalTime.of(22, 0),
+                travelEnd = LocalTime.of(23, 59))
+        hasEarlyBird ->
+            base.copy(
+                dayStart = LocalTime.of(6, 0),
+                travelEnd = LocalTime.of(20, 0),
+                maxActivitiesPerDay = 6)
+        else -> base
+      }
 
-  if (prefs.contains(Preference.SLOW_PACE)) {
-    eff = eff.copy(pauseBetweenEachActivity = 60 * 60)
-  } else if (prefs.contains(Preference.QUICK)) {
-    eff = eff.copy(pauseBetweenEachActivity = 0)
-  }
+  // Apply pace-related preferences
+  eff =
+      when {
+        Preference.SLOW_PACE in prefs -> eff.copy(pauseBetweenEachActivity = 60 * 60)
+        Preference.QUICK in prefs -> eff.copy(pauseBetweenEachActivity = 0)
+        else -> eff
+      }
+
   return eff
+}
+
+/**
+ * Encapsulates the state and logic for the trip scheduling algorithm. This avoids complex state
+ * management with captured variables in nested functions.
+ */
+private class TripSchedulerState(
+    tripProfile: TripProfile,
+    private val ordered: OrderedRoute,
+    private val activities: List<Activity>,
+    private val params: ScheduleParams
+) {
+  private val zone = ZoneId.systemDefault()
+  private val tripEndDay = tripProfile.endDate.toInstant().atZone(zone).toLocalDate()
+
+  private var currentDay: LocalDate = tripProfile.startDate.toInstant().atZone(zone).toLocalDate()
+  private var cursor: LocalDateTime =
+      LocalDateTime.of(currentDay, params.dayStart).roundUpToQuarter()
+  private var activitiesToday = 0
+  private val output = mutableListOf<TripElement>()
+
+  /** The main entry point to run the scheduling algorithm. */
+  fun buildSchedule(): List<TripElement> {
+    // Main scheduling loop
+    for (i in ordered.orderedLocations.indices) {
+      // Schedule all activities for the current location
+      activities
+          .asSequence()
+          .filter { it.location == ordered.orderedLocations[i] }
+          .forEach { scheduleActivity(it) }
+
+      // Schedule travel to the next location if it's not the last one
+      if (i < ordered.orderedLocations.lastIndex) {
+        scheduleTravel(i)
+      }
+    }
+    return output.sortedBy { it.startDate.seconds }
+  }
+
+  private fun scheduleActivity(act: Activity) {
+    if (activitiesToday >= params.maxActivitiesPerDay) {
+      if (isLastDay()) return
+      nextDay()
+    }
+
+    cursor = cursor.roundUpToQuarter()
+
+    if (!fitsInTimeWindow(act.estimatedTime, params.dayEnd)) {
+      if (isLastDay()) return
+      nextDay()
+    }
+
+    val start = cursor
+    val end = start.plusSeconds(act.estimatedTime.toLong()).roundUpToQuarter()
+
+    output += TripElement.TripActivity(act.copy(startDate = start.toTs(), endDate = end.toTs()))
+    activitiesToday++
+    cursor = end
+  }
+
+  private fun scheduleTravel(fromIdx: Int) {
+    // Apply pause before travel and then round up
+    cursor = cursor.plusSeconds(params.pauseBetweenEachActivity.toLong()).roundUpToQuarter()
+
+    val travelDurationSec = ordered.segmentDuration[fromIdx].toInt()
+    if (!fitsInTimeWindow(travelDurationSec, params.travelEnd)) {
+      if (isLastDay()) return
+      nextDay()
+      // Re-check after advancing the day
+      if (!fitsInTimeWindow(travelDurationSec, params.travelEnd)) {
+        return // Still doesn't fit, can't schedule.
+      }
+    }
+
+    val start = cursor
+    val end = start.plusSeconds(travelDurationSec.toLong()).roundUpToQuarter()
+    val locs = ordered.orderedLocations
+    output +=
+        TripElement.TripSegment(
+            RouteSegment(
+                from = locs[fromIdx],
+                to = locs[fromIdx + 1],
+                durationMinutes = ceil(travelDurationSec / 60.0).toInt(),
+                transportMode = TransportMode.CAR,
+                startDate = start.toTs(),
+                endDate = end.toTs()))
+    cursor = end
+  }
+
+  /** Advances the scheduler to the start of the next day. */
+  private fun nextDay() {
+    currentDay = currentDay.plusDays(1)
+    cursor = LocalDateTime.of(currentDay, params.dayStart).roundUpToQuarter()
+    activitiesToday = 0
+  }
+
+  /**
+   * Checks if an event of a given duration fits before the specified end time for the current day.
+   */
+  private fun fitsInTimeWindow(durationSeconds: Int, dayEndTime: LocalTime): Boolean {
+    val endOfDay = LocalDateTime.of(currentDay, dayEndTime)
+    return !cursor.plusSeconds(durationSeconds.toLong()).isAfter(endOfDay)
+  }
+
+  /** Checks if the scheduler is currently on the final day of the trip. */
+  private fun isLastDay(): Boolean = currentDay == tripEndDay
 }
 
 /**
@@ -152,88 +265,7 @@ fun scheduleTrip(
 ): List<TripElement> {
   if (ordered.orderedLocations.isEmpty()) return emptyList()
 
-  val eff = applyPreferenceOverrides(tripProfile, params)
-  val zone = ZoneId.systemDefault()
-  var currentDay: LocalDate = tripProfile.startDate.toInstant().atZone(zone).toLocalDate()
-  var cursor: LocalDateTime = LocalDateTime.of(currentDay, eff.dayStart).roundUpToQuarter()
-  var activitiesToday = 0
-  val out = mutableListOf<TripElement>()
-  val tripEndDay = tripProfile.endDate.toInstant().atZone(zone).toLocalDate()!!
+  val effectiveParams = applyPreferenceOverrides(tripProfile, params)
 
-  // all locations of the trip (user input + activities locations, all ordered)
-  val locs = ordered.orderedLocations
-  val legs = ordered.segmentDuration
-
-  /** Advance the cursor to the next day. */
-  fun nextDay() {
-    currentDay = currentDay.plusDays(1)
-    cursor = LocalDateTime.of(currentDay, eff.dayStart).roundUpToQuarter()
-    activitiesToday = 0
-  }
-
-  /** Checks if the activity fits within the current day's window. */
-  fun fitsActivity(durationSec: Int): Boolean =
-      !cursor.plusSeconds(durationSec.toLong()).isAfter(LocalDateTime.of(currentDay, eff.dayEnd))
-
-  /** Checks if the travel (RouteSegment) fits within the current day's window. */
-  fun fitsTravel(durationSec: Int): Boolean =
-      !cursor.plusSeconds(durationSec.toLong()).isAfter(LocalDateTime.of(currentDay, eff.travelEnd))
-
-  /** Schedules an activity. */
-  fun scheduleActivity(act: Activity) {
-    // Daily cap
-    if (activitiesToday > eff.maxActivitiesPerDay) {
-      if (currentDay == tripEndDay) return // cannot schedule more activities for the trip
-      else nextDay()
-    }
-
-    cursor = cursor.roundUpToQuarter()
-    if (!fitsActivity(act.estimatedTime)) {
-      if (currentDay == tripEndDay) return // cannot schedule this activity for the trip
-      else nextDay()
-    }
-
-    val start = cursor
-    val end = start.plusSeconds(act.estimatedTime.toLong()).roundUpToQuarter()
-    out += TripElement.TripActivity(act.copy(startDate = start.toTs(), endDate = end.toTs()))
-    activitiesToday++
-    cursor = end
-  }
-
-  /** Schedules a travel segment (RouteSegment). */
-  fun scheduleTravel(fromIdx: Int) {
-    // pause before travel, then round
-    cursor = cursor.plusSeconds(eff.pauseBetweenEachActivity.toLong()).roundUpToQuarter()
-
-    val driveSec = legs[fromIdx].toInt()
-    if (!fitsTravel(driveSec)) {
-      if (currentDay == tripEndDay) return // cannot schedule this travel for the trip
-      else nextDay()
-    }
-
-    val start = cursor
-    val end = start.plusSeconds(driveSec.toLong()).roundUpToQuarter()
-    out +=
-        TripElement.TripSegment(
-            RouteSegment(
-                from = locs[fromIdx],
-                to = locs[fromIdx + 1],
-                durationMinutes = ceil(driveSec / 60.0).toInt(),
-                transportMode = TransportMode.CAR,
-                startDate = start.toTs(),
-                endDate = end.toTs()))
-    cursor = end
-  }
-
-  // Main scheduling loop
-  for (i in locs.indices) {
-    // Out of all activities of the trip, take the ones at this location (location i)
-    // in the provided order, and schedule them
-    activities.asSequence().filter { it.location == locs[i] }.forEach { scheduleActivity(it) }
-
-    // If it is before the last location of the trip, schedule a travel to the next location
-    if (i < locs.lastIndex) scheduleTravel(i)
-  }
-
-  return out.sortedBy { it.startDate.seconds }
+  return TripSchedulerState(tripProfile, ordered, activities, effectiveParams).buildSchedule()
 }
