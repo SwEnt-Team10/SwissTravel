@@ -19,9 +19,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,9 +37,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.WikiImageRepository
 import kotlinx.coroutines.FlowPreview
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.debounce
-import kotlinx.coroutines.flow.distinctUntilChanged
 
 /** Test tags for the LocationAutocompleteTextField composable. */
 object LocationTextTestTags {
@@ -61,9 +56,8 @@ object LocationTextTestTags {
  * @param addressTextFieldViewModel The view model that manages the state of the address text field.
  * @param name The label for the text field.
  * @param clearOnSelect Whether to clear the text field after a location is selected.
+ * @param showImages Whether to show images next to the location suggestions.
  */
-
-// Parts of this code was written with the assistance of AI.
 @OptIn(ExperimentalMaterial3Api::class, FlowPreview::class)
 @Composable
 fun LocationAutocompleteTextField(
@@ -76,63 +70,28 @@ fun LocationAutocompleteTextField(
     showImages: Boolean = false,
 ) {
   val state by addressTextFieldViewModel.addressState.collectAsState()
-  // Local text state. This is the single source of truth for what's visible in the text field.
-  var text by rememberSaveable { mutableStateOf(state.locationQuery) }
   var expanded by remember { mutableStateOf(false) }
-
   val wikiRepo = remember(showImages) { if (showImages) WikiImageRepository.default() else null }
-  // Track if we're in the middle of a selection to prevent the text effect from triggering
-  var isSelecting by remember { mutableStateOf(false) }
 
-  // This effect synchronizes the text field *from* the ViewModel *to* the UI.
-  // It runs ONLY when a selection is made in the ViewModel.
-  LaunchedEffect(state.selectedLocation) {
-    state.selectedLocation?.let { location ->
-      isSelecting = true
-      text = if (clearOnSelect) "" else location.name
-      // Small delay to ensure the text update is processed before we reset the flag
-      kotlinx.coroutines.delay(50)
-      isSelecting = false
-    }
-  }
-
-  // This is the single effect that synchronizes user input *from* the UI *to* the ViewModel.
-  LaunchedEffect(Unit) {
-    snapshotFlow { text }
-        .distinctUntilChanged()
-        .debounce(700)
-        .collectLatest { currentText ->
-          // Skip processing if we're in the middle of a selection
-          if (isSelecting) return@collectLatest
-
-          // If text differs from selected location, it means user is typing
-          if (currentText != state.selectedLocation?.name) {
-            // Clear the selection first
-            addressTextFieldViewModel.clearSelectedLocation()
-
-            // Fetch suggestions (this API call will be cancelled if text changes again)
-            addressTextFieldViewModel.setLocationQuery(currentText)
-          }
-        }
-  }
+  // Derive text to display from the ViewModel's state
+  val textToShow = if (clearOnSelect && state.selectedLocation != null) "" else state.locationQuery
 
   ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
     OutlinedTextField(
-        value = text,
-        // onValueChange remains lightweight and lag-free.
+        value = textToShow,
+        // When the user types, immediately update the ViewModel.
+        // The ViewModel is now the single source of truth.
         onValueChange = { newText ->
-          text = newText
+          addressTextFieldViewModel.setLocationQuery(newText)
           expanded = true
         },
         modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
         label = { Text(name) },
         singleLine = true,
-        isError =
-            (text.isNotEmpty() && state.selectedLocation == null) || (expanded && text.isEmpty()),
+        // Error state logic is simplified
+        isError = textToShow.isNotEmpty() && state.selectedLocation == null,
         supportingText = {
-          if (expanded && text.isEmpty()) {
-            Text("$name ${stringResource(R.string.cannot_be_empty)}")
-          } else if (text.isNotEmpty() && state.selectedLocation == null) {
+          if (textToShow.isNotEmpty() && state.selectedLocation == null) {
             Text(text = stringResource(R.string.dropdown_menu_choose))
           }
         })
@@ -145,41 +104,8 @@ fun LocationAutocompleteTextField(
                 text = {
                   Row(verticalAlignment = Alignment.CenterVertically) {
                     if (showImages && wikiRepo != null) {
-                      var wikiImageUrl by remember(location.name) { mutableStateOf<String?>(null) }
-
-                      LaunchedEffect(location.name) {
-                        if (wikiImageUrl == null) {
-                          val result = wikiRepo.getImageByName(location.name)
-                          wikiImageUrl = result
-                        }
-                      }
-
-                      val context = LocalContext.current
-                      if (wikiImageUrl != null) {
-                        AsyncImage(
-                            model =
-                                ImageRequest.Builder(context)
-                                    .data(wikiImageUrl)
-                                    .addHeader(
-                                        "User-Agent",
-                                        "SwissTravelApp/1.0 (swisstravel.epfl@proton.me)")
-                                    .build(),
-                            contentDescription = "${location.name} image",
-                            placeholder = painterResource(id = R.drawable.debug_placeholder),
-                            error = painterResource(id = R.drawable.debug_placeholder),
-                            contentScale = ContentScale.Crop,
-                            modifier =
-                                Modifier.size(
-                                        dimensionResource(
-                                            R.dimen.location_autocomplete_image_padding))
-                                    .clip(CircleShape))
-                        Spacer(
-                            modifier =
-                                Modifier.width(
-                                    dimensionResource(R.dimen.location_autocomplete_image_padding)))
-                      }
+                      LocationImage(location = location, wikiRepo = wikiRepo)
                     }
-
                     Text(location.name, modifier = Modifier.weight(1f))
                   }
                 },
@@ -198,5 +124,36 @@ fun LocationAutocompleteTextField(
             }
           }
         }
+  }
+}
+
+/**
+ * A composable that fetches and displays an image for a given location using the
+ * WikiImageRepository. It handles its own state for the image URL.
+ */
+@Composable
+private fun LocationImage(location: Location, wikiRepo: WikiImageRepository) {
+  var wikiImageUrl by remember(location.name) { mutableStateOf<String?>(null) }
+  val context = LocalContext.current
+
+  // Fetch the image URL when the location name changes.
+  LaunchedEffect(location.name) { wikiImageUrl = wikiRepo.getImageByName(location.name) }
+
+  if (wikiImageUrl != null) {
+    AsyncImage(
+        model =
+            ImageRequest.Builder(context)
+                .data(wikiImageUrl)
+                .addHeader("User-Agent", "SwissTravelApp/1.0 (swisstravel.epfl@proton.me)")
+                .build(),
+        contentDescription = "${location.name} image",
+        placeholder = painterResource(id = R.drawable.debug_placeholder),
+        error = painterResource(id = R.drawable.debug_placeholder),
+        contentScale = ContentScale.Crop,
+        modifier =
+            Modifier.size(dimensionResource(R.dimen.location_autocomplete_image_padding))
+                .clip(CircleShape))
+    Spacer(
+        modifier = Modifier.width(dimensionResource(R.dimen.location_autocomplete_image_padding)))
   }
 }
