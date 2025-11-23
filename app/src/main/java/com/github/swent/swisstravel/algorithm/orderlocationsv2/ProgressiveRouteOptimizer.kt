@@ -12,7 +12,8 @@ import kotlin.math.sqrt
 
 private const val LARGE_VALUE = 1e9
 private const val DEFAULT_K = 5
-private const val UNREACHABLE_LEG = LARGE_VALUE / 100
+private const val UNREACHABLE_LEG =
+    LARGE_VALUE / 20 // a trip should not exceed around 50 days in travel time
 
 // Done with the help of AI
 /**
@@ -44,13 +45,16 @@ class ProgressiveRouteOptimizer(
    * @param activities List of activities (may be empty); activity location equality uses reference
    *   equality or matching coordinate
    * @param mode Transport mode to use when fetching durations
+   * @param onProgress Callback to report progress (0.0 to 1.0)
+   * @return OrderedRoute with ordered locations, total duration, and segment durations
    */
   suspend fun optimize(
       start: Location,
       end: Location,
       allLocations: List<Location>,
       activities: List<Activity> = emptyList(),
-      mode: TransportMode = TransportMode.CAR
+      mode: TransportMode = TransportMode.CAR,
+      onProgress: (Float) -> Unit
   ): OrderedRoute {
     val unvisited = allLocations.toMutableList().apply { removeAll { sameLocation(it, start) } }
     val ordered = mutableListOf(start)
@@ -60,6 +64,8 @@ class ProgressiveRouteOptimizer(
 
     val activityByCoord = activities.associateBy { it.location.coordinate }
     val activitiesMap = activityByCoord.mapValues { it.value.estimatedTime() }
+    var completedSteps = 0
+    val totalSteps = unvisited.size
 
     while (unvisited.isNotEmpty() && !sameLocation(current, end)) {
       val candidates = selectCandidates(current, end, unvisited)
@@ -68,11 +74,14 @@ class ProgressiveRouteOptimizer(
           pickBestCandidate(current, ordered, unvisited, candidates, durations, activitiesMap)
       appendCandidate(best, ordered, segmentDurations, unvisited).also { totalDuration += it }
       current = best.location
+      completedSteps++
+      onProgress(completedSteps.toFloat() / totalSteps)
     }
 
     if (!sameLocation(ordered.last(), end)) {
       totalDuration += appendFinalEnd(current, end, ordered, segmentDurations, mode)
     }
+    onProgress(1f)
 
     return OrderedRoute(
         orderedLocations = ordered,
