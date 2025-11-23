@@ -42,6 +42,13 @@ object ActivityInfosTestTag {
   const val TIP = "tip"
 }
 
+/**
+ * Activity infos screen.
+ *
+ * @param activity The activity to display.
+ * @param onBack Callback to be called when the back button is pressed.
+ * @param wikiRepo The wiki image repository to use.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActivityInfos(
@@ -49,8 +56,6 @@ fun ActivityInfos(
     onBack: () -> Unit = {},
     wikiRepo: WikiImageRepository = WikiImageRepository.default()
 ) {
-  val context = LocalContext.current
-
   Scaffold(
       topBar = {
         TopAppBar(
@@ -72,20 +77,6 @@ fun ActivityInfos(
         val minutes = activity.estimatedTime()
         val hours = minutes / 60
         val remainingMinutes = minutes % 60
-        var activityUrls by remember { mutableStateOf<List<String>>(emptyList()) }
-        var isLoading by remember { mutableStateOf(false) }
-
-        LaunchedEffect(activity.getName()) {
-          isLoading = true
-          activityUrls =
-              try {
-                wikiRepo.getImagesByName(activity.getName())
-              } catch (_: Exception) {
-                emptyList()
-              } finally {
-                isLoading = false
-              }
-        }
 
         val durationText =
             when {
@@ -130,71 +121,7 @@ fun ActivityInfos(
                   },
                   label = { Text(stringResource(R.string.estimated_time, durationText)) })
 
-              when {
-                isLoading -> {
-                  CircularProgressIndicator()
-                }
-                activityUrls.isNotEmpty() -> {
-                  Column(
-                      verticalArrangement =
-                          Arrangement.spacedBy(
-                              dimensionResource(R.dimen.activity_info_images_padding)),
-                      modifier = Modifier.testTag(ActivityInfosTestTag.IMAGES)) {
-                        Text(
-                            text = "Images",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.SemiBold)
-
-                        LazyRow(
-                            horizontalArrangement =
-                                Arrangement.spacedBy(
-                                    dimensionResource(
-                                        R.dimen.activity_info_images_horizontal_padding))) {
-                              items(activityUrls) { url ->
-                                Card(
-                                    shape =
-                                        RoundedCornerShape(
-                                            dimensionResource(
-                                                R.dimen.activity_info_main_col_padding)),
-                                    modifier =
-                                        Modifier.width(
-                                                dimensionResource(
-                                                    R.dimen.activity_info_images_width))
-                                            .height(
-                                                dimensionResource(
-                                                    R.dimen.activity_info_images_height))) {
-                                      AsyncImage(
-                                          model =
-                                              ImageRequest.Builder(context)
-                                                  .data(url)
-                                                  .addHeader(
-                                                      "User-Agent",
-                                                      "SwissTravelApp/1.0 (swisstravel.epfl@proton.me)")
-                                                  .crossfade(true)
-                                                  .build(),
-                                          contentDescription = null,
-                                          modifier =
-                                              Modifier.fillMaxSize()
-                                                  .clip(
-                                                      RoundedCornerShape(
-                                                          size =
-                                                              dimensionResource(
-                                                                  R.dimen
-                                                                      .activity_info_main_col_padding))),
-                                          contentScale = ContentScale.Crop,
-                                      )
-                                    }
-                              }
-                            }
-                      }
-                }
-                else -> {
-                  Text(
-                      text = stringResource(R.string.no_image_fallback),
-                      style = MaterialTheme.typography.bodySmall,
-                      color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-              }
+              ActivityImagesSection(activityName = activity.getName(), wikiRepo = wikiRepo)
 
               Spacer(Modifier.height(dimensionResource(R.dimen.activity_info_images_padding)))
 
@@ -211,4 +138,93 @@ fun ActivityInfos(
                   }
             }
       }
+}
+
+/**
+ * Activity images section
+ *
+ * @param activityName The activity name
+ * @param wikiRepo The wiki image repository
+ * @param modifier Modifier to apply
+ */
+@Composable
+private fun ActivityImagesSection(
+    activityName: String,
+    wikiRepo: WikiImageRepository,
+    modifier: Modifier = Modifier
+) {
+  val context = LocalContext.current
+
+  var activityUrls by remember { mutableStateOf<List<String>>(emptyList()) }
+  var isLoading by remember { mutableStateOf(false) }
+
+  LaunchedEffect(activityName) {
+    isLoading = true
+    activityUrls =
+        try {
+          wikiRepo.getImagesByName(activityName)
+        } catch (_: Exception) {
+          emptyList()
+        } finally {
+          isLoading = false
+        }
+  }
+
+  when {
+    isLoading -> {
+      CircularProgressIndicator()
+    }
+    activityUrls.isNotEmpty() -> {
+      Column(
+          verticalArrangement =
+              Arrangement.spacedBy(dimensionResource(R.dimen.activity_info_images_padding)),
+          modifier = modifier.testTag(ActivityInfosTestTag.IMAGES)) {
+            Text(
+                text = "Images",
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold)
+
+            LazyRow(
+                horizontalArrangement =
+                    Arrangement.spacedBy(
+                        dimensionResource(R.dimen.activity_info_images_horizontal_padding))) {
+                  items(activityUrls) { url ->
+                    Card(
+                        shape =
+                            RoundedCornerShape(
+                                dimensionResource(R.dimen.activity_info_main_col_padding)),
+                        modifier =
+                            Modifier.width(dimensionResource(R.dimen.activity_info_images_width))
+                                .height(dimensionResource(R.dimen.activity_info_images_height))) {
+                          AsyncImage(
+                              model =
+                                  ImageRequest.Builder(context)
+                                      .data(url)
+                                      .addHeader(
+                                          "User-Agent",
+                                          "SwissTravelApp/1.0 (swisstravel.epfl@proton.me)")
+                                      .crossfade(true)
+                                      .build(),
+                              contentDescription = null,
+                              modifier =
+                                  Modifier.fillMaxSize()
+                                      .clip(
+                                          RoundedCornerShape(
+                                              size =
+                                                  dimensionResource(
+                                                      R.dimen.activity_info_main_col_padding))),
+                              contentScale = ContentScale.Crop,
+                          )
+                        }
+                  }
+                }
+          }
+    }
+    else -> {
+      Text(
+          text = stringResource(R.string.no_image_fallback),
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+  }
 }
