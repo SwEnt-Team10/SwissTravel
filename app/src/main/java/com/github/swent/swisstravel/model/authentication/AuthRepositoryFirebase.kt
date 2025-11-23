@@ -12,6 +12,8 @@ import com.google.firebase.auth.auth
 import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 
+const val UNEXPECTED_ERROR = "Unexpected error"
+
 /**
  * A Firebase implementation of the [AuthRepository] interface.
  *
@@ -51,7 +53,8 @@ class AuthRepositoryFirebase(
    */
   override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
     return try {
-      if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+      return if (credential is CustomCredential &&
+          credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
         val idToken = helper.extractIdTokenCredential(credential.data).idToken
         val firebaseCred = helper.toFirebaseCredential(idToken)
 
@@ -60,14 +63,13 @@ class AuthRepositoryFirebase(
             auth.signInWithCredential(firebaseCred).await().user
                 ?: return Result.failure(
                     IllegalStateException("Login failed: Could not retrieve user information"))
-        return Result.success(user)
+        Result.success(user)
       } else {
-        return Result.failure(
-            IllegalStateException("Login failed: Credential is not of type Google ID"))
+        Result.failure(IllegalStateException("Login failed: Credential is not of type Google ID"))
       }
     } catch (e: Exception) {
       Result.failure(
-          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+          IllegalStateException("Login failed: ${e.localizedMessage ?: UNEXPECTED_ERROR}"))
     }
   }
 
@@ -90,7 +92,7 @@ class AuthRepositoryFirebase(
       Result.success(user)
     } catch (e: Exception) {
       Result.failure(
-          IllegalStateException("Login failed: ${e.localizedMessage ?: "Unexpected error"}"))
+          IllegalStateException("Login failed: ${e.localizedMessage ?: UNEXPECTED_ERROR}"))
     }
   }
 
@@ -131,7 +133,7 @@ class AuthRepositoryFirebase(
       Result.success(user)
     } catch (e: Exception) {
       Result.failure(
-          IllegalStateException("Sign up failed: ${e.localizedMessage ?: "Unexpected error"}"))
+          IllegalStateException("Sign up failed: ${e.localizedMessage ?: UNEXPECTED_ERROR}"))
     }
   }
 
@@ -193,7 +195,7 @@ class AuthRepositoryFirebase(
       Result.success(Unit)
     } catch (e: Exception) {
       Result.failure(
-          IllegalStateException("Logout failed: ${e.localizedMessage ?: "Unexpected error."}"))
+          IllegalStateException("Logout failed: ${e.localizedMessage ?: UNEXPECTED_ERROR}"))
     }
   }
 }
