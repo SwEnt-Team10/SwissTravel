@@ -3,7 +3,8 @@ package com.github.swent.swisstravel.model.trip
 /** A trip repository locally stored (inspiration taken from the bootcamp) */
 class TripRepositoryLocal(
     private val trips: MutableList<Trip> = mutableListOf(),
-    private var counter: Int = 0
+    private var counter: Int = 0,
+    private val errorMessage: String = "TripRepositoryLocal: Trip not found"
 ) : TripsRepository {
   override fun getNewUid(): String {
     return (counter++).toString()
@@ -14,7 +15,7 @@ class TripRepositoryLocal(
   }
 
   override suspend fun getTrip(tripId: String): Trip {
-    return trips.find { it.uid == tripId } ?: throw Exception("TripRepositoryLocal: Trip not found")
+    return trips.find { it.uid == tripId } ?: throw Exception(errorMessage)
   }
 
   override suspend fun addTrip(trip: Trip) {
@@ -26,7 +27,7 @@ class TripRepositoryLocal(
     if (index != -1) {
       trips[index] = updatedTrip
     } else {
-      throw Exception("TripRepositoryLocal: Trip not found")
+      throw Exception(errorMessage)
     }
   }
 
@@ -35,7 +36,7 @@ class TripRepositoryLocal(
     if (index != -1) {
       trips.removeAt(index)
     } else {
-      throw Exception("TripRepositoryLocal: Trip not found")
+      throw Exception(errorMessage)
     }
   }
 }
