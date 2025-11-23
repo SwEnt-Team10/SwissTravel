@@ -11,6 +11,26 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 
 /**
+ * Data class representing the progression weights for each step of the trip computation.
+ *
+ * @param selectActivities Weight for the activity selection step.
+ * @param optimizeRoute Weight for the route optimization step.
+ * @param scheduleTrip Weight for the trip scheduling step.
+ *
+ * The sum of all weights must equal 1.0.
+ */
+data class Progression(
+    val selectActivities: Float,
+    val optimizeRoute: Float,
+    val scheduleTrip: Float
+) {
+  init {
+    val sum = selectActivities + optimizeRoute + scheduleTrip
+    require(sum == 1.0f) { "Progression values must sum to 1.0, but got $sum" }
+  }
+}
+
+/**
  * Main class to compute a trip based on data the user passed through the trip creation process. It
  * integrates activity selection, route optimization, and trip scheduling.
  *
@@ -22,7 +42,9 @@ import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 class TripAlgorithm(
     private val activitySelector: SelectActivities,
     private val routeOptimizer: ProgressiveRouteOptimizer,
-    private val scheduleParams: ScheduleParams
+    private val scheduleParams: ScheduleParams,
+    private val progression: Progression =
+        Progression(selectActivities = 0.20f, optimizeRoute = 0.40f, scheduleTrip = 0.40f)
 ) {
   /**
    * Computes a trip based on the provided settings and profile.
@@ -42,7 +64,7 @@ class TripAlgorithm(
     // ---- STEP 1: Select activities ----
     onProgress(0.0f)
     val selectedActivities = activitySelector.addActivities()
-    onProgress(0.20f)
+    onProgress(progression.selectActivities)
 
     // ---- STEP 2: Optimize route based on time costs ----
     val optimizedRoute =
@@ -55,14 +77,16 @@ class TripAlgorithm(
                 if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
                   TransportMode.TRAIN
                 } else TransportMode.CAR) { progress ->
-              onProgress(0.20f + progress * 0.40f)
+              onProgress(progression.selectActivities + progression.optimizeRoute * progress)
             }
 
     // ---- STEP 3: Schedule trip ----
     val schedule =
         scheduleTrip(tripProfile, optimizedRoute, selectedActivities, scheduleParams) { progress ->
-          // Map scheduling progress 0..1 → global 0.60..1.00
-          onProgress(0.60f + progress * 0.40f)
+          onProgress(
+              progression.selectActivities +
+                  progression.optimizeRoute +
+                  progression.scheduleTrip * progress)
         }
 
     onProgress(1.0f)
