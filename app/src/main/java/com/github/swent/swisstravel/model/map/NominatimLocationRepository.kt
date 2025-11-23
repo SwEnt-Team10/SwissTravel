@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.model.map
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import java.io.IOException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
@@ -18,16 +19,19 @@ import org.json.JSONObject
  * https://operations.osmfoundation.org/policies/nominatim/
  *
  * @param client The OkHttpClient to use for network requests.
+ * @param ioDispatcher The CoroutineDispatcher for executing network requests. Defaults to
+ *   Dispatchers.IO.
  * @param baseUrl The base URL for the Nominatim API. Default is
  *   "https://nominatim.openstreetmap.org".
  */
 class NominatimLocationRepository(
     private val client: OkHttpClient,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
     private val baseUrl: String = "https://nominatim.openstreetmap.org"
 ) : LocationRepository {
 
   override suspend fun search(query: String): List<Location> =
-      withContext(Dispatchers.IO) {
+      withContext(ioDispatcher) {
         val trimmed = query.trim()
         if (trimmed.length < 2) return@withContext emptyList()
 
