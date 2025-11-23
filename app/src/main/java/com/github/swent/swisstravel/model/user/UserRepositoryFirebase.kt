@@ -209,7 +209,7 @@ class UserRepositoryFirebase(
    * @return The parsed list of preferences.
    */
   private fun parsePreferences(doc: DocumentSnapshot): List<Preference> {
-    val rawList = (doc["preferences"] as? List<*>) ?: emptyList<Any>()
+    val rawList = doc["preferences"] as? List<*> ?: emptyList<Any>()
     val prefs = mutableListOf<Preference>()
 
     for (item in rawList) {
@@ -232,7 +232,7 @@ class UserRepositoryFirebase(
    * @return The parsed list of friends.
    */
   private fun parseFriends(doc: DocumentSnapshot): List<Friend> {
-    val rawList = doc.get("friends") as? List<*> ?: emptyList<Any>()
+    val rawList = doc["friends"] as? List<*> ?: emptyList<Any>()
     val friends = mutableListOf<Friend>()
 
     for (item in rawList) {
@@ -260,7 +260,7 @@ class UserRepositoryFirebase(
    * @return The parsed UserStats object.
    */
   private fun parseStats(doc: DocumentSnapshot): UserStats {
-    val statsMap = doc.get("stats") as? Map<*, *> ?: return UserStats()
+    val statsMap = doc["stats"] as? Map<*, *> ?: return UserStats()
 
     fun <T : Number> num(key: String, default: Double = 0.0): Double {
       val value = statsMap[key] as? Number ?: return default
