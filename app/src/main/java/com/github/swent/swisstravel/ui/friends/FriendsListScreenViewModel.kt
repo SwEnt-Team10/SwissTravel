@@ -1,0 +1,22 @@
+package com.github.swent.swisstravel.ui.friends
+
+import androidx.lifecycle.ViewModel
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+
+data class FriendsListScreenUIState(
+    val friends: List<User> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMsg: String? = null
+)
+
+class FriendsListScreenViewModel(
+    private val userRepository: UserRepository = UserRepositoryFirebase()
+) : ViewModel() {
+
+  private val _uiState = MutableStateFlow(FriendsListScreenUIState())
+  val uiState = _uiState.asStateFlow()
+}
