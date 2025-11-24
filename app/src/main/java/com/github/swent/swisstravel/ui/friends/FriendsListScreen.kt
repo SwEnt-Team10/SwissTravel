@@ -32,7 +32,7 @@ object FriendsScreenTestTags {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FriendsScreen(
+fun FriendsListScreen(
     friendsViewModel: FriendsListScreenViewModel = viewModel(),
     onSelectFriend: (String) -> Unit = {},
     onAddFriend: () -> Unit = {},

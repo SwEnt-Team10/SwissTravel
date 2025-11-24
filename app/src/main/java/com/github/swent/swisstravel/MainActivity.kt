@@ -40,6 +40,7 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.friends.FriendsListScreen
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -131,6 +132,7 @@ fun SwissTravelApp(
       when (currentRoute) {
         Screen.CurrentTrip.route,
         Screen.MyTrips.route,
+        Screen.FriendsList.route,
         Screen.Profile.route -> true
         else -> false
       }
@@ -183,6 +185,7 @@ private fun SwissTravelScaffold(
                   when (currentRoute) {
                     Screen.CurrentTrip.route -> Tab.CurrentTrip
                     Screen.MyTrips.route -> Tab.MyTrips
+                    Screen.FriendsList.route -> Tab.Friends
                     Screen.Profile.route -> Tab.Profile
                     else -> Tab.CurrentTrip
                   },
@@ -217,6 +220,7 @@ private fun SwissTravelNavHost(
     pastTripsNavGraph(navigationActions)
     tripInfoNavGraph(context, navController, navigationActions)
     tripSettingsNavGraph(navController, navigationActions)
+    friendsListNavGraph(navController, navigationActions)
   }
 }
 
@@ -456,5 +460,17 @@ private fun NavGraphBuilder.tripSettingsNavGraph(
           },
           onFailure = { navigationActions.goBack() })
     }
+  }
+}
+
+private fun NavGraphBuilder.friendsListNavGraph(
+    navController: NavHostController,
+    navigationActions: NavigationActions
+) {
+  navigation(
+      startDestination = Screen.FriendsList.route,
+      route = Screen.FriendsList.name,
+  ) {
+    composable(Screen.FriendsList.route) { FriendsListScreen() }
   }
 }
