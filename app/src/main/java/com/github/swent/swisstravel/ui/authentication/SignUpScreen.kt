@@ -93,7 +93,9 @@ fun SignUpScreen(
                 onClick = { onPrevious() },
                 modifier = Modifier.fillMaxWidth().testTag(RETURN_BUTTON))
           }
-          SignUpStage.PENDING_VERIFICATION -> {} // No top bar in verification stage
+          SignUpStage.PENDING_VERIFICATION -> {
+            /* No top bar in verification stage */
+          }
         }
       }) { paddingValues ->
         when (uiState.signUpStage) {

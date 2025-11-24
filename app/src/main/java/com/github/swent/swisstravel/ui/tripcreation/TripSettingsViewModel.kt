@@ -140,7 +140,9 @@ class TripSettingsViewModel(
         val selectActivities =
             SelectActivities(
                 tripSettings = tripSettings.value,
-                onProgress = { progress -> _loadingProgress.value = progress },
+                onProgress = { progress ->
+                  _loadingProgress.value = progress
+                }, // TODO: Change this so that it is like a third or something
                 activityRepository = activityRepository)
         val selectedActivities = selectActivities.addActivities()
         setDestinations(selectedActivities.map { it.location })
@@ -174,6 +176,8 @@ class TripSettingsViewModel(
                 children = settings.travelers.children,
                 arrivalLocation = settings.arrivalDeparture.arrivalLocation,
                 departureLocation = settings.arrivalDeparture.departureLocation)
+
+        // TODO Put whole algorithm here
 
         val trip =
             Trip(

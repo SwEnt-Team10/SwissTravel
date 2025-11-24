@@ -2,8 +2,13 @@ package com.github.swent.swisstravel.ui.profile
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceRules
+import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +26,10 @@ data class ProfileScreenUIState(
     var errorMsg: String? = null
 )
 
-class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewModel() {
+class ProfileScreenViewModel(
+    private val userRepository: UserRepository,
+    private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
+) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileScreenUIState())
   private var currentUser: User? = null
@@ -33,11 +41,32 @@ class ProfileScreenViewModel(private val userRepository: UserRepository) : ViewM
         val user = userRepository.getCurrentUser()
         currentUser = user
         autoFill(user)
+        refreshStatsForUser(user)
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data: ${e.message}")
       } finally {
         _uiState.update { it.copy(isLoading = false) }
       }
+    }
+  }
+
+  /**
+   * Refreshes the user's stats based on their past trips.
+   *
+   * @param user The user to refresh stats for.
+   * @throws Exception If an error occurs while refreshing the stats.
+   */
+  private suspend fun refreshStatsForUser(user: User) {
+    if (user.uid == "guest") return
+
+    try {
+      val trips: List<Trip> = tripsRepository.getAllTrips()
+      val pastTrips = trips.filter { it.isPast() }
+
+      val stats = StatsCalculator.computeStats(pastTrips)
+      userRepository.updateUserStats(user.uid, stats)
+    } catch (e: Exception) {
+      _uiState.update { it.copy(errorMsg = it.errorMsg ?: "Error updating stats: ${e.message}") }
     }
   }
 

@@ -12,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
@@ -22,12 +23,30 @@ class FakeUserRepository : UserRepository {
     return User(
         uid = "fakeUid123",
         name = "Test User",
+        biography = "Fake Bio",
         email = "test@example.com",
         profilePicUrl = "",
-        preferences = listOf(Preference.MUSEUMS))
+        preferences = listOf(Preference.MUSEUMS),
+        friends = emptyList())
   }
 
   override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {
+    // no-op in tests
+  }
+
+  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
+    // no-op in tests
+  }
+
+  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
+    // no-op in tests
+  }
+
+  override suspend fun removeFriend(uid: String, friendUid: String) {
+    // no-op in tests
+  }
+
+  override suspend fun updateUserStats(uid: String, stats: UserStats) {
     // no-op in tests
   }
 }
@@ -110,10 +129,32 @@ class ProfileScreenUITest {
         object : UserRepository {
           override suspend fun getCurrentUser(): User {
             return User(
-                uid = "0", name = "", email = "", profilePicUrl = "", preferences = emptyList())
+                uid = "0",
+                name = "",
+                biography = "",
+                email = "",
+                profilePicUrl = "",
+                preferences = emptyList(),
+                friends = emptyList())
           }
 
           override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
+
+          override suspend fun updateUserStats(uid: String, stats: UserStats) {
+            /** no-op for tests* */
+          }
+
+          override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
+            /** no-op for tests* */
+          }
+
+          override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
+            /** no-op for tests* */
+          }
+
+          override suspend fun removeFriend(uid: String, friendUid: String) {
+            /** no-op for tests* */
+          }
         }
 
     composeTestRule.setContent {

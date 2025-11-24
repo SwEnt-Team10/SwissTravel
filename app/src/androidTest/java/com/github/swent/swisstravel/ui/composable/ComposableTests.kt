@@ -214,14 +214,18 @@ class ComposableTests : InMemorySwissTravelTest() {
 
     composeTestRule.setContent {
       SwissTravelTheme {
+        val listState =
+            TripListState(trips = tripList, isSelectionMode = false, isSelected = { false })
+        val listEvents =
+            TripListEvents(
+                onClickTripElement = { clickedTrip = it }, onLongPress = { longPressedTrip = it })
+
         SortedTripList(
             title = "My Trips",
-            trips = tripList,
-            onClickTripElement = { clickedTrip = it },
-            onLongPress = { longPressedTrip = it },
+            listState = listState,
+            listEvents = listEvents,
             onClickDropDownMenu = { sortClicked = true },
-            selectedSortType = TripSortType.END_DATE_ASC,
-            isSelectionMode = false)
+            selectedSortType = TripSortType.END_DATE_ASC)
       }
     }
 
@@ -245,10 +249,12 @@ class ComposableTests : InMemorySwissTravelTest() {
   @Test
   fun sortedTripListEmptyTest() {
     composeTestRule.setContent {
+      val listState = TripListState(trips = emptyList(), emptyListString = "test")
+      val listEvents = TripListEvents()
       SortedTripList(
           title = "test",
-          trips = emptyList(),
-          emptyListString = "test",
+          listState = listState,
+          listEvents = listEvents,
           selectedSortType = TripSortType.START_DATE_ASC)
     }
 

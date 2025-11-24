@@ -1,8 +1,6 @@
 package com.github.swent.swisstravel.ui.authentication
 
 /** This file is largely adapted from the bootcamp solution. */
-
-// import androidx.compose.ui.tooling.preview.Preview // <-- Uncomment this line to enable preview
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -242,15 +240,3 @@ fun GoogleSignInButton(type: GoogleButtonType, onSignInClick: () -> Unit) {
             }
       }
 }
-
-/**
- * Preview function for the SignInScreen, commented out to avoid unchecked coverage.
- *
- * Do not forget to uncomment 'import androidx.compose.ui.tooling.preview.Preview' at the beginning
- * of this file
- */
-// @Preview
-// @Composable
-// fun SignInScreenPreview() {
-//  SignInScreen()
-// }
