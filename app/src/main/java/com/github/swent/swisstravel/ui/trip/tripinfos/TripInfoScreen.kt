@@ -64,7 +64,6 @@ import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.google.firebase.Timestamp
 import com.mapbox.geojson.Point
-import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
@@ -87,6 +86,22 @@ object TripInfoScreenTestTags {
   const val PREVIOUS_STEP = "previousStep"
   const val NEXT_STEP = "nextStep"
 }
+
+/** UI state holder for the main content of the trip info screen. */
+data class TripInfoContentState(
+    val ui: TripInfoUIState,
+    val schedule: List<TripElement>,
+    val currentStepIndex: Int,
+    val mapState: MapState
+)
+
+/** Event handlers for the main content of the trip info screen. */
+data class TripInfoContentCallbacks(
+    val onStepChange: (Int) -> Unit,
+    val onToggleFullscreen: (Boolean) -> Unit,
+    val onToggleNavMode: () -> Unit,
+    val onUserLocationUpdate: (Point) -> Unit
+)
 
 /**
  * A composable that shows a trip's info. It shows the next step the user should do and shows the
@@ -200,15 +215,19 @@ fun TripInfoScreen(
         }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
-          TripInfoContent(
-              ui = ui,
-              schedule = schedule,
-              currentStepIndex = currentStepIndex,
-              mapState = mapState,
-              onStepChange = { newIndex -> currentStepIndex = newIndex },
-              onToggleFullscreen = { tripInfoViewModel.toggleFullscreen(it) },
-              onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
-              onUserLocationUpdate = { currentGpsPoint = it })
+          val contentState =
+              TripInfoContentState(
+                  ui = ui,
+                  schedule = schedule,
+                  currentStepIndex = currentStepIndex,
+                  mapState = mapState)
+          val callbacks =
+              TripInfoContentCallbacks(
+                  onStepChange = { newIndex -> currentStepIndex = newIndex },
+                  onToggleFullscreen = { tripInfoViewModel.toggleFullscreen(it) },
+                  onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
+                  onUserLocationUpdate = { currentGpsPoint = it })
+          TripInfoContent(contentState, callbacks)
 
           // Fullscreen map overlay
           if (ui.fullscreen) {
@@ -231,21 +250,15 @@ data class MapState(
 
 /** The main content of the trip info screen, displayed in a LazyColumn. */
 @Composable
-private fun TripInfoContent(
-    ui: TripInfoUIState,
-    schedule: List<TripElement>,
-    currentStepIndex: Int,
-    mapState: MapState,
-    onStepChange: (Int) -> Unit,
-    onToggleFullscreen: (Boolean) -> Unit,
-    onToggleNavMode: () -> Unit,
-    onUserLocationUpdate: (Point) -> Unit
+internal fun TripInfoContent(
+    contentState: TripInfoContentState,
+    callbacks: TripInfoContentCallbacks
 ) {
   LazyColumn(
       modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.LAZY_COLUMN),
       horizontalAlignment = Alignment.Start,
       contentPadding = PaddingValues(bottom = 24.dp)) {
-        if (ui.locations.isEmpty()) {
+        if (contentState.ui.locations.isEmpty()) {
           item {
             Text(
                 text = stringResource(R.string.no_locations_available),
@@ -254,31 +267,31 @@ private fun TripInfoContent(
         } else {
           item {
             CurrentStepHeader(
-                schedule = schedule,
-                currentStepIndex = currentStepIndex,
+                schedule = contentState.schedule,
+                currentStepIndex = contentState.currentStepIndex,
             )
           }
 
-          if (!ui.fullscreen) {
+          if (!contentState.ui.fullscreen) {
             item {
               TripMapCard(
-                  mapState = mapState,
-                  onToggleFullscreen = { onToggleFullscreen(true) },
-                  onToggleNavMode = onToggleNavMode,
-                  onUserLocationUpdate = onUserLocationUpdate)
+                  mapState = contentState.mapState,
+                  onToggleFullscreen = { callbacks.onToggleFullscreen(true) },
+                  onToggleNavMode = callbacks.onToggleNavMode,
+                  onUserLocationUpdate = callbacks.onUserLocationUpdate)
             }
             item {
               StepControls(
-                  currentStepIndex = currentStepIndex,
-                  scheduleSize = schedule.size,
-                  isComputing = mapState.isLoading,
-                  onStepChange = onStepChange)
+                  currentStepIndex = contentState.currentStepIndex,
+                  scheduleSize = contentState.schedule.size,
+                  isComputing = contentState.mapState.isLoading,
+                  onStepChange = callbacks.onStepChange)
             }
           }
         }
 
         // Steps list
-        itemsIndexed(schedule) { idx, el ->
+        itemsIndexed(contentState.schedule) { idx, el ->
           val stepNo = idx + 1
           when (el) {
             is TripElement.TripActivity -> {
@@ -596,6 +609,3 @@ private fun currentStepTime(schedule: List<TripElement>, index: Int): String {
     else -> "—"
   }
 }
-
-private fun Timestamp.toInstant(): Instant =
-    Instant.ofEpochSecond(this.seconds, this.nanoseconds.toLong())

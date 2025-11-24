@@ -40,6 +40,7 @@ class ActivityRepositoryMySwitzerland(
    * Builds a URL with the given parameters.
    *
    * @param url The URL to build.
+   * @param language The language to use.
    */
   private fun urlBuilder(url: String, language: String = "en"): HttpUrl {
     val newUrl: HttpUrl =

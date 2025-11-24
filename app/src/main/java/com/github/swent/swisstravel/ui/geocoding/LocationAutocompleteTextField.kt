@@ -130,6 +130,9 @@ fun LocationAutocompleteTextField(
 /**
  * A composable that fetches and displays an image for a given location using the
  * WikiImageRepository. It handles its own state for the image URL.
+ *
+ * @param location The location to fetch the image for.
+ * @param wikiRepo The repository to fetch the image from.
  */
 @Composable
 private fun LocationImage(location: Location, wikiRepo: WikiImageRepository) {
