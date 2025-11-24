@@ -3,7 +3,7 @@ package com.github.swent.swisstravel.ui.authentication
 import androidx.credentials.Credential
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.google.firebase.auth.FirebaseUser
-import io.mockk.mockk
+import org.mockito.Mockito
 
 /**
  * A mock implementation of the [com.github.swent.swisstravel.model.authentication.AuthRepository]
@@ -13,16 +13,17 @@ import io.mockk.mockk
 class MockAuthRepository : AuthRepository {
 
   // These variables allow us to control the outcome of the mock functions from our tests.
-  private val mockUser: FirebaseUser = mockk(relaxed = true)
+  val mockUser: FirebaseUser = Mockito.mock(FirebaseUser::class.java)
 
   // Results for each repository function
   var signUpResult: Result<FirebaseUser> = Result.success(mockUser)
   var signInEmailResult: Result<FirebaseUser> = Result.success(mockUser)
   var signInGoogleResult: Result<FirebaseUser> = Result.success(mockUser)
   var signOutResult: Result<Unit> = Result.success(Unit)
-  var checkVerificationResult: Result<Boolean> = Result.success(false) // Default to not verified
+  var checkVerificationResult: Result<Boolean> = Result.success(true) // Default to not verified
   var resendEmailResult: Result<Unit> = Result.success(Unit)
 
+  var userIsVerifiedResult: Result<Boolean> = Result.success(true)
   var deleteUserResult: Result<Unit> = Result.success(Unit)
 
   override suspend fun signUpWithEmailPassword(
