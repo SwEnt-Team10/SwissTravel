@@ -122,7 +122,8 @@ fun SwissTravelApp(
 
   val currentUser = FirebaseAuth.getInstance().currentUser
   val startDestination =
-      if (currentUser != null && currentUser.isEmailVerified) {
+      if ((currentUser != null && currentUser.isEmailVerified) ||
+          currentUser?.isAnonymous == true) {
         Screen.CurrentTrip.name
       } else {
         if (currentUser != null) {
