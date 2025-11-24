@@ -19,4 +19,23 @@ class FriendsListScreenViewModel(
 
   private val _uiState = MutableStateFlow(FriendsListScreenUIState())
   val uiState = _uiState.asStateFlow()
+
+  /** Refreshes the friends list from the repository. */
+  suspend fun refreshFriends() {
+    _uiState.value = uiState.value.copy(isLoading = true, errorMsg = null)
+    try {
+      val currentUser = userRepository.getCurrentUser()
+      val friends =
+          currentUser.friends.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
+      _uiState.value = uiState.value.copy(friends = friends, isLoading = false)
+    } catch (e: Exception) {
+      _uiState.value =
+          uiState.value.copy(isLoading = false, errorMsg = "Error fetching friends: ${e.message}")
+    }
+  }
+
+  /** Clears the current error message. */
+  fun clearErrorMsg() {
+    _uiState.value = uiState.value.copy(errorMsg = null)
+  }
 }

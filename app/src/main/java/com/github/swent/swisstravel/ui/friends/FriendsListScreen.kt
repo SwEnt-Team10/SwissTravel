@@ -19,9 +19,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.user.User
 
 object FriendsScreenTestTags {
   const val FRIENDS_LIST = "friendsList"
@@ -63,7 +63,7 @@ fun FriendsScreen(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.testTag(FriendsScreenTestTags.ADD_FRIEND_BUTTON)) {
-              Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_friend))
+              Icon(Icons.Default.Add, contentDescription = null)
             }
       }) { padding ->
         Column(
@@ -90,7 +90,7 @@ private fun FriendsTopAppBar(
   TopAppBar(
       title = {
         Text(
-            text = stringResource(R.string.friends_title),
+            text = "", // stringResource(R.string.friends_title),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground)
       },
@@ -98,9 +98,7 @@ private fun FriendsTopAppBar(
         IconButton(
             onClick = onSearchFriends,
             modifier = Modifier.testTag(FriendsScreenTestTags.SEARCH_FRIENDS_BUTTON)) {
-              Icon(
-                  Icons.Default.Search,
-                  contentDescription = stringResource(R.string.search_friends))
+              Icon(Icons.Default.Search, contentDescription = null)
             }
       },
       colors =
@@ -112,22 +110,22 @@ private fun FriendsTopAppBar(
 
 @Composable
 private fun FriendsListSection(
-    friends: List<Friend>,
+    friends: List<User>,
     onSelectFriend: (String) -> Unit,
 ) {
   if (friends.isEmpty()) {
     // Optional: show an empty message – reuse your style
     Text(
-        text = stringResource(R.string.no_friends),
+        text = "", // stringResource(R.string.no_friends),
         style = MaterialTheme.typography.bodyMedium,
     )
   } else {
     LazyColumn(
         modifier = Modifier.fillMaxSize().testTag(FriendsScreenTestTags.FRIENDS_LIST),
         verticalArrangement =
-            Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_item_spacing))) {
+            Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement))) {
           items(items = friends, key = { it.uid }) { friend ->
-            FriendElement(friend = friend, onClick = { onSelectFriend(friend.uid) })
+            FriendElement(userToDisplay = friend, onClick = { onSelectFriend(friend.uid) })
           }
         }
   }

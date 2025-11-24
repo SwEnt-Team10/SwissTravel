@@ -57,6 +57,25 @@ class UserRepositoryFirebase(
   }
 
   /**
+   * Retrieves a user by their UID.
+   *
+   * @param uid The UID of the user to retrieve.
+   * @return The User object if found, null otherwise.
+   */
+  override suspend fun getUserByUid(uid: String): User? {
+    return try {
+      val doc = db.collection("users").document(uid).get().await()
+      if (doc.exists()) {
+        createUserFromDoc(doc, uid)
+      } else {
+        null
+      }
+    } catch (_: Exception) {
+      null
+    }
+  }
+
+  /**
    * Function to update the user's preferences in Firestore.
    *
    * @param uid The UID of the user.

@@ -30,6 +30,11 @@ class FakeUserRepository : UserRepository {
         friends = emptyList())
   }
 
+  override suspend fun getUserByUid(uid: String): User? {
+    // no-op in tests
+    return null
+  }
+
   override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {
     // no-op in tests
   }
@@ -154,6 +159,11 @@ class ProfileScreenUITest {
 
           override suspend fun removeFriend(uid: String, friendUid: String) {
             /** no-op for tests* */
+          }
+
+          override suspend fun getUserByUid(uid: String): User? {
+            // no-op in tests
+            return null
           }
         }
 

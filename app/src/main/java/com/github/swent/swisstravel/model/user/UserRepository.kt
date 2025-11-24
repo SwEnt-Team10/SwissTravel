@@ -9,6 +9,13 @@ interface UserRepository {
   suspend fun getCurrentUser(): User
 
   /**
+   * Retrieves a user by their UID.
+   *
+   * @param uid The UID of the user to retrieve.
+   * @return The User object if found, null otherwise.
+   */
+  suspend fun getUserByUid(uid: String): User?
+  /**
    * Function to update the user's preferences in Firestore.
    *
    * @param uid The UID of the user.
