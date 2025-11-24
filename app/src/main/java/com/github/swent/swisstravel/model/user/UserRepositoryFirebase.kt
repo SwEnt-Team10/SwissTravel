@@ -35,7 +35,8 @@ class UserRepositoryFirebase(
           profilePicUrl = "",
           preferences = emptyList(),
           friends = emptyList(),
-          stats = UserStats())
+          stats = UserStats(),
+          pinnedTripsUids = emptyList())
     }
 
     val uid = firebaseUser.uid
@@ -167,6 +168,8 @@ class UserRepositoryFirebase(
     val prefs = parsePreferences(doc)
     val friends = parseFriends(doc)
     val stats = parseStats(doc)
+    val pinnedTripsUIds =
+        (doc["pinnedTripsUIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
     return User(
         uid = uid,
@@ -176,7 +179,8 @@ class UserRepositoryFirebase(
         profilePicUrl = doc["profilePicUrl"] as? String ?: "",
         preferences = prefs,
         friends = friends,
-        stats = stats)
+        stats = stats,
+        pinnedTripsUids = pinnedTripsUIds)
   }
 
   /**
@@ -196,7 +200,8 @@ class UserRepositoryFirebase(
             profilePicUrl = firebaseUser.photoUrl?.toString().orEmpty(),
             preferences = emptyList(),
             friends = emptyList(),
-            stats = UserStats())
+            stats = UserStats(),
+            pinnedTripsUids = emptyList())
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser
