@@ -132,10 +132,8 @@ fun TripInfoScreen(
 
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
-  var showMap by remember { mutableStateOf(true) }
   var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
-  var computeError by remember { mutableStateOf<String?>(null) }
   var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
   var currentGpsPoint by remember { mutableStateOf<Point?>(null) }
   var drawFromCurrentPosition by remember { mutableStateOf(false) }
@@ -150,7 +148,7 @@ fun TripInfoScreen(
                     idx = currentStepIndex,
                     currentGps = currentGpsPoint,
                     drawFromCurrentPosition = drawFromCurrentPosition),
-            drawRoute = schedule.isNotEmpty() && currentGpsPoint == null,
+            drawRoute = schedule.isNotEmpty(),
             drawFromCurrentPosition = drawFromCurrentPosition,
             isLoading = isComputing || (ui.locations.isNotEmpty() && schedule.isEmpty()))
       }
@@ -174,6 +172,7 @@ fun TripInfoScreen(
     schedule = tripSegments + tripActivities
     schedule = schedule.sortedBy { it.startDate }
     currentStepIndex = 0
+    isComputing = false
   }
 
   Scaffold(
