@@ -72,56 +72,67 @@ class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
                 onFailure = { failure ->
                   // If sign up fails, try to sign in.
                   // This handles the case where the user already exists but is not verified.
-                  repository
-                      .signInWithEmailPassword(email, password)
-                      .fold(
-                          onSuccess = { user ->
-                            if (user.isEmailVerified) {
+                  if (failure.message?.contains("EMAIL_ALREADY_IN_USE") == true) {
+                    repository
+                        .signInWithEmailPassword(email, password)
+                        .fold(
+                            onSuccess = { user ->
+                              if (user.isEmailVerified) {
+                                _uiState.update {
+                                  it.copy(
+                                      isLoading = false,
+                                      errorMsg = "Account already exists. Please sign in.",
+                                      signedOut = true,
+                                      user = null)
+                                }
+                                repository.signOut()
+                              } else {
+                                // User exists but is not verified. Delete the user and retry sign
+                                // up.
+                                viewModelScope.launch {
+                                  repository
+                                      .deleteUser()
+                                      .fold(
+                                          onSuccess = {
+                                            // Reset loading state to allow the recursive call to
+                                            // proceed
+                                            _uiState.update { it.copy(isLoading = false) }
+                                            // Retry sign up
+                                            signUpWithEmailPassword(
+                                                email, password, firstName, lastName, context)
+                                          },
+                                          onFailure = { deleteFailure ->
+                                            _uiState.update {
+                                              it.copy(
+                                                  isLoading = false,
+                                                  errorMsg =
+                                                      "Failed to reset account: ${deleteFailure.localizedMessage}",
+                                                  signedOut = true,
+                                                  user = null)
+                                            }
+                                          })
+                                }
+                              }
+                            },
+                            onFailure = {
+                              // If sign in also fails, show the original error
                               _uiState.update {
                                 it.copy(
                                     isLoading = false,
-                                    errorMsg = "Account already exists. Please sign in.",
+                                    errorMsg = failure.localizedMessage,
                                     signedOut = true,
                                     user = null)
                               }
-                              repository.signOut()
-                            } else {
-                              // User exists but is not verified. Delete the user and retry sign up.
-                              viewModelScope.launch {
-                                repository
-                                    .deleteUser()
-                                    .fold(
-                                        onSuccess = {
-                                          // Reset loading state to allow the recursive call to
-                                          // proceed
-                                          _uiState.update { it.copy(isLoading = false) }
-                                          // Retry sign up
-                                          signUpWithEmailPassword(
-                                              email, password, firstName, lastName, context)
-                                        },
-                                        onFailure = { deleteFailure ->
-                                          _uiState.update {
-                                            it.copy(
-                                                isLoading = false,
-                                                errorMsg =
-                                                    "Failed to reset account: ${deleteFailure.localizedMessage}",
-                                                signedOut = true,
-                                                user = null)
-                                          }
-                                        })
-                              }
-                            }
-                          },
-                          onFailure = {
-                            // If sign in also fails, show the original error
-                            _uiState.update {
-                              it.copy(
-                                  isLoading = false,
-                                  errorMsg = failure.localizedMessage,
-                                  signedOut = true,
-                                  user = null)
-                            }
-                          })
+                            })
+                  } else {
+                    _uiState.update {
+                      it.copy(
+                          isLoading = false,
+                          errorMsg = failure.localizedMessage,
+                          signedOut = true,
+                          user = null)
+                    }
+                  }
                 })
       } catch (e: Exception) {
         _uiState.update {

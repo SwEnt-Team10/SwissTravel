@@ -26,6 +26,7 @@
     <string name="password">Password</string>
     <string name="sign_in_account">Sign in to your account</string>
     <string name="no_email_received">Didn\'t receive an email? Resend</string>
+    <string name="no_user_signed_in">No user is currently signed in.</string>
     <!-- General -->
     <string name="yes">Yes</string>
     <string name="no">No</string>

@@ -4,6 +4,7 @@ import android.content.Context
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.google.firebase.auth.FirebaseUser
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import junit.framework.TestCase.assertEquals
 import junit.framework.TestCase.assertFalse
@@ -127,18 +128,18 @@ class SignUpViewModelTest {
   @Test
   fun `signUpWithEmailPassword failure with existing unverified user deletes and retries`() =
       runTest(testDispatcher) {
-        // 1. Initial Sign up fails
+        // Initial Sign up fails
         coEvery { mockAuthRepository.signUpWithEmailPassword(any(), any(), any(), any()) } returns
             Result.failure(Exception("EMAIL_ALREADY_IN_USE")) andThen
             Result.success(mockk())
 
-        // 2. Sign in succeeds with UNVERIFIED user
+        // Sign in succeeds with UNVERIFIED user
         val existingUser: FirebaseUser = mockk()
         coEvery { existingUser.isEmailVerified } returns false
         coEvery { mockAuthRepository.signInWithEmailPassword(any(), any()) } returns
             Result.success(existingUser)
 
-        // 3. Delete user succeeds
+        // Delete user succeeds
         coEvery { mockAuthRepository.deleteUser() } returns Result.success(Unit)
 
         viewModel.signUpWithEmailPassword(
@@ -149,6 +150,42 @@ class SignUpViewModelTest {
         // Verify delete was called
         io.mockk.coVerify { mockAuthRepository.deleteUser() }
         // Verify sign up was called twice (initial + retry)
+        io.mockk.coVerify(exactly = 2) {
+          mockAuthRepository.signUpWithEmailPassword(any(), any(), any(), any())
+        }
+      }
+
+  @Test
+  fun `signUpWithEmailPassword failure with unverified user deletes but retry fails`() =
+      runTest(testDispatcher) {
+        // Initial Sign up fails
+        coEvery { mockAuthRepository.signUpWithEmailPassword(any(), any(), any(), any()) } returns
+            Result.failure(Exception("EMAIL_ALREADY_IN_USE")) andThen
+            Result.failure(Exception("Retry failed"))
+
+        // Sign in succeeds with UNVERIFIED user
+        val existingUser: FirebaseUser = mockk()
+        coEvery { existingUser.isEmailVerified } returns false
+        coEvery { mockAuthRepository.signInWithEmailPassword(any(), any()) } returns
+            Result.success(existingUser)
+
+        // Delete user succeeds
+        coEvery { mockAuthRepository.deleteUser() } returns Result.success(Unit)
+
+        viewModel.signUpWithEmailPassword(
+            "test@example.com", "password", "John", "Doe", mockContext)
+
+        advanceUntilIdle()
+
+        val uiState = viewModel.uiState.value
+        assertFalse(uiState.isLoading)
+        assertEquals("Retry failed", uiState.errorMsg)
+        assertTrue(uiState.signedOut)
+        assertNull(uiState.user)
+
+        // Verify delete was called
+        io.mockk.coVerify { mockAuthRepository.deleteUser() }
+        // Verify sign up was called twice
         io.mockk.coVerify(exactly = 2) {
           mockAuthRepository.signUpWithEmailPassword(any(), any(), any(), any())
         }
