@@ -63,22 +63,22 @@ class TripsRepositoryFirestore(
       val ownerId = document.getString("ownerId") ?: return null
 
       val locations =
-          (document.get("locations") as? List<*>)?.mapNotNull { it ->
-            (it as? Map<*, *>)?.let { mapToLocation(it) }
+          (document["locations"] as? List<*>)?.mapNotNull { locationMap ->
+            (locationMap as? Map<*, *>)?.let { mapToLocation(it) }
           } ?: emptyList()
 
       val routeSegments =
-          (document.get("routeSegments") as? List<*>)?.mapNotNull { it ->
-            (it as? Map<*, *>)?.let { mapToRouteSegment(it) }
+          (document["routeSegments"] as? List<*>)?.mapNotNull { routeSegmentMap ->
+            (routeSegmentMap as? Map<*, *>)?.let { mapToRouteSegment(it) }
           } ?: emptyList()
 
       val activities =
-          (document.get("activities") as? List<*>)?.mapNotNull { it ->
-            (it as? Map<*, *>)?.let { mapToActivity(it) }
+          (document["activities"] as? List<*>)?.mapNotNull { activityMap ->
+            (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
           } ?: emptyList()
 
       val tripProfile =
-          (document.get("tripProfile") as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
+          (document["tripProfile"] as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
 
       val isFavorite = document.getBoolean("favorite") ?: false
 

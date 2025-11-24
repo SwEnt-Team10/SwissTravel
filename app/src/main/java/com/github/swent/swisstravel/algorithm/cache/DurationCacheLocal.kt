@@ -5,6 +5,7 @@ import android.util.Log
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.TransportMode
 import java.io.File
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -30,11 +31,13 @@ import kotlinx.serialization.json.Json
  * @param context Android context used to access the app's internal storage.
  * @param maxCacheSize Maximum number of entries allowed before LRU eviction.
  * @param cacheFile The file to which we write the cache entries, this is used mainly for testing
+ * @param ioDispatcher The coroutine dispatcher for I/O operations, defaults to Dispatchers.IO.
  */
 class DurationCacheLocal(
     private val context: Context,
     private val maxCacheSize: Int = 50000,
-    private val cacheFile: File? = null
+    private val cacheFile: File? = null,
+    private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : DurationCache() {
   private val json = Json { prettyPrint = true }
   private val mutex = Mutex()
@@ -57,7 +60,7 @@ class DurationCacheLocal(
       if (isLoaded) return
       if (actualCacheFile.exists()) {
         try {
-          val text = withContext(Dispatchers.IO) { actualCacheFile.readText() }
+          val text = withContext(ioDispatcher) { actualCacheFile.readText() }
           if (text.isNotEmpty()) {
             cache = json.decodeFromString(text)
             Log.d("DurationCacheLocal", "Loaded ${cache.size} entries")
@@ -77,7 +80,7 @@ class DurationCacheLocal(
   private suspend fun persistUnsafe() {
     try {
       val text = json.encodeToString(cache)
-      withContext(Dispatchers.IO) { actualCacheFile.writeText(text) }
+      withContext(ioDispatcher) { actualCacheFile.writeText(text) }
     } catch (e: Exception) {
       Log.e("DurationCacheLocal", "Failed to save cache", e)
     }

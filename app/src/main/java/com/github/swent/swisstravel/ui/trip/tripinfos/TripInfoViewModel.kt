@@ -30,6 +30,7 @@ data class TripInfoUIState(
     val isFavorite: Boolean = false,
     val errorMsg: String? = null,
     val fullscreen: Boolean = false,
+    val selectedActivity: Activity? = null,
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -151,5 +152,9 @@ class TripInfoViewModel(
    */
   override fun toggleFullscreen(fullscreen: Boolean) {
     _uiState.value = _uiState.value.copy(fullscreen = fullscreen)
+  }
+
+  fun selectActivity(activity: Activity?) {
+    _uiState.value = _uiState.value.copy(selectedActivity = activity)
   }
 }

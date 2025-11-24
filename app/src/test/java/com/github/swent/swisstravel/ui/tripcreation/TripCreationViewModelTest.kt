@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import com.google.common.base.CharMatcher.any
 import io.mockk.coEvery
 import io.mockk.spyk
@@ -272,11 +273,29 @@ class TripCreationViewModelTest {
       return User(
           uid = "test-user",
           name = "Test User",
+          biography = "Test bio",
           email = "test@example.com",
           profilePicUrl = "",
-          preferences = listOf(Preference.FOODIE))
+          preferences = listOf(Preference.FOODIE),
+          friends = emptyList())
     }
 
     override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
+
+    override suspend fun updateUserStats(uid: String, stats: UserStats) {
+      // no-op for testing
+    }
+
+    override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
+      // no-op for testing
+    }
+
+    override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
+      // no-op for testing
+    }
+
+    override suspend fun removeFriend(uid: String, friendUid: String) {
+      // no-op for testing
+    }
   }
 }
