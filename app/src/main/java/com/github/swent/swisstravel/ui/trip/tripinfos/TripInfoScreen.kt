@@ -1,7 +1,9 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -119,12 +121,17 @@ fun TripInfoScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
-    isOnCurrentTripScreen: Boolean = false
+    isOnCurrentTripScreen: Boolean = false,
+    onActivityClick: (TripElement.TripActivity) -> Unit = {}
 ) {
+  Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
+
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val ui by tripInfoViewModel.uiState.collectAsState()
   val context = LocalContext.current
+
+  BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
   var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
@@ -227,7 +234,7 @@ fun TripInfoScreen(
                   onToggleFullscreen = { tripInfoViewModel.toggleFullscreen(it) },
                   onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
                   onUserLocationUpdate = { currentGpsPoint = it })
-          TripInfoContent(contentState, callbacks)
+          TripInfoContent(contentState, callbacks, isComputing, schedule, onActivityClick)
 
           // Fullscreen map overlay
           if (ui.fullscreen) {
@@ -257,7 +264,10 @@ data class MapState(
 @Composable
 internal fun TripInfoContent(
     contentState: TripInfoContentState,
-    callbacks: TripInfoContentCallbacks
+    callbacks: TripInfoContentCallbacks,
+    isComputing: Boolean,
+    schedule: List<TripElement>,
+    onActivityClick: (TripElement.TripActivity) -> Unit
 ) {
   LazyColumn(
       modifier = Modifier.fillMaxSize().testTag(TripInfoScreenTestTags.LAZY_COLUMN),
@@ -283,7 +293,9 @@ internal fun TripInfoContent(
                   mapState = contentState.mapState,
                   onToggleFullscreen = { callbacks.onToggleFullscreen(true) },
                   onToggleNavMode = callbacks.onToggleNavMode,
-                  onUserLocationUpdate = callbacks.onUserLocationUpdate)
+                  onUserLocationUpdate = callbacks.onUserLocationUpdate,
+                  isComputing = isComputing,
+                  schedule = schedule)
             }
             item {
               StepControls(
@@ -296,20 +308,18 @@ internal fun TripInfoContent(
         }
 
         // Steps list
-        itemsIndexed(contentState.schedule) { idx, el ->
+        itemsIndexed(schedule) { idx, el ->
           val stepNo = idx + 1
           when (el) {
             is TripElement.TripActivity -> {
-              StepRow(
+              StepLocationCard(
                   stepNumber = stepNo,
-                  subtitle =
-                      el.activity.location.name +
-                          (if (el.activity.description.isBlank()) ""
-                          else " — ${el.activity.description}"),
+                  title = el.activity.location.name,
                   timeRange = "${fmtTime(el.activity.startDate)} – ${fmtTime(el.activity.endDate)}",
                   leadingIcon = {
                     Icon(imageVector = Icons.Filled.Attractions, contentDescription = null)
-                  })
+                  },
+                  modifier = Modifier.clickable { onActivityClick(el) })
             }
             is TripElement.TripSegment -> {
               StepRow(
@@ -403,7 +413,9 @@ private fun TripMapCard(
     mapState: MapState,
     onToggleFullscreen: () -> Unit,
     onToggleNavMode: () -> Unit,
-    onUserLocationUpdate: (Point) -> Unit
+    onUserLocationUpdate: (Point) -> Unit,
+    isComputing: Boolean,
+    schedule: List<TripElement>
 ) {
   Card(
       modifier =
@@ -417,7 +429,7 @@ private fun TripMapCard(
                 Modifier.fillMaxWidth()
                     .height(200.dp)
                     .testTag(TripInfoScreenTestTags.MAP_CONTAINER)) {
-              if (mapState.isLoading) {
+              if (isComputing || schedule.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                   CircularProgressIndicator(
                       modifier = Modifier.testTag(TripInfoScreenTestTags.LOADING))
@@ -496,7 +508,12 @@ private fun StepRow(
       leadingContent = leadingIcon)
 }
 
-/** A button to toggle the favorite status of the trip. */
+/**
+ * A button to mark/unmark a trip as favorite.
+ *
+ * @param isFavorite Whether the trip is favorite.
+ * @param onToggleFavorite Called when the user clicks the button.
+ */
 @Composable
 private fun FavoriteButton(isFavorite: Boolean, onToggleFavorite: () -> Unit) {
   IconButton(
@@ -519,6 +536,10 @@ private fun FavoriteButton(isFavorite: Boolean, onToggleFavorite: () -> Unit) {
 /**
  * A toggle button to switch between drawing the route from the start of the step or from the user's
  * current GPS location.
+ *
+ * @param drawFromCurrentPosition Whether the route should start from the current GPS position
+ * @param onToggleNavMode Called when the user clicks the button.
+ * @param modifier The modifier to apply.
  */
 @Composable
 fun NavigationModeToggle(
