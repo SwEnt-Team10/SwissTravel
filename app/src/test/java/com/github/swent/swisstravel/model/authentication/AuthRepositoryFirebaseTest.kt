@@ -253,7 +253,6 @@ class AuthRepositoryFirebaseTest {
     verify { mockAuth.signOut() }
   }
 
-
   @Test
   fun deleteUser_Success() = runTest {
     // Arrange
