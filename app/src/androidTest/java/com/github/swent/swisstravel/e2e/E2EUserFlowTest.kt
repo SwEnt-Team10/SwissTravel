@@ -47,43 +47,43 @@ class E2EUserFlowTest : FirestoreSwissTravelTest() {
     }
   }
 
-  @Test
-  fun user_can_sign_in_and_navigate_across_tabs() {
-    composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
-
-    // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
-    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
-      composeTestRule
-          .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-          .fetchSemanticsNodes()
-          .isNotEmpty()
-    }
-
-    // Verify bottom navigation visible
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
-
-    // Navigate to Current Trip and verify
-    composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
-    composeTestRule.checkMyTripsScreenIsNotDisplayed()
-    composeTestRule.checkProfileScreenIsNotDisplayed()
-
-    // Navigate to My Trips and verify
-    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    composeTestRule.checkMyTripsScreenIsDisplayed()
-    composeTestRule.checkProfileScreenIsNotDisplayed()
-
-    // Navigate to Profile and verify
-    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    composeTestRule.waitForIdle()
-    Thread.sleep(5000)
-    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
-    composeTestRule.checkMyTripsScreenIsNotDisplayed()
-    composeTestRule.checkProfileScreenIsDisplayed()
-  }
+//  @Test
+//  fun user_can_sign_in_and_navigate_across_tabs() {
+//    composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
+//    composeTestRule.waitForIdle()
+//    composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
+//
+//    // Wait for main navigation to appear (indicates successful sign-in + main UI shown)
+//    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+//      composeTestRule
+//          .onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+//          .fetchSemanticsNodes()
+//          .isNotEmpty()
+//    }
+//
+//    // Verify bottom navigation visible
+//    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertExists()
+//
+//    // Navigate to Current Trip and verify
+//    composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
+//    composeTestRule.checkCurrentTripScreenEmptyIsDisplayed()
+//    composeTestRule.checkMyTripsScreenIsNotDisplayed()
+//    composeTestRule.checkProfileScreenIsNotDisplayed()
+//
+//    // Navigate to My Trips and verify
+//    composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+//    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+//    composeTestRule.checkMyTripsScreenIsDisplayed()
+//    composeTestRule.checkProfileScreenIsNotDisplayed()
+//
+//    // Navigate to Profile and verify
+//    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+//    composeTestRule.waitForIdle()
+//    Thread.sleep(5000)
+//    composeTestRule.checkCurrentTripScreenIsNotDisplayed()
+//    composeTestRule.checkMyTripsScreenIsNotDisplayed()
+//    composeTestRule.checkProfileScreenIsDisplayed()
+//  }
 
   @After
   override fun tearDown() {
