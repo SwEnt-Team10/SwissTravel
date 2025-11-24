@@ -198,4 +198,23 @@ class AuthRepositoryFirebase(
           IllegalStateException("Logout failed: ${e.localizedMessage ?: UNEXPECTED_ERROR}"))
     }
   }
+
+  /**
+   * Deletes the currently authenticated user from Firebase.
+   *
+   * @return A [Result] indicating success ([Unit]) or an exception on failure.
+   */
+  override suspend fun deleteUser(): Result<Unit> {
+    return try {
+      val user = auth.currentUser
+      if (user == null) {
+        Result.failure(IllegalStateException("No user is currently signed in."))
+      } else {
+        user.delete().await()
+        Result.success(Unit)
+      }
+    } catch (e: Exception) {
+      Result.failure(IllegalStateException("Failed to delete user: ${e.localizedMessage}"))
+    }
+  }
 }

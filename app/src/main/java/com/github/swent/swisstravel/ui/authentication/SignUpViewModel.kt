@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -37,6 +38,8 @@ class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
    * @param lastName The user's last name.
    * @param context The application context, used for retrieving error string resources.
    */
+  var currentUser: FirebaseUser? = null
+
   fun signUpWithEmailPassword(
       email: String,
       password: String,
@@ -54,27 +57,73 @@ class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
             .signUpWithEmailPassword(email, password, firstName, lastName)
             .fold(
                 onSuccess = { user ->
-                  // Sign up successful, email sent. Now wait for verification.
+                  // We only update the stage to show the "Check your email" screen.
                   _uiState.update {
                     it.copy(
                         isLoading = false,
-                        user = user, // Keep user info
-                        signUpStage = SignUpStage.PENDING_VERIFICATION, // << CHANGE HERE
+                        signUpStage = SignUpStage.PENDING_VERIFICATION,
                         errorMsg = null,
-                        signedOut = false)
+                        // Ensure the UI still treats them as not fully logged in
+                        user = null,
+                        signedOut = true)
                   }
+                  // currentUser = user
                 },
                 onFailure = { failure ->
-                  _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        errorMsg = failure.localizedMessage,
-                        signedOut = true,
-                        user = null)
-                  }
+                  // If sign up fails, try to sign in.
+                  // This handles the case where the user already exists but is not verified.
+                  repository
+                      .signInWithEmailPassword(email, password)
+                      .fold(
+                          onSuccess = { user ->
+                            if (user.isEmailVerified) {
+                              _uiState.update {
+                                it.copy(
+                                    isLoading = false,
+                                    errorMsg = "Account already exists. Please sign in.",
+                                    signedOut = true,
+                                    user = null)
+                              }
+                              repository.signOut()
+                            } else {
+                              // User exists but is not verified. Delete the user and retry sign up.
+                              viewModelScope.launch {
+                                repository
+                                    .deleteUser()
+                                    .fold(
+                                        onSuccess = {
+                                          // Reset loading state to allow the recursive call to
+                                          // proceed
+                                          _uiState.update { it.copy(isLoading = false) }
+                                          // Retry sign up
+                                          signUpWithEmailPassword(
+                                              email, password, firstName, lastName, context)
+                                        },
+                                        onFailure = { deleteFailure ->
+                                          _uiState.update {
+                                            it.copy(
+                                                isLoading = false,
+                                                errorMsg =
+                                                    "Failed to reset account: ${deleteFailure.localizedMessage}",
+                                                signedOut = true,
+                                                user = null)
+                                          }
+                                        })
+                              }
+                            }
+                          },
+                          onFailure = {
+                            // If sign in also fails, show the original error
+                            _uiState.update {
+                              it.copy(
+                                  isLoading = false,
+                                  errorMsg = failure.localizedMessage,
+                                  signedOut = true,
+                                  user = null)
+                            }
+                          })
                 })
       } catch (e: Exception) {
-        // Unexpected errors
         _uiState.update {
           it.copy(
               isLoading = false,
@@ -100,10 +149,19 @@ class SignUpViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
           .fold(
               onSuccess = { isVerified ->
                 if (isVerified) {
-                  // Success -> Set the flag to trigger navigation.
-                  _uiState.update { it.copy(isLoading = false, isEmailVerified = true) }
+                  // SUCCESS: Now we can populate the user and sign them in
+                  // You might need to fetch the current user from the repo here
+                  // Assuming your repo has this
+
+                  _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isEmailVerified = true,
+                        user = currentUser, // Populate user now
+                        signedOut = false // Allow access to app
+                        )
+                  }
                 } else {
-                  // Not verified yet. Inform the user.
                   _uiState.update {
                     it.copy(
                         isLoading = false,
