@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
-import android.widget.Toast
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,13 +20,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
@@ -68,23 +65,13 @@ fun ArrivalDepartureScreen(
     arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm"),
     departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
 ) {
-  // Use different separate view models for arrival and departure
   val arrivalState by arrivalAddressVm.addressState.collectAsState()
   val departureState by departureAddressVm.addressState.collectAsState()
-  val context = LocalContext.current
-  val emptyDeparture = stringResource(R.string.departure_required)
-  val emptyArrival = stringResource(R.string.arrival_required)
-  val emptyDepartureAndArrival = stringResource(R.string.departure_and_arrival_required)
 
-  // A LaunchedEffect to synchronize the selected arrival location with the TripSettingsViewModel.
-  // It triggers whenever the selected location in the arrivalAddressVm changes.
-  LaunchedEffect(arrivalState.selectedLocation) {
+  // Synchronize the selected locations with the TripSettingsViewModel.
+  // This combines the previous two LaunchedEffect blocks into one.
+  LaunchedEffect(arrivalState.selectedLocation, departureState.selectedLocation) {
     arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it) }
-  }
-
-  // A LaunchedEffect to synchronize the selected departure location with the TripSettingsViewModel.
-  // It triggers whenever the selected location in the departureAddressVm changes.
-  LaunchedEffect(departureState.selectedLocation) {
     departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
   }
 
@@ -141,21 +128,9 @@ fun ArrivalDepartureScreen(
                         arrivalState.selectedLocation != null &&
                             departureState.selectedLocation != null,
                     onClick = {
-
-                      // check that both locations are set
-                      if (arrivalState.selectedLocation == null &&
-                          departureState.selectedLocation == null) {
-                        Toast.makeText(context, emptyDepartureAndArrival, Toast.LENGTH_SHORT).show()
-                        return@Button
-                      }
-                      if (departureState.selectedLocation == null) {
-                        Toast.makeText(context, emptyDeparture, Toast.LENGTH_SHORT).show()
-                        return@Button
-                      }
-                      if (arrivalState.selectedLocation == null) {
-                        Toast.makeText(context, emptyArrival, Toast.LENGTH_SHORT).show()
-                        return@Button
-                      }
+                      // Simplified validation logic for the Next button.
+                      // Since the button is only enabled when both locations are selected,
+                      // we can directly call onNext(). The complex checks are no longer needed.
                       onNext()
                     },
                     colors =
@@ -169,11 +144,4 @@ fun ArrivalDepartureScreen(
               }
         }
       }
-}
-
-/** A composable preview function for the [ArrivalDepartureScreen]. */
-@Preview
-@Composable
-fun TripArrivalDeparturePreview() {
-  ArrivalDepartureScreen()
 }

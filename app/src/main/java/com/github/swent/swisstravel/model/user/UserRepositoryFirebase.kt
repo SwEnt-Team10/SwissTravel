@@ -8,6 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 
+@Suppress("DEPRECATION")
 class UserRepositoryFirebase(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
@@ -36,14 +37,15 @@ class UserRepositoryFirebase(
 
     val uid = firebaseUser.uid
     return try {
-      val doc = db.collection("users").document(uid).get(Source.SERVER).await()
+      val doc = db.collection("users").document(uid)[Source.SERVER].await()
       if (doc.exists()) createUser(doc, uid) else retrieveUser(firebaseUser, uid)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       try {
-        val cachedDoc = db.collection("users").document(uid).get(Source.CACHE).await()
+        val cachedDoc = db.collection("users").document(uid)[Source.CACHE].await()
         if (cachedDoc.exists()) {
           createUser(cachedDoc, uid)
         } else {
+          // Fallback user creation if cache is also empty
           User(
               uid = uid,
               name = firebaseUser.displayName ?: "Guest",
@@ -51,7 +53,7 @@ class UserRepositoryFirebase(
               profilePicUrl = "",
               preferences = emptyList())
         }
-      } catch (cacheException: Exception) {
+      } catch (_: Exception) {
         retrieveUser(firebaseUser, uid)
       }
     }
@@ -75,9 +77,9 @@ class UserRepositoryFirebase(
 
     return User(
         uid = uid,
-        name = doc.getString("name") ?: "",
-        email = doc.getString("email") ?: "",
-        profilePicUrl = doc.getString("profilePicUrl") ?: "",
+        name = doc["name"] as? String ?: "",
+        email = doc["email"] as? String ?: "",
+        profilePicUrl = doc["profilePicUrl"] as? String ?: "",
         preferences = prefs)
   }
 
