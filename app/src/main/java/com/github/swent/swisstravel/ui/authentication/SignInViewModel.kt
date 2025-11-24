@@ -100,9 +100,9 @@ abstract class BaseAuthViewModel(
                         user = user,
                         errorMsg = null,
                         signedOut = false,
-                        // 1. Google accounts are always verified
+                        // Google accounts are always verified
                         isEmailVerified = true,
-                        // 2. Reset stage to ensure UI doesn't show the "Check Email" screen
+                        // In case the user is logged out, won't cause bugs
                         signUpStage = SignUpStage.FILLING_FORM)
                   }
                 },

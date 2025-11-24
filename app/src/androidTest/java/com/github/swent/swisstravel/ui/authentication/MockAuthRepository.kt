@@ -23,6 +23,8 @@ class MockAuthRepository : AuthRepository {
   var checkVerificationResult: Result<Boolean> = Result.success(false) // Default to not verified
   var resendEmailResult: Result<Unit> = Result.success(Unit)
 
+  var deleteUserResult: Result<Unit> = Result.success(Unit)
+
   override suspend fun signUpWithEmailPassword(
       email: String,
       password: String,
@@ -38,6 +40,10 @@ class MockAuthRepository : AuthRepository {
 
   override suspend fun resendVerificationEmail(): Result<Unit> {
     return resendEmailResult
+  }
+
+  override suspend fun deleteUser(): Result<Unit> {
+    return deleteUserResult
   }
 
   override suspend fun signInWithGoogle(credential: Credential): Result<FirebaseUser> {
