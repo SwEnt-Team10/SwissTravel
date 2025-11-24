@@ -84,14 +84,16 @@ class ProfileScreenUITest {
     }
 
     // Expand
-    composeTestRule.onNodeWithTag(useUnmergedTree = true,
-        testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE).performClick()
+    composeTestRule
+        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
+        .performClick()
     // Now a known preference chip should appear
     composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
 
     // Collapse
-    composeTestRule.onNodeWithTag(useUnmergedTree = true,
-        testTag =ProfileScreenTestTags.PREFERENCES_TOGGLE).performClick()
+    composeTestRule
+        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
+        .performClick()
     composeTestRule.onNodeWithText("Museums").assertDoesNotExist()
   }
 
@@ -102,8 +104,9 @@ class ProfileScreenUITest {
     }
 
     // Expand first
-    composeTestRule.onNodeWithTag(useUnmergedTree = true,
-        testTag =ProfileScreenTestTags.PREFERENCES_TOGGLE).performClick()
+    composeTestRule
+        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
+        .performClick()
     composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
 
     // Click to toggle on/off (we don't assert state, just ensure it doesn't crash)
