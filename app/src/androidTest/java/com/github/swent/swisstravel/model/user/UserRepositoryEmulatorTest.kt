@@ -5,6 +5,8 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Firebase
+import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlin.test.assertEquals
@@ -24,6 +26,28 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
     repositoryUser = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
+  }
+
+  private data class TestUser(val uid: String, val credential: AuthCredential)
+
+  private suspend fun createGoogleUserAndSignIn(
+      name: String,
+      email: String,
+      createDocViaRepo: Boolean = false
+  ): TestUser {
+    val token = FakeJwtGenerator.createFakeGoogleIdToken(name, email)
+    FirebaseEmulator.createGoogleUser(token)
+    val credential = GoogleAuthProvider.getCredential(token, null)
+
+    val authResult: AuthResult = FirebaseEmulator.auth.signInWithCredential(credential).await()
+    val firebaseUser = authResult.user ?: error("User should not be null after sign-in")
+
+    // Optionally create the Firestore user doc via repository
+    if (createDocViaRepo) {
+      repositoryUser.getCurrentUser()
+    }
+
+    return TestUser(uid = firebaseUser.uid, credential = credential)
   }
 
   @Test
@@ -204,20 +228,14 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun sendFriendRequest_addsPendingFriendToCurrentUser_only() = runBlocking {
     // Arrange: create A (current user)
-    val tokenA = FakeJwtGenerator.createFakeGoogleIdToken("User A", "userA@example.com")
-    FirebaseEmulator.createGoogleUser(tokenA)
-    val credentialA = GoogleAuthProvider.getCredential(tokenA, null)
-    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
-    val userA = repositoryUser.getCurrentUser()
-    val uidA = userA.uid
+    val (uidA, credentialA) =
+        createGoogleUserAndSignIn(
+            name = "User A", email = "userA@example.com", createDocViaRepo = true)
 
-    // Create B (we just need a valid uid as target)
-    val tokenB = FakeJwtGenerator.createFakeGoogleIdToken("User B", "userB@example.com")
-    FirebaseEmulator.createGoogleUser(tokenB)
-    val credentialB = GoogleAuthProvider.getCredential(tokenB, null)
-    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
-    val userB = repositoryUser.getCurrentUser()
-    val uidB = userB.uid
+    // Create B (need uid + doc as well)
+    val (uidB, credentialB) =
+        createGoogleUserAndSignIn(
+            name = "User B", email = "userB@example.com", createDocViaRepo = true)
 
     // Back to A to send request (A is the caller)
     FirebaseEmulator.auth.signInWithCredential(credentialA).await()
@@ -242,20 +260,14 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun acceptFriendRequest_updatesStatusToAccepted_onCurrentUserOnly() = runBlocking {
     // Arrange: create B as current user (the one accepting)
-    val tokenB = FakeJwtGenerator.createFakeGoogleIdToken("User B2", "userB2@example.com")
-    FirebaseEmulator.createGoogleUser(tokenB)
-    val credentialB = GoogleAuthProvider.getCredential(tokenB, null)
-    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
-    val userB = repositoryUser.getCurrentUser()
-    val uidB = userB.uid
+    val (uidB, credentialB) =
+        createGoogleUserAndSignIn(
+            name = "User B2", email = "userB2@example.com", createDocViaRepo = true)
 
-    // Create A (we just need A's uid)
-    val tokenA = FakeJwtGenerator.createFakeGoogleIdToken("User A2", "userA2@example.com")
-    FirebaseEmulator.createGoogleUser(tokenA)
-    val credentialA = GoogleAuthProvider.getCredential(tokenA, null)
-    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
-    val userA = repositoryUser.getCurrentUser()
-    val uidA = userA.uid
+    // Create A (we just need A's uid + doc)
+    val (uidA, credentialA) =
+        createGoogleUserAndSignIn(
+            name = "User A2", email = "userA2@example.com", createDocViaRepo = true)
 
     // Back to B; seed B's doc with a PENDING entry for A
     FirebaseEmulator.auth.signInWithCredential(credentialB).await()
@@ -281,20 +293,14 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun removeFriend_removesFriendFromCurrentUserOnly() = runBlocking {
     // Arrange: create A as current user
-    val tokenA = FakeJwtGenerator.createFakeGoogleIdToken("User A3", "userA3@example.com")
-    FirebaseEmulator.createGoogleUser(tokenA)
-    val credentialA = GoogleAuthProvider.getCredential(tokenA, null)
-    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
-    val userA = repositoryUser.getCurrentUser()
-    val uidA = userA.uid
+    val (uidA, credentialA) =
+        createGoogleUserAndSignIn(
+            name = "User A3", email = "userA3@example.com", createDocViaRepo = true)
 
     // Create B (just for uid)
-    val tokenB = FakeJwtGenerator.createFakeGoogleIdToken("User B3", "userB3@example.com")
-    FirebaseEmulator.createGoogleUser(tokenB)
-    val credentialB = GoogleAuthProvider.getCredential(tokenB, null)
-    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
-    val userB = repositoryUser.getCurrentUser()
-    val uidB = userB.uid
+    val (uidB, credentialB) =
+        createGoogleUserAndSignIn(
+            name = "User B3", email = "userB3@example.com", createDocViaRepo = true)
 
     // Back to A; seed A's doc with an ACCEPTED entry for B
     FirebaseEmulator.auth.signInWithCredential(credentialA).await()
