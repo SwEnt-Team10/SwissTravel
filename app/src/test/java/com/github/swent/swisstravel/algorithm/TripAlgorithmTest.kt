@@ -49,7 +49,7 @@ class TripAlgorithmTest {
 
     val activityElements = listOf(museumActivity)
 
-    coEvery { selectActivities.addActivities() } returns activityElements
+    coEvery { selectActivities.addActivities(any<(Float) -> Unit>()) } returns activityElements
 
     val orderedRoute =
         OrderedRoute(

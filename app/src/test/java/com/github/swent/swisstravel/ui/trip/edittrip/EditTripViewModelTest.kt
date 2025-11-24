@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
+import android.content.Context
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
@@ -8,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import io.mockk.*
+import kotlin.collections.emptyList
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -144,6 +146,9 @@ class EditTripScreenViewModelTest {
   fun `save merges ui state into tripProfile and calls editTrip`() = runTest {
     coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
     coEvery { repo.editTrip(any(), any()) } just Runs
+    // Needed to spy on the ViewModel to mock runTripAlgorithm
+    vm = spyk(vm)
+    coEvery { vm.runTripAlgorithm(any(), any(), any(), any()) } returns emptyList()
 
     vm.loadTrip(sampleTripId)
     advanceUntilIdle()
@@ -158,7 +163,8 @@ class EditTripScreenViewModelTest {
     val tripSlot = slot<Trip>()
     coEvery { repo.editTrip(eq(sampleTripId), capture(tripSlot)) } just Runs
 
-    vm.save()
+    val context = mockk<Context>(relaxed = true)
+    vm.save(context)
     advanceUntilIdle()
 
     coVerify(exactly = 1) { repo.editTrip(eq(sampleTripId), any()) }
@@ -178,11 +184,15 @@ class EditTripScreenViewModelTest {
   fun `save failure sets errorMsg`() = runTest {
     coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
     coEvery { repo.editTrip(any(), any()) } throws RuntimeException("save failed")
+    // Needed to spy on the ViewModel to mock runTripAlgorithm
+    vm = spyk(vm)
+    coEvery { vm.runTripAlgorithm(any(), any(), any(), any()) } returns emptyList()
 
     vm.loadTrip(sampleTripId)
     advanceUntilIdle()
 
-    vm.save()
+    val context = mockk<Context>(relaxed = true)
+    vm.save(context)
     advanceUntilIdle()
 
     assertEquals("save failed", vm.state.value.errorMsg)
