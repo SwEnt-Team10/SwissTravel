@@ -222,6 +222,9 @@
     <string name="estimated_time">Estimated time: %1$s</string>
     <string name="no_image_fallback">No images available for this activity.</string>
     <string name="activity_tip">Tip: Check weather &amp; opening hours before going.</string>
+    <string name="profile_info">Profile Information</string>
+    <string name="biography">Biography</string>
+    <string name="settings">Settings</string>
 
 
 </resources>

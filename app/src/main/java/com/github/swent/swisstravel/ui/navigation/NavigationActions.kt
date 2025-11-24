@@ -32,6 +32,8 @@ sealed class Screen(
 
   object Profile : Screen(route = "profile", name = "Profile", isTopLevelDestination = true)
 
+  object ProfileSettings : Screen(route = "profile_settings", name = "Profile Settings")
+
   object MyTrips : Screen(route = "my_trips", name = "My trips", isTopLevelDestination = true)
 
   object SetCurrentTrip : Screen(route = "set_current_trip", name = "Set current trip")

@@ -17,23 +17,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-data class ProfileScreenUIState(
+data class ProfileSettingsUIState(
     val isLoading: Boolean = true,
     val profilePicUrl: String = "",
     val name: String = "",
+    val biography: String = "",
     val email: String = "",
     var selectedPreferences: List<Preference> = emptyList(),
     var errorMsg: String? = null
 )
 
-class ProfileScreenViewModel(
+class ProfileSettingsViewModel(
     private val userRepository: UserRepository,
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
 ) : ViewModel() {
 
-  private val _uiState = MutableStateFlow(ProfileScreenUIState())
+  private val _uiState = MutableStateFlow(ProfileSettingsUIState())
   private var currentUser: User? = null
-  val uiState: StateFlow<ProfileScreenUIState> = _uiState.asStateFlow()
+  val uiState: StateFlow<ProfileSettingsUIState> = _uiState.asStateFlow()
 
   init {
     viewModelScope.launch {
@@ -73,7 +74,7 @@ class ProfileScreenViewModel(
   fun autoFill(loggedIn: User) {
     val sanitized = PreferenceRules.enforceMutualExclusivity(loggedIn.preferences)
     _uiState.value =
-        ProfileScreenUIState(
+        ProfileSettingsUIState(
             profilePicUrl = loggedIn.profilePicUrl,
             name = loggedIn.name,
             email = loggedIn.email,

@@ -46,7 +46,9 @@ import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
-import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
+import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
@@ -253,8 +255,14 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
   ) {
     composable(Screen.Profile.route) {
       ProfileScreen(
-          profileScreenViewModel =
-              ProfileScreenViewModel(userRepository = UserRepositoryFirebase()),
+          profileViewModel = ProfileViewModel(userRepository = UserRepositoryFirebase()),
+          onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
+          navigationActions = navigationActions)
+    }
+    composable(Screen.ProfileSettings.route) {
+      ProfileSettingsScreen(
+          profileSettingsViewModel =
+              ProfileSettingsViewModel(userRepository = UserRepositoryFirebase()),
           navigationActions = navigationActions)
     }
   }
