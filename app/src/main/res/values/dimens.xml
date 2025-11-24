@@ -75,7 +75,7 @@
     <!-- Step Location Card -->
     <dimen name="step_location_card_horizontal_padding">16dp</dimen>
     <dimen name="step_location_card_vertical_padding">8dp</dimen>
-    <dimen name="step_location_card_radius">8dp</dimen>
+    <dimen name="step_location_card_radius">24dp</dimen>
     <dimen name="step_location_card_padding">12dp</dimen>
     <dimen name="step_location_card_micro_spacer">4dp</dimen>
 
@@ -134,6 +134,15 @@
     <dimen name="small_padding">16dp</dimen>
     <dimen name="mid_padding">24dp</dimen>
     <dimen name="medium_padding">32dp</dimen>
+
+    <!-- Activity Infos -->
+    <dimen name="activity_info_main_col_padding">16dp</dimen>
+    <dimen name="activity_info_desc_padding">4dp</dimen>
+    <dimen name="activity_info_images_padding">8dp</dimen>
+    <dimen name="activity_info_images_horizontal_padding">12dp</dimen>
+    <dimen name="activity_info_images_width">220dp</dimen>
+    <dimen name="activity_info_images_height">150dp</dimen>
+
 
     <!-- Tonal Elevation -->
     <dimen name="tiny_tonal_elevation">2dp</dimen>

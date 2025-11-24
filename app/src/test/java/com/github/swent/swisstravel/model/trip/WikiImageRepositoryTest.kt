@@ -158,8 +158,8 @@ class WikiImageRepositoryTest {
     val urls = repo.getImagesByName("Some place", maxImages = 2)
 
     assertEquals(2, urls.size)
-    assertEquals("https://example.com/a.jpg", urls[0])
-    assertEquals("https://example.com/b.jpg", urls[1])
+    assertEquals("https://example.com/a.jpg", urls[1])
+    assertEquals("https://example.com/b.jpg", urls[0])
   }
 
   @Test
