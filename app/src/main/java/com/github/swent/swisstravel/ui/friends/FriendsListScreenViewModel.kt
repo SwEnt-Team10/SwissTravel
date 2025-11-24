@@ -1,11 +1,13 @@
 package com.github.swent.swisstravel.ui.friends
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 data class FriendsListScreenUIState(
     val friends: List<User> = emptyList(),
@@ -19,6 +21,10 @@ class FriendsListScreenViewModel(
 
   private val _uiState = MutableStateFlow(FriendsListScreenUIState())
   val uiState = _uiState.asStateFlow()
+
+  init {
+    viewModelScope.launch { refreshFriends() }
+  }
 
   /** Refreshes the friends list from the repository. */
   suspend fun refreshFriends() {

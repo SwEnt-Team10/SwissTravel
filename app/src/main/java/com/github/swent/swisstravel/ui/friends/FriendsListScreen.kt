@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
@@ -63,7 +64,7 @@ fun FriendsScreen(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.testTag(FriendsScreenTestTags.ADD_FRIEND_BUTTON)) {
-              Icon(Icons.Default.Add, contentDescription = null)
+              Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_friend))
             }
       }) { padding ->
         Column(
@@ -90,7 +91,7 @@ private fun FriendsTopAppBar(
   TopAppBar(
       title = {
         Text(
-            text = "", // stringResource(R.string.friends_title),
+            text = stringResource(R.string.friends_list),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground)
       },
@@ -98,7 +99,9 @@ private fun FriendsTopAppBar(
         IconButton(
             onClick = onSearchFriends,
             modifier = Modifier.testTag(FriendsScreenTestTags.SEARCH_FRIENDS_BUTTON)) {
-              Icon(Icons.Default.Search, contentDescription = null)
+              Icon(
+                  Icons.Default.Search,
+                  contentDescription = stringResource(R.string.search_friends))
             }
       },
       colors =
@@ -114,9 +117,8 @@ private fun FriendsListSection(
     onSelectFriend: (String) -> Unit,
 ) {
   if (friends.isEmpty()) {
-    // Optional: show an empty message – reuse your style
     Text(
-        text = "", // stringResource(R.string.no_friends),
+        text = stringResource(R.string.no_friends),
         style = MaterialTheme.typography.bodyMedium,
     )
   } else {

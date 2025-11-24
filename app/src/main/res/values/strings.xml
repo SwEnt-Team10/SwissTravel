@@ -223,5 +223,12 @@
     <string name="no_image_fallback">No images available for this activity.</string>
     <string name="activity_tip">Tip: Check weather &amp; opening hours before going.</string>
 
+    <!-- Friends List -->
+    <string name="friends_list">Friends</string>
+    <string name="no_friends">You have no friends added.</string>
+    <string name="add_friend">Add Friend</string>
+    <string name="search_friends">Search</string>
+
+
 
 </resources>
