@@ -248,7 +248,12 @@ data class MapState(
     val isLoading: Boolean
 )
 
-/** The main content of the trip info screen, displayed in a LazyColumn. */
+/**
+ * The main content of the trip info screen, displayed in a LazyColumn.
+ *
+ * @param contentState The state of the content.
+ * @param callbacks The event handlers for the content.
+ */
 @Composable
 internal fun TripInfoContent(
     contentState: TripInfoContentState,
