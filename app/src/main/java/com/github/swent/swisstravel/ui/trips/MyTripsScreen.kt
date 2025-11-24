@@ -53,6 +53,8 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripList
+import com.github.swent.swisstravel.ui.composable.TripListEvents
+import com.github.swent.swisstravel.ui.composable.TripListState
 
 /**
  * Contains constants for test tags used within [MyTripsScreen].
@@ -391,23 +393,33 @@ private fun UpcomingTripsSection(
     onEnterSelectionMode: () -> Unit,
     onSortSelected: (TripSortType) -> Unit,
 ) {
+  val listState =
+      TripListState(
+          trips = trips,
+          emptyListString = stringResource(R.string.no_upcoming_trips),
+          isSelectionMode = uiState.isSelectionMode,
+          isSelected = { trip -> trip in uiState.selectedTrips },
+      )
+  val listEvent =
+      TripListEvents(
+          onClickTripElement = {
+            it?.let { trip ->
+              if (uiState.isSelectionMode) onToggleSelection(trip) else onSelectTrip(trip.uid)
+            }
+          },
+          onLongPress = {
+            it?.let { trip ->
+              onEnterSelectionMode()
+              onToggleSelection(trip)
+            }
+          },
+      )
+
   SortedTripList(
       title = stringResource(R.string.upcoming_trips),
-      trips = trips,
-      onClickTripElement = {
-        it?.let { trip ->
-          if (uiState.isSelectionMode) onToggleSelection(trip) else onSelectTrip(trip.uid)
-        }
-      },
+      listState = listState,
+      listEvents = listEvent,
       onClickDropDownMenu = { type -> onSortSelected(type) },
       selectedSortType = uiState.sortType,
-      onLongPress = {
-        it?.let { trip ->
-          onEnterSelectionMode()
-          onToggleSelection(trip)
-        }
-      },
-      isSelected = { trip -> trip in uiState.selectedTrips },
-      isSelectionMode = uiState.isSelectionMode,
-      emptyListString = stringResource(R.string.no_upcoming_trips))
+  )
 }

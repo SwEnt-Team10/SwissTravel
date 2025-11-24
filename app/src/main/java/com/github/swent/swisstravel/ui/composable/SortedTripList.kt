@@ -31,30 +31,49 @@ object SortedTripListTestTags {
 }
 
 /**
+ * Holds the state parameters for the [TripList].
+ *
+ * @param trips The list of trips to display.
+ * @param emptyListString The string to display when the trip list is empty.
+ * @param isSelectionMode Whether the selection mode is active.
+ * @param noIconTripElement Whether to hide the icon in the trip element.
+ * @param isSelected Function to determine if a trip is selected.
+ */
+data class TripListState(
+    val trips: List<Trip> = emptyList(),
+    val emptyListString: String = "",
+    val isSelectionMode: Boolean = false,
+    val noIconTripElement: Boolean = false,
+    val isSelected: (Trip) -> Boolean = { false }
+)
+
+/**
+ * Holds the event callbacks for the [TripList].
+ *
+ * @param onClickTripElement Callback when a trip element is clicked.
+ * @param onLongPress Callback when a trip element is long-pressed.
+ */
+data class TripListEvents(
+    val onClickTripElement: (Trip?) -> Unit = {},
+    val onLongPress: (Trip?) -> Unit = {}
+)
+
+/**
  * A composable that displays a sorted list of trips with a dropdown menu for sorting options.
  *
  * @param title The title to display above the trip list.
- * @param trips The list of trips to display.
- * @param onClickTripElement Callback when a trip element is clicked.
+ * @param listState The state object for the underlying trip list.
+ * @param listEvents The event handler for the underlying trip list.
  * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
  * @param selectedSortType The currently selected sorting option.
- * @param onLongPress Callback when a trip element is long-pressed.
- * @param isSelected Function to determine if a trip is selected.
- * @param isSelectionMode Whether the selection mode is active.
- * @param emptyListString The string to display when the trip list is empty.
  */
 @Composable
 fun SortedTripList(
     title: String = "",
-    trips: List<Trip> = emptyList(),
-    onClickTripElement: (Trip?) -> Unit = {},
+    listState: TripListState,
+    listEvents: TripListEvents,
     onClickDropDownMenu: (TripSortType) -> Unit = {},
     selectedSortType: TripSortType,
-    onLongPress: (Trip?) -> Unit = {},
-    isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false,
-    noIconTripElement: Boolean = false,
-    emptyListString: String = ""
 ) {
   Column(modifier = Modifier.fillMaxWidth().testTag(SortedTripListTestTags.SORTED_TRIP_LIST)) {
     Row(
@@ -76,12 +95,12 @@ fun SortedTripList(
         }
 
     TripList(
-        trips = trips,
-        onClickTripElement = onClickTripElement,
-        onLongPress = onLongPress,
-        isSelected = isSelected,
-        isSelectionMode = isSelectionMode,
-        noIconTripElement = noIconTripElement,
-        emptyListString = emptyListString)
+        trips = listState.trips,
+        onClickTripElement = listEvents.onClickTripElement,
+        onLongPress = listEvents.onLongPress,
+        isSelected = listState.isSelected,
+        isSelectionMode = listState.isSelectionMode,
+        noIconTripElement = listState.noIconTripElement,
+        emptyListString = listState.emptyListString)
   }
 }

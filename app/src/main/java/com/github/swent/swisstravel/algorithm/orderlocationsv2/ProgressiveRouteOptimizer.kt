@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.algorithm.orderlocationsv2
 
+import android.util.Log
 import com.github.swent.swisstravel.algorithm.cache.DurationCache
 import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.model.trip.Coordinate
@@ -111,7 +112,10 @@ class ProgressiveRouteOptimizer(
   }
 
   /**
-   * Fetch durations from cache or the duration matrix for a list of candidate locations.
+   * Fetch durations from cache or the duration matrix for a list of candidate locations. This
+   * function first attempts to retrieve all durations from the local cache. For any durations not
+   * found in the cache, it fetches them from the network/matrix and then saves the new results back
+   * into the cache for future use.
    *
    * @param current Starting location for durations.
    * @param candidates Candidate locations to fetch durations to.
@@ -123,40 +127,85 @@ class ProgressiveRouteOptimizer(
       candidates: List<Location>,
       mode: TransportMode
   ): Map<Location, Double?> {
-    val durations = mutableMapOf<Location, Double?>()
-    val missing = mutableListOf<Location>()
+    // Attempt to get all durations from the cache first.
+    val cachedDurations = getCachedDurations(current, candidates, mode)
 
-    for (c in candidates) {
-      val cached =
+    // Identify which candidates are missing from the cache.
+    val missingCandidates = candidates.filterNot { cachedDurations.containsKey(it) }
+
+    // If all candidates were found in the cache, we are done.
+    if (missingCandidates.isEmpty()) {
+      return cachedDurations
+    }
+
+    // Fetch the missing durations and combine with the cached results.
+    val fetchedDurations = fetchAndCacheMissingDurations(current, missingCandidates, mode)
+    return cachedDurations + fetchedDurations
+  }
+
+  /**
+   * Retrieves durations from the cache for a list of candidate locations.
+   *
+   * @param current The starting location.
+   * @param candidates The list of destination locations.
+   * @param mode The transport mode.
+   * @return A map of locations to their cached duration. It only contains entries that were
+   *   successfully found in the cache.
+   */
+  private suspend fun getCachedDurations(
+      current: Location,
+      candidates: List<Location>,
+      mode: TransportMode
+  ): Map<Location, Double?> {
+    return candidates
+        .mapNotNull { candidate ->
           try {
-            cacheManager.getDuration(current.coordinate, c.coordinate, mode)
+            cacheManager.getDuration(current.coordinate, candidate.coordinate, mode)?.let {
+              candidate to it.duration
+            }
           } catch (e: Exception) {
+            Log.d("Error getting duration from cache", e.toString())
             null
           }
-      if (cached?.duration != null && cached.duration >= 0) durations[c] = cached.duration
-      else missing.add(c)
-    }
+        }
+        .toMap()
+  }
 
-    if (missing.isNotEmpty()) {
-      val fetched =
-          try {
-            matrixHybrid.fetchDurationsFromStart(
-                current.coordinate, missing.map { it.coordinate }, mode)
-          } catch (e: Exception) {
-            emptyMap<Pair<Coordinate, Coordinate>, Double?>()
-          }
+  /**
+   * Fetches durations for missing candidates from the matrix and saves them to the cache.
+   *
+   * @param current The starting location.
+   * @param missingCandidates The list of candidates for which durations are missing.
+   * @param mode The transport mode.
+   * @return A map of the newly fetched locations to their durations.
+   */
+  private suspend fun fetchAndCacheMissingDurations(
+      current: Location,
+      missingCandidates: List<Location>,
+      mode: TransportMode
+  ): Map<Location, Double?> {
+    // Fetch durations from the hybrid matrix.
+    val fetchedDurations =
+        try {
+          matrixHybrid.fetchDurationsFromStart(
+              current.coordinate, missingCandidates.map { it.coordinate }, mode)
+        } catch (e: Exception) {
+          Log.d("Error fetching durations", e.toString())
+          emptyMap()
+        }
 
-      for (c in missing) {
-        val dur = fetched[Pair(current.coordinate, c.coordinate)]
-        durations[c] = dur
-        if (dur != null && dur >= 0)
-            try {
-              cacheManager.saveDuration(current.coordinate, c.coordinate, dur, mode)
-            } catch (_: Exception) {}
+    // Create a map from the results and save valid new durations to the cache.
+    return missingCandidates.associateWith { candidate ->
+      val duration = fetchedDurations[Pair(current.coordinate, candidate.coordinate)]
+      if (duration != null && duration >= 0) {
+        try {
+          cacheManager.saveDuration(current.coordinate, candidate.coordinate, duration, mode)
+        } catch (_: Exception) {
+          // Ignore cache-saving errors.
+        }
       }
+      duration
     }
-
-    return durations
   }
 
   /**
@@ -247,7 +296,9 @@ class ProgressiveRouteOptimizer(
                   .fetchDurationsFromStart(last.coordinate, listOf(end.coordinate), mode)[
                       Pair(last.coordinate, end.coordinate)]
       finalDuration?.let { cacheManager.saveDuration(last.coordinate, end.coordinate, it, mode) }
-    } catch (_: Exception) {}
+    } catch (_: Exception) {
+      // ignore cache-saving errors
+    }
     ordered.add(end)
     segmentDurations.add(finalDuration ?: LARGE_VALUE)
     return finalDuration ?: LARGE_VALUE

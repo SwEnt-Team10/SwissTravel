@@ -33,7 +33,13 @@ object CurrentTripScreenTestTags {
   const val CREATE_TRIP_TEXT = "createTripText"
 }
 
-/**  */
+/**
+ * Screen to display the current trip.
+ *
+ * @param navigationActions Navigation actions to navigate to other screens.
+ * @param isLoggedIn Whether the user is logged in.
+ * @param myTripsViewModel View model for my trips.
+ */
 @Composable
 fun CurrentTripScreen(
     navigationActions: NavigationActions? = null,

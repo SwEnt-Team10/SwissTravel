@@ -18,6 +18,8 @@ import com.mapbox.navigation.ui.maps.route.line.model.RouteSetValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+const val DRIVING_TRAFFIC = "driving-traffic"
+
 /**
  * Represents the UI state for the NavigationMapScreen.
  *
@@ -113,7 +115,7 @@ class MapScreenViewModel : ViewModel() {
    * @param profile The navigation profile to use (e.g. "driving-traffic")
    */
   @OptIn(ExperimentalPreviewMapboxNavigationAPI::class)
-  private fun requestRoute(profile: String = "driving-traffic") {
+  private fun requestRoute(profile: String = DRIVING_TRAFFIC) {
     val nav = _uiState.value.mapboxNavigation ?: return
     val pts = _uiState.value.locationsList
     if (pts.size < 2) return
@@ -135,7 +137,7 @@ class MapScreenViewModel : ViewModel() {
           override fun onFailure(reasons: List<RouterFailure>, routeOptions: RouteOptions) {
             Log.e("NAV_MAP_VM", "requestRoute failure: $reasons")
             // Fallback to walking if driving fails
-            if (profile == "driving-traffic") {
+            if (profile == "DRIVING_TRAFFIC") {
               Log.d("NAV_MAP_VM", "Trying walking route as fallback")
               requestRoute("walking")
             }
@@ -145,7 +147,7 @@ class MapScreenViewModel : ViewModel() {
             if (routes.isEmpty()) {
               Log.d("NAV_MAP_VM", "No route found for $profile")
               // Fallback to walking if driving failed
-              if (profile == "driving-traffic") {
+              if (profile == DRIVING_TRAFFIC) {
                 Log.d("NAV_MAP_VM", "Trying walking route as fallback")
                 requestRoute("walking")
               }

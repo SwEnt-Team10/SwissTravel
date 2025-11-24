@@ -40,17 +40,17 @@ class UserRepositoryFirebase(
 
     val uid = firebaseUser.uid
     return try {
-      val doc = db.collection("users").document(uid).get(Source.SERVER).await()
+      val doc = db.collection("users").document(uid)[Source.SERVER].await()
       if (doc.exists()) createUserFromDoc(doc, uid) else createAndStoreNewUser(firebaseUser, uid)
     } catch (e: Exception) {
       try {
-        val cachedDoc = db.collection("users").document(uid).get(Source.CACHE).await()
+        val cachedDoc = db.collection("users").document(uid)[Source.CACHE].await()
         if (cachedDoc.exists()) {
           createUserFromDoc(cachedDoc, uid)
         } else {
           createAndStoreNewUser(firebaseUser, uid)
         }
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         createAndStoreNewUser(firebaseUser, uid)
       }
     }
@@ -170,10 +170,10 @@ class UserRepositoryFirebase(
 
     return User(
         uid = uid,
-        name = doc.getString("name").orEmpty(),
-        biography = doc.getString("biography").orEmpty(),
-        email = doc.getString("email").orEmpty(),
-        profilePicUrl = doc.getString("profilePicUrl").orEmpty(),
+        name = doc["name"] as? String ?: "",
+        biography = doc["biography"] as? String ?: "",
+        email = doc["email"] as? String ?: "",
+        profilePicUrl = doc["profilePicUrl"] as? String ?: "",
         preferences = prefs,
         friends = friends,
         stats = stats)
