@@ -56,7 +56,7 @@ class ProfileScreenUITest {
 
   @get:Rule val composeTestRule = createComposeRule()
   private val fakeRepo = FakeUserRepository()
-    private val fakeTripRepo = TripCreationTests.FakeTripsRepository(emptyList())
+  private val fakeTripRepo = TripCreationTests.FakeTripsRepository(emptyList())
 
   @Test
   fun allKeyUIElementsAreDisplayed_collapsedByDefault() {
