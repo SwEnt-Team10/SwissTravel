@@ -17,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.ExpandLess
@@ -82,6 +83,7 @@ object ProfileSettingsTestTags {
 @Composable
 fun ProfileSettingsScreen(
     profileSettingsViewModel: ProfileSettingsViewModel = viewModel(),
+    onBack: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
@@ -98,8 +100,18 @@ fun ProfileSettingsScreen(
 
   Scaffold(
       topBar = {
-        TopAppBar( // TODO add back button
+        TopAppBar(
             title = { Text(stringResource(R.string.settings)) },
+            navigationIcon = {
+              IconButton(
+                  onClick = onBack,
+                  modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_BUTTON)) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = stringResource(R.string.back_to_profile),
+                        tint = MaterialTheme.colorScheme.onBackground)
+                  }
+            },
             modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
       }) { pd ->
         if (uiState.isLoading) {

@@ -1,16 +1,17 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.isPast
-import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.model.user.PreferenceRules
 import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,11 +19,15 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class ProfileUIState(
+    val uid: String = "",
     val isLoading: Boolean = true,
+    val isOwnProfile: Boolean = false,
     val profilePicUrl: String = "",
     val name: String = "",
-    val email: String = "",
-    var selectedPreferences: List<Preference> = emptyList(),
+    val biography: String = "",
+    val stats: UserStats = UserStats(),
+    val pinnedTrips: List<Trip> = emptyList(),
+    val pinnedImages: List<Uri> = emptyList(),
     var errorMsg: String? = null
 )
 
@@ -43,9 +48,57 @@ class ProfileViewModel(
         autoFill(user)
         refreshStatsForUser(user)
       } catch (e: Exception) {
-        _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data: ${e.message}")
+        setErrorMsg("Error fetching user data: ${e.message}")
       } finally {
+        _uiState.update { it.copy(isOwnProfile = it.uid == currentUser?.uid) }
         _uiState.update { it.copy(isLoading = false) }
+      }
+    }
+  }
+
+  /**
+   * Automatically fills the UI state with the user's data.
+   *
+   * @param loggedIn The user to fill the UI state with.
+   */
+  fun autoFill(loggedIn: User) {
+    _uiState.value =
+        ProfileUIState(
+            profilePicUrl = loggedIn.profilePicUrl,
+            name = loggedIn.name,
+            biography = loggedIn.biography,
+            stats = loggedIn.stats,
+            // todo pinnedTripsUids = loggedIn.pinnedTripsUids,
+            // todo pinnedImages = loggedIn.pinnedImages
+        )
+  }
+
+  /**
+   * Loads the profile information for the given user ID
+   *
+   * @param uid the unique identifier of the user
+   */
+  fun loadProfileInfo(uid: String?) {
+    if (uid.isNullOrBlank()) {
+      Log.e("ProfileViewModel", "User ID is null or blank")
+      setErrorMsg("User ID is invalid")
+      return
+    }
+    viewModelScope.launch {
+      try {
+        val profile = userRepository.getUserById(uid) // todo
+        val pinnedTrips = profile.pinnedTripsUids.mapNotNull { uid -> tripsRepository.getTrip(uid) }
+        _uiState.value =
+            ProfileUIState(
+                profilePicUrl = profile.profilePicUrl,
+                name = profile.name,
+                biography = profile.biography,
+                stats = profile.stats,
+                pinnedTrips = pinnedTrips,
+                pinnedImages = profile.pinnedImages)
+      } catch (e: Exception) {
+        Log.e("ProfileViewModel", "Error loading profile info", e)
+        setErrorMsg("Failed to load profile info: ${e.message}")
       }
     }
   }
@@ -70,37 +123,17 @@ class ProfileViewModel(
     }
   }
 
-  fun autoFill(loggedIn: User) {
-    val sanitized = PreferenceRules.enforceMutualExclusivity(loggedIn.preferences)
-    _uiState.value =
-        ProfileUIState(
-            profilePicUrl = loggedIn.profilePicUrl,
-            name = loggedIn.name,
-            email = loggedIn.email,
-            selectedPreferences = sanitized)
+  /**
+   * Sets the error message in the UI state
+   *
+   * @param errorMsg the error message to set
+   */
+  fun setErrorMsg(errorMsg: String) {
+    _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
+  /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
-  }
-
-  fun savePreferences(selected: List<Preference>) {
-    viewModelScope.launch {
-      val user = currentUser
-
-      if (user == null || user.uid == "guest") {
-        _uiState.update { it.copy(errorMsg = "You must be signed in to save preferences.") }
-        return@launch
-      }
-
-      val sanitized = PreferenceRules.enforceMutualExclusivity(selected)
-      _uiState.update { it.copy(selectedPreferences = sanitized) }
-
-      try {
-        userRepository.updateUserPreferences(user.uid, sanitized)
-      } catch (e: Exception) {
-        _uiState.value = uiState.value.copy(errorMsg = "Error saving preferences: ${e.message}")
-      }
-    }
   }
 }

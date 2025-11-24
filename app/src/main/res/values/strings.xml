@@ -156,7 +156,16 @@
     <!-- Profile -->
     <string name="my_profile">My Profile</string>
     <string name="profile_pic_desc">Profile picture</string>
-    <string name="hi">Hi,</string>
+    <string name="achievements">Achievements</string>
+    <string name="pinned_trips">Pinned Trips</string>
+    <string name="edit_pinned_trips">Edit Pinned Trips</string>
+    <string name="pinned_images">Pinned Images</string>
+    <string name="edit_pinned_images">Edit Pinned Images</string>
+    <!-- Profile Settings -->
+    <string name="settings">Settings</string>
+    <string name="profile_info">Profile Information</string>
+    <string name="biography">Biography</string>
+    <string name="back_to_profile">Back to Profile Screen</string>
     <string name="personal_info">Personal Information</string>
     <string name="name">Name</string>
     <string name="email">Email</string>
@@ -222,9 +231,6 @@
     <string name="estimated_time">Estimated time: %1$s</string>
     <string name="no_image_fallback">No images available for this activity.</string>
     <string name="activity_tip">Tip: Check weather &amp; opening hours before going.</string>
-    <string name="profile_info">Profile Information</string>
-    <string name="biography">Biography</string>
-    <string name="settings">Settings</string>
 
 
 </resources>

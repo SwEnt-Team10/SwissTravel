@@ -71,6 +71,11 @@ class ProfileSettingsViewModel(
     }
   }
 
+  /**
+   * Automatically fills the UI state with the user's data.
+   *
+   * @param loggedIn The user to fill the UI state with.
+   */
   fun autoFill(loggedIn: User) {
     val sanitized = PreferenceRules.enforceMutualExclusivity(loggedIn.preferences)
     _uiState.value =
@@ -81,10 +86,16 @@ class ProfileSettingsViewModel(
             selectedPreferences = sanitized)
   }
 
+  /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
   }
 
+  /**
+   * Saves the user's preferences.
+   *
+   * @param selected The list of selected preferences.
+   */
   fun savePreferences(selected: List<Preference>) {
     viewModelScope.launch {
       val user = currentUser

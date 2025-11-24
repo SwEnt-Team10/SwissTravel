@@ -255,6 +255,7 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
   ) {
     composable(Screen.Profile.route) {
       ProfileScreen(
+          uid = FirebaseAuth.getInstance().currentUser?.uid ?: "",
           profileViewModel = ProfileViewModel(userRepository = UserRepositoryFirebase()),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           navigationActions = navigationActions)
