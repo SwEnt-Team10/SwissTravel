@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.friends
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
@@ -17,6 +18,7 @@ data class FriendsListScreenUIState(
     val searchQuery: String = "",
     val isSearching: Boolean = false,
     val searchResults: List<User> = emptyList(),
+    val currentUserUid: String = "",
 )
 
 class FriendsViewModel(private val userRepository: UserRepository = UserRepositoryFirebase()) :
@@ -34,24 +36,33 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     _uiState.value = uiState.value.copy(isLoading = true, errorMsg = null)
     try {
       val currentUser = userRepository.getCurrentUser()
-      val friends =
-          currentUser.friends.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
-      _uiState.value = uiState.value.copy(friends = friends, isLoading = false)
+
+      val acceptedFriends = currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }
+
+      val friends = acceptedFriends.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
+
+      _uiState.value =
+          uiState.value.copy(friends = friends, isLoading = false, currentUserUid = currentUser.uid)
     } catch (e: Exception) {
       _uiState.value =
           uiState.value.copy(isLoading = false, errorMsg = "Error fetching friends: ${e.message}")
     }
   }
 
-  val friendsToDisplay =
-      if (_uiState.value.searchQuery.isBlank()) {
-        _uiState.value.friends
+  val friendsToDisplay: List<User>
+    get() {
+      val state = _uiState.value
+      val q = state.searchQuery.trim()
+      val base = state.friends.filter { it.uid != state.currentUserUid }
+
+      return if (q.isBlank()) {
+        base
       } else {
-        _uiState.value.friends.filter { user ->
-          val q = _uiState.value.searchQuery.trim()
-          user.name.contains(q, ignoreCase = true) || (user.email.contains(q, ignoreCase = true))
+        base.filter { user ->
+          user.name.contains(q, ignoreCase = true) || user.email.contains(q, ignoreCase = true)
         }
       }
+    }
 
   /** Clears the current error message. */
   fun clearErrorMsg() {
@@ -74,15 +85,16 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
 
     viewModelScope.launch {
       val results = userRepository.getUserByNameOrEmail(query)
-      _uiState.update { it.copy(searchResults = results) }
+      val currentUid = _uiState.value.currentUserUid
+
+      _uiState.update { it.copy(searchResults = results.filter { user -> user.uid != currentUid }) }
     }
   }
 
   fun sendFriendRequest(toUid: String) {
     viewModelScope.launch {
-      val currentUserId = userRepository.getCurrentUser().uid
       try {
-        userRepository.sendFriendRequest(currentUserId, toUid)
+        userRepository.sendFriendRequest(_uiState.value.currentUserUid, toUid)
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error sending friend request: ${e.message}") }
       }

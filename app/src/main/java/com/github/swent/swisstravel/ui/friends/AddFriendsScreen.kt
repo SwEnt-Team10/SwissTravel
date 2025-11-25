@@ -1,6 +1,6 @@
 package com.github.swent.swisstravel.ui.friends
 
-import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -53,7 +54,6 @@ fun AddFriendScreen(
                   users = uiState.searchResults,
                   onClickUser = { user ->
                     friendsViewModel.sendFriendRequest(toUid = user.uid)
-                    Log.d("AddFriendScreen", "Sent friend request to ${user.uid}")
                     onBack()
                   })
             }
@@ -73,7 +73,8 @@ private fun AddFriendTopAppBar(
             query = searchQuery,
             onQueryChange = onSearchQueryChange,
             placeholder = stringResource(R.string.search_users),
-            onClose = onBack)
+            onClose = onBack,
+            trailingIcon = true)
       },
       navigationIcon = {
         IconButton(onClick = onBack) {
@@ -89,6 +90,7 @@ private fun AddFriendResultsSection(
     users: List<User>,
     onClickUser: (User) -> Unit,
 ) {
+  val context = LocalContext.current
   if (users.isEmpty()) {
     Text(
         text = stringResource(R.string.no_users_found), style = MaterialTheme.typography.bodyMedium)
@@ -98,7 +100,13 @@ private fun AddFriendResultsSection(
             Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement)),
         modifier = Modifier.fillMaxWidth()) {
           items(users, key = { it.uid }) { user ->
-            FriendElement(userToDisplay = user, onClick = { onClickUser(user) })
+            FriendElement(
+                userToDisplay = user,
+                onClick = {
+                  onClickUser(user)
+                  Toast.makeText(context, "Friend request sent to ${user.name}", Toast.LENGTH_SHORT)
+                      .show()
+                })
           }
         }
   }

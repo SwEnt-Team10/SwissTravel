@@ -177,6 +177,7 @@ fun FriendsSearchBar(
     onQueryChange: (String) -> Unit,
     placeholder: String,
     onClose: () -> Unit,
+    trailingIcon: Boolean = false,
 ) {
   TextField(
       value = query,
@@ -186,8 +187,10 @@ fun FriendsSearchBar(
       textStyle = MaterialTheme.typography.titleLarge,
       modifier = Modifier.fillMaxWidth(),
       trailingIcon = {
-        IconButton(onClick = onClose) {
-          Icon(Icons.Default.Close, contentDescription = "Close search")
+        if (trailingIcon) {
+          IconButton(onClick = onClose) {
+            Icon(Icons.Default.Close, contentDescription = "Close search")
+          }
         }
       },
       colors =
