@@ -122,7 +122,8 @@ fun TripInfoScreen(
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
-    onActivityClick: (TripElement.TripActivity) -> Unit = {}
+    onActivityClick: (TripElement.TripActivity) -> Unit = {},
+    onFindActivities: () -> Unit = {},
 ) {
   Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
 
@@ -219,6 +220,16 @@ fun TripInfoScreen(
               onBack = onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
               onEdit = onEditTrip)
+        }
+      },
+
+      // button to go to a screen were you can swipe (like/dislike) through activities
+      bottomBar = {
+        Button(
+            onClick = { onFindActivities() },
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+          Text(text = stringResource(R.string.find_activities))
         }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {

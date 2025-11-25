@@ -126,6 +126,7 @@
     <string name="next_step">Next step</string>
     <string name="draw_from_current_position">Draw route from current position</string>
     <string name="draw_from_previous_step">Draw route from previous step</string>
+    <string name="find_activities">Find activities</string>
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>

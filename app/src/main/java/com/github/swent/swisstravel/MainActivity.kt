@@ -35,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.ui.activities.FindActivitiesScreen
 import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
@@ -338,7 +339,8 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           onActivityClick = { tripActivity ->
             vm.selectActivity(tripActivity.activity)
             navigationActions.navigateToActivityInfo(uid)
-          })
+          },
+          onFindActivities = { navigationActions.navigateTo(Screen.FindActivities) })
     }
 
     composable(
@@ -362,6 +364,18 @@ private fun NavGraphBuilder.tripInfoNavGraph(
               onSaved = { navController.popBackStack() },
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
+
+    composable(Screen.FindActivities.route) {
+      FindActivitiesScreen(
+          onTripInfo = { navController.popBackStack() },
+          tripLocations =
+              navigationActions
+                  .tripInfoViewModel(navController)
+                  .uiState
+                  .collectAsState()
+                  .value
+                  .locations)
+    }
   }
 }
 
