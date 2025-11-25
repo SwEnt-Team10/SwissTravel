@@ -124,7 +124,7 @@ class TripAlgorithm(
             throw IllegalStateException("Trip scheduling failed: ${e.message}", e)
           }
 
-      check(!(schedule.isEmpty())) { "Scheduled trip is empty" }
+      check(schedule.isNotEmpty()) { "Scheduled trip is empty" }
 
       onProgress(1.0f)
       return schedule
