@@ -115,16 +115,18 @@ fun ProfileScreen(
                       onClick = onSettings,
                       modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
                         Icon(
-                            Icons.Outlined.Settings,
-                            contentDescription = stringResource(R.string.settings))
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = stringResource(R.string.settings),
+                            tint = MaterialTheme.colorScheme.onBackground)
                       }
                 } else {
                   IconButton(
                       onClick = onRemoveFriend,
                       modifier = Modifier.testTag(ProfileScreenTestTags.REMOVE_FRIEND_BUTTON)) {
                         Icon(
-                            Icons.Outlined.PersonRemove,
-                            contentDescription = stringResource(R.string.remove_friend))
+                            imageVector = Icons.Outlined.PersonRemove,
+                            contentDescription = stringResource(R.string.remove_friend),
+                            tint = MaterialTheme.colorScheme.onBackground)
                       }
                 }
               }
@@ -140,8 +142,12 @@ fun ProfileScreen(
               uiState = uiState,
               profileScreenViewModel = profileViewModel,
               onSelectTrip = onSelectTrip,
-              onEditPinnedTrips = onEditPinnedTrips,
-              onEditPinnedImages = onEditPinnedImages,
+              onEditPinnedTrips = {
+                Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
+              }, // todo onEditPinnedTrips,
+              onEditPinnedImages = {
+                Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
+              }, // todo onEditPinnedImages,
               modifier = Modifier.padding(pd))
         }
       }
