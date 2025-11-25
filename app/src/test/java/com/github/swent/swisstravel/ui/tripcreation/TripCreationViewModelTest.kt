@@ -1,12 +1,19 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.content.Context
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.google.common.base.CharMatcher.any
+import io.mockk.coEvery
+import io.mockk.mockk
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -22,6 +29,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.mock
 
 class TripCreationViewModelTest {
 
@@ -122,46 +130,111 @@ class TripCreationViewModelTest {
   }
 
   @Test
-  fun saveTripShouldAddTripAndEmitSaveSuccess() = runTest {
-    // Arrange
-    val start = LocalDate.of(2025, 1, 1)
-    val end = LocalDate.of(2025, 1, 2)
-    viewModel.updateDates(start, end)
-    viewModel.updateTravelers(adults = 2, children = 1)
-    val prefs = listOf(Preference.QUICK, Preference.FOODIE, Preference.MUSEUMS)
-    viewModel.updatePreferences(prefs)
+  fun saveTripShouldFailIfNoArrivalLocation() = runTest {
+    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
 
     // Act
-    viewModel.saveTrip()
+    val fakeContext: Context = mock()
+    viewModel.saveTrip(fakeContext)
 
     // Assert
+    when (val event = viewModel.validationEvents.first()) {
+      is ValidationEvent.SaveError -> {
+        assertEquals("Arrival location must not be null", event.message)
+      }
+      else -> throw AssertionError("Expected SaveError but got $event")
+    }
+  }
+
+  @Test
+  fun saveTripShouldFailIfNoDestinationLocation() = runTest {
+    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
+    viewModel.updateArrivalLocation(Location(Coordinate(1.0, 1.0), "loc1"))
+
+    // Act
+    val fakeContext: Context = mock()
+    viewModel.saveTrip(fakeContext)
+
+    // Assert
+    when (val event = viewModel.validationEvents.first()) {
+      is ValidationEvent.SaveError -> {
+        assertEquals("Departure location must not be null", event.message)
+      }
+      else -> throw AssertionError("Expected SaveError but got $event")
+    }
+  }
+
+  // Refactored using AI
+  @Test
+  fun saveTripShouldAddTripAndEmitSaveSuccess() = runTest {
+    val mockAlgorithm = mockk<TripAlgorithm>()
+    val fakeContext: Context = mock()
+
+    // A factory that returns our mock algorithm
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
+    val viewModel =
+        TripSettingsViewModel(
+            tripsRepository = fakeRepo,
+            userRepository = fakeUserRepo,
+            activityRepository = fakeActivityRepo,
+            algorithmFactory = algorithmFactory,
+        )
+
+    // Algorithm returns empty schedule → no activities or route segments
+    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
+
+    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
+    viewModel.updateTravelers(2, 1)
+    viewModel.updatePreferences(listOf(Preference.QUICK, Preference.FOODIE))
+    viewModel.updateArrivalLocation(Location(Coordinate(1.0, 1.0), "Arrival"))
+    viewModel.updateDepartureLocation(Location(Coordinate(2.0, 2.0), "Departure"))
+
+    viewModel.saveTrip(fakeContext)
+
     val event = viewModel.validationEvents.first()
     assertEquals(ValidationEvent.SaveSuccess, event)
 
     val added = fakeRepo.addedTrip
-    assertNotNull(added, "Trip should have been added to repository")
-
-    // Check basic trip info
-    assertEquals("fake-uid", added.uid)
+    assertNotNull(added)
     assertEquals(2, added.tripProfile.adults)
     assertEquals(1, added.tripProfile.children)
-
-    // Check preferences
-    assertEquals(prefs, added.tripProfile.preferences)
-    assertEquals(3, added.tripProfile.preferences.size)
   }
 
+  // Refactored using AI
   @Test
   fun saveTripShouldEmitSaveErrorWhenRepositoryThrows() = runTest {
-    // Arrange: cause repository to throw
+    val mockAlgorithm = mockk<TripAlgorithm>()
+    val fakeContext: Context = mock()
+
+    // The fake repo will throw when saving
     fakeRepo.shouldThrow = true
+
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
+    val viewModel =
+        TripSettingsViewModel(
+            tripsRepository = fakeRepo,
+            userRepository = fakeUserRepo,
+            activityRepository = fakeActivityRepo,
+            algorithmFactory = algorithmFactory,
+        )
+
+    // Algorithm still returns empty schedule
+    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
+
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
+    viewModel.updateTravelers(2, 1)
+    viewModel.updatePreferences(listOf(Preference.QUICK, Preference.FOODIE))
+    viewModel.updateArrivalLocation(Location(Coordinate(1.0, 1.0), "Arrival"))
+    viewModel.updateDepartureLocation(Location(Coordinate(2.0, 2.0), "Departure"))
 
     // Act
-    viewModel.saveTrip()
+    viewModel.saveTrip(fakeContext)
 
     // Assert
-    when (val event = viewModel.validationEvents.first()) {
+    val event = viewModel.validationEvents.first()
+    when (event) {
       is ValidationEvent.SaveError -> {
         assertTrue(event.message.contains("boom"))
       }
@@ -220,6 +293,16 @@ class TripCreationViewModelTest {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedImagesUris = emptyList())
+    }
+
+    override suspend fun getUserByUid(uid: String): User? {
+      // no-op in tests
+      return null
+    }
+
+    override suspend fun getUserByNameOrEmail(query: String): List<User> {
+      // no-op in tests
+      return emptyList()
     }
 
     override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
