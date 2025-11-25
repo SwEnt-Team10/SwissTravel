@@ -187,8 +187,7 @@ class ProgressiveRouteOptimizer(
     // Fetch durations from the hybrid matrix.
     val fetchedDurations =
         try {
-          matrixHybrid.fetchDurationsFromStart(
-              current.coordinate, missingCandidates.map { it.coordinate }, mode)
+          matrixHybrid.fetchDurationsFromStart(current, missingCandidates, mode)
         } catch (e: Exception) {
           Log.d("Error fetching durations", e.toString())
           emptyMap()
@@ -293,7 +292,7 @@ class ProgressiveRouteOptimizer(
       finalDuration =
           cached?.duration
               ?: matrixHybrid
-                  .fetchDurationsFromStart(last.coordinate, listOf(end.coordinate), mode)[
+                  .fetchDurationsFromStart(last, listOf(end), mode)[
                       Pair(last.coordinate, end.coordinate)]
       finalDuration?.let { cacheManager.saveDuration(last.coordinate, end.coordinate, it, mode) }
     } catch (_: Exception) {
