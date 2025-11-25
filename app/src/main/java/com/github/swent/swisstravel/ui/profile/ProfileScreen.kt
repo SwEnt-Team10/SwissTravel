@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.net.Uri
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
@@ -48,6 +50,7 @@ import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
 object ProfileScreenTestTags {
   const val SETTINGS_BUTTON = "settingsButton"
+  const val REMOVE_FRIEND_BUTTON = "removeFriendButton"
   const val DISPLAY_NAME = "displayName"
   const val PROFILE_PIC = "profilePic"
   const val BIOGRAPHY = "biography"
@@ -71,8 +74,10 @@ fun ProfileScreen(
     uid: String,
     profileViewModel: ProfileViewModel = viewModel(),
     onSettings: () -> Unit = {},
+    onRemoveFriend: () -> Unit = {},
     onSelectTrip: (String) -> Unit = {},
     onEditPinnedTrips: () -> Unit = {},
+    onEditPinnedImages: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
@@ -102,6 +107,14 @@ fun ProfileScreen(
                           Icons.Outlined.Settings,
                           contentDescription = stringResource(R.string.settings))
                     }
+              } else {
+                IconButton(
+                    onClick = onRemoveFriend,
+                    modifier = Modifier.testTag(ProfileScreenTestTags.REMOVE_FRIEND_BUTTON)) {
+                      Icon(
+                          Icons.Outlined.Cancel,
+                          contentDescription = stringResource(R.string.remove_friend))
+                    }
               }
             },
             modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
@@ -115,6 +128,8 @@ fun ProfileScreen(
               uiState = uiState,
               profileScreenViewModel = profileViewModel,
               onSelectTrip = onSelectTrip,
+              onEditPinnedTrips = onEditPinnedTrips,
+              onEditPinnedImages = onEditPinnedImages,
               modifier = Modifier.padding(pd))
         }
       }
@@ -132,6 +147,7 @@ private fun ProfileScreenContent(
     profileScreenViewModel: ProfileViewModel,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
+    onEditPinnedImages: () -> Unit = {},
     modifier: Modifier
 ) {
   val scrollState = rememberScrollState()
@@ -167,6 +183,11 @@ private fun ProfileScreenContent(
             isOwnProfile = uiState.isOwnProfile,
             onEditPinnedTrips = onEditPinnedTrips,
             onSelectTrip = onSelectTrip)
+
+        PinnedImages(
+            pinnedImages = uiState.pinnedImages,
+            isOwnProfile = uiState.isOwnProfile,
+            onEditPinnedImages = onEditPinnedImages)
       }
 }
 
@@ -280,8 +301,10 @@ private fun PinnedTrips(
       isSelected = { false }, // No selection mode here
       isSelectionMode = false,
       noIconTripElement = false,
-      emptyListString = "" // TODO
-      )
+      emptyListString =
+          if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
+          else stringResource(R.string.no_pinned_trips),
+  )
 }
 
 /**
@@ -293,7 +316,7 @@ private fun PinnedTrips(
  */
 @Composable
 private fun PinnedImages(
-    pinnedImages: List<String>,
+    pinnedImages: List<Uri>,
     isOwnProfile: Boolean,
     onEditPinnedImages: () -> Unit,
 ) {

@@ -159,8 +159,11 @@
     <string name="achievements">Achievements</string>
     <string name="pinned_trips">Pinned Trips</string>
     <string name="edit_pinned_trips">Edit Pinned Trips</string>
+    <string name="edit_no_pinned_trips">You don\'t have any pinned trips. Press the edit button to pin some!</string>
+    <string name="no_pinned_trips">No pinned trips here!</string>
     <string name="pinned_images">Pinned Images</string>
     <string name="edit_pinned_images">Edit Pinned Images</string>
+    <string name="remove_friend">Remove Friend</string>
     <!-- Profile Settings -->
     <string name="settings">Settings</string>
     <string name="profile_info">Profile Information</string>

@@ -79,8 +79,9 @@ class ProfileViewModel(
    */
   private suspend fun loadProfile(uid: String) {
     try {
-      // val profile = userRepository.getUserById(uid) // todo
-      val profile = userRepository.getCurrentUser()
+      val profile =
+          userRepository.getUserByUid(uid)
+              ?: throw IllegalStateException("User with uid $uid not found")
       val pinnedTrips = profile.pinnedTripsUids.mapNotNull { uid -> tripsRepository.getTrip(uid) }
       _uiState.update {
         it.copy(
