@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -39,7 +40,7 @@ object FriendsScreenTestTags {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsListScreen(
-    friendsViewModel: FriendsListScreenViewModel = viewModel(),
+    friendsViewModel: FriendsViewModel = viewModel(),
     onSelectFriend: (String) -> Unit = {},
     onAddFriend: () -> Unit = {},
 ) {
@@ -109,24 +110,11 @@ private fun FriendsTopAppBar(
   TopAppBar(
       title = {
         if (isSearching) {
-          TextField(
-              value = searchQuery,
-              onValueChange = onSearchQueryChange,
-              placeholder = { Text(text = stringResource(R.string.search_friends)) },
-              singleLine = true,
-              textStyle = MaterialTheme.typography.titleLarge,
-              modifier = Modifier.fillMaxSize(),
-              colors =
-                  TextFieldDefaults.colors(
-                      focusedContainerColor = Color.Transparent,
-                      unfocusedContainerColor = Color.Transparent,
-                      disabledContainerColor = Color.Transparent,
-                      errorContainerColor = Color.Transparent,
-                      focusedIndicatorColor = Color.Transparent,
-                      unfocusedIndicatorColor = Color.Transparent,
-                      disabledIndicatorColor = Color.Transparent,
-                      errorIndicatorColor = Color.Transparent,
-                  ))
+          FriendsSearchBar(
+              query = searchQuery,
+              onQueryChange = onSearchQueryChange,
+              placeholder = stringResource(R.string.search_friends),
+              onClose = onCloseSearch)
         } else {
           Text(
               text = stringResource(R.string.friends_list),
@@ -180,4 +168,37 @@ private fun FriendsListSection(
           }
         }
   }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FriendsSearchBar(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    placeholder: String,
+    onClose: () -> Unit,
+) {
+  TextField(
+      value = query,
+      onValueChange = onQueryChange,
+      placeholder = { Text(placeholder) },
+      singleLine = true,
+      textStyle = MaterialTheme.typography.titleLarge,
+      modifier = Modifier.fillMaxWidth(),
+      trailingIcon = {
+        IconButton(onClick = onClose) {
+          Icon(Icons.Default.Close, contentDescription = "Close search")
+        }
+      },
+      colors =
+          TextFieldDefaults.colors(
+              focusedContainerColor = Color.Transparent,
+              unfocusedContainerColor = Color.Transparent,
+              disabledContainerColor = Color.Transparent,
+              errorContainerColor = Color.Transparent,
+              focusedIndicatorColor = Color.Transparent,
+              unfocusedIndicatorColor = Color.Transparent,
+              disabledIndicatorColor = Color.Transparent,
+              errorIndicatorColor = Color.Transparent,
+          ))
 }

@@ -40,7 +40,9 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.friends.AddFriendScreen
 import com.github.swent.swisstravel.ui.friends.FriendsListScreen
+import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -106,6 +108,21 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
   }
 }
 
+@Composable
+fun friendsViewModel(navController: NavHostController): FriendsViewModel {
+  val currentEntry by navController.currentBackStackEntryAsState()
+
+  val parentEntry =
+      remember(currentEntry) {
+        runCatching { navController.getBackStackEntry(Screen.FriendsList.name) }.getOrNull()
+      }
+
+  return if (parentEntry != null) {
+    viewModel(parentEntry)
+  } else {
+    viewModel()
+  }
+}
 /**
  * The main composable function for the Swiss Travel App.
  *
@@ -471,6 +488,17 @@ private fun NavGraphBuilder.friendsListNavGraph(
       startDestination = Screen.FriendsList.route,
       route = Screen.FriendsList.name,
   ) {
-    composable(Screen.FriendsList.route) { FriendsListScreen() }
+    composable(Screen.FriendsList.route) {
+      val vm = friendsViewModel(navController)
+
+      FriendsListScreen(
+          friendsViewModel = vm, onAddFriend = { navigationActions.navigateTo(Screen.AddFriend) })
+    }
+
+    composable(Screen.AddFriend.route) {
+      val vm = friendsViewModel(navController)
+
+      AddFriendScreen(friendsViewModel = vm, onBack = { navigationActions.goBack() })
+    }
   }
 }

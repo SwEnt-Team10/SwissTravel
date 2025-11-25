@@ -229,6 +229,10 @@
     <string name="add_friend">Add Friend</string>
     <string name="search_friends">Search</string>
     <string name="close_search">Close Search</string>
+    <string name="search_users">Search users</string>
+    <string name="no_users_found">No users found</string>
+    <string name="go_back">Go back</string>
+
 
 
 

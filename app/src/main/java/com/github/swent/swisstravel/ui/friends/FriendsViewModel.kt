@@ -16,11 +16,11 @@ data class FriendsListScreenUIState(
     val errorMsg: String? = null,
     val searchQuery: String = "",
     val isSearching: Boolean = false,
+    val searchResults: List<User> = emptyList(),
 )
 
-class FriendsListScreenViewModel(
-    private val userRepository: UserRepository = UserRepositoryFirebase()
-) : ViewModel() {
+class FriendsViewModel(private val userRepository: UserRepository = UserRepositoryFirebase()) :
+    ViewModel() {
 
   private val _uiState = MutableStateFlow(FriendsListScreenUIState())
   val uiState = _uiState.asStateFlow()
@@ -64,5 +64,28 @@ class FriendsListScreenViewModel(
 
   fun toggleSearch() {
     _uiState.update { it.copy(isSearching = !it.isSearching, searchQuery = "") }
+  }
+
+  fun searchUsersGlobal(query: String) {
+    if (query.isBlank()) {
+      _uiState.update { it.copy(searchResults = emptyList()) }
+      return
+    }
+
+    viewModelScope.launch {
+      val results = userRepository.getUserByNameOrEmail(query)
+      _uiState.update { it.copy(searchResults = results) }
+    }
+  }
+
+  fun sendFriendRequest(toUid: String) {
+    viewModelScope.launch {
+      val currentUserId = userRepository.getCurrentUser().uid
+      try {
+        userRepository.sendFriendRequest(currentUserId, toUid)
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = "Error sending friend request: ${e.message}") }
+      }
+    }
   }
 }

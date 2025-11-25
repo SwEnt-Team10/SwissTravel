@@ -76,6 +76,8 @@ sealed class Screen(
 
   object FriendsList : Screen(route = "friends_list", name = "Friends")
 
+  object AddFriend : Screen(route = "add_friend", name = "Add Friend")
+
   // TODO change this when there is a new screen
 }
 
