@@ -98,16 +98,15 @@ fun FriendsListScreen(
                         start = dimensionResource(R.dimen.my_trip_padding_start_end),
                         end = dimensionResource(R.dimen.my_trip_padding_start_end),
                         bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
-              FriendsListSection(
-                  friends = friendsViewModel.friendsToDisplay,
-                  onSelectFriend = onSelectFriend,
-              )
-
               PendingFriendRequestsSection(
                   pendingFriends = uiState.pendingFriends,
                   currentUserUid = uiState.currentUserUid,
                   onAccept = { friendUid -> friendsViewModel.acceptFriendRequest(friendUid) },
                   onDecline = { friendUid -> friendsViewModel.removeFriend(friendUid) })
+              FriendsListSection(
+                  friends = friendsViewModel.friendsToDisplay,
+                  onSelectFriend = onSelectFriend,
+              )
             }
       }
 }

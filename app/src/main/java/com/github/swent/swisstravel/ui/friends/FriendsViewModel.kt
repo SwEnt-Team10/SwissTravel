@@ -109,7 +109,23 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     }
   }
 
-  fun acceptFriendRequest(toUid: String) {}
+  fun acceptFriendRequest(toUid: String) {
+    viewModelScope.launch {
+      try {
+        userRepository.acceptFriendRequest(_uiState.value.currentUserUid, toUid)
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = "Error accepting friend request: ${e.message}") }
+      }
+    }
+  }
 
-  fun removeFriend(toUid: String) {}
+  fun removeFriend(toUid: String) {
+    viewModelScope.launch {
+      try {
+        userRepository.removeFriend(_uiState.value.currentUserUid, toUid)
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = "Error removing friend: ${e.message}") }
+      }
+    }
+  }
 }
