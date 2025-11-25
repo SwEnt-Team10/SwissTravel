@@ -80,14 +80,16 @@ class SelectActivitiesTest {
         val progressUpdates = mutableListOf<Float>()
 
         val mandatory = listOf(Preference.WHEELCHAIR_ACCESSIBLE)
+        val optional = listOf(Preference.MUSEUMS, Preference.HIKE)
+
+        // Expect a single call with all optional preferences
         coEvery {
           mockActivityRepository.getActivitiesNearWithPreference(
-              mandatory + Preference.MUSEUMS, any(), any(), any())
-        } returns listOf(activityLausanne)
-        coEvery {
-          mockActivityRepository.getActivitiesNearWithPreference(
-              mandatory + Preference.HIKE, any(), any(), any())
-        } returns listOf(activityGeneva) andThen listOf(activityZurich)
+              match { it.containsAll(mandatory + optional) }, any(), any(), any())
+        } returns
+            listOf(activityLausanne) andThen
+            listOf(activityGeneva) andThen
+            listOf(activityZurich)
 
         val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
@@ -95,8 +97,7 @@ class SelectActivitiesTest {
         val result = selectActivities.addActivities { progressUpdates.add(it) }
 
         // Then
-        // 3 destinations * 2 optional preferences = 6 calls, but we mock returns to get 3 unique
-        // activities
+        // 3 destinations * 1 call (batched optional preferences) = 3 calls
         assertEquals(3, result.size)
         assertTrue(result.containsAll(listOf(activityLausanne, activityGeneva, activityZurich)))
         assertTrue(progressUpdates.last() == 1.0f)
