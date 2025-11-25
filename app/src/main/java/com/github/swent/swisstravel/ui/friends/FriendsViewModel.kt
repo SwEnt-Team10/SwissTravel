@@ -73,18 +73,25 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     }
 
   /** Clears the current error message. */
+  /** Clears the current error message. */
   fun clearErrorMsg() {
     _uiState.value = uiState.value.copy(errorMsg = null)
   }
 
+  /**
+   * Updates the search query.
+   *
+   * @param query The new search query.
+   */
   fun updateSearchQuery(query: String) {
     _uiState.update { it.copy(searchQuery = query) }
   }
 
-  fun toggleSearch() {
-    _uiState.update { it.copy(isSearching = !it.isSearching, searchQuery = "") }
-  }
-
+  /**
+   * Searches for users globally.
+   *
+   * @param query The search query.
+   */
   fun searchUsersGlobal(query: String) {
     if (query.isBlank()) {
       _uiState.update { it.copy(searchResults = emptyList()) }
@@ -99,6 +106,11 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     }
   }
 
+  /**
+   * Calls the repository to send a friend request.
+   *
+   * @param toUid The UID of the user to send the request to.
+   */
   fun sendFriendRequest(toUid: String) {
     viewModelScope.launch {
       try {
@@ -110,6 +122,11 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     }
   }
 
+  /**
+   * Calls the repository to accept a friend request.
+   *
+   * @param toUid The UID of the user to accept the request from.
+   */
   fun acceptFriendRequest(toUid: String) {
     viewModelScope.launch {
       try {
@@ -121,6 +138,11 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     }
   }
 
+  /**
+   * Calls the repository to remove a friend.
+   *
+   * @param toUid The UID of the user to remove.
+   */
   fun removeFriend(toUid: String) {
     viewModelScope.launch {
       try {

@@ -46,6 +46,13 @@ object FriendsScreenTestTags {
   const val SEARCH_FRIENDS_BUTTON = "searchFriends"
 }
 
+/**
+ * A screen for displaying a list of friends.
+ *
+ * @param friendsViewModel The view model for the friends screen.
+ * @param onSelectFriend The function to call when a friend is selected.
+ * @param onAddFriend The function to call when the add friend button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsListScreen(
@@ -120,6 +127,15 @@ fun FriendsListScreen(
       }
 }
 
+/**
+ * The top app bar for the friends screen.
+ *
+ * @param isSearching Whether the search bar is visible.
+ * @param searchQuery The current search query.
+ * @param onSearchQueryChange The function to call when the search query changes.
+ * @param onStartSearch The function to call when the search button is pressed.
+ * @param onCloseSearch The function to call when the close button is pressed
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendsTopAppBar(
@@ -192,6 +208,15 @@ private fun FriendsListSection(
   }
 }
 
+/**
+ * The search bar for the friends screen.
+ *
+ * @param query The current search query.
+ * @param onQueryChange The function to call when the search query changes.
+ * @param placeholder The text to display in the search bar.
+ * @param onClose The function to call when the close button is pressed.
+ * @param trailingIcon Whether to show the close button.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsSearchBar(
@@ -228,6 +253,13 @@ fun FriendsSearchBar(
           ))
 }
 
+/**
+ * Section for displaying pending friend requests.
+ *
+ * @param pendingFriends The list of pending friends.
+ * @param onAccept The function to call when a friend request is accepted.
+ * @param onDecline The function to call when a friend request is declined
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PendingFriendRequestsSection(
@@ -274,7 +306,7 @@ private fun PendingFriendRequestsSection(
                   pendingFriends.forEach { friend ->
                     FriendElement(
                         userToDisplay = friend,
-                        onClick = { /*TODO navigate to profile*/},
+                        onClick = {},
                         isPendingRequest = true,
                         shouldAccept = true,
                         onAccept = {

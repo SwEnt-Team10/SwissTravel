@@ -21,6 +21,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
 
+/**
+ * Screen for adding a friend to the user's friend list.
+ *
+ * @param friendsViewModel The view model for the friends screen.
+ * @param onBack The function to call when the back button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFriendScreen(
@@ -60,6 +66,13 @@ fun AddFriendScreen(
       }
 }
 
+/**
+ * The add friend top app bar. Displays the search bar and the back button.
+ *
+ * @param searchQuery The current search query.
+ * @param onSearchQueryChange The function to call when the search query changes.
+ * @param onBack The function to call when the back button is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddFriendTopAppBar(
@@ -85,6 +98,12 @@ private fun AddFriendTopAppBar(
       })
 }
 
+/**
+ * Displays the results of the search.
+ *
+ * @param users The list of users to display.
+ * @param onClickUser Callback for when a user is clicked.
+ */
 @Composable
 private fun AddFriendResultsSection(
     users: List<User>,

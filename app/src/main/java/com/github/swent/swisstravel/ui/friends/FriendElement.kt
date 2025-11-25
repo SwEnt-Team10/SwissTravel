@@ -31,6 +31,17 @@ object FriendElementTestTags {
   fun getTestTagForFriend(user: User): String = "friend${user.uid}"
 }
 
+/**
+ * A single friend element.
+ *
+ * @param userToDisplay The user to display.
+ * @param onClick The function to call when the element is clicked.
+ * @param modifier The modifier to apply to the element.
+ * @param isPendingRequest Whether the request is pending.
+ * @param shouldAccept Whether the request should be accepted.
+ * @param onAccept The function to call when the request is accepted.
+ * @param onDecline The function to call when the request is declined.
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FriendElement(
@@ -67,6 +78,12 @@ fun FriendElement(
       }
 }
 
+/**
+ * A section containing the friend's name and profile picture.
+ *
+ * @param userToDisplay The user to display.
+ * @param modifier The modifier to apply to the section.
+ */
 @Composable
 private fun FriendNameSection(userToDisplay: User, modifier: Modifier = Modifier) {
   Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
@@ -82,6 +99,11 @@ private fun FriendNameSection(userToDisplay: User, modifier: Modifier = Modifier
   }
 }
 
+/**
+ * A circle containing the friend's profile picture.
+ *
+ * @param profilePicUrl The URL of the friend's profile picture.
+ */
 @Composable
 private fun FriendCircle(
     profilePicUrl: String?,
@@ -104,6 +126,13 @@ private fun FriendCircle(
       }
 }
 
+/**
+ * A composable containing the icons to accept or decline a friend request or the arrow its already
+ * your friend.
+ *
+ * @param isPendingRequest Whether the request is pending.
+ * @param shouldAccept Whether the request should be accepted.
+ */
 @Composable
 fun FriendArrowSection(
     isPendingRequest: Boolean,
