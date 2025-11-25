@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.model.user
 
-import android.util.Log
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -58,48 +57,6 @@ class UserRepositoryFirebase(
   }
 
   /**
-   * Retrieves a user by their UID.
-   *
-   * @param uid The UID of the user to retrieve.
-   * @return The User object if found, null otherwise.
-   */
-  override suspend fun getUserByUid(uid: String): User? {
-    return try {
-      val doc = db.collection("users").document(uid).get().await()
-      if (doc.exists()) {
-        createUserFromDoc(doc, uid)
-      } else {
-        null
-      }
-    } catch (_: Exception) {
-      null
-    }
-  }
-
-  override suspend fun getUserByNameOrEmail(query: String): List<User> {
-    if (query.isBlank()) return emptyList()
-
-    val q = query.trim()
-
-    return try {
-      val usersRef = db.collection("users")
-
-      // 1. Query by name
-      val nameQuery = usersRef.orderBy("name").startAt(q).endAt(q + "\uf8ff").get().await()
-
-      // 2. Query by email
-      val emailQuery = usersRef.orderBy("email").startAt(q).endAt(q + "\uf8ff").get().await()
-
-      // Merge two lists into a set to eliminate duplicates
-      val docs = (nameQuery.documents + emailQuery.documents).distinctBy { it.id }
-
-      docs.mapNotNull { doc -> createUserFromDoc(doc, doc.id) }
-    } catch (e: Exception) {
-      emptyList()
-    }
-  }
-
-  /**
    * Function to update the user's preferences in Firestore.
    *
    * @param uid The UID of the user.
@@ -135,7 +92,6 @@ class UserRepositoryFirebase(
    * @param toUid The UID of the user receiving the request.
    */
   override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-    Log.d("UserRepositoryFirebase", "sendFriendRequest from $fromUid to $toUid")
     val currentAuthUid = auth.currentUser?.uid
     if (fromUid == "guest" || currentAuthUid == null || currentAuthUid != fromUid) return
 
@@ -147,9 +103,7 @@ class UserRepositoryFirebase(
 
     // Don't duplicate existing friend entry
     val already = friends.any { it.uid == toUid }
-    Log.d("UserRepositoryFirebase", "Already friends with $toUid: $already")
     if (!already) {
-      Log.d("UserRepositoryFirebase", "Adding friend entry for $toUid")
       friends.add(Friend(uid = toUid, status = FriendStatus.PENDING))
       docRef.update("friends", friends).await()
     }

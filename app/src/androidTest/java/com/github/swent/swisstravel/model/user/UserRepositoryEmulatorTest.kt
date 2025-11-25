@@ -10,8 +10,6 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
@@ -320,53 +318,6 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     val docA = FirebaseEmulator.firestore.collection("users").document(uidA).get().await()
     val friendsA = docA.get("friends") as? List<*> ?: emptyList<Any>()
     assertTrue(friendsA.isEmpty())
-  }
-
-  @Test
-  fun getUserByUid_returnsUserWhenDocumentExists() = runBlocking {
-    // Arrange: create and sign in a user, and create the Firestore doc via repository
-    val (uid, _) =
-        createGoogleUserAndSignIn(
-            name = "Lookup User", email = "lookup@example.com", createDocViaRepo = true)
-
-    // Act
-    val user = repositoryUser.getUserByUid(uid)
-
-    // Assert
-    assertNotNull(user, "Expected non-null user when Firestore document exists")
-    assertEquals(uid, user!!.uid)
-    assertEquals("lookup@example.com", user.email)
-    assertEquals("Lookup User", user.name)
-  }
-
-  @Test
-  fun getUserByUid_returnsNullWhenDocumentDoesNotExist() = runBlocking {
-    // Arrange: pick a UID that definitely has no document
-    val missingUid = "non_existing_uid"
-
-    // Act
-    val user = repositoryUser.getUserByUid(missingUid)
-
-    // Assert
-    assertNull(user, "Expected null when Firestore document does not exist")
-  }
-
-  @Test
-  fun getUserByUid_returnsNullWhenFirestoreThrows() = runBlocking {
-    // Arrange: disable network so get() will fail and throw inside await()
-    FirebaseEmulator.firestore.disableNetwork().await()
-    val uid = "offline_uid"
-
-    // Act
-    val user = repositoryUser.getUserByUid(uid)
-
-    // Assert: exception should be caught and translated to null
-    assertNull(user, "Expected null when Firestore throws an exception")
-
-    // Cleanup
-    FirebaseEmulator.firestore.enableNetwork().await()
-
-    Unit
   }
 
   @After
