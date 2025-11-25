@@ -9,8 +9,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.PersonAddAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -66,11 +68,15 @@ fun FriendsListScreen(
         FriendsTopAppBar(
             isSearching = isSearching,
             searchQuery = searchQuery,
-            onSearchQueryChange = { searchQuery = it },
+            onSearchQueryChange = { newQuery ->
+              searchQuery = newQuery
+              friendsViewModel.updateSearchQuery(newQuery)
+            },
             onStartSearch = { isSearching = true },
             onCloseSearch = {
               isSearching = false
               searchQuery = ""
+              friendsViewModel.updateSearchQuery("")
             })
       },
       floatingActionButton = {
@@ -79,7 +85,9 @@ fun FriendsListScreen(
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.testTag(FriendsScreenTestTags.ADD_FRIEND_BUTTON)) {
-              Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_friend))
+              Icon(
+                  Icons.Default.PersonAddAlt,
+                  contentDescription = stringResource(R.string.add_friend))
             }
       }) { padding ->
         Column(
@@ -94,6 +102,12 @@ fun FriendsListScreen(
                   friends = friendsViewModel.friendsToDisplay,
                   onSelectFriend = onSelectFriend,
               )
+
+              PendingFriendRequestsSection(
+                  pendingFriends = uiState.pendingFriends,
+                  currentUserUid = uiState.currentUserUid,
+                  onAccept = { friendUid -> friendsViewModel.acceptFriendRequest(friendUid) },
+                  onDecline = { friendUid -> friendsViewModel.removeFriend(friendUid) })
             }
       }
 }
@@ -204,4 +218,48 @@ fun FriendsSearchBar(
               disabledIndicatorColor = Color.Transparent,
               errorIndicatorColor = Color.Transparent,
           ))
+}
+
+@Composable
+private fun PendingFriendRequestsSection(
+    pendingFriends: List<User>,
+    currentUserUid: String,
+    onAccept: (String) -> Unit,
+    onDecline: (String) -> Unit,
+) {
+  if (pendingFriends.isEmpty()) return
+
+  var expanded by rememberSaveable { mutableStateOf(false) }
+
+  Column(modifier = Modifier.fillMaxWidth()) {
+    TextButton(onClick = { expanded = !expanded }) {
+      Text(
+          text = stringResource(R.string.pending_friend_requests, pendingFriends.size),
+          style = MaterialTheme.typography.titleMedium,
+          color = MaterialTheme.colorScheme.onBackground,
+          modifier = Modifier.weight(1f))
+      Icon(
+          imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+          contentDescription = null,
+          tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+
+    if (expanded) {
+      Column(
+          verticalArrangement =
+              Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement))) {
+            pendingFriends.forEach { friend ->
+              val friendWasSentToCurrentUser = friend.uid == currentUserUid
+
+              FriendElement(
+                  userToDisplay = friend,
+                  onClick = {},
+                  isPendingRequest = true,
+                  shouldAccept = friendWasSentToCurrentUser,
+                  onAccept = { onAccept(friend.uid) },
+                  onDecline = { onDecline(friend.uid) })
+            }
+          }
+    }
+  }
 }

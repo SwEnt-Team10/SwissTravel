@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 
 data class FriendsListScreenUIState(
     val friends: List<User> = emptyList(),
+    val pendingFriends: List<User> = emptyList(),
     val isLoading: Boolean = false,
     val errorMsg: String? = null,
     val searchQuery: String = "",
@@ -38,11 +39,18 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
       val currentUser = userRepository.getCurrentUser()
 
       val acceptedFriends = currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }
+      val pendingEntries = currentUser.friends.filter { it.status == FriendStatus.PENDING }
 
       val friends = acceptedFriends.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
+      val pendingUsers =
+          pendingEntries.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
 
       _uiState.value =
-          uiState.value.copy(friends = friends, isLoading = false, currentUserUid = currentUser.uid)
+          uiState.value.copy(
+              friends = friends,
+              pendingFriends = pendingUsers,
+              isLoading = false,
+              currentUserUid = currentUser.uid)
     } catch (e: Exception) {
       _uiState.value =
           uiState.value.copy(isLoading = false, errorMsg = "Error fetching friends: ${e.message}")
@@ -100,4 +108,8 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
       }
     }
   }
+
+  fun acceptFriendRequest(toUid: String) {}
+
+  fun removeFriend(toUid: String) {}
 }

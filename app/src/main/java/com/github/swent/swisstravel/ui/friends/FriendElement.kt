@@ -9,6 +9,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -18,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
@@ -29,7 +32,15 @@ object FriendElementTestTags {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun FriendElement(userToDisplay: User, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun FriendElement(
+    userToDisplay: User,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    isPendingRequest: Boolean = false,
+    shouldAccept: Boolean = false,
+    onAccept: () -> Unit = {},
+    onDecline: () -> Unit = {},
+) {
   Card(
       modifier =
           modifier
@@ -50,7 +61,7 @@ fun FriendElement(userToDisplay: User, onClick: () -> Unit, modifier: Modifier =
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
               FriendNameSection(userToDisplay = userToDisplay)
-              FriendArrowSection()
+              FriendArrowSection(isPendingRequest, shouldAccept, onAccept, onDecline)
             }
       }
 }
@@ -94,9 +105,32 @@ private fun FriendCircle(
 }
 
 @Composable
-private fun FriendArrowSection() {
-  Icon(
-      imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-      contentDescription = null,
-      tint = MaterialTheme.colorScheme.onSurfaceVariant)
+fun FriendArrowSection(
+    isPendingRequest: Boolean,
+    shouldAccept: Boolean,
+    onAccept: () -> Unit = {},
+    onDecline: () -> Unit = {},
+) {
+  if (!isPendingRequest || !shouldAccept) {
+    Icon(
+        imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.onSurfaceVariant)
+  } else {
+    Row {
+      IconButton(onClick = onAccept) {
+        Icon(
+            imageVector = Icons.Default.Check,
+            contentDescription = stringResource(R.string.accept_friend),
+            tint = MaterialTheme.colorScheme.primary)
+      }
+
+      IconButton(onClick = onDecline) {
+        Icon(
+            imageVector = Icons.Default.Close,
+            contentDescription = stringResource(R.string.deny_friend),
+            tint = MaterialTheme.colorScheme.error)
+      }
+    }
+  }
 }
