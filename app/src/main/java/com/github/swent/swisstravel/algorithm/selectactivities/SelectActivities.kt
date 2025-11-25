@@ -29,22 +29,21 @@ private const val NB_ACTIVITIES_PER_DAY = 3
  * preferences.
  *
  * @param tripSettings The settings for the trip, including destinations and preferences.
- * @param onProgress A callback function to report the progress of the selection process (from 0.0
- *   to 1.0).
  * @param activityRepository The repository to fetch activities from.
  */
 class SelectActivities(
     private val tripSettings: TripSettings,
-    private val onProgress: (Float) -> Unit,
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
   /**
    * Fetches and selects activities based on the trip settings.
    *
+   * @param onProgress A callback function to report the progress of the selection process (from 0.0
+   *   to 1.0).
    * @return A list of [Activity] based on the user preferences and points of interest
    */
-  suspend fun addActivities(): List<Activity> {
+  suspend fun addActivities(onProgress: (Float) -> Unit): List<Activity> {
     val allDestinations = buildDestinationList()
     val userPreferences = tripSettings.preferences.toMutableList()
 
