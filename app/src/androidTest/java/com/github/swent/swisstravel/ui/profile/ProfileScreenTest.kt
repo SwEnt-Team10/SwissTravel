@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.net.Uri
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
@@ -27,7 +28,10 @@ class FakeUserRepository : UserRepository {
         email = "test@example.com",
         profilePicUrl = "",
         preferences = listOf(Preference.MUSEUMS),
-        friends = emptyList())
+        friends = emptyList(),
+        stats = UserStats(),
+        pinnedTripsUids = emptyList(),
+        pinnedImagesUris = emptyList())
   }
 
   override suspend fun getUserByUid(uid: String): User? {
@@ -53,6 +57,18 @@ class FakeUserRepository : UserRepository {
   }
 
   override suspend fun removeFriend(uid: String, friendUid: String) {
+    // no-op in tests
+  }
+
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedImagesUris: List<Uri>?
+  ) {
     // no-op in tests
   }
 
@@ -145,7 +161,10 @@ class ProfileScreenUITest {
                 email = "",
                 profilePicUrl = "",
                 preferences = emptyList(),
-                friends = emptyList())
+                friends = emptyList(),
+                stats = UserStats(),
+                pinnedTripsUids = emptyList(),
+                pinnedImagesUris = emptyList())
           }
 
           override suspend fun getUserByUid(uid: String): User? {
@@ -173,6 +192,18 @@ class ProfileScreenUITest {
           }
 
           override suspend fun removeFriend(uid: String, friendUid: String) {
+            /** no-op for tests* */
+          }
+
+          override suspend fun updateUser(
+              uid: String,
+              name: String?,
+              biography: String?,
+              profilePicUrl: String?,
+              preferences: List<Preference>?,
+              pinnedTripsUids: List<String>?,
+              pinnedImagesUris: List<Uri>?
+          ) {
             /** no-op for tests* */
           }
         }

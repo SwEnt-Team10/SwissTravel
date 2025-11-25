@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.user
 
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
@@ -10,6 +11,7 @@ import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import junit.framework.TestCase.assertFalse
+import kotlin.collections.map
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -424,6 +426,115 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     // Assert
     assertTrue(noMatch.isEmpty(), "Expected empty list for non-matching query")
     assertTrue(blankQuery.isEmpty(), "Expected empty list for blank query")
+  }
+
+  @Test
+  fun updateUser_updatesAllFieldsCorrectly() = runBlocking {
+    // Arrange: create user
+    val (uid, credential) =
+        createGoogleUserAndSignIn(
+            name = "Original User", email = "updateuser@example.com", createDocViaRepo = true)
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
+
+    // Act: update fields
+    val newName = "Updated Name"
+    val newBiography = "This is an updated biography."
+    val newProfilePicUrl = "http://example.com/new_avatar.png"
+    val newPreferences = listOf(Preference.MUSEUMS, Preference.SCENIC_VIEWS)
+    val newPinnedTripsUids = listOf("trip1", "trip2")
+    val newPinnedImagesUris = listOf("file://image1".toUri(), "file://image2".toUri())
+
+    repositoryUser.updateUser(
+        uid = uid,
+        name = newName,
+        biography = newBiography,
+        profilePicUrl = newProfilePicUrl,
+        preferences = newPreferences,
+        pinnedTripsUids = newPinnedTripsUids,
+        pinnedImagesUris = newPinnedImagesUris)
+
+    // Assert: read back the document
+    val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
+    assertEquals(newName, doc.getString("name"))
+    assertEquals(newBiography, doc.getString("biography"))
+    assertEquals(newProfilePicUrl, doc.getString("profilePicUrl"))
+
+    val storedPrefs = doc.get("preferences") as List<*>
+    val storedEnums = storedPrefs.map { Preference.valueOf(it as String) }
+    assertEquals(newPreferences, storedEnums)
+
+    val storedTrips = doc.get("pinnedTripsUids") as List<*>
+    assertEquals(newPinnedTripsUids, storedTrips)
+
+    val storedImages = doc.get("pinnedImagesUris") as List<*>
+    assertEquals(newPinnedImagesUris.map { it.toString() }, storedImages)
+  }
+
+  @Test
+  fun updateUser_partialUpdate_onlyChangesProvidedFields() = runBlocking {
+    // Arrange: create user
+    val (uid, credential) =
+        createGoogleUserAndSignIn(
+            name = "Partial User", email = "partial@example.com", createDocViaRepo = true)
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
+
+    // Act: update only name and biography
+    val newName = "Partial Update Name"
+    val newBiography = "Updated biography only"
+    repositoryUser.updateUser(
+        uid = uid,
+        name = newName,
+        biography = newBiography,
+        profilePicUrl = null,
+        preferences = null,
+        pinnedTripsUids = null,
+        pinnedImagesUris = null)
+
+    // Assert
+    val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
+    assertEquals(newName, doc.getString("name"))
+    assertEquals(newBiography, doc.getString("biography"))
+
+    // Unchanged fields remain default / empty
+    assertEquals("http://example.com/avatar.png", doc.getString("profilePicUrl"))
+    assertTrue((doc.get("preferences") as? List<*>)?.isEmpty() ?: true)
+    assertTrue((doc.get("pinnedTripsUids") as? List<*>)?.isEmpty() ?: true)
+    assertTrue((doc.get("pinnedImagesUris") as? List<*>)?.isEmpty() ?: true)
+  }
+
+  @Test
+  fun updateUser_doesNothingForGuestUser() = runBlocking {
+    // Arrange
+    val guestUid = "guest"
+
+    // Act + Assert: should not throw, document not required
+    repositoryUser.updateUser(
+        uid = guestUid,
+        name = "Should Not Update",
+        biography = "Guest update",
+        profilePicUrl = "http://example.com/guest.png",
+        preferences = listOf(Preference.SCENIC_VIEWS),
+        pinnedTripsUids = listOf("tripX"),
+        pinnedImagesUris = listOf("file://imageX".toUri()))
+
+    // Nothing to assert in Firestore — test passes if no exception thrown
+    assertTrue(true)
+  }
+
+  @Test(expected = IllegalStateException::class)
+  fun updateUser_throwsIfUserDocDoesNotExist() = runBlocking {
+    // Arrange: pick UID with no document
+    val missingUid = "nonexistent_user"
+
+    // Act: attempt update — should throw
+    repositoryUser.updateUser(
+        uid = missingUid,
+        name = "Name",
+        biography = "Bio",
+        profilePicUrl = null,
+        preferences = null,
+        pinnedTripsUids = null,
+        pinnedImagesUris = null)
   }
 
   @After

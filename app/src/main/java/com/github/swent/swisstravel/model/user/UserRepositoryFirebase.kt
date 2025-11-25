@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.model.user
 
 import android.net.Uri
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -348,8 +349,8 @@ class UserRepositoryFirebase(
     val stats = parseStats(doc)
     val pinnedTripsUids =
         (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-    val pinnedImagesUris =
-        (doc["pinnedImagesUris"] as? List<*>)?.filterIsInstance<Uri>() ?: emptyList()
+    val pinnedImagesUrisStrings = doc.get("pinnedImagesUris") as? List<*> ?: emptyList<Uri>()
+    val pinnedImagesUris = pinnedImagesUrisStrings.mapNotNull { (it as? String)?.toUri() }
 
     return User(
         uid = uid,
