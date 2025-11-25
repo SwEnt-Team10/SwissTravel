@@ -40,37 +40,36 @@ class ProfileViewModel(
   private var currentUser: User? = null
   val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()
 
-  init {
+  /**
+   * Loads a user profile for the given user ID and determines whether it is the current user's
+   * profile.
+   *
+   * @param requestedUid The UID of the profile to load.
+   */
+  fun loadUser(requestedUid: String?) {
+    if (requestedUid.isNullOrBlank()) {
+      Log.e("ProfileViewModel", "User ID is null or blank")
+      setErrorMsg("User ID is invalid")
+      return
+    }
     viewModelScope.launch {
       try {
-        val user = userRepository.getCurrentUser()
-        currentUser = user
-        autoFill(user)
-        refreshStatsForUser(user)
+        // Load current user
+        currentUser = userRepository.getCurrentUser()
+        // Check if current user is the same as the profile to load
+        val isOwn = currentUser?.uid == requestedUid
+        loadProfile(requestedUid)
+        _uiState.update { it.copy(uid = requestedUid, isOwnProfile = isOwn) }
+        if (isOwn) {
+          refreshStatsForUser(currentUser!!)
+        }
       } catch (e: Exception) {
-        setErrorMsg("Error fetching user data: ${e.message}")
+        Log.e("ProfileViewModel", "Error loading profile", e)
+        setErrorMsg("Failed to load profile: ${e.message}")
       } finally {
-        _uiState.update { it.copy(isOwnProfile = it.uid == currentUser?.uid) }
         _uiState.update { it.copy(isLoading = false) }
       }
     }
-  }
-
-  /**
-   * Automatically fills the UI state with the user's data.
-   *
-   * @param loggedIn The user to fill the UI state with.
-   */
-  fun autoFill(loggedIn: User) {
-    _uiState.value =
-        ProfileUIState(
-            profilePicUrl = loggedIn.profilePicUrl,
-            name = loggedIn.name,
-            biography = loggedIn.biography,
-            stats = loggedIn.stats,
-            // todo pinnedTripsUids = loggedIn.pinnedTripsUids,
-            // todo pinnedImages = loggedIn.pinnedImages
-        )
   }
 
   /**
@@ -78,28 +77,23 @@ class ProfileViewModel(
    *
    * @param uid the unique identifier of the user
    */
-  fun loadProfileInfo(uid: String?) {
-    if (uid.isNullOrBlank()) {
-      Log.e("ProfileViewModel", "User ID is null or blank")
-      setErrorMsg("User ID is invalid")
-      return
-    }
-    viewModelScope.launch {
-      try {
-        val profile = userRepository.getUserById(uid) // todo
-        val pinnedTrips = profile.pinnedTripsUids.mapNotNull { uid -> tripsRepository.getTrip(uid) }
-        _uiState.value =
-            ProfileUIState(
-                profilePicUrl = profile.profilePicUrl,
-                name = profile.name,
-                biography = profile.biography,
-                stats = profile.stats,
-                pinnedTrips = pinnedTrips,
-                pinnedImages = profile.pinnedImages)
-      } catch (e: Exception) {
-        Log.e("ProfileViewModel", "Error loading profile info", e)
-        setErrorMsg("Failed to load profile info: ${e.message}")
+  private suspend fun loadProfile(uid: String) {
+    try {
+      // val profile = userRepository.getUserById(uid) // todo
+      val profile = userRepository.getCurrentUser()
+      val pinnedTrips = profile.pinnedTripsUids.mapNotNull { uid -> tripsRepository.getTrip(uid) }
+      _uiState.update {
+        it.copy(
+            profilePicUrl = profile.profilePicUrl,
+            name = profile.name,
+            biography = profile.biography,
+            stats = profile.stats,
+            pinnedTrips = pinnedTrips,
+            pinnedImages = profile.pinnedImages)
       }
+    } catch (e: Exception) {
+      Log.e("ProfileViewModel", "Error loading profile info", e)
+      setErrorMsg("Failed to load profile info: ${e.message}")
     }
   }
 

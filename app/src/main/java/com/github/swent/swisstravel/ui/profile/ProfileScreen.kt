@@ -78,6 +78,8 @@ fun ProfileScreen(
   val context = LocalContext.current
   val uiState = profileViewModel.uiState.collectAsState().value
 
+  LaunchedEffect(uid) { profileViewModel.loadUser(uid) }
+
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
@@ -275,7 +277,7 @@ private fun PinnedTrips(
       trips = pinnedTrips,
       onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
       onLongPress = { /* no-op */},
-      isSelected = { false },
+      isSelected = { false }, // No selection mode here
       isSelectionMode = false,
       noIconTripElement = false,
       emptyListString = "" // TODO
