@@ -160,6 +160,48 @@ class UserRepositoryFirebase(
   }
 
   /**
+   * Updates basic user fields in Firestore.
+   *
+   * @param uid The UID of the user.
+   * @param name Optional new name.
+   * @param biography Optional new biography.
+   * @param profilePicUrl Optional new profile picture URL.
+   * @param preferences Optional list of updated preferences.
+   * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
+   * @param pinnedImagesUris Optional updated list of pinned image URIs.
+   */
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedImagesUris: List<Uri>?
+  ) {
+    if (uid == "guest") return
+
+    val docRef = db.collection("users").document(uid)
+    val snapshot = docRef.get().await()
+
+    check(snapshot.exists()) { "User document does not exist for uid: $uid" }
+
+    val updates = mutableMapOf<String, Any?>()
+
+    if (name != null) updates["name"] = name
+    if (biography != null) updates["biography"] = biography
+    if (profilePicUrl != null) updates["profilePicUrl"] = profilePicUrl
+    if (preferences != null) updates["preferences"] = preferences.map { it.name }
+    if (pinnedTripsUids != null) updates["pinnedTripsUids"] = pinnedTripsUids
+    if (pinnedImagesUris != null)
+        updates["pinnedImagesUris"] = pinnedImagesUris.map { it.toString() }
+
+    if (updates.isNotEmpty()) {
+      docRef.update(updates).await()
+    }
+  }
+
+  /**
    * Helper function to create a User object from a DocumentSnapshot.
    *
    * @param doc The DocumentSnapshot to create the User from.
