@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel
 
-import EditTripScreen
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
@@ -50,6 +49,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
