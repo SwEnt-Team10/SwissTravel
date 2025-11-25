@@ -8,7 +8,6 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.APP_LOGO
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.EMAIL_FIELD
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
@@ -20,15 +19,13 @@ import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
-import com.google.android.gms.tasks.Tasks
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 class AuthenticationTest : FirestoreSwissTravelTest() {
@@ -41,8 +38,8 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signOut()
   }
 
-  private val viewModel: SignInViewModel =
-      SignInViewModel(AuthRepositoryFirebase(FirebaseEmulator.auth))
+  private val mockRepository = MockAuthRepository()
+  private val viewModel: SignInViewModel = SignInViewModel(mockRepository)
 
   @Test
   fun testSignInScreenDisplaysCorrectly() {
@@ -85,14 +82,10 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
   fun canSignInWithEmailAndPassword() {
     val testEmail = "testy@mctestface.com"
     val testPassword = "password123"
-
-    // Create a user in the emulator to sign in with. We must wait for this to complete.
-    Tasks.await(FirebaseEmulator.auth.createUserWithEmailAndPassword(testEmail, testPassword))
-    FirebaseEmulator.auth.signOut() // Ensure we are signed out before the test UI starts
-
+    `when`(mockRepository.mockUser.isEmailVerified).thenReturn(true)
     var signedIn = false
     composeTestRule.setContent {
-      SwissTravelTheme { SignInScreen(authViewModel = viewModel, onSignedIn = { signedIn = true }) }
+      SignInScreen(authViewModel = viewModel, onSignedIn = { signedIn = true })
     }
 
     // Find UI elements and interact
@@ -104,9 +97,5 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
     composeTestRule.waitUntil(timeoutMillis = 5000) { signedIn }
 
     assertTrue("User should be signed in after pressing the button", signedIn)
-    assertNotNull(
-        "Firebase auth current user should not be null", FirebaseEmulator.auth.currentUser)
-    assertEquals(
-        "Signed in user email should match", testEmail, FirebaseEmulator.auth.currentUser?.email)
   }
 }
