@@ -292,6 +292,16 @@ class TripCreationViewModelTest {
           friends = emptyList())
     }
 
+    override suspend fun getUserByUid(uid: String): User? {
+      // no-op in tests
+      return null
+    }
+
+    override suspend fun getUserByNameOrEmail(query: String): List<User> {
+      // no-op in tests
+      return emptyList()
+    }
+
     override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
 
     override suspend fun updateUserStats(uid: String, stats: UserStats) {
