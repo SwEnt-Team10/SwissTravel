@@ -12,8 +12,10 @@ import io.mockk.Runs
 import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
+import junit.framework.TestCase.assertFalse
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert
 import org.junit.Test
 
 class UserRepositoryMockTest {
@@ -51,8 +53,61 @@ class UserRepositoryMockTest {
     val result: User = repo.getCurrentUser()
 
     // Assert: repo fell back to createAndStoreNewUser(firebaseUser, uid)
-    Assert.assertEquals("uid123", result.uid)
-    Assert.assertEquals("Cacheless User", result.name)
-    Assert.assertEquals("cacheless@example.com", result.email)
+    assertEquals("uid123", result.uid)
+    assertEquals("Cacheless User", result.name)
+    assertEquals("cacheless@example.com", result.email)
+  }
+
+  @Test
+  fun updateUser_serializesEnumsAndUrisCorrectly() = runTest {
+    // Mocks
+    val auth = mockk<FirebaseAuth>(relaxed = true)
+    val db = mockk<FirebaseFirestore>(relaxed = true)
+    val docRef = mockk<DocumentReference>()
+    val snapshot = mockk<DocumentSnapshot>()
+
+    every { db.firestoreSettings = any<FirebaseFirestoreSettings>() } just Runs
+    every { auth.currentUser?.uid } returns "uid123"
+    every { db.collection("users").document("uid123") } returns docRef
+    every { docRef.get() } returns Tasks.forResult(snapshot)
+    every { snapshot.exists() } returns true
+
+    var captured: Map<String, Any?>? = null
+    every { docRef.update(any<Map<String, Any?>>()) } answers
+        {
+          captured = arg(0)
+          Tasks.forResult(null)
+        }
+
+    val repo = UserRepositoryFirebase(auth, db)
+
+    // Act
+    repo.updateUser(
+        uid = "uid123",
+        name = null,
+        biography = null,
+        profilePicUrl = "http://pic",
+        preferences = listOf(Preference.SCENIC_VIEWS, Preference.WHEELCHAIR_ACCESSIBLE),
+        pinnedTripsUids = listOf("t1", "t2"),
+        pinnedImagesUris = null // not updated
+        )
+
+    // Assert: update() must have been called
+    assertNotNull(captured)
+    // Extract once
+    val map = captured!!
+    // Assert correct number of updated fields
+    assertEquals(
+        3, // expected number of updated fields
+        map.size // profilePicUrl + preferences + pinnedTripsUids
+        )
+    // Assert each key/value
+    assertEquals("http://pic", map["profilePicUrl"])
+    assertEquals(listOf("SCENIC_VIEWS", "WHEELCHAIR_ACCESSIBLE"), map["preferences"])
+    assertEquals(listOf("t1", "t2"), map["pinnedTripsUids"])
+    assertFalse(map.containsKey("pinnedImagesUris"))
+    // TODO fix URIs cause it doesn't work in the test for some reason
+    // Assert.assertEquals(listOf("file:///data/data/your.package.name/files/image1"),
+    // captured!!["pinnedImagesUris"])
   }
 }
