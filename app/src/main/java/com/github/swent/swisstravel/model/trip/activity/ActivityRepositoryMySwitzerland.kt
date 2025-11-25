@@ -70,9 +70,14 @@ class ActivityRepositoryMySwitzerland(
    */
   private suspend fun fetchActivitiesFromUrl(url: HttpUrl): List<Activity> {
     return withContext(ioDispatcher) {
-      val request =
+        val topUrl : HttpUrl =
+            url.newBuilder()
+            .addQueryParameter("top", "true")
+            .build()
+
+        val request =
           Request.Builder()
-              .url(url)
+              .url(topUrl)
               .header("accept", "application/json")
               .header("x-api-key", API_KEY)
               .build()

@@ -21,7 +21,7 @@ private const val API_CALL_DELAY_MS = 1000L
 private const val NEAR = 15000
 
 /** Number of activities done in one day */
-private const val NB_ACTIVITIES_PER_DAY = 4
+private const val NB_ACTIVITIES_PER_DAY = 3
 
 /**
  * Selects activities for a trip based on user-defined settings and preferences. This class fetches
@@ -75,10 +75,9 @@ class SelectActivities(
           val allFetchedActivities = mutableListOf<Activity>()
           for (destination in allDestinations) {
             if (optionalPrefs.isNotEmpty()) {
-              for (preference in optionalPrefs) {
                 val fetched =
                     activityRepository.getActivitiesNearWithPreference(
-                        mandatoryPrefs + preference,
+                        mandatoryPrefs + optionalPrefs,
                         destination.coordinate,
                         NEAR,
                         numberOfActivityToFetchPerStep)
@@ -87,7 +86,6 @@ class SelectActivities(
                 completedSteps++
                 onProgress(completedSteps.toFloat() / totalSteps)
                 delay(API_CALL_DELAY_MS) // Respect API rate limit.
-              }
             } else {
               val fetched =
                   activityRepository.getActivitiesNearWithPreference(
