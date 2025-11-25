@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel
 
-import EditTripScreen
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
@@ -51,6 +50,7 @@ import com.github.swent.swisstravel.ui.navigation.Tab
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
@@ -138,9 +138,17 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
 
+  val currentUser = FirebaseAuth.getInstance().currentUser
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Landing.name
-      else Screen.CurrentTrip.name
+      if ((currentUser != null && currentUser.isEmailVerified) ||
+          currentUser?.isAnonymous == true) {
+        Screen.CurrentTrip.name
+      } else {
+        if (currentUser != null) {
+          FirebaseAuth.getInstance().signOut()
+        }
+        Screen.Landing.name
+      }
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route

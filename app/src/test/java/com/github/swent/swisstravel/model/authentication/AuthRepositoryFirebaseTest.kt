@@ -95,7 +95,6 @@ class AuthRepositoryFirebaseTest {
     // ARRANGE
     coEvery { mockAuth.createUserWithEmailAndPassword(any(), any()) } returns
         Tasks.forResult(mockAuthResult)
-    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
     coEvery { mockUser.updateProfile(any<UserProfileChangeRequest>()) } returns
         Tasks.forResult(null)
     coEvery { mockUser.sendEmailVerification() } returns Tasks.forResult(null)
@@ -144,7 +143,6 @@ class AuthRepositoryFirebaseTest {
     assertEquals("Sign up failed: Firebase error", result.exceptionOrNull()?.message)
   }
 
-  // --- NEW TESTS FOR signInWithEmailPassword ---
   @Test
   fun signInWithEmailPassword_Success() = runTest {
     // Arrange
@@ -174,13 +172,11 @@ class AuthRepositoryFirebaseTest {
     assertEquals("Login failed: Firebase error", result.exceptionOrNull()?.message)
   }
 
-  // --- NEW TESTS FOR reloadAndCheckVerification ---
   @Test
   fun reloadAndCheckVerification_Success_UserVerified() = runTest {
     // Arrange
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.isEmailVerified } returns true
-    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
     coEvery { mockUser.reload() } returns Tasks.forResult(null)
 
     // Act
@@ -197,7 +193,6 @@ class AuthRepositoryFirebaseTest {
     // Arrange
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.isEmailVerified } returns false
-    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
     coEvery { mockUser.reload() } returns Tasks.forResult(null)
 
     // Act
@@ -221,12 +216,10 @@ class AuthRepositoryFirebaseTest {
     assertEquals("No user is currently signed in.", result.exceptionOrNull()?.message)
   }
 
-  // --- NEW TESTS FOR resendVerificationEmail ---
   @Test
   fun resendVerificationEmail_Success() = runTest {
     // Arrange
     every { mockAuth.currentUser } returns mockUser
-    // FIX: Use Tasks.forResult(null) instead of mockVoidTask
     coEvery { mockUser.sendEmailVerification() } returns Tasks.forResult(null)
 
     // Act
@@ -250,7 +243,6 @@ class AuthRepositoryFirebaseTest {
     assertEquals("No user is currently signed in.", result.exceptionOrNull()?.message)
   }
 
-  // --- Existing Sign Out Tests ---
   @Test
   fun signOut_Success() {
     every { mockAuth.signOut() } returns Unit
@@ -262,13 +254,44 @@ class AuthRepositoryFirebaseTest {
   }
 
   @Test
-  fun signOut_Failure() {
-    val exception = Exception("Logout error")
-    every { mockAuth.signOut() } throws exception
+  fun deleteUser_Success() = runTest {
+    // Arrange
+    every { mockAuth.currentUser } returns mockUser
+    coEvery { mockUser.delete() } returns Tasks.forResult(null)
 
-    val result = authRepository.signOut()
+    // Act
+    val result = authRepository.deleteUser()
 
+    // Assert
+    assertTrue(result.isSuccess)
+    coVerify { mockUser.delete() }
+  }
+
+  @Test
+  fun deleteUser_Failure() = runTest {
+    // Arrange
+    val exception = Exception("Delete failed")
+    every { mockAuth.currentUser } returns mockUser
+    coEvery { mockUser.delete() } returns Tasks.forException(exception)
+
+    // Act
+    val result = authRepository.deleteUser()
+
+    // Assert
     assertTrue(result.isFailure)
-    assertEquals("Logout failed: Logout error", result.exceptionOrNull()?.message)
+    assertEquals("Failed to delete user: Delete failed", result.exceptionOrNull()?.message)
+  }
+
+  @Test
+  fun deleteUser_NoUser() = runTest {
+    // Arrange
+    every { mockAuth.currentUser } returns null
+
+    // Act
+    val result = authRepository.deleteUser()
+
+    // Assert
+    // If no user is signed in, deleteUser returns failure (idempotent)
+    assertTrue(result.isFailure)
   }
 }

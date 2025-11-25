@@ -39,6 +39,7 @@ import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
@@ -410,7 +411,6 @@ abstract class SwissTravelTest {
 
     onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed().assertTextEquals(trip.name)
     onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).assertIsDisplayed()
-    onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).assertIsDisplayed()
 
     checkTravelerCounterIsDisplayed(adultsLabel, childrenLabel)
 
