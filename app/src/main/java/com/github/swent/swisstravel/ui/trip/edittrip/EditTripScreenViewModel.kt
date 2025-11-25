@@ -1,10 +1,11 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
-import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
@@ -23,6 +24,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** UI state for the EditTripScreen. */
 data class EditTripUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
@@ -35,9 +37,20 @@ data class EditTripUiState(
     val selectedPrefs: Set<Preference> = emptySet()
 )
 
+/**
+ * ViewModel for the EditTripScreen. Handles loading, editing, and saving trips.
+ *
+ * @property tripRepository Repository for managing trips.
+ * @property activityRepository Repository for fetching activities.
+ * @property algorithmFactory Factory function to create TripAlgorithm instances.
+ */
 class EditTripScreenViewModel(
     private val tripRepository: TripsRepository = TripsRepositoryFirestore(),
-    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
+    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland(),
+    private val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { context, settings ->
+      TripAlgorithm.init(
+          context = context, tripSettings = settings, activityRepository = activityRepository)
+    }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(EditTripUiState())
@@ -101,14 +114,24 @@ class EditTripScreenViewModel(
   /**
    * Saves the current trip with the edited information. This will re-calculate activities based on
    * the new preferences.
+   *
+   * @param context The Android context.
    */
-  fun save() {
+  fun save(context: Context) {
     viewModelScope.launch {
       _uiState.update { it.copy(isSaving = true, savingProgress = 0f) }
       try {
         val state = _uiState.value
         val sanitizedPrefs = PreferenceRules.enforceMutualExclusivity(state.selectedPrefs)
         var selectedActivities = originalTrip.activities
+        var routeSegments = originalTrip.routeSegments
+        var allLocations = originalTrip.locations
+        val newTripProfile =
+            originalTrip.tripProfile.copy(
+                adults = state.adults,
+                children = state.children,
+                preferences = sanitizedPrefs.toList(),
+            )
 
         // Updates the activities only if the preferences have changed.
         if (sanitizedPrefs !=
@@ -137,35 +160,35 @@ class EditTripScreenViewModel(
                           originalTrip.tripProfile.departureLocation),
                   destinations = originalTrip.locations)
 
-          val selectActivities =
-              SelectActivities(
-                  tripSettings = tempTripSettings,
-                  onProgress = { progress ->
+          // Run the algorithm
+          val algorithm = algorithmFactory(context, tempTripSettings)
+          val schedule =
+              algorithm.runTripAlgorithm(
+                  tripSettings = tempTripSettings, tripProfile = newTripProfile) { progress ->
                     _uiState.update { it.copy(savingProgress = progress) }
-                  },
-                  activityRepository = activityRepository)
+                  }
 
-          selectedActivities = selectActivities.addActivities()
+          // Extract activities and route segments
+          selectedActivities =
+              schedule.filterIsInstance<TripElement.TripActivity>().map { it.activity }
+
+          routeSegments = schedule.filterIsInstance<TripElement.TripSegment>().map { it.route }
+
+          // Merge all locations from route segments and activities
+          // Done using AI
+          allLocations =
+              (routeSegments.sortedBy { it.startDate }.flatMap { listOf(it.from, it.to) } +
+                      selectedActivities.sortedBy { it.startDate }.map { it.location })
+                  .distinctBy { "${it.name}-${it.coordinate.latitude}-${it.coordinate.longitude}" }
         }
-
-        val updatedTripProfile =
-            originalTrip.tripProfile.copy(
-                adults = state.adults,
-                children = state.children,
-                preferences = sanitizedPrefs.toList(),
-            )
-
-        val newLocation = mutableListOf<Location>()
-        newLocation.add(originalTrip.tripProfile.arrivalLocation!!)
-        newLocation.addAll(selectedActivities.map { it.location })
-        newLocation.add(originalTrip.tripProfile.departureLocation!!)
 
         val updatedTrip =
             originalTrip.copy(
                 name = state.tripName,
-                tripProfile = updatedTripProfile,
+                tripProfile = newTripProfile,
                 activities = selectedActivities,
-                locations = newLocation)
+                routeSegments = routeSegments,
+                locations = allLocations)
 
         tripRepository.editTrip(state.tripId, updatedTrip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)
