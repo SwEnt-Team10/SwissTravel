@@ -59,11 +59,10 @@ class SelectActivitiesTest {
         listOf(activityGeneva) andThen
         listOf(activityZurich)
 
-    val selectActivities =
-        SelectActivities(tripSettings, { progressUpdates.add(it) }, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
     // When
-    val result = selectActivities.addActivities()
+    val result = selectActivities.addActivities { progressUpdates.add(it) }
 
     // Then
     assertEquals(3, result.size)
@@ -90,11 +89,10 @@ class SelectActivitiesTest {
               mandatory + Preference.HIKE, any(), any(), any())
         } returns listOf(activityGeneva) andThen listOf(activityZurich)
 
-        val selectActivities =
-            SelectActivities(tripSettings, { progressUpdates.add(it) }, mockActivityRepository)
+        val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
         // When
-        val result = selectActivities.addActivities()
+        val result = selectActivities.addActivities { progressUpdates.add(it) }
 
         // Then
         // 3 destinations * 2 optional preferences = 6 calls, but we mock returns to get 3 unique
@@ -110,10 +108,10 @@ class SelectActivitiesTest {
     tripSettings =
         tripSettings.copy(
             destinations = emptyList(), arrivalDeparture = TripArrivalDeparture(null, null))
-    val selectActivities = SelectActivities(tripSettings, {}, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
     // When
-    val result = selectActivities.addActivities()
+    val result = selectActivities.addActivities {}
 
     // Then
     assertTrue(result.isEmpty())
@@ -126,11 +124,10 @@ class SelectActivitiesTest {
     coEvery { mockActivityRepository.getActivitiesNear(any(), any(), any()) } returns
         listOf(activityLausanne)
 
-    val selectActivities =
-        SelectActivities(tripSettings, { progressUpdates.add(it) }, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
     // When
-    selectActivities.addActivities()
+    selectActivities.addActivities { progressUpdates.add(it) }
 
     // Then
     assertTrue(progressUpdates.isNotEmpty())
@@ -153,10 +150,10 @@ class SelectActivitiesTest {
     coEvery { mockActivityRepository.getActivitiesNear(zurich.coordinate, any(), any()) } returns
         listOf(activityZurich)
 
-    val selectActivities = SelectActivities(tripSettings, {}, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
     // When
-    val result = selectActivities.addActivities()
+    val result = selectActivities.addActivities {}
 
     // Then
     // 3 destinations, each call returns one activity

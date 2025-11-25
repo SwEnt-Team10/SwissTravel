@@ -58,8 +58,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.algorithm.orderlocations.orderLocations
-import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
@@ -136,7 +134,6 @@ fun TripInfoScreen(
 
   var isComputing by remember { mutableStateOf(false) }
   var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
-  var computeError by remember { mutableStateOf<String?>(null) }
   var currentStepIndex by rememberSaveable { mutableIntStateOf(0) }
   var currentGpsPoint by remember { mutableStateOf<Point?>(null) }
   var drawFromCurrentPosition by remember { mutableStateOf(false) }
@@ -151,7 +148,7 @@ fun TripInfoScreen(
                     idx = currentStepIndex,
                     currentGps = currentGpsPoint,
                     drawFromCurrentPosition = drawFromCurrentPosition),
-            drawRoute = schedule.isNotEmpty() && currentGpsPoint == null,
+            drawRoute = schedule.isNotEmpty(),
             drawFromCurrentPosition = drawFromCurrentPosition,
             isLoading = isComputing || (ui.locations.isNotEmpty() && schedule.isEmpty()))
       }
@@ -166,48 +163,16 @@ fun TripInfoScreen(
     }
   }
 
-  LaunchedEffect(computeError) {
-    computeError?.let {
-      Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-      computeError = null
-    }
-  }
-
-  // TODO Change this (no need to call the algorithm, everything should be stored)
   // compute schedule once trip data available
   LaunchedEffect(ui.locations, ui.activities, ui.tripProfile) {
     if (ui.locations.isEmpty() || ui.tripProfile == null) return@LaunchedEffect
-    isComputing = true
-    computeError = null
-    schedule = emptyList()
+    val tripSegments = ui.routeSegments.map { TripElement.TripSegment(it) }
+    val tripActivities = ui.activities.map { TripElement.TripActivity(it) }
+
+    schedule = tripSegments + tripActivities
+    schedule = schedule.sortedBy { it.startDate }
     currentStepIndex = 0
-
-    // all locations involved in the trip (input locations from user + locations from activities),
-    // without duplicates
-    val unique = (ui.activities.map { it.location } + ui.locations).distinctBy { it.coordinate }
-    val start = ui.locations.first()
-    val end = ui.locations.last()
-
-    orderLocations(context, unique, start, end) { ordered ->
-      if (ordered.totalDuration < 0) {
-        computeError = "Failed to compute route order."
-        isComputing = false
-        return@orderLocations
-      }
-      try {
-        schedule =
-            scheduleTrip(
-                tripProfile = requireNotNull(ui.tripProfile),
-                ordered = ordered,
-                activities = ui.activities,
-                onProgress = {}) // TODO Change this later to show progress
-        currentStepIndex = 0
-      } catch (e: Exception) {
-        computeError = "Failed to schedule trip: ${e.message}"
-      } finally {
-        isComputing = false
-      }
-    }
+    isComputing = false
   }
 
   Scaffold(
@@ -593,7 +558,22 @@ private fun FullScreenMap(
   }
 }
 
-/** Helper to get map locations for the current step. */
+/**
+ * Builds the list of locations that should be displayed on the map for the currently active step in
+ * the trip schedule.
+ *
+ * For a TripSegment, if the user's current GPS position is available, the route will start from the
+ * GPS location and end at the segment's destination. Otherwise, the original segment "from → to"
+ * route is used.
+ *
+ * For a TripActivity, only the activity's location is returned.
+ *
+ * @param schedule The full list of trip elements forming the schedule.
+ * @param idx The index of the currently selected step.
+ * @param currentGps The current GPS position of the user, or null if unavailable.
+ * @param drawFromCurrentPosition Whether the route should start from the current GPS position.
+ * @return A list of one or two locations describing what should be drawn on the map.
+ */
 private fun mapLocationsForStep(
     schedule: List<TripElement>,
     idx: Int,
