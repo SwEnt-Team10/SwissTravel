@@ -316,11 +316,6 @@ class UserRepositoryFirebase(
   ) {
     if (uid == "guest") return
 
-    val docRef = db.collection("users").document(uid)
-    val snapshot = docRef.get().await()
-
-    check(snapshot.exists()) { "User document does not exist for uid: $uid" }
-
     val updates = mutableMapOf<String, Any?>()
 
     if (name != null) updates["name"] = name
@@ -331,9 +326,15 @@ class UserRepositoryFirebase(
     if (pinnedImagesUris != null)
         updates["pinnedImagesUris"] = pinnedImagesUris.map { it.toString() }
 
-    if (updates.isNotEmpty()) {
-      docRef.update(updates).await()
-    }
+    // If nothing to update, skip Firestore
+    if (updates.isEmpty()) return
+
+    val docRef = db.collection("users").document(uid)
+    val snapshot = docRef.get().await()
+
+    check(snapshot.exists()) { "User document does not exist for uid: $uid" }
+
+    docRef.update(updates).await()
   }
 
   /**
@@ -349,7 +350,7 @@ class UserRepositoryFirebase(
     val stats = parseStats(doc)
     val pinnedTripsUids =
         (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-    val pinnedImagesUrisStrings = doc.get("pinnedImagesUris") as? List<*> ?: emptyList<Uri>()
+    val pinnedImagesUrisStrings = doc["pinnedImagesUris"] as? List<*> ?: emptyList<Uri>()
     val pinnedImagesUris = pinnedImagesUrisStrings.mapNotNull { (it as? String)?.toUri() }
 
     return User(

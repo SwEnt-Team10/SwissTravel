@@ -507,7 +507,11 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     // Arrange
     val guestUid = "guest"
 
-    // Act + Assert: should not throw, document not required
+    // Ensure the user document does NOT exist before update
+    val before = FirebaseEmulator.firestore.collection("users").document(guestUid).get().await()
+    assertFalse(before.exists())
+
+    // Act — this should not throw AND should not create/update anything
     repositoryUser.updateUser(
         uid = guestUid,
         name = "Should Not Update",
@@ -517,8 +521,9 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         pinnedTripsUids = listOf("tripX"),
         pinnedImagesUris = listOf("file://imageX".toUri()))
 
-    // Nothing to assert in Firestore — test passes if no exception thrown
-    assertTrue(true)
+    // Assert: the document must still NOT exist after the update
+    val after = FirebaseEmulator.firestore.collection("users").document(guestUid).get().await()
+    assertFalse(after.exists())
   }
 
   @Test(expected = IllegalStateException::class)
