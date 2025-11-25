@@ -29,6 +29,10 @@ import com.github.swent.swisstravel.model.user.User
 
 object FriendElementTestTags {
   fun getTestTagForFriend(user: User): String = "friend${user.uid}"
+
+  const val ARROW_ICON = "friendArrowIcon"
+  const val ACCEPT_BUTTON = "friendAcceptButton"
+  const val DECLINE_BUTTON = "friendDeclineButton"
 }
 
 /**
@@ -144,23 +148,26 @@ fun FriendArrowSection(
     Icon(
         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
         contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag(FriendElementTestTags.ARROW_ICON))
   } else {
     Row {
-      IconButton(onClick = onAccept) {
-        Icon(
-            imageVector = Icons.Default.Check,
-            contentDescription = stringResource(R.string.accept_friend),
-            tint = MaterialTheme.colorScheme.primary)
-      }
+      IconButton(
+          onClick = onAccept, modifier = Modifier.testTag(FriendElementTestTags.ACCEPT_BUTTON)) {
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = stringResource(R.string.accept_friend),
+                tint = MaterialTheme.colorScheme.primary)
+          }
 
       Spacer(modifier = Modifier.width(20.dp))
-      IconButton(onClick = onDecline) {
-        Icon(
-            imageVector = Icons.Default.Close,
-            contentDescription = stringResource(R.string.deny_friend),
-            tint = MaterialTheme.colorScheme.error)
-      }
+      IconButton(
+          onClick = onDecline, modifier = Modifier.testTag(FriendElementTestTags.DECLINE_BUTTON)) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(R.string.deny_friend),
+                tint = MaterialTheme.colorScheme.error)
+          }
     }
   }
 }

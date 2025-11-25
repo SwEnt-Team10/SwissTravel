@@ -44,6 +44,9 @@ object FriendsScreenTestTags {
   const val FRIENDS_LIST = "friendsList"
   const val ADD_FRIEND_BUTTON = "addFriend"
   const val SEARCH_FRIENDS_BUTTON = "searchFriends"
+  const val PENDING_SECTION_CARD = "pendingSectionCard"
+  const val PENDING_SECTION_HEADER = "pendingSectionHeader"
+  const val PENDING_SECTION_ARROW = "pendingSectionArrow"
 }
 
 /**
@@ -220,6 +223,7 @@ private fun FriendsListSection(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FriendsSearchBar(
+    modifier: Modifier = Modifier,
     query: String,
     onQueryChange: (String) -> Unit,
     placeholder: String,
@@ -232,7 +236,7 @@ fun FriendsSearchBar(
       placeholder = { Text(placeholder) },
       singleLine = true,
       textStyle = MaterialTheme.typography.titleLarge,
-      modifier = Modifier.fillMaxWidth(),
+      modifier = modifier.fillMaxWidth(),
       trailingIcon = {
         if (trailingIcon) {
           IconButton(onClick = onClose) {
@@ -273,7 +277,7 @@ private fun PendingFriendRequestsSection(
   var expanded by rememberSaveable { mutableStateOf(false) }
 
   Card(
-      modifier = Modifier.fillMaxWidth(),
+      modifier = Modifier.fillMaxWidth().testTag(FriendsScreenTestTags.PENDING_SECTION_CARD),
       shape = RoundedCornerShape(dimensionResource(R.dimen.trip_element_radius)),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)) {
         Column(modifier = Modifier.fillMaxWidth()) {
@@ -284,7 +288,8 @@ private fun PendingFriendRequestsSection(
                   Modifier.fillMaxWidth()
                       .padding(horizontal = dimensionResource(R.dimen.trip_element_padding))
                       .padding(vertical = dimensionResource(R.dimen.small_spacer))
-                      .clickable { expanded = !expanded },
+                      .clickable { expanded = !expanded }
+                      .testTag(FriendsScreenTestTags.PENDING_SECTION_HEADER),
               verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = stringResource(R.string.pending_friend_requests, pendingFriends.size),
@@ -295,7 +300,8 @@ private fun PendingFriendRequestsSection(
                     imageVector =
                         if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.testTag(FriendsScreenTestTags.PENDING_SECTION_ARROW))
               }
 
           if (expanded) {

@@ -15,12 +15,19 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
 
+object AddFriendsScreenTestTags {
+  const val ADD_FRIEND_SEARCH_FIELD = "addFriendSearchField"
+  const val ADD_FRIEND_RESULTS_LIST = "addFriendResultsList"
+
+  fun addFriendResultItemTag(uid: String) = "addFriendResult_$uid"
+}
 /**
  * Screen for adding a friend to the user's friend list.
  *
@@ -83,6 +90,7 @@ private fun AddFriendTopAppBar(
   TopAppBar(
       title = {
         FriendsSearchBar(
+            modifier = Modifier.testTag(AddFriendsScreenTestTags.ADD_FRIEND_SEARCH_FIELD),
             query = searchQuery,
             onQueryChange = onSearchQueryChange,
             placeholder = stringResource(R.string.search_users),
@@ -117,15 +125,21 @@ private fun AddFriendResultsSection(
     LazyColumn(
         verticalArrangement =
             Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement)),
-        modifier = Modifier.fillMaxWidth()) {
+        modifier =
+            Modifier.fillMaxWidth().testTag(AddFriendsScreenTestTags.ADD_FRIEND_RESULTS_LIST)) {
           items(users, key = { it.uid }) { user ->
-            FriendElement(
-                userToDisplay = user,
-                onClick = {
-                  onClickUser(user)
-                  Toast.makeText(context, "Friend request sent to ${user.name}", Toast.LENGTH_SHORT)
-                      .show()
-                })
+            Surface(
+                modifier =
+                    Modifier.testTag(AddFriendsScreenTestTags.addFriendResultItemTag(user.uid))) {
+                  FriendElement(
+                      userToDisplay = user,
+                      onClick = {
+                        onClickUser(user)
+                        Toast.makeText(
+                                context, "Friend request sent to ${user.name}", Toast.LENGTH_SHORT)
+                            .show()
+                      })
+                }
           }
         }
   }

@@ -73,7 +73,6 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     }
 
   /** Clears the current error message. */
-  /** Clears the current error message. */
   fun clearErrorMsg() {
     _uiState.value = uiState.value.copy(errorMsg = null)
   }
