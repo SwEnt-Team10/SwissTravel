@@ -5,6 +5,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,12 +14,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Cancel
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,14 +35,17 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
@@ -48,6 +55,7 @@ import com.github.swent.swisstravel.ui.composable.TripList
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
+/** Test tags for the profile screen. */
 object ProfileScreenTestTags {
   const val SETTINGS_BUTTON = "settingsButton"
   const val REMOVE_FRIEND_BUTTON = "removeFriendButton"
@@ -55,9 +63,10 @@ object ProfileScreenTestTags {
   const val PROFILE_PIC = "profilePic"
   const val BIOGRAPHY = "biography"
   const val ACHIEVEMENTS = "achievements"
-  const val PINNED_TRIPS = "pinnedTrips"
+  const val PINNED_TRIPS_TITLE = "pinnedTripsTitle"
   const val PINNED_TRIPS_EDIT_BUTTON = "pinnedTripsEditButton"
-  const val PINNED_IMAGES = "pinnedImages"
+  const val PINNED_IMAGES_TITLE = "pinnedImagesTitle"
+  const val PINNED_IMAGES_LIST = "pinnedImagesList"
   const val PINNED_IMAGES_EDIT_BUTTON = "pinnedImagesEditButton"
 }
 
@@ -66,12 +75,15 @@ object ProfileScreenTestTags {
  *
  * @param profileViewModel The view model for this screen.
  * @param onSettings The callback to navigate to the settings screen.
+ * @param onRemoveFriend The callback to remove the user as a friend.
+ * @param onSelectTrip The callback to select a trip.
+ * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
+ * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
  * @param navigationActions The navigation actions for this screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
-    uid: String,
     profileViewModel: ProfileViewModel = viewModel(),
     onSettings: () -> Unit = {},
     onRemoveFriend: () -> Unit = {},
@@ -81,9 +93,7 @@ fun ProfileScreen(
     navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
-  val uiState = profileViewModel.uiState.collectAsState().value
-
-  LaunchedEffect(uid) { profileViewModel.loadUser(uid) }
+  val uiState by profileViewModel.uiState.collectAsState()
 
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
@@ -99,22 +109,24 @@ fun ProfileScreen(
         TopAppBar(
             title = { Text(stringResource(R.string.my_profile)) },
             actions = {
-              if (uiState.isOwnProfile) {
-                IconButton(
-                    onClick = onSettings,
-                    modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
-                      Icon(
-                          Icons.Outlined.Settings,
-                          contentDescription = stringResource(R.string.settings))
-                    }
-              } else {
-                IconButton(
-                    onClick = onRemoveFriend,
-                    modifier = Modifier.testTag(ProfileScreenTestTags.REMOVE_FRIEND_BUTTON)) {
-                      Icon(
-                          Icons.Outlined.Cancel,
-                          contentDescription = stringResource(R.string.remove_friend))
-                    }
+              if (!uiState.isLoading) {
+                if (uiState.isOwnProfile) {
+                  IconButton(
+                      onClick = onSettings,
+                      modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
+                        Icon(
+                            Icons.Outlined.Settings,
+                            contentDescription = stringResource(R.string.settings))
+                      }
+                } else {
+                  IconButton(
+                      onClick = onRemoveFriend,
+                      modifier = Modifier.testTag(ProfileScreenTestTags.REMOVE_FRIEND_BUTTON)) {
+                        Icon(
+                            Icons.Outlined.PersonRemove,
+                            contentDescription = stringResource(R.string.remove_friend))
+                      }
+                }
               }
             },
             modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
@@ -178,11 +190,15 @@ private fun ProfileScreenContent(
 
         AchievementsDisplay(uiState.stats)
 
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
         PinnedTrips(
             pinnedTrips = uiState.pinnedTrips,
             isOwnProfile = uiState.isOwnProfile,
             onEditPinnedTrips = onEditPinnedTrips,
             onSelectTrip = onSelectTrip)
+
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
         PinnedImages(
             pinnedImages = uiState.pinnedImages,
@@ -205,7 +221,7 @@ private fun ProfileHeader(photoUrl: String, name: String) {
         modifier =
             Modifier.size(dimensionResource(R.dimen.profile_logo_size))
                 .clip(CircleShape)
-                .testTag(ProfileSettingsTestTags.PROFILE_PIC))
+                .testTag(ProfileScreenTestTags.PROFILE_PIC))
 
     Spacer(modifier = Modifier.width(dimensionResource(R.dimen.smaller_spacer)))
 
@@ -276,7 +292,7 @@ private fun PinnedTrips(
     onSelectTrip: (String) -> Unit,
 ) {
   Row(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS),
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE),
       horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = stringResource(R.string.pinned_trips),
@@ -321,7 +337,7 @@ private fun PinnedImages(
     onEditPinnedImages: () -> Unit,
 ) {
   Row(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES),
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE),
       horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = stringResource(R.string.pinned_images),
@@ -339,5 +355,16 @@ private fun PinnedImages(
         }
       }
 
-  // TODO
+  LazyRow(
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES_LIST),
+      horizontalArrangement = Arrangement.spacedBy(12.dp),
+      contentPadding = PaddingValues(horizontal = 4.dp)) {
+        items(pinnedImages) { uri ->
+          AsyncImage(
+              model = uri,
+              contentDescription = null,
+              modifier = Modifier.height(120.dp).clip(RoundedCornerShape(16.dp)),
+              contentScale = ContentScale.Crop)
+        }
+      }
 }

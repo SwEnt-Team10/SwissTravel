@@ -11,12 +11,24 @@ import com.github.swent.swisstravel.model.user.PreferenceRules
 import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * A data class representing the state of the profile settings screen.
+ *
+ * @property isLoading Whether the screen is currently loading.
+ * @property profilePicUrl The URL of the user's profile picture.
+ * @property name The user's name.
+ * @property biography The user's biography.
+ * @property email The user's email
+ * @property selectedPreferences The user's selected preferences.
+ * @property errorMsg The error message to display.
+ */
 data class ProfileSettingsUIState(
     val isLoading: Boolean = true,
     val profilePicUrl: String = "",
@@ -27,8 +39,14 @@ data class ProfileSettingsUIState(
     var errorMsg: String? = null
 )
 
+/**
+ * A view model for the profile settings screen.
+ *
+ * @param userRepository The repository for users.
+ * @param tripsRepository The repository for trips.
+ */
 class ProfileSettingsViewModel(
-    private val userRepository: UserRepository,
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
 ) : ViewModel() {
 

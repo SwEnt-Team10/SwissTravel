@@ -11,6 +11,7 @@ import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserStats
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,6 +19,20 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/**
+ * A data class representing the state of the profile screen.
+ *
+ * @property uid The UID of the user.
+ * @property isLoading Whether the screen is currently loading.
+ * @property isOwnProfile Whether the user is their own profile.
+ * @property profilePicUrl The URL of the user's profile picture.
+ * @property name The user's name.
+ * @property biography The user's biography.
+ * @property stats The user's stats.
+ * @property pinnedTrips The user's pinned trips.
+ * @property pinnedImages The user's pinned images.
+ * @property errorMsg The error message to display.
+ */
 data class ProfileUIState(
     val uid: String = "",
     val isLoading: Boolean = true,
@@ -31,9 +46,17 @@ data class ProfileUIState(
     var errorMsg: String? = null
 )
 
+/**
+ * A view model for the profile screen.
+ *
+ * @param userRepository The repository for users.
+ * @param tripsRepository The repository for trips.
+ * @param requestedUid The UID of the profile to load.
+ */
 class ProfileViewModel(
-    private val userRepository: UserRepository,
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
+    requestedUid: String
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileUIState())
@@ -46,11 +69,10 @@ class ProfileViewModel(
    *
    * @param requestedUid The UID of the profile to load.
    */
-  fun loadUser(requestedUid: String?) {
-    if (requestedUid.isNullOrBlank()) {
+  init {
+    if (requestedUid.isBlank()) {
       Log.e("ProfileViewModel", "User ID is null or blank")
       setErrorMsg("User ID is invalid")
-      return
     }
     viewModelScope.launch {
       try {
@@ -82,7 +104,7 @@ class ProfileViewModel(
       val profile =
           userRepository.getUserByUid(uid)
               ?: throw IllegalStateException("User with uid $uid not found")
-      val pinnedTrips = profile.pinnedTripsUids.mapNotNull { uid -> tripsRepository.getTrip(uid) }
+      val pinnedTrips = profile.pinnedTripsUids.map { uid -> tripsRepository.getTrip(uid) }
       _uiState.update {
         it.copy(
             profilePicUrl = profile.profilePicUrl,
@@ -90,7 +112,7 @@ class ProfileViewModel(
             biography = profile.biography,
             stats = profile.stats,
             pinnedTrips = pinnedTrips,
-            pinnedImages = profile.pinnedImages)
+            pinnedImages = profile.pinnedImagesUris)
       }
     } catch (e: Exception) {
       Log.e("ProfileViewModel", "Error loading profile info", e)

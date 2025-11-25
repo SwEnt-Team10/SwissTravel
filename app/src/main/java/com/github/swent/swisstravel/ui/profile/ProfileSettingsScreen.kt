@@ -60,6 +60,7 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
+/** Test tags for the profile settings screen. */
 object ProfileSettingsTestTags {
   const val PROFILE_PIC = "profilePic"
   const val PREFERENCES_LIST = "preferencesList"

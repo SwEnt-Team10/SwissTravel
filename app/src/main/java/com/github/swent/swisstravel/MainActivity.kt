@@ -33,7 +33,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
@@ -255,15 +254,15 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
   ) {
     composable(Screen.Profile.route) {
       ProfileScreen(
-          uid = FirebaseAuth.getInstance().currentUser?.uid ?: "",
-          profileViewModel = ProfileViewModel(userRepository = UserRepositoryFirebase()),
+          profileViewModel =
+              ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           navigationActions = navigationActions)
     }
     composable(Screen.ProfileSettings.route) {
       ProfileSettingsScreen(
-          profileSettingsViewModel =
-              ProfileSettingsViewModel(userRepository = UserRepositoryFirebase()),
+          profileSettingsViewModel = ProfileSettingsViewModel(),
+          onBack = { navigationActions.goBack() },
           navigationActions = navigationActions)
     }
   }
