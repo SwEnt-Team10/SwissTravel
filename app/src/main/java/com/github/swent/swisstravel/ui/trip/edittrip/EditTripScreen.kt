@@ -118,7 +118,7 @@ fun EditTripScreen(
             },
             actions = {
               Button(
-                  onClick = { editTripViewModel.save() },
+                  onClick = { editTripViewModel.save(context) },
                   enabled = !state.isLoading,
                   modifier = Modifier.testTag(EditTripScreenTestTags.CONFIRM_TOP_BAR),
               ) {
