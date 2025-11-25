@@ -7,12 +7,15 @@ import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class FriendsListScreenUIState(
     val friends: List<User> = emptyList(),
     val isLoading: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val searchQuery: String = "",
+    val isSearching: Boolean = false,
 )
 
 class FriendsListScreenViewModel(
@@ -40,8 +43,26 @@ class FriendsListScreenViewModel(
     }
   }
 
+  val friendsToDisplay =
+      if (_uiState.value.searchQuery.isBlank()) {
+        _uiState.value.friends
+      } else {
+        _uiState.value.friends.filter { user ->
+          val q = _uiState.value.searchQuery.trim()
+          user.name.contains(q, ignoreCase = true) || (user.email.contains(q, ignoreCase = true))
+        }
+      }
+
   /** Clears the current error message. */
   fun clearErrorMsg() {
     _uiState.value = uiState.value.copy(errorMsg = null)
+  }
+
+  fun updateSearchQuery(query: String) {
+    _uiState.update { it.copy(searchQuery = query) }
+  }
+
+  fun toggleSearch() {
+    _uiState.update { it.copy(isSearching = !it.isSearching, searchQuery = "") }
   }
 }

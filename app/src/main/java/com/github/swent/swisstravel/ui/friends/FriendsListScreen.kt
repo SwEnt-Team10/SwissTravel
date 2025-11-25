@@ -9,17 +9,23 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
@@ -36,10 +42,12 @@ fun FriendsListScreen(
     friendsViewModel: FriendsListScreenViewModel = viewModel(),
     onSelectFriend: (String) -> Unit = {},
     onAddFriend: () -> Unit = {},
-    onSearchFriends: () -> Unit = {},
 ) {
   val context = LocalContext.current
   val uiState by friendsViewModel.uiState.collectAsState()
+
+  var isSearching by rememberSaveable { mutableStateOf(false) }
+  var searchQuery by rememberSaveable { mutableStateOf("") }
 
   // Refresh when entering screen
   LaunchedEffect(Unit) { friendsViewModel.refreshFriends() }
@@ -55,8 +63,14 @@ fun FriendsListScreen(
   Scaffold(
       topBar = {
         FriendsTopAppBar(
-            onSearchFriends = onSearchFriends,
-        )
+            isSearching = isSearching,
+            searchQuery = searchQuery,
+            onSearchQueryChange = { searchQuery = it },
+            onStartSearch = { isSearching = true },
+            onCloseSearch = {
+              isSearching = false
+              searchQuery = ""
+            })
       },
       floatingActionButton = {
         FloatingActionButton(
@@ -76,7 +90,7 @@ fun FriendsListScreen(
                         end = dimensionResource(R.dimen.my_trip_padding_start_end),
                         bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
               FriendsListSection(
-                  friends = uiState.friends,
+                  friends = friendsViewModel.friendsToDisplay,
                   onSelectFriend = onSelectFriend,
               )
             }
@@ -86,23 +100,58 @@ fun FriendsListScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun FriendsTopAppBar(
-    onSearchFriends: () -> Unit,
+    isSearching: Boolean,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onStartSearch: () -> Unit,
+    onCloseSearch: () -> Unit,
 ) {
   TopAppBar(
       title = {
-        Text(
-            text = stringResource(R.string.friends_list),
-            style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+        if (isSearching) {
+          TextField(
+              value = searchQuery,
+              onValueChange = onSearchQueryChange,
+              placeholder = { Text(text = stringResource(R.string.search_friends)) },
+              singleLine = true,
+              textStyle = MaterialTheme.typography.titleLarge,
+              modifier = Modifier.fillMaxSize(),
+              colors =
+                  TextFieldDefaults.colors(
+                      focusedContainerColor = Color.Transparent,
+                      unfocusedContainerColor = Color.Transparent,
+                      disabledContainerColor = Color.Transparent,
+                      errorContainerColor = Color.Transparent,
+                      focusedIndicatorColor = Color.Transparent,
+                      unfocusedIndicatorColor = Color.Transparent,
+                      disabledIndicatorColor = Color.Transparent,
+                      errorIndicatorColor = Color.Transparent,
+                  ))
+        } else {
+          Text(
+              text = stringResource(R.string.friends_list),
+              style = MaterialTheme.typography.titleLarge,
+              color = MaterialTheme.colorScheme.onBackground,
+              maxLines = 1,
+              overflow = TextOverflow.Ellipsis)
+        }
       },
       actions = {
-        IconButton(
-            onClick = onSearchFriends,
-            modifier = Modifier.testTag(FriendsScreenTestTags.SEARCH_FRIENDS_BUTTON)) {
-              Icon(
-                  Icons.Default.Search,
-                  contentDescription = stringResource(R.string.search_friends))
-            }
+        if (isSearching) {
+          IconButton(onClick = onCloseSearch) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = stringResource(R.string.close_search))
+          }
+        } else {
+          IconButton(
+              onClick = onStartSearch,
+              modifier = Modifier.testTag(FriendsScreenTestTags.SEARCH_FRIENDS_BUTTON)) {
+                Icon(
+                    Icons.Default.Search,
+                    contentDescription = stringResource(R.string.search_friends))
+              }
+        }
       },
       colors =
           TopAppBarDefaults.topAppBarColors(
