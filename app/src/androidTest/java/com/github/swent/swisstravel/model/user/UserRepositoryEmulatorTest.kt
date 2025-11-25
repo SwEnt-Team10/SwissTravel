@@ -9,6 +9,7 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.AuthResult
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import junit.framework.TestCase.assertFalse
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -228,7 +229,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
   }
 
   @Test
-  fun sendFriendRequest_addsPendingFriendToCurrentUser_only() = runBlocking {
+  fun sendFriendRequest_addsPendingFriendToBothUsers() = runBlocking {
     // Arrange: create A (current user)
     val (uidA, credentialA) =
         createGoogleUserAndSignIn(
@@ -253,73 +254,80 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     assertEquals(uidB, friendA["uid"])
     assertEquals("PENDING", friendA["status"])
 
-    // B is unaffected (no automatic symmetric write)
+    // Assert: B also has a PENDING entry for A
     val docB = FirebaseEmulator.firestore.collection("users").document(uidB).get().await()
     val friendsB = docB.get("friends") as? List<*> ?: emptyList<Any>()
-    assertTrue(friendsB.isEmpty())
+    assertEquals(1, friendsB.size)
+    val friendB = friendsB.first() as Map<*, *>
+    assertEquals(uidA, friendB["uid"])
+    assertEquals("PENDING", friendB["status"])
   }
 
   @Test
-  fun acceptFriendRequest_updatesStatusToAccepted_onCurrentUserOnly() = runBlocking {
-    // Arrange: create B as current user (the one accepting)
+  fun acceptFriendRequest_updatesStatusToAcceptedForBothUsers() = runBlocking {
+    // Arrange: create A and B
+    val (uidA, credentialA) =
+        createGoogleUserAndSignIn(
+            name = "User A2", email = "userA2@example.com", createDocViaRepo = true)
     val (uidB, credentialB) =
         createGoogleUserAndSignIn(
             name = "User B2", email = "userB2@example.com", createDocViaRepo = true)
 
-    // Create A (we just need A's uid + doc)
-    val (uidA, credentialA) =
-        createGoogleUserAndSignIn(
-            name = "User A2", email = "userA2@example.com", createDocViaRepo = true)
+    // A sends a friend request to B → seeds PENDING on both sides
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
+    repositoryUser.sendFriendRequest(fromUid = uidA, toUid = uidB)
 
-    // Back to B; seed B's doc with a PENDING entry for A
+    // Now B accepts A
     FirebaseEmulator.auth.signInWithCredential(credentialB).await()
-    val pendingList = listOf(mapOf("uid" to uidA, "status" to "PENDING"))
-    FirebaseEmulator.firestore
-        .collection("users")
-        .document(uidB)
-        .update("friends", pendingList)
-        .await()
-
-    // Act: B accepts A
     repositoryUser.acceptFriendRequest(currentUid = uidB, fromUid = uidA)
 
-    // Assert: B's entry for A is now ACCEPTED
+    // Assert: B's entry for A is ACCEPTED
     val docB = FirebaseEmulator.firestore.collection("users").document(uidB).get().await()
     val friendsB = docB.get("friends") as? List<*> ?: emptyList<Any>()
     assertEquals(1, friendsB.size)
     val friendB = friendsB.first() as Map<*, *>
     assertEquals(uidA, friendB["uid"])
     assertEquals("ACCEPTED", friendB["status"])
+
+    // Assert: A's entry for B is also ACCEPTED
+    val docA = FirebaseEmulator.firestore.collection("users").document(uidA).get().await()
+    val friendsA = docA.get("friends") as? List<*> ?: emptyList<Any>()
+    assertEquals(1, friendsA.size)
+    val friendA = friendsA.first() as Map<*, *>
+    assertEquals(uidB, friendA["uid"])
+    assertEquals("ACCEPTED", friendA["status"])
   }
 
   @Test
-  fun removeFriend_removesFriendFromCurrentUserOnly() = runBlocking {
-    // Arrange: create A as current user
+  fun removeFriend_removesFriendFromBothUsers() = runBlocking {
+    // Arrange: create A and B
     val (uidA, credentialA) =
         createGoogleUserAndSignIn(
             name = "User A3", email = "userA3@example.com", createDocViaRepo = true)
-
-    // Create B (just for uid)
     val (uidB, credentialB) =
         createGoogleUserAndSignIn(
             name = "User B3", email = "userB3@example.com", createDocViaRepo = true)
 
-    // Back to A; seed A's doc with an ACCEPTED entry for B
+    // A sends request to B and B accepts → ACCEPTED on both sides
     FirebaseEmulator.auth.signInWithCredential(credentialA).await()
-    val acceptedList = listOf(mapOf("uid" to uidB, "status" to "ACCEPTED"))
-    FirebaseEmulator.firestore
-        .collection("users")
-        .document(uidA)
-        .update("friends", acceptedList)
-        .await()
+    repositoryUser.sendFriendRequest(fromUid = uidA, toUid = uidB)
 
-    // Act: A removes B
+    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
+    repositoryUser.acceptFriendRequest(currentUid = uidB, fromUid = uidA)
+
+    // Back to A to remove B
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
     repositoryUser.removeFriend(uid = uidA, friendUid = uidB)
 
     // Assert: A has no friends
     val docA = FirebaseEmulator.firestore.collection("users").document(uidA).get().await()
     val friendsA = docA.get("friends") as? List<*> ?: emptyList<Any>()
     assertTrue(friendsA.isEmpty())
+
+    // Assert: B also has no friends
+    val docB = FirebaseEmulator.firestore.collection("users").document(uidB).get().await()
+    val friendsB = docB.get("friends") as? List<*> ?: emptyList<Any>()
+    assertTrue(friendsB.isEmpty())
   }
 
   @Test
@@ -367,6 +375,55 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     FirebaseEmulator.firestore.enableNetwork().await()
 
     Unit
+  }
+
+  @Test
+  fun getUserByNameOrEmail_findsUsersByNameOrEmail() = runBlocking {
+    // Arrange: create three real users via auth + repository
+    val (uidAlex, credAlex) =
+        createGoogleUserAndSignIn(
+            name = "Alex Müller", email = "alex@example.com", createDocViaRepo = true)
+
+    val (uidAlice, credAlice) =
+        createGoogleUserAndSignIn(
+            name = "Alice Meyer", email = "alice@example.com", createDocViaRepo = true)
+
+    val (uidBob, credBob) =
+        createGoogleUserAndSignIn(
+            name = "Bob Dupont", email = "bob@example.com", createDocViaRepo = true)
+
+    // Sign back in as Alex (any authenticated user is fine for reads)
+    FirebaseEmulator.auth.signInWithCredential(credAlex).await()
+
+    // Act + Assert: search by name
+    val byName = repositoryUser.getUserByNameOrEmail("Alex")
+    assertTrue(byName.any { it.uid == uidAlex })
+    // Bob must not appear
+    assertFalse(byName.any { it.uid == uidBob })
+
+    // Act + Assert: search by email
+    val byEmail = repositoryUser.getUserByNameOrEmail("alice@example.com")
+    assertEquals(1, byEmail.size)
+    assertEquals(uidAlice, byEmail.first().uid)
+  }
+
+  @Test
+  fun getUserByNameOrEmail_returnsEmptyListForNoMatchOrBlankQuery() = runBlocking {
+    // Arrange: one existing user
+    val (uidCharlie, credCharlie) =
+        createGoogleUserAndSignIn(
+            name = "Charlie Example", email = "charlie@example.com", createDocViaRepo = true)
+
+    // Sign in as Charlie
+    FirebaseEmulator.auth.signInWithCredential(credCharlie).await()
+
+    // Act: queries that should not match
+    val noMatch = repositoryUser.getUserByNameOrEmail("does-not-exist")
+    val blankQuery = repositoryUser.getUserByNameOrEmail("")
+
+    // Assert
+    assertTrue(noMatch.isEmpty(), "Expected empty list for non-matching query")
+    assertTrue(blankQuery.isEmpty(), "Expected empty list for blank query")
   }
 
   @After

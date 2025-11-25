@@ -76,6 +76,12 @@ class UserRepositoryFirebase(
     }
   }
 
+  /**
+   * Retrieves a list of users whose name or email matches the given query.
+   *
+   * @param query The search query to match against user names and emails.
+   * @return A list of User objects that match the query.
+   */
   override suspend fun getUserByNameOrEmail(query: String): List<User> {
     if (query.isBlank()) return emptyList()
 
@@ -139,20 +145,54 @@ class UserRepositoryFirebase(
     val currentAuthUid = auth.currentUser?.uid
     if (fromUid == "guest" || currentAuthUid == null || currentAuthUid != fromUid) return
 
-    val docRef = db.collection("users").document(fromUid)
-    val doc = docRef.get().await()
-    check(doc.exists()) { "User document does not exist for uid: $fromUid" }
+    val usersRef = db.collection("users")
+    val fromRef = usersRef.document(fromUid)
+    val toRef = usersRef.document(toUid)
 
-    val friends = parseFriends(doc).toMutableList()
+    db.runTransaction { tx ->
+          val fromSnap = tx.get(fromRef)
+          val toSnap = tx.get(toRef)
 
-    // Don't duplicate existing friend entry
-    val already = friends.any { it.uid == toUid }
-    Log.d("UserRepositoryFirebase", "Already friends with $toUid: $already")
-    if (!already) {
-      Log.d("UserRepositoryFirebase", "Adding friend entry for $toUid")
-      friends.add(Friend(uid = toUid, status = FriendStatus.PENDING))
-      docRef.update("friends", friends).await()
-    }
+          check(fromSnap.exists()) { "User document does not exist for uid: $fromUid" }
+          check(toSnap.exists()) { "User document does not exist for uid: $toUid" }
+
+          val fromFriends = parseFriends(fromSnap).toMutableList()
+          val toFriends = parseFriends(toSnap).toMutableList()
+
+          // Sender side: ensure an entry for toUid with at least PENDING
+          val fromIdx = fromFriends.indexOfFirst { it.uid == toUid }
+          if (fromIdx < 0) {
+            fromFriends.add(Friend(uid = toUid, status = FriendStatus.PENDING))
+          } else {
+            // If already there, don't downgrade ACCEPTED, but ensure not something weird
+            val existing = fromFriends[fromIdx]
+            if (existing.status == FriendStatus.PENDING ||
+                existing.status == FriendStatus.ACCEPTED) {
+              // no-op
+            } else {
+              fromFriends[fromIdx] = existing.copy(status = FriendStatus.PENDING)
+            }
+          }
+
+          // Receiver side: ensure an entry for fromUid with PENDING
+          val toIdx = toFriends.indexOfFirst { it.uid == fromUid }
+          if (toIdx < 0) {
+            toFriends.add(Friend(uid = fromUid, status = FriendStatus.PENDING))
+          } else {
+            val existing = toFriends[toIdx]
+            if (existing.status == FriendStatus.PENDING ||
+                existing.status == FriendStatus.ACCEPTED) {
+              // no-op
+            } else {
+              toFriends[toIdx] = existing.copy(status = FriendStatus.PENDING)
+            }
+          }
+
+          tx.update(fromRef, "friends", fromFriends)
+          tx.update(toRef, "friends", toFriends)
+          null
+        }
+        .await()
   }
 
   /**
@@ -165,21 +205,41 @@ class UserRepositoryFirebase(
     val currentAuthUid = auth.currentUser?.uid
     if (currentUid == "guest" || currentAuthUid == null || currentAuthUid != currentUid) return
 
-    val docRef = db.collection("users").document(currentUid)
-    val doc = docRef.get().await()
-    check(doc.exists()) { "User document does not exist for uid: $currentUid" }
+    val usersRef = db.collection("users")
+    val currentRef = usersRef.document(currentUid)
+    val fromRef = usersRef.document(fromUid)
 
-    val friends = parseFriends(doc).toMutableList()
+    db.runTransaction { tx ->
+          val currentSnap = tx.get(currentRef)
+          val fromSnap = tx.get(fromRef)
 
-    val idx = friends.indexOfFirst { it.uid == fromUid }
-    if (idx >= 0) {
-      friends[idx] = friends[idx].copy(status = FriendStatus.ACCEPTED)
-    } else {
-      // If no entry yet, just add it as ACCEPTED
-      friends.add(Friend(uid = fromUid, status = FriendStatus.ACCEPTED))
-    }
+          check(currentSnap.exists()) { "User document does not exist for uid: $currentUid" }
+          check(fromSnap.exists()) { "User document does not exist for uid: $fromUid" }
 
-    docRef.update("friends", friends).await()
+          val currentFriends = parseFriends(currentSnap).toMutableList()
+          val fromFriends = parseFriends(fromSnap).toMutableList()
+
+          // On current user: ensure entry for fromUid is ACCEPTED
+          val curIdx = currentFriends.indexOfFirst { it.uid == fromUid }
+          if (curIdx >= 0) {
+            currentFriends[curIdx] = currentFriends[curIdx].copy(status = FriendStatus.ACCEPTED)
+          } else {
+            currentFriends.add(Friend(uid = fromUid, status = FriendStatus.ACCEPTED))
+          }
+
+          // On other user: ensure entry for currentUid is ACCEPTED
+          val fromIdx = fromFriends.indexOfFirst { it.uid == currentUid }
+          if (fromIdx >= 0) {
+            fromFriends[fromIdx] = fromFriends[fromIdx].copy(status = FriendStatus.ACCEPTED)
+          } else {
+            fromFriends.add(Friend(uid = currentUid, status = FriendStatus.ACCEPTED))
+          }
+
+          tx.update(currentRef, "friends", currentFriends)
+          tx.update(fromRef, "friends", fromFriends)
+          null
+        }
+        .await()
   }
 
   /**
@@ -192,14 +252,33 @@ class UserRepositoryFirebase(
     val currentAuthUid = auth.currentUser?.uid
     if (uid == "guest" || currentAuthUid == null || currentAuthUid != uid) return
 
-    val docRef = db.collection("users").document(uid)
-    val doc = docRef.get().await()
-    if (!doc.exists()) return
+    val usersRef = db.collection("users")
+    val userRef = usersRef.document(uid)
+    val friendRef = usersRef.document(friendUid)
 
-    val friends = parseFriends(doc).toMutableList()
-    friends.removeAll { it.uid == friendUid }
+    db.runTransaction { tx ->
+          val userSnap = tx.get(userRef)
+          val friendSnap = tx.get(friendRef)
 
-    docRef.update("friends", friends).await()
+          if (!userSnap.exists()) {
+            // Nothing to do if current user doc doesn't exist
+            return@runTransaction null
+          }
+
+          val userFriends = parseFriends(userSnap).toMutableList()
+          userFriends.removeAll { it.uid == friendUid }
+
+          tx.update(userRef, "friends", userFriends)
+
+          if (friendSnap.exists()) {
+            val friendFriends = parseFriends(friendSnap).toMutableList()
+            friendFriends.removeAll { it.uid == uid }
+            tx.update(friendRef, "friends", friendFriends)
+          }
+
+          null
+        }
+        .await()
   }
 
   /**
