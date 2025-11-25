@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
-import EditTripScreen
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -74,7 +73,7 @@ class EditTripScreenTest {
     // Wait for content
     composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
 
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).performClick()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).performClick()
   }
 
   @Test
@@ -169,7 +168,7 @@ class EditTripScreenTest {
 
     // Spinner shown, confirm disabled
     composeRule.onNodeWithTag(EditTripScreenTestTags.LOADING).assertIsDisplayed()
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).assertIsNotEnabled()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).assertIsNotEnabled()
 
     // Finish load
     repo.delayGetTrip = false
@@ -178,7 +177,7 @@ class EditTripScreenTest {
 
     // Text field visible, confirm enabled
     composeRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).assertIsDisplayed()
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).assertIsEnabled()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).assertIsEnabled()
   }
 
   @Test
@@ -204,7 +203,7 @@ class EditTripScreenTest {
     field.performTextInput(newName)
 
     // Save
-    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR).performClick()
+    composeRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).performClick()
   }
 
   // -------- helpers --------
