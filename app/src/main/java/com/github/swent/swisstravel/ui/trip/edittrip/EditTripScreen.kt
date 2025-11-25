@@ -119,7 +119,7 @@ fun EditTripScreen(
             },
             actions = {
               Button(
-                  onClick = { editTripViewModel.save() },
+                  onClick = { editTripViewModel.save(context) },
                   enabled = !state.isLoading,
                   modifier = Modifier.testTag(EditTripScreenTestTags.CONFIRM_TOP_BAR),
               ) {
@@ -138,7 +138,7 @@ fun EditTripScreen(
                           vertical = dimensionResource(R.dimen.smaller_padding)),
               contentAlignment = Alignment.Center) {
                 Button(
-                    onClick = { editTripViewModel.save() },
+                    onClick = { editTripViewModel.save(context) },
                     enabled = !state.isLoading,
                     shape = RoundedCornerShape(dimensionResource(R.dimen.big_button_radius)),
                     modifier =
