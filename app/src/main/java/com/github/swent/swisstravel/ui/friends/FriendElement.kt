@@ -13,10 +13,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextOverflow
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
 
@@ -55,7 +58,7 @@ fun FriendElement(userToDisplay: User, onClick: () -> Unit, modifier: Modifier =
 @Composable
 private fun FriendNameSection(userToDisplay: User) {
   Row(verticalAlignment = Alignment.CenterVertically) {
-    FriendCircle(friendName = userToDisplay.name)
+    FriendCircle(profilePicUrl = userToDisplay.profilePicUrl)
     Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
     Box(modifier = Modifier.fillMaxWidth(0.9f)) {
       Text(
@@ -69,13 +72,24 @@ private fun FriendNameSection(userToDisplay: User) {
 }
 
 @Composable
-private fun FriendCircle(friendName: String) {
+private fun FriendCircle(
+    profilePicUrl: String?,
+) {
+  val imageUrl = profilePicUrl?.takeIf { it.isNotBlank() }
+
   Box(
       modifier =
           Modifier.size(dimensionResource(R.dimen.trip_top_circle_size))
               .background(MaterialTheme.colorScheme.secondary, CircleShape),
       contentAlignment = Alignment.Center) {
-        Text(friendName.first().toString(), color = MaterialTheme.colorScheme.onSecondary)
+        AsyncImage(
+            model = imageUrl ?: R.drawable.default_profile_pic,
+            contentDescription = null,
+            modifier =
+                Modifier.fillMaxSize()
+                    .background(MaterialTheme.colorScheme.secondary, CircleShape)
+                    .clip(CircleShape),
+            contentScale = ContentScale.Crop)
       }
 }
 
