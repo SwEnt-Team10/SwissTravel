@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.algorithm.orderlocationsv2
 
 import android.content.Context
 import com.github.swent.swisstravel.model.trainstimetable.SbbTimetable
+import com.github.swent.swisstravel.model.trainstimetable.TrainTimetable
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TransportMode
@@ -132,26 +133,34 @@ class DurationMatrixHybridTest {
   }
 
   @Test
-  fun `fetchDurationsFromStart for public transport never calls buildClient`() = runBlocking {
-    val start = Location(Coordinate(1.0, 2.0), "loc1")
-    val ends =
-        listOf(Location(Coordinate(3.0, 4.0), "loc2"), Location(Coordinate(5.0, 6.0), "loc3"))
+  fun `fetchDurationsFromStart handles getFastestRoute exception and does not call buildClient`() =
+      runBlocking {
+        // Arrange
+        val fakeTrainTimetable = mockk<TrainTimetable>()
 
-    // Mock a train timetable
-    val fakeTrainTimetable = mockk<SbbTimetable>()
-    coEvery { fakeTrainTimetable.getFastestRoute(any(), any()) } returns 100
+        // Force getFastestRoute to throw
+        coEvery { fakeTrainTimetable.getFastestRoute(any(), any()) } throws RuntimeException("boom")
 
-    // Spy on DurationMatrixHybrid
-    val spyMatrixHybrid =
-        spyk(DurationMatrixHybrid(context, fakeTrainTimetable), recordPrivateCalls = true)
+        val durationMatrix =
+            spyk(DurationMatrixHybrid(context, fakeTrainTimetable), recordPrivateCalls = true)
 
-    val result = spyMatrixHybrid.fetchDurationsFromStart(start, ends, TransportMode.TRAIN)
+        val start = Location(Coordinate(1.0, 1.0), "start")
+        val ends =
+            listOf(Location(Coordinate(2.0, 2.0), "end1"), Location(Coordinate(3.0, 3.0), "end2"))
 
-    // Check that the result has expected size and values
-    assertEquals(2, result.size)
-    result.values.forEach { assertEquals(100.0, it) }
+        // Act
+        val result = durationMatrix.fetchDurationsFromStart(start, ends, TransportMode.TRAIN)
 
-    // Verify buildClient was never called
-    verify(exactly = 0) { spyMatrixHybrid["buildClient"](any<List<Point>>(), any<TransportMode>()) }
-  }
+        // Assert: all durations must be null
+        assertEquals(2, result.size)
+        result.values.forEach { assertNull(it) }
+
+        // Assert: buildClient is *never* called for TRAIN mode
+        verify(exactly = 0) {
+          durationMatrix["buildClient"](any<List<Point>>(), any<TransportMode>())
+        }
+
+        // Assert: getFastestRoute was called twice (once per end)
+        coVerify(exactly = 2) { fakeTrainTimetable.getFastestRoute(any(), any()) }
+      }
 }
