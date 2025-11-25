@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.user
 
+import android.net.Uri
 import com.github.swent.swisstravel.model.trip.TransportMode
 
 /**
@@ -25,6 +26,7 @@ data class User(
     val friends: List<Friend>,
     val stats: UserStats = UserStats(),
     val pinnedTripsUids: List<String>,
+    val pinnedImagesUris: List<Uri>,
 )
 
 /**

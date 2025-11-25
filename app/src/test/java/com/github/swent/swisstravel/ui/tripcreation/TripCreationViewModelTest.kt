@@ -216,7 +216,10 @@ class TripCreationViewModelTest {
           email = "test@example.com",
           profilePicUrl = "",
           preferences = listOf(Preference.FOODIE),
-          friends = emptyList())
+          friends = emptyList(),
+          stats = UserStats(),
+          pinnedTripsUids = emptyList(),
+          pinnedImagesUris = emptyList())
     }
 
     override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}

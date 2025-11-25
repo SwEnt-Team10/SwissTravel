@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.user
 
+import android.net.Uri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -36,7 +37,8 @@ class UserRepositoryFirebase(
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
-          pinnedTripsUids = emptyList())
+          pinnedTripsUids = emptyList(),
+          pinnedImagesUris = emptyList())
     }
 
     val uid = firebaseUser.uid
@@ -168,8 +170,10 @@ class UserRepositoryFirebase(
     val prefs = parsePreferences(doc)
     val friends = parseFriends(doc)
     val stats = parseStats(doc)
-    val pinnedTripsUIds =
-        (doc["pinnedTripsUIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val pinnedTripsUids =
+        (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val pinnedImagesUris =
+        (doc["pinnedImagesUris"] as? List<*>)?.filterIsInstance<Uri>() ?: emptyList()
 
     return User(
         uid = uid,
@@ -180,7 +184,8 @@ class UserRepositoryFirebase(
         preferences = prefs,
         friends = friends,
         stats = stats,
-        pinnedTripsUids = pinnedTripsUIds)
+        pinnedTripsUids = pinnedTripsUids,
+        pinnedImagesUris = pinnedImagesUris)
   }
 
   /**
@@ -201,7 +206,8 @@ class UserRepositoryFirebase(
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            pinnedTripsUids = emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedImagesUris = emptyList())
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser
