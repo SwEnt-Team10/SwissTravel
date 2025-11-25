@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.algorithm
 
+import android.content.Context
 import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
@@ -7,14 +8,19 @@ import com.github.swent.swisstravel.algorithm.tripschedule.ScheduleParams
 import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
+import io.mockk.coVerify
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
+import io.mockk.spyk
 import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
 
@@ -133,5 +139,146 @@ class TripAlgorithmTest {
     assertEquals(finalSchedule[1].endDate, result[1].endDate)
     assertEquals(finalSchedule[2].startDate, result[2].startDate)
     assertEquals(finalSchedule[2].endDate, result[2].endDate)
+  }
+
+  // Done with AI
+  @Test
+  fun `runTripAlgorithm delegates to computeTrip`() = runTest {
+    // Arrange
+    val settings = mockk<TripSettings>()
+    val profile = mockk<TripProfile>()
+
+    // Mock computeTrip directly
+    val expected = emptyList<TripElement>()
+
+    val algorithmSpy = spyk(algorithm)
+
+    coEvery { algorithmSpy.computeTrip(settings, profile, any()) } returns expected
+
+    // Act
+    val result = algorithmSpy.runTripAlgorithm(settings, profile) {}
+
+    // Assert
+    assertEquals(expected, result)
+    coVerify(exactly = 1) { algorithmSpy.computeTrip(settings, profile, any()) }
+  }
+
+  // Done with AI
+  @Test(expected = IllegalStateException::class)
+  fun `computeTrip throws when optimized route duration is zero or negative`() = runTest {
+    // Arrange
+    val coordinates =
+        listOf(Location(Coordinate(1.0, 1.0), "A"), Location(Coordinate(2.0, 2.0), "B"))
+
+    // Mock a valid activity, INCLUDING its location
+    val activity = mockk<Activity>()
+    every { activity.location } returns coordinates[0]
+
+    coEvery { selectActivities.addActivities(any()) } returns listOf(activity)
+
+    val invalidRoute =
+        OrderedRoute(
+            orderedLocations = coordinates,
+            totalDuration = 0.0, // invalid
+            segmentDuration = listOf(0.0))
+
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns
+        invalidRoute
+
+    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
+    coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
+
+    val settings =
+        TripSettings(
+            name = "Trip",
+            arrivalDeparture =
+                TripArrivalDeparture(
+                    arrivalLocation = coordinates[0], departureLocation = coordinates[1]),
+            destinations = coordinates,
+            preferences = emptyList())
+
+    val profile =
+        TripProfile(
+            startDate = Timestamp(0, 0),
+            endDate = Timestamp(1000, 0),
+            preferredLocations = emptyList(),
+            preferences = emptyList(),
+            adults = 1,
+            children = 0,
+            arrivalLocation = coordinates[0],
+            departureLocation = coordinates[1])
+
+    // Act → should now throw *your* IllegalStateException
+    algorithm.computeTrip(settings, profile)
+  }
+
+  // Done with AI
+  @Test(expected = IllegalStateException::class)
+  fun `computeTrip throws when scheduled trip is empty`() = runTest {
+    // Arrange
+    val coordinates =
+        listOf(Location(Coordinate(1.0, 1.0), "A"), Location(Coordinate(2.0, 2.0), "B"))
+
+    val activity = mockk<Activity>()
+    every { activity.location } returns coordinates[0]
+
+    coEvery { selectActivities.addActivities(any()) } returns listOf(activity)
+
+    val validRoute =
+        OrderedRoute(
+            orderedLocations = coordinates,
+            totalDuration = 1000.0,
+            segmentDuration = listOf(1000.0))
+
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns validRoute
+
+    // scheduleTrip empty → should trigger your check
+    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
+    coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
+
+    val settings =
+        TripSettings(
+            name = "Trip",
+            arrivalDeparture =
+                TripArrivalDeparture(
+                    arrivalLocation = coordinates[0], departureLocation = coordinates[1]),
+            destinations = coordinates,
+            preferences = emptyList())
+
+    val profile =
+        TripProfile(
+            startDate = Timestamp(0, 0),
+            endDate = Timestamp(1000, 0),
+            preferredLocations = emptyList(),
+            preferences = emptyList(),
+            adults = 1,
+            children = 0,
+            arrivalLocation = coordinates[0],
+            departureLocation = coordinates[1])
+
+    // Act → should now throw IllegalStateException (not MockKException)
+    algorithm.computeTrip(settings, profile)
+  }
+
+  // Done with AI
+  @Test
+  fun `init returns a TripAlgorithm instance`() {
+    // Arrange
+    val context = mockk<Context>(relaxed = true)
+    val repo = mockk<ActivityRepository>(relaxed = true)
+
+    val settings =
+        TripSettings(
+            name = "Sample Trip",
+            arrivalDeparture = mockk(relaxed = true),
+            destinations = emptyList(),
+            preferences = emptyList())
+
+    // Act
+    val algo =
+        TripAlgorithm.init(tripSettings = settings, activityRepository = repo, context = context)
+
+    // Assert
+    assertNotNull(algo)
   }
 }

@@ -6,10 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
-import com.github.swent.swisstravel.algorithm.cache.DurationCacheLocal
-import com.github.swent.swisstravel.algorithm.orderlocationsv2.DurationMatrixHybrid
-import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
-import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
@@ -74,11 +70,16 @@ sealed interface ValidationEvent {
  * @property tripsRepository Repository for managing trip data.
  * @property userRepository Repository for managing user data.
  * @property activityRepository Repository for managing activity data.
+ * @property algorithmFactory Factory function to create a TripAlgorithm instance.
  */
 open class TripSettingsViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
     private val userRepository: UserRepository = UserRepositoryFirebase(),
-    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
+    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland(),
+    private val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { context, settings ->
+      TripAlgorithm.init(
+          context = context, tripSettings = settings, activityRepository = activityRepository)
+    }
 ) : ViewModel() {
 
   private val _tripSettings = MutableStateFlow(TripSettings())
@@ -135,39 +136,6 @@ open class TripSettingsViewModel(
   }
 
   /**
-   * Runs the trip algorithm to compute a trip schedule based on the provided settings and profile.
-   *
-   * @param tripSettings The settings for the trip.
-   * @param tripProfile The profile of the trip.
-   * @param context The context used for initializing components that require it.
-   * @param onProgress A callback function to report the progress of the computation (from 0.0 to
-   *   1.0).
-   *     @return A list of [TripElement] representing the computed trip.
-   */
-  open suspend fun runTripAlgorithm(
-      tripSettings: TripSettings,
-      tripProfile: TripProfile,
-      context: Context,
-      onProgress: (Float) -> Unit
-  ): List<TripElement> {
-    val activitySelector =
-        SelectActivities(tripSettings = tripSettings, activityRepository = activityRepository)
-
-    val cacheManager = DurationCacheLocal(context)
-    val durationMatrix = DurationMatrixHybrid(context)
-    val penalty = ProgressiveRouteOptimizer.PenaltyConfig()
-    val optimizer =
-        ProgressiveRouteOptimizer(
-            cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
-
-    val tripAlgorithm =
-        TripAlgorithm(activitySelector = activitySelector, routeOptimizer = optimizer)
-
-    return tripAlgorithm.computeTrip(
-        tripSettings = tripSettings, tripProfile = tripProfile, onProgress = onProgress)
-  }
-
-  /**
    * Saves the current trip settings as a new Trip in the repository.
    *
    * Trip should be saved once an internet connection is available.
@@ -210,11 +178,11 @@ open class TripSettingsViewModel(
                 arrivalLocation = settings.arrivalDeparture.arrivalLocation,
                 departureLocation = settings.arrivalDeparture.departureLocation)
 
-        // Call the extracted algorithm function
+        // Run the algorithm
+        val algorithm = algorithmFactory(context, tripSettings.value)
         val schedule =
-            runTripAlgorithm(
-                tripSettings = tripSettings.value, tripProfile = tripProfile, context = context) {
-                    progress ->
+            algorithm.runTripAlgorithm(
+                tripSettings = tripSettings.value, tripProfile = tripProfile) { progress ->
                   _loadingProgress.value = progress
                 }
 

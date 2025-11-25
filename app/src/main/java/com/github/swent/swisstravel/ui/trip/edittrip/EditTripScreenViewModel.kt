@@ -4,13 +4,8 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
-import com.github.swent.swisstravel.algorithm.cache.DurationCacheLocal
-import com.github.swent.swisstravel.algorithm.orderlocationsv2.DurationMatrixHybrid
-import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
-import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripElement
-import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
@@ -29,6 +24,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+/** UI state for the EditTripScreen. */
 data class EditTripUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
@@ -41,9 +37,20 @@ data class EditTripUiState(
     val selectedPrefs: Set<Preference> = emptySet()
 )
 
+/**
+ * ViewModel for the EditTripScreen. Handles loading, editing, and saving trips.
+ *
+ * @property tripRepository Repository for managing trips.
+ * @property activityRepository Repository for fetching activities.
+ * @property algorithmFactory Factory function to create TripAlgorithm instances.
+ */
 class EditTripScreenViewModel(
     private val tripRepository: TripsRepository = TripsRepositoryFirestore(),
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland(),
+    private val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { context, settings ->
+      TripAlgorithm.init(
+          context = context, tripSettings = settings, activityRepository = activityRepository)
+    }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(EditTripUiState())
@@ -107,6 +114,8 @@ class EditTripScreenViewModel(
   /**
    * Saves the current trip with the edited information. This will re-calculate activities based on
    * the new preferences.
+   *
+   * @param context The Android context.
    */
   fun save(context: Context) {
     viewModelScope.launch {
@@ -151,12 +160,11 @@ class EditTripScreenViewModel(
                           originalTrip.tripProfile.departureLocation),
                   destinations = originalTrip.locations)
 
-          // Call the extracted algorithm function
+          // Run the algorithm
+          val algorithm = algorithmFactory(context, tempTripSettings)
           val schedule =
-              runTripAlgorithm(
-                  tripSettings = tempTripSettings,
-                  tripProfile = newTripProfile,
-                  context = context) { progress ->
+              algorithm.runTripAlgorithm(
+                  tripSettings = tempTripSettings, tripProfile = newTripProfile) { progress ->
                     _uiState.update { it.copy(savingProgress = progress) }
                   }
 
@@ -192,39 +200,6 @@ class EditTripScreenViewModel(
         _uiState.update { it.copy(isSaving = false) }
       }
     }
-  }
-
-  /**
-   * Runs the trip algorithm to compute a trip schedule based on the provided settings and profile.
-   *
-   * @param tripSettings The settings for the trip.
-   * @param tripProfile The profile of the trip.
-   * @param context The context used for initializing components that require it.
-   * @param onProgress A callback function to report the progress of the computation (from 0.0 to
-   *   1.0).
-   *     @return A list of [TripElement] representing the computed trip.
-   */
-  suspend fun runTripAlgorithm(
-      tripSettings: TripSettings,
-      tripProfile: TripProfile,
-      context: Context,
-      onProgress: (Float) -> Unit
-  ): List<TripElement> {
-    val activitySelector =
-        SelectActivities(tripSettings = tripSettings, activityRepository = activityRepository)
-
-    val cacheManager = DurationCacheLocal(context)
-    val durationMatrix = DurationMatrixHybrid(context)
-    val penalty = ProgressiveRouteOptimizer.PenaltyConfig()
-    val optimizer =
-        ProgressiveRouteOptimizer(
-            cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
-
-    val tripAlgorithm =
-        TripAlgorithm(activitySelector = activitySelector, routeOptimizer = optimizer)
-
-    return tripAlgorithm.computeTrip(
-        tripSettings = tripSettings, tripProfile = tripProfile, onProgress = onProgress)
   }
 
   /**

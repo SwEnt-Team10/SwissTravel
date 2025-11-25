@@ -1,12 +1,15 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
 import android.content.Context
+import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
 import io.mockk.*
 import kotlin.collections.emptyList
@@ -45,8 +48,7 @@ class EditTripScreenViewModelTest {
   fun setUp() {
     repo = mockk(relaxed = true)
     // Relaxed mock for ActivityRepository to avoid mocking every call in `save`
-    val activityRepo: com.github.swent.swisstravel.model.trip.activity.ActivityRepository =
-        mockk(relaxed = true)
+    val activityRepo: ActivityRepository = mockk(relaxed = true)
     vm = EditTripScreenViewModel(tripRepository = repo, activityRepository = activityRepo)
   }
 
@@ -144,12 +146,23 @@ class EditTripScreenViewModelTest {
   // -------------------------
   @Test
   fun `save merges ui state into tripProfile and calls editTrip`() = runTest {
+    val activityRepo: ActivityRepository = mockk(relaxed = true)
+    val mockAlgorithm = mockk<TripAlgorithm>()
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
+    vm =
+        EditTripScreenViewModel(
+            tripRepository = repo,
+            activityRepository = activityRepo,
+            algorithmFactory = algorithmFactory)
+
     coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
     coEvery { repo.editTrip(any(), any()) } just Runs
-    // Needed to spy on the ViewModel to mock runTripAlgorithm
-    vm = spyk(vm)
-    coEvery { vm.runTripAlgorithm(any(), any(), any(), any()) } returns emptyList()
 
+    // Mock algorithm to produce no new schedule (so activities/segments stay same)
+    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
+
+    // --- Act ---
     vm.loadTrip(sampleTripId)
     advanceUntilIdle()
 
@@ -182,11 +195,21 @@ class EditTripScreenViewModelTest {
 
   @Test
   fun `save failure sets errorMsg`() = runTest {
+    val activityRepo: ActivityRepository = mockk(relaxed = true)
+    val mockAlgorithm = mockk<TripAlgorithm>()
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
+    vm =
+        EditTripScreenViewModel(
+            tripRepository = repo,
+            activityRepository = activityRepo,
+            algorithmFactory = algorithmFactory)
+
     coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
     coEvery { repo.editTrip(any(), any()) } throws RuntimeException("save failed")
-    // Needed to spy on the ViewModel to mock runTripAlgorithm
-    vm = spyk(vm)
-    coEvery { vm.runTripAlgorithm(any(), any(), any(), any()) } returns emptyList()
+
+    // Mock algorithm behavior
+    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
 
     vm.loadTrip(sampleTripId)
     advanceUntilIdle()

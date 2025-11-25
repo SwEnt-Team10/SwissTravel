@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.tripcreation
 
 import android.content.Context
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
@@ -12,7 +13,7 @@ import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.google.common.base.CharMatcher.any
 import io.mockk.coEvery
-import io.mockk.spyk
+import io.mockk.mockk
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -166,15 +167,22 @@ class TripCreationViewModelTest {
   // Refactored using AI
   @Test
   fun saveTripShouldAddTripAndEmitSaveSuccess() = runTest {
-    // Needed to spy on the ViewModel to mock runTripAlgorithm
-    val viewModel =
-        spyk(
-            TripSettingsViewModel(
-                tripsRepository = fakeRepo,
-                userRepository = fakeUserRepo,
-                activityRepository = fakeActivityRepo))
+    val mockAlgorithm = mockk<TripAlgorithm>()
+    val fakeContext: Context = mock()
 
-    coEvery { viewModel.runTripAlgorithm(any(), any(), any(), any()) } returns emptyList()
+    // A factory that returns our mock algorithm
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
+    val viewModel =
+        TripSettingsViewModel(
+            tripsRepository = fakeRepo,
+            userRepository = fakeUserRepo,
+            activityRepository = fakeActivityRepo,
+            algorithmFactory = algorithmFactory,
+        )
+
+    // Algorithm returns empty schedule → no activities or route segments
+    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -182,7 +190,6 @@ class TripCreationViewModelTest {
     viewModel.updateArrivalLocation(Location(Coordinate(1.0, 1.0), "Arrival"))
     viewModel.updateDepartureLocation(Location(Coordinate(2.0, 2.0), "Departure"))
 
-    val fakeContext: Context = mock()
     viewModel.saveTrip(fakeContext)
 
     val event = viewModel.validationEvents.first()
@@ -197,18 +204,24 @@ class TripCreationViewModelTest {
   // Refactored using AI
   @Test
   fun saveTripShouldEmitSaveErrorWhenRepositoryThrows() = runTest {
-    // Needed to spy on the ViewModel to mock runTripAlgorithm
-    val viewModel =
-        spyk(
-            TripSettingsViewModel(
-                tripsRepository = fakeRepo,
-                userRepository = fakeUserRepo,
-                activityRepository = fakeActivityRepo))
+    val mockAlgorithm = mockk<TripAlgorithm>()
+    val fakeContext: Context = mock()
 
-    // Arrange: cause repository to throw
+    // The fake repo will throw when saving
     fakeRepo.shouldThrow = true
 
-    coEvery { viewModel.runTripAlgorithm(any(), any(), any(), any()) } returns emptyList()
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
+    val viewModel =
+        TripSettingsViewModel(
+            tripsRepository = fakeRepo,
+            userRepository = fakeUserRepo,
+            activityRepository = fakeActivityRepo,
+            algorithmFactory = algorithmFactory,
+        )
+
+    // Algorithm still returns empty schedule
+    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -217,7 +230,6 @@ class TripCreationViewModelTest {
     viewModel.updateDepartureLocation(Location(Coordinate(2.0, 2.0), "Departure"))
 
     // Act
-    val fakeContext: Context = mock()
     viewModel.saveTrip(fakeContext)
 
     // Assert

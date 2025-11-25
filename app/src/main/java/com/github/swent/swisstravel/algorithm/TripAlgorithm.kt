@@ -1,6 +1,9 @@
 package com.github.swent.swisstravel.algorithm
 
+import android.content.Context
 import android.util.Log
+import com.github.swent.swisstravel.algorithm.cache.DurationCacheLocal
+import com.github.swent.swisstravel.algorithm.orderlocationsv2.DurationMatrixHybrid
 import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.algorithm.tripschedule.ScheduleParams
@@ -8,6 +11,7 @@ import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 
@@ -104,9 +108,7 @@ class TripAlgorithm(
             throw IllegalStateException("Route optimization failed: ${e.message}", e)
           }
 
-      if (optimizedRoute.totalDuration <= 0) {
-        throw IllegalStateException("Optimized route duration is zero or negative")
-      }
+      check(optimizedRoute.totalDuration > 0) { "Optimized route duration is zero or negative" }
 
       // ---- STEP 3: Schedule trip ----
       val schedule =
@@ -122,15 +124,59 @@ class TripAlgorithm(
             throw IllegalStateException("Trip scheduling failed: ${e.message}", e)
           }
 
-      if (schedule.isEmpty()) {
-        throw IllegalStateException("Scheduled trip is empty")
-      }
+      check(!(schedule.isEmpty())) { "Scheduled trip is empty" }
 
       onProgress(1.0f)
       return schedule
     } catch (e: Exception) {
       Log.e("TripAlgorithm", "Trip computation failed", e)
       throw e
+    }
+  }
+
+  /**
+   * Runs the trip algorithm with the given settings and profile.
+   *
+   * @param tripSettings The settings for the trip.
+   * @param tripProfile The profile of the trip.
+   * @param onProgress A callback function to report progress.
+   * @return A list of TripElement representing the computed trip.
+   */
+  suspend fun runTripAlgorithm(
+      tripSettings: TripSettings,
+      tripProfile: TripProfile,
+      onProgress: (Float) -> Unit
+  ): List<TripElement> {
+    return computeTrip(
+        tripSettings = tripSettings, tripProfile = tripProfile, onProgress = onProgress)
+  }
+
+  companion object {
+    /**
+     * Initializes the TripAlgorithm with the necessary components.
+     *
+     * @param tripSettings The settings for the trip.
+     * @param activityRepository The repository to fetch activities from.
+     * @param context The Android context.
+     * @return An instance of TripAlgorithm.
+     */
+    fun init(
+        tripSettings: TripSettings,
+        activityRepository: ActivityRepository,
+        context: Context
+    ): TripAlgorithm {
+
+      val activitySelector =
+          SelectActivities(tripSettings = tripSettings, activityRepository = activityRepository)
+
+      val cacheManager = DurationCacheLocal(context)
+      val durationMatrix = DurationMatrixHybrid(context)
+      val penalty = ProgressiveRouteOptimizer.PenaltyConfig()
+      val optimizer =
+          ProgressiveRouteOptimizer(
+              cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
+
+      return TripAlgorithm(activitySelector, optimizer)
     }
   }
 }

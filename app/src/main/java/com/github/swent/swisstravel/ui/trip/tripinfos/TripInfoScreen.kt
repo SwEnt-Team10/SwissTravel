@@ -58,7 +58,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
@@ -166,8 +165,8 @@ fun TripInfoScreen(
   // compute schedule once trip data available
   LaunchedEffect(ui.locations, ui.activities, ui.tripProfile) {
     if (ui.locations.isEmpty() || ui.tripProfile == null) return@LaunchedEffect
-    val tripSegments = ui.routeSegments.map { it -> TripElement.TripSegment(it) }
-    val tripActivities = ui.activities.map { it -> TripElement.TripActivity(it) }
+    val tripSegments = ui.routeSegments.map { TripElement.TripSegment(it) }
+    val tripActivities = ui.activities.map { TripElement.TripActivity(it) }
 
     schedule = tripSegments + tripActivities
     schedule = schedule.sortedBy { it.startDate }
