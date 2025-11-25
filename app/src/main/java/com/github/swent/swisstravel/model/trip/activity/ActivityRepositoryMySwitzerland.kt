@@ -32,7 +32,8 @@ class ActivityRepositoryMySwitzerland(
 ) : ActivityRepository {
 
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
-  private val baseHttpUrl: HttpUrl = urlBuilder("https://opendata.myswitzerland.io/v1/attractions/")
+  private val baseHttpUrl: HttpUrl =
+      urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", top = true)
   private val destinationHttpUrl: HttpUrl =
       urlBuilder("https://opendata.myswitzerland.io/v1/destinations/")
 
@@ -42,7 +43,7 @@ class ActivityRepositoryMySwitzerland(
    * @param url The URL to build.
    * @param language The language to use.
    */
-  private fun urlBuilder(url: String, language: String = "en"): HttpUrl {
+  private fun urlBuilder(url: String, language: String = "en", top: Boolean = false): HttpUrl {
     val newUrl: HttpUrl =
         url.toHttpUrl()
             .newBuilder()
@@ -51,6 +52,10 @@ class ActivityRepositoryMySwitzerland(
             .addQueryParameter("striphtml", "true")
             .addQueryParameter("expand", "true")
             .build()
+
+    if (top) {
+      newUrl.newBuilder().addQueryParameter("top", "true").build()
+    }
     return newUrl
   }
 
@@ -70,14 +75,9 @@ class ActivityRepositoryMySwitzerland(
    */
   private suspend fun fetchActivitiesFromUrl(url: HttpUrl): List<Activity> {
     return withContext(ioDispatcher) {
-        val topUrl : HttpUrl =
-            url.newBuilder()
-            .addQueryParameter("top", "true")
-            .build()
-
-        val request =
+      val request =
           Request.Builder()
-              .url(topUrl)
+              .url(url)
               .header("accept", "application/json")
               .header("x-api-key", API_KEY)
               .build()

@@ -74,17 +74,17 @@ class SelectActivities(
           val allFetchedActivities = mutableListOf<Activity>()
           for (destination in allDestinations) {
             if (optionalPrefs.isNotEmpty()) {
-                val fetched =
-                    activityRepository.getActivitiesNearWithPreference(
-                        mandatoryPrefs + optionalPrefs,
-                        destination.coordinate,
-                        NEAR,
-                        numberOfActivityToFetchPerStep)
-                allFetchedActivities.addAll(fetched)
-                // Update progress after each API call.
-                completedSteps++
-                onProgress(completedSteps.toFloat() / totalSteps)
-                delay(API_CALL_DELAY_MS) // Respect API rate limit.
+              val fetched =
+                  activityRepository.getActivitiesNearWithPreference(
+                      mandatoryPrefs + optionalPrefs,
+                      destination.coordinate,
+                      NEAR,
+                      numberOfActivityToFetchPerStep)
+              allFetchedActivities.addAll(fetched)
+              // Update progress after each API call.
+              completedSteps++
+              onProgress(completedSteps.toFloat() / totalSteps)
+              delay(API_CALL_DELAY_MS) // Respect API rate limit.
             } else {
               val fetched =
                   activityRepository.getActivitiesNearWithPreference(
