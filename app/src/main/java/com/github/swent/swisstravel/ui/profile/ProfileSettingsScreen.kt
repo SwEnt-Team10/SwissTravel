@@ -20,8 +20,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,6 +34,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -63,12 +69,14 @@ import com.google.firebase.ktx.Firebase
 /** Test tags for the profile settings screen. */
 object ProfileSettingsTestTags {
   const val PROFILE_PIC = "profilePic"
-  const val PREFERENCES_LIST = "preferencesList"
-  const val DISPLAY_NAME = "displayName"
-  const val EMAIL = "email"
   const val PROFILE_INFO = "profileInfo"
+  const val FIELD_TEXT = "fieldText"
+  const val FIELD_EDIT_BUTTON = "fieldEditButton"
+  const val FIELD_CONFIRM_BUTTON = "fieldConfirmButton"
+  const val FIELD_CANCEL_BUTTON = "fieldCancelButton"
   const val PERSONAL_INFO = "personalInfo"
-  const val BIOGRAPHY = "biography"
+  const val EMAIL = "email"
+  const val PREFERENCES_LIST = "preferencesList"
   const val PREFERENCES = "preferences"
   const val PREFERENCES_TOGGLE = "preferencesToggle"
   const val LOGOUT_BUTTON = "logoutButton"
@@ -78,6 +86,7 @@ object ProfileSettingsTestTags {
  * A screen that shows the user's profile information.
  *
  * @param profileSettingsViewModel The view model for this screen.
+ * @param onBack The callback for when the back button is clicked.
  * @param navigationActions The navigation actions for this screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -134,6 +143,9 @@ fun ProfileSettingsScreen(
  *
  * @param uiState The state of the screen.
  * @param profileSettingsViewModel The view model for this screen.
+ * @param modifier The modifier for the content.
+ * @param authRepository The repository for authentication.
+ * @param navigationActions The navigation actions for this screen.
  */
 @Composable
 private fun ProfileSettingsContent(
@@ -157,7 +169,7 @@ private fun ProfileSettingsContent(
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
-        ProfileInfoSection(name = uiState.name, biography = uiState.biography)
+        ProfileInfoSection(uiState = uiState, viewModel = profileSettingsViewModel)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
@@ -200,24 +212,34 @@ private fun ProfileSettingsHeader(photoUrl: String) {
 }
 
 /**
- * A profile information section of the profile settings screen.
+ * The profile information section of the profile settings screen.
  *
- * @param name The name of the user.
- * @param biography The biography of the user.
+ * @param uiState The state of the screen.
+ * @param viewModel The view model for this screen.
  */
 @Composable
-private fun ProfileInfoSection(name: String, biography: String) {
+private fun ProfileInfoSection(
+    uiState: ProfileSettingsUIState,
+    viewModel: ProfileSettingsViewModel
+) {
   InfoSection(
       title = stringResource(R.string.profile_info),
       modifier = Modifier.testTag(ProfileSettingsTestTags.PROFILE_INFO)) {
-        InfoItem(
+        EditableField(
             label = stringResource(R.string.name),
-            value = name,
-            modifier = Modifier.testTag(ProfileSettingsTestTags.DISPLAY_NAME))
-        InfoItem(
+            text = uiState.name,
+            isEditing = uiState.isEditingName,
+            onStartEdit = { viewModel.startEditingName() },
+            onSave = { viewModel.saveName(it) },
+            onCancel = { viewModel.cancelEditingName() })
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+        EditableField(
             label = stringResource(R.string.biography),
-            value = biography,
-            modifier = Modifier.testTag(ProfileSettingsTestTags.BIOGRAPHY))
+            text = uiState.biography,
+            isEditing = uiState.isEditingBio,
+            onStartEdit = { viewModel.startEditingBio() },
+            onSave = { viewModel.saveBio(it) },
+            onCancel = { viewModel.cancelEditingBio() })
       }
 }
 
@@ -263,9 +285,7 @@ private fun PreferencesSection(selected: List<Preference>, onToggle: (Preference
             horizontalArrangement = Arrangement.SpaceBetween) {
               Text(
                   text = stringResource(R.string.travel_pref),
-                  style =
-                      MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                  color = MaterialTheme.colorScheme.onSecondaryContainer)
+                  style = MaterialTheme.typography.titleLarge)
               IconButton(
                   onClick = { expanded = !expanded },
                   modifier = Modifier.testTag(ProfileSettingsTestTags.PREFERENCES_TOGGLE)) {
@@ -342,13 +362,12 @@ fun InfoSection(
           modifier
               .fillMaxWidth()
               .padding(vertical = dimensionResource(R.dimen.tiny_spacer))
-              .clip(MaterialTheme.shapes.medium)
+              .clip(MaterialTheme.shapes.large)
               .background(MaterialTheme.colorScheme.onPrimary)
               .padding(dimensionResource(R.dimen.small_padding))) {
         Text(
             text = title,
-            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSecondaryContainer,
+            style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = dimensionResource(R.dimen.smaller_padding)))
         content()
       }
@@ -370,11 +389,94 @@ fun InfoItem(label: String, value: String, modifier: Modifier) {
             text = label,
             style =
                 MaterialTheme.typography.titleSmall.copy(
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)))
+                    fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface))
         Text(
             text = value.ifBlank { "-" },
             style = MaterialTheme.typography.bodyLarge,
             modifier = modifier)
       }
+}
+
+/**
+ * A field that can be edited in the profile settings screen.
+ *
+ * @param label The label for the field.
+ * @param text The current text in the field.
+ * @param isEditing Whether the field is currently being edited.
+ * @param onStartEdit The callback for when the field is clicked.
+ * @param onSave The callback for when the field is saved.
+ * @param onCancel The callback for when the field is cancelled.
+ */
+@Composable
+fun EditableField(
+    label: String,
+    text: String,
+    isEditing: Boolean,
+    onStartEdit: () -> Unit,
+    onSave: (String) -> Unit,
+    onCancel: () -> Unit
+) {
+  var editedText by remember(isEditing) { mutableStateOf(text) }
+
+  Column(modifier = Modifier.fillMaxWidth()) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier.fillMaxWidth()) {
+          Text(
+              text = label,
+              style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium))
+          Row {
+            // Cancel Button
+            if (isEditing) {
+              IconButton(
+                  onClick = { onCancel() },
+                  modifier = Modifier.testTag(ProfileSettingsTestTags.FIELD_CANCEL_BUTTON)) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = stringResource(R.string.cancel))
+                  }
+            }
+            // Edit / Save Button
+            IconButton(
+                onClick = { if (!isEditing) onStartEdit() else onSave(editedText) },
+                modifier =
+                    Modifier.testTag(
+                        if (!isEditing) ProfileSettingsTestTags.FIELD_EDIT_BUTTON
+                        else ProfileSettingsTestTags.FIELD_CONFIRM_BUTTON)) {
+                  Icon(
+                      imageVector = if (isEditing) Icons.Default.Check else Icons.Outlined.Edit,
+                      contentDescription =
+                          if (isEditing) stringResource(R.string.save)
+                          else stringResource(R.string.edit))
+                }
+          }
+        }
+    if (isEditing) {
+      TextField(
+          value = editedText,
+          onValueChange = { editedText = it },
+          colors =
+              TextFieldDefaults.colors(
+                  focusedContainerColor = MaterialTheme.colorScheme.onPrimary,
+                  unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary),
+          placeholder = {
+            Text(
+                text = stringResource(R.string.add_text),
+                style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic))
+          },
+          modifier = Modifier.fillMaxWidth())
+    } else {
+      if (text.isBlank()) {
+        Text(
+            text = stringResource(R.string.add_a_bio),
+            style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic))
+      } else {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier.testTag(ProfileSettingsTestTags.FIELD_TEXT))
+      }
+    }
+  }
 }

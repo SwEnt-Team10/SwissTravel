@@ -24,7 +24,9 @@ import kotlinx.coroutines.launch
  * @property isLoading Whether the screen is currently loading.
  * @property profilePicUrl The URL of the user's profile picture.
  * @property name The user's name.
+ * @property isEditingName Whether the user is currently editing their name.
  * @property biography The user's biography.
+ * @property isEditingBio Whether the user is currently editing their biography.
  * @property email The user's email
  * @property selectedPreferences The user's selected preferences.
  * @property errorMsg The error message to display.
@@ -33,10 +35,12 @@ data class ProfileSettingsUIState(
     val isLoading: Boolean = true,
     val profilePicUrl: String = "",
     val name: String = "",
+    val isEditingName: Boolean = false,
     val biography: String = "",
+    val isEditingBio: Boolean = false,
     val email: String = "",
     var selectedPreferences: List<Preference> = emptyList(),
-    var errorMsg: String? = null
+    var errorMsg: String? = null,
 )
 
 /**
@@ -100,6 +104,7 @@ class ProfileSettingsViewModel(
         ProfileSettingsUIState(
             profilePicUrl = loggedIn.profilePicUrl,
             name = loggedIn.name,
+            biography = loggedIn.biography,
             email = loggedIn.email,
             selectedPreferences = sanitized)
   }
@@ -132,5 +137,59 @@ class ProfileSettingsViewModel(
         _uiState.value = uiState.value.copy(errorMsg = "Error saving preferences: ${e.message}")
       }
     }
+  }
+
+  /** Starts editing the user's name. */
+  fun startEditingName() {
+    _uiState.update { it.copy(isEditingName = true) }
+  }
+
+  /** Starts editing the user's biography. */
+  fun startEditingBio() {
+    _uiState.update { it.copy(isEditingBio = true) }
+  }
+
+  /**
+   * Saves the user's name.
+   *
+   * @param newName The new name to save.
+   */
+  fun saveName(newName: String) {
+    viewModelScope.launch {
+      val user = currentUser ?: return@launch
+      try {
+        userRepository.updateUser(uid = user.uid, name = newName)
+        _uiState.update { it.copy(name = newName, isEditingName = false) }
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = "Error updating name: ${e.message}") }
+      }
+    }
+  }
+
+  /**
+   * Saves the user's biography.
+   *
+   * @param newBio The new biography to save.
+   */
+  fun saveBio(newBio: String) {
+    viewModelScope.launch {
+      val user = currentUser ?: return@launch
+      try {
+        userRepository.updateUser(uid = user.uid, biography = newBio)
+        _uiState.update { it.copy(biography = newBio, isEditingBio = false) }
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = "Error updating biography: ${e.message}") }
+      }
+    }
+  }
+
+  /** Cancels editing the user's name. */
+  fun cancelEditingName() {
+    _uiState.update { it.copy(isEditingName = false) }
+  }
+
+  /** Cancels editing the user's biography. */
+  fun cancelEditingBio() {
+    _uiState.update { it.copy(isEditingBio = false) }
   }
 }

@@ -183,16 +183,9 @@ private fun ProfileScreenContent(
       horizontalAlignment = Alignment.CenterHorizontally) {
         ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-        // Biography
-        Row(
-            modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.BIOGRAPHY),
-            verticalAlignment = Alignment.CenterVertically) {
-              Text(
-                  text = uiState.biography,
-                  style = MaterialTheme.typography.bodyMedium,
-                  maxLines = 3,
-                  overflow = TextOverflow.Ellipsis)
-            }
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+
+        BiographyDisplay(biography = uiState.biography)
 
         AchievementsDisplay(uiState.stats)
 
@@ -236,6 +229,22 @@ private fun ProfileHeader(photoUrl: String, name: String) {
         style = MaterialTheme.typography.headlineLarge,
         maxLines = 1,
         overflow = TextOverflow.Ellipsis)
+  }
+}
+
+@Composable
+private fun BiographyDisplay(biography: String) {
+  if (!biography.isBlank()) {
+    Row(
+        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.BIOGRAPHY),
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = biography,
+              style = MaterialTheme.typography.bodyMedium,
+              maxLines = 3,
+              overflow = TextOverflow.Ellipsis)
+        }
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
   }
 }
 
