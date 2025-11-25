@@ -2,7 +2,10 @@ package com.github.swent.swisstravel.algorithm.orderlocationsv2
 
 import android.content.Context
 import android.util.Log
+import com.github.swent.swisstravel.model.trainstimetable.SbbTimetable
+import com.github.swent.swisstravel.model.trainstimetable.TrainTimetable
 import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.mapbox.api.directions.v5.DirectionsCriteria.PROFILE_DRIVING
 import com.mapbox.api.directions.v5.DirectionsCriteria.PROFILE_WALKING
@@ -22,8 +25,12 @@ import retrofit2.Response
  * queries. It groups calls per start coordinate to minimize API calls.
  *
  * @param context Application context.
+ * @param trainTimetable The train timetable implementation to use for public transport durations.
  */
-open class DurationMatrixHybrid(private val context: Context) {
+open class DurationMatrixHybrid(
+    private val context: Context,
+    private val trainTimetable: TrainTimetable = SbbTimetable()
+) {
 
   /**
    * Requests travel durations from a single start coordinate to multiple end coordinates using a
@@ -45,34 +52,62 @@ open class DurationMatrixHybrid(private val context: Context) {
    *   seconds. `null` if duration could not be retrieved.
    */
   open suspend fun fetchDurationsFromStart(
-      start: Coordinate,
-      ends: List<Coordinate>,
+      start: Location,
+      ends: List<Location>,
       mode: TransportMode
   ): Map<Pair<Coordinate, Coordinate>, Double?> {
     if (ends.isEmpty()) return emptyMap()
 
-    val points = buildPoints(start, ends)
-    val client = buildClient(points, mode)
-
-    return suspendCancellableCoroutine { cont ->
-      client.enqueueCall(
-          object : Callback<MatrixResponse> {
-            override fun onResponse(
-                call: Call<MatrixResponse>,
-                response: Response<MatrixResponse>
-            ) {
+    return when (mode) {
+      TransportMode.TRAIN,
+      TransportMode.BUS,
+      TransportMode.TRAM -> {
+        // Use SbbTimetable for public transport
+        val results = mutableMapOf<Pair<Coordinate, Coordinate>, Double?>()
+        for (end in ends) {
+          val duration =
               try {
-                cont.resume(parseMatrixResponse(start, ends, response))
+                val from = start
+                val to = end
+                trainTimetable.getFastestRoute(from, to)?.toDouble()
               } catch (e: Exception) {
-                cont.resumeWithException(e)
+                Log.e(
+                    "DurationMatrixHybrid",
+                    "Failed to fetch public transport duration from $start to $end",
+                    e)
+                null
               }
-            }
+          results[start.coordinate to end.coordinate] = duration
+        }
+        results
+      }
+      else -> {
+        // Mapbox for CAR or WALKING
+        val points = buildPoints(start.coordinate, ends.map { it.coordinate })
+        val client = buildClient(points, mode)
 
-            override fun onFailure(call: Call<MatrixResponse>, t: Throwable) {
-              Log.e("DurationMatrixHybrid", "Matrix request failed.", t)
-              cont.resume(emptyDurations(start, ends))
-            }
-          })
+        suspendCancellableCoroutine { cont ->
+          client.enqueueCall(
+              object : Callback<MatrixResponse> {
+                override fun onResponse(
+                    call: Call<MatrixResponse>,
+                    response: Response<MatrixResponse>
+                ) {
+                  try {
+                    cont.resume(
+                        parseMatrixResponse(start.coordinate, ends.map { it.coordinate }, response))
+                  } catch (e: Exception) {
+                    cont.resumeWithException(e)
+                  }
+                }
+
+                override fun onFailure(call: Call<MatrixResponse>, t: Throwable) {
+                  Log.e("DurationMatrixHybrid", "Matrix request failed.", t)
+                  cont.resume(emptyDurations(start.coordinate, ends.map { it.coordinate }))
+                }
+              })
+        }
+      }
     }
   }
 
