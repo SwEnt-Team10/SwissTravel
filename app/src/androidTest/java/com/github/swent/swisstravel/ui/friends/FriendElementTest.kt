@@ -29,7 +29,9 @@ class FriendElementTest {
           profilePicUrl = "",
           preferences = emptyList(),
           friends = emptyList(),
-          stats = UserStats())
+          stats = UserStats(),
+          emptyList(),
+          emptyList())
 
   @Test
   fun friendElement_showsArrowWhenNotPendingOrNotShouldAccept() {

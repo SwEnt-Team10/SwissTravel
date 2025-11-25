@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.friends
 
+import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -33,7 +34,9 @@ class AddFriendScreenTest {
             profilePicUrl = "",
             preferences = emptyList(),
             friends = emptyList(),
-            stats = UserStats())
+            stats = UserStats(),
+            emptyList(),
+            emptyList())
 
     var searchResults: List<User> = emptyList()
 
@@ -61,6 +64,18 @@ class AddFriendScreenTest {
     override suspend fun removeFriend(uid: String, friendUid: String) {
       // not used here
     }
+
+    override suspend fun updateUser(
+        uid: String,
+        name: String?,
+        biography: String?,
+        profilePicUrl: String?,
+        preferences: List<Preference>?,
+        pinnedTripsUids: List<String>?,
+        pinnedImagesUris: List<Uri>?
+    ) {
+      // no op in test
+    }
   }
 
   @Test
@@ -77,7 +92,9 @@ class AddFriendScreenTest {
             profilePicUrl = "",
             preferences = emptyList(),
             friends = emptyList(),
-            stats = UserStats())
+            stats = UserStats(),
+            emptyList(),
+            emptyList())
 
     fakeRepo.searchResults = listOf(targetUser)
 
