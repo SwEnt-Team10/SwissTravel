@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
@@ -60,25 +61,24 @@ fun FriendElement(
                     .padding(horizontal = dimensionResource(R.dimen.trip_element_padding)),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-              FriendNameSection(userToDisplay = userToDisplay)
+              FriendNameSection(userToDisplay = userToDisplay, modifier = Modifier.weight(1f))
               FriendArrowSection(isPendingRequest, shouldAccept, onAccept, onDecline)
             }
       }
 }
 
 @Composable
-private fun FriendNameSection(userToDisplay: User) {
-  Row(verticalAlignment = Alignment.CenterVertically) {
+private fun FriendNameSection(userToDisplay: User, modifier: Modifier = Modifier) {
+  Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
     FriendCircle(profilePicUrl = userToDisplay.profilePicUrl)
     Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
-    Box(modifier = Modifier.fillMaxWidth(0.9f)) {
-      Text(
-          text = userToDisplay.name,
-          style = MaterialTheme.typography.bodyLarge,
-          color = MaterialTheme.colorScheme.onSurface,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis)
-    }
+    Text(
+        text = userToDisplay.name,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.weight(1f))
   }
 }
 
@@ -125,6 +125,7 @@ fun FriendArrowSection(
             tint = MaterialTheme.colorScheme.primary)
       }
 
+      Spacer(modifier = Modifier.width(20.dp))
       IconButton(onClick = onDecline) {
         Icon(
             imageVector = Icons.Default.Close,

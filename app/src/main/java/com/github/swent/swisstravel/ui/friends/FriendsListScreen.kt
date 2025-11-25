@@ -1,13 +1,18 @@
 package com.github.swent.swisstravel.ui.friends
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ExpandLess
@@ -22,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -29,6 +35,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
@@ -100,9 +107,11 @@ fun FriendsListScreen(
                         bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
               PendingFriendRequestsSection(
                   pendingFriends = uiState.pendingFriends,
-                  currentUserUid = uiState.currentUserUid,
                   onAccept = { friendUid -> friendsViewModel.acceptFriendRequest(friendUid) },
                   onDecline = { friendUid -> friendsViewModel.removeFriend(friendUid) })
+
+              Spacer(modifier = Modifier.height(20.dp))
+
               FriendsListSection(
                   friends = friendsViewModel.friendsToDisplay,
                   onSelectFriend = onSelectFriend,
@@ -219,46 +228,70 @@ fun FriendsSearchBar(
           ))
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PendingFriendRequestsSection(
     pendingFriends: List<User>,
-    currentUserUid: String,
     onAccept: (String) -> Unit,
     onDecline: (String) -> Unit,
 ) {
   if (pendingFriends.isEmpty()) return
 
+  val context = LocalContext.current
   var expanded by rememberSaveable { mutableStateOf(false) }
 
-  Column(modifier = Modifier.fillMaxWidth()) {
-    TextButton(onClick = { expanded = !expanded }) {
-      Text(
-          text = stringResource(R.string.pending_friend_requests, pendingFriends.size),
-          style = MaterialTheme.typography.titleMedium,
-          color = MaterialTheme.colorScheme.onBackground,
-          modifier = Modifier.weight(1f))
-      Icon(
-          imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-          contentDescription = null,
-          tint = MaterialTheme.colorScheme.onSurfaceVariant)
-    }
+  Card(
+      modifier = Modifier.fillMaxWidth(),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.trip_element_radius)),
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary)) {
+        Column(modifier = Modifier.fillMaxWidth()) {
 
-    if (expanded) {
-      Column(
-          verticalArrangement =
-              Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement))) {
-            pendingFriends.forEach { friend ->
-              val friendWasSentToCurrentUser = friend.uid == currentUserUid
+          // Header row (inside the card)
+          Row(
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = dimensionResource(R.dimen.trip_element_padding))
+                      .padding(vertical = dimensionResource(R.dimen.small_spacer))
+                      .clickable { expanded = !expanded },
+              verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = stringResource(R.string.pending_friend_requests, pendingFriends.size),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f))
+                Icon(
+                    imageVector =
+                        if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
 
-              FriendElement(
-                  userToDisplay = friend,
-                  onClick = {},
-                  isPendingRequest = true,
-                  shouldAccept = friendWasSentToCurrentUser,
-                  onAccept = { onAccept(friend.uid) },
-                  onDecline = { onDecline(friend.uid) })
-            }
+          if (expanded) {
+            Column(
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        dimensionResource(R.dimen.trip_list_vertical_arrangement))) {
+                  pendingFriends.forEach { friend ->
+                    FriendElement(
+                        userToDisplay = friend,
+                        onClick = { /*TODO navigate to profile*/},
+                        isPendingRequest = true,
+                        shouldAccept = true,
+                        onAccept = {
+                          Toast.makeText(context, "Friend request accepted!", Toast.LENGTH_SHORT)
+                              .show()
+                          onAccept(friend.uid)
+                          expanded = false
+                        },
+                        onDecline = {
+                          Toast.makeText(context, "Friend request declined!", Toast.LENGTH_SHORT)
+                              .show()
+                          onDecline(friend.uid)
+                          expanded = false
+                        })
+                  }
+                }
           }
-    }
-  }
+        }
+      }
 }

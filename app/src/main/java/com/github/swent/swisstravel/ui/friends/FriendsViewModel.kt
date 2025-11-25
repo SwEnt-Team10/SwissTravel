@@ -39,7 +39,7 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
       val currentUser = userRepository.getCurrentUser()
 
       val acceptedFriends = currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }
-      val pendingEntries = currentUser.friends.filter { it.status == FriendStatus.PENDING }
+      val pendingEntries = currentUser.friends.filter { it.status == FriendStatus.PENDING_INCOMING }
 
       val friends = acceptedFriends.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
       val pendingUsers =
@@ -103,6 +103,7 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     viewModelScope.launch {
       try {
         userRepository.sendFriendRequest(_uiState.value.currentUserUid, toUid)
+        refreshFriends()
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error sending friend request: ${e.message}") }
       }
@@ -113,6 +114,7 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     viewModelScope.launch {
       try {
         userRepository.acceptFriendRequest(_uiState.value.currentUserUid, toUid)
+        refreshFriends()
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error accepting friend request: ${e.message}") }
       }

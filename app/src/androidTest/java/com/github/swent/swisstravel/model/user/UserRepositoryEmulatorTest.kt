@@ -252,7 +252,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     assertEquals(1, friendsA.size)
     val friendA = friendsA.first() as Map<*, *>
     assertEquals(uidB, friendA["uid"])
-    assertEquals("PENDING", friendA["status"])
+    assertEquals("PENDING_OUTGOING", friendA["status"])
 
     // Assert: B also has a PENDING entry for A
     val docB = FirebaseEmulator.firestore.collection("users").document(uidB).get().await()
@@ -260,7 +260,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     assertEquals(1, friendsB.size)
     val friendB = friendsB.first() as Map<*, *>
     assertEquals(uidA, friendB["uid"])
-    assertEquals("PENDING", friendB["status"])
+    assertEquals("PENDING_INCOMING", friendB["status"])
   }
 
   @Test
