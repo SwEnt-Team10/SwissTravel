@@ -64,11 +64,44 @@ import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
+/**
+ * Represents navigation data for the app.
+ *
+ * @property navController The NavHostController used for navigation.
+ * @property navigationActions The NavigationActions used for navigation.
+ * @property startDestination The starting destination for navigation.
+ * @property currentRoute The current route in the navigation graph.
+ */
+private data class NavData(
+    val navController: NavHostController,
+    val navigationActions: NavigationActions,
+    val startDestination: String,
+    val currentRoute: String?
+)
+
+/**
+ * Represents whether to show the bottom bar.
+ *
+ * @property showBottomBar Whether to show the bottom bar.
+ * @property myTripsViewModel The MyTripsViewModel used for navigation.
+ */
+private data class BottomBarShow(
+    val showBottomBar: Boolean,
+    val myTripsViewModel: MyTripsViewModel
+)
+
+/** Provides a singleton instance of the OkHttpClient for making HTTP requests. */
 object HttpClientProvider {
   var client: OkHttpClient = OkHttpClient()
 }
 
+/** The main activity of the app. */
 class MainActivity : ComponentActivity() {
+  /**
+   * Called when the activity is starting.
+   *
+   * @param savedInstanceState The previously saved state of the activity.
+   */
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
@@ -146,39 +179,42 @@ fun SwissTravelApp(
         else -> false
       }
 
+  val bottomBarShow = BottomBarShow(showBottomBar, myTripsViewModel)
+  val navData = NavData(navController, navigationActions, startDestination, currentRoute)
+
   SwissTravelScaffold(
       context = context,
-      navController = navController,
-      navigationActions = navigationActions,
       credentialManager = credentialManager,
-      startDestination = startDestination,
-      showBottomBar = showBottomBar,
-      currentRoute = currentRoute,
-      myTripsViewModel = myTripsViewModel)
+      navData = navData,
+      bottomBarShow = bottomBarShow)
 }
 
+/**
+ * Handles the main scaffold for the Swiss Travel App.
+ *
+ * @param context The context of the current state of the application.
+ * @param credentialManager The CredentialManager for handling user credentials.
+ * @param navData The navigation data for the app.
+ * @param bottomBarShow Whether to show the bottom bar.
+ */
 @Composable
 private fun SwissTravelScaffold(
     context: Context,
-    navController: NavHostController,
-    navigationActions: NavigationActions,
     credentialManager: CredentialManager,
-    startDestination: String,
-    showBottomBar: Boolean,
-    currentRoute: String?,
-    myTripsViewModel: MyTripsViewModel
+    navData: NavData,
+    bottomBarShow: BottomBarShow
 ) {
   /* System back button handler */
   BackHandler {
     when {
       // If the current route is authentication then quit the app
-      currentRoute == Screen.Landing.route -> {
+      navData.currentRoute == Screen.Landing.route -> {
         (context as? ComponentActivity)?.finish()
       }
 
       // If the stack is not empty, go back to the previous screen
-      navController.previousBackStackEntry != null -> {
-        navController.popBackStack()
+      navData.navController.previousBackStackEntry != null -> {
+        navData.navController.popBackStack()
       }
 
       // If the stack is empty, do nothing (prevents accidental app exit)
@@ -190,30 +226,41 @@ private fun SwissTravelScaffold(
 
   Scaffold(
       bottomBar = {
-        if (showBottomBar) {
+        if (bottomBarShow.showBottomBar) {
           BottomNavigationMenu(
               selectedTab =
-                  when (currentRoute) {
+                  when (navData.currentRoute) {
                     Screen.CurrentTrip.route -> Tab.CurrentTrip
                     Screen.MyTrips.route -> Tab.MyTrips
                     Screen.Profile.route -> Tab.Profile
                     else -> Tab.CurrentTrip
                   },
-              onTabSelected = { tab -> navigationActions.navigateTo(tab.destination) },
+              onTabSelected = { tab -> navData.navigationActions.navigateTo(tab.destination) },
               modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
         }
       }) { innerPadding ->
         SwissTravelNavHost(
             context = context,
-            navController = navController,
-            navigationActions = navigationActions,
+            navController = navData.navController,
+            navigationActions = navData.navigationActions,
             credentialManager = credentialManager,
-            startDestination = startDestination,
+            startDestination = navData.startDestination,
             modifier = Modifier.padding(innerPadding),
-            myTripsViewModel = myTripsViewModel)
+            myTripsViewModel = bottomBarShow.myTripsViewModel)
       }
 }
 
+/**
+ * Sets up the navigation graph for the Swiss Travel App.
+ *
+ * @param context The context of the current state of the application.
+ * @param navController The NavHostController used for navigation.
+ * @param navigationActions The NavigationActions used for navigation.
+ * @param credentialManager The CredentialManager for handling user credentials.
+ * @param startDestination The starting destination for navigation.
+ * @param modifier The modifier to apply to this layout.
+ * @param myTripsViewModel The MyTripsViewModel used for navigation.
+ */
 @Composable
 private fun SwissTravelNavHost(
     context: Context,
@@ -235,6 +282,12 @@ private fun SwissTravelNavHost(
   }
 }
 
+/**
+ * Sets up the authentication navigation graph for the Swiss Travel App.
+ *
+ * @param navigationActions The NavigationActions used for navigation.
+ * @param credentialManager The CredentialManager for handling user credentials.
+ */
 private fun NavGraphBuilder.authNavGraph(
     navigationActions: NavigationActions,
     credentialManager: CredentialManager
@@ -261,6 +314,11 @@ private fun NavGraphBuilder.authNavGraph(
   }
 }
 
+/**
+ * Sets up the profile navigation graph for the Swiss Travel App.
+ *
+ * @param navigationActions The NavigationActions used for navigation.
+ */
 private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions) {
   navigation(
       startDestination = Screen.Profile.route,
@@ -275,6 +333,11 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
   }
 }
 
+/**
+ * Sets up the current trip navigation graph for the Swiss Travel App.
+ *
+ * @param navigationActions The NavigationActions used for navigation.
+ */
 private fun NavGraphBuilder.currentTripNavGraph(navigationActions: NavigationActions) {
   navigation(
       startDestination = Screen.CurrentTrip.route,
@@ -288,6 +351,11 @@ private fun NavGraphBuilder.currentTripNavGraph(navigationActions: NavigationAct
   }
 }
 
+/**
+ * Sets up the my trips navigation graph for the Swiss Travel App.
+ *
+ * @param context The context of the current state of the application.
+ */
 private fun NavGraphBuilder.myTripsNavGraph(
     context: Context,
     navigationActions: NavigationActions,
@@ -315,6 +383,11 @@ private fun NavGraphBuilder.myTripsNavGraph(
   }
 }
 
+/**
+ * Sets up the past trips navigation graph for the Swiss Travel App.
+ *
+ * @param navigationActions The NavigationActions used for navigation.
+ */
 private fun NavGraphBuilder.pastTripsNavGraph(navigationActions: NavigationActions) {
   navigation(
       startDestination = Screen.PastTrips.route,
@@ -328,6 +401,11 @@ private fun NavGraphBuilder.pastTripsNavGraph(navigationActions: NavigationActio
   }
 }
 
+/**
+ * Sets up the trip info navigation graph for the Swiss Travel App.
+ *
+ * @param context The context of the current state of the application.
+ */
 private fun NavGraphBuilder.tripInfoNavGraph(
     context: Context,
     navController: NavHostController,
@@ -382,6 +460,11 @@ private fun NavGraphBuilder.tripInfoNavGraph(
   }
 }
 
+/**
+ * Sets up the activity info route for the Swiss Travel App.
+ *
+ * @param context The context of the current state of the application.
+ */
 @Composable
 private fun ActivityInfoRoute(
     context: Context,
@@ -417,6 +500,11 @@ private fun ActivityInfoRoute(
   }
 }
 
+/**
+ * Sets up the trip settings navigation graph for the Swiss Travel App.
+ *
+ * @param navController The NavHostController used for navigation.
+ */
 private fun NavGraphBuilder.tripSettingsNavGraph(
     navController: NavHostController,
     navigationActions: NavigationActions
