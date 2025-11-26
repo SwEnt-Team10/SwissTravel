@@ -189,6 +189,12 @@ private fun FriendsTopAppBar(
               actionIconContentColor = MaterialTheme.colorScheme.onBackground))
 }
 
+/**
+ * A section for displaying the list of friends.
+ *
+ * @param friends The list of friends to display.
+ * @param onSelectFriend The function to call when a friend is selected.
+ */
 @Composable
 private fun FriendsListSection(
     friends: List<User>,
