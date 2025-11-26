@@ -123,9 +123,17 @@ fun SwissTravelApp(
   val myTripsViewModel: MyTripsViewModel = viewModel()
   val myTripsUiState by myTripsViewModel.uiState.collectAsState()
 
+  val currentUser = FirebaseAuth.getInstance().currentUser
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.Landing.name
-      else Screen.CurrentTrip.name
+      if ((currentUser != null && currentUser.isEmailVerified) ||
+          currentUser?.isAnonymous == true) {
+        Screen.CurrentTrip.name
+      } else {
+        if (currentUser != null) {
+          FirebaseAuth.getInstance().signOut()
+        }
+        Screen.Landing.name
+      }
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route

@@ -1,5 +1,7 @@
 package com.github.swent.swisstravel.model.user
 
+import android.net.Uri
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -35,7 +37,9 @@ class UserRepositoryFirebase(
           profilePicUrl = "",
           preferences = emptyList(),
           friends = emptyList(),
-          stats = UserStats())
+          stats = UserStats(),
+          pinnedTripsUids = emptyList(),
+          pinnedImagesUris = emptyList())
     }
 
     val uid = firebaseUser.uid
@@ -291,6 +295,49 @@ class UserRepositoryFirebase(
   }
 
   /**
+   * Updates basic user fields in Firestore.
+   *
+   * @param uid The UID of the user.
+   * @param name Optional new name.
+   * @param biography Optional new biography.
+   * @param profilePicUrl Optional new profile picture URL.
+   * @param preferences Optional list of updated preferences.
+   * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
+   * @param pinnedImagesUris Optional updated list of pinned image URIs.
+   */
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedImagesUris: List<Uri>?
+  ) {
+    if (uid == "guest") return
+
+    val updates = mutableMapOf<String, Any?>()
+
+    if (name != null) updates["name"] = name
+    if (biography != null) updates["biography"] = biography
+    if (profilePicUrl != null) updates["profilePicUrl"] = profilePicUrl
+    if (preferences != null) updates["preferences"] = preferences.map { it.name }
+    if (pinnedTripsUids != null) updates["pinnedTripsUids"] = pinnedTripsUids
+    if (pinnedImagesUris != null)
+        updates["pinnedImagesUris"] = pinnedImagesUris.map { it.toString() }
+
+    // If nothing to update, skip Firestore
+    if (updates.isEmpty()) return
+
+    val docRef = db.collection("users").document(uid)
+    val snapshot = docRef.get().await()
+
+    check(snapshot.exists()) { "User document does not exist for uid: $uid" }
+
+    docRef.update(updates).await()
+  }
+
+  /**
    * Helper function to create a User object from a DocumentSnapshot.
    *
    * @param doc The DocumentSnapshot to create the User from.
@@ -301,6 +348,10 @@ class UserRepositoryFirebase(
     val prefs = parsePreferences(doc)
     val friends = parseFriends(doc)
     val stats = parseStats(doc)
+    val pinnedTripsUids =
+        (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val pinnedImagesUrisStrings = doc["pinnedImagesUris"] as? List<*> ?: emptyList<Uri>()
+    val pinnedImagesUris = pinnedImagesUrisStrings.mapNotNull { (it as? String)?.toUri() }
 
     return User(
         uid = uid,
@@ -310,7 +361,9 @@ class UserRepositoryFirebase(
         profilePicUrl = doc["profilePicUrl"] as? String ?: "",
         preferences = prefs,
         friends = friends,
-        stats = stats)
+        stats = stats,
+        pinnedTripsUids = pinnedTripsUids,
+        pinnedImagesUris = pinnedImagesUris)
   }
 
   /**
@@ -330,7 +383,9 @@ class UserRepositoryFirebase(
             profilePicUrl = firebaseUser.photoUrl?.toString().orEmpty(),
             preferences = emptyList(),
             friends = emptyList(),
-            stats = UserStats())
+            stats = UserStats(),
+            pinnedTripsUids = emptyList(),
+            pinnedImagesUris = emptyList())
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser
