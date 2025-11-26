@@ -63,6 +63,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+/** Object containing test tags for UI testing of the DailyViewScreen. */
 object DailyViewScreenTestTags {
   const val TITLE = "dailyViewScreenTitle"
   const val BACK_BUTTON = "dailyViewScreenBackButton"
@@ -83,6 +84,19 @@ object DailyViewScreenTestTags {
   const val STEP_CARD = "dailyViewScreenStepCard"
 }
 
+/**
+ * A screen that displays the daily itinerary of a trip. It shows a map of the day's route and a
+ * list of travel segments and activities. Note : This class was partially written with the help of
+ * an AI. If you have any question, don't hesitate to contact the author of the class (@JstnFv)
+ *
+ * @param uid The unique identifier of the trip to display.
+ * @param tripInfoViewModel The ViewModel providing data and logic for the trip info.
+ * @param onMyTrips A callback to navigate back to the list of user's trips.
+ * @param onEditTrip A callback to navigate to the trip editing screen.
+ * @param isOnCurrentTripScreen A boolean indicating if this screen is part of the current trip
+ *   flow, which affects the visibility of the back button.
+ * @param onActivityClick A callback invoked when a user clicks on a trip activity for more details.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyViewScreen(
@@ -241,6 +255,16 @@ fun DailyViewScreen(
       }
 }
 
+/**
+ * The top app bar for the Daily View screen. Displays the trip title and action buttons for
+ * navigation, favoriting, and editing.
+ *
+ * @param ui The current UI state of the trip.
+ * @param isOnCurrentTripScreen A boolean to control the visibility of the back button.
+ * @param onBack Callback for when the back button is clicked.
+ * @param onToggleFavorite Callback for when the favorite button is clicked.
+ * @param onEdit Callback for when the edit button is clicked.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun DailyViewTopAppBar(
@@ -295,6 +319,13 @@ private fun DailyViewTopAppBar(
       })
 }
 
+/**
+ * A navigator component to switch between different days of the trip.
+ *
+ * @param currentDayIndex The index of the currently displayed day.
+ * @param days A list of all available dates for the trip.
+ * @param onDayChange A callback invoked with the new day index when the user navigates.
+ */
 @Composable
 private fun DayNavigator(currentDayIndex: Int, days: List<LocalDate>, onDayChange: (Int) -> Unit) {
   val currentDay = days.getOrNull(currentDayIndex)
@@ -332,6 +363,16 @@ private fun DayNavigator(currentDayIndex: Int, days: List<LocalDate>, onDayChang
       }
 }
 
+/**
+ * A card that displays the map for the current day's itinerary.
+ *
+ * @param mapState The state object for the map, containing locations and drawing options.
+ * @param onToggleFullscreen Callback to enter fullscreen map view.
+ * @param onToggleNavMode Callback to toggle navigation from the user's current position.
+ * @param onUserLocationUpdate Callback for when the user's location is updated.
+ * @param isComputing A boolean to show a loading indicator if the schedule is being processed.
+ * @param hasSteps A boolean indicating if there are any steps to display on the map.
+ */
 @Composable
 private fun DailyMapCard(
     mapState: MapState,
@@ -388,6 +429,17 @@ private fun DailyMapCard(
       }
 }
 
+/**
+ * A card representing a single step in the daily itinerary, which can be a travel segment or an
+ * activity.
+ *
+ * @param stepNumber The sequential number of the step in the day.
+ * @param element The [TripElement] data for this step.
+ * @param isSelected A boolean indicating if this card is currently selected, which changes its
+ *   appearance.
+ * @param onMapClick A callback invoked when the user clicks the map icon on a travel segment.
+ * @param onDetailsClick A callback invoked when the user clicks on an activity card.
+ */
 @Composable
 private fun DailyStepCard(
     stepNumber: Int,
@@ -494,6 +546,13 @@ private fun DailyStepCard(
       }
 }
 
+/**
+ * A fullscreen map overlay.
+ *
+ * @param mapState The state for the map to display.
+ * @param onExit Callback to exit the fullscreen mode.
+ * @param onUserLocationUpdate Callback that provides updates to the user's location.
+ */
 @Composable
 private fun FullScreenMap(
     mapState: MapState,
@@ -518,6 +577,15 @@ private fun FullScreenMap(
   }
 }
 
+/**
+ * Prepares the list of locations to be displayed on the map for a given day.
+ *
+ * @param dailySteps The list of [TripElement]s for the current day.
+ * @param currentGps The user's current GPS position, if available.
+ * @param drawFromCurrentPosition A boolean indicating whether to include the user's current
+ *   location as the starting point.
+ * @return A distinct list of [Location]s to be plotted on the map.
+ */
 private fun mapLocationsForDay(
     dailySteps: List<TripElement>,
     currentGps: Point?,
