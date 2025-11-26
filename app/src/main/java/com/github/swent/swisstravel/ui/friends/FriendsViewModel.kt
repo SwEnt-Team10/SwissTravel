@@ -37,7 +37,13 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     viewModelScope.launch { refreshFriendsSuspend() }
   }
 
-  /** Refreshes the friends list from the repository. Is private because of security issues */
+  /**
+   * Refreshes the friends list from the repository. It filters accepted and pending friend
+   * requests. This function is private because a view model should not expose public suspend
+   * functions. (See
+   * https://next.sonarqube.com/sonarqube/coding_rules?open=kotlin%3AS6311&rule_key=kotlin%3AS6311)
+   * *
+   */
   private suspend fun refreshFriendsSuspend() {
     _uiState.value = uiState.value.copy(isLoading = true, errorMsg = null)
     try {

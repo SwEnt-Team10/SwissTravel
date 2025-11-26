@@ -35,7 +35,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
@@ -120,7 +119,7 @@ fun FriendsListScreen(
                   onAccept = { friendUid -> friendsViewModel.acceptFriendRequest(friendUid) },
                   onDecline = { friendUid -> friendsViewModel.removeFriend(friendUid) })
 
-              Spacer(modifier = Modifier.height(20.dp))
+              Spacer(modifier = Modifier.height(dimensionResource(R.dimen.friends_spacer)))
 
               FriendsListSection(
                   friends = friendsViewModel.friendsToDisplay,
@@ -148,6 +147,7 @@ private fun FriendsTopAppBar(
     onStartSearch: () -> Unit,
     onCloseSearch: () -> Unit,
 ) {
+  val maxLines = 1
   TopAppBar(
       title = {
         if (isSearching) {
@@ -161,7 +161,7 @@ private fun FriendsTopAppBar(
               text = stringResource(R.string.friends_list),
               style = MaterialTheme.typography.titleLarge,
               color = MaterialTheme.colorScheme.onBackground,
-              maxLines = 1,
+              maxLines = maxLines,
               overflow = TextOverflow.Ellipsis)
         }
       },

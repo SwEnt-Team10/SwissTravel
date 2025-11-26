@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
@@ -90,6 +89,7 @@ fun FriendElement(
  */
 @Composable
 private fun FriendNameSection(userToDisplay: User, modifier: Modifier = Modifier) {
+  val maxLines = 1
   Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
     FriendCircle(profilePicUrl = userToDisplay.profilePicUrl)
     Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
@@ -97,7 +97,7 @@ private fun FriendNameSection(userToDisplay: User, modifier: Modifier = Modifier
         text = userToDisplay.name,
         style = MaterialTheme.typography.bodyLarge,
         color = MaterialTheme.colorScheme.onSurface,
-        maxLines = 1,
+        maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.weight(1f))
   }
@@ -160,7 +160,7 @@ fun FriendArrowSection(
                 tint = MaterialTheme.colorScheme.primary)
           }
 
-      Spacer(modifier = Modifier.width(20.dp))
+      Spacer(modifier = Modifier.width(dimensionResource(R.dimen.friends_spacer)))
       IconButton(
           onClick = onDecline, modifier = Modifier.testTag(FriendElementTestTags.DECLINE_BUTTON)) {
             Icon(

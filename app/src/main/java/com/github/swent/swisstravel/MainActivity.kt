@@ -108,6 +108,12 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
   }
 }
 
+/**
+ * Retrieves the FriendsViewModel scoped to the FriendsList navigation graph.
+ *
+ * @param navController The NavHostController used for navigation.
+ * @return The FriendsViewModel instance.
+ */
 @Composable
 fun friendsViewModel(navController: NavHostController): FriendsViewModel {
   val currentEntry by navController.currentBackStackEntryAsState()
@@ -123,6 +129,7 @@ fun friendsViewModel(navController: NavHostController): FriendsViewModel {
     viewModel()
   }
 }
+
 /**
  * The main composable function for the Swiss Travel App.
  *
@@ -488,6 +495,12 @@ private fun NavGraphBuilder.tripSettingsNavGraph(
   }
 }
 
+/**
+ * The navigation graph for the friends list and add friend screens.
+ *
+ * @param navController The NavHostController used for navigation.
+ * @param navigationActions The NavigationActions used for navigation actions.
+ */
 private fun NavGraphBuilder.friendsListNavGraph(
     navController: NavHostController,
     navigationActions: NavigationActions
