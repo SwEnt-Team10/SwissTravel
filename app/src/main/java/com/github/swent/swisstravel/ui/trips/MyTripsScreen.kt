@@ -159,13 +159,15 @@ fun MyTripsScreen(
             onPastTrips = onPastTrips)
       },
       floatingActionButton = {
-        FloatingActionButton(
-            onClick = onCreateTrip,
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary,
-            modifier = Modifier.testTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)) {
-              Icon(Icons.Default.Add, contentDescription = "Add")
-            }
+        if (!uiState.isSelectionMode) {
+          FloatingActionButton(
+              onClick = onCreateTrip,
+              containerColor = MaterialTheme.colorScheme.primary,
+              contentColor = MaterialTheme.colorScheme.onPrimary,
+              modifier = Modifier.testTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)) {
+                Icon(Icons.Default.Add, contentDescription = "Add")
+              }
+        }
       },
       content = { padding ->
         Column(

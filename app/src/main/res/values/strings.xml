@@ -239,5 +239,20 @@
     <string name="no_image_fallback">No images available for this activity.</string>
     <string name="activity_tip">Tip: Check weather &amp; opening hours before going.</string>
 
+    <!-- Friends List -->
+    <string name="friends_list">Friends</string>
+    <string name="no_friends">You have no friends added.</string>
+    <string name="add_friend">Add Friend</string>
+    <string name="search_friends">Search</string>
+    <string name="close_search">Close Search</string>
+    <string name="search_users">Search users</string>
+    <string name="no_users_found">No users found</string>
+    <string name="go_back">Go back</string>
+    <string name="pending_friend_requests">Pending Friend Requests (%1$d)</string>
+    <string name="accept_friend">"Accept friend request"</string>
+    <string name="deny_friend">Deny friend request</string>
+
+
+
 
 </resources>
