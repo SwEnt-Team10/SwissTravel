@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.WikiImageRepository
 import com.github.swent.swisstravel.ui.map.MapScreen
@@ -56,7 +57,10 @@ object ActivityInfosTestTag {
 fun ActivityInfos(
     activity: Activity,
     onBack: () -> Unit = {},
-    wikiRepo: WikiImageRepository = WikiImageRepository.default()
+    wikiRepo: WikiImageRepository = WikiImageRepository.default(),
+    mapContent: @Composable (Location) -> Unit = { location ->
+      MapScreen(locations = listOf(location), drawRoute = false, onUserLocationUpdate = {})
+    }
 ) {
   Scaffold(
       topBar = {
@@ -136,10 +140,7 @@ fun ActivityInfos(
               Box(
                   modifier =
                       Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(12.dp))) {
-                    MapScreen(
-                        locations = listOf(activity.location),
-                        drawRoute = false,
-                        onUserLocationUpdate = {})
+                    mapContent(activity.location)
                   }
 
               Spacer(Modifier.height(dimensionResource(R.dimen.activity_info_images_padding)))
