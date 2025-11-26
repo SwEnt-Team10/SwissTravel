@@ -39,6 +39,9 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
+import com.github.swent.swisstravel.ui.friends.AddFriendScreen
+import com.github.swent.swisstravel.ui.friends.FriendsListScreen
+import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.BottomNavigationMenu
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -140,6 +143,28 @@ fun tripSettingsViewModel(navController: NavHostController): TripSettingsViewMod
 }
 
 /**
+ * Retrieves the FriendsViewModel scoped to the FriendsList navigation graph.
+ *
+ * @param navController The NavHostController used for navigation.
+ * @return The FriendsViewModel instance.
+ */
+@Composable
+fun friendsViewModel(navController: NavHostController): FriendsViewModel {
+  val currentEntry by navController.currentBackStackEntryAsState()
+
+  val parentEntry =
+      remember(currentEntry) {
+        runCatching { navController.getBackStackEntry(Screen.FriendsList.name) }.getOrNull()
+      }
+
+  return if (parentEntry != null) {
+    viewModel(parentEntry)
+  } else {
+    viewModel()
+  }
+}
+
+/**
  * The main composable function for the Swiss Travel App.
  *
  * @param context The context of the current state of the application.
@@ -175,6 +200,7 @@ fun SwissTravelApp(
       when (currentRoute) {
         Screen.CurrentTrip.route,
         Screen.MyTrips.route,
+        Screen.FriendsList.route,
         Screen.Profile.route -> !myTripsUiState.isSelectionMode
         else -> false
       }
@@ -232,6 +258,7 @@ private fun SwissTravelScaffold(
                   when (navData.currentRoute) {
                     Screen.CurrentTrip.route -> Tab.CurrentTrip
                     Screen.MyTrips.route -> Tab.MyTrips
+                    Screen.FriendsList.route -> Tab.Friends
                     Screen.Profile.route -> Tab.Profile
                     else -> Tab.CurrentTrip
                   },
@@ -279,6 +306,7 @@ private fun SwissTravelNavHost(
     pastTripsNavGraph(navigationActions)
     tripInfoNavGraph(context, navController, navigationActions)
     tripSettingsNavGraph(navController, navigationActions)
+    friendsListNavGraph(navController, navigationActions)
   }
 }
 
@@ -560,6 +588,35 @@ private fun NavGraphBuilder.tripSettingsNavGraph(
             navigationActions.navigateTo(Screen.MyTrips, true)
           },
           onFailure = { navigationActions.goBack() })
+    }
+  }
+}
+
+/**
+ * The navigation graph for the friends list and add friend screens.
+ *
+ * @param navController The NavHostController used for navigation.
+ * @param navigationActions The NavigationActions used for navigation actions.
+ */
+private fun NavGraphBuilder.friendsListNavGraph(
+    navController: NavHostController,
+    navigationActions: NavigationActions
+) {
+  navigation(
+      startDestination = Screen.FriendsList.route,
+      route = Screen.FriendsList.name,
+  ) {
+    composable(Screen.FriendsList.route) {
+      val vm = friendsViewModel(navController)
+
+      FriendsListScreen(
+          friendsViewModel = vm, onAddFriend = { navigationActions.navigateTo(Screen.AddFriend) })
+    }
+
+    composable(Screen.AddFriend.route) {
+      val vm = friendsViewModel(navController)
+
+      AddFriendScreen(friendsViewModel = vm, onBack = { navigationActions.goBack() })
     }
   }
 }

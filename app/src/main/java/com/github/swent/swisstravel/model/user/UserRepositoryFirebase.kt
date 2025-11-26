@@ -270,8 +270,10 @@ class UserRepositoryFirebase(
     val fromFriends = parseFriends(fromSnap).toMutableList()
     val toFriends = parseFriends(toSnap).toMutableList()
 
-    ensurePendingEntry(friends = fromFriends, targetUid = toUid)
-    ensurePendingEntry(friends = toFriends, targetUid = fromUid)
+    ensurePendingEntry(
+        friends = fromFriends, targetUid = toUid, newStatus = FriendStatus.PENDING_OUTGOING)
+    ensurePendingEntry(
+        friends = toFriends, targetUid = fromUid, newStatus = FriendStatus.PENDING_INCOMING)
 
     return fromFriends to toFriends
   }
@@ -281,17 +283,23 @@ class UserRepositoryFirebase(
    * exists with PENDING or ACCEPTED, it is left untouched. Otherwise the status is set/overwritten
    * to PENDING.
    */
-  private fun ensurePendingEntry(friends: MutableList<Friend>, targetUid: String) {
+  private fun ensurePendingEntry(
+      friends: MutableList<Friend>,
+      targetUid: String,
+      newStatus: FriendStatus
+  ) {
     val idx = friends.indexOfFirst { it.uid == targetUid }
     if (idx < 0) {
-      friends.add(Friend(uid = targetUid, status = FriendStatus.PENDING))
+      friends.add(Friend(uid = targetUid, status = newStatus))
       return
     }
 
     val existing = friends[idx]
-    if (existing.status != FriendStatus.PENDING && existing.status != FriendStatus.ACCEPTED) {
-      friends[idx] = existing.copy(status = FriendStatus.PENDING)
+    if (existing.status == FriendStatus.ACCEPTED) {
+      return
     }
+
+    friends[idx] = existing.copy(status = newStatus)
   }
 
   /**
