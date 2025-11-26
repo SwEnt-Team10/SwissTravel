@@ -58,6 +58,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripSettingsViewModel
 import com.github.swent.swisstravel.ui.tripcreation.TripSummaryScreen
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersScreen
 import com.github.swent.swisstravel.ui.trips.MyTripsScreen
+import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.trips.PastTripsScreen
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreen
 import com.google.firebase.auth.FirebaseAuth
@@ -119,6 +120,8 @@ fun SwissTravelApp(
 ) {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
+  val myTripsViewModel: MyTripsViewModel = viewModel()
+  val myTripsUiState by myTripsViewModel.uiState.collectAsState()
 
   val startDestination =
       if (FirebaseAuth.getInstance().currentUser == null) Screen.Landing.name
@@ -131,7 +134,7 @@ fun SwissTravelApp(
       when (currentRoute) {
         Screen.CurrentTrip.route,
         Screen.MyTrips.route,
-        Screen.Profile.route -> true
+        Screen.Profile.route -> !myTripsUiState.isSelectionMode
         else -> false
       }
 
@@ -142,7 +145,8 @@ fun SwissTravelApp(
       credentialManager = credentialManager,
       startDestination = startDestination,
       showBottomBar = showBottomBar,
-      currentRoute = currentRoute)
+      currentRoute = currentRoute,
+      myTripsViewModel = myTripsViewModel)
 }
 
 @Composable
@@ -153,7 +157,8 @@ private fun SwissTravelScaffold(
     credentialManager: CredentialManager,
     startDestination: String,
     showBottomBar: Boolean,
-    currentRoute: String?
+    currentRoute: String?,
+    myTripsViewModel: MyTripsViewModel
 ) {
   /* System back button handler */
   BackHandler {
@@ -196,7 +201,8 @@ private fun SwissTravelScaffold(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             startDestination = startDestination,
-            modifier = Modifier.padding(innerPadding))
+            modifier = Modifier.padding(innerPadding),
+            myTripsViewModel = myTripsViewModel)
       }
 }
 
@@ -207,13 +213,14 @@ private fun SwissTravelNavHost(
     navigationActions: NavigationActions,
     credentialManager: CredentialManager,
     startDestination: String,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    myTripsViewModel: MyTripsViewModel
 ) {
   NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
     authNavGraph(navigationActions, credentialManager)
     profileNavGraph(navigationActions)
     currentTripNavGraph(navigationActions)
-    myTripsNavGraph(context, navigationActions)
+    myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
     tripInfoNavGraph(context, navController, navigationActions)
     tripSettingsNavGraph(navController, navigationActions)
@@ -275,7 +282,8 @@ private fun NavGraphBuilder.currentTripNavGraph(navigationActions: NavigationAct
 
 private fun NavGraphBuilder.myTripsNavGraph(
     context: Context,
-    navigationActions: NavigationActions
+    navigationActions: NavigationActions,
+    myTripsViewModel: MyTripsViewModel
 ) {
   navigation(
       startDestination = Screen.MyTrips.route,
@@ -283,6 +291,7 @@ private fun NavGraphBuilder.myTripsNavGraph(
   ) {
     composable(Screen.MyTrips.route) {
       MyTripsScreen(
+          myTripsViewModel = myTripsViewModel,
           onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
           onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
           onCreateTrip = { navigationActions.navigateTo(Screen.TripSettingsDates) },
