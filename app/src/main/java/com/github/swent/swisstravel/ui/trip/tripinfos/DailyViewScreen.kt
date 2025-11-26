@@ -48,9 +48,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Coordinate
@@ -184,7 +184,9 @@ fun DailyViewScreen(
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
               Text(
                   text = stringResource(R.string.no_locations_available),
-                  modifier = Modifier.padding(16.dp).testTag(DailyViewScreenTestTags.NO_LOCATIONS))
+                  modifier =
+                      Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                          .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
             }
           } else {
             Column(Modifier.fillMaxSize()) {
@@ -208,7 +210,10 @@ fun DailyViewScreen(
               // Daily Steps List
               LazyColumn(
                   modifier = Modifier.fillMaxSize().testTag(DailyViewScreenTestTags.LAZY_COLUMN),
-                  contentPadding = PaddingValues(bottom = 24.dp)) {
+                  contentPadding =
+                      PaddingValues(
+                          bottom =
+                              dimensionResource(R.dimen.daily_view_daily_step_bottom_padding))) {
                     itemsIndexed(dailySteps) { idx, el ->
                       DailyStepCard(
                           stepNumber = idx + 1,
@@ -298,7 +303,10 @@ private fun DayNavigator(currentDayIndex: Int, days: List<LocalDate>, onDayChang
   Row(
       modifier =
           Modifier.fillMaxWidth()
-              .padding(horizontal = 16.dp, vertical = 8.dp)
+              .padding(
+                  horizontal =
+                      dimensionResource(R.dimen.daily_view_day_navigation_horizontal_padding),
+                  vertical = dimensionResource(R.dimen.daily_view_day_navigation_vertical_padding))
               .testTag(DailyViewScreenTestTags.DAY_NAVIGATOR),
       horizontalArrangement = Arrangement.SpaceBetween,
       verticalAlignment = Alignment.CenterVertically) {
@@ -336,14 +344,17 @@ private fun DailyMapCard(
   Card(
       modifier =
           Modifier.fillMaxWidth()
-              .padding(horizontal = 16.dp, vertical = 8.dp)
+              .padding(
+                  horizontal =
+                      dimensionResource(R.dimen.daily_view_day_navigation_horizontal_padding),
+                  vertical = dimensionResource(R.dimen.daily_view_day_navigation_vertical_padding))
               .testTag(DailyViewScreenTestTags.MAP_CARD),
-      shape = RoundedCornerShape(12.dp),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.daily_view_map_corner_radius)),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
         Box(
             modifier =
                 Modifier.fillMaxWidth()
-                    .height(200.dp)
+                    .height(dimensionResource(R.dimen.daily_view_map_height))
                     .testTag(DailyViewScreenTestTags.MAP_CONTAINER)) {
               if (isComputing || !hasSteps) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -366,7 +377,7 @@ private fun DailyMapCard(
                   onClick = onToggleFullscreen,
                   modifier =
                       Modifier.align(Alignment.BottomEnd)
-                          .padding(12.dp)
+                          .padding(dimensionResource(R.dimen.daily_view_map_toggle_button_padding))
                           .testTag(DailyViewScreenTestTags.FULLSCREEN_BUTTON)) {
                     Icon(
                         imageVector = Icons.Filled.ZoomOutMap,
@@ -392,13 +403,23 @@ private fun DailyStepCard(
   Card(
       modifier =
           Modifier.fillMaxWidth()
-              .padding(horizontal = 16.dp, vertical = 8.dp)
+              .padding(
+                  horizontal =
+                      dimensionResource(R.dimen.daily_view_day_navigation_horizontal_padding),
+                  vertical = dimensionResource(R.dimen.daily_view_day_navigation_vertical_padding))
               .clickable(
                   enabled = element is TripElement.TripActivity,
                   onClick = onDetailsClick) // Card click goes to details
               .testTag(DailyViewScreenTestTags.STEP_CARD),
-      shape = RoundedCornerShape(12.dp),
-      elevation = CardDefaults.cardElevation(defaultElevation = if (isSelected) 8.dp else 2.dp),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.daily_view_map_corner_radius)),
+      elevation =
+          CardDefaults.cardElevation(
+              defaultElevation =
+                  if (isSelected) {
+                    dimensionResource(R.dimen.daily_view_card_elevation_on)
+                  } else {
+                    dimensionResource(R.dimen.daily_view_card_elevation_off)
+                  }),
       colors =
           CardDefaults.cardColors(
               containerColor =
@@ -406,11 +427,15 @@ private fun DailyStepCard(
                   else MaterialTheme.colorScheme.surfaceVariant)) {
         Column(modifier = Modifier.fillMaxWidth()) {
           Row(
-              modifier = Modifier.padding(16.dp).fillMaxWidth(),
+              modifier =
+                  Modifier.padding(dimensionResource(R.dimen.daily_view_date_padding))
+                      .fillMaxWidth(),
               verticalAlignment = Alignment.CenterVertically) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(end = 16.dp)) {
+                    modifier =
+                        Modifier.padding(
+                            end = dimensionResource(R.dimen.daily_view_date_end_padding))) {
                       Text(
                           text = startTime,
                           style = MaterialTheme.typography.bodyMedium,
@@ -418,7 +443,10 @@ private fun DailyStepCard(
                       Text(
                           text = "|",
                           style = MaterialTheme.typography.bodySmall,
-                          modifier = Modifier.padding(vertical = 2.dp))
+                          modifier =
+                              Modifier.padding(
+                                  vertical =
+                                      dimensionResource(R.dimen.daily_view_date_separator_padding)))
                       Text(
                           text = endTime,
                           style = MaterialTheme.typography.bodyMedium,
@@ -481,7 +509,7 @@ private fun FullScreenMap(
         onClick = onExit,
         modifier =
             Modifier.align(Alignment.BottomEnd)
-                .padding(16.dp)
+                .padding(dimensionResource(R.dimen.daily_view_map_toggle_button_padding))
                 .testTag(DailyViewScreenTestTags.FULLSCREEN_EXIT)) {
           Icon(
               imageVector = Icons.Filled.ZoomInMap,
