@@ -3,9 +3,11 @@ package com.github.swent.swisstravel.ui.navigation
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.MenuOpen
+import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.Groups
 import androidx.compose.material.icons.outlined.LocationOn
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Icon
@@ -45,12 +47,15 @@ sealed class Tab(
           Icons.Filled.LocationOn,
           Icons.Outlined.LocationOn)
 
+  object Friends :
+      Tab(R.string.friends_list, Screen.FriendsList, Icons.Filled.Groups, Icons.Outlined.Groups)
+
   object Profile :
       Tab(R.string.profile_tab, Screen.Profile, Icons.Filled.Person, Icons.Outlined.Person)
 }
 
 /* List of all the tabs in the bottom bar */
-private val tabs = listOf(Tab.MyTrips, Tab.CurrentTrip, Tab.Profile)
+private val tabs = listOf(Tab.MyTrips, Tab.CurrentTrip, Tab.Friends, Tab.Profile)
 
 /**
  * Composable setting up the bottom navigation bar
