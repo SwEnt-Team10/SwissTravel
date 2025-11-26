@@ -8,7 +8,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
-import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
@@ -108,7 +108,7 @@ class NavigationTest : InMemorySwissTravelTest() {
 
     // 2. Scroll to the logout button and click it
     composeTestRule
-        .onNodeWithTag(ProfileScreenTestTags.LOGOUT_BUTTON)
+        .onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON)
         .performScrollTo()
         .performClick()
 

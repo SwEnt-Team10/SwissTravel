@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
@@ -30,7 +31,7 @@ class FakeUserRepository : UserRepository {
         biography = "Fake Bio",
         email = "test@example.com",
         profilePicUrl = "",
-        preferences = listOf(Preference.MUSEUMS),
+        preferences = listOf(Preference.QUICK),
         friends = emptyList(),
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
@@ -161,9 +162,14 @@ class ProfileSettingsScreenTest {
       composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.label(prefix)).assertIsDisplayed()
       composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.text(prefix)).assertIsDisplayed()
       composeTestRule
-          .onNodeWithTag(ProfileSettingsScreenTestTags.editButton(prefix))
+          .onNodeWithTag(ProfileSettingsScreenTestTags.editButton(prefix), useUnmergedTree = true)
           .assertIsDisplayed()
     }
+    // Logout button present
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON)
+        .performScrollTo()
+        .assertIsDisplayed()
 
     // Preferences container present
     composeTestRule
@@ -188,15 +194,17 @@ class ProfileSettingsScreenTest {
         .onNodeWithTag(
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performScrollTo()
     // Now a known preference chip should appear
-    composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
+    composeTestRule.onNodeWithText("Fast Trip").assertIsDisplayed()
 
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PERSONAL_INFO).performScrollTo()
     // Collapse
     composeTestRule
         .onNodeWithTag(
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
-    composeTestRule.onNodeWithText("Museums").assertDoesNotExist()
+    composeTestRule.onNodeWithText("Fast Trip").assertDoesNotExist()
   }
 
   @Test
@@ -212,11 +220,12 @@ class ProfileSettingsScreenTest {
         .onNodeWithTag(
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
-    composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performScrollTo()
+    composeTestRule.onNodeWithText("Fast Trip").assertIsDisplayed()
 
     // Click to toggle on/off (we don't assert state, just ensure it doesn't crash)
-    composeTestRule.onNodeWithText("Museums").performClick()
-    composeTestRule.onNodeWithText("Museums").performClick()
+    composeTestRule.onNodeWithText("Fast Trip").performClick()
+    composeTestRule.onNodeWithText("Fast Trip").performClick()
   }
 
   /** Directly tests InfoSection/InfoItem for coverage. */
@@ -292,10 +301,14 @@ class ProfileSettingsScreenTest {
     // Enter edit mode
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.editButton("NAME")).performClick()
 
-    // Update text
+    // Clear any text
     composeTestRule
         .onNodeWithTag(ProfileSettingsScreenTestTags.textField("NAME"))
         .performTextClearance()
+
+    // Update text
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("NAME"))
         .performTextInput("New Name")
 
     // Save
@@ -324,10 +337,14 @@ class ProfileSettingsScreenTest {
     // Enter edit mode
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.editButton("NAME")).performClick()
 
-    // Change text
+    // Clear any text
     composeTestRule
         .onNodeWithTag(ProfileSettingsScreenTestTags.textField("NAME"))
         .performTextClearance()
+
+    // Change text
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("NAME"))
         .performTextInput("Should Not Save")
 
     // Cancel

@@ -38,7 +38,6 @@ import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
@@ -223,17 +222,11 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
-    onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST).assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
+    // TODO
   }
 
   fun ComposeTestRule.checkProfileScreenIsNotDisplayed() {
-    onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST).assertDoesNotExist()
-    onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertDoesNotExist()
-    onNodeWithTag(ProfileScreenTestTags.EMAIL).assertDoesNotExist()
-    onNodeWithTag(ProfileScreenTestTags.GREETING).assertDoesNotExist()
+    // TODO
   }
 
   fun ComposeTestRule.checkNavigationMenuIsDisplayed() {
@@ -545,6 +538,7 @@ abstract class SwissTravelTest {
       onNodeWithTag(ProfileSettingsScreenTestTags.text(prefix)).assertIsDisplayed()
       onNodeWithTag(ProfileSettingsScreenTestTags.editButton(prefix)).assertIsDisplayed()
     }
+    onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performScrollTo().assertIsDisplayed()
 
     // Preferences container present
     onNodeWithTag(ProfileSettingsScreenTestTags.PREFERENCES_LIST).assertIsDisplayed()

@@ -286,7 +286,7 @@ private fun ProfileInfoSection(
             onStartEdit = { viewModel.startEditingBio() },
             onSave = { viewModel.saveBio(it) },
             onCancel = { viewModel.cancelEditingBio() },
-            testTagPrefix = "BIO")
+            testTagPrefix = "BIOGRAPHY")
       }
 }
 
