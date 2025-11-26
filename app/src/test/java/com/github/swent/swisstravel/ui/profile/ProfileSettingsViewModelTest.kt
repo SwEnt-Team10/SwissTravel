@@ -30,7 +30,7 @@ import org.junit.Test
 class ProfileSettingsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var repository: UserRepository
+  private lateinit var userRepository: UserRepository
   private lateinit var tripsRepository: TripsRepository
   private lateinit var viewModel: ProfileSettingsViewModel
 
@@ -50,10 +50,10 @@ class ProfileSettingsViewModelTest {
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    repository = mockk()
+    userRepository = mockk()
     tripsRepository = mockk(relaxed = true)
 
-    coEvery { repository.updateUserStats(any(), any()) } just Runs
+    coEvery { userRepository.updateUserStats(any(), any()) } just Runs
   }
 
   @After
@@ -63,9 +63,9 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun initLoadsUserDataSuccessfully() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -78,9 +78,9 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun initSetsErrorMessageOnFailure() = runTest {
-    coEvery { repository.getCurrentUser() } throws Exception("Network error")
+    coEvery { userRepository.getCurrentUser() } throws Exception("Network error")
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -89,8 +89,8 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun autoFillUpdatesUiStateCorrectly() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
 
     viewModel.autoFill(fakeUser)
 
@@ -101,8 +101,8 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun clearErrorMsgSetsErrorMsgToNull() = runTest {
-    coEvery { repository.getCurrentUser() } throws Exception("Oops")
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    coEvery { userRepository.getCurrentUser() } throws Exception("Oops")
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     Assert.assertNotNull(viewModel.uiState.value.errorMsg)
@@ -113,26 +113,27 @@ class ProfileSettingsViewModelTest {
   @Test
   fun savePreferencesUpdatesRepositoryAndUiState() = runTest {
     val updatedPrefs = listOf(Preference.MUSEUMS, Preference.FOODIE)
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    coEvery { repository.updateUserPreferences(fakeUser.uid, updatedPrefs) } just Runs
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.updateUserPreferences(fakeUser.uid, updatedPrefs) } just Runs
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
     viewModel.savePreferences(updatedPrefs)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
     Assert.assertEquals(updatedPrefs, state.selectedPreferences)
-    coVerify(exactly = 1) { repository.updateUserPreferences(fakeUser.uid, updatedPrefs) }
+    coVerify(exactly = 1) { userRepository.updateUserPreferences(fakeUser.uid, updatedPrefs) }
   }
 
   @Test
   fun savePreferencesSetsErrorMsgWhenUpdateFails() = runTest {
     val updatedPrefs = listOf(Preference.HIKE)
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    coEvery { repository.updateUserPreferences(any(), any()) } throws Exception("Firestore error")
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.updateUserPreferences(any(), any()) } throws
+        Exception("Firestore error")
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
     viewModel.savePreferences(updatedPrefs)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -144,9 +145,9 @@ class ProfileSettingsViewModelTest {
   @Test
   fun savePreferences_showsErrorWhenUserIsNull() = runTest {
     // Arrange — repository throws so currentUser remains null
-    coEvery { repository.getCurrentUser() } throws Exception("No user")
+    coEvery { userRepository.getCurrentUser() } throws Exception("No user")
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity — try saving preferences with no user
@@ -173,9 +174,9 @@ class ProfileSettingsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedImagesUris = emptyList())
-    coEvery { repository.getCurrentUser() } returns guestUser
+    coEvery { userRepository.getCurrentUser() } returns guestUser
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity
@@ -189,21 +190,21 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun init_callsUpdateUserStats() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    coEvery { repository.updateUserStats(any(), any()) } just Runs
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.updateUserStats(any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { repository.updateUserStats(fakeUser.uid, fakeUser.stats) }
+    coVerify(exactly = 1) { userRepository.updateUserStats(fakeUser.uid, fakeUser.stats) }
   }
 
   @Test
   fun autoFill_withPartialUserData_updatesUiState() = runTest {
     val partialUser = fakeUser.copy(name = "", email = "")
-    coEvery { repository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     viewModel.autoFill(partialUser)
 
     val state = viewModel.uiState.value
@@ -213,14 +214,14 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun startEditingName_setsIsEditingNameTrue() = runTest {
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     viewModel.startEditingName()
     Assert.assertTrue(viewModel.uiState.value.isEditingName)
   }
 
   @Test
   fun cancelEditingName_setsIsEditingNameFalse() = runTest {
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     viewModel.startEditingName()
     viewModel.cancelEditingName()
     Assert.assertFalse(viewModel.uiState.value.isEditingName)
@@ -228,14 +229,14 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun startEditingBio_setsIsEditingBioTrue() = runTest {
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     viewModel.startEditingBio()
     Assert.assertTrue(viewModel.uiState.value.isEditingBio)
   }
 
   @Test
   fun cancelEditingBio_setsIsEditingBioFalse() = runTest {
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     viewModel.startEditingBio()
     viewModel.cancelEditingBio()
     Assert.assertFalse(viewModel.uiState.value.isEditingBio)
@@ -243,10 +244,10 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun saveName_updatesUiStateAndCallsRepository() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    coEvery { repository.updateUser(any(), any(), any()) } just Runs
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.updateUser(any(), any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveName("New Name")
@@ -254,15 +255,15 @@ class ProfileSettingsViewModelTest {
 
     Assert.assertEquals("New Name", viewModel.uiState.value.name)
     Assert.assertFalse(viewModel.uiState.value.isEditingName)
-    coVerify { repository.updateUser(fakeUser.uid, name = "New Name") }
+    coVerify { userRepository.updateUser(fakeUser.uid, name = "New Name") }
   }
 
   @Test
   fun saveName_setsErrorMsgOnFailure() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    coEvery { repository.updateUser(any(), any(), any()) } throws Exception("Name error")
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.updateUser(any(), any(), any()) } throws Exception("Name error")
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveName("New Name")
@@ -273,10 +274,10 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun saveBio_updatesUiStateAndCallsRepository() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    coEvery { repository.updateUser(any(), any(), any()) } just Runs
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.updateUser(any(), any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveBio("New Bio")
@@ -284,15 +285,15 @@ class ProfileSettingsViewModelTest {
 
     Assert.assertEquals("New Bio", viewModel.uiState.value.biography)
     Assert.assertFalse(viewModel.uiState.value.isEditingBio)
-    coVerify { repository.updateUser(fakeUser.uid, biography = "New Bio") }
+    coVerify { userRepository.updateUser(fakeUser.uid, biography = "New Bio") }
   }
 
   @Test
   fun saveBio_setsErrorMsgOnFailure() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
-    coEvery { repository.updateUser(any(), any(), any()) } throws Exception("Bio error")
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.updateUser(any(), any(), any()) } throws Exception("Bio error")
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveBio("New Bio")
@@ -305,7 +306,7 @@ class ProfileSettingsViewModelTest {
   fun refreshStatsForUser_doesNothingForGuest() = runTest {
     val guestUser = fakeUser.copy(uid = "guest")
     coEvery { tripsRepository.getAllTrips() } returns emptyList()
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     // simulate calling private method via init
     viewModel.autoFill(guestUser)
     // No error should be set
@@ -314,22 +315,22 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun refreshStatsForUser_updatesStats() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { tripsRepository.getAllTrips() } returns emptyList()
-    coEvery { repository.updateUserStats(any(), any()) } just Runs
+    coEvery { userRepository.updateUserStats(any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { repository.updateUserStats(fakeUser.uid, any()) }
+    coVerify { userRepository.updateUserStats(fakeUser.uid, any()) }
   }
 
   @Test
   fun refreshStatsForUser_setsErrorWhenTripsFail() = runTest {
-    coEvery { repository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { tripsRepository.getAllTrips() } throws Exception("Trips failed")
 
-    viewModel = ProfileSettingsViewModel(repository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     Assert.assertTrue(viewModel.uiState.value.errorMsg!!.contains("Trips failed"))
