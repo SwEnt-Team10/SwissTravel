@@ -4,6 +4,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -36,7 +37,10 @@ class ProfileScreenViewModelTest {
           email = "lionel@example.com",
           profilePicUrl = "http://example.com/pic.jpg",
           preferences = listOf(Preference.HIKE, Preference.FOODIE),
-          friends = emptyList())
+          friends = emptyList(),
+          stats = UserStats(),
+          pinnedTripsUids = emptyList(),
+          pinnedImagesUris = emptyList())
 
   @Before
   fun setup() {
@@ -160,7 +164,10 @@ class ProfileScreenViewModelTest {
             email = "Not signed in",
             profilePicUrl = "",
             preferences = emptyList(),
-            friends = emptyList())
+            friends = emptyList(),
+            stats = UserStats(),
+            pinnedTripsUids = emptyList(),
+            pinnedImagesUris = emptyList())
     coEvery { repository.getCurrentUser() } returns guestUser
 
     viewModel = ProfileScreenViewModel(repository, tripsRepository)

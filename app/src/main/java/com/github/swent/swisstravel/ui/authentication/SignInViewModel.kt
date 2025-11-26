@@ -74,11 +74,8 @@ abstract class BaseAuthViewModel(
   /**
    * Initiates the Google sign-in flow.
    *
-   * This function handles the entire process of signing in with Google, from displaying the
-   * credential manager to updating the UI state based on the outcome (success or failure).
-   *
-   * @param context The application context.
-   * @param credentialManager The [CredentialManager] to use for the Google Sign-In request.
+   * Google users are automatically verified, so we immediately set [isEmailVerified] to true and
+   * reset the [signUpStage].
    */
   fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
     if (_uiState.value.isLoading) return
@@ -86,24 +83,38 @@ abstract class BaseAuthViewModel(
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true, errorMsg = null) }
 
+      // Helper functions assumed to be in your BaseAuthViewModel or class
       val signInOptions = getSignInOptions(context)
       val signInRequest = signInRequest(signInOptions)
 
       try {
         val credential = getCredential(context, signInRequest, credentialManager)
-        repository.signInWithGoogle(credential).fold({ user ->
-          _uiState.update {
-            it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
-          }
-        }) { failure ->
-          _uiState.update {
-            it.copy(
-                isLoading = false,
-                errorMsg = failure.localizedMessage,
-                signedOut = true,
-                user = null)
-          }
-        }
+
+        repository
+            .signInWithGoogle(credential)
+            .fold(
+                onSuccess = { user ->
+                  _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        user = user,
+                        errorMsg = null,
+                        signedOut = false,
+                        // Google accounts are always verified
+                        isEmailVerified = true,
+                        // In case the user is logged out, won't cause bugs
+                        signUpStage = SignUpStage.FILLING_FORM)
+                  }
+                },
+                onFailure = { failure ->
+                  _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMsg = failure.localizedMessage,
+                        signedOut = true,
+                        user = null)
+                  }
+                })
       } catch (e: GetCredentialCancellationException) {
         _uiState.update {
           it.copy(isLoading = false, errorMsg = "Sign-in cancelled", signedOut = true, user = null)
@@ -112,7 +123,7 @@ abstract class BaseAuthViewModel(
         _uiState.update {
           it.copy(
               isLoading = false,
-              errorMsg = context.getString(string.unexpected_error, e.localizedMessage),
+              errorMsg = "Unexpected error: ${e.localizedMessage}",
               signedOut = true,
               user = null)
         }
@@ -151,8 +162,19 @@ class SignInViewModel(repository: AuthRepository = AuthRepositoryFirebase()) :
 
       try {
         repository.signInWithEmailPassword(email, password).fold({ user ->
-          _uiState.update {
-            it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
+          if (user.isEmailVerified) {
+            _uiState.update {
+              it.copy(isLoading = false, user = user, errorMsg = null, signedOut = false)
+            }
+          } else {
+            repository.signOut()
+            _uiState.update {
+              it.copy(
+                  isLoading = false,
+                  errorMsg = "Email not verified. Please verify your email.",
+                  signedOut = true,
+                  user = null)
+            }
           }
         }) { failure ->
           _uiState.update {
