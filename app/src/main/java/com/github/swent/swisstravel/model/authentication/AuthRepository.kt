@@ -53,4 +53,11 @@ interface AuthRepository {
    * @return A [Result] indicating success or failure.
    */
   suspend fun resendVerificationEmail(): Result<Unit>
+
+  /**
+   * Deletes the currently authenticated user.
+   *
+   * @return A [Result] indicating success or failure.
+   */
+  suspend fun deleteUser(): Result<Unit>
 }
