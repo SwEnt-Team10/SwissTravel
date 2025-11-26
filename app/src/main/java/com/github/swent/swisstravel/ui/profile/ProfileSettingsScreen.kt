@@ -70,25 +70,61 @@ import com.google.firebase.ktx.Firebase
 object ProfileSettingsScreenTestTags {
   const val PROFILE_PIC = "profilePic"
   const val PROFILE_INFO = "profileInfo"
-
-  fun text(prefix: String) = "${prefix.uppercase()}_TEXT"
-
-  fun textField(prefix: String) = "${prefix.uppercase()}_TEXTFIELD"
-
-  fun editButton(prefix: String) = "${prefix.uppercase()}_EDIT"
-
-  fun confirmButton(prefix: String) = "${prefix.uppercase()}_CONFIRM"
-
-  fun cancelButton(prefix: String) = "${prefix.uppercase()}_CANCEL"
-
-  fun empty(prefix: String) = "${prefix.uppercase()}_EMPTY"
-
   const val PERSONAL_INFO = "personalInfo"
   const val EMAIL = "email"
   const val PREFERENCES_LIST = "preferencesList"
   const val PREFERENCES = "preferences"
   const val PREFERENCES_TOGGLE = "preferencesToggle"
   const val LOGOUT_BUTTON = "logoutButton"
+
+  /**
+   * A test tag for text.
+   *
+   * @param prefix The prefix for the test tag.
+   */
+  fun text(prefix: String) = "${prefix.uppercase()}_TEXT"
+
+  /**
+   * A test tag for a label.
+   *
+   * @param prefix The prefix for the test tag.
+   */
+  fun label(prefix: String) = "${prefix.uppercase()}_LABEL"
+
+  /**
+   * A test tag for a a TextField.
+   *
+   * @param prefix The prefix for the test tag.
+   */
+  fun textField(prefix: String) = "${prefix.uppercase()}_TEXTFIELD"
+
+  /**
+   * A test tag for an edit button.
+   *
+   * @param prefix The prefix for the test tag.
+   */
+  fun editButton(prefix: String) = "${prefix.uppercase()}_EDIT"
+
+  /**
+   * A test tag for a confirm button.
+   *
+   * @param prefix The prefix for the test tag.
+   */
+  fun confirmButton(prefix: String) = "${prefix.uppercase()}_CONFIRM"
+
+  /**
+   * A test tag for a cancel button.
+   *
+   * @param prefix The prefix for the test tag.
+   */
+  fun cancelButton(prefix: String) = "${prefix.uppercase()}_CANCEL"
+
+  /**
+   * A test tag for an empty text.
+   *
+   * @param prefix The prefix for the test tag.
+   */
+  fun empty(prefix: String) = "${prefix.uppercase()}_EMPTY"
 }
 
 /**
@@ -438,7 +474,8 @@ fun EditableField(
         modifier = Modifier.fillMaxWidth()) {
           Text(
               text = label,
-              style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium))
+              style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
+              modifier = Modifier.testTag(ProfileSettingsScreenTestTags.label(testTagPrefix)))
           Row {
             // Cancel Button
             if (isEditing) {

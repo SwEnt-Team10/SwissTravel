@@ -39,6 +39,7 @@ import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
@@ -530,6 +531,27 @@ abstract class SwissTravelTest {
     }
     waitUntil { activity.isFinishing == shouldFinish }
     assertEquals(shouldFinish, activity.isFinishing)
+  }
+
+  fun ComposeTestRule.checkProfileSettingsScreenIsDisplayed() {
+    // Static bits
+    onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+    onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_INFO).assertIsDisplayed()
+    onNodeWithTag(ProfileSettingsScreenTestTags.PERSONAL_INFO).assertIsDisplayed()
+    onNodeWithTag(ProfileSettingsScreenTestTags.EMAIL).assertIsDisplayed()
+    val fields = listOf("NAME", "BIOGRAPHY")
+    fields.forEach { prefix ->
+      onNodeWithTag(ProfileSettingsScreenTestTags.label(prefix)).assertIsDisplayed()
+      onNodeWithTag(ProfileSettingsScreenTestTags.text(prefix)).assertIsDisplayed()
+      onNodeWithTag(ProfileSettingsScreenTestTags.editButton(prefix)).assertIsDisplayed()
+    }
+
+    // Preferences container present
+    onNodeWithTag(ProfileSettingsScreenTestTags.PREFERENCES_LIST).assertIsDisplayed()
+    // Header row present
+    onNodeWithTag(ProfileSettingsScreenTestTags.PREFERENCES).assertIsDisplayed()
+    // Collapsed by default: a well-known preference label should NOT be visible yet
+    onNodeWithText("Museums").assertDoesNotExist()
   }
 
   // TODO : Create helper/companions functions here
