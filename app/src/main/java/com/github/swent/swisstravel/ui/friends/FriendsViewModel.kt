@@ -29,11 +29,16 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
   val uiState = _uiState.asStateFlow()
 
   init {
-    viewModelScope.launch { refreshFriends() }
+    refreshFriends()
   }
 
-  /** Refreshes the friends list from the repository. */
-  suspend fun refreshFriends() {
+  /** Public refresh friend function */
+  fun refreshFriends() {
+    viewModelScope.launch { refreshFriendsSuspend() }
+  }
+
+  /** Refreshes the friends list from the repository. Is private because of security issues */
+  private suspend fun refreshFriendsSuspend() {
     _uiState.value = uiState.value.copy(isLoading = true, errorMsg = null)
     try {
       val currentUser = userRepository.getCurrentUser()
