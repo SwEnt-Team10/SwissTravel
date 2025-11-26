@@ -21,9 +21,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -31,11 +34,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -68,14 +75,16 @@ object ProfileScreenTestTags {
   const val PINNED_IMAGES_TITLE = "pinnedImagesTitle"
   const val PINNED_IMAGES_LIST = "pinnedImagesList"
   const val PINNED_IMAGES_EDIT_BUTTON = "pinnedImagesEditButton"
+  const val CONFIRM_UNFRIEND_BUTTON = "confirmUnfriendButton"
+  const val CANCEL_UNFRIEND_BUTTON = "cancelUnfriendButton"
 }
 
 /**
  * A screen that shows the user's profile information.
  *
  * @param profileViewModel The view model for this screen.
+ * @param onBack The callback to navigate back.
  * @param onSettings The callback to navigate to the settings screen.
- * @param onRemoveFriend The callback to remove the user as a friend.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
  * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
@@ -85,8 +94,8 @@ object ProfileScreenTestTags {
 @Composable
 fun ProfileScreen(
     profileViewModel: ProfileViewModel = viewModel(),
+    onBack: () -> Unit = {},
     onSettings: () -> Unit = {},
-    onRemoveFriend: () -> Unit = {},
     onSelectTrip: (String) -> Unit = {},
     onEditPinnedTrips: () -> Unit = {},
     onEditPinnedImages: () -> Unit = {},
@@ -104,10 +113,38 @@ fun ProfileScreen(
         }
   }
 
+  var showUnfriendConfirmation by remember { mutableStateOf(false) }
+
+  if (showUnfriendConfirmation) {
+    UnfriendDialog(
+        friendName = uiState.name,
+        onConfirm = {
+          profileViewModel.removeFriend(uiState.uid)
+          showUnfriendConfirmation = false
+          onBack()
+        },
+        onCancel = { showUnfriendConfirmation = false })
+  }
+
   Scaffold(
       topBar = {
         TopAppBar(
-            title = { Text(stringResource(R.string.my_profile)) },
+            title = {
+              if (uiState.isOwnProfile) Text(stringResource(R.string.my_profile))
+              else Text(uiState.name)
+            },
+            navigationIcon = {
+              if (!uiState.isLoading && !uiState.isOwnProfile) {
+                IconButton(
+                    onClick = onBack,
+                ) {
+                  Icon(
+                      imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                      contentDescription = stringResource(R.string.back_to_friends_list),
+                      tint = MaterialTheme.colorScheme.onBackground)
+                }
+              }
+            },
             actions = {
               if (!uiState.isLoading) {
                 if (uiState.isOwnProfile) {
@@ -121,11 +158,11 @@ fun ProfileScreen(
                       }
                 } else {
                   IconButton(
-                      onClick = onRemoveFriend,
+                      onClick = { showUnfriendConfirmation = true },
                       modifier = Modifier.testTag(ProfileScreenTestTags.REMOVE_FRIEND_BUTTON)) {
                         Icon(
                             imageVector = Icons.Outlined.PersonRemove,
-                            contentDescription = stringResource(R.string.remove_friend),
+                            contentDescription = stringResource(R.string.unfriend),
                             tint = MaterialTheme.colorScheme.onBackground)
                       }
                 }
@@ -382,4 +419,36 @@ private fun PinnedImages(
               contentScale = ContentScale.Crop)
         }
       }
+}
+
+/**
+ * Dialog displayed when the user confirms removal of a friend.
+ *
+ * @param onConfirm Invoked when user confirms removal.
+ * @param onCancel Invoked when dialog is dismissed or canceled.
+ */
+@Composable
+fun UnfriendDialog(friendName: String, onConfirm: () -> Unit, onCancel: () -> Unit) {
+  AlertDialog(
+      onDismissRequest = onCancel,
+      title = { Text(stringResource(R.string.confirm_unfriend_title, friendName)) },
+      text = { Text(stringResource(R.string.confirm_unfriend_text)) },
+      confirmButton = {
+        TextButton(
+            onClick = onConfirm,
+            modifier = Modifier.testTag(ProfileScreenTestTags.CONFIRM_UNFRIEND_BUTTON)) {
+              Text(stringResource(R.string.unfriend))
+            }
+      },
+      dismissButton = {
+        TextButton(
+            onClick = onCancel,
+            colors =
+                ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onBackground),
+            modifier = Modifier.testTag(ProfileScreenTestTags.CANCEL_UNFRIEND_BUTTON)) {
+              Text(stringResource(R.string.cancel))
+            }
+      },
+      containerColor = MaterialTheme.colorScheme.onPrimary)
 }

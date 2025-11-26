@@ -13,6 +13,7 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserStats
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -152,5 +153,25 @@ class ProfileViewModel(
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
+  }
+
+  /**
+   * Calls the repository to remove a friend.
+   *
+   * @param uid The UID of the user to remove.
+   */
+  fun removeFriend(uid: String) {
+    viewModelScope.launch {
+      try {
+        val userUid = FirebaseAuth.getInstance().currentUser?.uid
+        if (userUid == null) {
+          _uiState.update { it.copy(errorMsg = "User is not logged in") }
+          return@launch
+        }
+        userRepository.removeFriend(userUid, uid)
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = "Error removing friend: ${e.message}") }
+      }
+    }
   }
 }

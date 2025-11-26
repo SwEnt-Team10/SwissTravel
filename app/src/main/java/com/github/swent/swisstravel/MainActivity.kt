@@ -358,14 +358,9 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
           profileViewModel =
               ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
-          onRemoveFriend = { /* no-op */},
           onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-          onEditPinnedTrips = {
-            /* TODO */
-          },
-          onEditPinnedImages = {
-            /* TODO */
-          },
+          onEditPinnedTrips = { /* TODO */},
+          onEditPinnedImages = { /* TODO */},
           navigationActions = navigationActions)
     }
     composable(Screen.ProfileSettings.route) {
@@ -655,8 +650,7 @@ private fun NavGraphBuilder.friendsListNavGraph(
 
           ProfileScreen(
               profileViewModel = ProfileViewModel(requestedUid = uid),
-              onSettings = { /* no-op */},
-              onRemoveFriend = { /* TODO */},
+              onBack = { navigationActions.goBack() },
               onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
               onEditPinnedTrips = {},
               onEditPinnedImages = {},

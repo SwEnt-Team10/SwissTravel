@@ -164,7 +164,10 @@
     <string name="no_pinned_trips">No pinned trips here!</string>
     <string name="pinned_images">Pinned Images</string>
     <string name="edit_pinned_images">Edit Pinned Images</string>
-    <string name="remove_friend">Remove Friend</string>
+    <string name="back_to_friends_list">Back to Friends List</string>
+    <string name="confirm_unfriend_title">Are you sure you want to unfriend %1$s?</string>
+    <string name="confirm_unfriend_text">If you change your mind, you can friend them again through the \"Add Friend\" menu.</string>
+    <string name="unfriend">Unfriend</string>
     <!-- Profile Settings -->
     <string name="settings">Settings</string>
     <string name="profile_info">Profile Information</string>
