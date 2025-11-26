@@ -25,11 +25,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.WikiImageRepository
+import com.github.swent.swisstravel.ui.map.MapScreen
 import kotlin.collections.emptyList
 
 object ActivityInfosTestTag {
@@ -122,6 +124,23 @@ fun ActivityInfos(
                   label = { Text(stringResource(R.string.estimated_time, durationText)) })
 
               ActivityImagesSection(activityName = activity.getName(), wikiRepo = wikiRepo)
+
+              Spacer(Modifier.height(dimensionResource(R.dimen.activity_info_images_padding)))
+
+              // Map Section
+              Text(
+                  text = "Location",
+                  style = MaterialTheme.typography.titleMedium,
+                  fontWeight = FontWeight.SemiBold)
+
+              Box(
+                  modifier =
+                      Modifier.fillMaxWidth().height(200.dp).clip(RoundedCornerShape(12.dp))) {
+                    MapScreen(
+                        locations = listOf(activity.location),
+                        drawRoute = false,
+                        onUserLocationUpdate = {})
+                  }
 
               Spacer(Modifier.height(dimensionResource(R.dimen.activity_info_images_padding)))
 
