@@ -10,12 +10,12 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.ui.tripcreation.TripCreationTests
 import org.junit.Rule
 import org.junit.Test
 
@@ -78,24 +78,24 @@ class FakeUserRepository : UserRepository {
   }
 }
 
-class ProfileScreenUITest {
+class ProfileSettingsScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
   private val fakeRepo = FakeUserRepository()
-  private val fakeTripRepo = TripCreationTests.FakeTripsRepository(emptyList())
+  private val fakeTripRepo = TripRepositoryLocal()
 
   @Test
   fun allKeyUIElementsAreDisplayed_collapsedByDefault() {
     composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo, fakeTripRepo)) }
+      SwissTravelTheme { ProfileSettingsScreen(ProfileSettingsViewModel(fakeRepo, fakeTripRepo)) }
     }
 
     // Static bits
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PERSONAL_INFO).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.Pr).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PERSONAL_INFO).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.EMAIL).assertIsDisplayed()
 
     // Preferences container present
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST).assertIsDisplayed()

@@ -176,8 +176,8 @@
     <string name="default_pref_info">These preferences will be selected by default when creating a new trip.</string>
     <string name="edit">Edit</string>
     <string name="save">Save</string>
-    <string name="add_a_bio">Add a biography...</string>
-    <string name="add_text">Add text...</string>
+    <string name="press_edit_to_add">Press the edit button to add text...</string>
+    <string name="enter_text">Enter text...</string>
 
     <!-- Preferences -->
     <string name="preference_scenic_views">Scenic Views</string>

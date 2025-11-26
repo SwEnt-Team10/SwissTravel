@@ -67,13 +67,22 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
 /** Test tags for the profile settings screen. */
-object ProfileSettingsTestTags {
+object ProfileSettingsScreenTestTags {
   const val PROFILE_PIC = "profilePic"
   const val PROFILE_INFO = "profileInfo"
-  const val FIELD_TEXT = "fieldText"
-  const val FIELD_EDIT_BUTTON = "fieldEditButton"
-  const val FIELD_CONFIRM_BUTTON = "fieldConfirmButton"
-  const val FIELD_CANCEL_BUTTON = "fieldCancelButton"
+
+  fun text(prefix: String) = "${prefix.uppercase()}_TEXT"
+
+  fun textField(prefix: String) = "${prefix.uppercase()}_TEXTFIELD"
+
+  fun editButton(prefix: String) = "${prefix.uppercase()}_EDIT"
+
+  fun confirmButton(prefix: String) = "${prefix.uppercase()}_CONFIRM"
+
+  fun cancelButton(prefix: String) = "${prefix.uppercase()}_CANCEL"
+
+  fun empty(prefix: String) = "${prefix.uppercase()}_EMPTY"
+
   const val PERSONAL_INFO = "personalInfo"
   const val EMAIL = "email"
   const val PREFERENCES_LIST = "preferencesList"
@@ -208,7 +217,7 @@ private fun ProfileSettingsHeader(photoUrl: String) {
       modifier =
           Modifier.size(dimensionResource(R.dimen.profile_logo_size))
               .clip(CircleShape)
-              .testTag(ProfileSettingsTestTags.PROFILE_PIC))
+              .testTag(ProfileSettingsScreenTestTags.PROFILE_PIC))
 }
 
 /**
@@ -224,14 +233,15 @@ private fun ProfileInfoSection(
 ) {
   InfoSection(
       title = stringResource(R.string.profile_info),
-      modifier = Modifier.testTag(ProfileSettingsTestTags.PROFILE_INFO)) {
+      modifier = Modifier.testTag(ProfileSettingsScreenTestTags.PROFILE_INFO)) {
         EditableField(
             label = stringResource(R.string.name),
             text = uiState.name,
             isEditing = uiState.isEditingName,
             onStartEdit = { viewModel.startEditingName() },
             onSave = { viewModel.saveName(it) },
-            onCancel = { viewModel.cancelEditingName() })
+            onCancel = { viewModel.cancelEditingName() },
+            testTagPrefix = "NAME")
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
         EditableField(
             label = stringResource(R.string.biography),
@@ -239,7 +249,8 @@ private fun ProfileInfoSection(
             isEditing = uiState.isEditingBio,
             onStartEdit = { viewModel.startEditingBio() },
             onSave = { viewModel.saveBio(it) },
-            onCancel = { viewModel.cancelEditingBio() })
+            onCancel = { viewModel.cancelEditingBio() },
+            testTagPrefix = "BIO")
       }
 }
 
@@ -252,11 +263,11 @@ private fun ProfileInfoSection(
 private fun PersonalInfoSection(email: String) {
   InfoSection(
       title = stringResource(R.string.personal_info),
-      modifier = Modifier.testTag(ProfileSettingsTestTags.PERSONAL_INFO)) {
+      modifier = Modifier.testTag(ProfileSettingsScreenTestTags.PERSONAL_INFO)) {
         InfoItem(
             label = stringResource(R.string.email),
             value = email,
-            modifier = Modifier.testTag(ProfileSettingsTestTags.EMAIL))
+            modifier = Modifier.testTag(ProfileSettingsScreenTestTags.EMAIL))
       }
 }
 
@@ -277,10 +288,10 @@ private fun PreferencesSection(selected: List<Preference>, onToggle: (Preference
               .clip(MaterialTheme.shapes.medium)
               .background(MaterialTheme.colorScheme.onPrimary)
               .padding(dimensionResource(R.dimen.small_padding))
-              .testTag(ProfileSettingsTestTags.PREFERENCES_LIST)) {
+              .testTag(ProfileSettingsScreenTestTags.PREFERENCES_LIST)) {
         // Header row
         Row(
-            modifier = Modifier.fillMaxWidth().testTag(ProfileSettingsTestTags.PREFERENCES),
+            modifier = Modifier.fillMaxWidth().testTag(ProfileSettingsScreenTestTags.PREFERENCES),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween) {
               Text(
@@ -288,7 +299,7 @@ private fun PreferencesSection(selected: List<Preference>, onToggle: (Preference
                   style = MaterialTheme.typography.titleLarge)
               IconButton(
                   onClick = { expanded = !expanded },
-                  modifier = Modifier.testTag(ProfileSettingsTestTags.PREFERENCES_TOGGLE)) {
+                  modifier = Modifier.testTag(ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)) {
                     Icon(
                         imageVector =
                             if (expanded) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore,
@@ -327,7 +338,7 @@ private fun AuthButton(isSignedIn: Boolean, onClick: () -> Unit) {
       modifier =
           Modifier.fillMaxWidth(0.5f)
               .height(dimensionResource(R.dimen.medium_button_height))
-              .testTag(ProfileSettingsTestTags.LOGOUT_BUTTON),
+              .testTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON),
       shape = CircleShape,
       colors =
           ButtonDefaults.buttonColors(
@@ -406,6 +417,7 @@ fun InfoItem(label: String, value: String, modifier: Modifier) {
  * @param onStartEdit The callback for when the field is clicked.
  * @param onSave The callback for when the field is saved.
  * @param onCancel The callback for when the field is cancelled.
+ * @param testTagPrefix The prefix for the test tags.
  */
 @Composable
 fun EditableField(
@@ -414,7 +426,8 @@ fun EditableField(
     isEditing: Boolean,
     onStartEdit: () -> Unit,
     onSave: (String) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    testTagPrefix: String
 ) {
   var editedText by remember(isEditing) { mutableStateOf(text) }
 
@@ -431,7 +444,8 @@ fun EditableField(
             if (isEditing) {
               IconButton(
                   onClick = { onCancel() },
-                  modifier = Modifier.testTag(ProfileSettingsTestTags.FIELD_CANCEL_BUTTON)) {
+                  modifier =
+                      Modifier.testTag(ProfileSettingsScreenTestTags.cancelButton(testTagPrefix))) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.cancel))
@@ -442,8 +456,8 @@ fun EditableField(
                 onClick = { if (!isEditing) onStartEdit() else onSave(editedText) },
                 modifier =
                     Modifier.testTag(
-                        if (!isEditing) ProfileSettingsTestTags.FIELD_EDIT_BUTTON
-                        else ProfileSettingsTestTags.FIELD_CONFIRM_BUTTON)) {
+                        if (!isEditing) ProfileSettingsScreenTestTags.editButton(testTagPrefix)
+                        else ProfileSettingsScreenTestTags.confirmButton(testTagPrefix))) {
                   Icon(
                       imageVector = if (isEditing) Icons.Default.Check else Icons.Outlined.Edit,
                       contentDescription =
@@ -462,20 +476,23 @@ fun EditableField(
                   unfocusedContainerColor = MaterialTheme.colorScheme.onPrimary),
           placeholder = {
             Text(
-                text = stringResource(R.string.add_text),
+                text = stringResource(R.string.enter_text),
                 style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic))
           },
-          modifier = Modifier.fillMaxWidth())
+          modifier =
+              Modifier.fillMaxWidth()
+                  .testTag(ProfileSettingsScreenTestTags.textField(testTagPrefix)))
     } else {
       if (text.isBlank()) {
         Text(
-            text = stringResource(R.string.add_a_bio),
-            style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic))
+            text = stringResource(R.string.press_edit_to_add),
+            style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic),
+            modifier = Modifier.testTag(ProfileSettingsScreenTestTags.empty(testTagPrefix)))
       } else {
         Text(
             text = text,
             style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.testTag(ProfileSettingsTestTags.FIELD_TEXT))
+            modifier = Modifier.testTag(ProfileSettingsScreenTestTags.text(testTagPrefix)))
       }
     }
   }
