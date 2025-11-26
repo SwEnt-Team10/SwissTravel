@@ -152,9 +152,15 @@ fun DailyViewScreen(
 
     val newSchedule = (tripSegments + tripActivities).sortedBy { it.startDate }
     if (schedule != newSchedule) {
+      val newGrouped =
+          newSchedule.groupBy {
+            it.startDate.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+          }
+      val newDaysCount = newGrouped.keys.size
+
       schedule = newSchedule
-      // Reset only if necessary, or keep index if within bounds
-      if (currentDayIndex >= days.size) {
+      // Reset only if necessary, or keep index if within bounds of the NEW schedule
+      if (currentDayIndex >= newDaysCount) {
         currentDayIndex = 0
       }
     }
