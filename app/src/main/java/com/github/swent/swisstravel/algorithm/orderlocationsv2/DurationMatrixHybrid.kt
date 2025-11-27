@@ -69,7 +69,8 @@ open class DurationMatrixHybrid(
               try {
                 val from = start
                 val to = end
-                trainTimetable.getFastestRoute(from, to)?.toDouble()
+                // getFastestRoute may return 0 for "no connection" — treat as null
+                trainTimetable.getFastestRoute(from, to)?.takeIf { it > 0 }?.toDouble()
               } catch (e: Exception) {
                 Log.e(
                     "DurationMatrixHybrid",
