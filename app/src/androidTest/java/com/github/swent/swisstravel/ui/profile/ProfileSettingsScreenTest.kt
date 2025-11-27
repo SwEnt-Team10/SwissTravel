@@ -31,7 +31,7 @@ class FakeUserRepository : UserRepository {
         biography = "Fake Bio",
         email = "test@example.com",
         profilePicUrl = "",
-        preferences = listOf(Preference.QUICK),
+        preferences = listOf(Preference.MUSEUMS, Preference.QUICK),
         friends = emptyList(),
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
