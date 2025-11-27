@@ -82,15 +82,17 @@ class ProgressiveRouteOptimizer(
     var completedSteps = 0
     val totalSteps = unvisited.size
 
-    while (unvisited.isNotEmpty() && !sameLocation(current, end)) {
-      val candidates = selectCandidates(current, end, unvisited)
-      val durations = fetchDurations(current, candidates, mode)
-      val best =
-          pickBestCandidate(current, ordered, unvisited, candidates, durations, activitiesMap)
-      appendCandidate(best, ordered, segmentDurations, unvisited).also { totalDuration += it }
-      current = best.location
-      completedSteps++
-      onProgress(completedSteps.toFloat() / totalSteps)
+    if (unvisited.isNotEmpty()) {
+      do {
+        val candidates = selectCandidates(current, end, unvisited)
+        val durations = fetchDurations(current, candidates, mode)
+        val best =
+            pickBestCandidate(current, ordered, unvisited, candidates, durations, activitiesMap)
+        appendCandidate(best, ordered, segmentDurations, unvisited).also { totalDuration += it }
+        current = best.location
+        completedSteps++
+        onProgress(completedSteps.toFloat() / totalSteps)
+      } while (unvisited.isNotEmpty() && !sameLocation(current, end))
     }
 
     if (!sameLocation(ordered.last(), end)) {
