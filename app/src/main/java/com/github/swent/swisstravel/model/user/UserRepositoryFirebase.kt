@@ -26,21 +26,20 @@ class UserRepositoryFirebase(
    * the user's information is not found in Firestore, a new user is created.
    */
   override suspend fun getCurrentUser(): User {
-    val firebaseUser = auth.currentUser
-
-    if (firebaseUser == null || firebaseUser.isAnonymous) {
-      return User(
-          uid = "guest",
-          name = "Guest",
-          biography = "",
-          email = "Not signed in",
-          profilePicUrl = "",
-          preferences = emptyList(),
-          friends = emptyList(),
-          stats = UserStats(),
-          pinnedTripsUids = emptyList(),
-          pinnedImagesUris = emptyList())
-    }
+    val firebaseUser =
+        auth.currentUser
+            ?: // If not signed in, return a guest user
+            return User(
+                uid = "guest",
+                name = "Guest",
+                biography = "",
+                email = "Not signed in",
+                profilePicUrl = "",
+                preferences = emptyList(),
+                friends = emptyList(),
+                stats = UserStats(),
+                pinnedTripsUids = emptyList(),
+                pinnedImagesUris = emptyList())
 
     val uid = firebaseUser.uid
     return try {

@@ -24,6 +24,8 @@
 
     <!--Profile Screen -->
     <dimen name="profile_logo_size">100dp</dimen>
+    <dimen name="profile_padding_start_end">16dp</dimen>
+    <dimen name="profile_padding_top_bottom">4dp</dimen>
 
     <!--Edit Trip Screen -->
     <dimen name="edit_screen_vertical_arrangement">24dp</dimen>
