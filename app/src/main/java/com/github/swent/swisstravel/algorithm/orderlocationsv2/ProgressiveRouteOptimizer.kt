@@ -219,18 +219,7 @@ class ProgressiveRouteOptimizer(
           if (duration != null && duration > 0) {
             duration
           } else {
-            when (mode) {
-              TransportMode.CAR -> {
-                estimateDurationSecondsByDistance(current, candidate, CAR_SPEED)
-              }
-              TransportMode.TRAIN -> {
-                estimateDurationSecondsByDistance(current, candidate, TRAIN_SPEED)
-              }
-              else -> {
-                estimateDurationSecondsByDistance(
-                    current, candidate, UNKNOWN_SPEED) // in case of a problem with the mode
-              }
-            }
+            fallbackDuration(current, candidate, mode)
           }
 
       // Cache only if valid
@@ -452,5 +441,18 @@ class ProgressiveRouteOptimizer(
     val distKm = a.haversineDistanceTo(b)
     val minutes = (distKm / avgSpeedKmh) * FROM_HOUR_TO_MINUTES
     return max(5.0, minutes) * FROM_MINUTES_TO_SECONDS // always ≥ 5 min
+  }
+
+  /** Fallback duration estimation when no data is available in cache or matrix. */
+  private fun fallbackDuration(
+      current: Location,
+      candidate: Location,
+      mode: TransportMode
+  ): Double {
+    return when (mode) {
+      TransportMode.CAR -> estimateDurationSecondsByDistance(current, candidate, CAR_SPEED)
+      TransportMode.TRAIN -> estimateDurationSecondsByDistance(current, candidate, TRAIN_SPEED)
+      else -> estimateDurationSecondsByDistance(current, candidate, UNKNOWN_SPEED)
+    }
   }
 }
