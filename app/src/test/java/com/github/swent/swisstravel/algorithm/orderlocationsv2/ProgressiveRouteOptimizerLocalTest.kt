@@ -204,15 +204,7 @@ class ProgressiveRouteOptimizerLocalTest {
     val realCache = DurationCacheLocal(mockContext, cacheFile = tempFile)
 
     val optimizerWithCacheAndMatrices =
-        ProgressiveRouteOptimizer(
-            cacheManager = realCache,
-            matrixHybrid = matrixHybrid,
-            k = 5,
-            penaltyConfig =
-                ProgressiveRouteOptimizer.PenaltyConfig(
-                    zigzagMultiplier = 0.0,
-                    activityDiffMultiplier = 0.0,
-                    centerDistanceMultiplier = 0.0))
+        ProgressiveRouteOptimizer(cacheManager = realCache, matrixHybrid = matrixHybrid, k = 5)
 
     val activities =
         listOf(
