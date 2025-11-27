@@ -161,7 +161,8 @@ class ProgressiveRouteOptimizer(
         .mapNotNull { candidate ->
           try {
             cacheManager.getDuration(current.coordinate, candidate.coordinate, mode)?.let {
-              candidate to it.duration
+              // treat non-positive durations as missing/invalid
+              if (it.duration > 0.0) candidate to it.duration else null
             }
           } catch (e: Exception) {
             Log.d("Error getting duration from cache", e.toString())
@@ -195,15 +196,37 @@ class ProgressiveRouteOptimizer(
 
     // Create a map from the results and save valid new durations to the cache.
     return missingCandidates.associateWith { candidate ->
-      val duration = fetchedDurations[Pair(current.coordinate, candidate.coordinate)]
-      if (duration != null && duration >= 0) {
+
+      // Fetch result
+      val duration = fetchedDurations[current.coordinate to candidate.coordinate]
+
+      // Apply fallback
+      val finalDuration =
+          if (duration != null && duration > 0) {
+            duration
+          } else {
+            when (mode) {
+              TransportMode.CAR -> {
+                estimateDurationSecondsByDistance(current, candidate, 80.0)
+              }
+              TransportMode.TRAIN -> {
+                estimateDurationSecondsByDistance(current, candidate, 100.0)
+              }
+              else -> {
+                estimateDurationSecondsByDistance(
+                    current, candidate, 60.0) // placeholder in case of a problem with the mode
+              }
+            }
+          }
+
+      // Cache only if valid
+      if (finalDuration > 0) {
         try {
-          cacheManager.saveDuration(current.coordinate, candidate.coordinate, duration, mode)
-        } catch (_: Exception) {
-          // Ignore cache-saving errors.
-        }
+          cacheManager.saveDuration(current.coordinate, candidate.coordinate, finalDuration, mode)
+        } catch (_: Exception) {}
       }
-      duration
+
+      finalDuration
     }
   }
 
@@ -399,5 +422,19 @@ class ProgressiveRouteOptimizer(
   private fun sameLocation(a: Location, b: Location): Boolean {
     return a.coordinate.latitude == b.coordinate.latitude &&
         a.coordinate.longitude == b.coordinate.longitude
+  }
+
+  /**
+   * Estimate duration in seconds between two locations based on haversine distance and average
+   * speed.
+   */
+  private fun estimateDurationSecondsByDistance(
+      a: Location,
+      b: Location,
+      avgSpeedKmh: Double = 100.0
+  ): Double {
+    val distKm = a.haversineDistanceTo(b)
+    val minutes = (distKm / avgSpeedKmh) * 60.0
+    return max(5.0, minutes) * 60.0 // always ≥ 5 min
   }
 }
