@@ -464,9 +464,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
             vm.selectActivity(tripActivity.activity)
             navigationActions.navigateToActivityInfo(uid)
           },
-          onAddPhotos = {
-              navigationActions.navigateTo(Screen.AddPhotos(uid))
-          })
+          onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
 
     composable(
@@ -490,21 +488,15 @@ private fun NavGraphBuilder.tripInfoNavGraph(
               onSaved = { navController.popBackStack() },
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
-      composable(Screen.AddPhotos.route) { navBackStackEntry ->
-          val tripId = navBackStackEntry.arguments?.getString("tripId")
+    composable(Screen.AddPhotos.route) { navBackStackEntry ->
+      val tripId = navBackStackEntry.arguments?.getString("tripId")
 
-          tripId?.let {
-              AddPhotosScreen(
-                  onBack = { navController.popBackStack()
-                  },
-                  tripId = tripId
-              )
+      tripId?.let { AddPhotosScreen(onBack = { navController.popBackStack() }, tripId = tripId) }
+          ?: run {
+            Log.e("AddPhotosScreen", "Trip UID is null")
+            Toast.makeText(context, "Trip UID is null", Toast.LENGTH_SHORT).show()
           }
-              ?: run {
-                  Log.e("AddPhotosScreen", "Trip UID is null")
-                  Toast.makeText(context, "Trip UID is null", Toast.LENGTH_SHORT).show()
-              }
-      }
+    }
   }
 }
 

@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.model.trip
 
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
@@ -9,7 +10,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
-import androidx.core.net.toUri
 
 const val TRIPS_COLLECTION_PATH = "trips"
 
@@ -85,11 +85,9 @@ class TripsRepositoryFirestore(
       val isFavorite = document.getBoolean("favorite") ?: false
 
       val isCurrentTrip = document.getBoolean("currentTrip") ?: false
-        // With help of AI
-        val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
-        val listUri = listUriStrings.mapNotNull {
-            (it as? String)?.toUri()
-        }
+      // With help of AI
+      val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
+      val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
       Trip(
           uid = uid,
           name = name,

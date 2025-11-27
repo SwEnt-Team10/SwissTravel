@@ -335,7 +335,7 @@ private fun TripInfoTopAppBar(
         }
       },
       actions = {
-          AddPhotosButton(onAddPhotos = onAddPhotos)
+        AddPhotosButton(onAddPhotos = onAddPhotos)
         FavoriteButton(
             isFavorite = ui.isFavorite,
             onToggleFavorite = onToggleFavorite,
@@ -479,17 +479,11 @@ private fun StepRow(
 }
 
 @Composable
-private fun AddPhotosButton(
-    onAddPhotos: () -> Unit
-) {
-    IconButton(
-        onClick = onAddPhotos
-    ) {
-        Icon(
-            imageVector = Icons.Outlined.Image,
-            contentDescription = stringResource(R.string.add_photo)
-        )
-    }
+private fun AddPhotosButton(onAddPhotos: () -> Unit) {
+  IconButton(onClick = onAddPhotos) {
+    Icon(
+        imageVector = Icons.Outlined.Image, contentDescription = stringResource(R.string.add_photo))
+  }
 }
 
 /**
