@@ -327,7 +327,7 @@ class ProgressiveRouteOptimizer(
    * @param endDirectionMultiplier Multiplier for end-direction penalty
    */
   data class PenaltyConfig(
-      val zigzagMultiplier: Double = 2.0,
+      val zigzagMultiplier: Double = 10.0,
       val activityDiffMultiplier: Double = 0.0,
       val centerDistanceMultiplier: Double = 1.0,
       val endDirectionMultiplier: Double = 75.0
@@ -359,7 +359,7 @@ class ProgressiveRouteOptimizer(
     // 1) Zigzag penalty
     if (previous != null) {
       val angle = angleBetween(previous.coordinate, from.coordinate, to.coordinate)
-      if (angle > 90.0) {
+      if (angle > 90.0 || angle < 25.0) {
         penalty += angle * config.zigzagMultiplier
       }
     }
