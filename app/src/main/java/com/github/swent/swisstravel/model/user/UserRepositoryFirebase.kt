@@ -28,7 +28,7 @@ class UserRepositoryFirebase(
   override suspend fun getCurrentUser(): User {
     val firebaseUser = auth.currentUser
 
-    if (firebaseUser == null || firebaseUser.isAnonymous) {
+    if (firebaseUser == null /*|| firebaseUser.isAnonymous*/) { // TODO
       return User(
           uid = "guest",
           name = "Guest",

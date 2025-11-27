@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -38,6 +39,7 @@ import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
@@ -222,11 +224,54 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
-    // TODO
+    // Profile header
+    waitUntil(
+        timeoutMillis = 5000,
+        condition = { onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).isDisplayed() })
+    onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+
+    // Biography (not displayed cause it's empty)
+    // onNodeWithTag(ProfileScreenTestTags.BIOGRAPHY).assertIsDisplayed()
+
+    // Achievements
+    onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
+
+    // Settings button (own profile)
+    onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON).assertDoesNotExist()
+
+    // Pinned trips section
+    onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
+
+    // Pinned images section
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertExists()
   }
 
   fun ComposeTestRule.checkProfileScreenIsNotDisplayed() {
-    // TODO
+    // Profile header
+    onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsNotDisplayed()
+
+    // Biography
+    onNodeWithTag(ProfileScreenTestTags.BIOGRAPHY).assertIsNotDisplayed()
+
+    // Achievements
+    onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsNotDisplayed()
+
+    // Settings button (own profile)
+    onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsNotDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON).assertIsNotDisplayed()
+
+    // Pinned trips section
+    onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsNotDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertDoesNotExist()
+
+    // Pinned images section
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsNotDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertDoesNotExist()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
   }
 
   fun ComposeTestRule.checkNavigationMenuIsDisplayed() {
@@ -546,6 +591,30 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileSettingsScreenTestTags.PREFERENCES).assertIsDisplayed()
     // Collapsed by default: a well-known preference label should NOT be visible yet
     onNodeWithText("Museums").assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkFriendProfileScreenIsDisplayed() {
+    // Profile header
+    onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+
+    // Biography
+    onNodeWithTag(ProfileScreenTestTags.BIOGRAPHY).assertIsDisplayed()
+
+    // Achievements
+    onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
+
+    // Unfriend button (friend profile)
+    onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsNotDisplayed()
+
+    // Pinned trips section
+    onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertDoesNotExist()
+
+    // Pinned images section
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
   }
 
   // TODO : Create helper/companions functions here

@@ -364,7 +364,9 @@ class ProfileSettingsScreenTest {
     }
 
     // Empty bio shows fallback placeholder
-    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.empty("BIO")).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.empty("BIOGRAPHY"))
+        .assertIsDisplayed()
   }
 
   @Test
@@ -376,11 +378,13 @@ class ProfileSettingsScreenTest {
     }
 
     // Press edit
-    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.editButton("BIO")).performClick()
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.editButton("BIOGRAPHY"))
+        .performClick()
 
     // Should show TextField
     composeTestRule
-        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("BIO"))
+        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("BIOGRAPHY"))
         .assertIsDisplayed()
   }
 }

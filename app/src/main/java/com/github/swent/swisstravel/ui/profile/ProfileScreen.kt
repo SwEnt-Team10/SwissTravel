@@ -65,7 +65,7 @@ import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 /** Test tags for the profile screen. */
 object ProfileScreenTestTags {
   const val SETTINGS_BUTTON = "settingsButton"
-  const val REMOVE_FRIEND_BUTTON = "removeFriendButton"
+  const val UNFRIEND_BUTTON = "unfriendButton"
   const val DISPLAY_NAME = "displayName"
   const val PROFILE_PIC = "profilePic"
   const val BIOGRAPHY = "biography"
@@ -77,6 +77,7 @@ object ProfileScreenTestTags {
   const val PINNED_IMAGES_EDIT_BUTTON = "pinnedImagesEditButton"
   const val CONFIRM_UNFRIEND_BUTTON = "confirmUnfriendButton"
   const val CANCEL_UNFRIEND_BUTTON = "cancelUnfriendButton"
+  const val LOADING_INDICATOR = "loadingIndicator"
 }
 
 /**
@@ -159,7 +160,7 @@ fun ProfileScreen(
                 } else {
                   IconButton(
                       onClick = { showUnfriendConfirmation = true },
-                      modifier = Modifier.testTag(ProfileScreenTestTags.REMOVE_FRIEND_BUTTON)) {
+                      modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
                         Icon(
                             imageVector = Icons.Outlined.PersonRemove,
                             contentDescription = stringResource(R.string.unfriend),
@@ -172,7 +173,8 @@ fun ProfileScreen(
       }) { pd ->
         if (uiState.isLoading) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator()
+            CircularProgressIndicator(
+                modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
           }
         } else {
           ProfileScreenContent(
@@ -265,7 +267,8 @@ private fun ProfileHeader(photoUrl: String, name: String) {
         text = name,
         style = MaterialTheme.typography.headlineLarge,
         maxLines = 1,
-        overflow = TextOverflow.Ellipsis)
+        overflow = TextOverflow.Ellipsis,
+        modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
   }
 }
 
