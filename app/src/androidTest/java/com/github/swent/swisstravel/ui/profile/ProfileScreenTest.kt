@@ -1,65 +1,38 @@
 package com.github.swent.swisstravel.ui.profile
 
 import android.net.Uri
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
-import com.github.swent.swisstravel.ui.tripcreation.TripCreationTests
+import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
-/** Fake UserRepository to avoid Firebase. */
-class FakeUserRepository : UserRepository {
-  override suspend fun getCurrentUser(): User {
-    return User(
-        uid = "fakeUid123",
-        name = "Test User",
-        biography = "Fake Bio",
-        email = "test@example.com",
-        profilePicUrl = "",
-        preferences = listOf(Preference.MUSEUMS),
-        friends = emptyList(),
-        stats = UserStats(),
-        pinnedTripsUids = emptyList(),
-        pinnedImagesUris = emptyList())
-  }
+/** Minimal user repository for tests */
+private class TestUserRepository(private val user: User) : UserRepository {
+  override suspend fun getCurrentUser() = user
 
-  override suspend fun getUserByUid(uid: String): User? {
-    // no op in tests
-    return null
-  }
+  override suspend fun getUserByUid(uid: String) = user
 
-  override suspend fun getUserByNameOrEmail(query: String): List<User> {
-    // no op in tests
-    return emptyList()
-  }
+  override suspend fun getUserByNameOrEmail(query: String) = emptyList<User>()
 
-  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {
-    // no-op in tests
-  }
+  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
 
-  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-    // no-op in tests
-  }
+  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {}
 
-  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-    // no-op in tests
-  }
+  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
 
-  override suspend fun removeFriend(uid: String, friendUid: String) {
-    // no-op in tests
-  }
+  override suspend fun removeFriend(uid: String, friendUid: String) {}
 
   override suspend fun updateUser(
       uid: String,
@@ -69,170 +42,350 @@ class FakeUserRepository : UserRepository {
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
       pinnedImagesUris: List<Uri>?
-  ) {
-    // no-op in tests
-  }
+  ) {}
 
-  override suspend fun updateUserStats(uid: String, stats: UserStats) {
-    // no-op in tests
-  }
+  override suspend fun updateUserStats(uid: String, stats: UserStats) {}
 }
 
-class ProfileScreenUITest {
+/**
+ * Tests for the ProfileScreen composable.
+ *
+ * Made with the help of AI
+ */
+@RunWith(AndroidJUnit4::class)
+class ProfileScreenTest {
+
+  private val fakeTripRepo = TripRepositoryLocal()
 
   @get:Rule val composeTestRule = createComposeRule()
-  private val fakeRepo = FakeUserRepository()
-  private val fakeTripRepo = TripCreationTests.FakeTripsRepository(emptyList())
 
+  private val sampleStats =
+      UserStats(
+          totalTrips = 5,
+          totalTravelMinutes = 300,
+          uniqueLocations = 3,
+          mostUsedTransportMode = null,
+          longestRouteSegmentMin = 120)
+
+  /** Test own profile UI elements */
   @Test
-  fun allKeyUIElementsAreDisplayed_collapsedByDefault() {
-    composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo, fakeTripRepo)) }
-    }
+  fun ownProfile_displaysAllKeyUIElements() {
+    runBlocking {
+      val testUser =
+          User(
+              uid = "getolover1",
+              name = "Satoru Gojo",
+              biography = "nah id win",
+              email = "blbl@example.com",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
 
-    // Static bits
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.GREETING).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PERSONAL_INFO).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMAIL).assertIsDisplayed()
+      val viewModel =
+          ProfileViewModel(
+              userRepository = TestUserRepository(testUser),
+              tripsRepository = fakeTripRepo,
+              requestedUid = "getolover1")
 
-    // Preferences container present
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PREFERENCES_LIST).assertIsDisplayed()
-    // Header row present
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PREFERENCES).assertIsDisplayed()
-    // Collapsed by default: a well-known preference label should NOT be visible yet
-    composeTestRule.onNodeWithText("Museums").assertDoesNotExist()
-  }
-
-  @Test
-  fun expandAndCollapsePreferences_showsAndHidesContent() {
-    composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo, fakeTripRepo)) }
-    }
-
-    // Expand
-    composeTestRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
-        .performClick()
-    // Now a known preference chip should appear
-    composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
-
-    // Collapse
-    composeTestRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
-        .performClick()
-    composeTestRule.onNodeWithText("Museums").assertDoesNotExist()
-  }
-
-  @Test
-  fun clickingAPreferenceChip_invokesSaveFlow() {
-    composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo, fakeTripRepo)) }
-    }
-
-    // Expand first
-    composeTestRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
-        .performClick()
-    composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
-
-    // Click to toggle on/off (we don't assert state, just ensure it doesn't crash)
-    composeTestRule.onNodeWithText("Museums").performClick()
-    composeTestRule.onNodeWithText("Museums").performClick()
-  }
-
-  /** Directly tests InfoSection/InfoItem for coverage. */
-  @Test
-  fun infoSection_and_InfoItem_renderTextProperly() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
-          InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
-        }
+      composeTestRule.setContent {
+        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
       }
+
+      // Profile header
+      composeTestRule.onNodeWithText("Satoru Gojo").assertIsDisplayed()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+
+      // Biography
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.BIOGRAPHY).assertIsDisplayed()
+
+      // Achievements
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
+
+      // Settings button (own profile)
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()
+
+      // Pinned trips section
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
+
+      // Pinned images section
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertExists()
     }
-    composeTestRule.onNodeWithText("Section Title").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Label").assertIsDisplayed()
-    composeTestRule.onNodeWithText("Value").assertIsDisplayed()
+  }
+
+  /** Test other user's profile: unfriend button & dialog */
+  @Test
+  fun otherProfile_displaysUnfriendButton_andCanCancelDialog() {
+    runBlocking {
+      val currentUser =
+          User(
+              uid = "getolover1",
+              name = "Current User",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
+
+      val otherUser =
+          User(
+              uid = "gojolover999",
+              name = "Suguru Geto",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
+
+      val viewModel =
+          ProfileViewModel(
+              userRepository = TestUserRepository(currentUser),
+              tripsRepository = fakeTripRepo,
+              requestedUid = "gojolover999")
+
+      composeTestRule.setContent {
+        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
+      }
+
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON)
+          .assertIsDisplayed()
+          .performClick()
+
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.CONFIRM_UNFRIEND_BUTTON)
+          .assertIsDisplayed()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.CANCEL_UNFRIEND_BUTTON).performClick()
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.CONFIRM_UNFRIEND_BUTTON)
+          .assertDoesNotExist()
+    }
   }
 
   @Test
-  fun profileDisplaysFallbackValuesWhenEmpty() {
-    val emptyRepo =
-        object : UserRepository {
-          override suspend fun getCurrentUser(): User {
-            return User(
-                uid = "0",
-                name = "",
-                biography = "",
-                email = "",
-                profilePicUrl = "",
-                preferences = emptyList(),
-                friends = emptyList(),
-                stats = UserStats(),
-                pinnedTripsUids = emptyList(),
-                pinnedImagesUris = emptyList())
-          }
+  fun otherProfile_canRemoveFriend() {
+    runBlocking {
+      val currentUser =
+          User(
+              uid = "getolover1",
+              name = "Satoru Gojo",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
 
-          override suspend fun getUserByUid(uid: String): User? {
-            // no op for tests
-            return null
-          }
+      val otherUser =
+          User(
+              uid = "gojolover999",
+              name = "Suguru Geto",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
 
-          override suspend fun getUserByNameOrEmail(query: String): List<User> {
-            // no op for tests
-            return emptyList()
-          }
+      val viewModel =
+          ProfileViewModel(
+              userRepository = TestUserRepository(currentUser),
+              tripsRepository = fakeTripRepo,
+              requestedUid = "gojolover999")
 
-          override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
+      composeTestRule.setContent {
+        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
+      }
 
-          override suspend fun updateUserStats(uid: String, stats: UserStats) {
-            /** no-op for tests* */
-          }
+      // Open unfriend dialog
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON)
+          .assertIsDisplayed()
+          .performClick()
 
-          override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-            /** no-op for tests* */
-          }
+      // Confirm removal
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.CONFIRM_UNFRIEND_BUTTON)
+          .assertIsDisplayed()
+          .performClick()
 
-          override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-            /** no-op for tests* */
-          }
+      // The confirm button disappears (dialog dismissed)
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.CONFIRM_UNFRIEND_BUTTON)
+          .assertDoesNotExist()
 
-          override suspend fun removeFriend(uid: String, friendUid: String) {
-            /** no-op for tests* */
-          }
-
-          override suspend fun updateUser(
-              uid: String,
-              name: String?,
-              biography: String?,
-              profilePicUrl: String?,
-              preferences: List<Preference>?,
-              pinnedTripsUids: List<String>?,
-              pinnedImagesUris: List<Uri>?
-          ) {
-            /** no-op for tests* */
-          }
-        }
-
-    composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(emptyRepo, fakeTripRepo)) }
+      // UI state should not have an error message after removal
+      composeTestRule.runOnIdle { assert(viewModel.uiState.value.errorMsg.isNullOrEmpty()) }
     }
+  }
 
-    // InfoItem displays "-" when value is blank
-    composeTestRule
-        .onNode(hasTestTag(ProfileScreenTestTags.DISPLAY_NAME), useUnmergedTree = true)
-        .assertIsDisplayed()
-    composeTestRule
-        .onNode(hasTestTag(ProfileScreenTestTags.EMAIL), useUnmergedTree = true)
-        .assertIsDisplayed()
-    // We can also check the literal "-" exists at least once on the screen
-    composeTestRule
-        .onAllNodesWithTag(ProfileScreenTestTags.DISPLAY_NAME, useUnmergedTree = true)
-        .fetchSemanticsNodes()
-    composeTestRule
-        .onAllNodesWithTag(ProfileScreenTestTags.EMAIL, useUnmergedTree = true)
-        .fetchSemanticsNodes()
+  @Test
+  fun otherProfile_openUnfriendDialog_thenCancel_doesNotRemoveFriend() {
+    runBlocking {
+      val currentUser =
+          User(
+              uid = "currentUser",
+              name = "Current User",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
+
+      val otherUser =
+          User(
+              uid = "friend123",
+              name = "Friend User",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
+
+      val viewModel =
+          ProfileViewModel(
+              userRepository = TestUserRepository(currentUser),
+              tripsRepository = fakeTripRepo,
+              requestedUid = "friend123")
+
+      composeTestRule.setContent {
+        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
+      }
+
+      // Open unfriend dialog
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON)
+          .assertIsDisplayed()
+          .performClick()
+
+      // Cancel removal
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.CANCEL_UNFRIEND_BUTTON)
+          .assertIsDisplayed()
+          .performClick()
+
+      // Confirm button should no longer exist (dialog dismissed)
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.CONFIRM_UNFRIEND_BUTTON)
+          .assertDoesNotExist()
+
+      // UI state should still be fine, no error messages
+      composeTestRule.runOnIdle { assert(viewModel.uiState.value.errorMsg.isNullOrEmpty()) }
+    }
+  }
+
+  @Test
+  fun otherUserProfile_showsRemoveFriendAndNoEditOrSettingsButton() {
+    runBlocking {
+      val currentUser =
+          User(
+              uid = "currentUser",
+              name = "Current User",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
+
+      val otherUser =
+          User(
+              uid = "friend123",
+              name = "Friend User",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
+
+      val viewModel =
+          ProfileViewModel(
+              userRepository = TestUserRepository(currentUser),
+              tripsRepository = fakeTripRepo,
+              requestedUid = "friend123")
+
+      composeTestRule.setContent {
+        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
+      }
+
+      // Edit buttons for pinned trips/images should not exist
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON)
+          .assertDoesNotExist()
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON)
+          .assertDoesNotExist()
+
+      // Settings button should not exist
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertDoesNotExist()
+
+      // Remove friend button should exist
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON).assertIsDisplayed()
+    }
+  }
+
+  @Test
+  fun ownProfile_showsEditAndSettings_buttonsAndNoRemoveFriend() {
+    runBlocking {
+      val currentUser =
+          User(
+              uid = "currentUser",
+              name = "Current User",
+              biography = "This is my bio",
+              email = "current@example.com",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = emptyList(),
+              pinnedImagesUris = emptyList())
+
+      val viewModel =
+          ProfileViewModel(
+              userRepository = TestUserRepository(currentUser),
+              tripsRepository = fakeTripRepo,
+              requestedUid = "currentUser")
+
+      composeTestRule.setContent {
+        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
+      }
+
+      // Settings button should be displayed
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()
+
+      // Edit buttons for pinned trips/images should be visible (even if features not implemented
+      // yet)
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertExists()
+
+      // Remove friend button should NOT be displayed
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON).assertDoesNotExist()
+    }
   }
 }

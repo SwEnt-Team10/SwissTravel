@@ -50,7 +50,9 @@ import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.navigation.Tab
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
-import com.github.swent.swisstravel.ui.profile.ProfileScreenViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
+import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
@@ -302,13 +304,13 @@ private fun SwissTravelNavHost(
 ) {
   NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
     authNavGraph(navigationActions, credentialManager)
-    profileNavGraph(navigationActions)
+    profileNavGraph(navigationActions, context) // TODO context is temporary
     currentTripNavGraph(navigationActions)
     myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
     tripInfoNavGraph(context, navController, navigationActions)
     tripSettingsNavGraph(navController, navigationActions)
-    friendsListNavGraph(navController, navigationActions)
+    friendsListNavGraph(context, navController, navigationActions)
   }
 }
 
@@ -347,17 +349,34 @@ private fun NavGraphBuilder.authNavGraph(
 /**
  * Sets up the profile navigation graph for the Swiss Travel App.
  *
- * @param navigationActions The NavigationActions used for navigation.
+ * @param navigationActions The NavigationActions used for navigation. TODO remove context parameter
+ *   once edit pinned methods are implemented
  */
-private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions) {
+private fun NavGraphBuilder.profileNavGraph(
+    navigationActions: NavigationActions,
+    context: Context
+) {
   navigation(
       startDestination = Screen.Profile.route,
       route = Screen.Profile.name,
   ) {
     composable(Screen.Profile.route) {
       ProfileScreen(
-          profileScreenViewModel =
-              ProfileScreenViewModel(userRepository = UserRepositoryFirebase()),
+          profileViewModel =
+              ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
+          onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
+          onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+          onEditPinnedTrips = { /* TODO */
+            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
+          },
+          onEditPinnedImages = { /* TODO */
+            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
+          })
+    }
+    composable(Screen.ProfileSettings.route) {
+      ProfileSettingsScreen(
+          profileSettingsViewModel = ProfileSettingsViewModel(),
+          onBack = { navigationActions.goBack() },
           navigationActions = navigationActions)
     }
   }
@@ -448,7 +467,8 @@ private fun NavGraphBuilder.tripInfoNavGraph(
     composable(Screen.TripInfo.route) { navBackStackEntry ->
       val uid = navBackStackEntry.arguments?.getString("uid")
       if (uid == null) {
-        Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, context.getString(R.string.trip_id_missing), Toast.LENGTH_SHORT)
+            .show()
         navigationActions.navigateTo(Screen.MyTrips)
         return@composable
       }
@@ -520,7 +540,7 @@ private fun ActivityInfoRoute(
 ) {
   val tripId = backStackEntry.arguments?.getString("uid")
   if (tripId == null) {
-    Toast.makeText(context, "Trip ID is missing", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, context.getString(R.string.trip_id_missing), Toast.LENGTH_SHORT).show()
     navigationActions.goBack()
     return
   }
@@ -617,6 +637,7 @@ private fun NavGraphBuilder.tripSettingsNavGraph(
  * @param navigationActions The NavigationActions used for navigation actions.
  */
 private fun NavGraphBuilder.friendsListNavGraph(
+    context: Context,
     navController: NavHostController,
     navigationActions: NavigationActions
 ) {
@@ -624,17 +645,40 @@ private fun NavGraphBuilder.friendsListNavGraph(
       startDestination = Screen.FriendsList.route,
       route = Screen.FriendsList.name,
   ) {
+    // Friends List Screen
     composable(Screen.FriendsList.route) {
       val vm = friendsViewModel(navController)
 
       FriendsListScreen(
-          friendsViewModel = vm, onAddFriend = { navigationActions.navigateTo(Screen.AddFriend) })
+          friendsViewModel = vm,
+          onSelectFriend = { navigationActions.navigateTo(Screen.FriendProfile(it)) },
+          onAddFriend = { navigationActions.navigateTo(Screen.AddFriend) })
     }
 
+    // Add Friend Screen
     composable(Screen.AddFriend.route) {
       val vm = friendsViewModel(navController)
 
       AddFriendScreen(friendsViewModel = vm, onBack = { navigationActions.goBack() })
     }
+
+    // Friend Profile Screen
+    composable(
+        route = Screen.FriendProfile.route,
+        arguments = listOf(navArgument("uid") { type = NavType.StringType })) { entry ->
+          val uid = entry.arguments?.getString("uid")
+          if (uid == null) {
+            Toast.makeText(
+                    context, context.getString(R.string.user_uid_missing), Toast.LENGTH_SHORT)
+                .show()
+            navigationActions.goBack()
+            return@composable
+          }
+
+          ProfileScreen(
+              profileViewModel = ProfileViewModel(requestedUid = uid),
+              onBack = { navigationActions.goBack() },
+              onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) })
+        }
   }
 }

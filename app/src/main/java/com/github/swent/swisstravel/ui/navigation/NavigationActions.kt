@@ -32,6 +32,8 @@ sealed class Screen(
 
   object Profile : Screen(route = "profile", name = "Profile", isTopLevelDestination = true)
 
+  object ProfileSettings : Screen(route = "profile_settings", name = "Profile Settings")
+
   object MyTrips : Screen(route = "my_trips", name = "My trips", isTopLevelDestination = true)
 
   object SetCurrentTrip : Screen(route = "set_current_trip", name = "Set current trip")
@@ -81,6 +83,14 @@ sealed class Screen(
   object SwipeActivities : Screen(route = "swipe_activities", name = "Swipe Activities")
 
   object LikedActivities : Screen(route = "liked_activities", name = "Liked Activities")
+
+  data class FriendProfile(val uid: String) :
+      Screen(route = "profile/${uid}", name = "Friend Profile") {
+    companion object {
+      const val route = "profile/{uid}"
+      const val name = "Friend Profile"
+    }
+  }
 
   // TODO change this when there is a new screen
 }
@@ -138,7 +148,7 @@ class NavigationActions(
     navController.navigate(Screen.ActivityInfo.route(tripId))
   }
 
-  fun goBackToTripInfo(tripId: String): Boolean {
+  fun goBackToTripInfo(tripId: String): Boolean { // TODO this is unused ?
     // trip_info/<real-uid>, not the pattern
     val route = Screen.TripInfo(tripId).route // "trip_info/$tripId"
     return navController.popBackStack(route = route, inclusive = false)
