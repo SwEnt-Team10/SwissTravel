@@ -27,11 +27,24 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 
+object AddPhotosScreenTestTags {
+    const val MAIN_SCREEN = "mainScreen"
+    const val TOP_APP_BAR = "topAppBar"
+}
+
+/**
+ * A screen that shows the photos associated to a trip. You can add photos too.
+ *
+ * @param onBack a function that is call when the user click on the back button.
+ * @param viewModel the viewmodel used by the screen.
+ * @param tripId the uid of the trip.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPhotosScreen(
@@ -57,8 +70,10 @@ fun AddPhotosScreen(
     }
     val addPhotosUIState by viewModel.uiState.collectAsState()
     Scaffold(
+        modifier = Modifier.testTag(AddPhotosScreenTestTags.MAIN_SCREEN),
         topBar = {
             TopAppBar(
+                modifier = Modifier.testTag(AddPhotosScreenTestTags.TOP_APP_BAR),
                 title = {
                     Text(
                         text = "Add photos",
