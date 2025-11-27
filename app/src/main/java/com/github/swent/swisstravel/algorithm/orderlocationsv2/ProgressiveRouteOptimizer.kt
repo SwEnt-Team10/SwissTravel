@@ -16,6 +16,20 @@ private const val DEFAULT_K = 5
 private const val UNREACHABLE_LEG =
     LARGE_VALUE / 20 // a trip should not exceed around 50 days in travel time
 
+// average car speed in km/h for fallback estimation
+// set as 80 because national roads in Switzerland have speed limits of 80 km/h
+private const val CAR_SPEED = 80.0
+
+// average train speed in km/h for fallback estimation
+// set as 100 because train's speed in Switzerland generally range between 80km/h to 120km/h
+private const val TRAIN_SPEED = 100.0
+
+// average speed in km/h for fallback estimation when the transport mode is unknown
+// set as 60 because it's a reasonable average speed for mixed transport modes
+private const val UNKNOWN_SPEED = 60.0
+private const val FROM_HOUR_TO_MINUTES = 60.0
+private const val FROM_MINUTES_TO_SECONDS = 60.0
+
 // Done with the help of AI
 /**
  * ProgressiveRouteOptimizer:
@@ -207,14 +221,14 @@ class ProgressiveRouteOptimizer(
           } else {
             when (mode) {
               TransportMode.CAR -> {
-                estimateDurationSecondsByDistance(current, candidate, 80.0)
+                estimateDurationSecondsByDistance(current, candidate, CAR_SPEED)
               }
               TransportMode.TRAIN -> {
-                estimateDurationSecondsByDistance(current, candidate, 100.0)
+                estimateDurationSecondsByDistance(current, candidate, TRAIN_SPEED)
               }
               else -> {
                 estimateDurationSecondsByDistance(
-                    current, candidate, 60.0) // placeholder in case of a problem with the mode
+                    current, candidate, UNKNOWN_SPEED) // in case of a problem with the mode
               }
             }
           }
@@ -223,7 +237,9 @@ class ProgressiveRouteOptimizer(
       if (finalDuration > 0) {
         try {
           cacheManager.saveDuration(current.coordinate, candidate.coordinate, finalDuration, mode)
-        } catch (_: Exception) {}
+        } catch (_: Exception) {
+          // Ignore cache-saving errors.
+        }
       }
 
       finalDuration
@@ -431,10 +447,10 @@ class ProgressiveRouteOptimizer(
   private fun estimateDurationSecondsByDistance(
       a: Location,
       b: Location,
-      avgSpeedKmh: Double = 100.0
+      avgSpeedKmh: Double = UNKNOWN_SPEED
   ): Double {
     val distKm = a.haversineDistanceTo(b)
-    val minutes = (distKm / avgSpeedKmh) * 60.0
-    return max(5.0, minutes) * 60.0 // always ≥ 5 min
+    val minutes = (distKm / avgSpeedKmh) * FROM_HOUR_TO_MINUTES
+    return max(5.0, minutes) * FROM_MINUTES_TO_SECONDS // always ≥ 5 min
   }
 }
