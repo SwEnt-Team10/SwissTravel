@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.navigation
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -9,6 +10,7 @@ import androidx.compose.ui.test.performScrollTo
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
@@ -106,18 +108,33 @@ class NavigationTest : InMemorySwissTravelTest() {
     // 1. Navigate to the profile screen
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
 
-    // 2. Scroll to the logout button and click it
+    composeTestRule.waitUntil(
+        timeoutMillis = 5000,
+        condition = {
+          composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).isDisplayed()
+        })
+
+    // 2. Open profile settings
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).performClick()
+
+    composeTestRule.waitUntil(
+        timeoutMillis = 5000,
+        condition = {
+          composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_INFO).isDisplayed()
+        })
+
+    // 3. Scroll to the logout button and click it
     composeTestRule
-        .onNodeWithTag(ProfileScreenTestTags.LOGOUT_BUTTON)
+        .onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON)
         .performScrollTo()
         .performClick()
 
-    // 3. Wait for navigation and verify we are on the landing screen
+    // 4. Wait for navigation and verify we are on the landing screen
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(LandingScreenTestTags.SIGN_UP_BUTTON).assertIsDisplayed()
     composeTestRule.checkProfileScreenIsNotDisplayed()
 
-    // 4. Press the back button and assert that the activity finishes
+    // 5. Press the back button and assert that the activity finishes
     pressBack(shouldFinish = true)
   }
 
