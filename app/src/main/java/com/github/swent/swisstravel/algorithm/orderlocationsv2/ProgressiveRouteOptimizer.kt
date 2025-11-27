@@ -12,7 +12,7 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 private const val LARGE_VALUE = 1e9
-private const val DEFAULT_K = 5
+private const val DEFAULT_K = 7
 private const val UNREACHABLE_LEG =
     LARGE_VALUE / 20 // a trip should not exceed around 50 days in travel time
 
@@ -72,7 +72,7 @@ class ProgressiveRouteOptimizer(
       val candidates = selectCandidates(current, end, unvisited)
       val durations = fetchDurations(current, candidates, mode)
       val best =
-          pickBestCandidate(current, ordered, unvisited, candidates, durations, activitiesMap)
+          pickBestCandidate(current, ordered, unvisited, candidates, durations, activitiesMap, end)
       appendCandidate(best, ordered, segmentDurations, unvisited).also { totalDuration += it }
       current = best.location
       completedSteps++
@@ -224,12 +224,13 @@ class ProgressiveRouteOptimizer(
       unvisited: List<Location>,
       candidates: List<Location>,
       durations: Map<Location, Double?>,
-      activities: Map<Coordinate, Int>
+      activities: Map<Coordinate, Int>,
+      end: Location
   ): CandidateScore {
     val scored =
         candidates.map { candidate ->
           val travelSec = durations[candidate] ?: LARGE_VALUE
-          val activitySec = (activities[candidate.coordinate] ?: 0) * 60.0
+          val activitySec = (activities[candidate.coordinate] ?: 0) / 8.0
           val previous = ordered.getOrNull(ordered.size - 2)
           val penalty =
               computePenalty(
@@ -238,7 +239,8 @@ class ProgressiveRouteOptimizer(
                   previous,
                   unvisited.filter { it != candidate },
                   activities,
-                  penaltyConfig)
+                  penaltyConfig,
+                  end)
           CandidateScore(candidate, travelSec + activitySec + penalty, travelSec)
         }
     return scored.minByOrNull { it.score }
@@ -322,11 +324,13 @@ class ProgressiveRouteOptimizer(
    * @param zigzagMultiplier Multiplier for zigzag penalty
    * @param activityDiffMultiplier Multiplier for activity difference penalty
    * @param centerDistanceMultiplier Multiplier for center-of-mass penalty
+   * @param endDirectionMultiplier Multiplier for end-direction penalty
    */
   data class PenaltyConfig(
       val zigzagMultiplier: Double = 2.0,
-      val activityDiffMultiplier: Double = 30.0,
-      val centerDistanceMultiplier: Double = 10.0
+      val activityDiffMultiplier: Double = 0.0,
+      val centerDistanceMultiplier: Double = 1.0,
+      val endDirectionMultiplier: Double = 75.0
   )
 
   /**
@@ -346,10 +350,11 @@ class ProgressiveRouteOptimizer(
       previous: Location?,
       remaining: List<Location>,
       activities: Map<Coordinate, Int>,
-      config: PenaltyConfig
+      config: PenaltyConfig,
+      end: Location
   ): Double {
     val distKm = from.haversineDistanceTo(to)
-    var penalty = distKm * 60.0 // base distance penalty
+    var penalty = distKm // base distance penalty
 
     // 1) Zigzag penalty
     if (previous != null) {
@@ -377,6 +382,19 @@ class ProgressiveRouteOptimizer(
       val distToCenter = to.haversineDistanceTo(center)
       penalty += distToCenter * config.centerDistanceMultiplier
     }
+
+    // 4) End-direction penalty
+    val toEnd = to.haversineDistanceTo(end)
+
+    // Larger distances from the end = lower penalty
+    // Closer to the end = higher penalty
+    // Scaled by remaining stops (early steps penalise more)
+    val progress = 1.0 - (remaining.size / (remaining.size + 1.0))
+
+    // Invert distance: closer = larger penalty, farther = smaller penalty
+    val closeness = 100.0 / (toEnd + 1.0) // avoid div by zero
+
+    penalty += closeness * config.endDirectionMultiplier * (100.0 * progress)
 
     return penalty
   }
