@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -75,6 +77,7 @@ fun TripSummaryScreen(
 ) {
   val state by viewModel.tripSettings.collectAsState()
   val listState = rememberLazyListState()
+  val context = LocalContext.current
 
   Scaffold(
       topBar = {
@@ -113,7 +116,7 @@ fun TripSummaryScreen(
                   CreateTripButton(
                       enabled = state.name.isNotBlank(),
                       onClick = {
-                        viewModel.saveTrip()
+                        viewModel.saveTrip(context)
                         onNext()
                       })
                 }
@@ -310,6 +313,7 @@ private fun CreateTripButton(enabled: Boolean, onClick: () -> Unit) {
  *
  * @return The padding modifier.
  */
+@SuppressLint("ModifierFactoryExtensionFunction")
 @Composable
 private fun summaryPadding(): Modifier =
     Modifier.padding(

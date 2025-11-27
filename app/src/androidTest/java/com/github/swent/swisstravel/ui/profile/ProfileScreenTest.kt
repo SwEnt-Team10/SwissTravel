@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.net.Uri
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
@@ -14,6 +15,7 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.tripcreation.TripCreationTests
 import org.junit.Rule
 import org.junit.Test
 
@@ -27,7 +29,20 @@ class FakeUserRepository : UserRepository {
         email = "test@example.com",
         profilePicUrl = "",
         preferences = listOf(Preference.MUSEUMS),
-        friends = emptyList())
+        friends = emptyList(),
+        stats = UserStats(),
+        pinnedTripsUids = emptyList(),
+        pinnedImagesUris = emptyList())
+  }
+
+  override suspend fun getUserByUid(uid: String): User? {
+    // no op in tests
+    return null
+  }
+
+  override suspend fun getUserByNameOrEmail(query: String): List<User> {
+    // no op in tests
+    return emptyList()
   }
 
   override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {
@@ -46,6 +61,18 @@ class FakeUserRepository : UserRepository {
     // no-op in tests
   }
 
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedImagesUris: List<Uri>?
+  ) {
+    // no-op in tests
+  }
+
   override suspend fun updateUserStats(uid: String, stats: UserStats) {
     // no-op in tests
   }
@@ -55,11 +82,12 @@ class ProfileScreenUITest {
 
   @get:Rule val composeTestRule = createComposeRule()
   private val fakeRepo = FakeUserRepository()
+  private val fakeTripRepo = TripCreationTests.FakeTripsRepository(emptyList())
 
   @Test
   fun allKeyUIElementsAreDisplayed_collapsedByDefault() {
     composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
+      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo, fakeTripRepo)) }
     }
 
     // Static bits
@@ -80,27 +108,33 @@ class ProfileScreenUITest {
   @Test
   fun expandAndCollapsePreferences_showsAndHidesContent() {
     composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
+      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo, fakeTripRepo)) }
     }
 
     // Expand
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PREFERENCES_TOGGLE).performClick()
+    composeTestRule
+        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
+        .performClick()
     // Now a known preference chip should appear
     composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
 
     // Collapse
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PREFERENCES_TOGGLE).performClick()
+    composeTestRule
+        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
+        .performClick()
     composeTestRule.onNodeWithText("Museums").assertDoesNotExist()
   }
 
   @Test
   fun clickingAPreferenceChip_invokesSaveFlow() {
     composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo)) }
+      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(fakeRepo, fakeTripRepo)) }
     }
 
     // Expand first
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PREFERENCES_TOGGLE).performClick()
+    composeTestRule
+        .onNodeWithTag(useUnmergedTree = true, testTag = ProfileScreenTestTags.PREFERENCES_TOGGLE)
+        .performClick()
     composeTestRule.onNodeWithText("Museums").assertIsDisplayed()
 
     // Click to toggle on/off (we don't assert state, just ensure it doesn't crash)
@@ -135,7 +169,20 @@ class ProfileScreenUITest {
                 email = "",
                 profilePicUrl = "",
                 preferences = emptyList(),
-                friends = emptyList())
+                friends = emptyList(),
+                stats = UserStats(),
+                pinnedTripsUids = emptyList(),
+                pinnedImagesUris = emptyList())
+          }
+
+          override suspend fun getUserByUid(uid: String): User? {
+            // no op for tests
+            return null
+          }
+
+          override suspend fun getUserByNameOrEmail(query: String): List<User> {
+            // no op for tests
+            return emptyList()
           }
 
           override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
@@ -155,10 +202,22 @@ class ProfileScreenUITest {
           override suspend fun removeFriend(uid: String, friendUid: String) {
             /** no-op for tests* */
           }
+
+          override suspend fun updateUser(
+              uid: String,
+              name: String?,
+              biography: String?,
+              profilePicUrl: String?,
+              preferences: List<Preference>?,
+              pinnedTripsUids: List<String>?,
+              pinnedImagesUris: List<Uri>?
+          ) {
+            /** no-op for tests* */
+          }
         }
 
     composeTestRule.setContent {
-      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(emptyRepo)) }
+      SwissTravelTheme { ProfileScreen(ProfileScreenViewModel(emptyRepo, fakeTripRepo)) }
     }
 
     // InfoItem displays "-" when value is blank

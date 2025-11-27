@@ -21,7 +21,7 @@ private const val API_CALL_DELAY_MS = 1000L
 private const val NEAR = 15000
 
 /** Number of activities done in one day */
-private const val NB_ACTIVITIES_PER_DAY = 4
+private const val NB_ACTIVITIES_PER_DAY = 3
 
 /**
  * Selects activities for a trip based on user-defined settings and preferences. This class fetches
@@ -29,22 +29,21 @@ private const val NB_ACTIVITIES_PER_DAY = 4
  * preferences.
  *
  * @param tripSettings The settings for the trip, including destinations and preferences.
- * @param onProgress A callback function to report the progress of the selection process (from 0.0
- *   to 1.0).
  * @param activityRepository The repository to fetch activities from.
  */
 class SelectActivities(
     private val tripSettings: TripSettings,
-    private val onProgress: (Float) -> Unit,
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
   /**
    * Fetches and selects activities based on the trip settings.
    *
+   * @param onProgress A callback function to report the progress of the selection process (from 0.0
+   *   to 1.0).
    * @return A list of [Activity] based on the user preferences and points of interest
    */
-  suspend fun addActivities(): List<Activity> {
+  suspend fun addActivities(onProgress: (Float) -> Unit): List<Activity> {
     val allDestinations = buildDestinationList()
     val userPreferences = tripSettings.preferences.toMutableList()
 
@@ -75,19 +74,17 @@ class SelectActivities(
           val allFetchedActivities = mutableListOf<Activity>()
           for (destination in allDestinations) {
             if (optionalPrefs.isNotEmpty()) {
-              for (preference in optionalPrefs) {
-                val fetched =
-                    activityRepository.getActivitiesNearWithPreference(
-                        mandatoryPrefs + preference,
-                        destination.coordinate,
-                        NEAR,
-                        numberOfActivityToFetchPerStep)
-                allFetchedActivities.addAll(fetched)
-                // Update progress after each API call.
-                completedSteps++
-                onProgress(completedSteps.toFloat() / totalSteps)
-                delay(API_CALL_DELAY_MS) // Respect API rate limit.
-              }
+              val fetched =
+                  activityRepository.getActivitiesNearWithPreference(
+                      mandatoryPrefs + optionalPrefs,
+                      destination.coordinate,
+                      NEAR,
+                      numberOfActivityToFetchPerStep)
+              allFetchedActivities.addAll(fetched)
+              // Update progress after each API call.
+              completedSteps++
+              onProgress(completedSteps.toFloat() / totalSteps)
+              delay(API_CALL_DELAY_MS) // Respect API rate limit.
             } else {
               val fetched =
                   activityRepository.getActivitiesNearWithPreference(

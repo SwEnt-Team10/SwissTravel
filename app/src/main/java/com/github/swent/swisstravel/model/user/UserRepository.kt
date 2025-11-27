@@ -1,5 +1,7 @@
 package com.github.swent.swisstravel.model.user
 
+import android.net.Uri
+
 interface UserRepository {
   /**
    * Retrieves the current user from Firebase Authentication. If the user is not signed in, a guest
@@ -8,6 +10,21 @@ interface UserRepository {
    */
   suspend fun getCurrentUser(): User
 
+  /**
+   * Retrieves a user by their UID.
+   *
+   * @param uid The UID of the user to retrieve.
+   * @return The User object if found, null otherwise.
+   */
+  suspend fun getUserByUid(uid: String): User?
+
+  /**
+   * Retrieves a list of users whose name or email matches the given query.
+   *
+   * @param query The search query to match against user names and emails.
+   * @return A list of User objects that match the query.
+   */
+  suspend fun getUserByNameOrEmail(query: String): List<User>
   /**
    * Function to update the user's preferences in Firestore.
    *
@@ -47,4 +64,25 @@ interface UserRepository {
    * @param friendUid The UID of the friend to remove.
    */
   suspend fun removeFriend(uid: String, friendUid: String)
+
+  /**
+   * Updates basic user fields in Firestore.
+   *
+   * @param uid The UID of the user.
+   * @param name Optional new name.
+   * @param biography Optional new biography.
+   * @param profilePicUrl Optional new profile picture URL.
+   * @param preferences Optional list of updated preferences.
+   * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
+   * @param pinnedImagesUris Optional updated list of pinned image URIs.
+   */
+  suspend fun updateUser(
+      uid: String,
+      name: String? = null,
+      biography: String? = null,
+      profilePicUrl: String? = null,
+      preferences: List<Preference>? = null,
+      pinnedTripsUids: List<String>? = null,
+      pinnedImagesUris: List<Uri>? = null
+  )
 }

@@ -1,5 +1,7 @@
 package com.github.swent.swisstravel.model.user
 
+import android.net.Uri
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -35,7 +37,9 @@ class UserRepositoryFirebase(
           profilePicUrl = "",
           preferences = emptyList(),
           friends = emptyList(),
-          stats = UserStats())
+          stats = UserStats(),
+          pinnedTripsUids = emptyList(),
+          pinnedImagesUris = emptyList())
     }
 
     val uid = firebaseUser.uid
@@ -53,6 +57,54 @@ class UserRepositoryFirebase(
       } catch (_: Exception) {
         createAndStoreNewUser(firebaseUser, uid)
       }
+    }
+  }
+
+  /**
+   * Retrieves a user by their UID.
+   *
+   * @param uid The UID of the user to retrieve.
+   * @return The User object if found, null otherwise.
+   */
+  override suspend fun getUserByUid(uid: String): User? {
+    return try {
+      val doc = db.collection("users").document(uid).get().await()
+      if (doc.exists()) {
+        createUserFromDoc(doc, uid)
+      } else {
+        null
+      }
+    } catch (_: Exception) {
+      null
+    }
+  }
+
+  /**
+   * Retrieves a list of users whose name or email matches the given query.
+   *
+   * @param query The search query to match against user names and emails.
+   * @return A list of User objects that match the query.
+   */
+  override suspend fun getUserByNameOrEmail(query: String): List<User> {
+    if (query.isBlank()) return emptyList()
+
+    val q = query.trim()
+
+    return try {
+      val usersRef = db.collection("users")
+
+      // 1. Query by name
+      val nameQuery = usersRef.orderBy("name").startAt(q).endAt(q + "\uf8ff").get().await()
+
+      // 2. Query by email
+      val emailQuery = usersRef.orderBy("email").startAt(q).endAt(q + "\uf8ff").get().await()
+
+      // Merge two lists into a set to eliminate duplicates
+      val docs = (nameQuery.documents + emailQuery.documents).distinctBy { it.id }
+
+      docs.mapNotNull { doc -> createUserFromDoc(doc, doc.id) }
+    } catch (e: Exception) {
+      emptyList()
     }
   }
 
@@ -93,20 +145,29 @@ class UserRepositoryFirebase(
    */
   override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
     val currentAuthUid = auth.currentUser?.uid
+    if (fromUid == toUid) return
     if (fromUid == "guest" || currentAuthUid == null || currentAuthUid != fromUid) return
 
-    val docRef = db.collection("users").document(fromUid)
-    val doc = docRef.get().await()
-    check(doc.exists()) { "User document does not exist for uid: $fromUid" }
+    val usersRef = db.collection("users")
+    val fromRef = usersRef.document(fromUid)
+    val toRef = usersRef.document(toUid)
 
-    val friends = parseFriends(doc).toMutableList()
+    db.runTransaction { tx ->
+          val fromSnap = tx[fromRef]
+          val toSnap = tx[toRef]
 
-    // Don't duplicate existing friend entry
-    val already = friends.any { it.uid == toUid }
-    if (!already) {
-      friends.add(Friend(uid = toUid, status = FriendStatus.PENDING))
-      docRef.update("friends", friends).await()
-    }
+          check(fromSnap.exists()) { "User document does not exist for uid: $fromUid" }
+          check(toSnap.exists()) { "User document does not exist for uid: $toUid" }
+
+          val (updatedFromFriends, updatedToFriends) =
+              buildPendingFriendshipUpdate(
+                  fromSnap = fromSnap, toSnap = toSnap, fromUid = fromUid, toUid = toUid)
+
+          tx.update(fromRef, "friends", updatedFromFriends)
+          tx.update(toRef, "friends", updatedToFriends)
+          null
+        }
+        .await()
   }
 
   /**
@@ -119,21 +180,41 @@ class UserRepositoryFirebase(
     val currentAuthUid = auth.currentUser?.uid
     if (currentUid == "guest" || currentAuthUid == null || currentAuthUid != currentUid) return
 
-    val docRef = db.collection("users").document(currentUid)
-    val doc = docRef.get().await()
-    check(doc.exists()) { "User document does not exist for uid: $currentUid" }
+    val usersRef = db.collection("users")
+    val currentRef = usersRef.document(currentUid)
+    val fromRef = usersRef.document(fromUid)
 
-    val friends = parseFriends(doc).toMutableList()
+    db.runTransaction { tx ->
+          val currentSnap = tx[currentRef]
+          val fromSnap = tx[fromRef]
 
-    val idx = friends.indexOfFirst { it.uid == fromUid }
-    if (idx >= 0) {
-      friends[idx] = friends[idx].copy(status = FriendStatus.ACCEPTED)
-    } else {
-      // If no entry yet, just add it as ACCEPTED
-      friends.add(Friend(uid = fromUid, status = FriendStatus.ACCEPTED))
-    }
+          check(currentSnap.exists()) { "User document does not exist for uid: $currentUid" }
+          check(fromSnap.exists()) { "User document does not exist for uid: $fromUid" }
 
-    docRef.update("friends", friends).await()
+          val currentFriends = parseFriends(currentSnap).toMutableList()
+          val fromFriends = parseFriends(fromSnap).toMutableList()
+
+          // On current user: ensure entry for fromUid is ACCEPTED
+          val curIdx = currentFriends.indexOfFirst { it.uid == fromUid }
+          if (curIdx >= 0) {
+            currentFriends[curIdx] = currentFriends[curIdx].copy(status = FriendStatus.ACCEPTED)
+          } else {
+            currentFriends.add(Friend(uid = fromUid, status = FriendStatus.ACCEPTED))
+          }
+
+          // On other user: ensure entry for currentUid is ACCEPTED
+          val fromIdx = fromFriends.indexOfFirst { it.uid == currentUid }
+          if (fromIdx >= 0) {
+            fromFriends[fromIdx] = fromFriends[fromIdx].copy(status = FriendStatus.ACCEPTED)
+          } else {
+            fromFriends.add(Friend(uid = currentUid, status = FriendStatus.ACCEPTED))
+          }
+
+          tx.update(currentRef, "friends", currentFriends)
+          tx.update(fromRef, "friends", fromFriends)
+          null
+        }
+        .await()
   }
 
   /**
@@ -146,14 +227,122 @@ class UserRepositoryFirebase(
     val currentAuthUid = auth.currentUser?.uid
     if (uid == "guest" || currentAuthUid == null || currentAuthUid != uid) return
 
+    val usersRef = db.collection("users")
+    val userRef = usersRef.document(uid)
+    val friendRef = usersRef.document(friendUid)
+
+    db.runTransaction { tx ->
+          val userSnap = tx[userRef]
+          val friendSnap = tx[friendRef]
+
+          if (!userSnap.exists()) {
+            // Nothing to do if current user doc doesn't exist
+            return@runTransaction null
+          }
+
+          val userFriends = parseFriends(userSnap).toMutableList()
+          userFriends.removeAll { it.uid == friendUid }
+
+          tx.update(userRef, "friends", userFriends)
+
+          if (friendSnap.exists()) {
+            val friendFriends = parseFriends(friendSnap).toMutableList()
+            friendFriends.removeAll { it.uid == uid }
+            tx.update(friendRef, "friends", friendFriends)
+          }
+
+          null
+        }
+        .await()
+  }
+
+  /**
+   * Builds the updated friends lists for both sides of a pending friend request.
+   *
+   * @return Pair of (fromUserFriends, toUserFriends).
+   */
+  private fun buildPendingFriendshipUpdate(
+      fromSnap: DocumentSnapshot,
+      toSnap: DocumentSnapshot,
+      fromUid: String,
+      toUid: String
+  ): Pair<List<Friend>, List<Friend>> {
+    val fromFriends = parseFriends(fromSnap).toMutableList()
+    val toFriends = parseFriends(toSnap).toMutableList()
+
+    ensurePendingEntry(
+        friends = fromFriends, targetUid = toUid, newStatus = FriendStatus.PENDING_OUTGOING)
+    ensurePendingEntry(
+        friends = toFriends, targetUid = fromUid, newStatus = FriendStatus.PENDING_INCOMING)
+
+    return fromFriends to toFriends
+  }
+
+  /**
+   * Ensures there is an entry for [targetUid] with at least PENDING status. If an entry already
+   * exists with PENDING or ACCEPTED, it is left untouched. Otherwise the status is set/overwritten
+   * to PENDING.
+   */
+  private fun ensurePendingEntry(
+      friends: MutableList<Friend>,
+      targetUid: String,
+      newStatus: FriendStatus
+  ) {
+    val idx = friends.indexOfFirst { it.uid == targetUid }
+    if (idx < 0) {
+      friends.add(Friend(uid = targetUid, status = newStatus))
+      return
+    }
+
+    val existing = friends[idx]
+    if (existing.status == FriendStatus.ACCEPTED) {
+      return
+    }
+
+    friends[idx] = existing.copy(status = newStatus)
+  }
+
+  /**
+   * Updates basic user fields in Firestore.
+   *
+   * @param uid The UID of the user.
+   * @param name Optional new name.
+   * @param biography Optional new biography.
+   * @param profilePicUrl Optional new profile picture URL.
+   * @param preferences Optional list of updated preferences.
+   * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
+   * @param pinnedImagesUris Optional updated list of pinned image URIs.
+   */
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedImagesUris: List<Uri>?
+  ) {
+    if (uid == "guest") return
+
+    val updates = mutableMapOf<String, Any?>()
+
+    if (name != null) updates["name"] = name
+    if (biography != null) updates["biography"] = biography
+    if (profilePicUrl != null) updates["profilePicUrl"] = profilePicUrl
+    if (preferences != null) updates["preferences"] = preferences.map { it.name }
+    if (pinnedTripsUids != null) updates["pinnedTripsUids"] = pinnedTripsUids
+    if (pinnedImagesUris != null)
+        updates["pinnedImagesUris"] = pinnedImagesUris.map { it.toString() }
+
+    // If nothing to update, skip Firestore
+    if (updates.isEmpty()) return
+
     val docRef = db.collection("users").document(uid)
-    val doc = docRef.get().await()
-    if (!doc.exists()) return
+    val snapshot = docRef.get().await()
 
-    val friends = parseFriends(doc).toMutableList()
-    friends.removeAll { it.uid == friendUid }
+    check(snapshot.exists()) { "User document does not exist for uid: $uid" }
 
-    docRef.update("friends", friends).await()
+    docRef.update(updates).await()
   }
 
   /**
@@ -167,6 +356,10 @@ class UserRepositoryFirebase(
     val prefs = parsePreferences(doc)
     val friends = parseFriends(doc)
     val stats = parseStats(doc)
+    val pinnedTripsUids =
+        (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val pinnedImagesUrisStrings = doc["pinnedImagesUris"] as? List<*> ?: emptyList<Uri>()
+    val pinnedImagesUris = pinnedImagesUrisStrings.mapNotNull { (it as? String)?.toUri() }
 
     return User(
         uid = uid,
@@ -176,7 +369,9 @@ class UserRepositoryFirebase(
         profilePicUrl = doc["profilePicUrl"] as? String ?: "",
         preferences = prefs,
         friends = friends,
-        stats = stats)
+        stats = stats,
+        pinnedTripsUids = pinnedTripsUids,
+        pinnedImagesUris = pinnedImagesUris)
   }
 
   /**
@@ -196,7 +391,9 @@ class UserRepositoryFirebase(
             profilePicUrl = firebaseUser.photoUrl?.toString().orEmpty(),
             preferences = emptyList(),
             friends = emptyList(),
-            stats = UserStats())
+            stats = UserStats(),
+            pinnedTripsUids = emptyList(),
+            pinnedImagesUris = emptyList())
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser

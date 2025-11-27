@@ -13,6 +13,7 @@ import com.google.firebase.auth.userProfileChangeRequest
 import kotlinx.coroutines.tasks.await
 
 const val UNEXPECTED_ERROR = "Unexpected error"
+const val NO_USER_SIGNED_IN = "No user is currently signed in."
 
 /**
  * A Firebase implementation of the [AuthRepository] interface.
@@ -148,7 +149,7 @@ class AuthRepositoryFirebase(
     return try {
       val user = auth.currentUser
       if (user == null) {
-        Result.failure(IllegalStateException("No user is currently signed in."))
+        Result.failure(IllegalStateException(NO_USER_SIGNED_IN))
       } else {
         user.sendEmailVerification().await()
         Result.success(Unit)
@@ -171,7 +172,7 @@ class AuthRepositoryFirebase(
     return try {
       val user = auth.currentUser
       if (user == null) {
-        Result.failure(IllegalStateException("No user is currently signed in."))
+        Result.failure(IllegalStateException(NO_USER_SIGNED_IN))
       } else {
         // IMPORTANT: You must reload the user's state from Firebase
         user.reload().await()
@@ -196,6 +197,25 @@ class AuthRepositoryFirebase(
     } catch (e: Exception) {
       Result.failure(
           IllegalStateException("Logout failed: ${e.localizedMessage ?: UNEXPECTED_ERROR}"))
+    }
+  }
+
+  /**
+   * Deletes the currently authenticated user from Firebase.
+   *
+   * @return A [Result] indicating success ([Unit]) or an exception on failure.
+   */
+  override suspend fun deleteUser(): Result<Unit> {
+    return try {
+      val user = auth.currentUser
+      if (user == null) {
+        Result.failure(IllegalStateException(NO_USER_SIGNED_IN))
+      } else {
+        user.delete().await()
+        Result.success(Unit)
+      }
+    } catch (e: Exception) {
+      Result.failure(IllegalStateException("Failed to delete user: ${e.localizedMessage}"))
     }
   }
 }

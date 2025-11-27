@@ -1,3 +1,5 @@
+package com.github.swent.swisstravel.ui.trip.edittrip
+
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -6,7 +8,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -24,7 +25,6 @@ import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.composable.TravelersSelector
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.TopBarTestTags
-import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenViewModel
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
 import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
 
@@ -33,7 +33,6 @@ object EditTripScreenTestTags {
   const val LOADING = "editTripLoading"
   const val TRIP_NAME = "editTripName"
   const val CONFIRM_TOP_BAR = "editTripConfirmTopBar"
-  const val CONFIRM_BOTTOM_BAR = "editTripConfirmBottomBar"
   const val DELETE = "editTripDelete"
   const val DELETE_DIALOG = "editTripDeleteDialog"
   const val DELETE_CONFIRM = "editTripDeleteConfirm"
@@ -119,7 +118,7 @@ fun EditTripScreen(
             },
             actions = {
               Button(
-                  onClick = { editTripViewModel.save() },
+                  onClick = { editTripViewModel.save(context) },
                   enabled = !state.isLoading,
                   modifier = Modifier.testTag(EditTripScreenTestTags.CONFIRM_TOP_BAR),
               ) {
@@ -127,29 +126,6 @@ fun EditTripScreen(
               }
             },
             modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
-      },
-      bottomBar = {
-        Surface(tonalElevation = dimensionResource(R.dimen.tiny_tonal_elevation)) {
-          Box(
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(
-                          horizontal = dimensionResource(R.dimen.mid_padding),
-                          vertical = dimensionResource(R.dimen.smaller_padding)),
-              contentAlignment = Alignment.Center) {
-                Button(
-                    onClick = { editTripViewModel.save() },
-                    enabled = !state.isLoading,
-                    shape = RoundedCornerShape(dimensionResource(R.dimen.big_button_radius)),
-                    modifier =
-                        Modifier.fillMaxWidth(0.9f)
-                            .testTag(EditTripScreenTestTags.CONFIRM_BOTTOM_BAR)) {
-                      Icon(Icons.Filled.Edit, contentDescription = null)
-                      Spacer(modifier = Modifier.width(dimensionResource(R.dimen.tiny_spacer)))
-                      Text(stringResource(R.string.confirm_changes))
-                    }
-              }
-        }
       }) { inner ->
         if (state.isLoading) {
           Box(
