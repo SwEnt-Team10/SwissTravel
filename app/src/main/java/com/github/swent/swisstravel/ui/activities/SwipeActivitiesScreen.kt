@@ -10,10 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
@@ -46,19 +42,12 @@ fun SwipeActivitiesScreen(
 ) {
   val viewModel = remember { SwipeActivitiesViewModel(tripInfoViewModel) }
   Scaffold { pd ->
-    Box(modifier = Modifier.padding(pd)) {
-      // Back button, with zIndex = 1f, for it to be on top of the activity cards
-      Button(onClick = { onTripInfo() }, modifier = Modifier.zIndex(1f)) {
-        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-      }
-
-      SwipeActivitiesStack(viewModel)
-    }
+    Box(modifier = Modifier.padding(pd)) { SwipeActivitiesStack(viewModel, onTripInfo) }
   }
 }
 
 @Composable
-fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel) {
+fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> Unit) {
   val current = viewModel.uiState.collectAsState().value.currentActivity
   val next = viewModel.uiState.collectAsState().value.backActivity
 
@@ -69,7 +58,10 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel) {
         Text("No more activities to show!", modifier = Modifier.align(Alignment.Center))
       } else {
         key(activity.getName()) {
-          SwipeableCard(activity = activity, onSwiped = { liked -> viewModel.swipeActivity(liked) })
+          SwipeableCard(
+              activity = activity,
+              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onTripInfo)
         }
       }
     }
@@ -80,7 +72,10 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel) {
         Text("No more activities to show!", modifier = Modifier.align(Alignment.Center))
       } else {
         key(activity.getName()) {
-          SwipeableCard(activity = activity, onSwiped = { liked -> viewModel.swipeActivity(liked) })
+          SwipeableCard(
+              activity = activity,
+              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onTripInfo = onTripInfo)
         }
       }
     }
@@ -99,7 +94,7 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel) {
  * @param onSwiped Callback to be called when the activity is swiped.
  */
 @Composable
-fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit) {
+fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTripInfo: () -> Unit) {
   val swipeState = remember(activity) { mutableStateOf(SwipeState.Idle) }
 
   // Parameter for rotational movement
@@ -137,7 +132,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit) {
 
   // Apply rotation and offset to the card
   Box(modifier = Modifier.offset(x = offsetX.value).graphicsLayer { rotationZ = rotation.value }) {
-    ActivityInfos(activity = activity)
+    ActivityInfos(activity = activity, onBack = { onTripInfo() })
   }
 
   // Like and dislike actions

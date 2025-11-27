@@ -6,58 +6,57 @@ import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
+/**
+ * UI state for the Swipe Activities screen
+ *
+ * @param activitiesQueue The queue of activities to swipe through
+ * @param currentActivity The current activity being displayed
+ * @param backActivity The next activity to be displayed (so that it is more fluid, and to make the
+ *   illusion that there is a stack of cards
+ */
 data class SwipeActivitiesUIState(
     val activitiesQueue: List<Activity>? = null,
-    val currentActivity: Activity? = activitiesQueue?.getOrNull(0),
-    val backActivity: Activity? = activitiesQueue?.getOrNull(1)
+    val currentActivity: Activity? = null,
+    val backActivity: Activity? = null
 )
 
 /** Done with the help of ChatGPT */
 class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModel) : ViewModel() {
 
   /** UI state for the Swipe Activities screen */
-  private val _uiState: MutableStateFlow<SwipeActivitiesUIState> =
-      MutableStateFlow(
-          SwipeActivitiesUIState(
-              activitiesQueue =
-                  ArrayDeque(
-                      tripInfoViewModel.uiState.value.activities.filter { activity ->
-                        activity !in tripInfoViewModel.uiState.value.likedActivities
-                      })))
+  private val _uiState = MutableStateFlow(SwipeActivitiesUIState())
   val uiState = _uiState.asStateFlow()
 
-  fun loadNextActivity() {
-    val backActivityIndex: Int? =
-        _uiState.value.activitiesQueue?.indexOf(_uiState.value.backActivity)
-    // current activity becomes back activity
-    // back activity becomes the next in the queue
-    _uiState.value =
-        _uiState.value.copy(
-            currentActivity = _uiState.value.backActivity,
-            backActivity = _uiState.value.activitiesQueue?.getOrNull(backActivityIndex!! + 1))
+  init {
+    val all = tripInfoViewModel.uiState.value.activities
+    val liked = tripInfoViewModel.uiState.value.likedActivities
+    _uiState.value = _uiState.value.copy(activitiesQueue = ArrayDeque(all.filter { it !in liked }))
+    // load initial cards
+    updateCards()
   }
 
-  fun likeCurrentActivity() {
-    // Remove currentActivity from the queue
-    // Add currentActivity to liked activities
-    _uiState.value = _uiState.value.copy(activitiesQueue = _uiState.value.activitiesQueue?.drop(1))
-    tripInfoViewModel.likeActivity(_uiState.value.currentActivity!!)
-  }
-
-  fun dislikeCurrentActivity() {
-    // remove first element
-    // put it at the end of the queue
+  private fun updateCards() {
+    val queue = _uiState.value.activitiesQueue ?: return
     _uiState.value =
-        _uiState.value.copy(
-            activitiesQueue =
-                _uiState.value.activitiesQueue
-                    ?.drop(1)
-                    ?.plus(listOf(_uiState.value.currentActivity!!)),
-        )
+        _uiState.value.copy(currentActivity = queue.getOrNull(0), backActivity = queue.getOrNull(1))
   }
 
   fun swipeActivity(liked: Boolean) {
-    if (liked) likeCurrentActivity() else dislikeCurrentActivity()
-    loadNextActivity()
+    val current = _uiState.value.currentActivity ?: return
+
+    val newQueue =
+        if (liked) {
+          tripInfoViewModel.likeActivity(current)
+          // like => remove the activity from the queue
+          _uiState.value.activitiesQueue?.drop(1)
+        } else {
+          // dislike => move the activity to the back of the queue
+          _uiState.value.activitiesQueue?.drop(1)?.plusElement(current)
+        }
+
+    // if the queue is null, it means there are no more activities, so put an emptyList
+    _uiState.value = _uiState.value.copy(activitiesQueue = ArrayDeque(newQueue ?: emptyList()))
+    // load next cards
+    updateCards()
   }
 }

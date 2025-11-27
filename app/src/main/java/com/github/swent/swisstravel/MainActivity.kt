@@ -33,7 +33,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
-import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.activities.LikedActivitiesScreen
 import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreen
 import com.github.swent.swisstravel.ui.authentication.LandingScreen
@@ -56,6 +55,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -465,6 +465,9 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       route = Screen.TripInfo.name,
   ) {
     composable(Screen.TripInfo.route) { navBackStackEntry ->
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      val vm = viewModel<TripInfoViewModel>(parentEntry)
       val uid = navBackStackEntry.arguments?.getString("uid")
       if (uid == null) {
         Toast.makeText(context, context.getString(R.string.trip_id_missing), Toast.LENGTH_SHORT)
@@ -472,8 +475,6 @@ private fun NavGraphBuilder.tripInfoNavGraph(
         navigationActions.navigateTo(Screen.MyTrips)
         return@composable
       }
-
-      val vm = navigationActions.tripInfoViewModel(navController)
 
       TripInfoScreen(
           uid = uid,
@@ -510,18 +511,21 @@ private fun NavGraphBuilder.tripInfoNavGraph(
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
 
-    composable(Screen.SwipeActivities.route) {
+    composable(Screen.SwipeActivities.route) { navBackStackEntry ->
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       SwipeActivitiesScreen(
           onTripInfo = { navController.popBackStack() },
-          tripInfoViewModel = navigationActions.tripInfoViewModel(navController),
+          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry),
       )
     }
 
-    composable(Screen.LikedActivities.route) {
+    composable(Screen.LikedActivities.route) { navBackStackEntry ->
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
-          tripInfoViewModel = navigationActions.tripInfoViewModel(navController),
-      )
+          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry))
     }
   }
 }

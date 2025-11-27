@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** UI state for the TripInfo screen */
@@ -31,7 +32,7 @@ data class TripInfoUIState(
     val errorMsg: String? = null,
     val fullscreen: Boolean = false,
     val selectedActivity: Activity? = null,
-    val likedActivities: List<Activity> = emptyList(),
+    val likedActivities: List<Activity> = emptyList()
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -92,7 +93,8 @@ class TripInfoViewModel(
                 routeSegments = trip.routeSegments,
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,
-                isFavorite = trip.isFavorite)
+                isFavorite = trip.isFavorite,
+                likedActivities = _uiState.value.likedActivities)
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
         Log.e("TripInfoViewModel", "Error loading trip info", e)
@@ -161,9 +163,8 @@ class TripInfoViewModel(
 
   /** Adds the given activity to the list of liked activities in the UI state. */
   fun likeActivity(activity: Activity) {
-    if (activity !in _uiState.value.likedActivities) {
-      val updatedLikedActivities = _uiState.value.likedActivities + activity
-      _uiState.value = _uiState.value.copy(likedActivities = updatedLikedActivities)
+    _uiState.update { current ->
+      current.copy(likedActivities = (current.likedActivities + activity).distinct())
     }
   }
 }
