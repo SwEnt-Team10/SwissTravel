@@ -5,7 +5,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -44,8 +42,6 @@ object AddPhotosScreenTestTags {
   const val SAVE_BUTTON = "saveButton"
   const val ADD_PHOTOS_BUTTON = "addPhotosButton"
   const val VERTICAL_GRID = "verticalGrid"
-  const val COLUMN_EMPTY = "columnEmpty"
-  const val EMPTY_IMAGE_TEXT = "emptyImageText"
 
   fun getTestTagForUri(index: Int): String = "UriIndex$index"
 }
@@ -86,11 +82,12 @@ fun AddPhotosScreen(
             title = {
               Text(
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE),
-                  text = "Add photos",
+                  text = stringResource(R.string.add_photos_title),
                   style = MaterialTheme.typography.titleLarge,
                   color = MaterialTheme.colorScheme.onBackground)
             },
             navigationIcon = {
+              // Back button
               IconButton(
                   onClick = onBack,
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.BACK_BUTTON)) {
@@ -105,37 +102,31 @@ fun AddPhotosScreen(
         Row(
             modifier = Modifier.fillMaxWidth().testTag(AddPhotosScreenTestTags.BOTTOM_BAR),
             horizontalArrangement = Arrangement.Center) {
+              // Add photos to the UI state button
               Button(
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
                   onClick = {
                     picker.launch(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                   }) {
-                    Text(text = "Add photos")
+                    Text(text = stringResource(R.string.add_photos_button))
                   }
+              // Save photos button
               Button(
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.SAVE_BUTTON),
                   onClick = {
                     viewModel.savePhotos(tripId)
                     onBack()
                   }) {
-                    Text(text = "Save")
+                    Text(text = stringResource(R.string.add_photos_save_button))
                   }
             }
       }) { pd ->
-        if (addPhotosUIState.listUri.isEmpty()) {
-          Column(
-              verticalArrangement = Arrangement.Center,
-              horizontalAlignment = Alignment.CenterHorizontally,
-              modifier = Modifier.testTag(AddPhotosScreenTestTags.COLUMN_EMPTY)) {
-                Text(
-                    text = "No images for the trip",
-                    modifier = Modifier.testTag(AddPhotosScreenTestTags.EMPTY_IMAGE_TEXT))
-              }
-        }
+        // Display a grid with the images
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
             modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
+              // AI helped for the itemsIndexed
               itemsIndexed(addPhotosUIState.listUri) { index, uri ->
                 AsyncImage(
                     modifier = Modifier.testTag(AddPhotosScreenTestTags.getTestTagForUri(index)),

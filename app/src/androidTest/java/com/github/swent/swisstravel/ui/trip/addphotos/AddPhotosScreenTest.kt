@@ -2,7 +2,6 @@
 
 package com.github.swent.swisstravel.ui.trip.addphotos
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -29,11 +28,13 @@ class AddPhotosScreenTest : SwissTravelTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   override fun createInitializedRepository(): TripsRepository {
+    // Create a local repository
     return TripRepositoryLocal()
   }
 
   @Test
   fun checkAllComponentsAreDisplayedWithNoImage() = runTest {
+    // Initialization of the fake repository and model
     val fakeTrip =
         Trip(
             uid = "10",
@@ -47,14 +48,14 @@ class AddPhotosScreenTest : SwissTravelTest() {
             isCurrentTrip = true)
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = AddPhotosViewModel()
+    // UI testing
     composeTestRule.setContent { AddPhotosScreen(tripId = fakeTrip.uid, viewModel = fakeModel) }
     composeTestRule.addPhotosScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.COLUMN_EMPTY).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.EMPTY_IMAGE_TEXT).assertIsDisplayed()
   }
 
   @Test
   fun checkAllComponentsAreDisplayedWithImages() = runTest {
+    // Initialization of the fake repository and model
     val fakeTrip =
         Trip(
             uid = "10",
@@ -70,6 +71,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
 
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = AddPhotosViewModel()
+    // UI testing
     composeTestRule.setContent { AddPhotosScreen(tripId = fakeTrip.uid, viewModel = fakeModel) }
     composeTestRule.addPhotosScreenIsDisplayed()
     composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID).isDisplayed()

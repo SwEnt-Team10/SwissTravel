@@ -237,6 +237,12 @@
     <string name="accept_friend">"Accept friend request"</string>
     <string name="deny_friend">Deny friend request</string>
 
+    <!-- AddPhotosScreen -->
+    <string name="add_photos_title">Add photos</string>
+    <string name="add_photos_button">Add photos</string>
+    <string name="add_photos_save_button">Save</string>
+
+
 
 
 
