@@ -5,12 +5,15 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
@@ -25,6 +28,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -41,6 +45,11 @@ object AddPhotosScreenTestTags {
     const val BOTTOM_BAR = "bottomBar"
     const val SAVE_BUTTON = "saveButton"
     const val ADD_PHOTOS_BUTTON = "addPhotosButton"
+    const val VERTICAL_GRID = "verticalGrid"
+    const val COLUMN_EMPTY = "columnEmpty"
+    const val EMPTY_IMAGE_TEXT = "emptyImageText"
+
+    fun getTestTagForUri(index: Int): String = "UriIndex$index"
 }
 
 /**
@@ -129,12 +138,25 @@ fun AddPhotosScreen(
         }
     ) {
         pd ->
+        if (addPhotosUIState.listUri.isEmpty()) {
+            Column(
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier.testTag(AddPhotosScreenTestTags.COLUMN_EMPTY)
+            ) {
+                Text(
+                    text = "No images for the trip",
+                    modifier = Modifier.testTag(AddPhotosScreenTestTags.EMPTY_IMAGE_TEXT)
+                )
+            }
+        }
         LazyVerticalGrid(
             columns = GridCells.Fixed(4),
-            modifier = Modifier.padding(pd)
+            modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)
         ) {
-            items(addPhotosUIState.listUri) { uri ->
+            itemsIndexed(addPhotosUIState.listUri) { index, uri ->
                 AsyncImage(
+                    modifier = Modifier.testTag(AddPhotosScreenTestTags.getTestTagForUri(index)),
                     model = uri,
                     contentDescription = null
                 )

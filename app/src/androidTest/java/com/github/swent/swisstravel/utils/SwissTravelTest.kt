@@ -536,7 +536,7 @@ abstract class SwissTravelTest {
 
   // TODO : Create helper/companions functions here
 
-    fun ComposeTestRule.addPhotosScreenIsDisplayed() {
+    fun ComposeTestRule.addPhotosScreenWithNoImageIsDisplayed() {
         onNodeWithTag(AddPhotosScreenTestTags.MAIN_SCREEN).assertIsDisplayed()
         onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
         onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
@@ -544,6 +544,8 @@ abstract class SwissTravelTest {
         onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
         onNodeWithTag(AddPhotosScreenTestTags.SAVE_BUTTON).assertIsDisplayed()
         onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
+        onNodeWithTag(AddPhotosScreenTestTags.COLUMN_EMPTY).assertIsDisplayed()
+        onNodeWithTag(AddPhotosScreenTestTags.EMPTY_IMAGE_TEXT).assertIsDisplayed()
     }
 
 }

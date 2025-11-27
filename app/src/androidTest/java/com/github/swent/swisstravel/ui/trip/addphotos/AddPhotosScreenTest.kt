@@ -50,6 +50,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
         composeTestRule.setContent {
             AddPhotosScreen(tripId = "10", viewModel = fakeModel)
         }
-        composeTestRule.addPhotosScreenIsDisplayed()
+        composeTestRule.addPhotosScreenWithNoImageIsDisplayed()
     }
 }
