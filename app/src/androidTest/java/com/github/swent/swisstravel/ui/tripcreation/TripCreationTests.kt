@@ -119,7 +119,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
         .performScrollToNode(hasTestTag(TripPreferencesTestTags.DONE))
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
-    assertEquals(2, viewModel.tripSettings.value.preferences.size)
+    assertEquals(3, viewModel.tripSettings.value.preferences.size)
     // assert(fakeRepo.getAllTrips().isNotEmpty()) //can't make it to work
   }
 
