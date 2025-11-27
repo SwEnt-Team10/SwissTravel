@@ -154,7 +154,6 @@ class SelectActivities(
       allFetchedActivities.addAll(fetched)
       // Update progress after each API call.
       completedSteps++
-      onProgress(completedSteps.toFloat() / totalSteps)
       delay(API_CALL_DELAY_MS) // Respect API rate limit.
     }
     return allFetchedActivities.distinctBy { it.location }

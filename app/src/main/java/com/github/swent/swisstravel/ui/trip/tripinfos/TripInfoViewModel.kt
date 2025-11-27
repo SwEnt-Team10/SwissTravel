@@ -31,6 +31,7 @@ data class TripInfoUIState(
     val errorMsg: String? = null,
     val fullscreen: Boolean = false,
     val selectedActivity: Activity? = null,
+    val likedActivities: List<Activity> = emptyList(),
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -156,5 +157,13 @@ class TripInfoViewModel(
 
   fun selectActivity(activity: Activity?) {
     _uiState.value = _uiState.value.copy(selectedActivity = activity)
+  }
+
+  /** Adds the given activity to the list of liked activities in the UI state. */
+  fun likeActivity(activity: Activity) {
+    if (activity !in _uiState.value.likedActivities) {
+      val updatedLikedActivities = _uiState.value.likedActivities + activity
+      _uiState.value = _uiState.value.copy(likedActivities = updatedLikedActivities)
+    }
   }
 }

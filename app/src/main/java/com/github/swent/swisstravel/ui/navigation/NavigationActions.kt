@@ -74,7 +74,9 @@ sealed class Screen(
 
   object Loading : Screen(route = "loading", name = "Loading")
 
-  object FindActivities : Screen(route = "find_activities", name = "Find Activities")
+  object SwipeActivities : Screen(route = "swipe_activities", name = "Swipe Activities")
+
+  object LikedActivities : Screen(route = "liked_activities", name = "Liked Activities")
 
   // TODO change this when there is a new screen
 }

@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
@@ -121,7 +122,8 @@ fun TripInfoScreen(
     onEditTrip: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
     onActivityClick: (TripElement.TripActivity) -> Unit = {},
-    onFindActivities: () -> Unit = {},
+    onSwipeActivities: () -> Unit = {},
+    onLikedActivities: () -> Unit = {}
 ) {
   Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
 
@@ -191,10 +193,10 @@ fun TripInfoScreen(
       // button to go to a screen were you can swipe (like/dislike) through activities
       bottomBar = {
         Button(
-            onClick = { onFindActivities() },
+            onClick = { onSwipeActivities() },
             modifier = Modifier.fillMaxWidth(),
         ) {
-          Text(text = stringResource(R.string.find_activities))
+          Text(text = stringResource(R.string.swipe_activities))
         }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
@@ -211,6 +213,14 @@ fun TripInfoScreen(
                   onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
                   onUserLocationUpdate = { currentGpsPoint = it })
           TripInfoContent(contentState, callbacks, isComputing, schedule, onActivityClick)
+
+          // Button to go to the liked activities screen
+          Button(
+              onClick = { onLikedActivities() }, modifier = Modifier.align(Alignment.BottomEnd)) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = stringResource(R.string.liked_activities))
+              }
 
           // Fullscreen map overlay
           if (ui.fullscreen) {

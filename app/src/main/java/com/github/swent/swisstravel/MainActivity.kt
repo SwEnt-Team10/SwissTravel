@@ -34,7 +34,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
-import com.github.swent.swisstravel.ui.activities.FindActivitiesScreen
+import com.github.swent.swisstravel.ui.activities.LikedActivitiesScreen
+import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreen
 import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
@@ -348,7 +349,8 @@ private fun NavGraphBuilder.tripInfoNavGraph(
             vm.selectActivity(tripActivity.activity)
             navigationActions.navigateToActivityInfo(uid)
           },
-          onFindActivities = { navigationActions.navigateTo(Screen.FindActivities) })
+          onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
+          onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) })
     }
 
     composable(
@@ -373,16 +375,18 @@ private fun NavGraphBuilder.tripInfoNavGraph(
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
 
-    composable(Screen.FindActivities.route) {
-      FindActivitiesScreen(
+    composable(Screen.SwipeActivities.route) {
+      SwipeActivitiesScreen(
           onTripInfo = { navController.popBackStack() },
-          tripLocations =
-              navigationActions
-                  .tripInfoViewModel(navController)
-                  .uiState
-                  .collectAsState()
-                  .value
-                  .locations)
+          tripInfoViewModel = navigationActions.tripInfoViewModel(navController),
+      )
+    }
+
+    composable(Screen.LikedActivities.route) {
+      LikedActivitiesScreen(
+          onBack = { navController.popBackStack() },
+          tripInfoViewModel = navigationActions.tripInfoViewModel(navController),
+      )
     }
   }
 }
