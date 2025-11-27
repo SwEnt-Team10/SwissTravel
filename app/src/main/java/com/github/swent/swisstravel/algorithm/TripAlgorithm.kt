@@ -78,10 +78,11 @@ class TripAlgorithm(
           }
       onProgress(progression.selectActivities)
       val fullDestinationList = buildList {
-        tripSettings.arrivalDeparture.arrivalLocation?.let { add(it) }
+        addAll(tripSettings.destinations)
         addAll(selectedActivities.map { it.location })
-        tripSettings.arrivalDeparture.departureLocation?.let { add(it) }
       }
+
+      Log.d("TripAlgorithm", "Full destination list: $fullDestinationList")
 
       // ---- STEP 2: Optimize route ----
       val startLocation =
