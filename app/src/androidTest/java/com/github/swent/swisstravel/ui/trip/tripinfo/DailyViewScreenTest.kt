@@ -165,4 +165,41 @@ class DailyViewScreenTest {
     compose.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
     assert(backCalled)
   }
+
+  @Test
+  fun dayNavigator_updatesViewModel() {
+    val now = Timestamp.now()
+    val tomorrow = Timestamp(now.seconds + 86400, 0)
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setLocations(listOf(Location(Coordinate(0.0, 0.0), "Loc")))
+          setTripProfile(
+              TripProfile(startDate = now, endDate = tomorrow, preferences = emptyList()))
+          setRouteSegments(
+              listOf(
+                  RouteSegment(
+                      from = Location(Coordinate(0.0, 0.0), "A"),
+                      to = Location(Coordinate(1.0, 1.0), "B"),
+                      durationMinutes = 10,
+                      transportMode = com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+                      startDate = now,
+                      endDate = now),
+                  RouteSegment(
+                      from = Location(Coordinate(0.0, 0.0), "A"),
+                      to = Location(Coordinate(1.0, 1.0), "B"),
+                      durationMinutes = 10,
+                      transportMode = com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+                      startDate = tomorrow,
+                      endDate = tomorrow)))
+        }
+    setContent(vm)
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.NEXT_DAY_BUTTON).performClick()
+    assert(vm.uiState.value.currentDayIndex == 1)
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.PREV_DAY_BUTTON).performClick()
+    assert(vm.uiState.value.currentDayIndex == 0)
+  }
 }
