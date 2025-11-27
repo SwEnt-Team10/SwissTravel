@@ -59,7 +59,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
 /** Test tags for the profile screen. */
@@ -89,7 +88,6 @@ object ProfileScreenTestTags {
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
  * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
- * @param navigationActions The navigation actions for this screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -100,7 +98,6 @@ fun ProfileScreen(
     onSelectTrip: (String) -> Unit = {},
     onEditPinnedTrips: () -> Unit = {},
     onEditPinnedImages: () -> Unit = {},
-    navigationActions: NavigationActions? = null,
 ) {
   val context = LocalContext.current
   val uiState by profileViewModel.uiState.collectAsState()
@@ -129,47 +126,11 @@ fun ProfileScreen(
 
   Scaffold(
       topBar = {
-        TopAppBar(
-            title = {
-              if (uiState.isOwnProfile) Text(stringResource(R.string.my_profile))
-              else Text(uiState.name)
-            },
-            navigationIcon = {
-              if (!uiState.isLoading && !uiState.isOwnProfile) {
-                IconButton(
-                    onClick = onBack,
-                ) {
-                  Icon(
-                      imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                      contentDescription = stringResource(R.string.back_to_friends_list),
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-              }
-            },
-            actions = {
-              if (!uiState.isLoading) {
-                if (uiState.isOwnProfile) {
-                  IconButton(
-                      onClick = onSettings,
-                      modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = stringResource(R.string.settings),
-                            tint = MaterialTheme.colorScheme.onBackground)
-                      }
-                } else {
-                  IconButton(
-                      onClick = { showUnfriendConfirmation = true },
-                      modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
-                        Icon(
-                            imageVector = Icons.Outlined.PersonRemove,
-                            contentDescription = stringResource(R.string.unfriend),
-                            tint = MaterialTheme.colorScheme.onBackground)
-                      }
-                }
-              }
-            },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
+        ProfileScreenTopBar(
+            uiState = uiState,
+            onBack = onBack,
+            onSettings = onSettings,
+            onUnfriend = { showUnfriendConfirmation = true })
       }) { pd ->
         if (uiState.isLoading) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -179,7 +140,6 @@ fun ProfileScreen(
         } else {
           ProfileScreenContent(
               uiState = uiState,
-              profileScreenViewModel = profileViewModel,
               onSelectTrip = onSelectTrip,
               onEditPinnedTrips = {
                 Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
@@ -193,15 +153,75 @@ fun ProfileScreen(
 }
 
 /**
+ * The profile screen Top Bar.
+ *
+ * @param uiState The state of the screen.
+ * @param onBack The callback to navigate back.
+ * @param onSettings The callback to navigate to the settings screen.
+ * @param onUnfriend The callback to unfriend the user.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileScreenTopBar(
+    uiState: ProfileUIState,
+    onBack: () -> Unit,
+    onSettings: () -> Unit,
+    onUnfriend: () -> Unit
+) {
+  TopAppBar(
+      title = {
+        if (uiState.isOwnProfile) Text(stringResource(R.string.my_profile)) else Text(uiState.name)
+      },
+      navigationIcon = {
+        if (!uiState.isLoading && !uiState.isOwnProfile) {
+          IconButton(
+              onClick = onBack,
+          ) {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = stringResource(R.string.back_to_friends_list),
+                tint = MaterialTheme.colorScheme.onBackground)
+          }
+        }
+      },
+      actions = {
+        if (!uiState.isLoading) {
+          if (uiState.isOwnProfile) {
+            IconButton(
+                onClick = onSettings,
+                modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
+                  Icon(
+                      imageVector = Icons.Outlined.Settings,
+                      contentDescription = stringResource(R.string.settings),
+                      tint = MaterialTheme.colorScheme.onBackground)
+                }
+          } else {
+            IconButton(
+                onClick = onUnfriend,
+                modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
+                  Icon(
+                      imageVector = Icons.Outlined.PersonRemove,
+                      contentDescription = stringResource(R.string.unfriend),
+                      tint = MaterialTheme.colorScheme.onBackground)
+                }
+          }
+        }
+      },
+      modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
+}
+
+/**
  * The content of the profile screen.
  *
  * @param uiState The state of the screen.
- * @param profileScreenViewModel The view model for this screen.
+ * @param onSelectTrip The callback to select a trip.
+ * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
+ * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param modifier The modifier to apply to the content.
  */
 @Composable
 private fun ProfileScreenContent(
     uiState: ProfileUIState,
-    profileScreenViewModel: ProfileViewModel,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
     onEditPinnedImages: () -> Unit = {},
@@ -249,6 +269,7 @@ private fun ProfileScreenContent(
  * The profile header section of the profile screen.
  *
  * @param photoUrl The URL of the profile picture.
+ * @param name The name of the user.
  */
 @Composable
 private fun ProfileHeader(photoUrl: String, name: String) {
@@ -272,6 +293,11 @@ private fun ProfileHeader(photoUrl: String, name: String) {
   }
 }
 
+/**
+ * The biography section of the profile screen.
+ *
+ * @param biography The biography of the user.
+ */
 @Composable
 private fun BiographyDisplay(biography: String) {
   if (!biography.isBlank()) {
@@ -368,7 +394,6 @@ private fun PinnedTrips(
   TripList(
       trips = pinnedTrips,
       onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
-      onLongPress = { /* no-op */},
       isSelected = { false }, // No selection mode here
       isSelectionMode = false,
       noIconTripElement = false,
@@ -427,6 +452,7 @@ private fun PinnedImages(
 /**
  * Dialog displayed when the user confirms removal of a friend.
  *
+ * @param friendName The name of the friend.
  * @param onConfirm Invoked when user confirms removal.
  * @param onCancel Invoked when dialog is dismissed or canceled.
  */

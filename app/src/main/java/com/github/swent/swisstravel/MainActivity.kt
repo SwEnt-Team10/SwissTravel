@@ -360,8 +360,7 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
           onEditPinnedTrips = { /* TODO */},
-          onEditPinnedImages = { /* TODO */},
-          navigationActions = navigationActions)
+          onEditPinnedImages = { /* TODO */})
     }
     composable(Screen.ProfileSettings.route) {
       ProfileSettingsScreen(
@@ -642,7 +641,8 @@ private fun NavGraphBuilder.friendsListNavGraph(
         arguments = listOf(navArgument("uid") { type = NavType.StringType })) { entry ->
           val uid = entry.arguments?.getString("uid")
           if (uid == null) {
-            Toast.makeText(context, context.getString(R.string.trip_id_missing), Toast.LENGTH_SHORT)
+            Toast.makeText(
+                    context, context.getString(R.string.user_uid_missing), Toast.LENGTH_SHORT)
                 .show()
             navigationActions.goBack()
             return@composable
@@ -652,9 +652,8 @@ private fun NavGraphBuilder.friendsListNavGraph(
               profileViewModel = ProfileViewModel(requestedUid = uid),
               onBack = { navigationActions.goBack() },
               onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-              onEditPinnedTrips = {},
-              onEditPinnedImages = {},
-              navigationActions = navigationActions)
+              onEditPinnedTrips = { /* TODO */},
+              onEditPinnedImages = { /* TODO */})
         }
   }
 }

@@ -468,6 +468,8 @@ fun EditableField(
   var editedText by remember(isEditing) { mutableStateOf(text) }
 
   Column(modifier = Modifier.fillMaxWidth()) {
+
+    // Header Row with label and action buttons
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -476,33 +478,16 @@ fun EditableField(
               text = label,
               style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Medium),
               modifier = Modifier.testTag(ProfileSettingsScreenTestTags.label(testTagPrefix)))
-          Row {
-            // Cancel Button
-            if (isEditing) {
-              IconButton(
-                  onClick = { onCancel() },
-                  modifier =
-                      Modifier.testTag(ProfileSettingsScreenTestTags.cancelButton(testTagPrefix))) {
-                    Icon(
-                        imageVector = Icons.Default.Close,
-                        contentDescription = stringResource(R.string.cancel))
-                  }
-            }
-            // Edit / Save Button
-            IconButton(
-                onClick = { if (!isEditing) onStartEdit() else onSave(editedText) },
-                modifier =
-                    Modifier.testTag(
-                        if (!isEditing) ProfileSettingsScreenTestTags.editButton(testTagPrefix)
-                        else ProfileSettingsScreenTestTags.confirmButton(testTagPrefix))) {
-                  Icon(
-                      imageVector = if (isEditing) Icons.Default.Check else Icons.Outlined.Edit,
-                      contentDescription =
-                          if (isEditing) stringResource(R.string.save)
-                          else stringResource(R.string.edit))
-                }
-          }
+
+          EditButtons(
+              isEditing = isEditing,
+              onStartEdit = { onStartEdit() },
+              onSave = { onSave(editedText) },
+              onCancel = { onCancel() },
+              testTagPrefix = testTagPrefix)
         }
+
+    // Editing mode or Display mode
     if (isEditing) {
       TextField(
           value = editedText,
@@ -520,17 +505,71 @@ fun EditableField(
               Modifier.fillMaxWidth()
                   .testTag(ProfileSettingsScreenTestTags.textField(testTagPrefix)))
     } else {
-      if (text.isBlank()) {
-        Text(
-            text = stringResource(R.string.press_edit_to_add),
-            style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic),
-            modifier = Modifier.testTag(ProfileSettingsScreenTestTags.empty(testTagPrefix)))
-      } else {
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.testTag(ProfileSettingsScreenTestTags.text(testTagPrefix)))
-      }
+      DisplayTextOrPlaceholder(text = text, testTagPrefix = testTagPrefix)
     }
+  }
+}
+
+/**
+ * A row of buttons for editing or saving.
+ *
+ * @param isEditing Whether the user is editing.
+ * @param onStartEdit The callback for when the user starts editing.
+ * @param onSave The callback for when the user saves.
+ * @param onCancel The callback for when the user cancels.
+ * @param testTagPrefix The prefix for the test tags.
+ */
+@Composable
+private fun EditButtons(
+    isEditing: Boolean,
+    onStartEdit: () -> Unit,
+    onSave: () -> Unit,
+    onCancel: () -> Unit,
+    testTagPrefix: String
+) {
+  Row {
+    if (isEditing) {
+      IconButton(
+          onClick = onCancel,
+          modifier = Modifier.testTag(ProfileSettingsScreenTestTags.cancelButton(testTagPrefix))) {
+            Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel))
+          }
+    }
+
+    IconButton(
+        onClick = { if (isEditing) onSave() else onStartEdit() },
+        modifier =
+            Modifier.testTag(
+                if (isEditing) {
+                  ProfileSettingsScreenTestTags.confirmButton(testTagPrefix)
+                } else {
+                  ProfileSettingsScreenTestTags.editButton(testTagPrefix)
+                })) {
+          Icon(
+              imageVector = if (isEditing) Icons.Default.Check else Icons.Outlined.Edit,
+              contentDescription =
+                  if (isEditing) stringResource(R.string.save) else stringResource(R.string.edit))
+        }
+  }
+}
+
+/**
+ * A text that is displayed or a placeholder.
+ *
+ * @param text The text to display.
+ * @param testTagPrefix The prefix for the test tag.
+ */
+@Composable
+private fun DisplayTextOrPlaceholder(text: String, testTagPrefix: String) {
+  if (text.isBlank()) {
+    Text(
+        text = stringResource(R.string.press_edit_to_add),
+        style = MaterialTheme.typography.bodyLarge.copy(fontStyle = FontStyle.Italic),
+        modifier = Modifier.testTag(ProfileSettingsScreenTestTags.empty(testTagPrefix)))
+  } else {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.bodyLarge,
+        modifier = Modifier.testTag(ProfileSettingsScreenTestTags.text(testTagPrefix)))
   }
 }

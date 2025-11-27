@@ -180,8 +180,8 @@
     <string name="default_pref_info">These preferences will be selected by default when creating a new trip.</string>
     <string name="edit">Edit</string>
     <string name="save">Save</string>
-    <string name="press_edit_to_add">Press the edit button to add text...</string>
-    <string name="enter_text">Enter text...</string>
+    <string name="press_edit_to_add">Press the edit button to add text…</string>
+    <string name="enter_text">Enter text…</string>
 
     <!-- Preferences -->
     <string name="preference_scenic_views">Scenic Views</string>
@@ -255,6 +255,6 @@
     <string name="pending_friend_requests">Pending Friend Requests (%1$d)</string>
     <string name="accept_friend">"Accept friend request"</string>
     <string name="deny_friend">Deny friend request</string>
-    <string name="uid_missing">Can\'t find this profile, sorry :(</string>
+    <string name="user_uid_missing">Can\'t find this profile, sorry :(</string>
 
 </resources>
