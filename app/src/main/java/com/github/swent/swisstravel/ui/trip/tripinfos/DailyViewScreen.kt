@@ -40,11 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -54,8 +50,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
@@ -115,41 +109,19 @@ fun DailyViewScreen(
 
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
 
-  var isComputing by remember { mutableStateOf(false) }
-  var schedule by remember { mutableStateOf<List<TripElement>>(emptyList()) }
-  var currentDayIndex by rememberSaveable { mutableIntStateOf(0) }
-  var currentGpsPoint by remember { mutableStateOf<Point?>(null) }
-  var drawFromCurrentPosition by remember { mutableStateOf(false) }
-  var selectedStep by remember { mutableStateOf<TripElement?>(null) }
-
-  // Group schedule by day
-  val groupedSchedule =
-      remember(schedule) {
-        schedule
-            .groupBy {
-              it.startDate.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-            }
-            .toSortedMap()
-      }
-  val days = remember(groupedSchedule) { groupedSchedule.keys.toList() }
-  val currentDay = days.getOrNull(currentDayIndex)
+  val currentDay = ui.days.getOrNull(ui.currentDayIndex)
   val dailySteps =
-      if (currentDay != null) groupedSchedule[currentDay] ?: emptyList() else emptyList()
+      if (currentDay != null) ui.groupedSchedule[currentDay] ?: emptyList() else emptyList()
 
   // Map state logic
   val mapState =
-      remember(dailySteps, currentGpsPoint, drawFromCurrentPosition, selectedStep) {
-        val locations =
-            if (selectedStep != null) {
-              mapLocationsForDay(listOf(selectedStep!!), currentGpsPoint, drawFromCurrentPosition)
-            } else {
-              mapLocationsForDay(dailySteps, currentGpsPoint, drawFromCurrentPosition)
-            }
+      remember(ui.mapLocations, ui.schedule, ui.drawFromCurrentPosition, ui.isComputingSchedule) {
         MapState(
-            locations = locations,
+            locations = ui.mapLocations,
             drawRoute = dailySteps.isNotEmpty(),
-            drawFromCurrentPosition = drawFromCurrentPosition,
-            isLoading = isComputing || (ui.locations.isNotEmpty() && schedule.isEmpty()))
+            drawFromCurrentPosition = ui.drawFromCurrentPosition,
+            isLoading =
+                ui.isComputingSchedule || (ui.locations.isNotEmpty() && ui.schedule.isEmpty()))
       }
 
   LaunchedEffect(ui.errorMsg) {
@@ -157,29 +129,6 @@ fun DailyViewScreen(
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       tripInfoViewModel.clearErrorMsg()
     }
-  }
-
-  LaunchedEffect(ui.locations, ui.activities, ui.tripProfile) {
-    if (ui.locations.isEmpty() || ui.tripProfile == null) return@LaunchedEffect
-    isComputing = true
-    val tripSegments = ui.routeSegments.map { TripElement.TripSegment(it) }
-    val tripActivities = ui.activities.map { TripElement.TripActivity(it) }
-
-    val newSchedule = (tripSegments + tripActivities).sortedBy { it.startDate }
-    if (schedule != newSchedule) {
-      val newGrouped =
-          newSchedule.groupBy {
-            it.startDate.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-          }
-      val newDaysCount = newGrouped.keys.size
-
-      schedule = newSchedule
-      // Reset only if necessary, or keep index if within bounds of the NEW schedule
-      if (currentDayIndex >= newDaysCount) {
-        currentDayIndex = 0
-      }
-    }
-    isComputing = false
   }
 
   Scaffold(
@@ -207,18 +156,20 @@ fun DailyViewScreen(
             Column(Modifier.fillMaxSize()) {
               // Day Navigator
               DayNavigator(
-                  currentDayIndex = currentDayIndex,
-                  days = days,
-                  onDayChange = { currentDayIndex = it })
+                  currentDayIndex = ui.currentDayIndex,
+                  days = ui.days,
+                  onDayChange = { tripInfoViewModel.setCurrentDayIndex(it) })
 
               if (!ui.fullscreen) {
                 // Map Card
                 DailyMapCard(
                     mapState = mapState,
                     onToggleFullscreen = { tripInfoViewModel.toggleFullscreen(true) },
-                    onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
-                    onUserLocationUpdate = { currentGpsPoint = it },
-                    isComputing = isComputing,
+                    onToggleNavMode = {
+                      tripInfoViewModel.setDrawFromCurrentPosition(!ui.drawFromCurrentPosition)
+                    },
+                    onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
+                    isComputing = ui.isComputingSchedule,
                     hasSteps = dailySteps.isNotEmpty())
               }
 
@@ -233,8 +184,11 @@ fun DailyViewScreen(
                       DailyStepCard(
                           stepNumber = idx + 1,
                           element = el,
-                          isSelected = selectedStep == el,
-                          onMapClick = { selectedStep = if (selectedStep == el) null else el },
+                          isSelected = ui.selectedStep == el,
+                          onMapClick = {
+                            tripInfoViewModel.setSelectedStep(
+                                if (ui.selectedStep == el) null else el)
+                          },
                           onDetailsClick = {
                             if (el is TripElement.TripActivity) {
                               onActivityClick(el)
@@ -250,7 +204,7 @@ fun DailyViewScreen(
             FullScreenMap(
                 mapState = mapState,
                 onExit = { tripInfoViewModel.toggleFullscreen(false) },
-                onUserLocationUpdate = { currentGpsPoint = it })
+                onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) })
           }
         }
       }
@@ -569,52 +523,11 @@ private fun FullScreenMap(
         onClick = onExit,
         modifier =
             Modifier.align(Alignment.BottomEnd)
-                .padding(dimensionResource(R.dimen.daily_view_map_toggle_button_padding))
+                .padding(dimensionResource(R.dimen.daily_view_map_button_padding))
                 .testTag(DailyViewScreenTestTags.FULLSCREEN_EXIT)) {
           Icon(
               imageVector = Icons.Filled.ZoomInMap,
               contentDescription = stringResource(R.string.back_to_my_trips))
         }
   }
-}
-
-/**
- * Prepares the list of locations to be displayed on the map for a given day.
- *
- * @param dailySteps The list of [TripElement]s for the current day.
- * @param currentGps The user's current GPS position, if available.
- * @param drawFromCurrentPosition A boolean indicating whether to include the user's current
- *   location as the starting point.
- * @return A distinct list of [Location]s to be plotted on the map.
- */
-private fun mapLocationsForDay(
-    dailySteps: List<TripElement>,
-    currentGps: Point?,
-    drawFromCurrentPosition: Boolean
-): List<Location> {
-  if (dailySteps.isEmpty()) return emptyList()
-
-  val locations = mutableListOf<Location>()
-
-  // Add current location if requested
-  if (drawFromCurrentPosition && currentGps != null) {
-    locations.add(
-        Location(
-            name = "Current Location",
-            coordinate = Coordinate(currentGps.latitude(), currentGps.longitude())))
-  }
-
-  dailySteps.forEach { step ->
-    when (step) {
-      is TripElement.TripActivity -> {
-        // Do not add activity locations to the main map
-      }
-      is TripElement.TripSegment -> {
-        locations.add(step.route.from)
-        locations.add(step.route.to)
-      }
-    }
-  }
-
-  return locations.distinct()
 }
