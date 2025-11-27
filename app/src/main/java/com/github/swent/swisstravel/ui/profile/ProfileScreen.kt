@@ -79,6 +79,12 @@ object ProfileScreenTestTags {
   const val LOADING_INDICATOR = "loadingIndicator"
 }
 
+/** The maximum number of lines for the name. */
+private const val NAME_MAX_LINES = 1
+
+/** The maximum number of lines for the biography. */
+private const val BIOGRAPHY_MAX_LINES = 3
+
 /**
  * A screen that shows the user's profile information.
  *
@@ -287,7 +293,7 @@ private fun ProfileHeader(photoUrl: String, name: String) {
     Text(
         text = name,
         style = MaterialTheme.typography.headlineLarge,
-        maxLines = 1,
+        maxLines = NAME_MAX_LINES,
         overflow = TextOverflow.Ellipsis,
         modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
   }
@@ -307,7 +313,7 @@ private fun BiographyDisplay(biography: String) {
           Text(
               text = biography,
               style = MaterialTheme.typography.bodyMedium,
-              maxLines = 3,
+              maxLines = BIOGRAPHY_MAX_LINES,
               overflow = TextOverflow.Ellipsis)
         }
     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
@@ -394,9 +400,6 @@ private fun PinnedTrips(
   TripList(
       trips = pinnedTrips,
       onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
-      isSelected = { false }, // No selection mode here
-      isSelectionMode = false,
-      noIconTripElement = false,
       emptyListString =
           if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
           else stringResource(R.string.no_pinned_trips),
@@ -434,7 +437,7 @@ private fun PinnedImages(
               }
         }
       }
-
+  // TODO unfinished
   LazyRow(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES_LIST),
       horizontalArrangement = Arrangement.spacedBy(12.dp),

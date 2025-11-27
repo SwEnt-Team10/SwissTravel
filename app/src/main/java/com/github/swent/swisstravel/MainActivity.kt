@@ -301,7 +301,7 @@ private fun SwissTravelNavHost(
 ) {
   NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
     authNavGraph(navigationActions, credentialManager)
-    profileNavGraph(navigationActions)
+    profileNavGraph(navigationActions, context) // TODO context is temporary
     currentTripNavGraph(navigationActions)
     myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
@@ -346,9 +346,13 @@ private fun NavGraphBuilder.authNavGraph(
 /**
  * Sets up the profile navigation graph for the Swiss Travel App.
  *
- * @param navigationActions The NavigationActions used for navigation.
+ * @param navigationActions The NavigationActions used for navigation. TODO remove context parameter
+ *   once edit pinned methods are implemented
  */
-private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions) {
+private fun NavGraphBuilder.profileNavGraph(
+    navigationActions: NavigationActions,
+    context: Context
+) {
   navigation(
       startDestination = Screen.Profile.route,
       route = Screen.Profile.name,
@@ -359,8 +363,12 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
               ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-          onEditPinnedTrips = { /* TODO */},
-          onEditPinnedImages = { /* TODO */})
+          onEditPinnedTrips = { /* TODO */
+            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
+          },
+          onEditPinnedImages = { /* TODO */
+            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
+          })
     }
     composable(Screen.ProfileSettings.route) {
       ProfileSettingsScreen(
@@ -651,9 +659,7 @@ private fun NavGraphBuilder.friendsListNavGraph(
           ProfileScreen(
               profileViewModel = ProfileViewModel(requestedUid = uid),
               onBack = { navigationActions.goBack() },
-              onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-              onEditPinnedTrips = { /* TODO */},
-              onEditPinnedImages = { /* TODO */})
+              onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) })
         }
   }
 }

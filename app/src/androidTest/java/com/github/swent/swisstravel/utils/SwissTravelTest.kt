@@ -226,7 +226,7 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
     // Profile header
     waitUntil(
-        timeoutMillis = 5000,
+        timeoutMillis = UI_WAIT_TIMEOUT,
         condition = { onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).isDisplayed() })
     onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
 
@@ -590,7 +590,8 @@ abstract class SwissTravelTest {
     // Header row present
     onNodeWithTag(ProfileSettingsScreenTestTags.PREFERENCES).assertIsDisplayed()
     // Collapsed by default: a well-known preference label should NOT be visible yet
-    onNodeWithText("Museums").assertDoesNotExist()
+    onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.MUSEUMS))
+        .assertDoesNotExist()
   }
 
   fun ComposeTestRule.checkFriendProfileScreenIsDisplayed() {

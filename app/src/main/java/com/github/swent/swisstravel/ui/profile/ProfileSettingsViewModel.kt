@@ -192,4 +192,13 @@ class ProfileSettingsViewModel(
   fun cancelEditingBio() {
     _uiState.update { it.copy(isEditingBio = false) }
   }
+
+  /**
+   * Checks if the current user is signed in.
+   *
+   * @return True if the user is signed in, false otherwise.
+   */
+  fun userIsSignedIn(): Boolean {
+    return currentUser != null
+  }
 }

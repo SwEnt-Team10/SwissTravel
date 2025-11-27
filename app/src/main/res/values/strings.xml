@@ -182,6 +182,7 @@
     <string name="save">Save</string>
     <string name="press_edit_to_add">Press the edit button to add text…</string>
     <string name="enter_text">Enter text…</string>
+    <string name="hyphen">-</string>
 
     <!-- Preferences -->
     <string name="preference_scenic_views">Scenic Views</string>

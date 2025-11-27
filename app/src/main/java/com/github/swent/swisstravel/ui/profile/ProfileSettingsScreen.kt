@@ -63,8 +63,6 @@ import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 
 /** Test tags for the profile settings screen. */
 object ProfileSettingsScreenTestTags {
@@ -201,7 +199,7 @@ private fun ProfileSettingsContent(
     navigationActions: NavigationActions? = null
 ) {
   val scrollState = rememberScrollState()
-  val isSignedIn = Firebase.auth.currentUser != null
+  val isSignedIn = profileSettingsViewModel.userIsSignedIn()
 
   Column(
       modifier =
@@ -438,7 +436,7 @@ fun InfoItem(label: String, value: String, modifier: Modifier) {
                 MaterialTheme.typography.titleSmall.copy(
                     fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface))
         Text(
-            text = value.ifBlank { "-" },
+            text = value.ifBlank { stringResource(R.string.hyphen) },
             style = MaterialTheme.typography.bodyLarge,
             modifier = modifier)
       }

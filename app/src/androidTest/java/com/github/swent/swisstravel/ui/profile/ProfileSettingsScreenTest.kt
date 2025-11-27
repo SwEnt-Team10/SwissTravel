@@ -6,7 +6,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -18,6 +17,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
@@ -144,14 +144,17 @@ class ProfileSettingsScreenTest {
   private val fakeUserRepo = FakeUserRepository()
   private val fakeTripRepo = TripRepositoryLocal()
 
-  @Test
-  fun allKeyUIElementsAreDisplayed_collapsedByDefault() {
+  private fun setContentHelper(fakeUserRepository: UserRepository = fakeUserRepo) {
     composeTestRule.setContent {
       SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepo, fakeTripRepo))
+        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepository, fakeTripRepo))
       }
     }
+  }
 
+  @Test
+  fun allKeyUIElementsAreDisplayed_collapsedByDefault() {
+    setContentHelper()
     // Static bits
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_PIC).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_INFO).assertIsDisplayed()
@@ -178,16 +181,14 @@ class ProfileSettingsScreenTest {
     // Header row present
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PREFERENCES).assertIsDisplayed()
     // Collapsed by default: a well-known preference label should NOT be visible yet
-    composeTestRule.onNodeWithText("Museums").assertDoesNotExist()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.MUSEUMS))
+        .assertDoesNotExist()
   }
 
   @Test
   fun expandAndCollapsePreferences_showsAndHidesContent() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper()
 
     // Expand
     composeTestRule
@@ -196,7 +197,9 @@ class ProfileSettingsScreenTest {
         .performClick()
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performScrollTo()
     // Now a known preference chip should appear
-    composeTestRule.onNodeWithText("Fast Trip").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
+        .assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PERSONAL_INFO).performScrollTo()
     // Collapse
@@ -204,16 +207,14 @@ class ProfileSettingsScreenTest {
         .onNodeWithTag(
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
-    composeTestRule.onNodeWithText("Fast Trip").assertDoesNotExist()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
+        .assertDoesNotExist()
   }
 
   @Test
   fun clickingAPreferenceChip_invokesSaveFlow() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper()
 
     // Expand first
     composeTestRule
@@ -221,11 +222,17 @@ class ProfileSettingsScreenTest {
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performScrollTo()
-    composeTestRule.onNodeWithText("Fast Trip").assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
+        .assertIsDisplayed()
 
     // Click to toggle on/off (we don't assert state, just ensure it doesn't crash)
-    composeTestRule.onNodeWithText("Fast Trip").performClick()
-    composeTestRule.onNodeWithText("Fast Trip").performClick()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
+        .performClick()
+    composeTestRule
+        .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
+        .performClick()
   }
 
   /** Directly tests InfoSection/InfoItem for coverage. */
@@ -245,29 +252,19 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun profileDisplaysFallbackValuesWhenEmpty() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(emptyUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper(emptyUserRepo)
 
     // InfoItem displays "-" when value is blank
     composeTestRule
         .onNode(hasTestTag(ProfileSettingsScreenTestTags.EMAIL), useUnmergedTree = true)
         .assertIsDisplayed()
     // We can also check the literal "-" exists at least once on the screen
-    composeTestRule
-        .onAllNodesWithTag(ProfileSettingsScreenTestTags.EMAIL, useUnmergedTree = true)
-        .fetchSemanticsNodes()
+    composeTestRule.onNodeWithText("-", substring = false).assertIsDisplayed()
   }
 
   @Test
   fun clickingEdit_showsTextField_andConfirmCancelButtons() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper()
 
     // Before editing: text is shown, not TextField
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.text("NAME")).assertIsDisplayed()
@@ -292,11 +289,7 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun editingName_andSaving_updatesTextDisplayed() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper()
 
     // Enter edit mode
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.editButton("NAME")).performClick()
@@ -325,11 +318,7 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun editingName_andCancel_restoresOriginalValue() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper()
 
     // Original value from FakeUserRepository is "Test User"
     composeTestRule.onNodeWithText("Test User").assertIsDisplayed()
@@ -357,11 +346,7 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun emptyBiography_showsPressEditToAdd() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(emptyUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper(emptyUserRepo)
 
     // Empty bio shows fallback placeholder
     composeTestRule
@@ -371,11 +356,7 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun emptyField_editMode_showsTextField() {
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(emptyUserRepo, fakeTripRepo))
-      }
-    }
+    setContentHelper(emptyUserRepo)
 
     // Press edit
     composeTestRule

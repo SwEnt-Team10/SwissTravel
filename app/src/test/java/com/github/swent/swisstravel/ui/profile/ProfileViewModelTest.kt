@@ -132,4 +132,33 @@ class ProfileViewModelTest {
     state = viewModel.uiState.value
     Assert.assertNull(state.errorMsg)
   }
+
+  @Test
+  fun viewingOtherUsersProfileLoadsCorrectlyAndIsOwnProfileIsFalse() = runTest {
+    // Given: another existing user
+    val otherUser =
+        currentUser.copy(
+            uid = "bumAndFraud",
+            name = "Fushiguro Megumi",
+            biography = "I like dogs and being a bum.",
+            email = "mahoraga@saveme.com",
+            profilePicUrl = "http://bum.url")
+
+    coEvery { userRepository.getUserByUid("bumAndFraud") } returns otherUser
+
+    // When: loading another user's profile
+    viewModel = ProfileViewModel(userRepository, tripsRepository, "bumAndFraud")
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Then: UI state loads their data, but isOwnProfile is false
+    val state = viewModel.uiState.value
+
+    Assert.assertEquals(otherUser.uid, state.uid)
+    Assert.assertEquals(otherUser.name, state.name)
+    Assert.assertEquals(otherUser.biography, state.biography)
+    Assert.assertEquals(otherUser.profilePicUrl, state.profilePicUrl)
+
+    Assert.assertFalse(state.isOwnProfile)
+    Assert.assertNull(state.errorMsg)
+  }
 }
