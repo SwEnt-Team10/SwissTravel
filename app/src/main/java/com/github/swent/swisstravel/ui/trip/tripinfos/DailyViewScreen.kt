@@ -17,7 +17,8 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
@@ -345,7 +346,7 @@ private fun DayNavigator(currentDayIndex: Int, days: List<LocalDate>, onDayChang
             onClick = { if (currentDayIndex > 0) onDayChange(currentDayIndex - 1) },
             enabled = currentDayIndex > 0,
             modifier = Modifier.testTag(DailyViewScreenTestTags.PREV_DAY_BUTTON)) {
-              Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Previous Day")
+              Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous Day")
             }
 
         Text(
@@ -358,7 +359,7 @@ private fun DayNavigator(currentDayIndex: Int, days: List<LocalDate>, onDayChang
             onClick = { if (currentDayIndex < days.size - 1) onDayChange(currentDayIndex + 1) },
             enabled = currentDayIndex < days.size - 1,
             modifier = Modifier.testTag(DailyViewScreenTestTags.NEXT_DAY_BUTTON)) {
-              Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = "Next Day")
+              Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = "Next Day")
             }
       }
 }
