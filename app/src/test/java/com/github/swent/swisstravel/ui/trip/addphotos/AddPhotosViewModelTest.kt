@@ -5,6 +5,7 @@ package com.github.swent.swisstravel.ui.trip.addphotos
 import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosViewModel
 import com.google.firebase.Timestamp
@@ -91,6 +92,39 @@ class AddPhotosViewModelTest {
             // Verify that the new list of Uris is the concatenation of the
             val expectedList = fakeUris + newUris
             assertEquals(expectedList, addPhotosViewModel.uiState.value.listUri)
+
+        } finally {
+            Dispatchers.resetMain()
+        }
+    }
+
+    @Test
+    fun `test saveUri correctly adds new uri to the repository`() = runTest {
+
+        try {
+
+            // Set the dispatcher
+            val testDispatcher = UnconfinedTestDispatcher(testScheduler)
+            Dispatchers.setMain(testDispatcher)
+
+            // Set the model
+            val fakeRepo = TripRepositoryLocal()
+            fakeRepo.addTrip(fakeTrip)
+            val addPhotosViewModel = AddPhotosViewModel(fakeRepo)
+
+            // Load the state
+            addPhotosViewModel.loadPhotos("1")
+
+            // Add new photos to the state
+            val newUris = listOf("newUri1".toUri(), "newUri2".toUri())
+            addPhotosViewModel.addUri(newUris)
+
+            // Save to the repository
+            addPhotosViewModel.savePhotos("1")
+            val expectedList = fakeUris + newUris
+
+            // Verify
+            assertEquals(expectedList, fakeRepo.getTrip("1").listUri)
 
         } finally {
             Dispatchers.resetMain()
