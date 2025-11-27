@@ -1,6 +1,10 @@
 package com.github.swent.swisstravel.ui.trip.tripinfo
 
 import android.Manifest
+import androidx.compose.foundation.layout.Box
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -17,6 +21,7 @@ import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import com.google.firebase.Timestamp
+import com.mapbox.geojson.Point
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -34,7 +39,10 @@ class DailyViewScreenTest {
       vm: TripInfoViewModelContract,
       onMyTrips: () -> Unit = {},
       onEditTrip: () -> Unit = {},
-      onActivityClick: () -> Unit = {}
+      onActivityClick: () -> Unit = {},
+      mapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit = { _, _, _ ->
+        Box(modifier = Modifier.testTag("fakeMap"))
+      }
   ) {
     compose.setContent {
       DailyViewScreen(
@@ -42,7 +50,8 @@ class DailyViewScreenTest {
           tripInfoViewModel = vm,
           onMyTrips = onMyTrips,
           onEditTrip = onEditTrip,
-          onActivityClick = { onActivityClick() })
+          onActivityClick = { onActivityClick() },
+          mapContent = mapContent)
     }
   }
 

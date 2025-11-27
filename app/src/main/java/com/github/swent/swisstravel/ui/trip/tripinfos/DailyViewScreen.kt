@@ -50,6 +50,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
@@ -100,7 +101,14 @@ fun DailyViewScreen(
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
-    onActivityClick: (TripElement.TripActivity) -> Unit = {}
+    onActivityClick: (TripElement.TripActivity) -> Unit = {},
+    mapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit =
+        { locations, drawRoute, onUserLocationUpdate ->
+          MapScreen(
+              locations = locations,
+              drawRoute = drawRoute,
+              onUserLocationUpdate = onUserLocationUpdate)
+        }
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
@@ -170,7 +178,8 @@ fun DailyViewScreen(
                     },
                     onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
                     isComputing = ui.isComputingSchedule,
-                    hasSteps = dailySteps.isNotEmpty())
+                    hasSteps = dailySteps.isNotEmpty(),
+                    mapContent = mapContent)
               }
 
               // Daily Steps List
@@ -204,7 +213,8 @@ fun DailyViewScreen(
             FullScreenMap(
                 mapState = mapState,
                 onExit = { tripInfoViewModel.toggleFullscreen(false) },
-                onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) })
+                onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
+                mapContent = mapContent)
           }
         }
       }
@@ -335,7 +345,8 @@ private fun DailyMapCard(
     onToggleNavMode: () -> Unit,
     onUserLocationUpdate: (Point) -> Unit,
     isComputing: Boolean,
-    hasSteps: Boolean
+    hasSteps: Boolean,
+    mapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit
 ) {
   Card(
       modifier =
@@ -358,10 +369,7 @@ private fun DailyMapCard(
                       modifier = Modifier.testTag(DailyViewScreenTestTags.LOADING))
                 }
               } else {
-                MapScreen(
-                    locations = mapState.locations,
-                    drawRoute = mapState.drawRoute,
-                    onUserLocationUpdate = onUserLocationUpdate)
+                mapContent(mapState.locations, mapState.drawRoute, onUserLocationUpdate)
               }
 
               NavigationModeToggle(
@@ -512,13 +520,11 @@ private fun DailyStepCard(
 private fun FullScreenMap(
     mapState: MapState,
     onExit: () -> Unit,
-    onUserLocationUpdate: (Point) -> Unit
+    onUserLocationUpdate: (Point) -> Unit,
+    mapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit
 ) {
   Box(modifier = Modifier.fillMaxSize().testTag(DailyViewScreenTestTags.FULLSCREEN_MAP)) {
-    MapScreen(
-        locations = mapState.locations,
-        drawRoute = mapState.drawRoute,
-        onUserLocationUpdate = onUserLocationUpdate)
+    mapContent(mapState.locations, mapState.drawRoute, onUserLocationUpdate)
     IconButton(
         onClick = onExit,
         modifier =
