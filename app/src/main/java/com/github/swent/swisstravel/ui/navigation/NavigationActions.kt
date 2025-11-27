@@ -74,6 +74,10 @@ sealed class Screen(
 
   object Loading : Screen(route = "loading", name = "Loading")
 
+  object FriendsList : Screen(route = "friends_list", name = "Friends")
+
+  object AddFriend : Screen(route = "add_friend", name = "Add Friend")
+
   object SwipeActivities : Screen(route = "swipe_activities", name = "Swipe Activities")
 
   object LikedActivities : Screen(route = "liked_activities", name = "Liked Activities")

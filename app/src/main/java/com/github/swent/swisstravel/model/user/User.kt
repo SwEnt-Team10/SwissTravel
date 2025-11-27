@@ -57,10 +57,12 @@ data class Friend(val uid: String, val status: FriendStatus)
 /**
  * Enum representing the status of a friend request
  *
- * @property PENDING Pending friend request
+ * @property PENDING_INCOMING Incoming friend request
+ * @property PENDING_OUTGOING Outgoing friend request
  * @property ACCEPTED Accepted friend request
  */
 enum class FriendStatus {
-  PENDING,
+  PENDING_INCOMING,
+  PENDING_OUTGOING,
   ACCEPTED
 }
