@@ -25,6 +25,7 @@ import kotlin.test.assertEquals
 class AddPhotosViewModelTest {
     // Fake values
     private val fakeUris = listOf("uri1".toUri(), "uri2".toUri())
+    // Fake trip
     private val fakeTrip = Trip(
         uid = "1",
         name = "fake trip",

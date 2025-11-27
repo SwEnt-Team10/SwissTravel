@@ -36,6 +36,11 @@ import com.github.swent.swisstravel.R
 object AddPhotosScreenTestTags {
     const val MAIN_SCREEN = "mainScreen"
     const val TOP_APP_BAR = "topAppBar"
+    const val TOP_APP_BAR_TITLE = "topAppBarTitle"
+    const val BACK_BUTTON = "backButton"
+    const val BOTTOM_BAR = "bottomBar"
+    const val SAVE_BUTTON = "saveButton"
+    const val ADD_PHOTOS_BUTTON = "addPhotosButton"
 }
 
 /**
@@ -50,7 +55,7 @@ object AddPhotosScreenTestTags {
 fun AddPhotosScreen(
     onBack: () -> Unit = {},
     viewModel: AddPhotosViewModel = viewModel(),
-    tripId: String = ""
+    tripId: String
 ) {
     val context = LocalContext.current
     LaunchedEffect(tripId) {
@@ -76,13 +81,16 @@ fun AddPhotosScreen(
                 modifier = Modifier.testTag(AddPhotosScreenTestTags.TOP_APP_BAR),
                 title = {
                     Text(
+                        modifier = Modifier.testTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE),
                         text = "Add photos",
                         style = MaterialTheme.typography.titleLarge,
                         color = MaterialTheme.colorScheme.onBackground)
                 },
                 navigationIcon = {
                     IconButton(
-                        onClick = onBack) {
+                        onClick = onBack,
+                        modifier = Modifier.testTag(AddPhotosScreenTestTags.BACK_BUTTON)
+                        ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(R.string.back_to_my_trips),
@@ -93,10 +101,11 @@ fun AddPhotosScreen(
         },
         bottomBar = {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().testTag(AddPhotosScreenTestTags.BOTTOM_BAR),
                 horizontalArrangement = Arrangement.Center
             ) {
                 Button(
+                    modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
                     onClick = {
                         picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                     }
@@ -106,6 +115,7 @@ fun AddPhotosScreen(
                     )
                 }
                 Button(
+                    modifier = Modifier.testTag(AddPhotosScreenTestTags.SAVE_BUTTON),
                     onClick = {
                         viewModel.savePhotos(tripId)
                         onBack()
