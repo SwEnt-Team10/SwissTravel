@@ -52,7 +52,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -413,8 +413,7 @@ private fun NavGraphBuilder.myTripsNavGraph(
   ) {
     composable(Screen.MyTrips.route) {
       MyTripsScreen(
-          myTripsViewModel = myTripsViewModel,
-          onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+          onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
           onCreateTrip = { navigationActions.navigateTo(Screen.TripSettingsDates) },
           onEditCurrentTrip = { navigationActions.navigateTo(Screen.SetCurrentTrip) })
@@ -442,7 +441,7 @@ private fun NavGraphBuilder.pastTripsNavGraph(navigationActions: NavigationActio
     composable(Screen.PastTrips.route) {
       PastTripsScreen(
           onBack = { navigationActions.goBack() },
-          onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) })
+          onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) })
     }
   }
 }
@@ -458,10 +457,10 @@ private fun NavGraphBuilder.tripInfoNavGraph(
     navigationActions: NavigationActions
 ) {
   navigation(
-      startDestination = Screen.TripInfo.route,
+      startDestination = Screen.DailyView.route,
       route = Screen.TripInfo.name,
   ) {
-    composable(Screen.TripInfo.route) { navBackStackEntry ->
+    composable(Screen.DailyView.route) { navBackStackEntry ->
       val uid = navBackStackEntry.arguments?.getString("uid")
       if (uid == null) {
         Toast.makeText(context, context.getString(R.string.trip_id_missing), Toast.LENGTH_SHORT)
@@ -472,7 +471,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
 
       val vm = navigationActions.tripInfoViewModel(navController)
 
-      TripInfoScreen(
+      DailyViewScreen(
           uid = uid,
           tripInfoViewModel = vm,
           onMyTrips = { navigationActions.goBack() },
