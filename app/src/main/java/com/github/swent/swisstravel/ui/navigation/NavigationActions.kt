@@ -32,6 +32,8 @@ sealed class Screen(
 
   object Profile : Screen(route = "profile", name = "Profile", isTopLevelDestination = true)
 
+  object ProfileSettings : Screen(route = "profile_settings", name = "Profile Settings")
+
   object MyTrips : Screen(route = "my_trips", name = "My trips", isTopLevelDestination = true)
 
   object SetCurrentTrip : Screen(route = "set_current_trip", name = "Set current trip")
@@ -53,6 +55,13 @@ sealed class Screen(
     companion object {
       const val route = "trip_info/{uid}"
       const val name = "Trip Info"
+    }
+  }
+
+  data class DailyView(val uid: String) : Screen(route = "daily_view/${uid}", name = "Daily View") {
+    companion object {
+      const val route = "daily_view/{uid}"
+      const val name = "Daily View"
     }
   }
 
@@ -84,6 +93,14 @@ sealed class Screen(
   object FriendsList : Screen(route = "friends_list", name = "Friends")
 
   object AddFriend : Screen(route = "add_friend", name = "Add Friend")
+
+  data class FriendProfile(val uid: String) :
+      Screen(route = "profile/${uid}", name = "Friend Profile") {
+    companion object {
+      const val route = "profile/{uid}"
+      const val name = "Friend Profile"
+    }
+  }
 
   // TODO change this when there is a new screen
 }
@@ -141,9 +158,9 @@ class NavigationActions(
     navController.navigate(Screen.ActivityInfo.route(tripId))
   }
 
-  fun goBackToTripInfo(tripId: String): Boolean {
+  fun goBackToTripInfo(tripId: String): Boolean { // TODO this is unused ?
     // trip_info/<real-uid>, not the pattern
-    val route = Screen.TripInfo(tripId).route // "trip_info/$tripId"
+    val route = Screen.DailyView(tripId).route // "daily_view/$tripId"
     return navController.popBackStack(route = route, inclusive = false)
   }
 

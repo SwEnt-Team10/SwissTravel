@@ -126,6 +126,7 @@
     <string name="next_step">Next step</string>
     <string name="draw_from_current_position">Draw route from current position</string>
     <string name="draw_from_previous_step">Draw route from previous step</string>
+    <string name="trip_id_missing">Trip ID is missing</string>
     <string name="add_photo">Add photos</string>
 
     <!-- Edit Trip -->
@@ -157,12 +158,32 @@
     <!-- Profile -->
     <string name="my_profile">My Profile</string>
     <string name="profile_pic_desc">Profile picture</string>
-    <string name="hi">Hi,</string>
+    <string name="achievements">Achievements</string>
+    <string name="pinned_trips">Pinned Trips</string>
+    <string name="edit_pinned_trips">Edit Pinned Trips</string>
+    <string name="edit_no_pinned_trips">You don\'t have any pinned trips. Press the edit button to pin some!</string>
+    <string name="no_pinned_trips">No pinned trips here!</string>
+    <string name="pinned_images">Pinned Images</string>
+    <string name="edit_pinned_images">Edit Pinned Images</string>
+    <string name="back_to_friends_list">Back to Friends List</string>
+    <string name="confirm_unfriend_title">Are you sure you want to unfriend %1$s?</string>
+    <string name="confirm_unfriend_text">If you change your mind, you can friend them again through the \"Add Friend\" menu.</string>
+    <string name="unfriend">Unfriend</string>
+    <!-- Profile Settings -->
+    <string name="settings">Settings</string>
+    <string name="profile_info">Profile Information</string>
+    <string name="biography">Biography</string>
+    <string name="back_to_profile">Back to Profile Screen</string>
     <string name="personal_info">Personal Information</string>
     <string name="name">Name</string>
     <string name="email">Email</string>
     <string name="travel_pref">Travel Preferences</string>
     <string name="default_pref_info">These preferences will be selected by default when creating a new trip.</string>
+    <string name="edit">Edit</string>
+    <string name="save">Save</string>
+    <string name="press_edit_to_add">Press the edit button to add text…</string>
+    <string name="enter_text">Enter text…</string>
+    <string name="hyphen">-</string>
 
     <!-- Preferences -->
     <string name="preference_scenic_views">Scenic Views</string>
@@ -236,6 +257,7 @@
     <string name="pending_friend_requests">Pending Friend Requests (%1$d)</string>
     <string name="accept_friend">"Accept friend request"</string>
     <string name="deny_friend">Deny friend request</string>
+    <string name="user_uid_missing">Can\'t find this profile, sorry :(</string>
 
     <!-- AddPhotosScreen -->
     <string name="add_photos_title">Add photos</string>

@@ -5,10 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
+import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.mapbox.geojson.Point
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,6 +35,16 @@ data class TripInfoUIState(
     val errorMsg: String? = null,
     val fullscreen: Boolean = false,
     val selectedActivity: Activity? = null,
+    // New fields for DailyViewScreen MVVM refactor
+    val schedule: List<TripElement> = emptyList(),
+    val groupedSchedule: Map<LocalDate, List<TripElement>> = emptyMap(),
+    val days: List<LocalDate> = emptyList(),
+    val currentDayIndex: Int = 0,
+    val mapLocations: List<Location> = emptyList(),
+    val isComputingSchedule: Boolean = false,
+    val selectedStep: TripElement? = null,
+    val drawFromCurrentPosition: Boolean = false,
+    val currentGpsPoint: Point? = null
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -81,7 +95,10 @@ class TripInfoViewModel(
     }
     viewModelScope.launch {
       try {
+        val current = _uiState.value
         val trip = tripsRepository.getTrip(uid)
+        val isSameTrip = current.uid == trip.uid
+
         _uiState.value =
             TripInfoUIState(
                 uid = trip.uid,
@@ -91,7 +108,14 @@ class TripInfoViewModel(
                 routeSegments = trip.routeSegments,
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,
-                isFavorite = trip.isFavorite)
+                isFavorite = trip.isFavorite,
+                // Preserve transient state if reloading the same trip
+                currentDayIndex = if (isSameTrip) current.currentDayIndex else 0,
+                selectedStep = if (isSameTrip) current.selectedStep else null,
+                drawFromCurrentPosition =
+                    if (isSameTrip) current.drawFromCurrentPosition else false,
+                currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null)
+        computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
         Log.e("TripInfoViewModel", "Error loading trip info", e)
@@ -154,7 +178,133 @@ class TripInfoViewModel(
     _uiState.value = _uiState.value.copy(fullscreen = fullscreen)
   }
 
-  fun selectActivity(activity: Activity?) {
+  override fun selectActivity(activity: Activity?) {
     _uiState.value = _uiState.value.copy(selectedActivity = activity)
+  }
+
+  /**
+   * Sets the current day index for the daily view.
+   *
+   * @param index The new index.
+   */
+  override fun setCurrentDayIndex(index: Int) {
+    if (index < 0 || index >= _uiState.value.days.size) return
+    _uiState.value = _uiState.value.copy(currentDayIndex = index)
+    updateMapLocations()
+  }
+
+  /**
+   * Sets the selected step in the daily view.
+   *
+   * @param step The selected trip element.
+   */
+  override fun setSelectedStep(step: TripElement?) {
+    _uiState.value = _uiState.value.copy(selectedStep = step)
+    updateMapLocations()
+  }
+
+  /**
+   * Toggles whether to draw the route from the current user position.
+   *
+   * @param enabled True to enable, false to disable.
+   */
+  override fun setDrawFromCurrentPosition(enabled: Boolean) {
+    _uiState.value = _uiState.value.copy(drawFromCurrentPosition = enabled)
+    updateMapLocations()
+  }
+
+  /**
+   * Updates the current user GPS location.
+   *
+   * @param point The new GPS point.
+   */
+  override fun updateUserLocation(point: Point) {
+    _uiState.value = _uiState.value.copy(currentGpsPoint = point)
+    if (_uiState.value.drawFromCurrentPosition) {
+      updateMapLocations()
+    }
+  }
+
+  /** Computes the schedule and groups it by day. */
+  private fun computeSchedule() {
+    val current = _uiState.value
+    if (current.locations.isEmpty() || current.tripProfile == null) return
+
+    _uiState.value = current.copy(isComputingSchedule = true)
+
+    viewModelScope.launch {
+      val tripSegments = current.routeSegments.map { TripElement.TripSegment(it) }
+      val tripActivities = current.activities.map { TripElement.TripActivity(it) }
+
+      val newSchedule = (tripSegments + tripActivities).sortedBy { it.startDate }
+
+      if (newSchedule != current.schedule) {
+        val newGrouped =
+            newSchedule
+                .groupBy {
+                  it.startDate.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                }
+                .toSortedMap()
+        val newDays = newGrouped.keys.toList()
+        val newDaysCount = newDays.size
+
+        var newIndex = current.currentDayIndex
+        if (newIndex >= newDaysCount) {
+          newIndex = 0
+        }
+
+        _uiState.value =
+            _uiState.value.copy(
+                schedule = newSchedule,
+                groupedSchedule = newGrouped,
+                days = newDays,
+                currentDayIndex = newIndex,
+                isComputingSchedule = false)
+        updateMapLocations()
+      } else {
+        _uiState.value = _uiState.value.copy(isComputingSchedule = false)
+      }
+    }
+  }
+
+  /** Updates the list of locations to be displayed on the map. */
+  private fun updateMapLocations() {
+    val current = _uiState.value
+    val currentDay = current.days.getOrNull(current.currentDayIndex)
+    val dailySteps =
+        if (currentDay != null) current.groupedSchedule[currentDay] ?: emptyList() else emptyList()
+
+    val locations = mutableListOf<Location>()
+
+    // Add current location if requested
+    if (current.drawFromCurrentPosition && current.currentGpsPoint != null) {
+      locations.add(
+          Location(
+              name = "Current Location",
+              coordinate =
+                  com.github.swent.swisstravel.model.trip.Coordinate(
+                      current.currentGpsPoint.latitude(), current.currentGpsPoint.longitude())))
+    }
+
+    val stepsToMap =
+        if (current.selectedStep != null) {
+          listOf(current.selectedStep)
+        } else {
+          dailySteps
+        }
+
+    stepsToMap.forEach { step ->
+      when (step) {
+        is TripElement.TripActivity -> {
+          // Do not add activity locations to the main map
+        }
+        is TripElement.TripSegment -> {
+          locations.add(step.route.from)
+          locations.add(step.route.to)
+        }
+      }
+    }
+
+    _uiState.value = _uiState.value.copy(mapLocations = locations.distinct())
   }
 }

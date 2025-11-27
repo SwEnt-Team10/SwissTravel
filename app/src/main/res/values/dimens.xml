@@ -24,6 +24,8 @@
 
     <!--Profile Screen -->
     <dimen name="profile_logo_size">100dp</dimen>
+    <dimen name="profile_padding_start_end">16dp</dimen>
+    <dimen name="profile_padding_top_bottom">4dp</dimen>
 
     <!--Edit Trip Screen -->
     <dimen name="edit_screen_vertical_arrangement">24dp</dimen>
@@ -79,7 +81,24 @@
     <dimen name="step_location_card_padding">12dp</dimen>
     <dimen name="step_location_card_micro_spacer">4dp</dimen>
 
-"
+    <!-- Daily View Screen -->
+    <dimen name="daily_view_padding">16dp</dimen>
+    <dimen name="daily_view_daily_step_bottom_padding">24dp</dimen>
+    <dimen name="daily_view_day_navigation_horizontal_padding">16dp</dimen>
+    <dimen name="daily_view_day_navigation_vertical_padding">8dp</dimen>
+    <dimen name="daily_view_map_corner_radius">12dp</dimen>
+    <dimen name="daily_view_map_height">200dp</dimen>
+    <dimen name="daily_view_map_toggle_button_padding">12dp</dimen>
+    <dimen name="daily_view_card_elevation_on">8dp</dimen>
+    <dimen name="daily_view_card_elevation_off">2dp</dimen>
+    <dimen name="daily_view_date_padding">16dp</dimen>
+    <dimen name="daily_view_date_end_padding">16dp</dimen>
+    <dimen name="daily_view_date_separator_padding">8dp</dimen>
+    <dimen name="daily_view_map_button_padding">16dp</dimen>
+
+
+
+
 
     <!-- Trip Summary -->
     <dimen name="trip_summary_padding_horizontal">16dp</dimen>

@@ -4,6 +4,14 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 object TripsRepositoryProvider {
-  private val _repository: TripsRepository by lazy { TripsRepositoryFirestore(Firebase.firestore) }
-  var repository: TripsRepository = _repository
+  private val defaultRepository: TripsRepository by lazy {
+    TripsRepositoryFirestore(Firebase.firestore)
+  }
+  private var _customRepository: TripsRepository? = null
+
+  var repository: TripsRepository
+    get() = _customRepository ?: defaultRepository
+    set(value) {
+      _customRepository = value
+    }
 }

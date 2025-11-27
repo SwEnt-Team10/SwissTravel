@@ -9,6 +9,8 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.io.File
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
@@ -202,15 +204,7 @@ class ProgressiveRouteOptimizerLocalTest {
     val realCache = DurationCacheLocal(mockContext, cacheFile = tempFile)
 
     val optimizerWithCacheAndMatrices =
-        ProgressiveRouteOptimizer(
-            cacheManager = realCache,
-            matrixHybrid = matrixHybrid,
-            k = 5,
-            penaltyConfig =
-                ProgressiveRouteOptimizer.PenaltyConfig(
-                    zigzagMultiplier = 0.0,
-                    activityDiffMultiplier = 0.0,
-                    centerDistanceMultiplier = 0.0))
+        ProgressiveRouteOptimizer(cacheManager = realCache, matrixHybrid = matrixHybrid, k = 5)
 
     val activities =
         listOf(
@@ -252,5 +246,51 @@ class ProgressiveRouteOptimizerLocalTest {
 
     tempFile.delete()
     assert(!tempFile.exists())
+  }
+
+  @Test
+  fun `fallback duration is used when cache and API fail`() = runBlocking {
+    // a and b should be ~10 km apart
+    val a = Location(Coordinate(46.0, 7.0), "A")
+    val b = Location(Coordinate(46.09, 7.0), "B")
+
+    val locations = listOf(a, b)
+
+    // Cache always fails
+    coEvery { cacheManager.getDuration(any(), any(), any()) } returns null
+
+    // API also fails to provide durations
+    coEvery { matrixHybrid.fetchDurationsFromStart(any(), any(), any()) } returns emptyMap()
+
+    // No activities needed
+    val activities = emptyList<Activity>()
+    val transportModes = listOf(TransportMode.CAR, TransportMode.TRAIN, TransportMode.UNKNOWN)
+
+    for (mode in transportModes) {
+      val result =
+          optimizer.optimize(
+              start = a,
+              end = b,
+              allLocations = locations,
+              activities = activities,
+              mode = mode,
+              onProgress = {})
+
+      // Since both the cache and API fail it should use the fallback
+      val duration = result.segmentDuration.firstOrNull()
+      assertNotNull(duration)
+      assertTrue(duration > 0, "Fallback duration should produce a positive value")
+      when (mode) {
+        TransportMode.CAR -> { // Speed of 80 km/h
+          assertEquals(450.0, duration, 1.0)
+        }
+        TransportMode.TRAIN -> { // Speed of 100 km/h
+          assertEquals(360.0, duration, 1.0)
+        }
+        else -> { // Speed of 60 km/h
+          assertEquals(600.0, duration, 1.0)
+        }
+      }
+    }
   }
 }

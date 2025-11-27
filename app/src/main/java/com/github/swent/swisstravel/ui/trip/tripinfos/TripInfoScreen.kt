@@ -576,7 +576,7 @@ private fun FullScreenMap(
  * @param drawFromCurrentPosition Whether the route should start from the current GPS position.
  * @return A list of one or two locations describing what should be drawn on the map.
  */
-private fun mapLocationsForStep(
+fun mapLocationsForStep(
     schedule: List<TripElement>,
     idx: Int,
     currentGps: Point?,
