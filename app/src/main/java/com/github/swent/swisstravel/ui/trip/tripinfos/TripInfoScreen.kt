@@ -55,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -194,7 +195,7 @@ fun TripInfoScreen(
       bottomBar = {
         Button(
             onClick = { onSwipeActivities() },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.small_spacer)),
         ) {
           Text(text = stringResource(R.string.swipe_activities))
         }
@@ -216,7 +217,10 @@ fun TripInfoScreen(
 
           // Button to go to the liked activities screen
           Button(
-              onClick = { onLikedActivities() }, modifier = Modifier.align(Alignment.BottomEnd)) {
+              onClick = { onLikedActivities() },
+              modifier =
+                  Modifier.align(Alignment.BottomEnd)
+                      .padding(dimensionResource(R.dimen.small_spacer))) {
                 Icon(
                     imageVector = Icons.Filled.Favorite,
                     contentDescription = stringResource(R.string.liked_activities))
