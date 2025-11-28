@@ -128,7 +128,7 @@ jobs:
       - name: Assemble
         run: |
           # To run the CI with debug information, add --info
-          ./gradlew assembleDebug lint --parallel --build-cache
+          ./gradlew assembleDebug lint --parallel --build-cache --info --stacktrace
 
       # Start Firebase emulators for instrumentation tests
       - name: Start Firebase emulators
