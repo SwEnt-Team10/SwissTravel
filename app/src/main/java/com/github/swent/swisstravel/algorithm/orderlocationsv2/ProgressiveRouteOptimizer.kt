@@ -12,9 +12,23 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 private const val LARGE_VALUE = 1e9
-private const val DEFAULT_K = 5
+private const val DEFAULT_K = 7
 private const val UNREACHABLE_LEG =
     LARGE_VALUE / 20 // a trip should not exceed around 50 days in travel time
+
+// average car speed in km/h for fallback estimation
+// set as 80 because national roads in Switzerland have speed limits of 80 km/h
+private const val CAR_SPEED = 80.0
+
+// average train speed in km/h for fallback estimation
+// set as 100 because train's speed in Switzerland generally range between 80km/h to 120km/h
+private const val TRAIN_SPEED = 100.0
+
+// average speed in km/h for fallback estimation when the transport mode is unknown
+// set as 60 because it's a reasonable average speed for mixed transport modes
+private const val UNKNOWN_SPEED = 60.0
+private const val FROM_HOUR_TO_MINUTES = 60.0
+private const val FROM_MINUTES_TO_SECONDS = 60.0
 
 // Done with the help of AI
 /**
@@ -68,15 +82,18 @@ class ProgressiveRouteOptimizer(
     var completedSteps = 0
     val totalSteps = unvisited.size
 
-    while (unvisited.isNotEmpty() && !sameLocation(current, end)) {
-      val candidates = selectCandidates(current, end, unvisited)
-      val durations = fetchDurations(current, candidates, mode)
-      val best =
-          pickBestCandidate(current, ordered, unvisited, candidates, durations, activitiesMap)
-      appendCandidate(best, ordered, segmentDurations, unvisited).also { totalDuration += it }
-      current = best.location
-      completedSteps++
-      onProgress(completedSteps.toFloat() / totalSteps)
+    if (unvisited.isNotEmpty()) {
+      do {
+        val candidates = selectCandidates(current, end, unvisited)
+        val durations = fetchDurations(current, candidates, mode)
+        val best =
+            pickBestCandidate(
+                current, ordered, unvisited, candidates, durations, activitiesMap, end)
+        appendCandidate(best, ordered, segmentDurations, unvisited).also { totalDuration += it }
+        current = best.location
+        completedSteps++
+        onProgress(completedSteps.toFloat() / totalSteps)
+      } while (unvisited.isNotEmpty() && !sameLocation(current, end))
     }
 
     if (!sameLocation(ordered.last(), end)) {
@@ -161,7 +178,8 @@ class ProgressiveRouteOptimizer(
         .mapNotNull { candidate ->
           try {
             cacheManager.getDuration(current.coordinate, candidate.coordinate, mode)?.let {
-              candidate to it.duration
+              // treat non-positive durations as missing/invalid
+              if (it.duration > 0.0) candidate to it.duration else null
             }
           } catch (e: Exception) {
             Log.d("Error getting duration from cache", e.toString())
@@ -195,15 +213,28 @@ class ProgressiveRouteOptimizer(
 
     // Create a map from the results and save valid new durations to the cache.
     return missingCandidates.associateWith { candidate ->
-      val duration = fetchedDurations[Pair(current.coordinate, candidate.coordinate)]
-      if (duration != null && duration >= 0) {
+
+      // Fetch result
+      val duration = fetchedDurations[current.coordinate to candidate.coordinate]
+
+      // Apply fallback
+      val finalDuration =
+          if (duration != null && duration > 0) {
+            duration
+          } else {
+            fallbackDuration(current, candidate, mode)
+          }
+
+      // Cache only if valid
+      if (finalDuration > 0) {
         try {
-          cacheManager.saveDuration(current.coordinate, candidate.coordinate, duration, mode)
+          cacheManager.saveDuration(current.coordinate, candidate.coordinate, finalDuration, mode)
         } catch (_: Exception) {
           // Ignore cache-saving errors.
         }
       }
-      duration
+
+      finalDuration
     }
   }
 
@@ -224,12 +255,13 @@ class ProgressiveRouteOptimizer(
       unvisited: List<Location>,
       candidates: List<Location>,
       durations: Map<Location, Double?>,
-      activities: Map<Coordinate, Int>
+      activities: Map<Coordinate, Int>,
+      end: Location
   ): CandidateScore {
     val scored =
         candidates.map { candidate ->
           val travelSec = durations[candidate] ?: LARGE_VALUE
-          val activitySec = (activities[candidate.coordinate] ?: 0) * 60.0
+          val activitySec = (activities[candidate.coordinate] ?: 0) / 8.0
           val previous = ordered.getOrNull(ordered.size - 2)
           val penalty =
               computePenalty(
@@ -238,7 +270,8 @@ class ProgressiveRouteOptimizer(
                   previous,
                   unvisited.filter { it != candidate },
                   activities,
-                  penaltyConfig)
+                  penaltyConfig,
+                  end)
           CandidateScore(candidate, travelSec + activitySec + penalty, travelSec)
         }
     return scored.minByOrNull { it.score }
@@ -322,11 +355,13 @@ class ProgressiveRouteOptimizer(
    * @param zigzagMultiplier Multiplier for zigzag penalty
    * @param activityDiffMultiplier Multiplier for activity difference penalty
    * @param centerDistanceMultiplier Multiplier for center-of-mass penalty
+   * @param endDirectionMultiplier Multiplier for end-direction penalty
    */
   data class PenaltyConfig(
-      val zigzagMultiplier: Double = 2.0,
-      val activityDiffMultiplier: Double = 30.0,
-      val centerDistanceMultiplier: Double = 10.0
+      val zigzagMultiplier: Double = 10.0,
+      val activityDiffMultiplier: Double = 0.0,
+      val centerDistanceMultiplier: Double = 1.0,
+      val endDirectionMultiplier: Double = 75.0
   )
 
   /**
@@ -339,6 +374,8 @@ class ProgressiveRouteOptimizer(
    * @param remaining The remaining list of destinations after [to]
    * @param activities The activities
    * @param config The penalty configuration
+   * @param end The final destination
+   * @return The computed penalty in arbitrary units to add to the travel time
    */
   private fun computePenalty(
       from: Location,
@@ -346,15 +383,16 @@ class ProgressiveRouteOptimizer(
       previous: Location?,
       remaining: List<Location>,
       activities: Map<Coordinate, Int>,
-      config: PenaltyConfig
+      config: PenaltyConfig,
+      end: Location
   ): Double {
     val distKm = from.haversineDistanceTo(to)
-    var penalty = distKm * 60.0 // base distance penalty
+    var penalty = distKm // base distance penalty
 
     // 1) Zigzag penalty
     if (previous != null) {
       val angle = angleBetween(previous.coordinate, from.coordinate, to.coordinate)
-      if (angle > 90.0) {
+      if (angle > 90.0 || angle < 25.0) {
         penalty += angle * config.zigzagMultiplier
       }
     }
@@ -378,6 +416,19 @@ class ProgressiveRouteOptimizer(
       penalty += distToCenter * config.centerDistanceMultiplier
     }
 
+    // 4) End-direction penalty
+    val toEnd = to.haversineDistanceTo(end)
+
+    // Larger distances from the end = lower penalty
+    // Closer to the end = higher penalty
+    // Scaled by remaining stops (early steps penalise more)
+    val progress = 1.0 - (remaining.size / (remaining.size + 1.0))
+
+    // Invert distance: closer = larger penalty, farther = smaller penalty
+    val closeness = 100.0 / (toEnd + 1.0) // avoid div by zero
+
+    penalty += closeness * config.endDirectionMultiplier * (100.0 * progress)
+
     return penalty
   }
 
@@ -399,5 +450,32 @@ class ProgressiveRouteOptimizer(
   private fun sameLocation(a: Location, b: Location): Boolean {
     return a.coordinate.latitude == b.coordinate.latitude &&
         a.coordinate.longitude == b.coordinate.longitude
+  }
+
+  /**
+   * Estimate duration in seconds between two locations based on haversine distance and average
+   * speed.
+   */
+  private fun estimateDurationSecondsByDistance(
+      a: Location,
+      b: Location,
+      avgSpeedKmh: Double = UNKNOWN_SPEED
+  ): Double {
+    val distKm = a.haversineDistanceTo(b)
+    val minutes = (distKm / avgSpeedKmh) * FROM_HOUR_TO_MINUTES
+    return max(5.0, minutes) * FROM_MINUTES_TO_SECONDS // always ≥ 5 min
+  }
+
+  /** Fallback duration estimation when no data is available in cache or matrix. */
+  private fun fallbackDuration(
+      current: Location,
+      candidate: Location,
+      mode: TransportMode
+  ): Double {
+    return when (mode) {
+      TransportMode.CAR -> estimateDurationSecondsByDistance(current, candidate, CAR_SPEED)
+      TransportMode.TRAIN -> estimateDurationSecondsByDistance(current, candidate, TRAIN_SPEED)
+      else -> estimateDurationSecondsByDistance(current, candidate, UNKNOWN_SPEED)
+    }
   }
 }

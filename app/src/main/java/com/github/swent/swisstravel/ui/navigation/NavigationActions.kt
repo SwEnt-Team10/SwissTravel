@@ -58,6 +58,13 @@ sealed class Screen(
     }
   }
 
+  data class DailyView(val uid: String) : Screen(route = "daily_view/${uid}", name = "Daily View") {
+    companion object {
+      const val route = "daily_view/{uid}"
+      const val name = "Daily View"
+    }
+  }
+
   object ActivityInfo : Screen("activityInfo/{uid}", name = "Activity Infos") {
     fun route(uid: String) = "activityInfo/$uid"
   }
@@ -150,7 +157,7 @@ class NavigationActions(
 
   fun goBackToTripInfo(tripId: String): Boolean { // TODO this is unused ?
     // trip_info/<real-uid>, not the pattern
-    val route = Screen.TripInfo(tripId).route // "trip_info/$tripId"
+    val route = Screen.DailyView(tripId).route // "daily_view/$tripId"
     return navController.popBackStack(route = route, inclusive = false)
   }
 
