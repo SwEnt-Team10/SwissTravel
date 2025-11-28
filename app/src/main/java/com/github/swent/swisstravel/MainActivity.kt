@@ -481,7 +481,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
             navigationActions.navigateToActivityInfo(uid)
           })
     }
-
+    // composable to route the activity info screen
     composable(
         route = Screen.ActivityInfo.route,
         arguments = listOf(navArgument("uid") { type = NavType.StringType })) { backStackEntry ->
