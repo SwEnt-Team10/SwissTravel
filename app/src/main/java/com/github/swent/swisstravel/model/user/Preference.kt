@@ -23,7 +23,8 @@ enum class Preference {
   SLOW_PACE,
   WHEELCHAIR_ACCESSIBLE,
   EARLY_BIRD,
-  NIGHT_OWL
+  NIGHT_OWL,
+  INTERMEDIATE_STOPS
 }
 
 /** Object containing utility functions and mappings related to preference categories. */
@@ -75,6 +76,7 @@ object PreferenceCategories {
         Preference.EARLY_BIRD -> Category.TRAVEL_STYLE
         Preference.NIGHT_OWL -> Category.TRAVEL_STYLE
         Preference.SLOW_PACE -> Category.TRAVEL_STYLE
+        Preference.INTERMEDIATE_STOPS -> Category.TRAVEL_STYLE
         Preference.PUBLIC_TRANSPORT -> Category.ACCESSIBILITY
         Preference.WHEELCHAIR_ACCESSIBLE -> Category.ACCESSIBILITY
       }
@@ -147,6 +149,7 @@ fun Preference.displayStringRes(): Int {
     Preference.SLOW_PACE -> R.string.preference_slow_pace
     Preference.EARLY_BIRD -> R.string.preference_early_bird
     Preference.NIGHT_OWL -> R.string.preference_night_owl
+    Preference.INTERMEDIATE_STOPS -> R.string.preference_intermediate_stops
   }
 }
 
@@ -176,6 +179,7 @@ fun Preference.toTestTagString(): String {
     Preference.SLOW_PACE -> "slowPace"
     Preference.EARLY_BIRD -> "earlyBird"
     Preference.NIGHT_OWL -> "nightOwl"
+    Preference.INTERMEDIATE_STOPS -> "intermediateStops"
   }
 }
 
@@ -205,6 +209,7 @@ fun Preference.toSwissTourismFacet(): String {
     Preference.SLOW_PACE -> ""
     Preference.EARLY_BIRD -> ""
     Preference.NIGHT_OWL -> ""
+    Preference.INTERMEDIATE_STOPS -> ""
   }
 }
 
@@ -234,6 +239,7 @@ fun Preference.toSwissTourismFacetFilter(): String {
     Preference.SLOW_PACE -> ""
     Preference.EARLY_BIRD -> ""
     Preference.NIGHT_OWL -> ""
+    Preference.INTERMEDIATE_STOPS -> ""
   }
 }
 

@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.algorithm.selectactivities
 
 import android.util.Log
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
@@ -53,6 +54,7 @@ class SelectActivities(
     userPreferences.remove(Preference.SLOW_PACE)
     userPreferences.remove(Preference.EARLY_BIRD)
     userPreferences.remove(Preference.NIGHT_OWL)
+    userPreferences.remove(Preference.INTERMEDIATE_STOPS)
 
     // add 1 day since the last day is excluded
     val days =
@@ -119,6 +121,17 @@ class SelectActivities(
     onProgress(1f)
 
     return filteredActivities
+  }
+
+  /**
+   * Fetches one activity near the given location for testing purposes.
+   *
+   * @param coords The [Coordinate] around which to search for an activity.
+   * @param radius The search radius in meters. Defaults to [NEAR].
+   * @return A single [Activity] found near the specified location or null.
+   */
+  suspend fun getOneActivityNear(coords: Coordinate, radius: Int = NEAR): Activity? {
+    return activityRepository.getActivitiesNear(coords, radius, 1).firstOrNull()
   }
 
   /**
