@@ -19,10 +19,10 @@ import org.junit.Rule
 class SwipeActivitiesScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
-    @get:Rule
-    val grantPermissionRule: GrantPermissionRule =
-        GrantPermissionRule.grant(
-            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+  @get:Rule
+  val grantPermissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   val vm = FakeTripInfoViewModel()
 

@@ -16,8 +16,8 @@ class LikedActivitiesScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
   @get:Rule
   val grantPermissionRule: GrantPermissionRule =
-    GrantPermissionRule.grant(
-      Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   val vm = FakeTripInfoViewModel()
   // fakeActivity() creates a single activity with default values (the function is defined in
