@@ -211,4 +211,46 @@ class DailyViewScreenTest {
     compose.onNodeWithTag(DailyViewScreenTestTags.PREV_DAY_BUTTON).performClick()
     assert(vm.uiState.value.currentDayIndex == 0)
   }
+
+  @Test
+  fun swipeActivitiesButtonWorks() {
+    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    var swipeCalled = false
+
+    compose.setContent {
+      DailyViewScreen(
+          uid = "TEST",
+          tripInfoViewModel = vm,
+          onMyTrips = {},
+          onEditTrip = {},
+          onSwipeActivities = { swipeCalled = true })
+    }
+
+    compose
+        .onNodeWithTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    compose.runOnIdle { assert(swipeCalled) }
+  }
+
+  @Test
+  fun likedActivitiesButtonWorks() {
+    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    var likeCalled = false
+
+    compose.setContent {
+      DailyViewScreen(
+          uid = "TEST",
+          tripInfoViewModel = vm,
+          onMyTrips = {},
+          onEditTrip = {},
+          onLikedActivities = { likeCalled = true })
+    }
+
+    compose
+        .onNodeWithTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    compose.runOnIdle { assert(likeCalled) }
+  }
 }

@@ -273,4 +273,46 @@ class TripInfoScreenTest {
     compose.setContent { TripInfoScreen(uid = "whatever", isOnCurrentTripScreen = true) }
     compose.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).isNotDisplayed()
   }
+
+  @Test
+  fun swipeActivitiesButtonNavigatesToSwipeScreen() {
+    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    var swipeCalled = false
+
+    compose.setContent {
+      TripInfoScreen(
+          uid = "TEST",
+          tripInfoViewModel = vm,
+          onMyTrips = {},
+          onEditTrip = {},
+          onSwipeActivities = { swipeCalled = true })
+    }
+
+    compose
+        .onNodeWithTag(TripInfoScreenTestTags.SWIPE_ACTIVITIES_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    compose.runOnIdle { assert(swipeCalled) }
+  }
+
+  @Test
+  fun likedActivitiesButtonNavigatesToLikedActivitiesScreen() {
+    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    var likeCalled = false
+
+    compose.setContent {
+      TripInfoScreen(
+          uid = "TEST",
+          tripInfoViewModel = vm,
+          onMyTrips = {},
+          onEditTrip = {},
+          onLikedActivities = { likeCalled = true })
+    }
+
+    compose
+        .onNodeWithTag(TripInfoScreenTestTags.LIKED_ACTIVITIES_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    compose.runOnIdle { assert(likeCalled) }
+  }
 }

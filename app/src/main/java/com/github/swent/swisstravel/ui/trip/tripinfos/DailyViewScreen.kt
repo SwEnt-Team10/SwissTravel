@@ -20,12 +20,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -78,6 +80,8 @@ object DailyViewScreenTestTags {
   const val FULLSCREEN_MAP = "dailyViewScreenFullScreenMap"
   const val FULLSCREEN_EXIT = "dailyViewScreenFullScreenExit"
   const val STEP_CARD = "dailyViewScreenStepCard"
+  const val SWIPE_ACTIVITIES_BUTTON = "dailyViewScreenSwipeActivitiesButton"
+  const val LIKED_ACTIVITIES_BUTTON = "dailyViewScreenLikedActivitiesButton"
 }
 
 /**
@@ -108,7 +112,9 @@ fun DailyViewScreen(
               locations = locations,
               drawRoute = drawRoute,
               onUserLocationUpdate = onUserLocationUpdate)
-        }
+        },
+    onSwipeActivities: () -> Unit = {},
+    onLikedActivities: () -> Unit = {}
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
@@ -149,6 +155,30 @@ fun DailyViewScreen(
               onBack = onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
               onEdit = onEditTrip)
+        }
+      },
+      bottomBar = {
+        Row {
+          // button to go to a screen were you can swipe (like/dislike) through activities
+          Button(
+              onClick = { onSwipeActivities() },
+              modifier =
+                  Modifier.fillMaxWidth(0.7f)
+                      .padding(dimensionResource(R.dimen.small_spacer))
+                      .testTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON),
+          ) {
+            Text(text = stringResource(R.string.swipe_activities))
+          }
+          // Button to go to the liked activities screen
+          Button(
+              onClick = { onLikedActivities() },
+              modifier =
+                  Modifier.padding(dimensionResource(R.dimen.small_spacer))
+                      .testTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = stringResource(R.string.liked_activities))
+              }
         }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {

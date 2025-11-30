@@ -2,7 +2,7 @@ package com.github.swent.swisstravel.ui.activities
 
 import androidx.lifecycle.ViewModel
 import com.github.swent.swisstravel.model.trip.activity.Activity
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -21,7 +21,8 @@ data class SwipeActivitiesUIState(
 )
 
 /** Done with the help of ChatGPT */
-class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModel) : ViewModel() {
+class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModelContract) :
+    ViewModel() {
 
   /** UI state for the Swipe Activities screen */
   private val _uiState = MutableStateFlow(SwipeActivitiesUIState())

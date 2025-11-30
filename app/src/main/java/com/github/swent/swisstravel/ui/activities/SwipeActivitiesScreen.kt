@@ -21,11 +21,19 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
+
+object SwipeActivitiesScreenTestTags {
+  const val SWIPE_ACTIVITIES_SCREEN = "swipe_activities_screen"
+  const val LIKE_BUTTON = "swipe_activities_screen_like_button"
+  const val DISLIKE_BUTTON = "swipe_activities_screen_dislike_button"
+}
 
 /**
  * Screen to find activities by swiping like/dislike.
@@ -37,19 +45,21 @@ import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
  */
 @Composable
 fun SwipeActivitiesScreen(
-    onTripInfo: () -> Unit,
-    tripInfoViewModel: TripInfoViewModel,
+    onTripInfo: () -> Unit = {},
+    tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
   val viewModel = remember { SwipeActivitiesViewModel(tripInfoViewModel) }
-  Scaffold { pd ->
-    Box(modifier = Modifier.padding(pd)) { SwipeActivitiesStack(viewModel, onTripInfo) }
+  Scaffold { pd
+    ->
+    Box(modifier = Modifier.padding(pd).testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) { SwipeActivitiesStack(viewModel, onTripInfo) }
   }
 }
 
 @Composable
 fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> Unit) {
-  val current = viewModel.uiState.collectAsState().value.currentActivity
-  val next = viewModel.uiState.collectAsState().value.backActivity
+  val state = viewModel.uiState.collectAsState().value
+  val current = state.currentActivity
+  val next = state.backActivity
 
   Box(modifier = Modifier.fillMaxSize()) {
     // Back card (next)
@@ -103,9 +113,9 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
           targetValue =
               when (swipeState.value) {
                 // rotate clockwise
-                SwipeState.Like -> 20f
+                SwipeState.Like -> 30f
                 // rotate counter-clockwise
-                SwipeState.Dislike -> -20f
+                SwipeState.Dislike -> -30f
                 else -> 0f
               },
           // duration of the animation
@@ -117,9 +127,9 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
           targetValue =
               when (swipeState.value) {
                 // move right
-                SwipeState.Like -> 400.dp
+                SwipeState.Like -> 600.dp
                 // move left
-                SwipeState.Dislike -> (-400).dp
+                SwipeState.Dislike -> (-600).dp
                 else -> 0.dp
               },
           // duration of the animation
@@ -141,8 +151,10 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
-          Button(onClick = { swipeState.value = SwipeState.Dislike }) { Text("Dislike") }
-          Button(onClick = { swipeState.value = SwipeState.Like }) { Text("Like") }
+          Button(onClick = { swipeState.value = SwipeState.Dislike }, modifier = Modifier.testTag(
+              SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) { Text("Dislike") }
+          Button(onClick = { swipeState.value = SwipeState.Like }, modifier = Modifier.testTag(
+              SwipeActivitiesScreenTestTags.LIKE_BUTTON)) { Text("Like") }
         }
   }
 }

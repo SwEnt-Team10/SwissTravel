@@ -87,6 +87,8 @@ object TripInfoScreenTestTags {
   const val FULLSCREEN_EXIT = "fullScreenExit"
   const val PREVIOUS_STEP = "previousStep"
   const val NEXT_STEP = "nextStep"
+  const val SWIPE_ACTIVITIES_BUTTON = "swipeActivitiesButton"
+  const val LIKED_ACTIVITIES_BUTTON = "likedActivitiesButton"
 }
 
 /** UI state holder for the main content of the trip info screen. */
@@ -190,14 +192,28 @@ fun TripInfoScreen(
               onEdit = onEditTrip)
         }
       },
-
-      // button to go to a screen were you can swipe (like/dislike) through activities
       bottomBar = {
-        Button(
-            onClick = { onSwipeActivities() },
-            modifier = Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.small_spacer)),
-        ) {
-          Text(text = stringResource(R.string.swipe_activities))
+        Row() {
+          // button to go to a screen were you can swipe (like/dislike) through activities
+          Button(
+              onClick = { onSwipeActivities() },
+              modifier =
+                  Modifier.fillMaxWidth(0.7f)
+                      .padding(dimensionResource(R.dimen.small_spacer))
+                      .testTag(TripInfoScreenTestTags.SWIPE_ACTIVITIES_BUTTON),
+          ) {
+            Text(text = stringResource(R.string.swipe_activities))
+          }
+          // Button to go to the liked activities screen
+          Button(
+              onClick = { onLikedActivities() },
+              modifier =
+                  Modifier.padding(dimensionResource(R.dimen.small_spacer))
+                      .testTag(TripInfoScreenTestTags.LIKED_ACTIVITIES_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Filled.Favorite,
+                    contentDescription = stringResource(R.string.liked_activities))
+              }
         }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
@@ -214,17 +230,6 @@ fun TripInfoScreen(
                   onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
                   onUserLocationUpdate = { currentGpsPoint = it })
           TripInfoContent(contentState, callbacks, isComputing, schedule, onActivityClick)
-
-          // Button to go to the liked activities screen
-          Button(
-              onClick = { onLikedActivities() },
-              modifier =
-                  Modifier.align(Alignment.BottomEnd)
-                      .padding(dimensionResource(R.dimen.small_spacer))) {
-                Icon(
-                    imageVector = Icons.Filled.Favorite,
-                    contentDescription = stringResource(R.string.liked_activities))
-              }
 
           // Fullscreen map overlay
           if (ui.fullscreen) {
