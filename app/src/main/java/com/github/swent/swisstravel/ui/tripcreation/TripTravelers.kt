@@ -1,9 +1,14 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -19,6 +24,7 @@ import com.github.swent.swisstravel.ui.navigation.TopBar
 /** Test tags for UI tests to identify components. */
 object TripTravelersTestTags {
   const val NEXT = "next"
+  const val RANDOM = "random"
   const val TRIP_TRAVELERS_SCREEN = "tripTravelersScreen"
 }
 
@@ -32,6 +38,7 @@ object TripTravelersTestTags {
 fun TripTravelersScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
+    onRandom: () -> Unit = {},
     onPrevious: () -> Unit = {}
 ) {
   val tripSettings by viewModel.tripSettings.collectAsState()
@@ -78,21 +85,46 @@ fun TripTravelersScreen(
                         onAdultsChange = { travelers = travelers.copy(adults = it) },
                         onChildrenChange = { travelers = travelers.copy(children = it) })
 
-                    // --- Done button ---
-                    Button(
-                        onClick = onNext,
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary),
-                        shape =
-                            RoundedCornerShape(
-                                dimensionResource(R.dimen.trip_travelers_button_radius)),
-                        modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
-                          Text(
-                              text = stringResource(R.string.next),
-                              color = MaterialTheme.colorScheme.onPrimary,
-                              style = MaterialTheme.typography.titleMedium)
-                        }
+                    // --- Buttons Box ---
+                    Box(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                      // --- Done button (centered) ---
+                      Button(
+                          onClick = onNext,
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primary),
+                          shape =
+                              RoundedCornerShape(
+                                  dimensionResource(R.dimen.trip_travelers_button_radius)),
+                          modifier =
+                              Modifier.align(Alignment.Center)
+                                  .testTag(TripTravelersTestTags.NEXT)) {
+                            Text(
+                                text = stringResource(R.string.next),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.titleMedium)
+                          }
+
+                      // --- Random button (aligned to the end) ---
+                      Button(
+                          onClick = onRandom,
+                          shape = CircleShape,
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primary),
+                          modifier =
+                              Modifier.size(dimensionResource(R.dimen.trip_travelers_button_height))
+                                  .align(Alignment.CenterEnd)
+                                  .testTag(TripTravelersTestTags.RANDOM),
+                          contentPadding = PaddingValues(dimensionResource(R.dimen.empty))) {
+                            Icon(
+                                imageVector = Icons.Outlined.Casino,
+                                contentDescription = stringResource(R.string.random),
+                                tint = MaterialTheme.colorScheme.onPrimary)
+                          }
+                    }
                   }
             }
       }
