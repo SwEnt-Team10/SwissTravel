@@ -258,4 +258,41 @@
     <string name="deny_friend">Deny friend request</string>
     <string name="user_uid_missing">Can\'t find this profile, sorry :(</string>
 
+    <!-- Achievement strings -->
+
+    <!-- Trip Count -->
+    <string name="achievement_rookie_explorer">Rookie Explorer</string>
+    <string name="achievement_weekend_adventurer">Weekend Adventurer</string>
+    <string name="achievement_frequent_traveler">Frequent Traveler</string>
+    <string name="achievement_global_nomad">Global Nomad</string>
+
+    <!-- Travel Time -->
+    <string name="achievement_just_warming_up">Just Warming Up</string>
+    <string name="achievement_mileage_maker">Mileage Maker</string>
+    <string name="achievement_endurance_traveler">Endurance Traveler</string>
+    <string name="achievement_time_lord">Time Lord</string>
+
+    <!-- Unique Locations -->
+    <string name="achievement_local_tourist">Local Tourist</string>
+    <string name="achievement_city_hopper">City Hopper</string>
+    <string name="achievement_continent_crawler">Continent Crawler</string>
+    <string name="achievement_globe_trotter">Globe Trotter</string>
+
+    <!-- Transport Mode -->
+    <string name="achievement_train_enthusiast">Train Enthusiast</string>
+    <string name="achievement_road_warrior">Road Warrior</string>
+    <string name="achievement_bus_buddy">Bus Buddy</string>
+    <string name="achievement_eco_rider">Eco Rider</string>
+
+    <!-- Longest Route Segment -->
+    <string name="achievement_short_hop">Short Hop</string>
+    <string name="achievement_journeyman">Journeyman</string>
+    <string name="achievement_long_hauler">Long Hauler</string>
+    <string name="achievement_iron_route_champion">Iron Route Champion</string>
+
+    <!-- Social / Friends -->
+    <string name="achievement_new_friend">New Friend</string>
+    <string name="achievement_social_traveler">Social Traveler</string>
+    <string name="achievement_popular_guide">Popular Guide</string>
+    <string name="achievement_legendary_connector">Legendary Connector</string>
 </resources>
