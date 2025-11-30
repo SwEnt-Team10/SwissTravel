@@ -153,7 +153,7 @@ fun TripPreferencesScreen(
                 onClick = {
                   if (!isRandomTrip) onNext()
                   else {
-                    // TODO: viewModel.randomTrip(context)
+                    viewModel.randomTrip(context)
                     onRandom()
                   }
                 },
