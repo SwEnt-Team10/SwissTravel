@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
+import android.net.Uri
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Timestamp
@@ -101,6 +102,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("tripProfile") } returns tripProfileMap
     every { doc.getBoolean("favorite") } returns true
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.get("listUri") } returns emptyList<Uri>()
 
     val trip = repo.getTrip("trip1")
 
@@ -161,6 +163,7 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.get("listUri") } returns emptyList<Uri>()
 
     val trip = repo.getTrip("tripImgUrls")
 
@@ -204,6 +207,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("activities") } returns listOf(validActivityMap, invalidActivityMap)
     every { doc.get("locations") } returns emptyList<Map<String, Any>>()
     every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
+    every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("tripProfile") } returns
         mapOf(
             "startDate" to Timestamp.now(),
@@ -238,6 +242,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("locations") } returns emptyList<Map<String, Any>>()
     every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
     every { doc.get("activities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("tripProfile") } returns
         mapOf(
             "startDate" to Timestamp.now(),
