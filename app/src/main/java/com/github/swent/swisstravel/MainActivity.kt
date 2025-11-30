@@ -658,7 +658,8 @@ private fun NavGraphBuilder.friendsListNavGraph(
           ProfileScreen(
               profileViewModel = ProfileViewModel(requestedUid = uid),
               onBack = { navigationActions.goBack() },
-              onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) })
+              onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+              friendsViewModel = friendsViewModel(navController))
         }
   }
 }
