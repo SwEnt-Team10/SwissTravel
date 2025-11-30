@@ -42,7 +42,8 @@ class AddPhotosScreenTest : SwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
             isFavorite = true,
-            isCurrentTrip = true)
+            isCurrentTrip = true,
+            listUri = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = AddPhotosViewModel()
     // UI testing

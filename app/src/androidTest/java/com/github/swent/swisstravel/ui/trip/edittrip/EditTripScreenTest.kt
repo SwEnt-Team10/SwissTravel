@@ -233,7 +233,8 @@ class EditTripScreenTest {
         activities = emptyList(),
         tripProfile = profile,
         isFavorite = false,
-        isCurrentTrip = false)
+        isCurrentTrip = false,
+        listUri = emptyList())
   }
 
   // inside your EditTripScreenTest.kt
