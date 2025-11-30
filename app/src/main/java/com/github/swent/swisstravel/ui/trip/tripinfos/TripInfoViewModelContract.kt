@@ -61,4 +61,11 @@ interface TripInfoViewModelContract {
    * @param point The new GPS point.
    */
   fun updateUserLocation(point: Point)
+
+  /**
+   * Likes the given activity, adding it to the list of liked activities.
+   *
+   * @param activity The activity to like.
+   */
+  fun likeActivity(activity: Activity)
 }

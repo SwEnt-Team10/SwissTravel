@@ -31,14 +31,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.activity.Activity
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 
 object LikedActivitiesScreenTestTags {
   const val SCREEN_TITLE = "liked_activities_screen_title"
-    const val BACK_BUTTON = "liked_activities_back_button"
-    const val EMPTY_TEXT = "liked_activities_empty_state_text"
-    const val LIKED_ACTIVITIES_LIST = "liked_activities_list"
+  const val BACK_BUTTON = "liked_activities_back_button"
+  const val EMPTY_TEXT = "liked_activities_empty_state_text"
+  const val LIKED_ACTIVITIES_LIST = "liked_activities_list"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -50,24 +49,33 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoVi
   Scaffold(
       topBar = {
         TopAppBar(
-            title = { Text(stringResource(R.string.liked_activities), modifier = Modifier.testTag(
-                LikedActivitiesScreenTestTags.SCREEN_TITLE)) },
+            title = {
+              Text(
+                  stringResource(R.string.liked_activities),
+                  modifier = Modifier.testTag(LikedActivitiesScreenTestTags.SCREEN_TITLE))
+            },
             navigationIcon = {
-              IconButton(onClick = onBack, modifier = Modifier.testTag(
-                  LikedActivitiesScreenTestTags.BACK_BUTTON)) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
-              }
+              IconButton(
+                  onClick = onBack,
+                  modifier = Modifier.testTag(LikedActivitiesScreenTestTags.BACK_BUTTON)) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                        contentDescription = null)
+                  }
             })
       }) { pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
           if (likedActivities.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-              Text("No liked activities yet.", modifier = Modifier.testTag(
-                  LikedActivitiesScreenTestTags.EMPTY_TEXT))
+              Text(
+                  "No liked activities yet.",
+                  modifier = Modifier.testTag(LikedActivitiesScreenTestTags.EMPTY_TEXT))
             }
           } else {
             LazyColumn(
-                modifier = Modifier.fillMaxSize().testTag(LikedActivitiesScreenTestTags.LIKED_ACTIVITIES_LIST),
+                modifier =
+                    Modifier.fillMaxSize()
+                        .testTag(LikedActivitiesScreenTestTags.LIKED_ACTIVITIES_LIST),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(16.dp)) {
                   itemsIndexed(likedActivities) { idx, activity -> LikedActivityItem(activity) }

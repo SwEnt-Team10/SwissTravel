@@ -312,7 +312,7 @@ class TripInfoViewModel(
   }
 
   /** Adds the given activity to the list of liked activities in the UI state. */
-  fun likeActivity(activity: Activity) {
+  override fun likeActivity(activity: Activity) {
     _uiState.update { current ->
       current.copy(likedActivities = (current.likedActivities + activity).distinct())
     }

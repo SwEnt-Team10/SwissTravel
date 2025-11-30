@@ -22,7 +22,8 @@ class SwipeActivitiesScreenTest {
 
   @Before
   fun setup() {
-      // fakeActivity() creates a single activity with default values (the function is defined in ActivityInfosTest.kt)
+    // fakeActivity() creates a single activity with default values (the function is defined in
+    // ActivityInfosTest.kt)
     vm.setActivities(listOf(fakeActivity()))
     composeTestRule.setContent { SwipeActivitiesScreen(tripInfoViewModel = vm) }
   }
@@ -40,9 +41,10 @@ class SwipeActivitiesScreenTest {
   @Test
   fun likeButtonWorks() {
     assertTrue(vm.uiState.value.likedActivities.isEmpty())
-    composeTestRule.onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)
-      .assertIsDisplayed()
-      .performClick()
+    composeTestRule
+        .onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     // wait for the animation to finish and the state to update
     composeTestRule.mainClock.advanceTimeBy(500)
     composeTestRule.waitForIdle()
@@ -52,9 +54,10 @@ class SwipeActivitiesScreenTest {
   @Test
   fun dislikeButtonWorks() {
     assertTrue(vm.uiState.value.likedActivities.isEmpty())
-    composeTestRule.onNodeWithTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)
-      .assertIsDisplayed()
-      .performClick()
+    composeTestRule
+        .onNodeWithTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
     // wait for the animation to finish and the state to update
     composeTestRule.mainClock.advanceTimeBy(500)
     composeTestRule.waitForIdle()

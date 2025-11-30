@@ -49,9 +49,12 @@ fun SwipeActivitiesScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
   val viewModel = remember { SwipeActivitiesViewModel(tripInfoViewModel) }
-  Scaffold { pd
-    ->
-    Box(modifier = Modifier.padding(pd).testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) { SwipeActivitiesStack(viewModel, onTripInfo) }
+  Scaffold { pd ->
+    Box(
+        modifier =
+            Modifier.padding(pd).testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) {
+          SwipeActivitiesStack(viewModel, onTripInfo)
+        }
   }
 }
 
@@ -151,10 +154,16 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
         modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
-          Button(onClick = { swipeState.value = SwipeState.Dislike }, modifier = Modifier.testTag(
-              SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) { Text("Dislike") }
-          Button(onClick = { swipeState.value = SwipeState.Like }, modifier = Modifier.testTag(
-              SwipeActivitiesScreenTestTags.LIKE_BUTTON)) { Text("Like") }
+          Button(
+              onClick = { swipeState.value = SwipeState.Dislike },
+              modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) {
+                Text("Dislike")
+              }
+          Button(
+              onClick = { swipeState.value = SwipeState.Like },
+              modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)) {
+                Text("Like")
+              }
         }
   }
 }
