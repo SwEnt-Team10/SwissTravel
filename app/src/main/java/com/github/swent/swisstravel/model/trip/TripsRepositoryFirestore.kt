@@ -1,6 +1,8 @@
 package com.github.swent.swisstravel.model.trip
 
+import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
@@ -83,6 +85,9 @@ class TripsRepositoryFirestore(
       val isFavorite = document.getBoolean("favorite") ?: false
 
       val isCurrentTrip = document.getBoolean("currentTrip") ?: false
+      // With help of AI
+      val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
+      val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
 
       Trip(
           uid = uid,
@@ -93,7 +98,8 @@ class TripsRepositoryFirestore(
           activities = activities,
           tripProfile = tripProfile,
           isFavorite = isFavorite,
-          isCurrentTrip = isCurrentTrip)
+          isCurrentTrip = isCurrentTrip,
+          listUri = listUri)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null

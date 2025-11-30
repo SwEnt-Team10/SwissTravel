@@ -20,6 +20,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
@@ -100,6 +101,7 @@ fun DailyViewScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
+    onAddPhotos: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
     onActivityClick: (TripElement.TripActivity) -> Unit = {},
     mapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit =
@@ -148,7 +150,8 @@ fun DailyViewScreen(
               isOnCurrentTripScreen = isOnCurrentTripScreen,
               onBack = onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
-              onEdit = onEditTrip)
+              onEdit = onEditTrip,
+              onAddPhotos = { onAddPhotos() })
         }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
@@ -237,7 +240,8 @@ private fun DailyViewTopAppBar(
     isOnCurrentTripScreen: Boolean,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onAddPhotos: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
@@ -259,6 +263,11 @@ private fun DailyViewTopAppBar(
         }
       },
       actions = {
+        IconButton(onClick = { onAddPhotos() }) {
+          Icon(
+              imageVector = Icons.Filled.Image,
+              contentDescription = stringResource(R.string.add_photo))
+        }
         IconButton(
             onClick = onToggleFavorite,
             modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {

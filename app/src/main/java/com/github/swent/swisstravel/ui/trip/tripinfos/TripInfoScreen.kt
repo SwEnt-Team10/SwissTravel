@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.NearMe
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button
@@ -120,7 +121,8 @@ fun TripInfoScreen(
     onMyTrips: () -> Unit = {},
     onEditTrip: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
-    onActivityClick: (TripElement.TripActivity) -> Unit = {}
+    onActivityClick: (TripElement.TripActivity) -> Unit = {},
+    onAddPhotos: () -> Unit = {}
 ) {
   Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
 
@@ -183,7 +185,8 @@ fun TripInfoScreen(
               isOnCurrentTripScreen = isOnCurrentTripScreen,
               onBack = onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
-              onEdit = onEditTrip)
+              onEdit = onEditTrip,
+              onAddPhotos = { onAddPhotos() })
         }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
@@ -309,7 +312,8 @@ private fun TripInfoTopAppBar(
     isOnCurrentTripScreen: Boolean,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onAddPhotos: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
@@ -331,6 +335,7 @@ private fun TripInfoTopAppBar(
         }
       },
       actions = {
+        AddPhotosButton(onAddPhotos = { onAddPhotos() })
         FavoriteButton(
             isFavorite = ui.isFavorite,
             onToggleFavorite = onToggleFavorite,
@@ -425,6 +430,14 @@ private fun TripMapCard(
                   }
             }
       }
+}
+/** Displays a button to go on a screen to add photos */
+@Composable
+private fun AddPhotosButton(onAddPhotos: () -> Unit) {
+  IconButton(onClick = onAddPhotos) {
+    Icon(
+        imageVector = Icons.Outlined.Image, contentDescription = stringResource(R.string.add_photo))
+  }
 }
 
 /** Displays the "Previous" and "Next" step buttons. */

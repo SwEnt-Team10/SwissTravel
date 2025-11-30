@@ -127,6 +127,7 @@
     <string name="draw_from_current_position">Draw route from current position</string>
     <string name="draw_from_previous_step">Draw route from previous step</string>
     <string name="trip_id_missing">Trip ID is missing</string>
+    <string name="add_photo">Add photos</string>
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
