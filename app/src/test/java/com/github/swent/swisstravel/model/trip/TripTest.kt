@@ -94,7 +94,8 @@ class TripTest {
           activities = listActivities,
           tripProfile = tripProfile,
           isFavorite = false,
-          isCurrentTrip = false)
+          isCurrentTrip = false,
+          listUri = emptyList())
 
   @Test
   fun testGetAllTripElementsOrdered() {

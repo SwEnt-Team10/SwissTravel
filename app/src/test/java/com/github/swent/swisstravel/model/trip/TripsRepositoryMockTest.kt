@@ -324,7 +324,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
@@ -356,7 +357,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     every { mockCollection.document("server-id-123") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
@@ -380,7 +382,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns
@@ -401,7 +404,8 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
