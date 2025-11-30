@@ -1,9 +1,11 @@
 package com.github.swent.swisstravel.ui.activities
 
+import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.test.rule.GrantPermissionRule
 import com.github.swent.swisstravel.ui.composable.fakeActivity
 import com.github.swent.swisstravel.ui.trip.tripinfo.FakeTripInfoViewModel
 import kotlin.test.Test
@@ -17,6 +19,10 @@ import org.junit.Rule
 class SwipeActivitiesScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
+    @get:Rule
+    val grantPermissionRule: GrantPermissionRule =
+        GrantPermissionRule.grant(
+            Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   val vm = FakeTripInfoViewModel()
 
