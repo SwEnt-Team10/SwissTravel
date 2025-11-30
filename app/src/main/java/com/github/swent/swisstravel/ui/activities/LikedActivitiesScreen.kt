@@ -77,7 +77,7 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoVi
                 verticalArrangement =
                     Arrangement.spacedBy(dimensionResource(R.dimen.smaller_padding)),
                 contentPadding = PaddingValues(dimensionResource(R.dimen.small_padding))) {
-                  itemsIndexed(likedActivities) { idx, activity -> LikedActivityItem(activity) }
+                  itemsIndexed(likedActivities) { _, activity -> LikedActivityItem(activity) }
                 }
           }
         }

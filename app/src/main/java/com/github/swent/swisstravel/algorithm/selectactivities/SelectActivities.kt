@@ -157,56 +157,6 @@ class SelectActivities(
     return allFetchedActivities.distinctBy { it.location }
   }
 
-  fun fetchAllActivitiesWithPreferences() {}
-
-  /**
-   * Done with the help of ChatGPT
-   *
-   * Fetches one activity near the given locations, excluding activities already present in
-   * `alreadyFetched`.
-   *
-   * @param locations The list of locations to search near.
-   * @param alreadyFetched A set of unique keys of activities that have already been fetched.
-   * @return A new [Activity] if found, or null if no new activity is available.
-   */
-  suspend fun fetchActivity(locations: List<Location>, alreadyFetched: Set<Activity>): Activity? {
-    if (locations.isEmpty()) return null
-
-    val userPrefs = tripSettings.preferences.toMutableList()
-
-    // Remove unsupported prefs
-    userPrefs.remove(Preference.QUICK)
-    userPrefs.remove(Preference.SLOW_PACE)
-    userPrefs.remove(Preference.EARLY_BIRD)
-    userPrefs.remove(Preference.NIGHT_OWL)
-
-    val (mandatory, optional) = separateMandatoryPreferences(userPrefs)
-
-    // Random location
-    val chosenLocation = locations.random()
-
-    // Fetch from API
-    val fetched =
-        if (optional.isNotEmpty()) {
-          val randomOpt = optional.random()
-          activityRepository.getActivitiesNearWithPreference(
-              mandatory + randomOpt, chosenLocation.coordinate, NEAR, 10)
-        } else {
-          activityRepository.getActivitiesNear(chosenLocation.coordinate, NEAR, 10)
-        }
-
-    delay(API_CALL_DELAY_MS)
-
-    if (fetched.isEmpty()) return null
-
-    // Filter out already fetched
-    val newOnes = fetched.filter { it !in alreadyFetched }
-
-    if (newOnes.isEmpty()) return null
-
-    return newOnes.random()
-  }
-
   /**
    * Calculates the total number of steps based on the number of destinations and preferences.
    *
