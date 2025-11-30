@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
@@ -78,7 +80,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
     /* Done button */
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
-        .performScrollToNode(hasTestTag(TripPreferencesTestTags.DONE))
+        .performTouchInput { swipeUp() }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
   }
 
@@ -116,7 +118,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
     assert(viewModel.tripSettings.value.preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE))
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
-        .performScrollToNode(hasTestTag(TripPreferencesTestTags.DONE))
+        .performTouchInput { swipeUp() }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
     assertEquals(3, viewModel.tripSettings.value.preferences.size)

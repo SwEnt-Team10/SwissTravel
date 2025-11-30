@@ -31,6 +31,7 @@
     <string name="no">No</string>
     <string name="done">Done</string>
     <string name="next">Next</string>
+    <string name="surprise">Surprise me</string>
     <string name="unexpected_error">Unexpected error: %1$s</string>
     <string name="error">Error</string>
 

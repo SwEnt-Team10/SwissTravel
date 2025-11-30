@@ -82,6 +82,13 @@ open class TripSettingsViewModel(
     }
 ) : ViewModel() {
 
+  private val _isRandomTrip = MutableStateFlow(false)
+  val isRandomTrip: StateFlow<Boolean> = _isRandomTrip.asStateFlow()
+
+  fun setRandomTrip(isRandom: Boolean) {
+    _isRandomTrip.value = isRandom
+  }
+
   private val _tripSettings = MutableStateFlow(TripSettings())
   val tripSettings: StateFlow<TripSettings> = _tripSettings
 
