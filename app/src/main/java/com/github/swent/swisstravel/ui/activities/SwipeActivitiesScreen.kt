@@ -22,8 +22,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
@@ -68,7 +71,9 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
     // Back card (next)
     next.let { activity ->
       if (activity == null) {
-        Text("No more activities to show!", modifier = Modifier.align(Alignment.Center))
+        Text(
+            stringResource(R.string.no_activities_to_propose),
+            modifier = Modifier.align(Alignment.Center))
       } else {
         key(activity.getName()) {
           SwipeableCard(
@@ -82,7 +87,9 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
     // Front card (current)
     current.let { activity ->
       if (activity == null) {
-        Text("No more activities to show!", modifier = Modifier.align(Alignment.Center))
+        Text(
+            stringResource(R.string.no_activities_to_propose),
+            modifier = Modifier.align(Alignment.Center))
       } else {
         key(activity.getName()) {
           SwipeableCard(
@@ -149,23 +156,25 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
   }
 
   // Like and dislike actions
-  Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.BottomCenter) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
-          Button(
-              onClick = { swipeState.value = SwipeState.Dislike },
-              modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) {
-                Text("Dislike")
-              }
-          Button(
-              onClick = { swipeState.value = SwipeState.Like },
-              modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)) {
-                Text("Like")
-              }
-        }
-  }
+  Box(
+      modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.small_padding)),
+      contentAlignment = Alignment.BottomCenter) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.small_padding)),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically) {
+              Button(
+                  onClick = { swipeState.value = SwipeState.Dislike },
+                  modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) {
+                    Text(stringResource(R.string.dislike_button))
+                  }
+              Button(
+                  onClick = { swipeState.value = SwipeState.Like },
+                  modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)) {
+                    Text(stringResource(R.string.like_button))
+                  }
+            }
+      }
 }
 
 enum class SwipeState {

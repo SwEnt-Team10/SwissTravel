@@ -130,6 +130,14 @@
     <string name="liked_activities">Liked Activities</string>
     <string name="trip_id_missing">Trip ID is missing</string>
 
+    <!-- Swipe Activities -->
+    <string name="no_activities_to_propose">No more activities to show</string>
+    <string name="like_button">Like</string>
+    <string name="dislike_button">Dislike</string>
+
+    <!-- Liked Activities -->
+    <string name="no_liked_activities">No liked activities yet</string>
+
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
     <string name="travelers">Travelers</string>

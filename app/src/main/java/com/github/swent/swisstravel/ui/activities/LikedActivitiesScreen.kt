@@ -4,10 +4,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -27,8 +25,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
@@ -68,7 +66,7 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoVi
           if (likedActivities.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
               Text(
-                  "No liked activities yet.",
+                  stringResource(R.string.no_liked_activities),
                   modifier = Modifier.testTag(LikedActivitiesScreenTestTags.EMPTY_TEXT))
             }
           } else {
@@ -76,8 +74,9 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoVi
                 modifier =
                     Modifier.fillMaxSize()
                         .testTag(LikedActivitiesScreenTestTags.LIKED_ACTIVITIES_LIST),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                contentPadding = PaddingValues(16.dp)) {
+                verticalArrangement =
+                    Arrangement.spacedBy(dimensionResource(R.dimen.smaller_padding)),
+                contentPadding = PaddingValues(dimensionResource(R.dimen.small_padding))) {
                   itemsIndexed(likedActivities) { idx, activity -> LikedActivityItem(activity) }
                 }
           }
@@ -85,13 +84,19 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoViewModel: TripInfoVi
       }
 }
 
+/**
+ * Composable to display a liked activity item in a list.
+ *
+ * @param activity The activity to display.
+ */
 @Composable
 fun LikedActivityItem(activity: Activity) {
-  Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(4.dp)) {
-    Column(modifier = Modifier.padding(16.dp)) {
-      Text(activity.getName(), style = MaterialTheme.typography.titleMedium)
-      Spacer(Modifier.height(4.dp))
-      Text(activity.description, style = MaterialTheme.typography.bodyMedium)
-    }
-  }
+  Card(
+      modifier = Modifier.fillMaxWidth(),
+      elevation = CardDefaults.cardElevation(dimensionResource(R.dimen.mini_padding))) {
+        Column(modifier = Modifier.padding(dimensionResource(R.dimen.small_padding))) {
+          Text(activity.getName(), style = MaterialTheme.typography.titleMedium)
+          Text(activity.description, style = MaterialTheme.typography.bodyMedium)
+        }
+      }
 }
