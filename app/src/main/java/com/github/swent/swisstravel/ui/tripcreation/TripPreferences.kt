@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -15,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -63,34 +66,11 @@ fun TripPreferencesScreen(
   val prefs = tripSettings.preferences
   val context = LocalContext.current
   val lazyListState = rememberLazyListState()
-
-  // This state will be true only if the user has scrolled to the end of the list.
-  val isScrolledToEnd by remember {
-    derivedStateOf {
-      val layoutInfo = lazyListState.layoutInfo
-      val visibleItemsInfo = layoutInfo.visibleItemsInfo
-      if (layoutInfo.totalItemsCount == 0) {
-        true
-      } else {
-        // Check if the last item is visible and fully occupies its space or more
-        val lastVisibleItem = visibleItemsInfo.lastOrNull() ?: return@derivedStateOf false
-        val lastItemVisible = lastVisibleItem.index == layoutInfo.totalItemsCount - 1
-        val lastItemSize = lastVisibleItem.size
-        // The bottom of the last item is at or past the viewport's end
-        val lastItemBottom = lastVisibleItem.offset + lastItemSize
-        val viewportEnd = layoutInfo.viewportEndOffset
-
-        lastItemVisible && lastItemBottom <= viewportEnd
-      }
-    }
-  }
+  val isScrolledToEnd by rememberIsScrolledToEnd(lazyListState)
 
   LaunchedEffect(Unit) {
     viewModel.validationEvents.collectLatest { event ->
       when (event) {
-        is ValidationEvent.SaveSuccess -> {
-          onNext()
-        }
         is ValidationEvent.SaveError -> {
           Toast.makeText(context, "${R.string.error}: ${event.message}", Toast.LENGTH_LONG).show()
         }
@@ -148,31 +128,76 @@ fun TripPreferencesScreen(
               }
 
           // --- Next button (conditionally visible) ---
-          if (isScrolledToEnd) {
-            Button(
-                onClick = {
-                  if (!isRandomTrip) onNext()
-                  else {
-                    viewModel.randomTrip(context)
-                    onRandom()
-                  }
-                },
-                colors =
-                    ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                modifier =
-                    Modifier.align(Alignment.BottomCenter)
-                        .padding(bottom = dimensionResource(R.dimen.medium_padding))
-                        .testTag(TripPreferencesTestTags.DONE)) {
-                  Text(
-                      text =
-                          if (!isRandomTrip) stringResource(R.string.next)
-                          else {
-                            stringResource(R.string.surprise)
-                          },
-                      color = MaterialTheme.colorScheme.onPrimary,
-                      style = MaterialTheme.typography.titleMedium)
-                }
-          }
+          doneButton(
+              Modifier.align(Alignment.BottomCenter),
+              viewModel,
+              isRandomTrip,
+              isScrolledToEnd,
+              onNext,
+              onRandom,
+              context)
         }
       }
+}
+
+@Composable
+private fun doneButton(
+    modifier: Modifier = Modifier,
+    viewModel: TripSettingsViewModel,
+    isRandomTrip: Boolean,
+    isScrolledToEnd: Boolean,
+    onNext: () -> Unit,
+    onRandom: () -> Unit,
+    context: Context
+) {
+  if (isScrolledToEnd) {
+    val buttonText =
+        if (isRandomTrip) stringResource(R.string.surprise) else stringResource(R.string.next)
+
+    Button(
+        onClick = {
+          if (isRandomTrip) {
+            viewModel.randomTrip(context)
+            onRandom()
+          } else {
+            onNext()
+          }
+        },
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+        modifier =
+            modifier
+                .padding(bottom = dimensionResource(R.dimen.medium_padding))
+                .testTag(TripPreferencesTestTags.DONE)) {
+          Text(
+              text = buttonText,
+              color = MaterialTheme.colorScheme.onPrimary,
+              style = MaterialTheme.typography.titleMedium)
+        }
+  }
+}
+
+/**
+ * Returns a State<Boolean> that is true if the LazyColumn has been scrolled to the end. This is a
+ * helper function to keep the main composable clean.
+ *
+ * @param lazyListState The LazyListState to be observed. •@return A State<Boolean> that is true if
+ *   the LazyColumn has been scrolled to the end.
+ */
+@Composable
+private fun rememberIsScrolledToEnd(lazyListState: LazyListState): State<Boolean> {
+  return remember(lazyListState) {
+    derivedStateOf {
+      val layoutInfo = lazyListState.layoutInfo
+      val visibleItemsInfo = layoutInfo.visibleItemsInfo
+      if (layoutInfo.totalItemsCount == 0) {
+        true
+      } else {
+        val lastVisibleItem = visibleItemsInfo.lastOrNull() ?: return@derivedStateOf false
+        val lastItemVisible = lastVisibleItem.index == layoutInfo.totalItemsCount - 1
+        // The bottom of the last item is at or past the viewport's end
+        val lastItemBottom = lastVisibleItem.offset + lastVisibleItem.size
+        lastItemVisible && lastItemBottom <= layoutInfo.viewportEndOffset
+      }
+    }
+  }
 }

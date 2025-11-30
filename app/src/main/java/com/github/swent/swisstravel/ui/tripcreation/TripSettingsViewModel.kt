@@ -2,7 +2,6 @@ package com.github.swent.swisstravel.ui.tripcreation
 
 import android.content.Context
 import android.util.Log
-import androidx.compose.foundation.layout.size
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
@@ -26,7 +25,6 @@ import java.time.LocalDate
 import java.time.Period
 import java.time.ZoneId
 import kotlin.random.Random
-import kotlin.random.nextInt
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
