@@ -133,8 +133,8 @@ class ProgressiveRouteOptimizer(
         val from = locations[index - 1]
         val to = locations[index]
         val next = locations[index + 1]
-        var durationFromTo = 0.0
-        var durationToNext = 0.0
+        var durationFromTo = newSegmentDurations[index - 1]
+        var durationToNext = newSegmentDurations[index]
         // Fetch duration for from -> to if we didn't do it already
         if (newSegmentDurations[index - 1] == invalidDuration) {
           durationFromTo =
@@ -155,7 +155,7 @@ class ProgressiveRouteOptimizer(
     val totalDuration = newSegmentDurations.sum()
     return OrderedRoute(
         orderedLocations = locations,
-        totalDuration = totalDuration,
+        totalDuration = if (totalDuration >= UNREACHABLE_LEG) -1.0 else totalDuration,
         segmentDuration = newSegmentDurations)
   }
 

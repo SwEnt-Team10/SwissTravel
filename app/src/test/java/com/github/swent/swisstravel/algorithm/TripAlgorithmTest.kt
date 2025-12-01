@@ -281,4 +281,63 @@ class TripAlgorithmTest {
     // Assert
     assertNotNull(algo)
   }
+
+  @Test
+  fun `addInBetweenActivities inserts intermediate activities using mocked getOneActivityNearWithPreferences`() =
+      runTest {
+        // Arrange
+        val start = Location(Coordinate(10.0, 10.0), "Start")
+        val end = Location(Coordinate(10.9, 10.9), "End") // ~100 km away
+
+        val orderedLocations = listOf(start, end)
+
+        val optimizedRoute =
+            OrderedRoute(
+                orderedLocations = orderedLocations,
+                totalDuration = 500.0,
+                segmentDuration = mutableListOf(500.0))
+
+        val activities = mutableListOf<Activity>()
+
+        // Spy on algorithm to override getOneActivityNearWithPreferences
+        val algorithmSpy = spyk(algorithm)
+
+        // Create fake activities to be returned deterministically
+        val fakeActivity = mockk<Activity>()
+        every { fakeActivity.location } returns Location(Coordinate(10.4, 10.4), "Fake1")
+
+        // Mock getOneActivityNearWithPreferences to return the fake activities sequentially
+        coEvery { selectActivities.getOneActivityNearWithPreferences(any(), any()) } returns
+            fakeActivity
+
+        // Mock recomputeOrderedRoute to return the route already computed
+        coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
+            {
+              optimizedRoute.copy(
+                  orderedLocations = listOf(start, fakeActivity.location, end),
+                  totalDuration = 500.0,
+                  segmentDuration = listOf(300.0, 200.0))
+            }
+
+        // Act
+        val result =
+            algorithmSpy.addInBetweenActivities(
+                optimizedRoute = optimizedRoute, activities = activities)
+
+        // Assert
+        // Check that new activities were added to activities list
+        assertEquals(1, activities.size)
+        assertEquals(fakeActivity, activities[0])
+
+        // Check that new ordered locations include the activities
+        assertEquals(3, result.orderedLocations.size)
+        assertEquals(start, result.orderedLocations[0])
+        assertEquals(fakeActivity.location, result.orderedLocations[1])
+        assertEquals(end, result.orderedLocations[2])
+
+        // Check that segment durations list has been expanded for the new activities
+        assertEquals(result.orderedLocations.size - 1, result.segmentDuration.size)
+        assertEquals(300.0, result.segmentDuration[0])
+        assertEquals(200.0, result.segmentDuration[1])
+      }
 }

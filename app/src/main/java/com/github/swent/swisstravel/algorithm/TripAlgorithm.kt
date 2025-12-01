@@ -149,12 +149,7 @@ class TripAlgorithm(
                     if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
                       TransportMode.TRAIN
                     } else TransportMode.CAR) { progress ->
-                  if (tripSettings.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
-                    onProgress(
-                        progression.selectActivities + progression.optimizeRoute / 2 * progress)
-                  } else {
-                    onProgress(progression.selectActivities + progression.optimizeRoute * progress)
-                  }
+                  onProgress(progression.selectActivities + progression.optimizeRoute * progress)
                 }
           } catch (e: Exception) {
             throw IllegalStateException("Route optimization failed: ${e.message}", e)
@@ -168,7 +163,7 @@ class TripAlgorithm(
             addInBetweenActivities(optimizedRoute = optimizedRoute, activityList) { progress ->
               onProgress(
                   progression.selectActivities +
-                      progression.optimizeRoute / 2 +
+                      progression.optimizeRoute +
                       progression.fetchInBetweenActivities * progress)
             }
       }
@@ -247,6 +242,8 @@ class TripAlgorithm(
    * Adds intermediate activities between main locations in the optimized route based on distance.
    *
    * @param optimizedRoute The optimized route containing main locations.
+   * @param activities The mutable list of activities to which new activities will be added.
+   * @param mode The transport mode for route optimization.
    * @param onProgress A callback function to report progress (from 0.0 to 1.0).
    * @return A new OrderedRoute including the in-between activities.
    */
@@ -256,6 +253,7 @@ class TripAlgorithm(
       mode: TransportMode = TransportMode.CAR,
       onProgress: (Float) -> Unit = {}
   ): OrderedRoute {
+    var totalProgress = 0f
     // 1. Get the optimized ordered main locations
     val optimizedMainLocations = optimizedRoute.orderedLocations
 
@@ -286,16 +284,15 @@ class TripAlgorithm(
 
       // Report progress
       for (i in 1..numStops) {
-        onProgress(
-            progression.selectActivities +
-                progression.optimizeRoute / 2 +
-                progression.fetchInBetweenActivities / 2 * (i.toFloat() / numStops.toFloat()))
+        onProgress(totalProgress)
+        totalProgress = i.toFloat() / (numStops.toFloat() * 2)
       }
     }
 
     // If nothing to add, return early
     if (intermediateActivitiesBySegment.isEmpty()) return optimizedRoute
 
+    // 5. Build new OrderedRoute with the new activities inserted
     val newSegmentDurations = optimizedRoute.segmentDuration.toMutableList()
     val newOrderedLocations = optimizedRoute.orderedLocations.toMutableList()
     // List of indexes where new activities were added to adjust segment durations later
@@ -303,7 +300,7 @@ class TripAlgorithm(
     // Add elements to the lists of our original OrderedRoute at the correct place
     for ((startSeg, activities) in intermediateActivitiesBySegment) {
       // Get the start segment index in the optimized route
-      val startIndex = optimizedRoute.orderedLocations.indexOfFirst { it.sameLocation(startSeg) }
+      val startIndex = newOrderedLocations.indexOfFirst { it.sameLocation(startSeg) }
       if (startIndex == -1) continue
 
       // Add the activities location after the start segment
@@ -313,9 +310,9 @@ class TripAlgorithm(
         val insertIndex = startIndex + i
         newOrderedLocations.add(insertIndex, activity.location)
         addedIndexes.add(insertIndex)
-        // insertIndex - 1 since we want to add the new segment duration before the new location
         // Set to INVALID_DURATION so that the re-computation knows to calculate it
-        newSegmentDurations.add(insertIndex - 1, INVALID_DURATION)
+        newSegmentDurations[insertIndex - 1] = INVALID_DURATION
+        newSegmentDurations.add(insertIndex, INVALID_DURATION)
       }
     }
 
@@ -326,16 +323,11 @@ class TripAlgorithm(
             totalDuration = optimizedRoute.totalDuration,
             segmentDuration = newSegmentDurations)
 
-    // Recompute the time segments properly with the route optimizer
+    // 6. Recompute the time segments properly with the route optimizer
     val finalOptimizedRoute =
         routeOptimizer.recomputeOrderedRoute(
             newOptimizedRoute, addedIndexes, mode, INVALID_DURATION) {
-              onProgress(
-                  progression.selectActivities +
-                      progression.optimizeRoute / 2 +
-                      progression.fetchInBetweenActivities / 2 +
-                      progression.fetchInBetweenActivities / 2 * it +
-                      progression.scheduleTrip)
+              onProgress(it + totalProgress)
             }
 
     return finalOptimizedRoute
