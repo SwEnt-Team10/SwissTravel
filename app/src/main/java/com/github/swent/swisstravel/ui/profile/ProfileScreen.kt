@@ -55,6 +55,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -485,11 +486,10 @@ private fun AchievementDetailDialog(
                   Spacer(modifier = Modifier.width(8.dp))
 
                   Text(
-                      text = stringResource(data.label),
+                      text = stringResource(data.condition),
                       style =
-                          if (isCurrent) MaterialTheme.typography.bodyMedium
-                          else MaterialTheme.typography.bodySmall,
-                  )
+                          MaterialTheme.typography.bodySmall.copy(
+                              fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal))
                 }
           }
         }

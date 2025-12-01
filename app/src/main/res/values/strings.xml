@@ -304,4 +304,117 @@
     <string name="achievement_category_longest_route">Longest route segment</string>
     <string name="achievement_category_social">Total friends</string>
 
+    <!-- Achievement Condition -->
+    <!-- ============= TRIP COUNT ============= -->
+    <string name="achievement_rookie_explorer_condition">
+    Take at least 1 trip.
+</string>
+
+    <string name="achievement_weekend_adventurer_condition">
+    Take at least 5 trips.
+</string>
+
+    <string name="achievement_frequent_traveler_condition">
+    Take at least 10 trips.
+</string>
+
+    <string name="achievement_global_nomad_condition">
+    Take at least 20 trips.
+</string>
+
+
+    <!-- ============= TRAVEL TIME (MINUTES) ============= -->
+
+    <string name="achievement_just_warming_up_condition">
+    Travel for at least 100 minutes total.
+</string>
+
+    <string name="achievement_mileage_maker_condition">
+    Travel for at least 1,000 minutes total.
+</string>
+
+    <string name="achievement_endurance_traveler_condition">
+    Travel for at least 5,000 minutes total.
+</string>
+
+    <string name="achievement_time_lord_condition">
+    Travel for at least 20,000 minutes total.
+</string>
+
+
+    <!-- ============= UNIQUE LOCATIONS ============= -->
+
+    <string name="achievement_local_tourist_condition">
+    Visit at least 3 unique locations.
+</string>
+
+    <string name="achievement_city_hopper_condition">
+    Visit at least 10 unique locations.
+</string>
+
+    <string name="achievement_continent_crawler_condition">
+    Visit at least 20 unique locations.
+</string>
+
+    <string name="achievement_globe_trotter_condition">
+    Visit at least 50 unique locations.
+</string>
+
+
+    <!-- ============= TRANSPORT MODE ============= -->
+
+    <string name="achievement_train_enthusiast_condition">
+    Have train as your most used mode of transport.
+</string>
+
+    <string name="achievement_road_warrior_condition">
+    Have car as your most used mode of transport.
+</string>
+
+    <string name="achievement_bus_buddy_condition">
+    Have bus as your most used mode of transport.
+</string>
+
+    <string name="achievement_eco_rider_condition">
+    Have tram as your most used mode of transport.
+</string>
+
+
+    <!-- ============= LONGEST ROUTE SEGMENT ============= -->
+
+    <string name="achievement_short_hop_condition">
+    Complete a trip segment lasting at least 15 minutes.
+</string>
+
+    <string name="achievement_journeyman_condition">
+    Complete a trip segment lasting at least 60 minutes.
+</string>
+
+    <string name="achievement_long_hauler_condition">
+    Complete a trip segment lasting at least 180 minutes.
+</string>
+
+    <string name="achievement_iron_route_champion_condition">
+    Complete a trip segment lasting at least 600 minutes.
+</string>
+
+
+    <!-- ============= SOCIAL / FRIENDS ============= -->
+
+    <string name="achievement_new_friend_condition">
+    Add at least 1 friend.
+</string>
+
+    <string name="achievement_social_traveler_condition">
+    Add at least 5 friends.
+</string>
+
+    <string name="achievement_popular_guide_condition">
+    Add at least 10 friends.
+</string>
+
+    <string name="achievement_legendary_connector_condition">
+    Add at least 20 friends.
+</string>
+
 </resources>
