@@ -159,7 +159,7 @@ class EditTripScreenViewModel(
                       TripArrivalDeparture(
                           originalTrip.tripProfile.arrivalLocation,
                           originalTrip.tripProfile.departureLocation),
-                  destinations = originalTrip.locations)
+                  destinations = originalTrip.tripProfile.preferredLocations)
 
           // Run the algorithm
           val algorithm = algorithmFactory(context, tempTripSettings, activityRepository)

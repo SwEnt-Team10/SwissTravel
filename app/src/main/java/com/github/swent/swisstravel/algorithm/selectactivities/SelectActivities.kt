@@ -50,12 +50,7 @@ class SelectActivities(
 
     // Removes preferences that are not supported by mySwitzerland.
     // Avoids unnecessary API calls.
-    userPreferences.remove(Preference.QUICK)
-    userPreferences.remove(Preference.SLOW_PACE)
-    userPreferences.remove(Preference.EARLY_BIRD)
-    userPreferences.remove(Preference.NIGHT_OWL)
-    userPreferences.remove(Preference.INTERMEDIATE_STOPS)
-    userPreferences.remove(Preference.PUBLIC_TRANSPORT)
+    removeUnsupportedPreferences(userPreferences)
 
     // add 1 day since the last day is excluded
     val days =
@@ -142,6 +137,7 @@ class SelectActivities(
    */
   suspend fun getOneActivityNearWithPreferences(coords: Coordinate, radius: Int = NEAR): Activity? {
     val userPreferences = tripSettings.preferences.toMutableList()
+    removeUnsupportedPreferences(userPreferences)
     // If the user has preferences, separate mandatory and optional ones and fetch accordingly.
     if (userPreferences.isNotEmpty()) {
       val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(userPreferences)
@@ -160,6 +156,21 @@ class SelectActivities(
     } else { // No preferences, fetch any activity near the location.
       return activityRepository.getActivitiesNear(coords, radius, 1).firstOrNull()
     }
+  }
+
+  /**
+   * Removes preferences that are not supported by the activity repository to avoid unnecessary API
+   * calls.
+   *
+   * @param preferences The mutable list of preferences to filter.
+   */
+  private fun removeUnsupportedPreferences(preferences: MutableList<Preference>) {
+    preferences.remove(Preference.QUICK)
+    preferences.remove(Preference.SLOW_PACE)
+    preferences.remove(Preference.EARLY_BIRD)
+    preferences.remove(Preference.NIGHT_OWL)
+    preferences.remove(Preference.INTERMEDIATE_STOPS)
+    preferences.remove(Preference.PUBLIC_TRANSPORT)
   }
 
   /**

@@ -18,11 +18,11 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
-import kotlin.collections.plus
 import kotlin.collections.zipWithNext
 
-const val DISTANCE_PER_STOP_KM = 80.0
+const val DISTANCE_PER_STOP_KM = 90.0
 const val RADIUS_NEW_ACTIVITY_M = 15000
+const val INVALID_DURATION = -1.0
 
 /**
  * Data class representing the progression weights for each step of the trip computation.
@@ -165,11 +165,7 @@ class TripAlgorithm(
       // ---- STEP 2b: Insert in-between activities if preference enabled ----
       if (tripSettings.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
         optimizedRoute =
-            addInBetweenActivities(
-                optimizedRoute = optimizedRoute,
-                selectedActivities = activityList,
-                tripSettings = tripSettings,
-            ) { progress ->
+            addInBetweenActivities(optimizedRoute = optimizedRoute, activityList) { progress ->
               onProgress(
                   progression.selectActivities +
                       progression.optimizeRoute / 2 +
@@ -248,64 +244,20 @@ class TripAlgorithm(
   }
 
   /**
-   * Clusters activities based on proximity to base locations within a specified radius.
-   *
-   * @param baseLocations List of base locations to cluster around.
-   * @param activities List of activities to be clustered.
-   * @param radiusKm The radius in kilometers to consider for clustering.
-   * @return A map where each base location maps to a list of nearby activities.
-   */
-  fun clusterActivitiesByBaseLocations(
-      baseLocations: List<Location>,
-      activities: List<Activity>,
-      radiusKm: Double =
-          15.0 // Set as 15 km since the const val in SelectActivities is not accessible here and is
-               // 15 km
-  ): Map<Location, List<Activity>> {
-
-    val remaining = activities.toMutableList()
-    val result = mutableMapOf<Location, MutableList<Activity>>()
-
-    for (base in baseLocations) {
-
-      // Find activities within radius
-      val nearby = remaining.filter { it.location.haversineDistanceTo(base) <= radiusKm }
-
-      // Assign to result
-      result[base] = nearby.toMutableList()
-
-      // Remove assigned from the pool
-      remaining.removeAll(nearby)
-    }
-
-    // handle leftover activities (too far from any base but should never happen)
-    if (remaining.isNotEmpty()) {
-      result[Location(Coordinate(0.0, 0.0), "UNASSIGNED")] = remaining
-    }
-
-    return result
-  }
-
-  /**
    * Adds intermediate activities between main locations in the optimized route based on distance.
    *
    * @param optimizedRoute The optimized route containing main locations.
-   * @param tripSettings The settings for the trip.
    * @param onProgress A callback function to report progress (from 0.0 to 1.0).
    * @return A new OrderedRoute including the in-between activities.
    */
   suspend fun addInBetweenActivities(
       optimizedRoute: OrderedRoute,
-      selectedActivities: List<Activity>,
-      tripSettings: TripSettings,
+      activities: MutableList<Activity>,
       mode: TransportMode = TransportMode.CAR,
       onProgress: (Float) -> Unit = {}
   ): OrderedRoute {
-    // 1. Get the optimized ordered main locations (original destinations)
-    val optimizedMainLocations =
-        optimizedRoute.orderedLocations.filter { loc ->
-          tripSettings.destinations.any { dest -> dest.sameLocation(loc) }
-        }
+    // 1. Get the optimized ordered main locations
+    val optimizedMainLocations = optimizedRoute.orderedLocations
 
     // 2. Build segments along the optimized route
     val segmentPairs = optimizedMainLocations.zipWithNext()
@@ -327,6 +279,7 @@ class TripAlgorithm(
 
       // Generate activities for this segment
       val newActivities = generateActivitiesBetween(startSeg, endSeg, numStops)
+      activities.addAll(newActivities)
 
       // Store in the map under its start segment
       intermediateActivitiesBySegment.getOrPut(startSeg) { mutableListOf() }.addAll(newActivities)
@@ -340,17 +293,14 @@ class TripAlgorithm(
       }
     }
 
-    // TODO: First, find the last location in the cluster startSeg of the function on top and the
-    // first location in the cluster endSeg
-    // With this, add a new time segment in the optimizeRoute at the good index (don't forget to
-    // add a 1 to the next index each time you do this)
-    // At the same time, add the new activities in the orderedLocations at the good index
-    // Finally, recalculate the total duration by adding the new time segments durations
+    // If nothing to add, return early
+    if (intermediateActivitiesBySegment.isEmpty()) return optimizedRoute
 
-    val newSegmentDurations = mutableListOf<Double>()
-    val newOrderedLocations = mutableListOf<Location>()
+    val newSegmentDurations = optimizedRoute.segmentDuration.toMutableList()
+    val newOrderedLocations = optimizedRoute.orderedLocations.toMutableList()
     // List of indexes where new activities were added to adjust segment durations later
     val addedIndexes = mutableListOf<Int>()
+    // Add elements to the lists of our original OrderedRoute at the correct place
     for ((startSeg, activities) in intermediateActivitiesBySegment) {
       // Get the start segment index in the optimized route
       val startIndex = optimizedRoute.orderedLocations.indexOfFirst { it.sameLocation(startSeg) }
@@ -359,12 +309,13 @@ class TripAlgorithm(
       // Add the activities location after the start segment
       for (i in 1..activities.size) {
         val activity = activities[i - 1]
+        // Because each time we add a new location, the next index shifts by 1
         val insertIndex = startIndex + i
         newOrderedLocations.add(insertIndex, activity.location)
         addedIndexes.add(insertIndex)
         // insertIndex - 1 since we want to add the new segment duration before the new location
-        // Set to -1 so that the re-computation knows to calculate it
-        newSegmentDurations.add(insertIndex - 1, -1.0)
+        // Set to INVALID_DURATION so that the re-computation knows to calculate it
+        newSegmentDurations.add(insertIndex - 1, INVALID_DURATION)
       }
     }
 
@@ -377,14 +328,15 @@ class TripAlgorithm(
 
     // Recompute the time segments properly with the route optimizer
     val finalOptimizedRoute =
-        routeOptimizer.reocomputeOrderedRoute(newOptimizedRoute, addedIndexes, mode = mode) {
-          onProgress(
-              progression.selectActivities +
-                  progression.optimizeRoute / 2 +
-                  progression.fetchInBetweenActivities / 2 +
-                  progression.fetchInBetweenActivities / 2 * it +
-                  progression.scheduleTrip)
-        }
+        routeOptimizer.recomputeOrderedRoute(
+            newOptimizedRoute, addedIndexes, mode, INVALID_DURATION) {
+              onProgress(
+                  progression.selectActivities +
+                      progression.optimizeRoute / 2 +
+                      progression.fetchInBetweenActivities / 2 +
+                      progression.fetchInBetweenActivities / 2 * it +
+                      progression.scheduleTrip)
+            }
 
     return finalOptimizedRoute
   }
