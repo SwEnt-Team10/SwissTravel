@@ -1,10 +1,7 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Casino
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -24,7 +21,7 @@ import com.github.swent.swisstravel.ui.navigation.TopBar
 /** Test tags for UI tests to identify components. */
 object TripTravelersTestTags {
   const val NEXT = "next"
-  const val RANDOM = "random"
+  const val RANDOM_SWITCH = "randomSwitch"
   const val TRIP_TRAVELERS_SCREEN = "tripTravelersScreen"
 }
 
@@ -43,6 +40,8 @@ fun TripTravelersScreen(
 ) {
   val tripSettings by viewModel.tripSettings.collectAsState()
   var travelers by remember { mutableStateOf(tripSettings.travelers) }
+
+  var isRandom by remember { mutableStateOf(false) }
 
   LaunchedEffect(travelers) {
     val current = viewModel.tripSettings.value.travelers
@@ -85,44 +84,45 @@ fun TripTravelersScreen(
                         onAdultsChange = { travelers = travelers.copy(adults = it) },
                         onChildrenChange = { travelers = travelers.copy(children = it) })
 
-                    // --- Buttons Box ---
-                    Box(
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                      // --- Done button (centered) ---
+                    // --- Random toggle and Button column ---
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                      // --- Random trip toggle ---
+                      Row(
+                          modifier = Modifier.fillMaxWidth(),
+                          verticalAlignment = Alignment.CenterVertically,
+                          horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(
+                                text = stringResource(R.string.random_trip_generation),
+                                style = MaterialTheme.typography.bodyLarge)
+                            Switch(
+                                checked = isRandom,
+                                onCheckedChange = { isRandom = it },
+                                modifier = Modifier.testTag(TripTravelersTestTags.RANDOM_SWITCH))
+                          }
+
+                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+                      // --- Done button ---
                       Button(
-                          onClick = onNext,
+                          onClick = {
+                            viewModel.setRandomTrip(isRandom)
+                            if (isRandom) {
+                              onRandom()
+                            } else {
+                              onNext()
+                            }
+                          },
                           colors =
                               ButtonDefaults.buttonColors(
                                   containerColor = MaterialTheme.colorScheme.primary),
                           shape =
                               RoundedCornerShape(
                                   dimensionResource(R.dimen.trip_travelers_button_radius)),
-                          modifier =
-                              Modifier.align(Alignment.Center)
-                                  .testTag(TripTravelersTestTags.NEXT)) {
+                          modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
                             Text(
                                 text = stringResource(R.string.next),
                                 color = MaterialTheme.colorScheme.onPrimary,
                                 style = MaterialTheme.typography.titleMedium)
-                          }
-
-                      // --- Random button (aligned to the end) ---
-                      Button(
-                          onClick = onRandom,
-                          shape = CircleShape,
-                          colors =
-                              ButtonDefaults.buttonColors(
-                                  containerColor = MaterialTheme.colorScheme.primary),
-                          modifier =
-                              Modifier.size(dimensionResource(R.dimen.trip_travelers_button_height))
-                                  .align(Alignment.CenterEnd)
-                                  .testTag(TripTravelersTestTags.RANDOM),
-                          contentPadding = PaddingValues(dimensionResource(R.dimen.empty))) {
-                            Icon(
-                                imageVector = Icons.Outlined.Casino,
-                                contentDescription = stringResource(R.string.random),
-                                tint = MaterialTheme.colorScheme.onPrimary)
                           }
                     }
                   }

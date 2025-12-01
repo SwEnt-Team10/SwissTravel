@@ -43,7 +43,7 @@
     <string name="nb_travelers">How many travelers will there be?</string>
     <string name="nb_adults">How many adults?</string>
     <string name="nb_children">How many children?</string>
-    <string name="random">I am feeling lucky.</string>
+    <string name="random_trip_generation">Random Trip Generation</string>
 
     <!-- Trip dates -->
     <string name="trip_dates">When will you be travelling?</string>

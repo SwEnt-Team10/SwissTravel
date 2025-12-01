@@ -165,7 +165,8 @@ class TripCreationTests : InMemorySwissTravelTest() {
     composeTestRule.setContent { SwissTravelTheme { TripTravelersScreen(onNext = {}) } }
     composeTestRule.onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertExists()
     composeTestRule.checkTopBarIsDisplayed()
-    composeTestRule.onNodeWithTag(TripTravelersTestTags.RANDOM).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripTravelersTestTags.RANDOM_SWITCH).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripTravelersTestTags.RANDOM_SWITCH).performClick()
     composeTestRule.onNodeWithTag(TripTravelersTestTags.NEXT).performClick()
   }
 }

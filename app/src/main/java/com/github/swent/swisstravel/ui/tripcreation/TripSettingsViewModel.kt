@@ -172,8 +172,12 @@ open class TripSettingsViewModel(
     // Determine a manageable number of intermediate destinations based on trip duration
     val tripDurationDays =
         if (settings.date.startDate != null && settings.date.endDate != null) {
-          ChronoUnit.DAYS.between(settings.date.startDate, settings.date.endDate).toInt() + 1
+          val duration =
+              ChronoUnit.DAYS.between(settings.date.startDate, settings.date.endDate).toInt() + 1
+          Log.d("TripSettingsViewModel", "Trip duration in days: $duration")
+          duration
         } else {
+          Log.d("TripSettingsViewModel", "Dates are null")
           DEFAULT_DURATION // Default to a 3-day trip if dates are not set, should not happen
         }
     // Rule: roughly one new city every 2 days. Minimum 0, max 3.
