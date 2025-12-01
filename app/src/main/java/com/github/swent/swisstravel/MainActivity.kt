@@ -401,6 +401,8 @@ private fun NavGraphBuilder.currentTripNavGraph(navigationActions: NavigationAct
  * Sets up the my trips navigation graph for the Swiss Travel App.
  *
  * @param context The context of the current state of the application.
+ * @param navigationActions The NavigationActions used for navigation.
+ * @param myTripsViewModel The MyTripsViewModel providing state and business logic.
  */
 private fun NavGraphBuilder.myTripsNavGraph(
     context: Context,
@@ -413,6 +415,7 @@ private fun NavGraphBuilder.myTripsNavGraph(
   ) {
     composable(Screen.MyTrips.route) {
       MyTripsScreen(
+          myTripsViewModel = myTripsViewModel,
           onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onPastTrips = { navigationActions.navigateTo(Screen.PastTrips) },
           onCreateTrip = { navigationActions.navigateTo(Screen.TripSettingsDates) },
@@ -566,16 +569,28 @@ private fun NavGraphBuilder.tripSettingsNavGraph(
           onPrevious = { navigationActions.goBack() })
     }
     composable(Screen.TripSettingsTravelers.route) {
+      val vm = tripSettingsViewModel(navController)
       TripTravelersScreen(
-          viewModel = tripSettingsViewModel(navController),
-          onNext = { navigationActions.navigateTo(Screen.TripSettingsPreferences) },
+          viewModel = vm,
+          onNext = {
+            vm.setRandomTrip(false)
+            navigationActions.navigateTo(Screen.TripSettingsPreferences)
+          },
+          onRandom = {
+            vm.setRandomTrip(true)
+            navigationActions.navigateTo(Screen.TripSettingsPreferences)
+          },
           onPrevious = { navigationActions.goBack() })
     }
     composable(Screen.TripSettingsPreferences.route) {
+      val vm = tripSettingsViewModel(navController)
+      val isRandomTrip by vm.isRandomTrip.collectAsState()
       TripPreferencesScreen(
-          viewModel = tripSettingsViewModel(navController),
+          viewModel = vm,
           onNext = { navigationActions.navigateTo(Screen.TripSettingsArrivalDeparture) },
-          onPrevious = { navigationActions.goBack() })
+          onPrevious = { navigationActions.goBack() },
+          isRandomTrip = isRandomTrip,
+          onRandom = { navigationActions.navigateTo(Screen.Loading) })
     }
     composable(Screen.TripSettingsArrivalDeparture.route) {
       ArrivalDepartureScreen(
