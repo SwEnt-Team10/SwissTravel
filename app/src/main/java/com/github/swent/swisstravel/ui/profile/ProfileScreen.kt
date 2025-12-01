@@ -65,6 +65,7 @@ import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Achievement
 import com.github.swent.swisstravel.model.user.AchievementCategory
+import com.github.swent.swisstravel.model.user.AchievementId
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.category
 import com.github.swent.swisstravel.model.user.displayStringRes
@@ -438,35 +439,7 @@ private fun AchievementDetailDialog(
 ) {
   val category = achievement.id.category()
   val tiers = category.tiers()
-  val currentValue: Int
-  val unitLabel: String
-
-  when (category) {
-    AchievementCategory.TRIPS -> {
-      currentValue = stats.totalTrips
-      unitLabel = "total trips completed."
-    }
-    AchievementCategory.TIME -> {
-      currentValue = stats.totalTravelMinutes
-      unitLabel = "total minutes travelled"
-    }
-    AchievementCategory.LOCATIONS -> {
-      currentValue = stats.uniqueLocations
-      unitLabel = "unique locations"
-    }
-    AchievementCategory.LONGEST_ROUTE -> {
-      currentValue = stats.longestRouteSegmentMin
-      unitLabel = "minutes (longest segment)"
-    }
-    AchievementCategory.SOCIAL -> {
-      currentValue = friendsCount
-      unitLabel = "total friends"
-    }
-    AchievementCategory.TRANSPORT -> {
-      currentValue = 0
-      unitLabel = "" // handled differently
-    }
-  }
+  val (currentValue, unitLabel) = computeCurrentStat(category, stats, friendsCount)
 
   AlertDialog(
       onDismissRequest = onDismiss,
@@ -476,63 +449,14 @@ private fun AchievementDetailDialog(
       title = { Text(text = stringResource(category.displayStringRes())) },
       text = {
         Column(modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENT_DIALOG)) {
-          if (category == AchievementCategory.TRANSPORT) {
-            val nameOrFallback =
-                if (isOwnProfile) null
-                else
-                    profileName.takeIf { it.isNotBlank() }
-                        ?: stringResource(R.string.achievement_subject_they)
-
-            // mode as a nice lowercase string
-            val modeLabel =
-                when (stats.mostUsedTransportMode) {
-                  TransportMode.TRAIN -> stringResource(R.string.transport_mode_train)
-                  TransportMode.CAR -> stringResource(R.string.transport_mode_car)
-                  TransportMode.BUS -> stringResource(R.string.transport_mode_bus)
-                  TransportMode.TRAM -> stringResource(R.string.transport_mode_tram)
-                  else -> null
-                }
-
-            val text =
-                if (modeLabel == null) {
-                  if (isOwnProfile) {
-                    stringResource(R.string.achievement_transport_none_you)
-                  } else {
-                    stringResource(R.string.achievement_transport_none_other, nameOrFallback!!)
-                  }
-                } else {
-                  if (isOwnProfile) {
-                    stringResource(R.string.achievement_transport_you, modeLabel)
-                  } else {
-                    stringResource(
-                        R.string.achievement_transport_other, nameOrFallback!!, modeLabel)
-                  }
-                }
-
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-          } else {
-            val nameOrFallback =
-                profileName.ifBlank { stringResource(R.string.achievement_subject_they) }
-
-            val text =
-                if (isOwnProfile) {
-                  stringResource(R.string.achievement_current_stat_you, currentValue, unitLabel)
-                } else {
-                  stringResource(
-                      R.string.achievement_current_stat_other,
-                      nameOrFallback,
-                      currentValue,
-                      unitLabel)
-                }
-
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-          }
+          AchievementMainText(
+              category = category,
+              stats = stats,
+              currentValue = currentValue,
+              unitLabel = unitLabel,
+              isOwnProfile = isOwnProfile,
+              profileName = profileName,
+          )
 
           Spacer(modifier = Modifier.height(12.dp))
 
@@ -544,31 +468,187 @@ private fun AchievementDetailDialog(
           Spacer(modifier = Modifier.height(8.dp))
 
           tiers.forEach { tierId ->
-            val data = tierId.toData()
-            val isCurrent = tierId == achievement.id
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier =
-                    Modifier.padding(vertical = 4.dp)
-                        .testTag(ProfileScreenTestTags.ACHIEVEMENT_TIER_ROW)) {
-                  Icon(
-                      painter = painterResource(data.icon),
-                      contentDescription = stringResource(data.label),
-                      tint = Color.Unspecified,
-                      modifier = Modifier.size(if (isCurrent) 56.dp else 48.dp))
-
-                  Spacer(modifier = Modifier.width(8.dp))
-
-                  Text(
-                      text = stringResource(data.condition),
-                      style =
-                          MaterialTheme.typography.bodySmall.copy(
-                              fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal))
-                }
+            AchievementTierRow(
+                tierId = tierId,
+                isCurrent = (tierId == achievement.id),
+            )
           }
         }
       })
+}
+
+/** Small holder for current value + unit text. */
+private data class AchievementStat(val value: Int?, val unitLabel: String)
+
+/**
+ * Compute the current stat for the given category.
+ *
+ * @param category The category to compute the stat for.
+ * @param stats The user's stats.
+ * @param friendsCount The number of friends.
+ */
+private fun computeCurrentStat(
+    category: AchievementCategory,
+    stats: UserStats,
+    friendsCount: Int
+): AchievementStat =
+    when (category) {
+      AchievementCategory.TRIPS -> AchievementStat(stats.totalTrips, "total trips completed.")
+      AchievementCategory.TIME ->
+          AchievementStat(stats.totalTravelMinutes, "total minutes travelled")
+      AchievementCategory.LOCATIONS -> AchievementStat(stats.uniqueLocations, "unique locations")
+      AchievementCategory.LONGEST_ROUTE ->
+          AchievementStat(stats.longestRouteSegmentMin, "minutes (longest segment)")
+      AchievementCategory.SOCIAL -> AchievementStat(friendsCount, "total friends")
+      AchievementCategory.TRANSPORT -> AchievementStat(null, "") // handled separately
+    }
+
+/**
+ * The main text of the achievements detail's dialog.
+ *
+ * @param category The category to display.
+ * @param stats The user's stats.
+ * @param currentValue The current value.
+ * @param unitLabel The unit label.
+ * @param isOwnProfile Whether the user is their own profile.
+ * @param profileName The name of the user.
+ */
+@Composable
+private fun AchievementMainText(
+    category: AchievementCategory,
+    stats: UserStats,
+    currentValue: Int?,
+    unitLabel: String,
+    isOwnProfile: Boolean,
+    profileName: String,
+) {
+  if (category == AchievementCategory.TRANSPORT) {
+    TransportAchievementText(
+        stats = stats,
+        isOwnProfile = isOwnProfile,
+        profileName = profileName,
+    )
+  } else {
+    StatAchievementText(
+        currentValue = currentValue ?: 0,
+        unitLabel = unitLabel,
+        isOwnProfile = isOwnProfile,
+        profileName = profileName,
+    )
+  }
+}
+
+/**
+ * The texts for the achievements stat's dialog.
+ *
+ * @param currentValue The current value.
+ * @param unitLabel The unit label.
+ * @param isOwnProfile Whether the user is their own profile.
+ * @param profileName The name of the user.
+ */
+@Composable
+private fun StatAchievementText(
+    currentValue: Int,
+    unitLabel: String,
+    isOwnProfile: Boolean,
+    profileName: String,
+) {
+  val nameOrFallback = profileName.ifBlank { stringResource(R.string.achievement_subject_they) }
+
+  val text =
+      if (isOwnProfile) {
+        stringResource(R.string.achievement_current_stat_you, currentValue, unitLabel)
+      } else {
+        stringResource(
+            R.string.achievement_current_stat_other, nameOrFallback, currentValue, unitLabel)
+      }
+
+  Text(
+      text = text,
+      style = MaterialTheme.typography.bodyMedium,
+  )
+}
+
+/**
+ * The text for the transport achievement's dialog.
+ *
+ * @param stats The user's stats.
+ * @param isOwnProfile Whether the user is their own profile.
+ * @param profileName The name of the user.
+ */
+@Composable
+private fun TransportAchievementText(
+    stats: UserStats,
+    isOwnProfile: Boolean,
+    profileName: String,
+) {
+  val nameOrFallback =
+      if (isOwnProfile) null
+      else
+          profileName.takeIf { it.isNotBlank() }
+              ?: stringResource(R.string.achievement_subject_they)
+
+  val modeLabel =
+      when (stats.mostUsedTransportMode) {
+        TransportMode.TRAIN -> stringResource(R.string.transport_mode_train)
+        TransportMode.CAR -> stringResource(R.string.transport_mode_car)
+        TransportMode.BUS -> stringResource(R.string.transport_mode_bus)
+        TransportMode.TRAM -> stringResource(R.string.transport_mode_tram)
+        else -> null
+      }
+
+  val text =
+      if (modeLabel == null) {
+        if (isOwnProfile) {
+          stringResource(R.string.achievement_transport_none_you)
+        } else {
+          stringResource(R.string.achievement_transport_none_other, nameOrFallback!!)
+        }
+      } else {
+        if (isOwnProfile) {
+          stringResource(R.string.achievement_transport_you, modeLabel)
+        } else {
+          stringResource(R.string.achievement_transport_other, nameOrFallback!!, modeLabel)
+        }
+      }
+
+  Text(
+      text = text,
+      style = MaterialTheme.typography.bodyMedium,
+  )
+}
+
+/**
+ * The tier row of the achievements detail's dialog.
+ *
+ * @param tierId The tier to display.
+ * @param isCurrent Whether the tier is current.
+ */
+@Composable
+private fun AchievementTierRow(
+    tierId: AchievementId,
+    isCurrent: Boolean,
+) {
+  val data = tierId.toData()
+
+  Row(
+      verticalAlignment = Alignment.CenterVertically,
+      modifier =
+          Modifier.padding(vertical = 4.dp).testTag(ProfileScreenTestTags.ACHIEVEMENT_TIER_ROW)) {
+        Icon(
+            painter = painterResource(data.icon),
+            contentDescription = stringResource(data.label),
+            tint = Color.Unspecified,
+            modifier = Modifier.size(if (isCurrent) 56.dp else 48.dp))
+
+        Spacer(modifier = Modifier.width(8.dp))
+
+        Text(
+            text = stringResource(data.condition),
+            style =
+                MaterialTheme.typography.bodySmall.copy(
+                    fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal))
+      }
 }
 
 /**
