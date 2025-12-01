@@ -33,7 +33,6 @@
     <dimen name="profile_achievement_icon_size">56dp</dimen>
     <dimen name="profile_achievement_icon_size_small">48dp</dimen>
     <dimen name="profile_achievement_tier_vertical_padding">4dp</dimen>
-    <dimen name="profile_pinned_image_height">120dp</dimen>
 
     <!--Edit Trip Screen -->
     <dimen name="edit_screen_vertical_arrangement">24dp</dimen>
