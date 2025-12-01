@@ -269,6 +269,26 @@ class UserRepositoryFirebase(
     val fromFriends = parseFriends(fromSnap).toMutableList()
     val toFriends = parseFriends(toSnap).toMutableList()
 
+    val fromIdx = fromFriends.indexOfFirst { it.uid == toUid }
+    val toIdx = toFriends.indexOfFirst { it.uid == fromUid }
+
+    val fromExisting = fromIdx.takeIf { it >= 0 }?.let { fromFriends[it] }
+    val toExisting = toIdx.takeIf { it >= 0 }?.let { toFriends[it] }
+
+    // If there is already a "mutual pending" relationship, upgrade to ACCEPTED
+    val isMutualPending =
+        (fromExisting?.status == FriendStatus.PENDING_INCOMING &&
+            toExisting?.status == FriendStatus.PENDING_OUTGOING) ||
+            (fromExisting?.status == FriendStatus.PENDING_OUTGOING &&
+                toExisting?.status == FriendStatus.PENDING_INCOMING)
+    if (isMutualPending) {
+      fromFriends[fromIdx] = fromFriends[fromIdx].copy(status = FriendStatus.ACCEPTED)
+
+      toFriends[toIdx] = toFriends[toIdx].copy(status = FriendStatus.ACCEPTED)
+
+      return fromFriends to toFriends
+    }
+
     ensurePendingEntry(
         friends = fromFriends, targetUid = toUid, newStatus = FriendStatus.PENDING_OUTGOING)
     ensurePendingEntry(
