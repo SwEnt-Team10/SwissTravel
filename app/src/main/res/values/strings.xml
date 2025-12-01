@@ -31,6 +31,7 @@
     <string name="no">No</string>
     <string name="done">Done</string>
     <string name="next">Next</string>
+    <string name="surprise">Surprise me</string>
     <string name="unexpected_error">Unexpected error: %1$s</string>
     <string name="error">Error</string>
 
@@ -42,6 +43,7 @@
     <string name="nb_travelers">How many travelers will there be?</string>
     <string name="nb_adults">How many adults?</string>
     <string name="nb_children">How many children?</string>
+    <string name="random_trip_generation">Random Trip Generation</string>
 
     <!-- Trip dates -->
     <string name="trip_dates">When will you be travelling?</string>

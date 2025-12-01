@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="grand_tour">
+        <item>Zurich;47.3769;8.5417</item>
+        <item>Basel;47.5596;7.5886</item>
+        <item>Lausanne;46.5197;6.6323</item>
+        <item>Bern;46.9480;7.4474</item>
+        <item>Chur;46.8498;9.5329</item>
+        <item>Neuchâtel;46.9896;6.9293</item>
+        <item>Emmental;47.057931600000025;7.734675399999995</item>
+        <item>Bodensee - Region Untersee (Salenstein);47.67250389999999;9.058989299999988</item>
+        <item>Säntis;47.25616499999998;9.318509100000009</item>
+        <item>Heidihaus;47.0134444;9.544544199999997</item>
+        <item>Monte San Giorgio;45.94825160000001;8.966007799999991</item>
+        <item>Rheinfall;47.67833370000002;8.615684500000004</item>
+        <item>Bodensee - Region Obersee (Altnau);47.622436200000024;9.270229300000006</item>
+        <item>St. Gallen;47.4221134;9.387211199999994</item>
+        <item>Churfirsten;47.203206400000006;9.349901700000002</item>
+        <item>Bernina Glaciers;46.45627890000003;9.940588499999983</item>
+        <item>Engadin St. Moritz;46.49702220000003;9.848781799999985</item>
+        <item>Walliser Stadel Goms;46.46942250000001;8.243646000000018</item>
+        <item>Aletsch Arena;46.42741599999997;8.093705200000016</item>
+        <item>Stockalperschloss Brig;46.315072500000014;7.99077270000001</item>
+        <item>Lac Léman, Coppet;46.31525030000003;6.19317769999999</item>
+        <item>Gstaad Saanenland;46.49281960000002;7.2680086000000035</item>
+        <item>Luzern;47.051192199999996;8.295299999999987</item>
+        <item>Autofähre Vierwaldstättersee;46.9814235;8.477840400000009</item>
+        <item>Vierwaldstättersee;46.993338499999986;8.605416999999989</item>
+        <item>Grosser Mythen;47.0207592;8.703510799999998</item>
+        <item>CabriO Stanserhorn;46.930476800000044;8.342292300000018</item>
+        <item>Saint Ursanne;47.36372930000001;7.154872999999995</item>
+        <item>Rapperswil-Jona;47.224697899999995;8.81447909999998</item>
+        <item>Kloster Einsiedeln;47.12660760000003;8.750556699999986</item>
+        <item>Fribourg;46.80417400000003;7.171588499999988</item>
+        <item>Viamala Schlucht;46.66351610000001;9.447770099999987</item>
+        <item>Basel;47.58790940000001;7.589444500000004</item>
+        <item>Freilichtmuseum Ballenberg;46.7497416;8.086710000000007</item>
+        <item>Le Port de Morges;46.507095300000046;6.4978765999999855</item>
+        <item>La Punt, Chesa Merleda;46.579084900000026;9.925525200000003</item>
+        <item>Pizolgipfel;46.95922590000003;9.386916200000005</item>
+        <item>Vitznau Rigi Bahnen;47.00947950000001;8.482754199999984</item>
+        <item>Pays-d\'Enhaut, Chateaux d\'Oex;46.47481279999999;7.136907599999981</item>
+        <item>Gruyères;46.5823112;7.080479299999988</item>
+        <item>Cardada;46.190879301163385;8.782096988277107</item>
+        <item>Mendrisio;45.8688751;8.989347599999999</item>
+        <item>Tremola;46.55086279999999;8.564057399999982</item>
+        <item>San Bernardino;46.48610159999998;9.169464099999987</item>
+        <item>Niesen;46.64611160000003;7.652500000000012</item>
+        <item>St. Beatus-Höhlen;46.68359829999999;7.782079000000003</item>
+        <item>Lavaux;46.47808770000002;6.7883121999999965</item>
+        <item>Ascona;46.15463369999999;8.766458299999984</item>
+        <item>Bellinzona;46.19130889999999;9.026536299999988</item>
+        <item>Furka;46.57241130000001;8.414864999999994</item>
+        <item>Davos Klosters;46.77958330000001;9.930308900000004</item>
+        <item>Gornergrat Matterhorn;45.98330560000002;7.78313890000001</item>
+        <item>Matterhorn;46.020847;7.79782299999999</item>
+        <item>Schloss Hallwyl;47.323236200000004;8.194998199999981</item>
+        <item>Schloss Burgdorf;47.058559100000025;7.631752400000016</item>
+        <item>Castel San Pietro;45.8598837;9.008710599999983</item>
+        <item>Monte Ceneri;46.139365200000015;8.90571099999998</item>
+        <item>Meilen;47.26776710000001;8.63917279999999</item>
+        <item>Niederhorn;46.711284399999975;7.775940099999982</item>
+        <item>Morcote;45.92264930000001;8.916071900000011</item>
+        <item>Wasserschloss Wyher;47.142023200000004;8.023529900000002</item>
+        <item>Fully;46.13772839999999;7.103911199999983</item>
+        <item>Höhematte Interlaken;46.68679740000002;7.859026799999986</item>
+        <item>Bettmeralp - Aletsch Arena;46.38931199999999;8.060821999999991</item>
+        <item>Parco San Michele - Lugano;46.00443;8.972769999999985</item>
+        <item>Spiez;46.68727800000002;7.679606000000007</item>
+        <item>Schloss Hünegg;46.73717438164968;7.655536301327496</item>
+        <item>Stäfa;47.23872470000001;8.718430600000016</item>
+        <item>Thun;46.75791399999999;7.629356000000017</item>
+        <item>Appenzeller Schaukäserei;47.37330456765793;9.344800351087788</item>
+        <item>Alpstein;47.28458590000003;9.485321000000008</item>
+        <item>Monte Generoso;45.92975000000003;9.019166700000016</item>
+        <item>Swissminiatur;45.95356570000002;8.950714299999989</item>
+        <item>Jet d\'eau Genève;46.209884500000015;6.150013600000008</item>
+        <item>Creux du Van;46.956040100000024;6.749691800000015</item>
+        <item>Badhütte Rorschach;47.48023840000002;9.484399999999983</item>
+        <item>Hospental;46.61714420000002;8.568546899999982</item>
+        <item>Val Surses;46.606410000000004;9.573879999999994</item>
+        <item>Obermutten;46.670263999999996;9.48417099999998</item>
+        <item>Abbaye de Saint-Maurice;46.220006999999995;7.004186899999997</item>
+        <item>Gemmi 2350 - Leukerbad;46.397854000000024;7.616047999999989</item>
+        <item>Piz Bernina - Samedan;46.54044599999998;9.885624000000002</item>
+        <item>Romanshorn;47.564659999999996;9.38085200000001</item>
+        <item>Maloja;46.395790000000005;9.694330000000004</item>
+        <item>Les Grottes de Vallorbe;46.698638899999985;6.345722200000003</item>
+        <item>Erlach;47.042543;7.090897000000002</item>
+        <item>Chantarella;46.50142;9.83490999999999</item>
+        <item>Stein am Rhein;47.658403000000035;8.856199999999985</item>
+        <item>Region Dents du Midi;46.224917000000005;6.861694000000011</item>
+        <item>Stockhorn - Simmental;46.693611;7.537500000000019</item>
+        <item>Lindt - Home of Chocolate;47.318176433592726;8.551873589136774 </item>
+        <item>Sion;46.23127030000003;7.342633700000011</item>
+        <item>Rolle;46.45562900000001;6.337801999999998</item>
+        <item>Aarburg;47.319145000000034;7.898097000000014</item>
+        <item>Weisshorn-Gruppe;46.20636000000001;7.867153000000009</item>
+    </string-array>
+</resources>
