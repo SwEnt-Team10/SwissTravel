@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -46,10 +47,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -57,7 +60,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.Achievement
 import com.github.swent.swisstravel.ui.composable.TripList
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
@@ -252,7 +255,7 @@ private fun ProfileScreenContent(
 
         BiographyDisplay(biography = uiState.biography)
 
-        AchievementsDisplay(uiState.stats)
+        AchievementsDisplay(uiState.achievements)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
@@ -326,7 +329,9 @@ private fun BiographyDisplay(biography: String) {
  * @param stats The user's stats.
  */
 @Composable
-private fun AchievementsDisplay(stats: UserStats) {
+private fun AchievementsDisplay(achievements: List<Achievement>) {
+  if (achievements.isEmpty()) return
+
   Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     Text(
         text = stringResource(R.string.achievements),
@@ -336,31 +341,35 @@ private fun AchievementsDisplay(stats: UserStats) {
 
   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
-  Row(
+  LazyRow(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.ACHIEVEMENTS),
-      horizontalArrangement = Arrangement.SpaceBetween,
+      horizontalArrangement = Arrangement.SpaceEvenly,
+      verticalAlignment = Alignment.CenterVertically,
   ) {
-    // TODO TEMPORARY (HENCE HARDCODED STRINGS)
-    AchievementItem("Trips", stats.totalTrips.toString())
-    AchievementItem("Minutes", stats.totalTravelMinutes.toString())
-    AchievementItem("Locations", stats.uniqueLocations.toString())
-    AchievementItem("Transport", stats.mostUsedTransportMode?.name ?: "-")
-    AchievementItem("Longest (min)", stats.longestRouteSegmentMin.toString())
+    items(achievements) { achievement -> AchievementMedal(achievement) }
   }
 }
 
 /**
  * A single achievement item in the achievements section.
  *
- * @param label The label for the achievement.
- * @param value The value for the achievement.
+ * @param achievement The achievement medal to display.
  */
 @Composable
-private fun AchievementItem(label: String, value: String) {
-  Column(horizontalAlignment = Alignment.CenterHorizontally) {
-    Text(text = value, style = MaterialTheme.typography.headlineMedium)
-    Text(text = label, style = MaterialTheme.typography.bodySmall)
-  }
+private fun AchievementMedal(achievement: Achievement) {
+  val label = stringResource(achievement.label)
+
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.widthIn(min = 72.dp).padding(horizontal = 4.dp)) {
+        Icon(
+            painter = painterResource(achievement.icon),
+            contentDescription = label,
+            tint = Color.Unspecified,
+            modifier = Modifier.size(56.dp))
+
+        Spacer(modifier = Modifier.height(4.dp))
+      }
 }
 
 /**

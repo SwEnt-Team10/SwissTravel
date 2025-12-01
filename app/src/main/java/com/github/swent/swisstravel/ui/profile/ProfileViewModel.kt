@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.model.user.Achievement
+import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
@@ -110,7 +111,9 @@ class ProfileViewModel(
       val pinnedTrips = profile.pinnedTripsUids.map { uid -> tripsRepository.getTrip(uid) }
 
       val achievements =
-          computeAchievements(stats = profile.stats, friendsCount = profile.friends.size)
+          computeAchievements(
+              stats = profile.stats,
+              friendsCount = profile.friends.filter { it.status == FriendStatus.ACCEPTED }.size)
       _uiState.update {
         it.copy(
             profilePicUrl = profile.profilePicUrl,

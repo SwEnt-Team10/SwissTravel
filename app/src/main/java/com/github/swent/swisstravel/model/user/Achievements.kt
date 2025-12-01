@@ -195,7 +195,7 @@ fun computeAchievements(
     TransportMode.TRAIN -> add(AchievementId.TRAIN_ENTHUSIAST)
     TransportMode.CAR -> add(AchievementId.ROAD_WARRIOR)
     TransportMode.BUS -> add(AchievementId.BUS_BUDDY)
-    TransportMode.TRAM -> add(AchievementId.ECO_RIDER) // adjust if you have BIKE instead
+    TransportMode.TRAM -> add(AchievementId.ECO_RIDER)
     else -> Unit
   }
 
