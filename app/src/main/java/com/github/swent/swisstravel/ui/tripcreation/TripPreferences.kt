@@ -128,7 +128,7 @@ fun TripPreferencesScreen(
               }
 
           // --- Next button (conditionally visible) ---
-          doneButton(
+          DoneButton(
               Modifier.align(Alignment.BottomCenter),
               viewModel,
               isRandomTrip,
@@ -140,8 +140,19 @@ fun TripPreferencesScreen(
       }
 }
 
+/**
+ * Button to be displayed at the bottom of the screen.
+ *
+ * @param modifier Modifier to be applied to the button.
+ * @param viewModel ViewModel to handle the trip settings logic.
+ * @param isRandomTrip Whether the trip is random or not.
+ * @param isScrolledToEnd Whether the LazyColumn has been scrolled to the end.
+ * @param onNext Callback to be invoked when the user is done setting preferences.
+ * @param onRandom Callback to be invoked when the user wants a random trip.
+ * @param context Context to be used for the Toast.
+ */
 @Composable
-private fun doneButton(
+private fun DoneButton(
     modifier: Modifier = Modifier,
     viewModel: TripSettingsViewModel,
     isRandomTrip: Boolean,
@@ -180,8 +191,8 @@ private fun doneButton(
  * Returns a State<Boolean> that is true if the LazyColumn has been scrolled to the end. This is a
  * helper function to keep the main composable clean.
  *
- * @param lazyListState The LazyListState to be observed. •@return A State<Boolean> that is true if
- *   the LazyColumn has been scrolled to the end.
+ * @param lazyListState The LazyListState to be observed.
+ * @return A State<Boolean> that is true if the LazyColumn has been scrolled to the end.
  */
 @Composable
 private fun rememberIsScrolledToEnd(lazyListState: LazyListState): State<Boolean> {

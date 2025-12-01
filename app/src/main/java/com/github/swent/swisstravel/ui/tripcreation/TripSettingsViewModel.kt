@@ -22,8 +22,8 @@ import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Timestamp
 import java.time.LocalDate
-import java.time.Period
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import kotlin.random.Random
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +32,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+const val DEFAULT_DURATION = 3
 
 /** * Data class representing the start and end dates of a trip. */
 data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = null)
@@ -162,17 +164,17 @@ open class TripSettingsViewModel(
     val random = seed?.let { Random(it) } ?: Random
     val settings = _tripSettings.value
 
-    // Pick distinct arrival and departure locations at random
+    // Pick distinct start and end locations at random
     val availableCities = grandTour.toMutableList()
-    val arrival = availableCities.removeAt(random.nextInt(availableCities.size))
-    val departure = availableCities.removeAt(random.nextInt(availableCities.size))
+    val start = availableCities.removeAt(random.nextInt(availableCities.size))
+    val end = availableCities.removeAt(random.nextInt(availableCities.size))
 
     // Determine a manageable number of intermediate destinations based on trip duration
     val tripDurationDays =
         if (settings.date.startDate != null && settings.date.endDate != null) {
-          Period.between(settings.date.startDate, settings.date.endDate).days + 1
+          ChronoUnit.DAYS.between(settings.date.startDate, settings.date.endDate).toInt() + 1
         } else {
-          3 // Default to a 3-day trip if dates are not set, should not happen
+          DEFAULT_DURATION // Default to a 3-day trip if dates are not set, should not happen
         }
     // Rule: roughly one new city every 2 days. Minimum 0, max 3.
     val numIntermediateDestinations = (tripDurationDays / 2).coerceAtMost(3).coerceAtLeast(0)
@@ -189,7 +191,7 @@ open class TripSettingsViewModel(
     _tripSettings.update {
       it.copy(
           name = "Random Swiss Adventure",
-          arrivalDeparture = TripArrivalDeparture(arrival, departure),
+          arrivalDeparture = TripArrivalDeparture(start, end),
           destinations = intermediateDestinations)
     }
 
