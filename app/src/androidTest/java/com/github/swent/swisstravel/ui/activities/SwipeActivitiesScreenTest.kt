@@ -7,8 +7,11 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
+import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.ui.composable.fakeActivity
 import com.github.swent.swisstravel.ui.trip.tripinfo.FakeTripInfoViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripCreationTests
+import com.github.swent.swisstravel.utils.SwissTravelTest
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Assert.assertFalse
@@ -17,7 +20,7 @@ import org.junit.Before
 import org.junit.Rule
 
 @ExperimentalCoroutinesApi
-class SwipeActivitiesScreenTest {
+class SwipeActivitiesScreenTest : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
   @get:Rule
@@ -26,6 +29,11 @@ class SwipeActivitiesScreenTest {
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   val vm = FakeTripInfoViewModel()
+
+  override fun createInitializedRepository(): TripsRepository {
+    // update this to a different list of trips if needed
+    return TripCreationTests.FakeTripsRepository(listOf())
+  }
 
   @Before
   fun setup() {
@@ -38,11 +46,7 @@ class SwipeActivitiesScreenTest {
   @Test
   fun swipeActivitiesScreenComponentsAreDisplayed() {
     assertFalse(vm.uiState.value.activities.isEmpty())
-    composeTestRule
-        .onNodeWithTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)
-        .assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON).assertIsDisplayed()
+    composeTestRule.checkSwipeActivityScreenIsDisplayed()
   }
 
   @Test
