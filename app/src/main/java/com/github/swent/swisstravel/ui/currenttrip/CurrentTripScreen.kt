@@ -99,8 +99,7 @@ fun CurrentTripScreen(
                     onClick = { navigationActions?.navigateTo(Screen.TripSettingsDates) },
                     enabled = isLoggedIn,
                     modifier =
-                        Modifier.fillMaxWidth()
-                            .height(dimensionResource(R.dimen.current_trip_button_height))
+                        Modifier.height(dimensionResource(R.dimen.current_trip_button_height))
                             .testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                       Text(
                           text = stringResource(R.string.when_travelling),

@@ -100,7 +100,7 @@
     <!-- Current Trip Screen -->
     <dimen name="current_trip_icon_bottom_padding">16dp</dimen>
     <dimen name="current_trip_column_padding">16dp</dimen>
-    <dimen name="current_trip_button_height">40dp</dimen>
+    <dimen name="current_trip_button_height">50dp</dimen>
 
 
     <!-- Trip Summary -->
