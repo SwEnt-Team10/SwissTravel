@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.algorithm
 import android.content.Context
 import android.util.Log
 import com.github.swent.swisstravel.algorithm.cache.DurationCacheLocal
+import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.algorithm.orderlocationsv2.DurationMatrixHybrid
 import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
@@ -17,8 +18,10 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import kotlin.collections.plus
+import kotlin.collections.zipWithNext
 
-const val DISTANCE_PER_STOP_KM = 50.0
+const val DISTANCE_PER_STOP_KM = 80.0
 const val RADIUS_NEW_ACTIVITY_M = 15000
 
 /**
@@ -26,6 +29,7 @@ const val RADIUS_NEW_ACTIVITY_M = 15000
  *
  * @param selectActivities Weight for the activity selection step.
  * @param optimizeRoute Weight for the route optimization step.
+ * @param fetchInBetweenActivities Weight for fetching in-between activities step.
  * @param scheduleTrip Weight for the trip scheduling step.
  *
  * The sum of all weights must equal 1.0.
@@ -33,10 +37,11 @@ const val RADIUS_NEW_ACTIVITY_M = 15000
 data class Progression(
     val selectActivities: Float,
     val optimizeRoute: Float,
+    val fetchInBetweenActivities: Float,
     val scheduleTrip: Float
 ) {
   init {
-    val sum = selectActivities + optimizeRoute + scheduleTrip
+    val sum = selectActivities + optimizeRoute + scheduleTrip + fetchInBetweenActivities
     require(sum == 1.0f) { "Progression values must sum to 1.0, but got $sum" }
   }
 }
@@ -45,18 +50,52 @@ data class Progression(
  * Main class to compute a trip based on data the user passed through the trip creation process. It
  * integrates activity selection, route optimization, and trip scheduling.
  *
- * @param activitySelector The component responsible for selecting activities based on user
+ * @property activitySelector The component responsible for selecting activities based on user
  *   preferences.
- * @param routeOptimizer The component responsible for optimizing the route between locations.
- * @param scheduleParams Parameters for scheduling the trip.
+ * @property routeOptimizer The component responsible for optimizing the route between locations.
+ * @property scheduleParams Parameters for scheduling the trip.
+ * @property progression Weights for each step of the trip computation process.
  */
 class TripAlgorithm(
     private val activitySelector: SelectActivities,
     private val routeOptimizer: ProgressiveRouteOptimizer,
     private val scheduleParams: ScheduleParams = ScheduleParams(),
     private val progression: Progression =
-        Progression(selectActivities = 0.20f, optimizeRoute = 0.40f, scheduleTrip = 0.40f)
+        Progression(
+            selectActivities = 0.20f,
+            optimizeRoute = 0.40f,
+            fetchInBetweenActivities = 0.10f,
+            scheduleTrip = 0.30f)
 ) {
+  companion object {
+    /**
+     * Initializes the TripAlgorithm with the necessary components.
+     *
+     * @param tripSettings The settings for the trip.
+     * @param activityRepository The repository to fetch activities from.
+     * @param context The Android context.
+     * @return An instance of TripAlgorithm.
+     */
+    fun init(
+        tripSettings: TripSettings,
+        activityRepository: ActivityRepository,
+        context: Context
+    ): TripAlgorithm {
+
+      val activitySelector =
+          SelectActivities(tripSettings = tripSettings, activityRepository = activityRepository)
+
+      val cacheManager = DurationCacheLocal(context)
+      val durationMatrix = DurationMatrixHybrid(context)
+      val penalty = ProgressiveRouteOptimizer.PenaltyConfig()
+      val optimizer =
+          ProgressiveRouteOptimizer(
+              cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
+
+      return TripAlgorithm(activitySelector, optimizer)
+    }
+  }
+
   /**
    * Computes a trip based on the provided settings and profile.
    *
@@ -99,7 +138,7 @@ class TripAlgorithm(
       Log.d("TripAlgorithm", "Full destination list: $fullDestinationList")
 
       // ---- STEP 2: Optimize route ----
-      val optimizedRoute =
+      var optimizedRoute =
           try {
             routeOptimizer.optimize(
                 start = startLocation,
@@ -110,7 +149,12 @@ class TripAlgorithm(
                     if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
                       TransportMode.TRAIN
                     } else TransportMode.CAR) { progress ->
-                  onProgress(progression.selectActivities + progression.optimizeRoute * progress)
+                  if (tripSettings.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
+                    onProgress(
+                        progression.selectActivities + progression.optimizeRoute / 2 * progress)
+                  } else {
+                    onProgress(progression.selectActivities + progression.optimizeRoute * progress)
+                  }
                 }
           } catch (e: Exception) {
             throw IllegalStateException("Route optimization failed: ${e.message}", e)
@@ -118,57 +162,25 @@ class TripAlgorithm(
 
       check(optimizedRoute.totalDuration > 0) { "Optimized route duration is zero or negative" }
 
-      // ---- STEP 2b: Insert in-between activities if preference enabled ---- (helped by AI)
+      // ---- STEP 2b: Insert in-between activities if preference enabled ----
       if (tripSettings.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
-        // 1. Get the optimized ordered locations
-        val optimizedLocations = optimizedRoute.orderedLocations
-
-        // 2. Build segments along the optimized route
-        val segmentPairs = optimizedLocations.zipWithNext() // consecutive pairs
-
-        // 3. Decide how many new stops to add per segment
-        val stopsPerSegment =
-            segmentPairs.map { (a, b) ->
-              val distKm = a.coordinate.haversineDistanceTo(b.coordinate)
-              (distKm / DISTANCE_PER_STOP_KM).toInt() // floor
+        optimizedRoute =
+            addInBetweenActivities(
+                optimizedRoute = optimizedRoute,
+                selectedActivities = activityList,
+                tripSettings = tripSettings,
+            ) { progress ->
+              onProgress(
+                  progression.selectActivities +
+                      progression.optimizeRoute / 2 +
+                      progression.fetchInBetweenActivities * progress)
             }
-
-        // 4. Total number of stops to insert
-        val totalNewStops = stopsPerSegment.sum()
-        var toFree = totalNewStops
-
-        if (toFree > 0) {
-          // 5. Identify clusters in the selected activities
-          val clustersMutable = activityList.groupBy { it.location }.toMutableMap()
-
-          // 6. Remove activities from clusters to make room
-          val clusterOrder = clustersMutable.entries.sortedByDescending { it.value.size }
-          for ((base, list) in clusterOrder) {
-            if (toFree <= 0) break
-            if (list.isEmpty()) continue
-            val removeCount = minOf(1, list.size, toFree)
-            val removed =
-                removeWorstActivitiesFromCluster(base, list as MutableList<Activity>, removeCount)
-            activityList.removeAll { act ->
-              removed.any { r -> act.location.sameLocation(r.location) }
-            }
-            toFree -= removed.size
-          }
-
-          // 7. Insert new in-between activities along each segment
-          segmentPairs.forEachIndexed { index, (startSeg, endSeg) ->
-            val numStops = stopsPerSegment[index]
-            if (numStops <= 0) return@forEachIndexed
-
-            for (i in 1..numStops) {
-              val newActivities =
-                  generateActivitiesBetween(start = startSeg, end = endSeg, count = numStops)
-
-              activityList.addAll(newActivities)
-            }
-          }
-        }
       }
+
+      onProgress(
+          progression.selectActivities +
+              progression.optimizeRoute +
+              progression.fetchInBetweenActivities)
 
       // ---- STEP 3: Schedule trip ----
       val schedule =
@@ -177,6 +189,7 @@ class TripAlgorithm(
               onProgress(
                   progression.selectActivities +
                       progression.optimizeRoute +
+                      progression.fetchInBetweenActivities +
                       progression.scheduleTrip * progress)
             }
           } catch (e: Exception) {
@@ -191,50 +204,6 @@ class TripAlgorithm(
       Log.e("TripAlgorithm", "Trip computation failed", e)
       throw e
     }
-  }
-
-  /**
-   * Runs the trip algorithm with the given settings and profile.
-   *
-   * @param tripSettings The settings for the trip.
-   * @param tripProfile The profile of the trip.
-   * @param onProgress A callback function to report progress.
-   * @return A list of TripElement representing the computed trip.
-   */
-  suspend fun runTripAlgorithm(
-      tripSettings: TripSettings,
-      tripProfile: TripProfile,
-      onProgress: (Float) -> Unit
-  ): List<TripElement> {
-    return computeTrip(
-        tripSettings = tripSettings, tripProfile = tripProfile, onProgress = onProgress)
-  }
-
-  /**
-   * Remove the worst activities from the cluster around baseLocation using a simple heuristic:
-   * remove those farthest from the baseLocation first. Returns the list of removed activities.
-   *
-   * @param baseLocation The base location to measure distance from.
-   * @param cluster The mutable list of activities in the cluster.
-   * @param count The number of activities to remove.
-   * @return The list of removed activities.
-   */
-  private fun removeWorstActivitiesFromCluster(
-      baseLocation: Location,
-      cluster: MutableList<Activity>,
-      count: Int
-  ): List<Activity> {
-    if (count <= 0) return emptyList()
-    if (cluster.isEmpty()) return emptyList()
-    // TODO: For now we use distance to the center of the cluster only; could be improved with
-    // activity ratings, popularity, or randomly.
-    val sorted =
-        cluster.sortedByDescending {
-          baseLocation.coordinate.haversineDistanceTo(it.location.coordinate)
-        }
-    val toRemove = sorted.take(count)
-    cluster.removeAll(toRemove.toSet())
-    return toRemove
   }
 
   /**
@@ -269,7 +238,8 @@ class TripAlgorithm(
           Coordinate(latitude = baseLat + randomOffsetLat, longitude = baseLon + randomOffsetLon)
 
       val activity =
-          activitySelector.getOneActivityNear(coords = coord, radius = RADIUS_NEW_ACTIVITY_M)
+          activitySelector.getOneActivityNearWithPreferences(
+              coords = coord, radius = RADIUS_NEW_ACTIVITY_M)
 
       if (activity != null) newActivities.add(activity)
     }
@@ -277,36 +247,149 @@ class TripAlgorithm(
     return newActivities
   }
 
+  /**
+   * Clusters activities based on proximity to base locations within a specified radius.
+   *
+   * @param baseLocations List of base locations to cluster around.
+   * @param activities List of activities to be clustered.
+   * @param radiusKm The radius in kilometers to consider for clustering.
+   * @return A map where each base location maps to a list of nearby activities.
+   */
+  fun clusterActivitiesByBaseLocations(
+      baseLocations: List<Location>,
+      activities: List<Activity>,
+      radiusKm: Double =
+          15.0 // Set as 15 km since the const val in SelectActivities is not accessible here and is
+               // 15 km
+  ): Map<Location, List<Activity>> {
+
+    val remaining = activities.toMutableList()
+    val result = mutableMapOf<Location, MutableList<Activity>>()
+
+    for (base in baseLocations) {
+
+      // Find activities within radius
+      val nearby = remaining.filter { it.location.haversineDistanceTo(base) <= radiusKm }
+
+      // Assign to result
+      result[base] = nearby.toMutableList()
+
+      // Remove assigned from the pool
+      remaining.removeAll(nearby)
+    }
+
+    // handle leftover activities (too far from any base but should never happen)
+    if (remaining.isNotEmpty()) {
+      result[Location(Coordinate(0.0, 0.0), "UNASSIGNED")] = remaining
+    }
+
+    return result
+  }
+
+  /**
+   * Adds intermediate activities between main locations in the optimized route based on distance.
+   *
+   * @param optimizedRoute The optimized route containing main locations.
+   * @param tripSettings The settings for the trip.
+   * @param onProgress A callback function to report progress (from 0.0 to 1.0).
+   * @return A new OrderedRoute including the in-between activities.
+   */
+  suspend fun addInBetweenActivities(
+      optimizedRoute: OrderedRoute,
+      selectedActivities: List<Activity>,
+      tripSettings: TripSettings,
+      mode: TransportMode = TransportMode.CAR,
+      onProgress: (Float) -> Unit = {}
+  ): OrderedRoute {
+    // 1. Get the optimized ordered main locations (original destinations)
+    val optimizedMainLocations =
+        optimizedRoute.orderedLocations.filter { loc ->
+          tripSettings.destinations.any { dest -> dest.sameLocation(loc) }
+        }
+
+    // 2. Build segments along the optimized route
+    val segmentPairs = optimizedMainLocations.zipWithNext()
+
+    // 3. Decide how many new stops to add per segment
+    val stopsPerSegment =
+        segmentPairs.map { (a, b) ->
+          val distKm = a.coordinate.haversineDistanceTo(b.coordinate)
+          (distKm / DISTANCE_PER_STOP_KM).toInt()
+        }
+
+    // 4. Insert intermediate activities along each segment
+    // Create a map: startSeg -> List<Activity>
+    val intermediateActivitiesBySegment = mutableMapOf<Location, MutableList<Activity>>()
+
+    segmentPairs.forEachIndexed { index, (startSeg, endSeg) ->
+      val numStops = stopsPerSegment[index]
+      if (numStops <= 0) return@forEachIndexed
+
+      // Generate activities for this segment
+      val newActivities = generateActivitiesBetween(startSeg, endSeg, numStops)
+
+      // Store in the map under its start segment
+      intermediateActivitiesBySegment.getOrPut(startSeg) { mutableListOf() }.addAll(newActivities)
+
+      // Report progress
+      for (i in 1..numStops) {
+        onProgress(
+            progression.selectActivities +
+                progression.optimizeRoute / 2 +
+                progression.fetchInBetweenActivities / 2 * (i.toFloat() / numStops.toFloat()))
+      }
+    }
+
+    // TODO: First, find the last location in the cluster startSeg of the function on top and the
+    // first location in the cluster endSeg
+    // With this, add a new time segment in the optimizeRoute at the good index (don't forget to
+    // add a 1 to the next index each time you do this)
+    // At the same time, add the new activities in the orderedLocations at the good index
+    // Finally, recalculate the total duration by adding the new time segments durations
+
+    val newSegmentDurations = mutableListOf<Double>()
+    val newOrderedLocations = mutableListOf<Location>()
+    // List of indexes where new activities were added to adjust segment durations later
+    val addedIndexes = mutableListOf<Int>()
+    for ((startSeg, activities) in intermediateActivitiesBySegment) {
+      // Get the start segment index in the optimized route
+      val startIndex = optimizedRoute.orderedLocations.indexOfFirst { it.sameLocation(startSeg) }
+      if (startIndex == -1) continue
+
+      // Add the activities location after the start segment
+      for (i in 1..activities.size) {
+        val activity = activities[i - 1]
+        val insertIndex = startIndex + i
+        newOrderedLocations.add(insertIndex, activity.location)
+        addedIndexes.add(insertIndex)
+        // insertIndex - 1 since we want to add the new segment duration before the new location
+        // Set to -1 so that the re-computation knows to calculate it
+        newSegmentDurations.add(insertIndex - 1, -1.0)
+      }
+    }
+
+    // New OrderedRoute with the new locations and placeholder durations
+    val newOptimizedRoute =
+        OrderedRoute(
+            orderedLocations = newOrderedLocations,
+            totalDuration = optimizedRoute.totalDuration,
+            segmentDuration = newSegmentDurations)
+
+    // Recompute the time segments properly with the route optimizer
+    val finalOptimizedRoute =
+        routeOptimizer.reocomputeOrderedRoute(newOptimizedRoute, addedIndexes, mode = mode) {
+          onProgress(
+              progression.selectActivities +
+                  progression.optimizeRoute / 2 +
+                  progression.fetchInBetweenActivities / 2 +
+                  progression.fetchInBetweenActivities / 2 * it +
+                  progression.scheduleTrip)
+        }
+
+    return finalOptimizedRoute
+  }
+
   /** Extension function to generate a random double in a closed range */
   private fun ClosedFloatingPointRange<Double>.random() =
       (start + Math.random() * (endInclusive - start))
-
-  companion object {
-    /**
-     * Initializes the TripAlgorithm with the necessary components.
-     *
-     * @param tripSettings The settings for the trip.
-     * @param activityRepository The repository to fetch activities from.
-     * @param context The Android context.
-     * @return An instance of TripAlgorithm.
-     */
-    fun init(
-        tripSettings: TripSettings,
-        activityRepository: ActivityRepository,
-        context: Context
-    ): TripAlgorithm {
-
-      val activitySelector =
-          SelectActivities(tripSettings = tripSettings, activityRepository = activityRepository)
-
-      val cacheManager = DurationCacheLocal(context)
-      val durationMatrix = DurationMatrixHybrid(context)
-      val penalty = ProgressiveRouteOptimizer.PenaltyConfig()
-      val optimizer =
-          ProgressiveRouteOptimizer(
-              cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
-
-      return TripAlgorithm(activitySelector, optimizer)
-    }
-  }
 }

@@ -156,7 +156,7 @@ class TripAlgorithmTest {
     coEvery { algorithmSpy.computeTrip(settings, profile, any()) } returns expected
 
     // Act
-    val result = algorithmSpy.runTripAlgorithm(settings, profile) {}
+    val result = algorithmSpy.computeTrip(settings, profile) {}
 
     // Assert
     assertEquals(expected, result)

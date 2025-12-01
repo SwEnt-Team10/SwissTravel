@@ -55,13 +55,21 @@ class SelectActivities(
     userPreferences.remove(Preference.EARLY_BIRD)
     userPreferences.remove(Preference.NIGHT_OWL)
     userPreferences.remove(Preference.INTERMEDIATE_STOPS)
+    userPreferences.remove(Preference.PUBLIC_TRANSPORT)
 
     // add 1 day since the last day is excluded
     val days =
         ChronoUnit.DAYS.between(
             tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
-    val totalNbActivities = (NB_ACTIVITIES_PER_DAY * days).toDouble()
-
+    // Estimate the total number of activities needed for the trip.
+    // If there are intermediate stops, we reduce the total number of activities by estimating that
+    // one activity will be done between two very distant locations.
+    val totalNbActivities =
+        if (userPreferences.contains(Preference.INTERMEDIATE_STOPS)) {
+          NB_ACTIVITIES_PER_DAY * days.toDouble() - tripSettings.destinations.size
+        } else {
+          (NB_ACTIVITIES_PER_DAY) * days.toDouble()
+        }
     // Calculate the total number of steps for progress reporting.
     val totalSteps = totalSteps(allDestinations.size, userPreferences.size)
 
@@ -124,14 +132,34 @@ class SelectActivities(
   }
 
   /**
-   * Fetches one activity near the given location for testing purposes.
+   * Fetches one activity near the given location for testing purposes. If user preferences are set,
+   * it tries to fetch an activity matching those preferences. Otherwise, it fetches any activity
+   * near the location.
    *
    * @param coords The [Coordinate] around which to search for an activity.
    * @param radius The search radius in meters. Defaults to [NEAR].
    * @return A single [Activity] found near the specified location or null.
    */
-  suspend fun getOneActivityNear(coords: Coordinate, radius: Int = NEAR): Activity? {
-    return activityRepository.getActivitiesNear(coords, radius, 1).firstOrNull()
+  suspend fun getOneActivityNearWithPreferences(coords: Coordinate, radius: Int = NEAR): Activity? {
+    val userPreferences = tripSettings.preferences.toMutableList()
+    // If the user has preferences, separate mandatory and optional ones and fetch accordingly.
+    if (userPreferences.isNotEmpty()) {
+      val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(userPreferences)
+      if (optionalPrefs.isNotEmpty()) {
+        val fetched =
+            activityRepository.getActivitiesNearWithPreference(
+                mandatoryPrefs + optionalPrefs, coords, NEAR, 1)
+        delay(API_CALL_DELAY_MS) // Respect API rate limit.
+        return fetched.firstOrNull()
+      } else {
+        val fetched =
+            activityRepository.getActivitiesNearWithPreference(mandatoryPrefs, coords, NEAR, 1)
+        delay(API_CALL_DELAY_MS) // Respect API rate limit.
+        return fetched.firstOrNull()
+      }
+    } else { // No preferences, fetch any activity near the location.
+      return activityRepository.getActivitiesNear(coords, radius, 1).firstOrNull()
+    }
   }
 
   /**

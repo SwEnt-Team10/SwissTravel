@@ -107,6 +107,18 @@ class ProgressiveRouteOptimizer(
         segmentDuration = segmentDurations)
   }
 
+  fun reocomputeOrderedRoute(
+      orderedLocations: OrderedRoute,
+      addedIndexes: List<Int>,
+      mode: TransportMode = TransportMode.CAR,
+      onProgress: (Float) -> Unit
+  ): OrderedRoute {
+
+    // Recompute the time for A -> addedIndex -> B
+    // Recompute the total time
+    // return the new OrderedRoute
+  }
+
   /**
    * Select the k nearest unvisited candidate locations from the current location.
    *
