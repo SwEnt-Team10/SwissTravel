@@ -89,6 +89,9 @@ object ProfileScreenTestTags {
   const val CONFIRM_UNFRIEND_BUTTON = "confirmUnfriendButton"
   const val CANCEL_UNFRIEND_BUTTON = "cancelUnfriendButton"
   const val LOADING_INDICATOR = "loadingIndicator"
+  const val ACHIEVEMENT_MEDAL = "achievementMedal"
+  const val ACHIEVEMENT_DIALOG = "achievementDetailDialog"
+  const val ACHIEVEMENT_TIER_ROW = "achievementTierRow"
 }
 
 /** The maximum number of lines for the name. */
@@ -340,10 +343,14 @@ private fun BiographyDisplay(biography: String) {
 /**
  * The achievements section of the profile screen.
  *
+ * @param achievements The list of achievements.
  * @param stats The user's stats.
+ * @param friendsCount The number of friends.
+ * @param isOwnProfile Whether the user is their own profile.
+ * @param profileName The name of the user.
  */
 @Composable
-private fun AchievementsDisplay(
+fun AchievementsDisplay(
     achievements: List<Achievement>,
     stats: UserStats,
     friendsCount: Int,
@@ -387,6 +394,7 @@ private fun AchievementsDisplay(
  * A single achievement item in the achievements section.
  *
  * @param achievement The achievement medal to display.
+ * @param onClick Callback to invoke when the achievement is clicked.
  */
 @Composable
 private fun AchievementMedal(achievement: Achievement, onClick: () -> Unit = {}) {
@@ -395,7 +403,10 @@ private fun AchievementMedal(achievement: Achievement, onClick: () -> Unit = {})
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier =
-          Modifier.widthIn(min = 72.dp).padding(horizontal = 4.dp).clickable(onClick = onClick)) {
+          Modifier.widthIn(min = 72.dp)
+              .padding(horizontal = 4.dp)
+              .clickable(onClick = onClick)
+              .testTag(ProfileScreenTestTags.ACHIEVEMENT_MEDAL)) {
         Icon(
             painter = painterResource(achievement.icon),
             contentDescription = label,
@@ -406,6 +417,16 @@ private fun AchievementMedal(achievement: Achievement, onClick: () -> Unit = {})
       }
 }
 
+/**
+ * The achievements detail's dialog that pops up when you click on an achievement.
+ *
+ * @param achievement The achievement to display.
+ * @param stats The user's stats.
+ * @param friendsCount The number of friends.
+ * @param isOwnProfile Whether the user is their own profile.
+ * @param profileName The name of the user.
+ * @param onDismiss Callback to invoke when the dialog is dismissed.
+ */
 @Composable
 private fun AchievementDetailDialog(
     achievement: Achievement,
@@ -454,7 +475,7 @@ private fun AchievementDetailDialog(
       },
       title = { Text(text = stringResource(category.displayStringRes())) },
       text = {
-        Column {
+        Column(modifier = Modifier.testTag(ProfileScreenTestTags.ACHIEVEMENT_DIALOG)) {
           if (category == AchievementCategory.TRANSPORT) {
             val nameOrFallback =
                 if (isOwnProfile) null
@@ -528,7 +549,9 @@ private fun AchievementDetailDialog(
 
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(vertical = 4.dp)) {
+                modifier =
+                    Modifier.padding(vertical = 4.dp)
+                        .testTag(ProfileScreenTestTags.ACHIEVEMENT_TIER_ROW)) {
                   Icon(
                       painter = painterResource(data.icon),
                       contentDescription = stringResource(data.label),
