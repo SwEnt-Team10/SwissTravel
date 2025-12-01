@@ -183,6 +183,9 @@
     <string name="press_edit_to_add">Press the edit button to add text…</string>
     <string name="enter_text">Enter text…</string>
     <string name="hyphen">-</string>
+    <!-- Select Pinned Trips -->
+    <string name="no_trips">You have no Trips.</string>
+    <string name="select_pinned_trips">Select Pinned Trips (max. 3)</string>
 
     <!-- Preferences -->
     <string name="preference_scenic_views">Scenic Views</string>

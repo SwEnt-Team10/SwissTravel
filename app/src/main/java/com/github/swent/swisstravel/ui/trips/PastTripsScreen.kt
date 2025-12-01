@@ -164,6 +164,7 @@ fun PastTripsScreen(
  * - Provides actions for navigate back, delete, favorite, or select all.
  *
  * @param uiState Current UI state for trip data.
+ * @param onBack Callback invoked when the back button is pressed.
  * @param selectedTripCount Number of selected trips.
  * @param onClickDropDownMenu Callback to open the sort menu.
  * @param onCancelSelection Callback to exit selection mode.
