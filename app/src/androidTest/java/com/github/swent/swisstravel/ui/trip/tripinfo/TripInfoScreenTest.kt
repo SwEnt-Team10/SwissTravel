@@ -309,7 +309,7 @@ class TripInfoScreenTest {
           tripInfoViewModel = vm,
           tripInfoContentCallbacks =
               TripInfoContentCallbacks(
-                  onMyTrips = {}, onEditTrip = {}, onSwipeActivities = { likeCalled = true }))
+                  onMyTrips = {}, onEditTrip = {}, onLikedActivities = { likeCalled = true }))
     }
 
     compose

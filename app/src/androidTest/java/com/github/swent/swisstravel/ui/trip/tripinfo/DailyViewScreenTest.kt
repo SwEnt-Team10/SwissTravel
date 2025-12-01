@@ -226,7 +226,7 @@ class DailyViewScreenTest {
           tripInfoViewModel = vm,
           callbacks =
               DailyViewScreenCallbacks(
-                  onMyTrips = {}, onEditTrip = {}, onLikedActivities = { swipeCalled = true }))
+                  onMyTrips = {}, onEditTrip = {}, onSwipeActivities = { swipeCalled = true }))
     }
 
     compose
