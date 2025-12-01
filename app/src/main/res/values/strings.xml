@@ -4,6 +4,11 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
 
+    <!-- Main Activity -->
+    <string name="trip_id_route">tripId</string>
+    <string name="add_photos_screen_tag">AddPhotosScreen</string>
+    <string name="null_trip_id">Trip UID is null</string>
+
     <!-- Client ID for Google Sign-In -->
     <string name="default_web_client_id">188461068405-bd2f3li3vhnsmphl3tuj8kkgb5lnvo5f.apps.googleusercontent.com</string>
 

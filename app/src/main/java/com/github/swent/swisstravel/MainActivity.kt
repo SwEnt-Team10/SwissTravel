@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
@@ -507,12 +508,12 @@ private fun NavGraphBuilder.tripInfoNavGraph(
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
-      val tripId = navBackStackEntry.arguments?.getString("tripId")
+      val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
 
       tripId?.let { AddPhotosScreen(onBack = { navController.popBackStack() }, tripId = tripId) }
           ?: run {
-            Log.e("AddPhotosScreen", "Trip UID is null")
-            Toast.makeText(context, "Trip UID is null", Toast.LENGTH_SHORT).show()
+            Log.e(stringResource(R.string.add_photos_screen_tag), stringResource(R.string.null_trip_id))
+            Toast.makeText(context, stringResource(R.string.null_trip_id), Toast.LENGTH_SHORT).show()
           }
     }
   }

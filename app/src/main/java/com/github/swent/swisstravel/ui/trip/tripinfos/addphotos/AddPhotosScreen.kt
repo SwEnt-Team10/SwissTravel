@@ -6,8 +6,10 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -28,6 +30,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -111,6 +115,7 @@ fun AddPhotosScreen(
                   }) {
                     Text(text = stringResource(R.string.add_photos_button))
                   }
+            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.save_add_button_padding)))
               // Save photos button
               Button(
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.SAVE_BUTTON),
@@ -124,7 +129,7 @@ fun AddPhotosScreen(
       }) { pd ->
         // Display a grid with the images
         LazyVerticalGrid(
-            columns = GridCells.Fixed(4),
+            columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
             modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
               // AI helped for the itemsIndexed
               itemsIndexed(addPhotosUIState.listUri) { index, uri ->

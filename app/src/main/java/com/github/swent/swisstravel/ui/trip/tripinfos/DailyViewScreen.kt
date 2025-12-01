@@ -263,11 +263,9 @@ private fun DailyViewTopAppBar(
         }
       },
       actions = {
-        IconButton(onClick = { onAddPhotos() }) {
-          Icon(
-              imageVector = Icons.Filled.Image,
-              contentDescription = stringResource(R.string.add_photo))
-        }
+          AddPhotosButton(
+              onAddPhotos = {onAddPhotos()}
+          )
         IconButton(
             onClick = onToggleFavorite,
             modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {

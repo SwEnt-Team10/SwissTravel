@@ -431,14 +431,6 @@ private fun TripMapCard(
             }
       }
 }
-/** Displays a button to go on a screen to add photos */
-@Composable
-private fun AddPhotosButton(onAddPhotos: () -> Unit) {
-  IconButton(onClick = onAddPhotos) {
-    Icon(
-        imageVector = Icons.Outlined.Image, contentDescription = stringResource(R.string.add_photo))
-  }
-}
 
 /** Displays the "Previous" and "Next" step buttons. */
 @Composable
