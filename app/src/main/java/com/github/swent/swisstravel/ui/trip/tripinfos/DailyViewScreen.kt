@@ -125,7 +125,7 @@ fun DailyViewScreen(
               drawRoute = drawRoute,
               onUserLocationUpdate = onUserLocationUpdate)
         },
-    callbacks: DailyViewScreenCallbacks
+    callbacks: DailyViewScreenCallbacks = DailyViewScreenCallbacks()
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 

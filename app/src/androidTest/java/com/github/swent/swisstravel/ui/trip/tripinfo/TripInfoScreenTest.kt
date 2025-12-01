@@ -38,7 +38,10 @@ class TripInfoScreenTest {
   ) {
     compose.setContent {
       TripInfoScreen(
-          uid = "TEST", tripInfoViewModel = vm, onMyTrips = onMyTrips, onEditTrip = onEditTrip)
+          uid = "TEST",
+          tripInfoViewModel = vm,
+          tripInfoContentCallbacks =
+              TripInfoContentCallbacks(onMyTrips = onMyTrips, onEditTrip = onEditTrip))
     }
   }
 
@@ -283,9 +286,9 @@ class TripInfoScreenTest {
       TripInfoScreen(
           uid = "TEST",
           tripInfoViewModel = vm,
-          onMyTrips = {},
-          onEditTrip = {},
-          onSwipeActivities = { swipeCalled = true })
+          tripInfoContentCallbacks =
+              TripInfoContentCallbacks(
+                  onMyTrips = {}, onEditTrip = {}, onSwipeActivities = { swipeCalled = true }))
     }
 
     compose
@@ -304,9 +307,9 @@ class TripInfoScreenTest {
       TripInfoScreen(
           uid = "TEST",
           tripInfoViewModel = vm,
-          onMyTrips = {},
-          onEditTrip = {},
-          onLikedActivities = { likeCalled = true })
+          tripInfoContentCallbacks =
+              TripInfoContentCallbacks(
+                  onMyTrips = {}, onEditTrip = {}, onSwipeActivities = { likeCalled = true }))
     }
 
     compose

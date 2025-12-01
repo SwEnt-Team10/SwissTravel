@@ -138,7 +138,7 @@ fun TripInfoScreen(
     uid: String?,
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     isOnCurrentTripScreen: Boolean = false,
-    tripInfoContentCallbacks: TripInfoContentCallbacks
+    tripInfoContentCallbacks: TripInfoContentCallbacks = TripInfoContentCallbacks()
 ) {
   Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
 

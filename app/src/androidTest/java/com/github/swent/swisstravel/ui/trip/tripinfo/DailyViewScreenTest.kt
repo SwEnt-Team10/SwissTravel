@@ -18,6 +18,7 @@ import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import com.google.firebase.Timestamp
@@ -48,9 +49,11 @@ class DailyViewScreenTest {
       DailyViewScreen(
           uid = "TEST",
           tripInfoViewModel = vm,
-          onMyTrips = onMyTrips,
-          onEditTrip = onEditTrip,
-          onActivityClick = { onActivityClick() },
+          callbacks =
+              DailyViewScreenCallbacks(
+                  onMyTrips = onMyTrips,
+                  onEditTrip = onEditTrip,
+                  onActivityClick = { onActivityClick() }),
           mapContent = mapContent)
     }
   }
@@ -221,9 +224,9 @@ class DailyViewScreenTest {
       DailyViewScreen(
           uid = "TEST",
           tripInfoViewModel = vm,
-          onMyTrips = {},
-          onEditTrip = {},
-          onSwipeActivities = { swipeCalled = true })
+          callbacks =
+              DailyViewScreenCallbacks(
+                  onMyTrips = {}, onEditTrip = {}, onLikedActivities = { swipeCalled = true }))
     }
 
     compose
@@ -242,9 +245,9 @@ class DailyViewScreenTest {
       DailyViewScreen(
           uid = "TEST",
           tripInfoViewModel = vm,
-          onMyTrips = {},
-          onEditTrip = {},
-          onLikedActivities = { likeCalled = true })
+          callbacks =
+              DailyViewScreenCallbacks(
+                  onMyTrips = {}, onEditTrip = {}, onLikedActivities = { likeCalled = true }))
     }
 
     compose
