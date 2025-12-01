@@ -404,17 +404,19 @@ private fun AchievementMedal(achievement: Achievement, onClick: () -> Unit = {})
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier =
-          Modifier.widthIn(min = 72.dp)
-              .padding(horizontal = 4.dp)
+          Modifier.widthIn(min = dimensionResource(R.dimen.profile_achievement_min_width))
+              .padding(
+                  horizontal = dimensionResource(R.dimen.profile_achievement_horizontal_padding))
               .clickable(onClick = onClick)
               .testTag(ProfileScreenTestTags.ACHIEVEMENT_MEDAL)) {
         Icon(
             painter = painterResource(achievement.icon),
             contentDescription = label,
             tint = Color.Unspecified,
-            modifier = Modifier.size(56.dp))
+            modifier = Modifier.size(dimensionResource(R.dimen.profile_achievement_icon_size)))
 
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(
+            modifier = Modifier.height(dimensionResource(R.dimen.step_location_card_micro_spacer)))
       }
 }
 
@@ -458,14 +460,14 @@ private fun AchievementDetailDialog(
               profileName = profileName,
           )
 
-          Spacer(modifier = Modifier.height(12.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.smaller_spacer)))
 
           Text(
               text = "Tiers",
               style = MaterialTheme.typography.titleMedium,
           )
 
-          Spacer(modifier = Modifier.height(8.dp))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
           tiers.forEach { tierId ->
             AchievementTierRow(
@@ -631,17 +633,21 @@ private fun AchievementTierRow(
 ) {
   val data = tierId.toData()
 
+  val iconSize =
+      if (isCurrent) dimensionResource(R.dimen.profile_achievement_icon_size)
+      else dimensionResource(R.dimen.profile_achievement_icon_size_small)
   Row(
       verticalAlignment = Alignment.CenterVertically,
       modifier =
-          Modifier.padding(vertical = 4.dp).testTag(ProfileScreenTestTags.ACHIEVEMENT_TIER_ROW)) {
+          Modifier.padding(dimensionResource(R.dimen.profile_achievement_tier_vertical_padding))
+              .testTag(ProfileScreenTestTags.ACHIEVEMENT_TIER_ROW)) {
         Icon(
             painter = painterResource(data.icon),
             contentDescription = stringResource(data.label),
             tint = Color.Unspecified,
-            modifier = Modifier.size(if (isCurrent) 56.dp else 48.dp))
+            modifier = Modifier.size(iconSize))
 
-        Spacer(modifier = Modifier.width(8.dp))
+        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.tiny_spacer)))
 
         Text(
             text = stringResource(data.condition),
