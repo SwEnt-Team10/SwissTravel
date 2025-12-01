@@ -264,7 +264,12 @@ private fun ProfileScreenContent(
 
         BiographyDisplay(biography = uiState.biography)
 
-        AchievementsDisplay(uiState.achievements, uiState.stats, uiState.friendsCount)
+        AchievementsDisplay(
+            uiState.achievements,
+            uiState.stats,
+            uiState.friendsCount,
+            isOwnProfile = uiState.isOwnProfile,
+            profileName = uiState.name)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
@@ -341,7 +346,9 @@ private fun BiographyDisplay(biography: String) {
 private fun AchievementsDisplay(
     achievements: List<Achievement>,
     stats: UserStats,
-    friendsCount: Int
+    friendsCount: Int,
+    isOwnProfile: Boolean,
+    profileName: String
 ) {
   if (achievements.isEmpty()) return
 
@@ -369,6 +376,8 @@ private fun AchievementsDisplay(
         achievement = ach,
         stats = stats,
         friendsCount = friendsCount,
+        isOwnProfile = isOwnProfile,
+        profileName = profileName,
         onDismiss = { selected = null },
     )
   }
@@ -402,6 +411,8 @@ private fun AchievementDetailDialog(
     achievement: Achievement,
     stats: UserStats,
     friendsCount: Int,
+    isOwnProfile: Boolean,
+    profileName: String,
     onDismiss: () -> Unit,
 ) {
   val category = achievement.id.category()
@@ -445,20 +456,61 @@ private fun AchievementDetailDialog(
       text = {
         Column {
           if (category == AchievementCategory.TRANSPORT) {
+            val nameOrFallback =
+                if (isOwnProfile) null
+                else
+                    profileName.takeIf { it.isNotBlank() }
+                        ?: stringResource(R.string.achievement_subject_they)
+
+            // mode as a nice lowercase string
+            val modeLabel =
+                when (stats.mostUsedTransportMode) {
+                  TransportMode.TRAIN -> stringResource(R.string.transport_mode_train)
+                  TransportMode.CAR -> stringResource(R.string.transport_mode_car)
+                  TransportMode.BUS -> stringResource(R.string.transport_mode_bus)
+                  TransportMode.TRAM -> stringResource(R.string.transport_mode_tram)
+                  else -> null
+                }
+
+            val text =
+                if (modeLabel == null) {
+                  if (isOwnProfile) {
+                    stringResource(R.string.achievement_transport_none_you)
+                  } else {
+                    stringResource(R.string.achievement_transport_none_other, nameOrFallback!!)
+                  }
+                } else {
+                  if (isOwnProfile) {
+                    stringResource(R.string.achievement_transport_you, modeLabel)
+                  } else {
+                    stringResource(
+                        R.string.achievement_transport_other, nameOrFallback!!, modeLabel)
+                  }
+                }
+
             Text(
-                text =
-                    when (stats.mostUsedTransportMode) {
-                      TransportMode.TRAIN -> "Your most used transport mode is train."
-                      TransportMode.CAR -> "Your most used transport mode is car."
-                      TransportMode.BUS -> "Your most used transport mode is bus."
-                      TransportMode.TRAM -> "Your most used transport mode is tram."
-                      else -> "No preferred transport mode yet."
-                    },
-                style = MaterialTheme.typography.bodyMedium)
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+            )
           } else {
+            val nameOrFallback =
+                profileName.ifBlank { stringResource(R.string.achievement_subject_they) }
+
+            val text =
+                if (isOwnProfile) {
+                  stringResource(R.string.achievement_current_stat_you, currentValue, unitLabel)
+                } else {
+                  stringResource(
+                      R.string.achievement_current_stat_other,
+                      nameOrFallback,
+                      currentValue,
+                      unitLabel)
+                }
+
             Text(
-                text = "You currently have: $currentValue $unitLabel",
-                style = MaterialTheme.typography.bodyMedium)
+                text = text,
+                style = MaterialTheme.typography.bodyMedium,
+            )
           }
 
           Spacer(modifier = Modifier.height(12.dp))

@@ -303,6 +303,27 @@
     <string name="achievement_category_transport">Most used transport mode</string>
     <string name="achievement_category_longest_route">Longest route segment</string>
     <string name="achievement_category_social">Total friends</string>
+    <string name="achievement_subject_they">This traveler</string>
+
+    <string name="achievement_current_stat_you">You currently have: %1$d %2$s</string>
+    <string name="achievement_current_stat_other">%1$s currently has: %2$d %3$s</string>
+
+    <!-- Transport mode labels -->
+    <string name="transport_mode_train">train</string>
+    <string name="transport_mode_car">car</string>
+    <string name="transport_mode_bus">bus</string>
+    <string name="transport_mode_tram">tram</string>
+
+    <!-- Transport achievement text -->
+    <string name="achievement_transport_you">Your most used transport mode is %1$s.</string>
+    <string name="achievement_transport_other">%1$s\'s most used transport mode is %2$s.</string>
+
+    <string name="achievement_transport_none_you">
+        You don\'t have a preferred transport mode yet.
+    </string>
+    <string name="achievement_transport_none_other">
+        %1$s doesn\'t have a preferred transport mode yet.
+    </string>
 
     <!-- Achievement Condition -->
     <!-- ============= TRIP COUNT ============= -->

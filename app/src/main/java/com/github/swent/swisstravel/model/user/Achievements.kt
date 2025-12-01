@@ -51,7 +51,7 @@ data class Achievement(
     @DrawableRes val icon: Int,
 )
 
-/** Enum linking logical ids to string + drawable resources. */
+/** Enum linking logical ids to string + condition to get the achievement + drawable resources. */
 enum class AchievementData(
     val id: AchievementId,
     @StringRes val label: Int,
