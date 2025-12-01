@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.profile.selectpinnedtrips
 
 import android.util.Log
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.ui.trips.TripsViewModel
@@ -39,5 +40,11 @@ class SelectPinnedTripsViewModel(
       Log.e("SelectPinnedTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")
     }
+  }
+
+  override fun onToggleTripSelection(trip: Trip) {
+    val current = _uiState.value.selectedTrips.toMutableSet()
+    if (current.contains(trip)) current.remove(trip) else current.add(trip)
+    _uiState.value = _uiState.value.copy(selectedTrips = current)
   }
 }

@@ -149,9 +149,7 @@ fun ProfileScreen(
           ProfileScreenContent(
               uiState = uiState,
               onSelectTrip = onSelectTrip,
-              onEditPinnedTrips = {
-                Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
-              }, // todo onEditPinnedTrips,
+              onEditPinnedTrips = onEditPinnedTrips,
               onEditPinnedImages = {
                 Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
               }, // todo onEditPinnedImages,
@@ -402,6 +400,7 @@ private fun PinnedTrips(
   TripList(
       trips = pinnedTrips,
       onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
+      isSelectionMode = true,
       emptyListString =
           if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
           else stringResource(R.string.no_pinned_trips),
