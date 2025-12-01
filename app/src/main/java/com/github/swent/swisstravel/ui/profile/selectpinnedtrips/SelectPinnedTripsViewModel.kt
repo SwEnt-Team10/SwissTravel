@@ -37,12 +37,14 @@ class SelectPinnedTripsViewModel(
       try {
         val user = userRepository.getCurrentUser()
         currentUser = user
-        _uiState.value =
-            _uiState.value.copy(
-                selectedTrips = user.pinnedTripsUids.map { tripsRepository.getTrip(it) }.toSet())
-        getAllTrips()
+        val trips = tripsRepository.getAllTrips()
+        val selected =
+            user.pinnedTripsUids.mapNotNull { uid -> trips.find { it.uid == uid } }.toSet()
+        val sortedTrips = sortTrips(trips, _uiState.value.sortType)
+        _uiState.value = _uiState.value.copy(tripsList = sortedTrips, selectedTrips = selected)
       } catch (e: Exception) {
-        setErrorMsg("Failed to load user and trips: ${e.message}")
+        setErrorMsg("Failed to load pinned trips: ${e.message}")
+        Log.e("SelectPinnedTripsViewModel", "Error initializing", e)
       }
     }
   }
@@ -52,7 +54,8 @@ class SelectPinnedTripsViewModel(
     try {
       val trips = tripsRepository.getAllTrips()
       val sortedTrips = sortTrips(trips, _uiState.value.sortType)
-      _uiState.value = _uiState.value.copy(tripsList = sortedTrips)
+      _uiState.value =
+          _uiState.value.copy(tripsList = sortedTrips, selectedTrips = _uiState.value.selectedTrips)
     } catch (e: Exception) {
       Log.e("SelectPinnedTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")
@@ -62,7 +65,7 @@ class SelectPinnedTripsViewModel(
   /** Toggles the selection state of a trip. */
   override fun onToggleTripSelection(trip: Trip) {
     val current = _uiState.value.selectedTrips.toMutableSet()
-    if (current.size > 3) {
+    if (current.size >= 3 && !current.contains(trip)) {
       setErrorMsg("You can only pin up to 3 trips on your profile.")
     } else {
       if (current.contains(trip)) current.remove(trip) else current.add(trip)

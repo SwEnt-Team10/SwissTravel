@@ -260,5 +260,6 @@
     <string name="accept_friend">"Accept friend request"</string>
     <string name="deny_friend">Deny friend request</string>
     <string name="user_uid_missing">Can\'t find this profile, sorry :(</string>
+    <string name="save_selected_trips">Save selected Trips</string>
 
 </resources>

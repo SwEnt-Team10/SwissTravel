@@ -363,7 +363,7 @@ private fun NavGraphBuilder.profileNavGraph(
           profileViewModel =
               ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
-          onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+          onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },
           onEditPinnedImages = {})
     }

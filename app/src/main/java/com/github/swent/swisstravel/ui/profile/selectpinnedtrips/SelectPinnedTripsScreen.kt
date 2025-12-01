@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +28,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripList
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -40,8 +41,7 @@ import com.github.swent.swisstravel.ui.trips.TripsViewModel
  * and lists.
  */
 object SelectedPinnedTripsScreenTestTags {
-  /** Returns a unique test tag for the given [trip] element. */
-  fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
+  const val SAVE_SELECTED_TRIPS_FAB = "saveSelectedTripsFab"
 }
 
 /**
@@ -86,6 +86,21 @@ fun SelectPinnedTripsScreen(
             onBack = onBack,
             onClickDropDownMenu = { selectPinnedTripsViewModel.updateSortType(it) })
       },
+      floatingActionButton = {
+        FloatingActionButton(
+            onClick = {
+              selectPinnedTripsViewModel.onSaveSelectedTrips()
+              onBack()
+            },
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary,
+            modifier =
+                Modifier.testTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)) {
+              Icon(
+                  Icons.Default.Check,
+                  contentDescription = stringResource(R.string.save_selected_trips))
+            }
+      },
       content = { padding ->
         Column(
             modifier =
@@ -100,7 +115,6 @@ fun SelectPinnedTripsScreen(
                   onClickTripElement = {
                     it?.let { selectPinnedTripsViewModel.toggleTripSelection(it) }
                   },
-                  onLongPress = { /* No-op */},
                   isSelected = { trip -> trip in uiState.selectedTrips },
                   isSelectionMode = uiState.isSelectionMode,
                   emptyListString = stringResource(R.string.no_trips))

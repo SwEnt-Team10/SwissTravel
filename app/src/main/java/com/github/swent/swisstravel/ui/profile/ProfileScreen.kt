@@ -16,10 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
@@ -233,8 +231,6 @@ private fun ProfileScreenContent(
     onEditPinnedImages: () -> Unit = {},
     modifier: Modifier
 ) {
-  val scrollState = rememberScrollState()
-
   Column(
       modifier =
           modifier
@@ -243,8 +239,7 @@ private fun ProfileScreenContent(
                   top = dimensionResource(R.dimen.profile_padding_top_bottom),
                   start = dimensionResource(R.dimen.profile_padding_start_end),
                   end = dimensionResource(R.dimen.profile_padding_start_end),
-                  bottom = dimensionResource(R.dimen.profile_padding_top_bottom))
-              .verticalScroll(scrollState),
+                  bottom = dimensionResource(R.dimen.profile_padding_top_bottom)),
       horizontalAlignment = Alignment.CenterHorizontally) {
         ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
@@ -400,7 +395,6 @@ private fun PinnedTrips(
   TripList(
       trips = pinnedTrips,
       onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
-      isSelectionMode = true,
       emptyListString =
           if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
           else stringResource(R.string.no_pinned_trips),
