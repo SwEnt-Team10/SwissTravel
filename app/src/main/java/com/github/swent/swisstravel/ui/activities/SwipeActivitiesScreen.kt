@@ -10,7 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -36,6 +41,7 @@ object SwipeActivitiesScreenTestTags {
   const val SWIPE_ACTIVITIES_SCREEN = "swipe_activities_screen"
   const val LIKE_BUTTON = "swipe_activities_screen_like_button"
   const val DISLIKE_BUTTON = "swipe_activities_screen_dislike_button"
+  const val BACK_BUTTON = "back_to_daily_view_button"
 }
 
 /**
@@ -52,15 +58,36 @@ fun SwipeActivitiesScreen(
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
   val viewModel = remember { SwipeActivitiesViewModel(tripInfoViewModel) }
-  Scaffold { pd ->
-    Box(
-        modifier =
-            Modifier.padding(pd).testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) {
-          SwipeActivitiesStack(viewModel, onTripInfo)
+  Scaffold(
+      topBar = {
+        if (viewModel.uiState.collectAsState().value.currentActivity == null) {
+          IconButton(
+              onClick = onTripInfo,
+              modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.BACK_BUTTON)) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = "Back",
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
         }
-  }
+      }) { pd ->
+        Box(
+            modifier =
+                Modifier.padding(pd)
+                    .testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) {
+              SwipeActivitiesStack(viewModel, onTripInfo)
+            }
+      }
 }
 
+/**
+ * Stack of cards containing the activities to swipe. This stack contains only 2 cards for
+ * optimization reasons (having a card composable for each activity is not useful and would cost
+ * more)
+ *
+ * @param viewModel The ViewModel to use.
+ * @param onTripInfo Callback to be called when navigating back to trip info.
+ */
 @Composable
 fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> Unit) {
   val state = viewModel.uiState.collectAsState().value
@@ -69,6 +96,7 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
 
   Box(modifier = Modifier.fillMaxSize()) {
     // Back card (next)
+    // pre-loaded for fluidity when you swipe the front card
     next.let { activity ->
       if (activity == null) {
         Text(

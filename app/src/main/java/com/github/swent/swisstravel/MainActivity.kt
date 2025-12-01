@@ -55,6 +55,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
@@ -477,14 +478,16 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       DailyViewScreen(
           uid = uid,
           tripInfoViewModel = vm,
-          onMyTrips = { navigationActions.goBack() },
-          onEditTrip = { navigationActions.navigateToEditTrip(uid) },
-          onActivityClick = { tripActivity ->
-            vm.selectActivity(tripActivity.activity)
-            navigationActions.navigateToActivityInfo(uid)
-          },
-          onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
-          onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) })
+          callbacks =
+              DailyViewScreenCallbacks(
+                  onMyTrips = { navigationActions.goBack() },
+                  onEditTrip = { navigationActions.navigateToEditTrip(uid) },
+                  onActivityClick = { tripActivity ->
+                    vm.selectActivity(tripActivity.activity)
+                    navigationActions.navigateToActivityInfo(uid)
+                  },
+                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
+                  onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }))
     }
 
     composable(

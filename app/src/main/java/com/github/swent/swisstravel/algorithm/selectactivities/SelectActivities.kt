@@ -121,42 +121,6 @@ class SelectActivities(
     return filteredActivities
   }
 
-  suspend fun fetchAllActivities(): List<Activity> {
-    val allDestinations = buildDestinationList()
-    val userPreferences = tripSettings.preferences.toMutableList()
-
-    // Removes preferences that are not supported by mySwitzerland.
-    // Avoids unnecessary API calls.
-    userPreferences.remove(Preference.QUICK)
-    userPreferences.remove(Preference.SLOW_PACE)
-    userPreferences.remove(Preference.EARLY_BIRD)
-    userPreferences.remove(Preference.NIGHT_OWL)
-
-    // add 1 day since the last day is excluded
-    val days =
-        ChronoUnit.DAYS.between(
-            tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
-    val totalNbActivities = (NB_ACTIVITIES_PER_DAY * days).toDouble()
-
-    // Calculate the total number of steps for progress reporting.
-    val totalSteps = totalSteps(allDestinations.size, userPreferences.size)
-
-    val numberOfActivityToFetchPerStep = ceil(totalNbActivities / totalSteps).toInt()
-    var completedSteps = 0
-    // If no preferences are set, fetch general activities near each destination.
-    val allFetchedActivities = mutableListOf<Activity>()
-    for (destination in allDestinations) {
-      val fetched =
-          activityRepository.getActivitiesNear(
-              destination.coordinate, NEAR, numberOfActivityToFetchPerStep)
-      allFetchedActivities.addAll(fetched)
-      // Update progress after each API call.
-      completedSteps++
-      delay(API_CALL_DELAY_MS) // Respect API rate limit.
-    }
-    return allFetchedActivities.distinctBy { it.location }
-  }
-
   /**
    * Calculates the total number of steps based on the number of destinations and preferences.
    *

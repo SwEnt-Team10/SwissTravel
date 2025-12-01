@@ -24,6 +24,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoContentCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
 
@@ -59,8 +60,14 @@ fun CurrentTripScreen(
   if (currentTrip != null) {
     TripInfoScreen(
         currentTrip.uid,
-        onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
-        isOnCurrentTripScreen = true)
+        isOnCurrentTripScreen = true,
+        tripInfoContentCallbacks =
+            TripInfoContentCallbacks(
+                onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
+                onMyTrips = { navigationActions?.goBack() },
+                onActivityClick = { navigationActions?.navigateToActivityInfo(currentTrip.uid) },
+                onSwipeActivities = { navigationActions?.navigateTo(Screen.SwipeActivities) },
+                onLikedActivities = { navigationActions?.navigateTo(Screen.LikedActivities) }))
   } else {
     Scaffold(
         content = { pd ->

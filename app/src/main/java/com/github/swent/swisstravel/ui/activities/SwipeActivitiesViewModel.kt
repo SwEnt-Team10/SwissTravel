@@ -36,12 +36,26 @@ class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModelC
     updateCards()
   }
 
+  /**
+   * Updates the cards to be displayed in the screen.
+   *
+   * Front card gets the value of the back card.
+   *
+   * Back card gets the value below itself.
+   */
   private fun updateCards() {
     val queue = _uiState.value.activitiesQueue ?: return
     _uiState.value =
         _uiState.value.copy(currentActivity = queue.getOrNull(0), backActivity = queue.getOrNull(1))
   }
 
+  /**
+   * If you liked the activity, it will add the activity to the liked activities list of the trip
+   * Otherwise, it is considered as a dislike, and it will put the activity at the beginning of the
+   * queue
+   *
+   * @param liked a boolean indicating whether you liked the activity or not
+   */
   fun swipeActivity(liked: Boolean) {
     val current = _uiState.value.currentActivity ?: return
 
