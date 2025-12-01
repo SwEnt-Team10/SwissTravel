@@ -20,7 +20,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
-import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
@@ -263,9 +262,7 @@ private fun DailyViewTopAppBar(
         }
       },
       actions = {
-          AddPhotosButton(
-              onAddPhotos = {onAddPhotos()}
-          )
+        AddPhotosButton(onAddPhotos = { onAddPhotos() })
         IconButton(
             onClick = onToggleFavorite,
             modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {

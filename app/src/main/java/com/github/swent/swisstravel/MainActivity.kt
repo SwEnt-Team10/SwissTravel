@@ -515,8 +515,11 @@ private fun NavGraphBuilder.tripInfoNavGraph(
 
       tripId?.let { AddPhotosScreen(onBack = { navController.popBackStack() }, tripId = tripId) }
           ?: run {
-            Log.e(stringResource(R.string.add_photos_screen_tag), stringResource(R.string.null_trip_id))
-            Toast.makeText(context, stringResource(R.string.null_trip_id), Toast.LENGTH_SHORT).show()
+            Log.e(
+                stringResource(R.string.add_photos_screen_tag),
+                stringResource(R.string.null_trip_id))
+            Toast.makeText(context, stringResource(R.string.null_trip_id), Toast.LENGTH_SHORT)
+                .show()
           }
     }
   }

@@ -26,7 +26,6 @@ import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.NearMe
 import androidx.compose.material.icons.outlined.StarOutline
 import androidx.compose.material3.Button

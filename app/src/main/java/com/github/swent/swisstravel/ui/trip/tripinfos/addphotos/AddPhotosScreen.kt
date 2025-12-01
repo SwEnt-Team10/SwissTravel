@@ -115,7 +115,7 @@ fun AddPhotosScreen(
                   }) {
                     Text(text = stringResource(R.string.add_photos_button))
                   }
-            Spacer(modifier = Modifier.width(dimensionResource(R.dimen.save_add_button_padding)))
+              Spacer(modifier = Modifier.width(dimensionResource(R.dimen.save_add_button_padding)))
               // Save photos button
               Button(
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.SAVE_BUTTON),
