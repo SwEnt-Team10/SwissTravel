@@ -23,7 +23,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-    import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
@@ -37,7 +37,7 @@ object CurrentTripScreenTestTags {
 }
 
 /**
- * Screen to display the current trip.
+ * Screen to display the current trip. If not set, it will display a button to create a new trip.
  *
  * @param navigationActions Navigation actions to navigate to other screens.
  * @param isLoggedIn Whether the user is logged in.
@@ -68,13 +68,20 @@ fun CurrentTripScreen(
     Scaffold(
         content = { pd ->
           Column(
-              modifier = Modifier.fillMaxSize().padding(pd).padding(dimensionResource(R.dimen.current_trip_column_padding)),
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(pd)
+                      .padding(dimensionResource(R.dimen.current_trip_column_padding)),
               verticalArrangement = Arrangement.Center,
               horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
                     painter = painterResource(R.drawable.no_trip_sign),
                     contentDescription = null,
-                    modifier = Modifier.padding(bottom = dimensionResource(R.dimen.current_trip_icon_bottom_padding)).fillMaxWidth(),
+                    modifier =
+                        Modifier.padding(
+                                bottom =
+                                    dimensionResource(R.dimen.current_trip_icon_bottom_padding))
+                            .fillMaxWidth(),
                     tint = MaterialTheme.colorScheme.primary)
                 Text(
                     text = stringResource(R.string.create_trip),
