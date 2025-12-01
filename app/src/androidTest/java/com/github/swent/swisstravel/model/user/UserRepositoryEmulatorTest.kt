@@ -266,6 +266,42 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
   }
 
   @Test
+  fun mutualFriendRequests_autoAcceptsFriendship() = runBlocking {
+    // Arrange: create A and B with Firestore docs via repository
+    val (uidA, credentialA) =
+        createGoogleUserAndSignIn(
+            name = "Mutual User A", email = "mutualA@example.com", createDocViaRepo = true)
+
+    val (uidB, credentialB) =
+        createGoogleUserAndSignIn(
+            name = "Mutual User B", email = "mutualB@example.com", createDocViaRepo = true)
+
+    // A sends a friend request to B
+    FirebaseEmulator.auth.signInWithCredential(credentialA).await()
+    repositoryUser.sendFriendRequest(fromUid = uidA, toUid = uidB)
+
+    // B also sends a friend request to A
+    FirebaseEmulator.auth.signInWithCredential(credentialB).await()
+    repositoryUser.sendFriendRequest(fromUid = uidB, toUid = uidA)
+
+    // Assert: A's entry for B is ACCEPTED
+    val docA = FirebaseEmulator.firestore.collection("users").document(uidA).get().await()
+    val friendsA = docA.get("friends") as? List<*> ?: emptyList<Any>()
+    assertEquals(1, friendsA.size)
+    val friendA = friendsA.first() as Map<*, *>
+    assertEquals(uidB, friendA["uid"])
+    assertEquals("ACCEPTED", friendA["status"])
+
+    // Assert: B's entry for A is ACCEPTED
+    val docB = FirebaseEmulator.firestore.collection("users").document(uidB).get().await()
+    val friendsB = docB.get("friends") as? List<*> ?: emptyList<Any>()
+    assertEquals(1, friendsB.size)
+    val friendB = friendsB.first() as Map<*, *>
+    assertEquals(uidA, friendB["uid"])
+    assertEquals("ACCEPTED", friendB["status"])
+  }
+
+  @Test
   fun acceptFriendRequest_updatesStatusToAcceptedForBothUsers() = runBlocking {
     // Arrange: create A and B
     val (uidA, credentialA) =
