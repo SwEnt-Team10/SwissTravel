@@ -12,7 +12,6 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.google.common.base.CharMatcher.any
 import io.mockk.coEvery
 import io.mockk.mockk
 import java.time.LocalDate
