@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,15 +23,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+    import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
-import com.mapbox.maps.extension.style.sources.generated.vectorSource
 
 /** Object for test tags */
 object CurrentTripScreenTestTags {
@@ -73,32 +68,32 @@ fun CurrentTripScreen(
     Scaffold(
         content = { pd ->
           Column(
-              modifier = Modifier.fillMaxSize().padding(pd).padding(32.dp),
+              modifier = Modifier.fillMaxSize().padding(pd).padding(dimensionResource(R.dimen.current_trip_column_padding)),
               verticalArrangement = Arrangement.Center,
               horizontalAlignment = Alignment.CenterHorizontally) {
                 Icon(
                     painter = painterResource(R.drawable.no_trip_sign),
                     contentDescription = null,
-                    modifier = Modifier.padding(bottom = 24.dp).fillMaxWidth(),
+                    modifier = Modifier.padding(bottom = dimensionResource(R.dimen.current_trip_icon_bottom_padding)).fillMaxWidth(),
                     tint = MaterialTheme.colorScheme.primary)
                 Text(
                     text = stringResource(R.string.create_trip),
                     style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT))
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
                 Text(
                     text = "Start planning your next adventure!",
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
                 // Create a new trip
                 Button(
                     onClick = { navigationActions?.navigateTo(Screen.TripSettingsDates) },
                     enabled = isLoggedIn,
                     modifier =
                         Modifier.fillMaxWidth()
-                            .height(50.dp)
+                            .height(dimensionResource(R.dimen.current_trip_button_height))
                             .testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                       Text(
                           text = stringResource(R.string.when_travelling),
