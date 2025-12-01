@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.profile
 
 import android.net.Uri
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -59,8 +60,15 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Achievement
+import com.github.swent.swisstravel.model.user.AchievementCategory
+import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.category
+import com.github.swent.swisstravel.model.user.displayStringRes
+import com.github.swent.swisstravel.model.user.tiers
+import com.github.swent.swisstravel.model.user.toData
 import com.github.swent.swisstravel.ui.composable.TripList
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
@@ -255,7 +263,7 @@ private fun ProfileScreenContent(
 
         BiographyDisplay(biography = uiState.biography)
 
-        AchievementsDisplay(uiState.achievements)
+        AchievementsDisplay(uiState.achievements, uiState.stats, uiState.friendsCount)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
@@ -329,9 +337,14 @@ private fun BiographyDisplay(biography: String) {
  * @param stats The user's stats.
  */
 @Composable
-private fun AchievementsDisplay(achievements: List<Achievement>) {
+private fun AchievementsDisplay(
+    achievements: List<Achievement>,
+    stats: UserStats,
+    friendsCount: Int
+) {
   if (achievements.isEmpty()) return
 
+  var selected by remember { mutableStateOf<Achievement?>(null) }
   Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     Text(
         text = stringResource(R.string.achievements),
@@ -346,7 +359,17 @@ private fun AchievementsDisplay(achievements: List<Achievement>) {
       horizontalArrangement = Arrangement.SpaceEvenly,
       verticalAlignment = Alignment.CenterVertically,
   ) {
-    items(achievements) { achievement -> AchievementMedal(achievement) }
+    items(achievements) { achievement ->
+      AchievementMedal(achievement, onClick = { selected = achievement })
+    }
+  }
+  selected?.let { ach ->
+    AchievementDetailDialog(
+        achievement = ach,
+        stats = stats,
+        friendsCount = friendsCount,
+        onDismiss = { selected = null },
+    )
   }
 }
 
@@ -356,12 +379,13 @@ private fun AchievementsDisplay(achievements: List<Achievement>) {
  * @param achievement The achievement medal to display.
  */
 @Composable
-private fun AchievementMedal(achievement: Achievement) {
+private fun AchievementMedal(achievement: Achievement, onClick: () -> Unit = {}) {
   val label = stringResource(achievement.label)
 
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.widthIn(min = 72.dp).padding(horizontal = 4.dp)) {
+      modifier =
+          Modifier.widthIn(min = 72.dp).padding(horizontal = 4.dp).clickable(onClick = onClick)) {
         Icon(
             painter = painterResource(achievement.icon),
             contentDescription = label,
@@ -370,6 +394,106 @@ private fun AchievementMedal(achievement: Achievement) {
 
         Spacer(modifier = Modifier.height(4.dp))
       }
+}
+
+@Composable
+private fun AchievementDetailDialog(
+    achievement: Achievement,
+    stats: UserStats,
+    friendsCount: Int,
+    onDismiss: () -> Unit,
+) {
+  val category = achievement.id.category()
+  val tiers = category.tiers()
+  val currentValue: Int
+  val unitLabel: String
+
+  when (category) {
+    AchievementCategory.TRIPS -> {
+      currentValue = stats.totalTrips
+      unitLabel = "total trips completed."
+    }
+    AchievementCategory.TIME -> {
+      currentValue = stats.totalTravelMinutes
+      unitLabel = "total minutes travelled"
+    }
+    AchievementCategory.LOCATIONS -> {
+      currentValue = stats.uniqueLocations
+      unitLabel = "unique locations"
+    }
+    AchievementCategory.LONGEST_ROUTE -> {
+      currentValue = stats.longestRouteSegmentMin
+      unitLabel = "minutes (longest segment)"
+    }
+    AchievementCategory.SOCIAL -> {
+      currentValue = friendsCount
+      unitLabel = "total friends"
+    }
+    AchievementCategory.TRANSPORT -> {
+      currentValue = 0
+      unitLabel = "" // handled differently
+    }
+  }
+
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      confirmButton = {
+        TextButton(onClick = onDismiss) { Text(text = stringResource(android.R.string.ok)) }
+      },
+      title = { Text(text = stringResource(category.displayStringRes())) },
+      text = {
+        Column {
+          if (category == AchievementCategory.TRANSPORT) {
+            Text(
+                text =
+                    when (stats.mostUsedTransportMode) {
+                      TransportMode.TRAIN -> "Your most used transport mode is train."
+                      TransportMode.CAR -> "Your most used transport mode is car."
+                      TransportMode.BUS -> "Your most used transport mode is bus."
+                      TransportMode.TRAM -> "Your most used transport mode is tram."
+                      else -> "No preferred transport mode yet."
+                    },
+                style = MaterialTheme.typography.bodyMedium)
+          } else {
+            Text(
+                text = "You currently have: $currentValue $unitLabel",
+                style = MaterialTheme.typography.bodyMedium)
+          }
+
+          Spacer(modifier = Modifier.height(12.dp))
+
+          Text(
+              text = "Tiers",
+              style = MaterialTheme.typography.titleMedium,
+          )
+
+          Spacer(modifier = Modifier.height(8.dp))
+
+          tiers.forEach { tierId ->
+            val data = tierId.toData()
+            val isCurrent = tierId == achievement.id
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(vertical = 4.dp)) {
+                  Icon(
+                      painter = painterResource(data.icon),
+                      contentDescription = stringResource(data.label),
+                      tint = Color.Unspecified,
+                      modifier = Modifier.size(if (isCurrent) 56.dp else 48.dp))
+
+                  Spacer(modifier = Modifier.width(8.dp))
+
+                  Text(
+                      text = stringResource(data.label),
+                      style =
+                          if (isCurrent) MaterialTheme.typography.bodyMedium
+                          else MaterialTheme.typography.bodySmall,
+                  )
+                }
+          }
+        }
+      })
 }
 
 /**

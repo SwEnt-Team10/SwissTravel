@@ -135,8 +135,7 @@ enum class AchievementData(
 }
 
 /** Helper: find the data for a given id. */
-private fun AchievementId.toData(): AchievementData =
-    AchievementData.values().first { it.id == this }
+fun AchievementId.toData(): AchievementData = AchievementData.values().first { it.id == this }
 
 /** Compute unlocked achievements from user stats + friend count. */
 fun computeAchievements(
@@ -221,3 +220,97 @@ fun computeAchievements(
 
   return result
 }
+
+enum class AchievementCategory {
+  TRIPS,
+  TIME,
+  LOCATIONS,
+  TRANSPORT,
+  LONGEST_ROUTE,
+  SOCIAL
+}
+
+fun AchievementCategory.displayStringRes(): Int =
+    when (this) {
+      AchievementCategory.TRIPS -> R.string.achievement_category_trips
+      AchievementCategory.TIME -> R.string.achievement_category_time
+      AchievementCategory.LOCATIONS -> R.string.achievement_category_locations
+      AchievementCategory.TRANSPORT -> R.string.achievement_category_transport
+      AchievementCategory.LONGEST_ROUTE -> R.string.achievement_category_longest_route
+      AchievementCategory.SOCIAL -> R.string.achievement_category_social
+    }
+
+fun AchievementId.category(): AchievementCategory =
+    when (this) {
+      AchievementId.ROOKIE_EXPLORER,
+      AchievementId.WEEKEND_ADVENTURER,
+      AchievementId.FREQUENT_TRAVELER,
+      AchievementId.GLOBAL_NOMAD -> AchievementCategory.TRIPS
+      AchievementId.JUST_WARMING_UP,
+      AchievementId.MILEAGE_MAKER,
+      AchievementId.ENDURANCE_TRAVELER,
+      AchievementId.TIME_LORD -> AchievementCategory.TIME
+      AchievementId.LOCAL_TOURIST,
+      AchievementId.CITY_HOPPER,
+      AchievementId.CONTINENT_CRAWLER,
+      AchievementId.GLOBE_TROTTER -> AchievementCategory.LOCATIONS
+      AchievementId.TRAIN_ENTHUSIAST,
+      AchievementId.ROAD_WARRIOR,
+      AchievementId.BUS_BUDDY,
+      AchievementId.ECO_RIDER -> AchievementCategory.TRANSPORT
+      AchievementId.SHORT_HOP,
+      AchievementId.JOURNEYMAN,
+      AchievementId.LONG_HAULER,
+      AchievementId.IRON_ROUTE_CHAMPION -> AchievementCategory.LONGEST_ROUTE
+      AchievementId.NEW_FRIEND,
+      AchievementId.SOCIAL_TRAVELER,
+      AchievementId.POPULAR_GUIDE,
+      AchievementId.LEGENDARY_CONNECTOR -> AchievementCategory.SOCIAL
+    }
+
+/** thresholds in same units you used in computeAchievements */
+fun AchievementCategory.tiers(): List<AchievementId> =
+    when (this) {
+      AchievementCategory.TRIPS ->
+          listOf(
+              AchievementId.ROOKIE_EXPLORER,
+              AchievementId.WEEKEND_ADVENTURER,
+              AchievementId.FREQUENT_TRAVELER,
+              AchievementId.GLOBAL_NOMAD,
+          )
+      AchievementCategory.TIME ->
+          listOf(
+              AchievementId.JUST_WARMING_UP,
+              AchievementId.MILEAGE_MAKER,
+              AchievementId.ENDURANCE_TRAVELER,
+              AchievementId.TIME_LORD,
+          )
+      AchievementCategory.LOCATIONS ->
+          listOf(
+              AchievementId.LOCAL_TOURIST,
+              AchievementId.CITY_HOPPER,
+              AchievementId.CONTINENT_CRAWLER,
+              AchievementId.GLOBE_TROTTER,
+          )
+      AchievementCategory.TRANSPORT ->
+          listOf(
+              AchievementId.TRAIN_ENTHUSIAST,
+              AchievementId.ROAD_WARRIOR,
+              AchievementId.BUS_BUDDY,
+              AchievementId.ECO_RIDER,
+          )
+      AchievementCategory.LONGEST_ROUTE ->
+          listOf(
+              AchievementId.SHORT_HOP,
+              AchievementId.JOURNEYMAN,
+              AchievementId.LONG_HAULER,
+              AchievementId.IRON_ROUTE_CHAMPION,
+          )
+      AchievementCategory.SOCIAL ->
+          listOf(
+              AchievementId.NEW_FRIEND,
+              AchievementId.SOCIAL_TRAVELER,
+              AchievementId.POPULAR_GUIDE,
+              AchievementId.LEGENDARY_CONNECTOR,
+          )
+    }

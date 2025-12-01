@@ -47,7 +47,8 @@ data class ProfileUIState(
     val pinnedTrips: List<Trip> = emptyList(),
     val pinnedImages: List<Uri> = emptyList(),
     var errorMsg: String? = null,
-    var achievements: List<Achievement> = emptyList()
+    var achievements: List<Achievement> = emptyList(),
+    val friendsCount: Int = 0,
 )
 
 /**
@@ -110,10 +111,9 @@ class ProfileViewModel(
               ?: throw IllegalStateException("User with uid $uid not found")
       val pinnedTrips = profile.pinnedTripsUids.map { uid -> tripsRepository.getTrip(uid) }
 
-      val achievements =
-          computeAchievements(
-              stats = profile.stats,
-              friendsCount = profile.friends.filter { it.status == FriendStatus.ACCEPTED }.size)
+      val friendsCount = profile.friends.filter { it.status == FriendStatus.ACCEPTED }.size
+
+      val achievements = computeAchievements(stats = profile.stats, friendsCount = friendsCount)
       _uiState.update {
         it.copy(
             profilePicUrl = profile.profilePicUrl,
@@ -122,7 +122,8 @@ class ProfileViewModel(
             stats = profile.stats,
             pinnedTrips = pinnedTrips,
             pinnedImages = profile.pinnedImagesUris,
-            achievements = achievements)
+            achievements = achievements,
+            friendsCount = friendsCount)
       }
     } catch (e: Exception) {
       Log.e("ProfileViewModel", "Error loading profile info", e)

@@ -295,4 +295,13 @@
     <string name="achievement_social_traveler">Social Traveler</string>
     <string name="achievement_popular_guide">Popular Guide</string>
     <string name="achievement_legendary_connector">Legendary Connector</string>
+
+    <!-- Achievement Info -->
+    <string name="achievement_category_trips">Total trips</string>
+    <string name="achievement_category_time">Total travel time</string>
+    <string name="achievement_category_locations">Unique locations</string>
+    <string name="achievement_category_transport">Most used transport mode</string>
+    <string name="achievement_category_longest_route">Longest route segment</string>
+    <string name="achievement_category_social">Total friends</string>
+
 </resources>
