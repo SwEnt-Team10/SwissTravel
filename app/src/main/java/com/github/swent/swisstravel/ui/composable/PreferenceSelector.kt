@@ -140,12 +140,20 @@ fun PreferenceSelector(
     isChecked: (Preference) -> Boolean,
     onCheckedChange: (Preference) -> Unit,
     textStyle: TextStyle = MaterialTheme.typography.headlineMedium,
+    isRandomTrip: Boolean = false
 ) {
+  val categoriesToShow =
+      if (isRandomTrip) {
+        listOf(PreferenceCategories.Category.ACCESSIBILITY)
+      } else {
+        PreferenceCategories.Category.values().toList()
+      }
+
   Column(
       verticalArrangement =
           Arrangement.spacedBy(dimensionResource(R.dimen.preference_selector_vertical_arrangement)),
       modifier = Modifier.testTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)) {
-        for (category in PreferenceCategories.Category.values()) {
+        for (category in categoriesToShow) {
           if (category == PreferenceCategories.Category.DEFAULT &&
               category.getPreferences().isEmpty()) {
             // Skip DEFAULT category if it has no preferences
@@ -174,10 +182,3 @@ fun PreviewContentPreferenceSelector() {
         })
   }
 }
-/// ** A preview of the [PreferenceSelector] composable. (Commented for better coverage) */
-// import androidx.compose.ui.tooling.preview.Preview
-// @Preview(showBackground = true)
-// @Composable
-// fun PreferenceSelectorPreview() {
-//    PreviewContentPreferenceSelector()
-// }
