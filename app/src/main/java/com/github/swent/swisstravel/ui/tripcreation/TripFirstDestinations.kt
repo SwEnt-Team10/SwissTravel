@@ -103,84 +103,31 @@ fun FirstDestinationScreen(
               LazyColumn(
                   modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.mid_padding)),
                   horizontalAlignment = Alignment.CenterHorizontally) {
-                    // --- Title ---
-                    item {
-                      Text(
-                          modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
-                          text = stringResource(R.string.first_destinations_title),
-                          textAlign = TextAlign.Center,
-                          style =
-                              MaterialTheme.typography.headlineMedium.copy(
-                                  fontWeight = FontWeight.Bold))
+                    item { FirstDestinationsTitle() }
 
-                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
-                    }
-
-                    // --- Add Destination Button ---
                     item {
-                      Button(
-                          modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
-                          onClick = {
+                      AddDestinationButton(
+                          destinations = destinations,
+                          onAddDestination = {
                             destinations.add(Location(coordinate = Coordinate(0.0, 0.0), name = ""))
-                          },
-                          enabled =
-                              (destinations.isEmpty() || destinations.last().name.isNotEmpty()) &&
-                                  destinations.size < MAX_DESTINATIONS,
-                      ) {
-                        Text(
-                            if (destinations.size < MAX_DESTINATIONS) {
-                              stringResource(R.string.add_first_destination)
-                            } else stringResource(R.string.destination_limited))
-                      }
-
-                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
-
-                      HorizontalDivider()
-
-                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+                          })
                     }
 
-                    // --- List of Destination Input Fields ---
                     itemsIndexed(destinations, key = { index, _ -> index }) { index, _ ->
                       val destinationVm = destinationViewModelFactory(index)
-                      LocationAutocompleteTextField(
+                      DestinationItem(
+                          index = index,
+                          destinationVm = destinationVm,
                           onLocationSelected = { selectedLocation ->
                             destinations[index] = selectedLocation
-                          },
-                          addressTextFieldViewModel = destinationVm,
-                          clearOnSelect = false,
-                          name = "Destination ${index + 1}",
-                          showImages = true)
-
-                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+                          })
                     }
 
-                    // --- Suggestions Header ---
                     item {
-                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
-
-                      Row(
-                          modifier =
-                              Modifier.fillMaxWidth()
-                                  .clickable { isExpanded = !isExpanded }
-                                  .padding(vertical = dimensionResource(R.dimen.small_padding)),
-                          horizontalArrangement = Arrangement.SpaceBetween,
-                          verticalAlignment = Alignment.CenterVertically) {
-                            Text(
-                                text = "See Our Suggestions For You",
-                                style = MaterialTheme.typography.titleMedium)
-                            Icon(
-                                imageVector =
-                                    if (isExpanded)
-                                        androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp
-                                    else
-                                        androidx.compose.material.icons.Icons.Filled
-                                            .KeyboardArrowDown,
-                                contentDescription = if (isExpanded) "Collapse" else "Expand")
-                          }
+                      SuggestionsHeader(
+                          isExpanded = isExpanded, onToggleExpand = { isExpanded = !isExpanded })
                     }
 
-                    // --- Suggestions List ---
                     if (isExpanded) {
                       SuggestionList(
                           destinations = selectedSuggestions,
@@ -193,40 +140,107 @@ fun FirstDestinationScreen(
                           })
                     }
 
-                    // --- Next Button ---
                     item {
-                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
-
-                      HorizontalDivider()
-
-                      Spacer(
-                          modifier =
-                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
-
-                      Row(
-                          modifier = Modifier.fillMaxWidth(),
-                          horizontalArrangement = Arrangement.Center) {
-                            Button(
-                                modifier = Modifier.testTag(NEXT_BUTTON),
-                                onClick = {
-                                  val manualList = destinations.filter { it.name.isNotEmpty() }
-                                  val mergedList = manualList + selectedSuggestions
-                                  viewModel.setDestinations(mergedList)
-                                  onNext()
-                                },
-                                colors =
-                                    ButtonDefaults.buttonColors(
-                                        containerColor = MaterialTheme.colorScheme.primary)) {
-                                  Text(
-                                      stringResource(R.string.next),
-                                      color = MaterialTheme.colorScheme.onPrimary,
-                                      style = MaterialTheme.typography.titleMedium)
-                                }
-                          }
+                      NextButton(
+                          onNext = {
+                            val manualList = destinations.filter { it.name.isNotEmpty() }
+                            val mergedList = manualList + selectedSuggestions
+                            viewModel.setDestinations(mergedList)
+                            onNext()
+                          })
                     }
                   }
             }
       }
+}
+
+@Composable
+fun FirstDestinationsTitle() {
+  Text(
+      modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
+      text = stringResource(R.string.first_destinations_title),
+      textAlign = TextAlign.Center,
+      style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+}
+
+@Composable
+fun AddDestinationButton(destinations: MutableList<Location>, onAddDestination: () -> Unit) {
+  Button(
+      modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
+      onClick = onAddDestination,
+      enabled =
+          (destinations.isEmpty() || destinations.last().name.isNotEmpty()) &&
+              destinations.size < MAX_DESTINATIONS,
+  ) {
+    Text(
+        if (destinations.size < MAX_DESTINATIONS) {
+          stringResource(R.string.add_first_destination)
+        } else stringResource(R.string.destination_limited))
+  }
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+
+  HorizontalDivider()
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+}
+
+@Composable
+fun DestinationItem(
+    index: Int,
+    destinationVm: AddressTextFieldViewModelContract,
+    onLocationSelected: (Location) -> Unit
+) {
+  LocationAutocompleteTextField(
+      onLocationSelected = onLocationSelected,
+      addressTextFieldViewModel = destinationVm,
+      clearOnSelect = false,
+      name = "Destination ${index + 1}",
+      showImages = true)
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+}
+
+@Composable
+fun SuggestionsHeader(isExpanded: Boolean, onToggleExpand: () -> Unit) {
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .clickable { onToggleExpand() }
+              .padding(vertical = dimensionResource(R.dimen.small_padding)),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(text = "See Our Suggestions For You", style = MaterialTheme.typography.titleMedium)
+        Icon(
+            imageVector =
+                if (isExpanded) androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp
+                else androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown,
+            contentDescription = if (isExpanded) "Collapse" else "Expand")
+      }
+}
+
+@Composable
+fun NextButton(onNext: () -> Unit) {
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+
+  HorizontalDivider()
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+
+  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    Button(
+        modifier = Modifier.testTag(NEXT_BUTTON),
+        onClick = onNext,
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+          Text(
+              stringResource(R.string.next),
+              color = MaterialTheme.colorScheme.onPrimary,
+              style = MaterialTheme.typography.titleMedium)
+        }
+  }
 }
 
 /** Extension function for LazyListScope to display a list of suggested destinations. */
