@@ -27,6 +27,13 @@
     <dimen name="profile_padding_start_end">16dp</dimen>
     <dimen name="profile_padding_top_bottom">4dp</dimen>
 
+    <!-- Profile Achievements -->
+    <dimen name="profile_achievement_min_width">72dp</dimen>
+    <dimen name="profile_achievement_horizontal_padding">4dp</dimen>
+    <dimen name="profile_achievement_icon_size">56dp</dimen>
+    <dimen name="profile_achievement_icon_size_small">48dp</dimen>
+    <dimen name="profile_achievement_tier_vertical_padding">4dp</dimen>
+
     <!--Edit Trip Screen -->
     <dimen name="edit_screen_vertical_arrangement">24dp</dimen>
     <dimen name="edit_screen_textfield_radius">12dp</dimen>

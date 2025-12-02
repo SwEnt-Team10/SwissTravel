@@ -8,11 +8,14 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.isPast
+import com.github.swent.swisstravel.model.user.Achievement
+import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.computeAchievements
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +46,9 @@ data class ProfileUIState(
     val stats: UserStats = UserStats(),
     val pinnedTrips: List<Trip> = emptyList(),
     val pinnedImages: List<Uri> = emptyList(),
-    var errorMsg: String? = null
+    var errorMsg: String? = null,
+    var achievements: List<Achievement> = emptyList(),
+    val friendsCount: Int = 0,
 )
 
 /**
@@ -105,6 +110,10 @@ class ProfileViewModel(
           userRepository.getUserByUid(uid)
               ?: throw IllegalStateException("User with uid $uid not found")
       val pinnedTrips = profile.pinnedTripsUids.map { uid -> tripsRepository.getTrip(uid) }
+
+      val friendsCount = profile.friends.filter { it.status == FriendStatus.ACCEPTED }.size
+
+      val achievements = computeAchievements(stats = profile.stats, friendsCount = friendsCount)
       _uiState.update {
         it.copy(
             profilePicUrl = profile.profilePicUrl,
@@ -112,7 +121,9 @@ class ProfileViewModel(
             biography = profile.biography,
             stats = profile.stats,
             pinnedTrips = pinnedTrips,
-            pinnedImages = profile.pinnedImagesUris)
+            pinnedImages = profile.pinnedImagesUris,
+            achievements = achievements,
+            friendsCount = friendsCount)
       }
     } catch (e: Exception) {
       Log.e("ProfileViewModel", "Error loading profile info", e)

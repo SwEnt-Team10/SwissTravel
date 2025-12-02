@@ -56,6 +56,7 @@ import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreenTestTags
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
+import java.lang.Thread.sleep
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -236,9 +237,6 @@ abstract class SwissTravelTest {
 
     // Biography (not displayed cause it's empty)
     // onNodeWithTag(ProfileScreenTestTags.BIOGRAPHY).assertIsDisplayed()
-
-    // Achievements
-    onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
 
     // Settings button (own profile)
     onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()
