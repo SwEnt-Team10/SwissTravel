@@ -35,6 +35,8 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
+import com.github.swent.swisstravel.ui.activities.LikedActivitiesScreen
+import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreen
 import com.github.swent.swisstravel.ui.authentication.LandingScreen
 import com.github.swent.swisstravel.ui.authentication.SignInScreen
 import com.github.swent.swisstravel.ui.authentication.SignUpScreen
@@ -55,6 +57,8 @@ import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
@@ -480,12 +484,14 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       DailyViewScreen(
           uid = uid,
           tripInfoViewModel = vm,
-          onMyTrips = { navigationActions.goBack() },
-          onEditTrip = { navigationActions.navigateToEditTrip(uid) },
-          onActivityClick = { tripActivity ->
-            vm.selectActivity(tripActivity.activity)
-            navigationActions.navigateToActivityInfo(uid)
-          },
+          callbacks =
+              DailyViewScreenCallbacks(
+                  onMyTrips = { navigationActions.goBack() },
+                  onEditTrip = { navigationActions.navigateToEditTrip(uid) },
+                  onActivityClick = { tripActivity ->
+                    vm.selectActivity(tripActivity.activity)
+                    navigationActions.navigateToActivityInfo(uid)
+                  }),
           onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
 
@@ -510,6 +516,23 @@ private fun NavGraphBuilder.tripInfoNavGraph(
               onSaved = { navController.popBackStack() },
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
+
+    composable(Screen.SwipeActivities.route) { navBackStackEntry ->
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      SwipeActivitiesScreen(
+          onTripInfo = { navController.popBackStack() },
+          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry),
+      )
+    }
+
+    composable(Screen.LikedActivities.route) { navBackStackEntry ->
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      LikedActivitiesScreen(
+          onBack = { navController.popBackStack() },
+          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry))
+    }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
 

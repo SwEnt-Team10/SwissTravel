@@ -87,6 +87,10 @@ sealed class Screen(
 
   object AddFriend : Screen(route = "add_friend", name = "Add Friend")
 
+  object SwipeActivities : Screen(route = "swipe_activities", name = "Swipe Activities")
+
+  object LikedActivities : Screen(route = "liked_activities", name = "Liked Activities")
+
   data class FriendProfile(val uid: String) :
       Screen(route = "profile/${uid}", name = "Friend Profile") {
     companion object {

@@ -151,6 +151,7 @@
     <dimen name="big_spacer">96dp</dimen>
 
     <!-- Padding values -->
+    <dimen name="mini_padding">4dp</dimen>
     <dimen name="tiny_padding">8dp</dimen>
     <dimen name="smaller_padding">12dp</dimen>
     <dimen name="small_padding">16dp</dimen>

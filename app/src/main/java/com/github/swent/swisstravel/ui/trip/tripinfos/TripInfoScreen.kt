@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
@@ -54,6 +55,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -85,6 +87,8 @@ object TripInfoScreenTestTags {
   const val FULLSCREEN_EXIT = "fullScreenExit"
   const val PREVIOUS_STEP = "previousStep"
   const val NEXT_STEP = "nextStep"
+  const val SWIPE_ACTIVITIES_BUTTON = "swipeActivitiesButton"
+  const val LIKED_ACTIVITIES_BUTTON = "likedActivitiesButton"
 }
 
 /** UI state holder for the main content of the trip info screen. */
@@ -95,12 +99,26 @@ data class TripInfoContentState(
     val mapState: MapState
 )
 
-/** Event handlers for the main content of the trip info screen. */
+/**
+ * Event handlers for the main content of the trip info screen.
+ *
+ * @param onMyTrips A callback to navigate back to the list of user's trips.
+ * @param onEditTrip A callback to navigate to the trip editing screen.
+ * @param onActivityClick A callback invoked when a user clicks on a trip activity for more details.
+ * @param onSwipeActivities A callback to navigate to the screen where the user can swipe
+ *   activities.
+ * @param onLikedActivities A callback to navigate to the screen of liked activities.
+ */
 data class TripInfoContentCallbacks(
-    val onStepChange: (Int) -> Unit,
-    val onToggleFullscreen: (Boolean) -> Unit,
-    val onToggleNavMode: () -> Unit,
-    val onUserLocationUpdate: (Point) -> Unit
+    val onStepChange: (Int) -> Unit = {},
+    val onToggleFullscreen: (Boolean) -> Unit = {},
+    val onToggleNavMode: () -> Unit = {},
+    val onUserLocationUpdate: (Point) -> Unit = {},
+    val onMyTrips: () -> Unit = {},
+    val onEditTrip: () -> Unit = {},
+    val onActivityClick: (TripElement.TripActivity) -> Unit = {},
+    val onSwipeActivities: () -> Unit = {},
+    val onLikedActivities: () -> Unit = {}
 )
 
 /**
@@ -109,19 +127,19 @@ data class TripInfoContentCallbacks(
  *
  * @param uid The trip's ID.
  * @param tripInfoViewModel The view model to use.
- * @param onMyTrips Called when the user clicks the back button.
- * @param onEditTrip Called when the user clicks the edit button.
+ * @param tripInfoContentCallbacks Event handlers for the main content of the trip info screen
+ * @param isOnCurrentTripScreen A boolean to know whether the composable is called from
+ *   CurrentTripScreen
+ * @param tripInfoContentCallbacks A data class for callbacks used to navigate in this composable
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TripInfoScreen(
     uid: String?,
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
-    onMyTrips: () -> Unit = {},
-    onEditTrip: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
-    onActivityClick: (TripElement.TripActivity) -> Unit = {},
-    onAddPhotos: () -> Unit = {}
+    onAddPhotos: () -> Unit = {},
+    tripInfoContentCallbacks: TripInfoContentCallbacks = TripInfoContentCallbacks()
 ) {
   Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
 
@@ -182,11 +200,16 @@ fun TripInfoScreen(
           TripInfoTopAppBar(
               ui = ui,
               isOnCurrentTripScreen = isOnCurrentTripScreen,
-              onBack = onMyTrips,
+              onBack = tripInfoContentCallbacks.onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
-              onEdit = onEditTrip,
-              onAddPhotos = { onAddPhotos() })
+              onAddPhotos = { onAddPhotos() },
+              onEdit = tripInfoContentCallbacks.onEditTrip)
         }
+      },
+      bottomBar = {
+        TripInfoScreenBottomBar(
+            onSwipeActivities = tripInfoContentCallbacks.onSwipeActivities,
+            onLikedActivities = tripInfoContentCallbacks.onLikedActivities)
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
           val contentState =
@@ -201,7 +224,12 @@ fun TripInfoScreen(
                   onToggleFullscreen = { tripInfoViewModel.toggleFullscreen(it) },
                   onToggleNavMode = { drawFromCurrentPosition = !drawFromCurrentPosition },
                   onUserLocationUpdate = { currentGpsPoint = it })
-          TripInfoContent(contentState, callbacks, isComputing, schedule, onActivityClick)
+          TripInfoContent(
+              contentState,
+              callbacks,
+              isComputing,
+              schedule,
+              tripInfoContentCallbacks.onActivityClick)
 
           // Fullscreen map overlay
           if (ui.fullscreen) {
@@ -212,6 +240,40 @@ fun TripInfoScreen(
           }
         }
       }
+}
+
+/**
+ * The bottom bar for the trip info screen, containing buttons for swiping activities and accessing
+ * liked activities.
+ *
+ * @param onSwipeActivities A callback to navigate to the screen where the user can swipe
+ *   activities.
+ * @param onLikedActivities A callback to navigate to the screen of liked activities.
+ */
+@Composable
+fun TripInfoScreenBottomBar(onSwipeActivities: () -> Unit, onLikedActivities: () -> Unit) {
+  Row {
+    // button to go to a screen were you can swipe (like/dislike) through activities
+    Button(
+        onClick = onSwipeActivities,
+        modifier =
+            Modifier.fillMaxWidth(0.7f)
+                .padding(dimensionResource(R.dimen.small_spacer))
+                .testTag(TripInfoScreenTestTags.SWIPE_ACTIVITIES_BUTTON),
+    ) {
+      Text(text = stringResource(R.string.swipe_activities))
+    }
+    // Button to go to the liked activities screen
+    Button(
+        onClick = onLikedActivities,
+        modifier =
+            Modifier.padding(dimensionResource(R.dimen.small_spacer))
+                .testTag(TripInfoScreenTestTags.LIKED_ACTIVITIES_BUTTON)) {
+          Icon(
+              imageVector = Icons.Filled.Favorite,
+              contentDescription = stringResource(R.string.liked_activities))
+        }
+  }
 }
 
 /** UI state holder for map properties. */
