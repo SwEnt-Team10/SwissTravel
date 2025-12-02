@@ -99,6 +99,13 @@ sealed class Screen(
     }
   }
 
+  data class AddPhotos(val tripId: String) :
+      Screen(route = "add_photos/${tripId}", name = "Add Photos") {
+    companion object {
+      const val route = "add_photos/{tripId}"
+    }
+  }
+
   // TODO change this when there is a new screen
 }
 

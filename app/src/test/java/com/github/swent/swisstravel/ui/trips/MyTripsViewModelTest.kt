@@ -49,7 +49,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = true)
+            isCurrentTrip = true,
+            listUri = emptyList())
 
     // Upcoming trip: start > now
     val upcomingTrip =
@@ -66,7 +67,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(currentTrip, upcomingTrip)
     viewModel = MyTripsViewModel(repository)
@@ -95,7 +97,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = true)
+            isCurrentTrip = true,
+            listUri = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(currentTrip)
     viewModel = MyTripsViewModel(repository)
@@ -124,7 +127,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(upcomingTrip)
     viewModel = MyTripsViewModel(repository)
@@ -187,7 +191,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     // Initially disabled
     assertEquals(false, viewModel.uiState.value.isSelectionMode)
@@ -219,7 +224,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     val trip2 =
         Trip(
@@ -231,7 +237,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     viewModel.toggleSelectionMode(true)
 
@@ -264,7 +271,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     viewModel.toggleSelectionMode(true)
     viewModel.toggleTripSelection(trip)
@@ -287,7 +295,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     val trip2 =
         Trip(
@@ -299,7 +308,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(trip1, trip2)
     coEvery { repository.deleteTrip(any()) } returns Unit
@@ -337,7 +347,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     val upcomingTrip =
         Trip(
@@ -353,7 +364,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(currentTrip, upcomingTrip)
     viewModel = MyTripsViewModel(repository)
@@ -377,7 +389,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(trip1)
     coEvery { repository.deleteTrip(any()) } throws Exception("DB failure")
@@ -409,7 +422,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false),
+            isCurrentTrip = false,
+            listUri = emptyList()),
         Trip(
             "2",
             "Beta",
@@ -423,7 +437,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false),
+            isCurrentTrip = false,
+            listUri = emptyList()),
         Trip(
             "3",
             "Gamma",
@@ -437,7 +452,8 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false))
+            isCurrentTrip = false,
+            listUri = emptyList()))
   }
 
   @Test
@@ -542,7 +558,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(trip)
     coEvery { repository.editTrip(any(), any()) } returns Unit
@@ -571,7 +588,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     // Simulate normal getAllTrips but fail when editing trip
     coEvery { repository.getAllTrips() } returns listOf(trip)
@@ -601,7 +619,8 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     coEvery { repository.editTrip(any(), any()) } throws Exception("Firestore edit failed")
 

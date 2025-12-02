@@ -279,7 +279,8 @@ open class TripSettingsViewModel(
                 activities = selectedActivities,
                 tripProfile = tripProfile,
                 isFavorite = false,
-                isCurrentTrip = false)
+                isCurrentTrip = false,
+                listUri = emptyList())
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

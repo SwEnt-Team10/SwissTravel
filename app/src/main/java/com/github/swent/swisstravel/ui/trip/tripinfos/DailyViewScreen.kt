@@ -117,6 +117,7 @@ data class DailyViewScreenCallbacks(
 fun DailyViewScreen(
     uid: String?,
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
+    onAddPhotos: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
     mapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit =
         { locations, drawRoute, onUserLocationUpdate ->
@@ -175,7 +176,8 @@ fun DailyViewScreen(
               isOnCurrentTripScreen = isOnCurrentTripScreen,
               onBack = callbacks.onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
-              onEdit = callbacks.onEditTrip)
+              onEdit = callbacks.onEditTrip,
+              onAddPhotos = { onAddPhotos() })
         }
       },
       bottomBar = {
@@ -305,7 +307,8 @@ private fun DailyViewTopAppBar(
     isOnCurrentTripScreen: Boolean,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onAddPhotos: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
@@ -327,6 +330,7 @@ private fun DailyViewTopAppBar(
         }
       },
       actions = {
+        AddPhotosButton(onAddPhotos = { onAddPhotos() })
         IconButton(
             onClick = onToggleFavorite,
             modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {
