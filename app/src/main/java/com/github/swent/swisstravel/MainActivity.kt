@@ -312,7 +312,7 @@ private fun SwissTravelNavHost(
     authNavGraph(navigationActions, credentialManager)
     profileNavGraph(navigationActions)
     currentTripNavGraph(navigationActions)
-    myTripsNavGraph(context, navigationActions)
+    myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
     tripInfoNavGraph(context, navController, navigationActions)
     tripSettingsNavGraph(navController, navigationActions)
@@ -416,7 +416,8 @@ private fun NavGraphBuilder.currentTripNavGraph(navigationActions: NavigationAct
  */
 private fun NavGraphBuilder.myTripsNavGraph(
     context: Context,
-    navigationActions: NavigationActions
+    navigationActions: NavigationActions,
+    myTripsViewModel: MyTripsViewModel
 ) {
   navigation(
       startDestination = Screen.MyTrips.route,

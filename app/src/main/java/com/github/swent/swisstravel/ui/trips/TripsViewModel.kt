@@ -58,7 +58,7 @@ abstract class TripsViewModel(protected val tripsRepository: TripsRepository) : 
   val uiState: StateFlow<TripsUIState> = _uiState.asStateFlow()
 
   /** Subclasses define how all trips from the repository are fetched. */
-  protected abstract suspend fun getAllTrips()
+  abstract suspend fun getAllTrips()
 
   /** Refreshes the list of trips by re-fetching them from the repository. */
   fun refreshUIState() {
@@ -108,7 +108,7 @@ abstract class TripsViewModel(protected val tripsRepository: TripsRepository) : 
    *
    * @param trip The trip to select or deselect.
    */
-  protected open fun onToggleTripSelection(trip: Trip) {
+  open fun onToggleTripSelection(trip: Trip) {
     val current = _uiState.value.selectedTrips.toMutableSet()
     if (current.contains(trip)) current.remove(trip) else current.add(trip)
 
