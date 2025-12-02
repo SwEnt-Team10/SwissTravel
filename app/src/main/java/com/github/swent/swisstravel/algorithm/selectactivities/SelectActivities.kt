@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.algorithm.selectactivities
 
 import android.util.Log
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
@@ -49,17 +50,21 @@ class SelectActivities(
 
     // Removes preferences that are not supported by mySwitzerland.
     // Avoids unnecessary API calls.
-    userPreferences.remove(Preference.QUICK)
-    userPreferences.remove(Preference.SLOW_PACE)
-    userPreferences.remove(Preference.EARLY_BIRD)
-    userPreferences.remove(Preference.NIGHT_OWL)
+    removeUnsupportedPreferences(userPreferences)
 
     // add 1 day since the last day is excluded
     val days =
         ChronoUnit.DAYS.between(
             tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
-    val totalNbActivities = (NB_ACTIVITIES_PER_DAY * days).toDouble()
-
+    // Estimate the total number of activities needed for the trip.
+    // If there are intermediate stops, we reduce the total number of activities by estimating that
+    // one activity will be done between two very distant locations.
+    val totalNbActivities =
+        if (userPreferences.contains(Preference.INTERMEDIATE_STOPS)) {
+          NB_ACTIVITIES_PER_DAY * days.toDouble() - tripSettings.destinations.size
+        } else {
+          (NB_ACTIVITIES_PER_DAY) * days.toDouble()
+        }
     // Calculate the total number of steps for progress reporting.
     val totalSteps = totalSteps(allDestinations.size, userPreferences.size)
 
@@ -119,6 +124,53 @@ class SelectActivities(
     onProgress(1f)
 
     return filteredActivities
+  }
+
+  /**
+   * Fetches one activity near the given location for testing purposes. If user preferences are set,
+   * it tries to fetch an activity matching those preferences. Otherwise, it fetches any activity
+   * near the location.
+   *
+   * @param coords The [Coordinate] around which to search for an activity.
+   * @param radius The search radius in meters. Defaults to [NEAR].
+   * @return A single [Activity] found near the specified location or null.
+   */
+  suspend fun getOneActivityNearWithPreferences(coords: Coordinate, radius: Int = NEAR): Activity? {
+    val userPreferences = tripSettings.preferences.toMutableList()
+    removeUnsupportedPreferences(userPreferences)
+    var fetched: List<Activity>?
+    // If the user has preferences, separate mandatory and optional ones and fetch accordingly.
+    if (userPreferences.isNotEmpty()) {
+      val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(userPreferences)
+      if (optionalPrefs.isNotEmpty()) {
+        fetched =
+            activityRepository.getActivitiesNearWithPreference(
+                mandatoryPrefs + optionalPrefs, coords, NEAR, 1)
+        delay(API_CALL_DELAY_MS) // Respect API rate limit.
+      } else {
+        fetched =
+            activityRepository.getActivitiesNearWithPreference(mandatoryPrefs, coords, NEAR, 1)
+        delay(API_CALL_DELAY_MS) // Respect API rate limit.
+      }
+    } else { // No preferences, fetch any activity near the location.
+      fetched = activityRepository.getActivitiesNear(coords, radius, 1)
+    }
+    return fetched.firstOrNull()
+  }
+
+  /**
+   * Removes preferences that are not supported by the activity repository to avoid unnecessary API
+   * calls.
+   *
+   * @param preferences The mutable list of preferences to filter.
+   */
+  private fun removeUnsupportedPreferences(preferences: MutableList<Preference>) {
+    preferences.remove(Preference.QUICK)
+    preferences.remove(Preference.SLOW_PACE)
+    preferences.remove(Preference.EARLY_BIRD)
+    preferences.remove(Preference.NIGHT_OWL)
+    preferences.remove(Preference.INTERMEDIATE_STOPS)
+    preferences.remove(Preference.PUBLIC_TRANSPORT)
   }
 
   /**

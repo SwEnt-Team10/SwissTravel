@@ -108,6 +108,58 @@ class ProgressiveRouteOptimizer(
   }
 
   /**
+   * Recompute only the segments of an existing ordered route that correspond to newly added
+   * locations.
+   *
+   * @param orderedLocations Existing ordered route.
+   * @param addedIndexes Indexes of locations in the ordered route that were newly added.
+   * @param mode Transport mode to use when fetching durations.
+   * @param invalidDuration Duration value that indicates an invalid or missing segment duration.
+   * @param onProgress Callback to report progress (0.0 to 1.0).
+   * @return New OrderedRoute with updated segment durations.
+   */
+  suspend fun recomputeOrderedRoute(
+      orderedLocations: OrderedRoute,
+      addedIndexes: List<Int>,
+      mode: TransportMode = TransportMode.CAR,
+      invalidDuration: Double,
+      onProgress: (Float) -> Unit
+  ): OrderedRoute {
+    val locations = orderedLocations.orderedLocations
+    val newSegmentDurations = orderedLocations.segmentDuration.toMutableList()
+    var progression = 1
+    for (index in addedIndexes) {
+      if (index > 0 && index < locations.size - 1) {
+        val from = locations[index - 1]
+        val to = locations[index]
+        val next = locations[index + 1]
+        var durationFromTo = newSegmentDurations[index - 1]
+        var durationToNext = newSegmentDurations[index]
+        // Fetch duration for from -> to if we didn't do it already
+        if (newSegmentDurations[index - 1] == invalidDuration) {
+          durationFromTo =
+              fetchDurations(from, listOf(to), mode)[to] ?: fallbackDuration(from, to, mode)
+        }
+        // Fetch duration for to -> next if we didn't do it already
+        if (newSegmentDurations[index] == invalidDuration) {
+          durationToNext =
+              fetchDurations(to, listOf(next), mode)[next] ?: fallbackDuration(to, next, mode)
+        }
+        newSegmentDurations[index - 1] = max(0.0, durationFromTo)
+        newSegmentDurations[index] = max(0.0, durationToNext)
+      }
+      onProgress(progression.toFloat() / addedIndexes.size)
+      progression++
+    }
+
+    val totalDuration = newSegmentDurations.sum()
+    return OrderedRoute(
+        orderedLocations = locations,
+        totalDuration = if (totalDuration >= UNREACHABLE_LEG) -1.0 else totalDuration,
+        segmentDuration = newSegmentDurations)
+  }
+
+  /**
    * Select the k nearest unvisited candidate locations from the current location.
    *
    * @param current Current location.

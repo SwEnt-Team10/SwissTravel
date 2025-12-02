@@ -104,6 +104,33 @@ class SelectActivitiesTest {
       }
 
   @Test
+  fun `addActivities returns activities based on mandatory preferences`() = runBlocking {
+    // Given
+    val preferences = listOf(Preference.WHEELCHAIR_ACCESSIBLE)
+    tripSettings = tripSettings.copy(preferences = preferences)
+    val progressUpdates = mutableListOf<Float>()
+
+    val mandatory = listOf(Preference.WHEELCHAIR_ACCESSIBLE)
+
+    // Expect a single call with all optional preferences
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          match { it.containsAll(mandatory) }, any(), any(), any())
+    } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
+
+    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+
+    // When
+    val result = selectActivities.addActivities { progressUpdates.add(it) }
+
+    // Then
+    // 3 destinations * 1 call (batched optional preferences) = 3 calls
+    assertEquals(3, result.size)
+    assertTrue(result.containsAll(listOf(activityLausanne, activityGeneva, activityZurich)))
+    assertTrue(progressUpdates.last() == 1.0f)
+  }
+
+  @Test
   fun `addActivities returns empty list when no destinations are provided`() = runBlocking {
     // Given
     tripSettings =
@@ -159,5 +186,104 @@ class SelectActivitiesTest {
     // Then
     // 3 destinations, each call returns one activity
     assertEquals(3, result.size)
+  }
+
+  @Test
+  fun `getOneActivityNearWithPreferences returns activity using preference-based fetch`() =
+      runBlocking {
+        val mandatory = listOf(Preference.WHEELCHAIR_ACCESSIBLE)
+        val optional = listOf(Preference.MUSEUMS)
+        // Given user preferences
+        tripSettings = tripSettings.copy(preferences = mandatory + optional)
+
+        val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+
+        // Mock: must call getActivitiesNearWithPreference with mandatory + optional
+        coEvery {
+          mockActivityRepository.getActivitiesNearWithPreference(
+              match { prefs -> prefs.containsAll(mandatory + optional) },
+              lausanne.coordinate,
+              any(),
+              1)
+        } returns listOf(activityLausanne)
+
+        // When
+        val result = selectActivities.getOneActivityNearWithPreferences(lausanne.coordinate)
+
+        // Then
+        assertEquals(activityLausanne, result)
+
+        // Ensure getActivitiesNear() was NOT called
+        io.mockk.coVerify(exactly = 0) {
+          mockActivityRepository.getActivitiesNear(any(), any(), any())
+        }
+
+        // Ensure preference-based call WAS made
+        io.mockk.coVerify(exactly = 1) {
+          mockActivityRepository.getActivitiesNearWithPreference(
+              any(), lausanne.coordinate, any(), 1)
+        }
+      }
+
+  @Test
+  fun `getOneActivityNearWithPreferences returns activity using mandatory preference-based fetch`() =
+      runBlocking {
+        val mandatory = listOf(Preference.WHEELCHAIR_ACCESSIBLE)
+
+        // Given user preferences
+        tripSettings = tripSettings.copy(preferences = mandatory)
+
+        val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+
+        // Mock: must call getActivitiesNearWithPreference with mandatory + optional
+        coEvery {
+          mockActivityRepository.getActivitiesNearWithPreference(
+              match { prefs -> prefs.containsAll(mandatory) }, lausanne.coordinate, any(), 1)
+        } returns listOf(activityLausanne)
+
+        // When
+        val result = selectActivities.getOneActivityNearWithPreferences(lausanne.coordinate)
+
+        // Then
+        assertEquals(activityLausanne, result)
+
+        // Ensure getActivitiesNear() was NOT called
+        io.mockk.coVerify(exactly = 0) {
+          mockActivityRepository.getActivitiesNear(any(), any(), any())
+        }
+
+        // Ensure preference-based call WAS made
+        io.mockk.coVerify(exactly = 1) {
+          mockActivityRepository.getActivitiesNearWithPreference(
+              any(), lausanne.coordinate, any(), 1)
+        }
+      }
+
+  @Test
+  fun `getOneActivityNearWithPreferences returns activity when no preferences`() = runBlocking {
+    // Given no preferences
+    tripSettings = tripSettings.copy(preferences = emptyList())
+
+    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+
+    // Mock: should call getActivitiesNear()
+    coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), 1) } returns
+        listOf(activityLausanne)
+
+    // When
+    val result = selectActivities.getOneActivityNearWithPreferences(lausanne.coordinate)
+
+    // Then
+    assertEquals(activityLausanne, result)
+
+    // Ensure preference call NOT used
+    io.mockk.coVerify(exactly = 0) {
+      mockActivityRepository.getActivitiesNearWithPreference(any(), any(), any(), any())
+    }
+
+    // Ensure normal near call WAS used
+    io.mockk.coVerify(exactly = 1) {
+      mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), 1)
+    }
   }
 }
