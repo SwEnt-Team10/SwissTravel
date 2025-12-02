@@ -78,6 +78,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
     }
   }
 
+  // This test has been provided by an AI
   @Test
   fun pickerSimulation_addsImagesToGrid() = runTest {
     val fakeTrip =
