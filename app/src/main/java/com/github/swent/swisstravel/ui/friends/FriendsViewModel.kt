@@ -157,6 +157,7 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
     viewModelScope.launch {
       try {
         userRepository.removeFriend(_uiState.value.currentUserUid, toUid)
+        refreshFriends()
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error removing friend: ${e.message}") }
       }

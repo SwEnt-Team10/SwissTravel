@@ -300,7 +300,8 @@ class EditTripScreenViewModelTest {
         activities = emptyList(),
         tripProfile = profile,
         isFavorite = false,
-        isCurrentTrip = false)
+        isCurrentTrip = false,
+        listUri = emptyList())
   }
 }
 

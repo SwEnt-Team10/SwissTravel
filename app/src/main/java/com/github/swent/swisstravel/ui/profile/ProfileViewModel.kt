@@ -164,20 +164,4 @@ class ProfileViewModel(
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
   }
-
-  /**
-   * Calls the repository to remove a friend.
-   *
-   * @param uid The UID of the user to remove.
-   */
-  fun removeFriend(uid: String) {
-    viewModelScope.launch {
-      try {
-        val userUid = userRepository.getCurrentUser().uid
-        userRepository.removeFriend(userUid, uid)
-      } catch (e: Exception) {
-        _uiState.update { it.copy(errorMsg = "Error removing friend: ${e.message}") }
-      }
-    }
-  }
 }

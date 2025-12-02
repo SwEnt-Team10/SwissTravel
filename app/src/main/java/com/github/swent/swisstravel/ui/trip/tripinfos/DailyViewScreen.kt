@@ -20,12 +20,14 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -78,7 +80,27 @@ object DailyViewScreenTestTags {
   const val FULLSCREEN_MAP = "dailyViewScreenFullScreenMap"
   const val FULLSCREEN_EXIT = "dailyViewScreenFullScreenExit"
   const val STEP_CARD = "dailyViewScreenStepCard"
+  const val SWIPE_ACTIVITIES_BUTTON = "dailyViewScreenSwipeActivitiesButton"
+  const val LIKED_ACTIVITIES_BUTTON = "dailyViewScreenLikedActivitiesButton"
 }
+
+/**
+ * A data class to refactor the callbacks of the DailViewScreen composable
+ *
+ * @param onMyTrips A callback to navigate back to the list of user's trips.
+ * @param onEditTrip A callback to navigate to the trip editing screen.
+ * @param onActivityClick A callback invoked when a user clicks on a trip activity for more details.
+ * @param onSwipeActivities A callback to navigate to the screen where the user can swipe
+ *   activities.
+ * @param onLikedActivities A callback to navigate to the screen of liked activities.
+ */
+data class DailyViewScreenCallbacks(
+    val onMyTrips: () -> Unit = {},
+    val onEditTrip: () -> Unit = {},
+    val onActivityClick: (TripElement.TripActivity) -> Unit = {},
+    val onSwipeActivities: () -> Unit = {},
+    val onLikedActivities: () -> Unit = {}
+)
 
 /**
  * A screen that displays the daily itinerary of a trip. It shows a map of the day's route and a
@@ -87,32 +109,38 @@ object DailyViewScreenTestTags {
  *
  * @param uid The unique identifier of the trip to display.
  * @param tripInfoViewModel The ViewModel providing data and logic for the trip info.
- * @param onMyTrips A callback to navigate back to the list of user's trips.
- * @param onEditTrip A callback to navigate to the trip editing screen.
  * @param isOnCurrentTripScreen A boolean indicating if this screen is part of the current trip
  *   flow, which affects the visibility of the back button.
- * @param onActivityClick A callback invoked when a user clicks on a trip activity for more details.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DailyViewScreen(
     uid: String?,
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
-    onMyTrips: () -> Unit = {},
-    onEditTrip: () -> Unit = {},
+    onAddPhotos: () -> Unit = {},
     isOnCurrentTripScreen: Boolean = false,
-    onActivityClick: (TripElement.TripActivity) -> Unit = {},
     mapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit =
         { locations, drawRoute, onUserLocationUpdate ->
           MapScreen(
               locations = locations,
               drawRoute = drawRoute,
               onUserLocationUpdate = onUserLocationUpdate)
-        }
+        },
+    callbacks: DailyViewScreenCallbacks = DailyViewScreenCallbacks()
 ) {
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val ui by tripInfoViewModel.uiState.collectAsState()
+
+  LaunchedEffect(ui.days, isOnCurrentTripScreen) {
+    if (isOnCurrentTripScreen) {
+      val today = LocalDate.now()
+      val index = ui.days.indexOf(today)
+      if (index != -1 && index != ui.currentDayIndex) {
+        tripInfoViewModel.setCurrentDayIndex(index)
+      }
+    }
+  }
   val context = LocalContext.current
 
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }
@@ -146,10 +174,16 @@ fun DailyViewScreen(
           DailyViewTopAppBar(
               ui = ui,
               isOnCurrentTripScreen = isOnCurrentTripScreen,
-              onBack = onMyTrips,
+              onBack = callbacks.onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
-              onEdit = onEditTrip)
+              onEdit = callbacks.onEditTrip,
+              onAddPhotos = { onAddPhotos() })
         }
+      },
+      bottomBar = {
+        DailyViewBottomBar(
+            onSwipeActivities = callbacks.onSwipeActivities,
+            onLikedActivities = callbacks.onLikedActivities)
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
           if (ui.locations.isEmpty()) {
@@ -200,7 +234,7 @@ fun DailyViewScreen(
                           },
                           onDetailsClick = {
                             if (el is TripElement.TripActivity) {
-                              onActivityClick(el)
+                              callbacks.onActivityClick(el)
                             }
                           })
                     }
@@ -221,6 +255,42 @@ fun DailyViewScreen(
 }
 
 /**
+ * The bottom bar for the Daily View screen, containing buttons for swiping activities and accessing
+ * liked activities.
+ *
+ * @param onSwipeActivities Callback for when the swipe activities button is clicked.
+ * @param onLikedActivities Callback for when the liked activities button is clicked.
+ */
+@Composable
+private fun DailyViewBottomBar(
+    onSwipeActivities: () -> Unit = {},
+    onLikedActivities: () -> Unit = {}
+) {
+  Row {
+    // button to go to a screen were you can swipe (like/dislike) through activities
+    Button(
+        onClick = onSwipeActivities,
+        modifier =
+            Modifier.fillMaxWidth(0.7f)
+                .padding(dimensionResource(R.dimen.small_spacer))
+                .testTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON),
+    ) {
+      Text(text = stringResource(R.string.swipe_activities))
+    }
+    // Button to go to the liked activities screen
+    Button(
+        onClick = onLikedActivities,
+        modifier =
+            Modifier.padding(dimensionResource(R.dimen.small_spacer))
+                .testTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON)) {
+          Icon(
+              imageVector = Icons.Filled.Favorite,
+              contentDescription = stringResource(R.string.liked_activities))
+        }
+  }
+}
+
+/**
  * The top app bar for the Daily View screen. Displays the trip title and action buttons for
  * navigation, favoriting, and editing.
  *
@@ -237,7 +307,8 @@ private fun DailyViewTopAppBar(
     isOnCurrentTripScreen: Boolean,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onAddPhotos: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
@@ -259,6 +330,7 @@ private fun DailyViewTopAppBar(
         }
       },
       actions = {
+        AddPhotosButton(onAddPhotos = { onAddPhotos() })
         IconButton(
             onClick = onToggleFavorite,
             modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {

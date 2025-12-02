@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -19,6 +21,7 @@ import com.github.swent.swisstravel.ui.navigation.TopBar
 /** Test tags for UI tests to identify components. */
 object TripTravelersTestTags {
   const val NEXT = "next"
+  const val RANDOM_SWITCH = "randomSwitch"
   const val TRIP_TRAVELERS_SCREEN = "tripTravelersScreen"
 }
 
@@ -32,10 +35,13 @@ object TripTravelersTestTags {
 fun TripTravelersScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
+    onRandom: () -> Unit = {},
     onPrevious: () -> Unit = {}
 ) {
   val tripSettings by viewModel.tripSettings.collectAsState()
   var travelers by remember { mutableStateOf(tripSettings.travelers) }
+
+  var isRandom by remember { mutableStateOf(false) }
 
   LaunchedEffect(travelers) {
     val current = viewModel.tripSettings.value.travelers
@@ -78,21 +84,47 @@ fun TripTravelersScreen(
                         onAdultsChange = { travelers = travelers.copy(adults = it) },
                         onChildrenChange = { travelers = travelers.copy(children = it) })
 
-                    // --- Done button ---
-                    Button(
-                        onClick = onNext,
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary),
-                        shape =
-                            RoundedCornerShape(
-                                dimensionResource(R.dimen.trip_travelers_button_radius)),
-                        modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
-                          Text(
-                              text = stringResource(R.string.next),
-                              color = MaterialTheme.colorScheme.onPrimary,
-                              style = MaterialTheme.typography.titleMedium)
-                        }
+                    // --- Random toggle and Button column ---
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                      // --- Random trip toggle ---
+                      Row(
+                          modifier = Modifier.fillMaxWidth(),
+                          verticalAlignment = Alignment.CenterVertically,
+                          horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(
+                                text = stringResource(R.string.random_trip_generation),
+                                style = MaterialTheme.typography.bodyLarge)
+                            Switch(
+                                checked = isRandom,
+                                onCheckedChange = { isRandom = it },
+                                modifier = Modifier.testTag(TripTravelersTestTags.RANDOM_SWITCH))
+                          }
+
+                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+                      // --- Done button ---
+                      Button(
+                          onClick = {
+                            viewModel.setRandomTrip(isRandom)
+                            if (isRandom) {
+                              onRandom()
+                            } else {
+                              onNext()
+                            }
+                          },
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primary),
+                          shape =
+                              RoundedCornerShape(
+                                  dimensionResource(R.dimen.trip_travelers_button_radius)),
+                          modifier = Modifier.testTag(TripTravelersTestTags.NEXT)) {
+                            Text(
+                                text = stringResource(R.string.next),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                style = MaterialTheme.typography.titleMedium)
+                          }
+                    }
                   }
             }
       }

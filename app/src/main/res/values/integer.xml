@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Add photos Screen -->
+    <integer name="images_on_grid">4</integer>
+</resources>

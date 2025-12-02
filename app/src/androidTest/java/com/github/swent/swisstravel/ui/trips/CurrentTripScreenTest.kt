@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,7 +47,8 @@ class CurrentTripScreenTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = true)
+            isCurrentTrip = true,
+            listUri = emptyList())
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
@@ -54,7 +56,7 @@ class CurrentTripScreenTest {
       CurrentTripScreen(isLoggedIn = true, myTripsViewModel = viewModel)
     }
 
-    composeTestRule.onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)
         .assertIsNotDisplayed()
@@ -81,7 +83,8 @@ class CurrentTripScreenTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isFavorite = false,
-            isCurrentTrip = false)
+            isCurrentTrip = false,
+            listUri = emptyList())
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(notCurrentTrip))

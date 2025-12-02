@@ -71,6 +71,7 @@ import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
 import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
 /** Test tags for the profile screen. */
@@ -119,6 +120,7 @@ fun ProfileScreen(
     onSelectTrip: (String) -> Unit = {},
     onEditPinnedTrips: () -> Unit = {},
     onEditPinnedImages: () -> Unit = {},
+    friendsViewModel: FriendsViewModel = viewModel(),
 ) {
   val context = LocalContext.current
   val uiState by profileViewModel.uiState.collectAsState()
@@ -138,7 +140,7 @@ fun ProfileScreen(
     UnfriendDialog(
         friendName = uiState.name,
         onConfirm = {
-          profileViewModel.removeFriend(uiState.uid)
+          friendsViewModel.removeFriend(uiState.uid)
           showUnfriendConfirmation = false
           onBack()
         },

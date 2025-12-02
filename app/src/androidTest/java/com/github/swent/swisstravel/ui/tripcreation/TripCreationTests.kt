@@ -7,9 +7,14 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceCategories
+import com.github.swent.swisstravel.model.user.PreferenceCategories.category
+import com.github.swent.swisstravel.model.user.PreferenceCategories.getPreferences
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -78,7 +83,41 @@ class TripCreationTests : InMemorySwissTravelTest() {
     /* Done button */
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
-        .performScrollToNode(hasTestTag(TripPreferencesTestTags.DONE))
+        .performTouchInput { swipeUp() }
+    composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
+  }
+
+  @Test
+  fun tripPreferencesScreenRandomTest() {
+    composeTestRule.setContent { TripPreferencesScreen(onNext = {}, isRandomTrip = true) }
+    composeTestRule.onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_SCREEN).assertExists()
+    composeTestRule
+        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCES_TITLE)
+        .assertIsDisplayed()
+    composeTestRule.checkTopBarIsDisplayed()
+    /* Preference Selector */
+    val preferenceSelector =
+        composeTestRule.onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
+    preferenceSelector.assertIsDisplayed()
+    val preferenceCategories =
+        listOf(
+            PreferenceCategories.Category.ACCESSIBILITY, PreferenceCategories.Category.TRAVEL_STYLE)
+    for (category in PreferenceCategories.Category.values()) {
+      for (preference in category.getPreferences()) {
+        if (!preferenceCategories.contains(preference.category())) {
+          val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
+          composeTestRule.onNodeWithTag(tag).assertDoesNotExist()
+        } else {
+          val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
+          preferenceSelector.performScrollToNode(hasTestTag(tag))
+          composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
+        }
+      }
+    }
+    /* Done button */
+    composeTestRule
+        .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
+        .performTouchInput { swipeUp() }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
   }
 
@@ -116,7 +155,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
     assert(viewModel.tripSettings.value.preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE))
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
-        .performScrollToNode(hasTestTag(TripPreferencesTestTags.DONE))
+        .performTouchInput { swipeUp() }
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(TripPreferencesTestTags.DONE).performClick()
     assertEquals(3, viewModel.tripSettings.value.preferences.size)
@@ -128,6 +167,8 @@ class TripCreationTests : InMemorySwissTravelTest() {
     composeTestRule.setContent { SwissTravelTheme { TripTravelersScreen(onNext = {}) } }
     composeTestRule.onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertExists()
     composeTestRule.checkTopBarIsDisplayed()
+    composeTestRule.onNodeWithTag(TripTravelersTestTags.RANDOM_SWITCH).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripTravelersTestTags.RANDOM_SWITCH).performClick()
     composeTestRule.onNodeWithTag(TripTravelersTestTags.NEXT).performClick()
   }
 }
