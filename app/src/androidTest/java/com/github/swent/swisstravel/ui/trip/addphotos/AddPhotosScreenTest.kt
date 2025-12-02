@@ -1,8 +1,11 @@
 package com.github.swent.swisstravel.ui.trip.addphotos
 
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.model.trip.Trip
@@ -77,13 +80,12 @@ class AddPhotosScreenTest : SwissTravelTest() {
       composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(i)).isDisplayed()
     }
   }
-
-  // This test has been provided by an AI
+  // AI did the test
   @Test
-  fun pickerSimulation_addsImagesToGrid() = runTest {
+  fun checkAddingImagesViaButton() = runTest {
     val fakeTrip =
         Trip(
-            uid = "10",
+            uid = "11",
             name = "Amazing trip",
             ownerId = "1274218746",
             locations = emptyList(),
@@ -96,16 +98,62 @@ class AddPhotosScreenTest : SwissTravelTest() {
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = AddPhotosViewModel()
 
-    // Compose content
-    composeTestRule.setContent { AddPhotosScreen(tripId = fakeTrip.uid, viewModel = fakeModel) }
-
-    // Simulate picker returning 2 URIs
-    val fakeUris = listOf("FakeUri1".toUri(), "FakeUri2".toUri())
-    composeTestRule.runOnUiThread { fakeModel.addUri(fakeUris) }
-
-    // Assert grid shows the images
-    fakeUris.forEachIndexed { index, _ ->
-      composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(index)).isDisplayed()
+    composeTestRule.setContent {
+      AddPhotosScreen(
+          tripId = fakeTrip.uid,
+          viewModel = fakeModel,
+          launchPickerOverride = {
+            fakeModel.addUri(
+                listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()))
+          })
     }
+
+    // Click on the button add photos
+    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).performClick()
+
+    // Verify that the images has been added
+    composeTestRule
+        .onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID)
+        .onChildren()
+        .assertCountEquals(2)
+  }
+  // AI did the test
+  @Test
+  fun checkBackAndSaveButtonsTriggerOnBack() = runTest {
+    var backCalled = false
+    val fakeTrip =
+        Trip(
+            uid = "12",
+            name = "Trip with images",
+            ownerId = "1274218746",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
+            isFavorite = true,
+            isCurrentTrip = true,
+            listUri = emptyList())
+    TripsRepositoryProvider.repository.addTrip(fakeTrip)
+    val fakeModel = AddPhotosViewModel()
+
+    composeTestRule.setContent {
+      AddPhotosScreen(
+          tripId = fakeTrip.uid,
+          viewModel = fakeModel,
+          onBack = { backCalled = true },
+          launchPickerOverride = {
+            fakeModel.addUri(
+                listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()))
+          })
+    }
+
+    // Click on the back button
+    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).performClick()
+    assert(backCalled)
+
+    // Reset and click on the save button
+    backCalled = false
+    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.SAVE_BUTTON).performClick()
+    assert(backCalled)
   }
 }

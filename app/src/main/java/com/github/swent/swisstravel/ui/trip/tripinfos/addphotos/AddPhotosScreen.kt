@@ -62,12 +62,13 @@ object AddPhotosScreenTestTags {
 fun AddPhotosScreen(
     onBack: () -> Unit = {},
     viewModel: AddPhotosViewModel = viewModel(),
-    tripId: String
+    tripId: String,
+    launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
 ) {
   val context = LocalContext.current
   LaunchedEffect(tripId) { viewModel.loadPhotos(tripId) }
   // AI helped for the picker
-  val picker =
+  val pickerLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
         if (uris.isNotEmpty()) {
           uris.forEach { uri ->
@@ -77,6 +78,9 @@ fun AddPhotosScreen(
           viewModel.addUri(uris)
         }
       }
+  val launchPicker: (PickVisualMediaRequest) -> Unit =
+      launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
+
   val addPhotosUIState by viewModel.uiState.collectAsState()
   Scaffold(
       modifier = Modifier.testTag(AddPhotosScreenTestTags.MAIN_SCREEN),
@@ -110,7 +114,7 @@ fun AddPhotosScreen(
               Button(
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
                   onClick = {
-                    picker.launch(
+                    launchPicker(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                   }) {
                     Text(text = stringResource(R.string.add_photos_button))
