@@ -67,7 +67,6 @@ import com.github.swent.swisstravel.model.user.Achievement
 import com.github.swent.swisstravel.model.user.AchievementCategory
 import com.github.swent.swisstravel.model.user.AchievementId
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.model.user.category
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
@@ -439,7 +438,7 @@ private fun AchievementDetailDialog(
     profileName: String,
     onDismiss: () -> Unit,
 ) {
-  val category = achievement.id.category()
+  val category = achievement.id.category
   val tiers = category.tiers()
   val (currentValue, unitLabel) = computeCurrentStat(category, stats, friendsCount)
 

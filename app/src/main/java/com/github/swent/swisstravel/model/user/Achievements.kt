@@ -5,43 +5,52 @@ import androidx.annotation.StringRes
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.TransportMode
 
+enum class AchievementCategory(@StringRes val labelRes: Int) {
+  TRIPS(R.string.achievement_category_trips),
+  TIME(R.string.achievement_category_time),
+  LOCATIONS(R.string.achievement_category_locations),
+  TRANSPORT(R.string.achievement_category_transport),
+  LONGEST_ROUTE(R.string.achievement_category_longest_route),
+  SOCIAL(R.string.achievement_category_social),
+}
+
 /** Logical ids for achievements. */
-enum class AchievementId {
+enum class AchievementId(val category: AchievementCategory) {
   // 1) Trip Count
-  ROOKIE_EXPLORER,
-  WEEKEND_ADVENTURER,
-  FREQUENT_TRAVELER,
-  GLOBAL_NOMAD,
+  ROOKIE_EXPLORER(AchievementCategory.TRIPS),
+  WEEKEND_ADVENTURER(AchievementCategory.TRIPS),
+  FREQUENT_TRAVELER(AchievementCategory.TRIPS),
+  GLOBAL_NOMAD(AchievementCategory.TRIPS),
 
   // 2) Travel Time
-  JUST_WARMING_UP,
-  MILEAGE_MAKER,
-  ENDURANCE_TRAVELER,
-  TIME_LORD,
+  JUST_WARMING_UP(AchievementCategory.TIME),
+  MILEAGE_MAKER(AchievementCategory.TIME),
+  ENDURANCE_TRAVELER(AchievementCategory.TIME),
+  TIME_LORD(AchievementCategory.TIME),
 
   // 3) Unique Locations
-  LOCAL_TOURIST,
-  CITY_HOPPER,
-  CONTINENT_CRAWLER,
-  GLOBE_TROTTER,
+  LOCAL_TOURIST(AchievementCategory.LOCATIONS),
+  CITY_HOPPER(AchievementCategory.LOCATIONS),
+  CONTINENT_CRAWLER(AchievementCategory.LOCATIONS),
+  GLOBE_TROTTER(AchievementCategory.LOCATIONS),
 
   // 4) Transport Mode
-  TRAIN_ENTHUSIAST,
-  ROAD_WARRIOR,
-  BUS_BUDDY,
-  ECO_RIDER,
+  TRAIN_ENTHUSIAST(AchievementCategory.TRANSPORT),
+  ROAD_WARRIOR(AchievementCategory.TRANSPORT),
+  BUS_BUDDY(AchievementCategory.TRANSPORT),
+  ECO_RIDER(AchievementCategory.TRANSPORT),
 
   // 5) Longest Route Segment
-  SHORT_HOP,
-  JOURNEYMAN,
-  LONG_HAULER,
-  IRON_ROUTE_CHAMPION,
+  SHORT_HOP(AchievementCategory.LONGEST_ROUTE),
+  JOURNEYMAN(AchievementCategory.LONGEST_ROUTE),
+  LONG_HAULER(AchievementCategory.LONGEST_ROUTE),
+  IRON_ROUTE_CHAMPION(AchievementCategory.LONGEST_ROUTE),
 
   // 6) Social / Friends
-  NEW_FRIEND,
-  SOCIAL_TRAVELER,
-  POPULAR_GUIDE,
-  LEGENDARY_CONNECTOR,
+  NEW_FRIEND(AchievementCategory.SOCIAL),
+  SOCIAL_TRAVELER(AchievementCategory.SOCIAL),
+  POPULAR_GUIDE(AchievementCategory.SOCIAL),
+  LEGENDARY_CONNECTOR(AchievementCategory.SOCIAL),
 }
 
 /** Single achievement instance. */
@@ -51,7 +60,7 @@ data class Achievement(
     @DrawableRes val icon: Int,
 )
 
-/** Enum linking logical ids to string + condition to get the achievement + drawable resources. */
+/** Enum linking logical ids to string + drawable resources. */
 enum class AchievementData(
     val id: AchievementId,
     @StringRes val label: Int,
@@ -188,197 +197,104 @@ enum class AchievementData(
       AchievementId.LEGENDARY_CONNECTOR,
       R.string.achievement_legendary_connector,
       R.string.achievement_legendary_connector_condition,
-      R.drawable.ic_legendary_connector),
+      R.drawable.ic_legendary_connector);
+
+  companion object {
+    private val byId: Map<AchievementId, AchievementData> = values().associateBy { it.id }
+
+    fun fromId(id: AchievementId): AchievementData =
+        byId[id] ?: error("Unknown achievement id: $id")
+  }
 }
-
-/** An enum representing the different categories of achievements. */
-enum class AchievementCategory {
-  TRIPS,
-  TIME,
-  LOCATIONS,
-  TRANSPORT,
-  LONGEST_ROUTE,
-  SOCIAL
-}
-
-/** Filters achievements into categories */
-fun AchievementId.category(): AchievementCategory =
-    when (this) {
-      AchievementId.ROOKIE_EXPLORER,
-      AchievementId.WEEKEND_ADVENTURER,
-      AchievementId.FREQUENT_TRAVELER,
-      AchievementId.GLOBAL_NOMAD -> AchievementCategory.TRIPS
-      AchievementId.JUST_WARMING_UP,
-      AchievementId.MILEAGE_MAKER,
-      AchievementId.ENDURANCE_TRAVELER,
-      AchievementId.TIME_LORD -> AchievementCategory.TIME
-      AchievementId.LOCAL_TOURIST,
-      AchievementId.CITY_HOPPER,
-      AchievementId.CONTINENT_CRAWLER,
-      AchievementId.GLOBE_TROTTER -> AchievementCategory.LOCATIONS
-      AchievementId.TRAIN_ENTHUSIAST,
-      AchievementId.ROAD_WARRIOR,
-      AchievementId.BUS_BUDDY,
-      AchievementId.ECO_RIDER -> AchievementCategory.TRANSPORT
-      AchievementId.SHORT_HOP,
-      AchievementId.JOURNEYMAN,
-      AchievementId.LONG_HAULER,
-      AchievementId.IRON_ROUTE_CHAMPION -> AchievementCategory.LONGEST_ROUTE
-      AchievementId.NEW_FRIEND,
-      AchievementId.SOCIAL_TRAVELER,
-      AchievementId.POPULAR_GUIDE,
-      AchievementId.LEGENDARY_CONNECTOR -> AchievementCategory.SOCIAL
-    }
-
-/** thresholds in same units you used in computeAchievements */
-fun AchievementCategory.tiers(): List<AchievementId> =
-    when (this) {
-      AchievementCategory.TRIPS ->
-          listOf(
-              AchievementId.ROOKIE_EXPLORER,
-              AchievementId.WEEKEND_ADVENTURER,
-              AchievementId.FREQUENT_TRAVELER,
-              AchievementId.GLOBAL_NOMAD,
-          )
-      AchievementCategory.TIME ->
-          listOf(
-              AchievementId.JUST_WARMING_UP,
-              AchievementId.MILEAGE_MAKER,
-              AchievementId.ENDURANCE_TRAVELER,
-              AchievementId.TIME_LORD,
-          )
-      AchievementCategory.LOCATIONS ->
-          listOf(
-              AchievementId.LOCAL_TOURIST,
-              AchievementId.CITY_HOPPER,
-              AchievementId.CONTINENT_CRAWLER,
-              AchievementId.GLOBE_TROTTER,
-          )
-      AchievementCategory.TRANSPORT ->
-          listOf(
-              AchievementId.TRAIN_ENTHUSIAST,
-              AchievementId.ROAD_WARRIOR,
-              AchievementId.BUS_BUDDY,
-              AchievementId.ECO_RIDER,
-          )
-      AchievementCategory.LONGEST_ROUTE ->
-          listOf(
-              AchievementId.SHORT_HOP,
-              AchievementId.JOURNEYMAN,
-              AchievementId.LONG_HAULER,
-              AchievementId.IRON_ROUTE_CHAMPION,
-          )
-      AchievementCategory.SOCIAL ->
-          listOf(
-              AchievementId.NEW_FRIEND,
-              AchievementId.SOCIAL_TRAVELER,
-              AchievementId.POPULAR_GUIDE,
-              AchievementId.LEGENDARY_CONNECTOR,
-          )
-    }
 
 /** Helper: find the data for a given id. */
-fun AchievementId.toData(): AchievementData = AchievementData.values().first { it.id == this }
+fun AchievementId.toData(): AchievementData = AchievementData.fromId(this)
 
-/** Convert an achievement category to a string resource. */
-fun AchievementCategory.displayStringRes(): Int =
-    when (this) {
-      AchievementCategory.TRIPS -> R.string.achievement_category_trips
-      AchievementCategory.TIME -> R.string.achievement_category_time
-      AchievementCategory.LOCATIONS -> R.string.achievement_category_locations
-      AchievementCategory.TRANSPORT -> R.string.achievement_category_transport
-      AchievementCategory.LONGEST_ROUTE -> R.string.achievement_category_longest_route
-      AchievementCategory.SOCIAL -> R.string.achievement_category_social
-    }
+/** Helper: build a concrete Achievement from its id. */
+fun AchievementId.toAchievement(): Achievement {
+  val data = toData()
+  return Achievement(
+      id = data.id,
+      label = data.label,
+      icon = data.icon,
+  )
+}
 
 /**
- * Compute achievements for a given user.
+ * Thresholds per category, in the same order as [AchievementCategory.tiers] returns ids.
  *
- * @param stats The user's stats
- * @param friendsCount The number of friends the user has
- * @return A list of achievements for the user
+ * Units:
+ * - TRIPS: number of trips
+ * - TIME: total travel minutes
+ * - LOCATIONS: unique locations
+ * - LONGEST_ROUTE: longest segment in minutes
+ * - SOCIAL: number of friends
  */
+private val CATEGORY_THRESHOLDS: Map<AchievementCategory, List<Int>> =
+    mapOf(
+        AchievementCategory.TRIPS to listOf(1, 5, 10, 20),
+        AchievementCategory.TIME to listOf(100, 1_000, 5_000, 20_000),
+        AchievementCategory.LOCATIONS to listOf(3, 10, 20, 50),
+        AchievementCategory.LONGEST_ROUTE to listOf(15, 60, 180, 600),
+        AchievementCategory.SOCIAL to listOf(1, 5, 10, 20),
+    )
+
+/** Compute unlocked achievements from user stats + friend count. */
 fun computeAchievements(
     stats: UserStats,
     friendsCount: Int,
 ): List<Achievement> {
   val result = mutableListOf<Achievement>()
 
-  /** Adds a given achievement to the user along with its data */
-  fun add(id: AchievementId) {
-    val data = id.toData()
-    result +=
-        Achievement(
-            id = data.id,
-            label = data.label,
-            icon = data.icon,
-        )
-  }
-
-  /** Adds the highest medal tier only */
-  fun addHighestTier(value: Int, thresholds: List<Pair<Int, AchievementId>>) {
-    val best = thresholds.lastOrNull { (required, _) -> value >= required }
-    if (best != null) add(best.second)
+  fun MutableList<Achievement>.addHighestTier(
+      category: AchievementCategory,
+      value: Int,
+  ) {
+    val thresholds = CATEGORY_THRESHOLDS[category] ?: return
+    val tierIds = category.tiers()
+    val bestIndex = thresholds.indexOfLast { value >= it }
+    if (bestIndex in tierIds.indices) {
+      add(tierIds[bestIndex].toAchievement())
+    }
   }
 
   // 1) Trip Count
-  addHighestTier(
-      stats.totalTrips,
-      listOf(
-          1 to AchievementId.ROOKIE_EXPLORER,
-          5 to AchievementId.WEEKEND_ADVENTURER,
-          10 to AchievementId.FREQUENT_TRAVELER,
-          20 to AchievementId.GLOBAL_NOMAD,
-      ))
+  result.addHighestTier(AchievementCategory.TRIPS, stats.totalTrips)
 
   // 2) Travel Time
-  addHighestTier(
-      stats.totalTravelMinutes,
-      listOf(
-          100 to AchievementId.JUST_WARMING_UP,
-          1_000 to AchievementId.MILEAGE_MAKER,
-          5_000 to AchievementId.ENDURANCE_TRAVELER,
-          20_000 to AchievementId.TIME_LORD,
-      ))
+  result.addHighestTier(AchievementCategory.TIME, stats.totalTravelMinutes)
 
   // 3) Unique Locations
-  addHighestTier(
-      stats.uniqueLocations,
-      listOf(
-          3 to AchievementId.LOCAL_TOURIST,
-          10 to AchievementId.CITY_HOPPER,
-          20 to AchievementId.CONTINENT_CRAWLER,
-          50 to AchievementId.GLOBE_TROTTER,
-      ))
+  result.addHighestTier(AchievementCategory.LOCATIONS, stats.uniqueLocations)
 
   // 4) Transport Mode (non-tiered)
   when (stats.mostUsedTransportMode) {
-    TransportMode.TRAIN -> add(AchievementId.TRAIN_ENTHUSIAST)
-    TransportMode.CAR -> add(AchievementId.ROAD_WARRIOR)
-    TransportMode.BUS -> add(AchievementId.BUS_BUDDY)
-    TransportMode.TRAM -> add(AchievementId.ECO_RIDER)
+    TransportMode.TRAIN -> result += AchievementId.TRAIN_ENTHUSIAST.toAchievement()
+    TransportMode.CAR -> result += AchievementId.ROAD_WARRIOR.toAchievement()
+    TransportMode.BUS -> result += AchievementId.BUS_BUDDY.toAchievement()
+    TransportMode.TRAM -> result += AchievementId.ECO_RIDER.toAchievement()
     else -> Unit
   }
 
   // 5) Longest Route Segment
-  addHighestTier(
+  result.addHighestTier(
+      AchievementCategory.LONGEST_ROUTE,
       stats.longestRouteSegmentMin,
-      listOf(
-          15 to AchievementId.SHORT_HOP,
-          60 to AchievementId.JOURNEYMAN,
-          180 to AchievementId.LONG_HAULER,
-          600 to AchievementId.IRON_ROUTE_CHAMPION,
-      ))
+  )
 
   // 6) Social / Friends
-  addHighestTier(
-      friendsCount,
-      listOf(
-          1 to AchievementId.NEW_FRIEND,
-          5 to AchievementId.SOCIAL_TRAVELER,
-          10 to AchievementId.POPULAR_GUIDE,
-          20 to AchievementId.LEGENDARY_CONNECTOR,
-      ))
+  result.addHighestTier(AchievementCategory.SOCIAL, friendsCount)
 
   return result
 }
+
+/**
+ * The display string for an achievement category.
+ *
+ * @return The string resource ID for the display string.
+ */
+fun AchievementCategory.displayStringRes(): Int = labelRes
+
+/** Filters each achievement by category */
+fun AchievementCategory.tiers(): List<AchievementId> =
+    AchievementId.values().filter { it.category == this }

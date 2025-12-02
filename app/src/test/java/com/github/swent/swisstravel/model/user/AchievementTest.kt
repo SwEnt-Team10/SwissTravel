@@ -261,7 +261,7 @@ class AchievementTest {
   fun `every achievement id maps to expected category`() {
     // Just ensure the mapping does not throw and is exhaustive
     AchievementId.values().forEach { id ->
-      val category = id.category()
+      val category = id.category
       // Sanity check: category has this id in its tier list, except transport mode
       val idsInCategory = category.tiers()
       assertTrue(id in idsInCategory, "Expected $id to be present in tiers() of category $category")
