@@ -4,6 +4,11 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
 
+    <!-- Main Activity -->
+    <string name="trip_id_route">tripId</string>
+    <string name="add_photos_screen_tag">AddPhotosScreen</string>
+    <string name="null_trip_id">Trip UID is null</string>
+
     <!-- Client ID for Google Sign-In -->
     <string name="default_web_client_id">188461068405-bd2f3li3vhnsmphl3tuj8kkgb5lnvo5f.apps.googleusercontent.com</string>
 
@@ -131,6 +136,7 @@
     <string name="swipe_activities">Swipe activities</string>
     <string name="liked_activities">Liked Activities</string>
     <string name="trip_id_missing">Trip ID is missing</string>
+    <string name="add_photo">Add photos</string>
 
     <!-- Swipe Activities -->
     <string name="no_activities_to_propose">No more activities to show</string>
@@ -216,6 +222,7 @@
     <string name="preference_early_bird">Early Bird</string>
     <string name="preference_night_owl">Night Owl</string>
     <string name="preference_slow_pace">Slow Paced</string>
+    <string name="preference_intermediate_stops">Intermediate Stops</string>
 
     <!-- Preference Categories -->
     <string name="preference_category_activity_type">Activity Type</string>
@@ -269,5 +276,184 @@
     <string name="accept_friend">"Accept friend request"</string>
     <string name="deny_friend">Deny friend request</string>
     <string name="user_uid_missing">Can\'t find this profile, sorry :(</string>
+
+    <!-- Achievement strings -->
+
+    <!-- Trip Count -->
+    <string name="achievement_rookie_explorer">Rookie Explorer</string>
+    <string name="achievement_weekend_adventurer">Weekend Adventurer</string>
+    <string name="achievement_frequent_traveler">Frequent Traveler</string>
+    <string name="achievement_global_nomad">Global Nomad</string>
+
+    <!-- Travel Time -->
+    <string name="achievement_just_warming_up">Just Warming Up</string>
+    <string name="achievement_mileage_maker">Mileage Maker</string>
+    <string name="achievement_endurance_traveler">Endurance Traveler</string>
+    <string name="achievement_time_lord">Time Lord</string>
+
+    <!-- Unique Locations -->
+    <string name="achievement_local_tourist">Local Tourist</string>
+    <string name="achievement_city_hopper">City Hopper</string>
+    <string name="achievement_continent_crawler">Continent Crawler</string>
+    <string name="achievement_globe_trotter">Globe Trotter</string>
+
+    <!-- Transport Mode -->
+    <string name="achievement_train_enthusiast">Train Enthusiast</string>
+    <string name="achievement_road_warrior">Road Warrior</string>
+    <string name="achievement_bus_buddy">Bus Buddy</string>
+    <string name="achievement_eco_rider">Eco Rider</string>
+
+    <!-- Longest Route Segment -->
+    <string name="achievement_short_hop">Short Hop</string>
+    <string name="achievement_journeyman">Journeyman</string>
+    <string name="achievement_long_hauler">Long Hauler</string>
+    <string name="achievement_iron_route_champion">Iron Route Champion</string>
+
+    <!-- Social / Friends -->
+    <string name="achievement_new_friend">New Friend</string>
+    <string name="achievement_social_traveler">Social Traveler</string>
+    <string name="achievement_popular_guide">Popular Guide</string>
+    <string name="achievement_legendary_connector">Legendary Connector</string>
+
+    <!-- Achievement Info -->
+    <string name="achievement_category_trips">Total trips</string>
+    <string name="achievement_category_time">Total travel time</string>
+    <string name="achievement_category_locations">Unique locations</string>
+    <string name="achievement_category_transport">Most used transport mode</string>
+    <string name="achievement_category_longest_route">Longest route segment</string>
+    <string name="achievement_category_social">Total friends</string>
+    <string name="achievement_subject_they">This traveler</string>
+    <string name="achievement_current_stat_you">You currently have: %1$d %2$s</string>
+    <string name="achievement_current_stat_other">%1$s currently has: %2$d %3$s</string>
+
+    <!-- Transport mode labels -->
+    <string name="transport_mode_train">train</string>
+    <string name="transport_mode_car">car</string>
+    <string name="transport_mode_bus">bus</string>
+    <string name="transport_mode_tram">tram</string>
+
+    <!-- Transport achievement text -->
+    <string name="achievement_transport_you">Your most used transport mode is %1$s.</string>
+    <string name="achievement_transport_other">%1$s\'s most used transport mode is %2$s.</string>
+
+    <string name="achievement_transport_none_you">
+        You don\'t have a preferred transport mode yet.
+    </string>
+    <string name="achievement_transport_none_other">
+        %1$s doesn\'t have a preferred transport mode yet.
+    </string>
+
+    <!-- Achievement Condition -->
+    <!-- ============= TRIP COUNT ============= -->
+    <string name="achievement_rookie_explorer_condition">
+    Take at least 1 trip.
+    </string>
+
+    <string name="achievement_weekend_adventurer_condition">
+    Take at least 5 trips.
+    </string>
+
+    <string name="achievement_frequent_traveler_condition">
+    Take at least 10 trips.
+    </string>
+
+    <string name="achievement_global_nomad_condition">
+    Take at least 20 trips.
+    </string>
+
+    <!-- ============= TRAVEL TIME (MINUTES) ============= -->
+
+    <string name="achievement_just_warming_up_condition">
+    Travel for at least 100 minutes total.
+    </string>
+
+    <string name="achievement_mileage_maker_condition">
+    Travel for at least 1,000 minutes total.
+    </string>
+
+    <string name="achievement_endurance_traveler_condition">
+    Travel for at least 5,000 minutes total.
+    </string>
+
+    <string name="achievement_time_lord_condition">
+    Travel for at least 20,000 minutes total.
+    </string>
+
+    <!-- ============= UNIQUE LOCATIONS ============= -->
+
+    <string name="achievement_local_tourist_condition">
+    Visit at least 3 unique locations.
+    </string>
+
+    <string name="achievement_city_hopper_condition">
+    Visit at least 10 unique locations.
+    </string>
+
+    <string name="achievement_continent_crawler_condition">
+    Visit at least 20 unique locations.
+    </string>
+
+    <string name="achievement_globe_trotter_condition">
+    Visit at least 50 unique locations.
+    </string>
+
+    <!-- ============= TRANSPORT MODE ============= -->
+
+    <string name="achievement_train_enthusiast_condition">
+    Have train as your most used mode of transport.
+    </string>
+
+    <string name="achievement_road_warrior_condition">
+    Have car as your most used mode of transport.
+    </string>
+
+    <string name="achievement_bus_buddy_condition">
+    Have bus as your most used mode of transport.
+    </string>
+
+    <string name="achievement_eco_rider_condition">
+    Have tram as your most used mode of transport.
+    </string>
+
+    <!-- ============= LONGEST ROUTE SEGMENT ============= -->
+
+    <string name="achievement_short_hop_condition">
+    Complete a trip segment lasting at least 15 minutes.
+    </string>
+
+    <string name="achievement_journeyman_condition">
+    Complete a trip segment lasting at least 60 minutes.
+    </string>
+
+    <string name="achievement_long_hauler_condition">
+    Complete a trip segment lasting at least 180 minutes.
+    </string>
+
+    <string name="achievement_iron_route_champion_condition">
+    Complete a trip segment lasting at least 600 minutes.
+    </string>
+
+    <!-- ============= SOCIAL / FRIENDS ============= -->
+
+    <string name="achievement_new_friend_condition">
+    Add at least 1 friend.
+    </string>
+
+    <string name="achievement_social_traveler_condition">
+    Add at least 5 friends.
+    </string>
+
+    <string name="achievement_popular_guide_condition">
+    Add at least 10 friends.
+    </string>
+
+    <string name="achievement_legendary_connector_condition">
+    Add at least 20 friends.
+    </string>
+  
+    <!-- AddPhotosScreen -->
+    <string name="add_photos_title">Add photos</string>
+    <string name="add_photos_button">Add photos</string>
+    <string name="add_photos_save_button">Save</string>
 
 </resources>

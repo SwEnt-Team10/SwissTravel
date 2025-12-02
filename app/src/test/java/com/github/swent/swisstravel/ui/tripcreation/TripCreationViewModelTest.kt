@@ -91,7 +91,7 @@ class TripCreationViewModelTest {
     every { mockResources.getStringArray(R.array.grand_tour) } returns cities
 
     // Mock the algorithm response
-    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
 
     // Setup initial state
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4)) // 4-day trip
@@ -239,7 +239,7 @@ class TripCreationViewModelTest {
         )
 
     // Algorithm returns empty schedule → no activities or route segments
-    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -278,7 +278,7 @@ class TripCreationViewModelTest {
         )
 
     // Algorithm still returns empty schedule
-    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
