@@ -270,7 +270,8 @@ fun SuggestionList(
                       onSuggestionSelected(location)
                     }
                   }
-                  .padding(dimensionResource(R.dimen.small_padding)),
+                  .padding(dimensionResource(R.dimen.small_padding))
+                  .testTag("suggestion_row_${location.name}"),
           horizontalArrangement = Arrangement.SpaceBetween,
           verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -278,6 +279,7 @@ fun SuggestionList(
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.weight(1f))
             androidx.compose.material3.Checkbox(
+                modifier = Modifier.testTag("suggestion_checkbox_${location.name}"),
                 checked = isSelected,
                 onCheckedChange = { checked ->
                   if (checked) {

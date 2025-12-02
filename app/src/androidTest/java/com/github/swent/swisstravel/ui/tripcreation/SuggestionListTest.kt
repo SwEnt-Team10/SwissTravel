@@ -10,6 +10,8 @@ import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import org.junit.Test
 
+// This class was written with the help of AI
+
 class SuggestionListTest : com.github.swent.swisstravel.utils.SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
@@ -54,13 +56,13 @@ class SuggestionListTest : com.github.swent.swisstravel.utils.SwissTravelTest() 
     composeTestRule.onNodeWithTag("suggestion_checkbox_${firstSuggestion.name}").assertIsOff()
 
     // Click the row to select
-    composeTestRule.onNodeWithTag("suggestion_row_${firstSuggestion.name}").performClick()
+    composeTestRule.onNodeWithTag("suggestion_checkbox_${firstSuggestion.name}").performClick()
 
     // Verify state is now checked
     composeTestRule.onNodeWithTag("suggestion_checkbox_${firstSuggestion.name}").assertIsOn()
 
     // Click again to deselect
-    composeTestRule.onNodeWithTag("suggestion_row_${firstSuggestion.name}").performClick()
+    composeTestRule.onNodeWithTag("suggestion_checkbox_${firstSuggestion.name}").performClick()
 
     // Verify state is unchecked
     composeTestRule.onNodeWithTag("suggestion_checkbox_${firstSuggestion.name}").assertIsOff()

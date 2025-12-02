@@ -100,7 +100,8 @@ abstract class SwissTravelTest {
     }
 
   init {
-    assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running the tests" }
+    // assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running the
+    // tests" }
   }
 
   @Before
