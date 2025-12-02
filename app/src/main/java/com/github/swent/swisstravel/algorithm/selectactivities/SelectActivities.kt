@@ -138,24 +138,24 @@ class SelectActivities(
   suspend fun getOneActivityNearWithPreferences(coords: Coordinate, radius: Int = NEAR): Activity? {
     val userPreferences = tripSettings.preferences.toMutableList()
     removeUnsupportedPreferences(userPreferences)
+    var fetched: List<Activity>? = null
     // If the user has preferences, separate mandatory and optional ones and fetch accordingly.
     if (userPreferences.isNotEmpty()) {
       val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(userPreferences)
       if (optionalPrefs.isNotEmpty()) {
-        val fetched =
+        fetched =
             activityRepository.getActivitiesNearWithPreference(
                 mandatoryPrefs + optionalPrefs, coords, NEAR, 1)
         delay(API_CALL_DELAY_MS) // Respect API rate limit.
-        return fetched.firstOrNull()
       } else {
-        val fetched =
+        fetched =
             activityRepository.getActivitiesNearWithPreference(mandatoryPrefs, coords, NEAR, 1)
         delay(API_CALL_DELAY_MS) // Respect API rate limit.
-        return fetched.firstOrNull()
       }
     } else { // No preferences, fetch any activity near the location.
-      return activityRepository.getActivitiesNear(coords, radius, 1).firstOrNull()
+      fetched = activityRepository.getActivitiesNear(coords, radius, 1)
     }
+    return fetched.firstOrNull()
   }
 
   /**

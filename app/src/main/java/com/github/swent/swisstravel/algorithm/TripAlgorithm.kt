@@ -19,6 +19,7 @@ import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import kotlin.collections.zipWithNext
+import kotlin.random.Random
 
 const val DISTANCE_PER_STOP_KM = 90.0
 const val RADIUS_NEW_ACTIVITY_M = 15000
@@ -334,6 +335,8 @@ class TripAlgorithm(
   }
 
   /** Extension function to generate a random double in a closed range */
-  private fun ClosedFloatingPointRange<Double>.random() =
-      (start + Math.random() * (endInclusive - start))
+  private fun ClosedFloatingPointRange<Double>.random(rng: Random = Random.Default): Double {
+    // Guarantee closed range by adding the minimal epsilon
+    return rng.nextDouble(start, endInclusive + Double.MIN_VALUE)
+  }
 }
