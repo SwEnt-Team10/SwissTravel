@@ -21,7 +21,7 @@ class SuggestionListTest {
 
     // Click on "Suggestions" to expand
     composeTestRule.onNodeWithText("See Our Suggestions For You").performClick()
-      // assert the suggestions are correctly displayed
+    // assert the suggestions are correctly displayed
     composeTestRule.onNodeWithText("See Our Suggestions For You").assertIsDisplayed()
   }
 }
