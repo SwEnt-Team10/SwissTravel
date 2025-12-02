@@ -31,6 +31,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.displayStringRes
+import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
@@ -616,6 +617,12 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkSwipeActivityScreenIsDisplayed() {
+    onNodeWithTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN).assertIsDisplayed()
+    onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON).assertIsDisplayed()
   }
 
   // TODO : Create helper/companions functions here

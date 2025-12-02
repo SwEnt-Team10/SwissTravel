@@ -26,28 +26,6 @@ class ActivityInfosTest {
 
   @get:Rule val composeRule = createComposeRule()
 
-  private fun fakeActivity(
-      name: String = "Some Activity",
-      description: String = "Nice place to visit.",
-      estimatedTimeSeconds: Int = 7200,
-  ): Activity {
-    val now = Timestamp.now()
-    val loc =
-        Location(
-            coordinate = Coordinate(0.0, 0.0),
-            name = name,
-        )
-
-    return Activity(
-        startDate = now,
-        endDate = now,
-        location = loc,
-        description = description,
-        imageUrls = emptyList(),
-        estimatedTime = estimatedTimeSeconds,
-    )
-  }
-
   @Test
   fun title_and_backButton_are_displayed() {
     val activity = fakeActivity(name = "Notre-Dame Cathedral")
@@ -176,4 +154,26 @@ class ActivityInfosTest {
         .assertIsDisplayed()
         .assert(hasText(expectedTip))
   }
+}
+
+fun fakeActivity(
+    name: String = "Some Activity",
+    description: String = "Nice place to visit.",
+    estimatedTimeSeconds: Int = 7200,
+): Activity {
+  val now = Timestamp.now()
+  val loc =
+      Location(
+          coordinate = Coordinate(0.0, 0.0),
+          name = name,
+      )
+
+  return Activity(
+      startDate = now,
+      endDate = now,
+      location = loc,
+      description = description,
+      imageUrls = emptyList(),
+      estimatedTime = estimatedTimeSeconds,
+  )
 }
