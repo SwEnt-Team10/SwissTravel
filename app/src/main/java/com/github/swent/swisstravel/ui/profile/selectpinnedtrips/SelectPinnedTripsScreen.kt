@@ -40,6 +40,7 @@ import com.github.swent.swisstravel.ui.trips.TripsViewModel
  * and lists.
  */
 object SelectedPinnedTripsScreenTestTags {
+  const val TOP_APP_BAR = "topAppBar"
   const val SAVE_SELECTED_TRIPS_FAB = "saveSelectedTripsFab"
 }
 
@@ -159,5 +160,6 @@ private fun SelectedPinnedTripsTopAppBar(
           TopAppBarDefaults.topAppBarColors(
               titleContentColor = MaterialTheme.colorScheme.onBackground,
               navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
-              actionIconContentColor = MaterialTheme.colorScheme.onBackground))
+              actionIconContentColor = MaterialTheme.colorScheme.onBackground),
+      modifier = Modifier.testTag(SelectedPinnedTripsScreenTestTags.TOP_APP_BAR))
 }
