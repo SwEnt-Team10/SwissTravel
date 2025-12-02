@@ -96,6 +96,9 @@
     <dimen name="daily_view_date_separator_padding">8dp</dimen>
     <dimen name="daily_view_map_button_padding">16dp</dimen>
 
+    <!-- First Destination Screen -->
+    <dimen name="first_destination_suggestion_height">200dp</dimen>
+
 
     <!-- Current Trip Screen -->
     <dimen name="current_trip_icon_bottom_padding">16dp</dimen>

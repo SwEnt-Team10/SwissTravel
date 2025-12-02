@@ -323,4 +323,46 @@ open class TripSettingsViewModel(
       it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = departure))
     }
   }
+
+  // --- Suggestions Logic ---
+
+  private val _suggestions = MutableStateFlow<List<Location>>(emptyList())
+  val suggestions: StateFlow<List<Location>> = _suggestions.asStateFlow()
+
+  private val _selectedSuggestions = MutableStateFlow<List<Location>>(emptyList())
+  val selectedSuggestions: StateFlow<List<Location>> = _selectedSuggestions.asStateFlow()
+
+  fun generateSuggestions(context: Context) {
+    if (_suggestions.value.isEmpty()) {
+      val grandTourArray = context.resources.getStringArray(R.array.grand_tour)
+      val newSuggestions =
+          grandTourArray
+              .asSequence()
+              .shuffled()
+              .take(5)
+              .mapNotNull { entry ->
+                val parts = entry.split(";")
+                if (parts.size >= 3) {
+                  val name = parts[0]
+                  val lat = parts[1].toDoubleOrNull()
+                  val lon = parts[2].toDoubleOrNull()
+                  if (lat != null && lon != null) {
+                    Location(Coordinate(lat, lon), name)
+                  } else null
+                } else null
+              }
+              .toList()
+      _suggestions.value = newSuggestions
+    }
+  }
+
+  fun toggleSuggestion(location: Location) {
+    _selectedSuggestions.update { current ->
+      if (current.any { it.name == location.name && it.coordinate == location.coordinate }) {
+        current.filterNot { it.name == location.name && it.coordinate == location.coordinate }
+      } else {
+        current + location
+      }
+    }
+  }
 }
