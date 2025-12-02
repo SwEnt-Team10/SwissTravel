@@ -144,7 +144,8 @@ fun PreferenceSelector(
 ) {
   val categoriesToShow =
       if (isRandomTrip) {
-        listOf(PreferenceCategories.Category.ACCESSIBILITY)
+        listOf(
+            PreferenceCategories.Category.TRAVEL_STYLE, PreferenceCategories.Category.ACCESSIBILITY)
       } else {
         PreferenceCategories.Category.values().toList()
       }

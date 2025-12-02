@@ -99,16 +99,18 @@ class TripCreationTests : InMemorySwissTravelTest() {
     val preferenceSelector =
         composeTestRule.onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
     preferenceSelector.assertIsDisplayed()
-    for (preference in PreferenceCategories.Category.ACCESSIBILITY.getPreferences()) {
-      val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
-      preferenceSelector.performScrollToNode(hasTestTag(tag))
-      composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
-    }
+    val preferenceCategories =
+        listOf(
+            PreferenceCategories.Category.ACCESSIBILITY, PreferenceCategories.Category.TRAVEL_STYLE)
     for (category in PreferenceCategories.Category.values()) {
       for (preference in category.getPreferences()) {
-        if (preference.category() != PreferenceCategories.Category.ACCESSIBILITY) {
+        if (!preferenceCategories.contains(preference.category())) {
           val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
           composeTestRule.onNodeWithTag(tag).assertDoesNotExist()
+        } else {
+          val tag = PreferenceSelectorTestTags.getTestTagButton(preference)
+          preferenceSelector.performScrollToNode(hasTestTag(tag))
+          composeTestRule.onNodeWithTag(tag).assertIsDisplayed()
         }
       }
     }
