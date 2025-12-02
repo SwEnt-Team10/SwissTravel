@@ -28,6 +28,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
 
 /** Object for test tags */
@@ -62,8 +63,12 @@ fun CurrentTripScreen(
   if (currentTrip != null) {
     DailyViewScreen(
         currentTrip.uid,
-        onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
-        isOnCurrentTripScreen = true)
+        isOnCurrentTripScreen = true,
+        callbacks =
+            DailyViewScreenCallbacks(
+                onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
+                onSwipeActivities = { navigationActions?.navigateTo(Screen.SwipeActivities) },
+                onLikedActivities = { navigationActions?.navigateTo(Screen.LikedActivities) }))
   } else {
     Scaffold(
         content = { pd ->
