@@ -4,6 +4,11 @@
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
 
+    <!-- Main Activity -->
+    <string name="trip_id_route">tripId</string>
+    <string name="add_photos_screen_tag">AddPhotosScreen</string>
+    <string name="null_trip_id">Trip UID is null</string>
+
     <!-- Client ID for Google Sign-In -->
     <string name="default_web_client_id">188461068405-bd2f3li3vhnsmphl3tuj8kkgb5lnvo5f.apps.googleusercontent.com</string>
 
@@ -31,6 +36,7 @@
     <string name="no">No</string>
     <string name="done">Done</string>
     <string name="next">Next</string>
+    <string name="surprise">Surprise me</string>
     <string name="unexpected_error">Unexpected error: %1$s</string>
     <string name="error">Error</string>
 
@@ -42,6 +48,7 @@
     <string name="nb_travelers">How many travelers will there be?</string>
     <string name="nb_adults">How many adults?</string>
     <string name="nb_children">How many children?</string>
+    <string name="random_trip_generation">Random Trip Generation</string>
 
     <!-- Trip dates -->
     <string name="trip_dates">When will you be travelling?</string>
@@ -126,7 +133,18 @@
     <string name="next_step">Next step</string>
     <string name="draw_from_current_position">Draw route from current position</string>
     <string name="draw_from_previous_step">Draw route from previous step</string>
+    <string name="swipe_activities">Swipe activities</string>
+    <string name="liked_activities">Liked Activities</string>
     <string name="trip_id_missing">Trip ID is missing</string>
+    <string name="add_photo">Add photos</string>
+
+    <!-- Swipe Activities -->
+    <string name="no_activities_to_propose">No more activities to show</string>
+    <string name="like_button">Like</string>
+    <string name="dislike_button">Dislike</string>
+
+    <!-- Liked Activities -->
+    <string name="no_liked_activities">No liked activities yet</string>
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
@@ -261,5 +279,10 @@
     <string name="deny_friend">Deny friend request</string>
     <string name="user_uid_missing">Can\'t find this profile, sorry :(</string>
     <string name="save_selected_trips">Save selected Trips</string>
+
+    <!-- AddPhotosScreen -->
+    <string name="add_photos_title">Add photos</string>
+    <string name="add_photos_button">Add photos</string>
+    <string name="add_photos_save_button">Save</string>
 
 </resources>

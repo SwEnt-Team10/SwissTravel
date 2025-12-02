@@ -112,4 +112,10 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     _ui.value = _ui.value.copy(routeSegments = segments)
     recomputeSchedule()
   }
+
+  override fun likeActivity(activity: Activity) {
+    val current = _ui.value
+    val newLiked = current.likedActivities.toMutableList().apply { add(activity) }
+    _ui.value = current.copy(likedActivities = newLiked)
+  }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
@@ -22,6 +23,8 @@ import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.temporal.ChronoUnit
+import kotlin.random.Random
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,6 +32,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+const val DEFAULT_DURATION = 3
 
 /** * Data class representing the start and end dates of a trip. */
 data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = null)
@@ -82,6 +87,13 @@ open class TripSettingsViewModel(
     }
 ) : ViewModel() {
 
+  private val _isRandomTrip = MutableStateFlow(false)
+  val isRandomTrip: StateFlow<Boolean> = _isRandomTrip.asStateFlow()
+
+  fun setRandomTrip(isRandom: Boolean) {
+    _isRandomTrip.value = isRandom
+  }
+
   private val _tripSettings = MutableStateFlow(TripSettings())
   val tripSettings: StateFlow<TripSettings> = _tripSettings
 
@@ -133,6 +145,63 @@ open class TripSettingsViewModel(
         Log.e("TripSettingsViewModel", "Failed to load user preferences", e)
       }
     }
+  }
+
+  /**
+   * Generates a random trip based on the current trip settings.
+   *
+   * @param context The context used for initializing components that require it.
+   * @param seed The seed to use for the random number generator. If null, a random seed will be
+   *   used.
+   */
+  fun randomTrip(context: Context, seed: Int? = null) {
+    val grandTour =
+        context.resources.getStringArray(R.array.grand_tour).map {
+          val parts = it.split(";")
+          Location(Coordinate(parts[1].toDouble(), parts[2].toDouble()), parts[0], "")
+        }
+
+    val random = seed?.let { Random(it) } ?: Random
+    val settings = _tripSettings.value
+
+    // Pick distinct start and end locations at random
+    val availableCities = grandTour.toMutableList()
+    val start = availableCities.removeAt(random.nextInt(availableCities.size))
+    val end = availableCities.removeAt(random.nextInt(availableCities.size))
+
+    // Determine a manageable number of intermediate destinations based on trip duration
+    val tripDurationDays =
+        if (settings.date.startDate != null && settings.date.endDate != null) {
+          val duration =
+              ChronoUnit.DAYS.between(settings.date.startDate, settings.date.endDate).toInt() + 1
+          Log.d("TripSettingsViewModel", "Trip duration in days: $duration")
+          duration
+        } else {
+          Log.d("TripSettingsViewModel", "Dates are null")
+          DEFAULT_DURATION // Default to a 3-day trip if dates are not set, should not happen
+        }
+    // Rule: roughly one new city every 2 days. Minimum 0, max 3.
+    val numIntermediateDestinations = (tripDurationDays / 2).coerceAtMost(3).coerceAtLeast(0)
+
+    // Select random, distinct intermediate destinations
+    val intermediateDestinations =
+        if (numIntermediateDestinations > 0) {
+          availableCities.shuffled(random).take(numIntermediateDestinations)
+        } else {
+          emptyList()
+        }
+
+    // Update the TripSettings state with the new random locations
+    _tripSettings.update {
+      it.copy(
+          name = "Random Swiss Adventure",
+          arrivalDeparture = TripArrivalDeparture(start, end),
+          destinations = intermediateDestinations)
+    }
+
+    // Call setDestinations to construct the full list and then save the trip
+    setDestinations(intermediateDestinations)
+    saveTrip(context)
   }
 
   /**
@@ -210,7 +279,8 @@ open class TripSettingsViewModel(
                 activities = selectedActivities,
                 tripProfile = tripProfile,
                 isFavorite = false,
-                isCurrentTrip = false)
+                isCurrentTrip = false,
+                listUri = emptyList())
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

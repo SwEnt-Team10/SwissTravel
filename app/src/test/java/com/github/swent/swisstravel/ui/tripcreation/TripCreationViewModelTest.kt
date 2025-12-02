@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
 import android.content.Context
+import android.content.res.Resources
 import android.net.Uri
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
@@ -12,11 +13,12 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.google.common.base.CharMatcher.any
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import java.time.LocalDate
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -58,6 +60,60 @@ class TripCreationViewModelTest {
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+  }
+
+  @Test
+  fun `randomTrip should pick locations and save the trip`() = runTest {
+    // Mocks
+    val mockAlgorithm = mockk<TripAlgorithm>()
+    val mockContext = mockk<Context>()
+    val mockResources = mockk<Resources>()
+
+    // A factory that returns our mock algorithm
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
+    val viewModel =
+        TripSettingsViewModel(
+            tripsRepository = fakeRepo,
+            userRepository = fakeUserRepo,
+            activityRepository = fakeActivityRepo,
+            algorithmFactory = algorithmFactory,
+        )
+
+    // Mocking the resource loading
+    val cities =
+        arrayOf(
+            "Zurich;47.3769;8.5417",
+            "Geneva;46.2044;6.1432",
+            "Bern;46.9480;7.4474",
+            "Lucerne;47.0502;8.3093")
+    every { mockContext.resources } returns mockResources
+    every { mockResources.getStringArray(R.array.grand_tour) } returns cities
+
+    // Mock the algorithm response
+    coEvery { mockAlgorithm.runTripAlgorithm(any(), any(), any()) } returns emptyList()
+
+    // Setup initial state
+    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4)) // 4-day trip
+    viewModel.setRandomTrip(true) // Simulate being in random mode
+
+    // Use a seed for predictable "randomness"
+    viewModel.randomTrip(mockContext, seed = 123)
+
+    // Assertions
+    val settings = viewModel.tripSettings.value
+
+    // Check that trip name is updated
+    assertEquals("Random Swiss Adventure", settings.name)
+
+    // Check that arrival/departure are set and different
+    assertNotNull(settings.arrivalDeparture.arrivalLocation)
+    assertNotNull(settings.arrivalDeparture.departureLocation)
+    assertNotEquals(
+        settings.arrivalDeparture.arrivalLocation, settings.arrivalDeparture.departureLocation)
+
+    // Check that intermediate destinations are selected
+    assertEquals(4, settings.destinations.size)
   }
 
   @Test
@@ -169,7 +225,7 @@ class TripCreationViewModelTest {
   @Test
   fun saveTripShouldAddTripAndEmitSaveSuccess() = runTest {
     val mockAlgorithm = mockk<TripAlgorithm>()
-    val fakeContext: Context = mock()
+    val fakeContext: Context = mockk()
 
     // A factory that returns our mock algorithm
     val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
@@ -188,8 +244,8 @@ class TripCreationViewModelTest {
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
     viewModel.updatePreferences(listOf(Preference.QUICK, Preference.FOODIE))
-    viewModel.updateArrivalLocation(Location(Coordinate(1.0, 1.0), "Arrival"))
-    viewModel.updateDepartureLocation(Location(Coordinate(2.0, 2.0), "Departure"))
+    viewModel.updateArrivalLocation(Location(Coordinate(0.0, 0.0), "Arrival", ""))
+    viewModel.updateDepartureLocation(Location(Coordinate(0.0, 0.0), "Departure", ""))
 
     viewModel.saveTrip(fakeContext)
 
@@ -206,7 +262,7 @@ class TripCreationViewModelTest {
   @Test
   fun saveTripShouldEmitSaveErrorWhenRepositoryThrows() = runTest {
     val mockAlgorithm = mockk<TripAlgorithm>()
-    val fakeContext: Context = mock()
+    val fakeContext: Context = mockk()
 
     // The fake repo will throw when saving
     fakeRepo.shouldThrow = true
@@ -227,8 +283,8 @@ class TripCreationViewModelTest {
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
     viewModel.updatePreferences(listOf(Preference.QUICK, Preference.FOODIE))
-    viewModel.updateArrivalLocation(Location(Coordinate(1.0, 1.0), "Arrival"))
-    viewModel.updateDepartureLocation(Location(Coordinate(2.0, 2.0), "Departure"))
+    viewModel.updateArrivalLocation(Location(Coordinate(0.0, 0.0), "Arrival", ""))
+    viewModel.updateDepartureLocation(Location(Coordinate(0.0, 0.0), "Departure", ""))
 
     // Act
     viewModel.saveTrip(fakeContext)
