@@ -14,16 +14,17 @@ class SuggestionListTest : com.github.swent.swisstravel.utils.SwissTravelTest() 
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  override fun createInitializedRepository(): com.github.swent.swisstravel.model.trip.TripsRepository {
+  override fun createInitializedRepository():
+      com.github.swent.swisstravel.model.trip.TripsRepository {
     return com.github.swent.swisstravel.ui.trips.FakeTripsRepository()
   }
 
   @Test
   fun suggestionList_isDisplayed_afterExpansion() {
-    val viewModel = TripSettingsViewModel(
-        tripsRepository = repository,
-        userRepository = com.github.swent.swisstravel.ui.profile.FakeUserRepository()
-    )
+    val viewModel =
+        TripSettingsViewModel(
+            tripsRepository = repository,
+            userRepository = com.github.swent.swisstravel.ui.profile.FakeUserRepository())
     composeTestRule.setContent { FirstDestinationScreen(viewModel = viewModel) }
 
     // Click on "Suggestions" to expand
@@ -34,10 +35,10 @@ class SuggestionListTest : com.github.swent.swisstravel.utils.SwissTravelTest() 
 
   @Test
   fun suggestionList_selectionUpdatesCheckbox() {
-    val viewModel = TripSettingsViewModel(
-        tripsRepository = repository,
-        userRepository = com.github.swent.swisstravel.ui.profile.FakeUserRepository()
-    )
+    val viewModel =
+        TripSettingsViewModel(
+            tripsRepository = repository,
+            userRepository = com.github.swent.swisstravel.ui.profile.FakeUserRepository())
     composeTestRule.setContent { FirstDestinationScreen(viewModel = viewModel) }
 
     // Expand suggestions
