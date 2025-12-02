@@ -77,4 +77,34 @@ class AddPhotosScreenTest : SwissTravelTest() {
       composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(i)).isDisplayed()
     }
   }
+
+  @Test
+  fun pickerSimulation_addsImagesToGrid() = runTest {
+    val fakeTrip =
+        Trip(
+            uid = "10",
+            name = "Amazing trip",
+            ownerId = "1274218746",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
+            isFavorite = true,
+            isCurrentTrip = true,
+            listUri = emptyList())
+    TripsRepositoryProvider.repository.addTrip(fakeTrip)
+    val fakeModel = AddPhotosViewModel()
+
+    // Compose content
+    composeTestRule.setContent { AddPhotosScreen(tripId = fakeTrip.uid, viewModel = fakeModel) }
+
+    // Simulate picker returning 2 URIs
+    val fakeUris = listOf("FakeUri1".toUri(), "FakeUri2".toUri())
+    composeTestRule.runOnUiThread { fakeModel.addUri(fakeUris) }
+
+    // Assert grid shows the images
+    fakeUris.forEachIndexed { index, _ ->
+      composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(index)).isDisplayed()
+    }
+  }
 }
