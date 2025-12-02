@@ -5,7 +5,7 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.trip.TripsRepository
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosViewModel
 import com.google.firebase.Timestamp
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers

@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.trip.tripinfos.addphotos
+package com.github.swent.swisstravel.ui.trip.tripinfos.photos.add
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -54,19 +54,19 @@ object AddPhotosScreenTestTags {
  * A screen that shows the photos associated to a trip. You can add photos too.
  *
  * @param onBack a function that is call when the user click on the back button.
- * @param viewModel the viewmodel used by the screen.
+ * @param photosViewModel the viewmodel used by the screen.
  * @param tripId the uid of the trip.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPhotosScreen(
     onBack: () -> Unit = {},
-    viewModel: AddPhotosViewModel = viewModel(),
+    photosViewModel: PhotosViewModel = viewModel(),
     tripId: String,
     launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
 ) {
   val context = LocalContext.current
-  LaunchedEffect(tripId) { viewModel.loadPhotos(tripId) }
+  LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   // AI helped for the picker
   val pickerLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
@@ -75,13 +75,13 @@ fun AddPhotosScreen(
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-          viewModel.addUri(uris)
+          photosViewModel.addUri(uris)
         }
       }
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
 
-  val addPhotosUIState by viewModel.uiState.collectAsState()
+  val addPhotosUIState by photosViewModel.uiState.collectAsState()
   Scaffold(
       modifier = Modifier.testTag(AddPhotosScreenTestTags.MAIN_SCREEN),
       topBar = {
@@ -124,7 +124,7 @@ fun AddPhotosScreen(
               Button(
                   modifier = Modifier.testTag(AddPhotosScreenTestTags.SAVE_BUTTON),
                   onClick = {
-                    viewModel.savePhotos(tripId)
+                    photosViewModel.savePhotos(tripId)
                     onBack()
                   }) {
                     Text(text = stringResource(R.string.add_photos_save_button))

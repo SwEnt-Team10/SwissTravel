@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.trip.tripinfos.addphotos
+package com.github.swent.swisstravel.ui.trip.tripinfos.photos.add
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -11,14 +11,17 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /** UI State for the AddPhotosScreen */
-data class AddPhotosUIState(val listUri: List<Uri> = emptyList())
+data class PhotosUIState(
+    val listUri: List<Uri> = emptyList(),
+    val editMode: Boolean = false
+    )
 
 /** ViewModel for the AddPhotosScreen */
-class AddPhotosViewModel(
+class PhotosViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
 ) : ViewModel() {
-  private val _uiState = MutableStateFlow(AddPhotosUIState())
-  val uiState: StateFlow<AddPhotosUIState> = _uiState.asStateFlow()
+  private val _uiState = MutableStateFlow(PhotosUIState())
+  val uiState: StateFlow<PhotosUIState> = _uiState.asStateFlow()
 
   /**
    * Add the uris of photos to the state
@@ -50,7 +53,13 @@ class AddPhotosViewModel(
   fun loadPhotos(tripId: String) {
     viewModelScope.launch {
       val trip = tripsRepository.getTrip(tripId)
-      _uiState.value = AddPhotosUIState(listUri = trip.listUri)
+      _uiState.value = PhotosUIState(listUri = trip.listUri)
     }
   }
+    fun isOnEditMode(): Boolean {
+        return uiState.value.editMode
+    }
+    fun switchOnEditMode() {
+        _uiState.value = _uiState.value.copy(editMode = !_uiState.value.editMode)
+    }
 }

@@ -13,9 +13,9 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreen
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreenTestTags
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosViewModel
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
 import kotlin.test.Test

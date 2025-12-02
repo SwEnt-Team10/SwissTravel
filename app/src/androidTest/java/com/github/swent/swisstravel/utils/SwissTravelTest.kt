@@ -44,7 +44,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -56,7 +56,6 @@ import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreenTestTags
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
-import java.lang.Thread.sleep
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
