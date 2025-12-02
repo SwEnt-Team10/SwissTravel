@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
@@ -73,27 +74,17 @@ class SelectActivities(
           // Fetch all activities that match any of the optional preferences for each destination.
           val allFetchedActivities = mutableListOf<Activity>()
           for (destination in allDestinations) {
-            if (optionalPrefs.isNotEmpty()) {
-              val fetched =
-                  activityRepository.getActivitiesNearWithPreference(
-                      mandatoryPrefs + optionalPrefs,
-                      destination.coordinate,
-                      NEAR,
-                      numberOfActivityToFetchPerStep)
-              allFetchedActivities.addAll(fetched)
-              // Update progress after each API call.
-              completedSteps++
-              onProgress(completedSteps.toFloat() / totalSteps)
-              delay(API_CALL_DELAY_MS) // Respect API rate limit.
-            } else {
-              val fetched =
-                  activityRepository.getActivitiesNearWithPreference(
-                      mandatoryPrefs, destination.coordinate, NEAR, numberOfActivityToFetchPerStep)
-              allFetchedActivities.addAll(fetched)
-              completedSteps++
-              onProgress(completedSteps.toFloat() / totalSteps)
-              delay(API_CALL_DELAY_MS) // Respect API rate limit.
-            }
+            val fetched =
+                activityRepository.getActivitiesNearWithPreference(
+                    mandatoryPrefs + optionalPrefs,
+                    destination.coordinate,
+                    NEAR,
+                    numberOfActivityToFetchPerStep)
+            allFetchedActivities.addAll(fetched)
+            // Update progress after each API call.
+            completedSteps++
+            onProgress(completedSteps.toFloat() / totalSteps)
+            delay(API_CALL_DELAY_MS) // Respect API rate limit.
           }
           // Remove duplicate activities that may have been fetched for different preferences.
           allFetchedActivities.distinctBy { it.location }
@@ -119,6 +110,114 @@ class SelectActivities(
     onProgress(1f)
 
     return filteredActivities
+  }
+
+  /**
+   * Fetches a list of activities from mySwitzerland API, with these properties :
+   * - the list has twice as many activities as the ones automatically scheduled for the trip
+   * - first, it fills the list with activities that correspond to the preferences
+   * - then, if there is not enough activities, propose some that don't necessarily correspond to
+   *   the preferences (until there is twice as many as the scheduled ones)
+   * - every activity in this list should NOT be in the scheduled activities and NOT in the liked
+   *   activities
+   * - the locations from which these activities are fetched is the entire list of locations of the
+   *   trip (from the user's input)
+   *
+   * Done with the help of ChatGPT
+   *
+   * @param tripInfoVM The tripInfoViewModel, used for :
+   * - the locations of the trip
+   * - the likedActivities
+   * - the scheduled activities
+   */
+  suspend fun fetchSwipeActivities(tripInfoVM: TripInfoViewModelContract): List<Activity> {
+    val allDestinations = buildDestinationList()
+    val prefs = tripSettings.preferences.toMutableList()
+    val fetchedActivities = mutableListOf<Activity>()
+    val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(prefs)
+    val state = tripInfoVM.uiState.value
+
+    // Removes preferences that are not supported by mySwitzerland.
+    // Avoids unnecessary API calls.
+    prefs.remove(Preference.QUICK)
+    prefs.remove(Preference.SLOW_PACE)
+    prefs.remove(Preference.EARLY_BIRD)
+    prefs.remove(Preference.NIGHT_OWL)
+
+    // activities to exclude
+    val liked = state.likedActivities.map { it.location }.toSet()
+    val scheduled = state.activities.map { it.location }.toSet()
+
+    // limit of proposed activities (twice the amount of activities already scheduled)
+    val nbProposedActivities = state.activities.size * 2
+
+    // fetch activities with preferences
+    val preferred =
+        fetchWithPrefs(
+                locations = allDestinations,
+                fetchLimit = nbProposedActivities,
+                mandatoryPrefs,
+                optionalPrefs)
+            .filter { it.location !in liked && it.location !in scheduled }
+    fetchedActivities.addAll(preferred)
+
+    // if not enough activities, fetch and add activities without preferences
+    if (fetchedActivities.size < nbProposedActivities) {
+      val notPreferred =
+          fetchWithoutPrefs(locations = allDestinations, fetchLimit = nbProposedActivities).filter {
+            it.location !in liked && it.location !in scheduled
+          }
+      fetchedActivities.addAll(notPreferred)
+    }
+
+    return fetchedActivities
+        // remove duplicates (by the name of the activity)
+        .distinctBy { it.getName() }
+        .take(nbProposedActivities)
+  }
+
+  /**
+   * Fetches activities from MySwitzerland API at the given locations, with the given preferences
+   *
+   * @param locations The locations were to find activities
+   * @param fetchLimit The maximum number of activities to return
+   * @param mandatoryPrefs Preferences that are mandatory (this function should not fetch any activity that don't have these preferences)
+   * @param optionalPrefs Preferences that are optional
+   */
+  suspend fun fetchWithPrefs(
+      locations: List<Location>,
+      fetchLimit: Int,
+      mandatoryPrefs: List<Preference>,
+      optionalPrefs: List<Preference>
+  ): List<Activity> {
+    val activitiesFetched = mutableListOf<Activity>()
+    for (loc in locations) {
+      val fetched =
+          activityRepository.getActivitiesNearWithPreference(
+              mandatoryPrefs + optionalPrefs, loc.coordinate, NEAR, fetchLimit)
+      activitiesFetched.addAll(fetched)
+      delay(API_CALL_DELAY_MS) // Respect API rate limit.
+    }
+    return activitiesFetched
+  }
+
+  /**
+   * Fetches activities from MySwitzerland API at the given locations, without any preferences
+   *
+   * @param locations The locations were to find activities
+   * @param fetchLimit The maximum number of activities to return
+   */
+  suspend fun fetchWithoutPrefs(
+      locations: List<Location>,
+      fetchLimit: Int
+  ): List<Activity> {
+    val activitiesFetched = mutableListOf<Activity>()
+    for (loc in locations) {
+      val fetched = activityRepository.getActivitiesNear(loc.coordinate, NEAR, fetchLimit)
+      activitiesFetched.addAll(fetched)
+      delay(API_CALL_DELAY_MS) // Respect API rate limit.
+    }
+    return activitiesFetched
   }
 
   /**
