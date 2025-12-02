@@ -44,7 +44,8 @@ class TripInfoViewModelTest {
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
           isFavorite = false,
-          isCurrentTrip = false)
+          isCurrentTrip = false,
+          listUri = emptyList())
 
   @Before
   fun setup() {

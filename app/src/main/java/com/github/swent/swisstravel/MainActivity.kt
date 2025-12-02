@@ -3,6 +3,7 @@ package com.github.swent.swisstravel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -22,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
@@ -57,6 +59,7 @@ import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -488,9 +491,8 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   onActivityClick = { tripActivity ->
                     vm.selectActivity(tripActivity.activity)
                     navigationActions.navigateToActivityInfo(uid)
-                  },
-                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
-                  onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }))
+                  }),
+          onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
 
     composable(
@@ -530,6 +532,18 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
           tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry))
+    }
+    composable(Screen.AddPhotos.route) { navBackStackEntry ->
+      val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
+
+      tripId?.let { AddPhotosScreen(onBack = { navController.popBackStack() }, tripId = tripId) }
+          ?: run {
+            Log.e(
+                stringResource(R.string.add_photos_screen_tag),
+                stringResource(R.string.null_trip_id))
+            Toast.makeText(context, stringResource(R.string.null_trip_id), Toast.LENGTH_SHORT)
+                .show()
+          }
     }
   }
 }

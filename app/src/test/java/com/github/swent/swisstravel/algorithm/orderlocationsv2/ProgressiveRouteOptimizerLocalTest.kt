@@ -2,11 +2,13 @@ package com.github.swent.swisstravel.algorithm.orderlocationsv2
 
 import android.content.Context
 import com.github.swent.swisstravel.algorithm.cache.DurationCacheLocal
+import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.mockk
 import java.io.File
 import kotlin.test.assertNotNull
@@ -16,6 +18,8 @@ import org.json.JSONObject
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+
+const val CAR_SPEED = 80.0
 
 // Done with the help of AI
 class ProgressiveRouteOptimizerLocalTest {
@@ -292,5 +296,136 @@ class ProgressiveRouteOptimizerLocalTest {
         }
       }
     }
+  }
+
+  // --------------------------
+  // Tests for recomputeOrderedRoute
+  // --------------------------
+
+  @Test
+  fun `recomputeOrderedRoute recomputes both segments using cache and matrix`() = runBlocking {
+    val invalid = -1.0
+
+    // Route: A -> B -> C
+    val A = GVA
+    val B = LSN
+    val C = MTX
+
+    val ordered =
+        OrderedRoute(
+            orderedLocations = listOf(A, B, C),
+            segmentDuration = mutableListOf(invalid, invalid),
+            totalDuration = invalid)
+
+    // Mock cache returns NOTHING
+    coEvery { cacheManager.getDuration(any(), any(), any()) } returns null
+
+    // Mock matrixHybrid returns two durations
+    coEvery { matrixHybrid.fetchDurationsFromStart(A, listOf(B), any()) } returns
+        mapOf((A.coordinate to B.coordinate) to 500.0)
+
+    coEvery { matrixHybrid.fetchDurationsFromStart(B, listOf(C), any()) } returns
+        mapOf((B.coordinate to C.coordinate) to 900.0)
+
+    val updated =
+        optimizer.recomputeOrderedRoute(
+            orderedLocations = ordered,
+            addedIndexes = listOf(1),
+            mode = TransportMode.CAR,
+            invalidDuration = invalid,
+            onProgress = {})
+
+    assertEquals(500.0, updated.segmentDuration[0], 0.01)
+    assertEquals(900.0, updated.segmentDuration[1], 0.01)
+    assertEquals(1400.0, updated.totalDuration, 0.01)
+  }
+
+  @Test
+  fun `recomputeOrderedRoute uses fallback if no cache and no matrix value`() = runBlocking {
+    val invalid = -1.0
+
+    val A = GVA
+    val B = LSN
+    val C = MTX
+
+    val ordered =
+        OrderedRoute(
+            orderedLocations = listOf(A, B, C),
+            segmentDuration = mutableListOf(invalid, invalid),
+            totalDuration = invalid)
+
+    // Nothing in cache
+    coEvery { cacheManager.getDuration(any(), any(), any()) } returns null
+
+    // Matrix returns empty
+    coEvery { matrixHybrid.fetchDurationsFromStart(any(), any(), any()) } returns emptyMap()
+
+    val updated =
+        optimizer.recomputeOrderedRoute(
+            orderedLocations = ordered,
+            addedIndexes = listOf(1),
+            mode = TransportMode.CAR,
+            invalidDuration = invalid,
+            onProgress = {})
+
+    // Make sure the constant CAR_SPEED is the same here and in ProgressiveRouteOptimizer
+    val fbAB = A.haversineDistanceTo(B) / CAR_SPEED * 3600.0
+    val fbBC = B.haversineDistanceTo(C) / CAR_SPEED * 3600.0
+
+    assertEquals(fbAB, updated.segmentDuration[0], 10.0)
+    assertEquals(fbBC, updated.segmentDuration[1], 10.0)
+    assertEquals(fbAB + fbBC, updated.totalDuration, 20.0)
+  }
+
+  @Test
+  fun `recomputeOrderedRoute triggers progress callback`() = runBlocking {
+    val invalid = -1.0
+    val A = GVA
+    val B = LSN
+    val C = MTX
+
+    val ordered =
+        OrderedRoute(
+            orderedLocations = listOf(A, B, C),
+            segmentDuration = mutableListOf(invalid, invalid),
+            totalDuration = invalid)
+
+    coEvery { cacheManager.getDuration(any(), any(), any()) } returns null
+    coEvery { matrixHybrid.fetchDurationsFromStart(any(), any(), any()) } returns emptyMap()
+
+    var progressCalls = 0
+
+    optimizer.recomputeOrderedRoute(
+        orderedLocations = ordered,
+        addedIndexes = listOf(1),
+        invalidDuration = invalid,
+        onProgress = { progressCalls++ })
+
+    assertEquals(1, progressCalls)
+  }
+
+  @Test
+  fun `recomputeOrderedRoute does nothing when index is first or last`() = runBlocking {
+    val invalid = -1.0
+    val ordered =
+        OrderedRoute(
+            orderedLocations = listOf(GVA, LSN, MTX),
+            segmentDuration = mutableListOf(100.0, 200.0),
+            totalDuration = 300.0)
+
+    // index 0 and 2 do not trigger recomputation
+    val updated =
+        optimizer.recomputeOrderedRoute(
+            orderedLocations = ordered,
+            addedIndexes = listOf(0, 2),
+            invalidDuration = invalid,
+            onProgress = {})
+
+    assertEquals(listOf(100.0, 200.0), updated.segmentDuration)
+    assertEquals(300.0, updated.totalDuration, 0.01)
+
+    // And verify NO calls were made to the duration fetchers
+    coVerify(exactly = 0) { cacheManager.getDuration(any(), any(), any()) }
+    coVerify(exactly = 0) { matrixHybrid.fetchDurationsFromStart(any(), any(), any()) }
   }
 }

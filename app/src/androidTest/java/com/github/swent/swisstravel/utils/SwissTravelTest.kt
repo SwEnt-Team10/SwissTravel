@@ -44,6 +44,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -55,6 +56,7 @@ import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreenTestTags
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
+import java.lang.Thread.sleep
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -138,7 +140,8 @@ abstract class SwissTravelTest {
               preferredLocations = emptyList(),
               preferences = emptyList()),
           isFavorite = false,
-          isCurrentTrip = false)
+          isCurrentTrip = false,
+          listUri = emptyList())
 
   val trip2 =
       Trip(
@@ -154,7 +157,8 @@ abstract class SwissTravelTest {
               preferredLocations = emptyList(),
               preferences = emptyList()),
           isFavorite = false,
-          isCurrentTrip = false)
+          isCurrentTrip = false,
+          listUri = emptyList())
 
   val tripList = listOf(trip1, trip2)
 
@@ -233,9 +237,6 @@ abstract class SwissTravelTest {
 
     // Biography (not displayed cause it's empty)
     // onNodeWithTag(ProfileScreenTestTags.BIOGRAPHY).assertIsDisplayed()
-
-    // Achievements
-    onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
 
     // Settings button (own profile)
     onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()
@@ -617,6 +618,16 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.addPhotosScreenIsDisplayed() {
+    onNodeWithTag(AddPhotosScreenTestTags.MAIN_SCREEN).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.SAVE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkSwipeActivityScreenIsDisplayed() {

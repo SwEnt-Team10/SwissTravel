@@ -138,6 +138,7 @@ fun TripInfoScreen(
     uid: String?,
     tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
     isOnCurrentTripScreen: Boolean = false,
+    onAddPhotos: () -> Unit = {},
     tripInfoContentCallbacks: TripInfoContentCallbacks = TripInfoContentCallbacks()
 ) {
   Log.d("NAV_DEBUG", "Entered TripInfo with uid=$uid")
@@ -201,6 +202,7 @@ fun TripInfoScreen(
               isOnCurrentTripScreen = isOnCurrentTripScreen,
               onBack = tripInfoContentCallbacks.onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
+              onAddPhotos = { onAddPhotos() },
               onEdit = tripInfoContentCallbacks.onEditTrip)
         }
       },
@@ -371,7 +373,8 @@ private fun TripInfoTopAppBar(
     isOnCurrentTripScreen: Boolean,
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onAddPhotos: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
@@ -393,6 +396,7 @@ private fun TripInfoTopAppBar(
         }
       },
       actions = {
+        AddPhotosButton(onAddPhotos = { onAddPhotos() })
         FavoriteButton(
             isFavorite = ui.isFavorite,
             onToggleFavorite = onToggleFavorite,

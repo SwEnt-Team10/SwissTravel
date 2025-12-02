@@ -250,10 +250,10 @@ open class TripSettingsViewModel(
         // Run the algorithm
         val algorithm = algorithmFactory(context, tripSettings.value)
         val schedule =
-            algorithm.runTripAlgorithm(
-                tripSettings = tripSettings.value, tripProfile = tripProfile) { progress ->
-                  _loadingProgress.value = progress
-                }
+            algorithm.computeTrip(tripSettings = tripSettings.value, tripProfile = tripProfile) {
+                progress ->
+              _loadingProgress.value = progress
+            }
 
         // Extract activities and route segments
         val selectedActivities: List<Activity> =
@@ -279,7 +279,8 @@ open class TripSettingsViewModel(
                 activities = selectedActivities,
                 tripProfile = tripProfile,
                 isFavorite = false,
-                isCurrentTrip = false)
+                isCurrentTrip = false,
+                listUri = emptyList())
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

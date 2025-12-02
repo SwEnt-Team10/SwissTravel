@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
+import android.net.Uri
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.google.firebase.Timestamp
 
@@ -38,5 +39,6 @@ data class Trip(
     val activities: List<Activity>,
     val tripProfile: TripProfile,
     val isFavorite: Boolean,
-    val isCurrentTrip: Boolean
+    val isCurrentTrip: Boolean,
+    val listUri: List<Uri>
 )
