@@ -82,6 +82,23 @@ class SelectPinnedTripsScreenTest {
           isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList())
+  private val trip4 =
+      Trip(
+          uid = "trip4",
+          name = "Trip Four",
+          ownerId = "user1",
+          locations = emptyList(),
+          routeSegments = emptyList(),
+          activities = emptyList(),
+          tripProfile =
+              TripProfile(
+                  startDate = Timestamp(0, 0),
+                  endDate = Timestamp(0, 0),
+                  preferredLocations = emptyList(),
+                  preferences = emptyList()),
+          isFavorite = false,
+          isCurrentTrip = false,
+          listUri = emptyList())
   private val fakeTripsRepo = TripRepositoryLocal()
 
   init {
@@ -89,12 +106,13 @@ class SelectPinnedTripsScreenTest {
       fakeTripsRepo.addTrip(trip1)
       fakeTripsRepo.addTrip(trip2)
       fakeTripsRepo.addTrip(trip3)
+      fakeTripsRepo.addTrip(trip4)
     }
   }
 
   private val fakeUserRepo =
       object : UserRepository {
-        override suspend fun getCurrentUser() =
+        var user =
             User(
                 uid = "user1",
                 name = "Test User",
@@ -106,6 +124,8 @@ class SelectPinnedTripsScreenTest {
                 stats = UserStats(),
                 pinnedTripsUids = listOf("trip1"),
                 pinnedImagesUris = emptyList())
+
+        override suspend fun getCurrentUser() = user
 
         override suspend fun getUserByUid(uid: String) = null
 
@@ -127,7 +147,12 @@ class SelectPinnedTripsScreenTest {
             preferences: List<Preference>?,
             pinnedTripsUids: List<String>?,
             pinnedImagesUris: List<Uri>?
-        ) {}
+        ) {
+          user =
+              user.copy(
+                  pinnedTripsUids = pinnedTripsUids ?: user.pinnedTripsUids,
+              )
+        }
 
         override suspend fun updateUserStats(uid: String, stats: UserStats) {}
       }
@@ -159,12 +184,9 @@ class SelectPinnedTripsScreenTest {
 
   @Test
   fun emptyPinnedTrips_showsFallback() {
-    setContentHelper(
-        userRepo =
-            object : UserRepository by fakeUserRepo {
-              override suspend fun getCurrentUser() =
-                  fakeUserRepo.getCurrentUser().copy(pinnedTripsUids = emptyList())
-            })
+    val emptyTripsRepo = TripRepositoryLocal() // contains no trips
+
+    setContentHelper(tripRepo = emptyTripsRepo)
 
     composeTestRule.onNodeWithTag(TripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
   }
@@ -204,13 +226,15 @@ class SelectPinnedTripsScreenTest {
           .onNodeWithTag(TripElementTestTags.getTestTagForTrip(fakeTripsRepo.getTrip("trip3")))
           .performClick()
 
-      // Add a 4th trip dynamically
-      val trip4 = fakeTripsRepo.getTrip("trip3").copy(uid = "trip4", name = "Trip Four")
-      fakeTripsRepo.addTrip(trip4)
-      composeTestRule.waitForIdle()
+      // Save selection
+      composeTestRule
+          .onNodeWithTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
+          .performClick()
 
       // Attempt to select 4th trip (should be blocked)
-      composeTestRule.onNodeWithTag(TripElementTestTags.getTestTagForTrip(trip4)).performClick()
+      composeTestRule
+          .onNodeWithTag(TripElementTestTags.getTestTagForTrip(fakeTripsRepo.getTrip("trip4")))
+          .performClick()
 
       // Save selection
       composeTestRule
@@ -220,7 +244,7 @@ class SelectPinnedTripsScreenTest {
       val pinned = fakeUserRepo.getCurrentUser().pinnedTripsUids
 
       // ASSERTIONS
-      assertFalse(pinned.contains("trip4")) // 4th trip is NOT added
+      assertFalse(pinned.contains("trip4")) // 4th trip is *not* added
       assertEquals(3, pinned.size) // Still max 3 pinned
     }
   }

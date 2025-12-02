@@ -372,7 +372,7 @@ private fun NavGraphBuilder.profileNavGraph(
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },
-          onEditPinnedImages = {})
+          onEditPinnedImages = { /* TODO */})
     }
     composable(Screen.ProfileSettings.route) {
       ProfileSettingsScreen(
