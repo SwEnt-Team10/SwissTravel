@@ -138,7 +138,7 @@ class SelectActivities(
   suspend fun getOneActivityNearWithPreferences(coords: Coordinate, radius: Int = NEAR): Activity? {
     val userPreferences = tripSettings.preferences.toMutableList()
     removeUnsupportedPreferences(userPreferences)
-    var fetched: List<Activity>? = null
+    var fetched: List<Activity>?
     // If the user has preferences, separate mandatory and optional ones and fetch accordingly.
     if (userPreferences.isNotEmpty()) {
       val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(userPreferences)
