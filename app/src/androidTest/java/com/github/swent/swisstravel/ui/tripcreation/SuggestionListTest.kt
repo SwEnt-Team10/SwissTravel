@@ -7,12 +7,13 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.utils.SwissTravelTest
 import org.junit.Rule
 import org.junit.Test
 
 // This class was written with the help of AI
 
-class SuggestionListTest : com.github.swent.swisstravel.utils.SwissTravelTest() {
+class SuggestionListTest : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
