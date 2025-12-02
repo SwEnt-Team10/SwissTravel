@@ -244,6 +244,7 @@ fun FirstDestinationScreen(
  *
  * @param destinations The list of currently selected suggested destinations, used to determine
  *   checkbox states.
+ * @param suggestions The list of all available suggestions.
  * @param onSuggestionSelected Callback invoked when a user selects a suggestion.
  * @param onSuggestionDeselected Callback invoked when a user deselects a suggestion.
  * @param modifier The modifier to be applied to the list.
