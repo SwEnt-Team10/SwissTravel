@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.trip.tripinfos.photos.add
+package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,8 +26,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -36,6 +35,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.PhotosUIState
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.PhotosViewModel
 
 object AddPhotosScreenTestTags {
   const val MAIN_SCREEN = "mainScreen"
@@ -63,7 +64,8 @@ fun AddPhotosScreen(
     onBack: () -> Unit = {},
     photosViewModel: PhotosViewModel = viewModel(),
     tripId: String,
-    launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
+    launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null,
+    uiState: PhotosUIState
 ) {
   val context = LocalContext.current
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
@@ -81,7 +83,6 @@ fun AddPhotosScreen(
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
 
-  val addPhotosUIState by photosViewModel.uiState.collectAsState()
   Scaffold(
       modifier = Modifier.testTag(AddPhotosScreenTestTags.MAIN_SCREEN),
       topBar = {
@@ -104,7 +105,11 @@ fun AddPhotosScreen(
                         contentDescription = stringResource(R.string.back_to_my_trips),
                         tint = MaterialTheme.colorScheme.onBackground)
                   }
-            })
+            },
+            actions = {
+                EditButton(photosViewModel)
+            }
+            )
       },
       bottomBar = {
         Row(
@@ -136,7 +141,7 @@ fun AddPhotosScreen(
             columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
             modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
               // AI helped for the itemsIndexed
-              itemsIndexed(addPhotosUIState.listUri) { index, uri ->
+              itemsIndexed(uiState.listUri) { index, uri ->
                 AsyncImage(
                     modifier = Modifier.testTag(AddPhotosScreenTestTags.getTestTagForUri(index)),
                     model = uri,
@@ -144,4 +149,21 @@ fun AddPhotosScreen(
               }
             }
       }
+}
+
+@Composable
+private fun EditButton(
+    photosViewModel: PhotosViewModel
+) {
+    IconButton(
+        onClick = {
+            photosViewModel.switchOnEditMode()
+        }
+    ) {
+        Icon(
+            imageVector = Icons.Filled.Edit,
+            contentDescription = "Edit Mode",
+            tint = MaterialTheme.colorScheme.onBackground
+        )
+    }
 }

@@ -5,13 +5,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.AddPhotosScreen
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.PhotosViewModel
 
 @Composable
 fun PhotosScreen(
     onBack: () -> Unit = {},
-    photosViewModel: PhotosViewModel,
+    photosViewModel: PhotosViewModel = viewModel(),
     tripId: String,
     launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
 ) {
@@ -20,7 +20,10 @@ fun PhotosScreen(
     }
     val photosUIState by photosViewModel.uiState.collectAsState()
     if (photosViewModel.isOnEditMode()) {
-        EditPhotosScreen()
+        EditPhotosScreen(
+            uiState = photosUIState,
+            photosViewModel = photosViewModel
+        )
     } else {
         AddPhotosScreen(
             onBack = {
@@ -28,7 +31,8 @@ fun PhotosScreen(
             },
             photosViewModel = photosViewModel,
             tripId = tripId,
-            launchPickerOverride = launchPickerOverride
+            launchPickerOverride = launchPickerOverride,
+            uiState = photosUIState
         )
     }
 }

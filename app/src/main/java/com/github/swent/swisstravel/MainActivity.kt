@@ -59,7 +59,7 @@ import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.AddPhotosScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -536,7 +536,14 @@ private fun NavGraphBuilder.tripInfoNavGraph(
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
 
-      tripId?.let { AddPhotosScreen(onBack = { navController.popBackStack() }, tripId = tripId) }
+      tripId?.let {
+          PhotosScreen(
+              onBack = {
+                  navController.popBackStack()
+                       },
+              tripId = tripId
+          )
+      }
           ?: run {
             Log.e(
                 stringResource(R.string.add_photos_screen_tag),
