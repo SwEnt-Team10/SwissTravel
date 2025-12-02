@@ -130,6 +130,16 @@ fun DailyViewScreen(
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val ui by tripInfoViewModel.uiState.collectAsState()
+
+  LaunchedEffect(ui.days, isOnCurrentTripScreen) {
+    if (isOnCurrentTripScreen) {
+      val today = LocalDate.now()
+      val index = ui.days.indexOf(today)
+      if (index != -1 && index != ui.currentDayIndex) {
+        tripInfoViewModel.setCurrentDayIndex(index)
+      }
+    }
+  }
   val context = LocalContext.current
 
   BackHandler(enabled = ui.fullscreen) { tripInfoViewModel.toggleFullscreen(false) }

@@ -5,9 +5,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -19,11 +21,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoContentCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreen
 import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
@@ -35,7 +40,7 @@ object CurrentTripScreenTestTags {
 }
 
 /**
- * Screen to display the current trip.
+ * Screen to display the current trip. If not set, it will display a button to create a new trip.
  *
  * @param navigationActions Navigation actions to navigate to other screens.
  * @param isLoggedIn Whether the user is logged in.
@@ -58,34 +63,52 @@ fun CurrentTripScreen(
     }
   }
   if (currentTrip != null) {
-    TripInfoScreen(
+    DailyViewScreen(
         currentTrip.uid,
         isOnCurrentTripScreen = true,
-        tripInfoContentCallbacks =
-            TripInfoContentCallbacks(
-                onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
-                onMyTrips = { navigationActions?.goBack() },
-                onActivityClick = { navigationActions?.navigateToActivityInfo(currentTrip.uid) },
-                onSwipeActivities = { navigationActions?.navigateTo(Screen.SwipeActivities) },
-                onLikedActivities = { navigationActions?.navigateTo(Screen.LikedActivities) }))
+        callbacks = DailyViewScreenCallbacks(
+            onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
+            onSwipeActivities = {navigationActions?.navigateTo(Screen.SwipeActivities) },
+            onLikedActivities = {navigationActions?.navigateTo(Screen.LikedActivities)}
+            )
+        )
   } else {
     Scaffold(
         content = { pd ->
           Column(
-              modifier = Modifier.fillMaxSize().padding(pd),
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(pd)
+                      .padding(dimensionResource(R.dimen.current_trip_column_padding)),
               verticalArrangement = Arrangement.Center,
               horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    painter = painterResource(R.drawable.no_trip_sign),
+                    contentDescription = null,
+                    modifier =
+                        Modifier.padding(
+                                bottom =
+                                    dimensionResource(R.dimen.current_trip_icon_bottom_padding))
+                            .fillMaxWidth(),
+                    tint = MaterialTheme.colorScheme.primary)
                 Text(
                     text = stringResource(R.string.create_trip),
-                    style = MaterialTheme.typography.displayLarge,
+                    style = MaterialTheme.typography.headlineMedium,
                     color = MaterialTheme.colorScheme.onBackground,
                     modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT))
-                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.big_spacer)))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+                Text(
+                    text = "Start planning your next adventure!",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
                 // Create a new trip
                 Button(
                     onClick = { navigationActions?.navigateTo(Screen.TripSettingsDates) },
                     enabled = isLoggedIn,
-                    modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
+                    modifier =
+                        Modifier.height(dimensionResource(R.dimen.current_trip_button_height))
+                            .testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                       Text(
                           text = stringResource(R.string.when_travelling),
                           style = MaterialTheme.typography.titleMedium,
