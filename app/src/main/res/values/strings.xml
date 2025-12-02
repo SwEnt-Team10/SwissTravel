@@ -225,6 +225,7 @@
     <string name="preference_early_bird">Early Bird</string>
     <string name="preference_night_owl">Night Owl</string>
     <string name="preference_slow_pace">Slow Paced</string>
+    <string name="preference_intermediate_stops">Intermediate Stops</string>
 
     <!-- Preference Categories -->
     <string name="preference_category_activity_type">Activity Type</string>
