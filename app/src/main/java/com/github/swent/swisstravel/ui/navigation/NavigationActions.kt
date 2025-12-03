@@ -106,6 +106,8 @@ sealed class Screen(
     }
   }
 
+  object SelectPinnedTrips : Screen(route = "select_pinned_trips", name = "Select Pinned Trips")
+
   // TODO change this when there is a new screen
 }
 
