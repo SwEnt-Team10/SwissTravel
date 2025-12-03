@@ -170,9 +170,9 @@ class SelectPinnedTripsScreenTest {
   fun allKeyUIElementsAreDisplayed() {
     setContentHelper()
 
-    composeTestRule.onNodeWithTag(SelectedPinnedTripsScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(SelectPinnedTripsScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
+        .onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
         .assertIsDisplayed()
     composeTestRule.onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
 
@@ -204,7 +204,7 @@ class SelectPinnedTripsScreenTest {
           .performClick()
 
       composeTestRule
-          .onNodeWithTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
+          .onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
           .performClick()
 
       // Now trip2 should be pinned in the user repository
@@ -228,7 +228,7 @@ class SelectPinnedTripsScreenTest {
 
       // Save selection
       composeTestRule
-          .onNodeWithTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
+          .onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
           .performClick()
 
       // Attempt to select 4th trip (should be blocked)
@@ -238,7 +238,7 @@ class SelectPinnedTripsScreenTest {
 
       // Save selection
       composeTestRule
-          .onNodeWithTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
+          .onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
           .performClick()
 
       val pinned = fakeUserRepo.getCurrentUser().pinnedTripsUids
@@ -263,7 +263,7 @@ class SelectPinnedTripsScreenTest {
 
       // Save selection
       composeTestRule
-          .onNodeWithTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
+          .onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)
           .performClick()
 
       // Now it should be removed

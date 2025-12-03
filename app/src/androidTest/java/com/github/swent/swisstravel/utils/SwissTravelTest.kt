@@ -43,7 +43,7 @@ import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
-import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectedPinnedTripsScreenTestTags
+import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreenTestTags
@@ -58,7 +58,6 @@ import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreenTestTags
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
-import java.lang.Thread.sleep
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -639,8 +638,8 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.selectPinnedTripsScreenIsDisplayed() {
-    onNodeWithTag(SelectedPinnedTripsScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
-    onNodeWithTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB).assertIsDisplayed()
+    onNodeWithTag(SelectPinnedTripsScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
+    onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB).assertIsDisplayed()
     onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
 
     // Ensure pinned trip is displayed

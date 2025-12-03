@@ -188,8 +188,7 @@ class SelectPinnedTripsViewModelTest {
     viewModel.onSaveSelectedTrips()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    val error = viewModel.uiState.value.errorMsg
-    assertFalse(error.isNullOrBlank())
+    assertEquals("Error updating selected Trips.", viewModel.uiState.value.errorMsg)
   }
 
   @Test

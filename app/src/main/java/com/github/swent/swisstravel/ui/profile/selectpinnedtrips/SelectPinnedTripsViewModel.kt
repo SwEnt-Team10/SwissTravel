@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.profile.selectpinnedtrips
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
  * Trips are loaded automatically on initialization and can be refreshed as needed.
  *
  * @param tripsRepository The repository responsible for managing user trips.
+ * @param userRepository The repository responsible for managing user information.
  */
 class SelectPinnedTripsViewModel(
     tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
@@ -29,6 +31,9 @@ class SelectPinnedTripsViewModel(
 ) : TripsViewModel(tripsRepository) {
 
   private var currentUser: User? = null
+
+  private val _saveSuccess = mutableStateOf<Boolean?>(null)
+  val saveSuccess = _saveSuccess
 
   /** Initializes the ViewModel by loading all trips. */
   init {
@@ -79,14 +84,23 @@ class SelectPinnedTripsViewModel(
       val user = currentUser
       if (user == null) {
         setErrorMsg("User not logged in.")
+        _saveSuccess.value = false
         return@launch
       }
       try {
         userRepository.updateUser(
             uid = user.uid, pinnedTripsUids = _uiState.value.selectedTrips.map { it.uid })
+        _saveSuccess.value = true
       } catch (e: Exception) {
-        setErrorMsg("Error updating selected Trips: ${e.message}")
+        setErrorMsg("Error updating selected Trips.")
+        Log.e("SelectPinnedTripsViewModel", "Error saving selected trips", e)
+        _saveSuccess.value = false
       }
     }
+  }
+
+  /** Resets the save success state to null. */
+  fun resetSaveSuccess() {
+    _saveSuccess.value = null
   }
 }

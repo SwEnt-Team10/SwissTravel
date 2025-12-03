@@ -39,7 +39,7 @@ import com.github.swent.swisstravel.ui.trips.TripsViewModel
  * These tags enable UI tests to locate and assert specific UI elements, such as buttons, dialogs,
  * and lists.
  */
-object SelectedPinnedTripsScreenTestTags {
+object SelectPinnedTripsScreenTestTags {
   const val TOP_APP_BAR = "topAppBar"
   const val SAVE_SELECTED_TRIPS_FAB = "saveSelectedTripsFab"
 }
@@ -55,7 +55,7 @@ object SelectedPinnedTripsScreenTestTags {
  * It reacts to state changes from [SelectPinnedTripsViewModel], handling UI logic such as
  * refreshing data, error messages, and trip selection.
  *
- * @param SelectPinnedTripsViewModel The [SelectPinnedTripsViewModel] providing state and business
+ * @param selectPinnedTripsViewModel The [SelectPinnedTripsViewModel] providing state and business
  *   logic.
  * @param onBack Callback invoked when the close button is pressed.
  */
@@ -79,6 +79,15 @@ fun SelectPinnedTripsScreen(
     }
   }
 
+  // If save is successful, navigate back to the previous screen
+  val saveSuccess by selectPinnedTripsViewModel.saveSuccess
+  LaunchedEffect(saveSuccess) {
+    if (saveSuccess == true) {
+      onBack()
+      selectPinnedTripsViewModel.resetSaveSuccess()
+    }
+  }
+
   Scaffold(
       topBar = {
         SelectedPinnedTripsTopAppBar(
@@ -94,8 +103,7 @@ fun SelectPinnedTripsScreen(
             },
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary,
-            modifier =
-                Modifier.testTag(SelectedPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)) {
+            modifier = Modifier.testTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB)) {
               Icon(
                   Icons.Default.Check,
                   contentDescription = stringResource(R.string.save_selected_trips))
@@ -123,9 +131,9 @@ fun SelectPinnedTripsScreen(
 }
 
 /**
- * Top bar for the Past Trips screen.
- * - Displays either title or selection mode info.
- * - Provides actions for navigate back, delete, favorite, or select all.
+ * Top bar for the Select Pinned Trips screen.
+ * - Displays title info.
+ * - Provides actions for navigate back or sort.
  *
  * @param uiState Current UI state for trip data.
  * @param onBack Callback invoked when the back button is pressed.
@@ -161,5 +169,5 @@ private fun SelectedPinnedTripsTopAppBar(
               titleContentColor = MaterialTheme.colorScheme.onBackground,
               navigationIconContentColor = MaterialTheme.colorScheme.onBackground,
               actionIconContentColor = MaterialTheme.colorScheme.onBackground),
-      modifier = Modifier.testTag(SelectedPinnedTripsScreenTestTags.TOP_APP_BAR))
+      modifier = Modifier.testTag(SelectPinnedTripsScreenTestTags.TOP_APP_BAR))
 }
