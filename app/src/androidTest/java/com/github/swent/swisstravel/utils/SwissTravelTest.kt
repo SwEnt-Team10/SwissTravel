@@ -248,8 +248,8 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
 
     // Pinned images section
-    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_TITLE).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_LIST).assertExists()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertExists()
   }
 
@@ -272,8 +272,8 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertDoesNotExist()
 
     // Pinned images section
-    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsNotDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertDoesNotExist()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_TITLE).assertIsNotDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_LIST).assertDoesNotExist()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
   }
 
@@ -616,8 +616,8 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertDoesNotExist()
 
     // Pinned images section
-    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_TITLE).assertIsDisplayed()
+    onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_LIST).assertExists()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
   }
 

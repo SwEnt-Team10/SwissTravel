@@ -180,8 +180,10 @@
     <string name="edit_pinned_trips">Edit Pinned Trips</string>
     <string name="edit_no_pinned_trips">You don\'t have any pinned trips. Press the edit button to pin some!</string>
     <string name="no_pinned_trips">No pinned trips here!</string>
-    <string name="pinned_images">Pinned Images</string>
-    <string name="edit_pinned_images">Edit Pinned Images</string>
+    <string name="pinned_photos">Pinned Photos</string>
+    <string name="edit_pinned_photos">Edit Pinned Photos</string>
+    <string name="edit_no_pinned_photos">You don\'t have any pinned photos. Press the edit button to pin some!</string>
+    <string name="no_pinned_photos">No pinned photos here!</string>
     <string name="back_to_friends_list">Back to Friends List</string>
     <string name="confirm_unfriend_title">Are you sure you want to unfriend %1$s?</string>
     <string name="confirm_unfriend_text">If you change your mind, you can friend them again through the \"Add Friend\" menu.</string>
@@ -204,6 +206,7 @@
     <!-- Select Pinned Trips -->
     <string name="no_trips">You have no Trips.</string>
     <string name="select_pinned_trips">Select Pinned Trips (max. 3)</string>
+    <string name="save_selected_trips">Save Selected Trips</string>
     <!-- Select Pinned Photos -->
     <string name="select_pinned_photos_title">Select Photos to Pin</string>
 
@@ -281,7 +284,6 @@
     <string name="accept_friend">"Accept friend request"</string>
     <string name="deny_friend">Deny friend request</string>
     <string name="user_uid_missing">Can\'t find this profile, sorry :(</string>
-    <string name="save_selected_trips">Save selected Trips</string>
 
     <!-- Achievement strings -->
 

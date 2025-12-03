@@ -164,8 +164,8 @@ class ProfileScreenTest : SwissTravelTest() {
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
 
       // Pinned images section
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_TITLE).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_PHOTOS_LIST).assertExists()
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertExists()
     }
   }
