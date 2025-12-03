@@ -165,7 +165,7 @@ fun FirstDestinationsTitle() {
 }
 
 @Composable
-fun AddDestinationButton(destinations: MutableList<Location>, onAddDestination: () -> Unit) {
+fun AddDestinationButton(destinations: List<Location>, onAddDestination: () -> Unit) {
   Button(
       modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
       onClick = onAddDestination,
