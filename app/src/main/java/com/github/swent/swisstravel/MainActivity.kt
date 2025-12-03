@@ -54,6 +54,8 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
+import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreen
+import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
@@ -308,7 +310,7 @@ private fun SwissTravelNavHost(
 ) {
   NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
     authNavGraph(navigationActions, credentialManager)
-    profileNavGraph(navigationActions, context) // TODO context is temporary
+    profileNavGraph(navigationActions)
     currentTripNavGraph(navigationActions)
     myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
@@ -353,12 +355,11 @@ private fun NavGraphBuilder.authNavGraph(
 /**
  * Sets up the profile navigation graph for the Swiss Travel App.
  *
- * @param navigationActions The NavigationActions used for navigation. TODO remove context parameter
- *   once edit pinned methods are implemented
+ * @param navigationActions The NavigationActions used for navigation. once edit pinned methods are
+ *   implemented
  */
 private fun NavGraphBuilder.profileNavGraph(
     navigationActions: NavigationActions,
-    context: Context
 ) {
   navigation(
       startDestination = Screen.Profile.route,
@@ -369,19 +370,21 @@ private fun NavGraphBuilder.profileNavGraph(
           profileViewModel =
               ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
-          onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-          onEditPinnedTrips = { /* TODO */
-            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
-          },
-          onEditPinnedImages = { /* TODO */
-            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
-          })
+          onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
+          onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },
+          onEditPinnedImages = { /* TODO */})
     }
     composable(Screen.ProfileSettings.route) {
       ProfileSettingsScreen(
           profileSettingsViewModel = ProfileSettingsViewModel(),
           onBack = { navigationActions.goBack() },
           navigationActions = navigationActions)
+    }
+    composable(Screen.SelectPinnedTrips.route) {
+      SelectPinnedTripsScreen(
+          selectPinnedTripsViewModel = SelectPinnedTripsViewModel(),
+          onBack = { navigationActions.goBack() },
+      )
     }
   }
 }
