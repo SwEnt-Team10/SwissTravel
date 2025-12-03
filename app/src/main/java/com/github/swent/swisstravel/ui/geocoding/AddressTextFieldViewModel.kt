@@ -4,9 +4,10 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.HttpClientProvider
+import com.github.swent.swisstravel.model.map.GeoapifyLocationRepository
 import com.github.swent.swisstravel.model.map.LocationRepository
-import com.github.swent.swisstravel.model.map.NominatimLocationRepository
 import com.github.swent.swisstravel.model.trip.Location
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -65,44 +66,56 @@ data class AddressTextFieldState(
  */
 open class AddressTextFieldViewModel(
     private val locationRepository: LocationRepository =
-        NominatimLocationRepository(HttpClientProvider.client)
+        GeoapifyLocationRepository(HttpClientProvider.client)
 ) : ViewModel(), AddressTextFieldViewModelContract {
 
   private val _addressState = MutableStateFlow(AddressTextFieldState())
   override val addressState: StateFlow<AddressTextFieldState> = _addressState.asStateFlow()
 
+  private var searchJob: kotlinx.coroutines.Job? = null
+
   override fun setLocation(location: Location?) {
     if (location == null) {
-      _addressState.value = _addressState.value.copy(selectedLocation = null, locationQuery = "")
+      _addressState.value =
+          _addressState.value.copy(
+              selectedLocation = null, locationQuery = "", locationSuggestions = emptyList())
     } else {
       _addressState.value =
-          _addressState.value.copy(selectedLocation = location, locationQuery = location.name)
+          _addressState.value.copy(
+              selectedLocation = location,
+              locationQuery = location.name,
+              locationSuggestions = emptyList())
     }
   }
 
   override fun setLocationQuery(query: String) {
-    _addressState.value = _addressState.value.copy(locationQuery = query)
+    // When the user types, we consider that they’re editing the query → clear selected location.
+    _addressState.value = _addressState.value.copy(locationQuery = query, selectedLocation = null)
 
-    if (query.isNotEmpty()) {
-      viewModelScope.launch {
-        try {
-          val results = locationRepository.search(query)
-          _addressState.value = _addressState.value.copy(locationSuggestions = results)
-        } catch (e: Exception) {
-          // Log, doesn't need a string resource
-          Log.e(AddressTextFieldViewModelTags.TAG, "Error fetching location suggestions", e)
+    // Cancel any in-flight search
+    searchJob?.cancel()
 
-          _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
-        }
-      }
-    } else {
+    if (query.isBlank()) {
       _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
+      return
     }
+
+    searchJob =
+        viewModelScope.launch {
+          try {
+            // Debounce
+            delay(150)
+
+            val results = locationRepository.search(query)
+            _addressState.value = _addressState.value.copy(locationSuggestions = results)
+          } catch (e: Exception) {
+            Log.e(AddressTextFieldViewModelTags.TAG, "Error fetching location suggestions", e)
+            _addressState.value = _addressState.value.copy(locationSuggestions = emptyList())
+          }
+        }
   }
 
   override fun clearSelectedLocation() {
-    // When the user starts typing after a selection, clear the selection.
-    // This signals that a new search is being initiated.
     _addressState.value = _addressState.value.copy(selectedLocation = null)
   }
 }

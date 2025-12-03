@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -30,6 +31,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -95,9 +97,10 @@ fun LocationAutocompleteTextField(
             Text(text = stringResource(R.string.dropdown_menu_choose))
           }
         })
-    ExposedDropdownMenu(
+    DropdownMenu(
         expanded = expanded && state.locationSuggestions.isNotEmpty(),
-        onDismissRequest = { expanded = false }) {
+        onDismissRequest = { expanded = false },
+        properties = PopupProperties(focusable = false)) {
           val suggestions = state.locationSuggestions.take(3)
           suggestions.forEachIndexed { index, location ->
             DropdownMenuItem(
