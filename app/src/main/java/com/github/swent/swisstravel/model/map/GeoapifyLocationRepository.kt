@@ -51,18 +51,18 @@ class GeoapifyLocationRepository(
   }
 
   private fun parseBody(body: String): List<Location> {
+    Log.d("GeoapifyLocationRepository", "Parsing body: $body")
     val json = JSONObject(body)
     val results = json.optJSONArray("results") ?: return emptyList()
 
     val locations = mutableListOf<Location>()
     for (i in 0 until results.length()) {
       val result = results.optJSONObject(i) ?: continue
-      val city = result.optString("city", "")
-      val state = result.optString("state", "")
+      val formatted = result.optString("formatted", "")
       val lat = result.optDouble("lat")
       val lon = result.optDouble("lon")
 
-      val location = Location(name = "$city, $state", coordinate = Coordinate(lat, lon))
+      val location = Location(name = formatted, coordinate = Coordinate(lat, lon))
 
       locations += location
     }
