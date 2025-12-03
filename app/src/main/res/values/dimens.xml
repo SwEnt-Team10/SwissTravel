@@ -78,8 +78,6 @@
 
     <!-- Location Autocomplete -->
     <dimen name="location_autocomplete_image_padding">40dp</dimen>
-    <dimen name="location_autocomplete_image_spacer">16dp</dimen>
-    <dimen name="location_autocomplete_divider_thickness">1dp</dimen>
 
     <!-- Step Location Card -->
     <dimen name="step_location_card_horizontal_padding">16dp</dimen>
@@ -103,12 +101,10 @@
     <dimen name="daily_view_date_separator_padding">8dp</dimen>
     <dimen name="daily_view_map_button_padding">16dp</dimen>
 
-
     <!-- Current Trip Screen -->
     <dimen name="current_trip_icon_bottom_padding">16dp</dimen>
     <dimen name="current_trip_column_padding">16dp</dimen>
     <dimen name="current_trip_button_height">50dp</dimen>
-
 
     <!-- Trip Summary -->
     <dimen name="trip_summary_padding_horizontal">16dp</dimen>
@@ -144,7 +140,6 @@
     <dimen name="medium_button_height">48dp</dimen>
     <dimen name="google_button_logo">24dp</dimen>
     <dimen name="google_button_padding">8dp</dimen>
-    <dimen name="big_button_radius">28dp</dimen>
     <dimen name="google_button_border">1dp</dimen>
 
     <!-- Spacer -->
@@ -155,7 +150,6 @@
     <dimen name="medium_spacer">32dp</dimen>
     <dimen name="medium_large_spacer">48dp</dimen>
     <dimen name="large_spacer">60dp</dimen>
-    <dimen name="big_spacer">96dp</dimen>
 
     <!-- Padding values -->
     <dimen name="mini_padding">4dp</dimen>
