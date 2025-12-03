@@ -1,7 +1,5 @@
-package com.android.swisstravel.data.trips
+package com.github.swent.swisstravel.model.trip
 
-import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.trip.Location
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
