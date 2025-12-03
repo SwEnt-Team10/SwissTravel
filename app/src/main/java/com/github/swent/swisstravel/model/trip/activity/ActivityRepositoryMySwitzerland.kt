@@ -147,11 +147,6 @@ class ActivityRepositoryMySwitzerland(
     val imageUrls = parseImageUrls(item.optJSONArray("image"))
     val estimatedTime = parseEstimatedTime(item.optJSONArray("classification"))
 
-    if (!isValidActivity(description, estimatedTime)) {
-      Log.d("ActivityRepo", "Skipping invalid activity: $name")
-      return null
-    }
-
     return Activity(
         Timestamp.now(), Timestamp.now(), location, description, imageUrls, estimatedTime)
   }
@@ -238,19 +233,6 @@ class ActivityRepositoryMySwitzerland(
   }
 
   /**
-   * Checks if an activity is valid based on its description and estimated time.
-   *
-   * @param description The description of the activity.
-   * @param estimatedTime The estimated time of the activity in seconds.
-   * @return True if the activity is valid, false otherwise.
-   */
-  private fun isValidActivity(description: String, estimatedTime: Int): Boolean {
-    if (description.isBlank() || description == DESCRIPTION_FALLBACK) return false
-    if (estimatedTime <= 0) return false
-    return true
-  }
-
-  /**
    * Fetches valid activities with pagination until the desired limit is reached.
    *
    * @param baseUrl The base URL to fetch activities from.
@@ -264,12 +246,7 @@ class ActivityRepositoryMySwitzerland(
 
     while (validResults.size < limit) {
       // Randomly increase the number of activities pulled to introduce randomness
-      val totalActivityPull =
-          if (Math.random() < ACTIVITY_SHUFFLE) {
-            limit + (limit * EXTRA_RANDOM_ACTIVITIES).toInt()
-          } else {
-            limit
-          }
+      val totalActivityPull = getActivityNumberToPull(limit, Math.random() < ACTIVITY_SHUFFLE)
       val url =
           baseUrl
               .newBuilder()
@@ -295,6 +272,21 @@ class ActivityRepositoryMySwitzerland(
     // Shuffle the results to introduce randomness since there can be many valid activities
     validResults.shuffle()
     return validResults.take(limit)
+  }
+
+  /**
+   * This is public for testing purposes only and is not dangerous to have in public. Determine the
+   * number of activities to pull from the API, adding randomness.
+   *
+   * @param limit The base limit of activities to pull.
+   * @return The adjusted number of activities to pull.
+   */
+  fun getActivityNumberToPull(limit: Int, random: Boolean): Int {
+    return if (random) {
+      limit + (limit * EXTRA_RANDOM_ACTIVITIES).toInt()
+    } else {
+      limit
+    }
   }
 
   /**
