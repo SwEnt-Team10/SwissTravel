@@ -11,6 +11,7 @@ import com.google.firebase.Timestamp
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
+import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -246,7 +247,7 @@ class ActivityRepositoryMySwitzerland(
 
     while (validResults.size < limit) {
       // Randomly increase the number of activities pulled to introduce randomness
-      val totalActivityPull = getActivityNumberToPull(limit, Math.random() < ACTIVITY_SHUFFLE)
+      val totalActivityPull = getActivityNumberToPull(limit, Random.nextDouble() < ACTIVITY_SHUFFLE)
       val url =
           baseUrl
               .newBuilder()
