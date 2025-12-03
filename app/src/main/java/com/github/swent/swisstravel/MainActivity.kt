@@ -59,7 +59,8 @@ import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -537,11 +538,14 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
 
       tripId?.let {
-          PhotosScreen(
+          AddPhotosScreen(
               onBack = {
                   navController.popBackStack()
                        },
-              tripId = tripId
+              tripId = tripId,
+              onEdit = {
+                  navigationActions.navigateTo(Screen.EditPhotos(tripId))
+              }
           )
       }
           ?: run {
@@ -552,6 +556,19 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                 .show()
           }
     }
+      composable(Screen.EditPhotos.route) { navBackStackEntry ->
+          val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
+
+          tripId?.let {
+              EditPhotosScreen(
+                  onCancel = {
+                      navigationActions.goBack()
+                  },
+                  tripId = tripId
+              )
+          }
+
+      }
   }
 }
 

@@ -6,10 +6,8 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
@@ -26,17 +24,16 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.PhotosUIState
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.PhotosViewModel
 
 object AddPhotosScreenTestTags {
   const val MAIN_SCREEN = "mainScreen"
@@ -62,10 +59,10 @@ object AddPhotosScreenTestTags {
 @Composable
 fun AddPhotosScreen(
     onBack: () -> Unit = {},
+    onEdit: () -> Unit = {},
     photosViewModel: PhotosViewModel = viewModel(),
     tripId: String,
-    launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null,
-    uiState: PhotosUIState
+    launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
 ) {
   val context = LocalContext.current
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
@@ -77,11 +74,13 @@ fun AddPhotosScreen(
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-          photosViewModel.addUri(uris)
+            photosViewModel.addPhotos(tripId = tripId, uris = uris)
         }
       }
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
+
+    val uiState by photosViewModel.uiState.collectAsState()
 
   Scaffold(
       modifier = Modifier.testTag(AddPhotosScreenTestTags.MAIN_SCREEN),
@@ -107,7 +106,9 @@ fun AddPhotosScreen(
                   }
             },
             actions = {
-                EditButton(photosViewModel)
+                EditButton(onEdit = {
+                    onEdit()
+                })
             }
             )
       },
@@ -123,16 +124,6 @@ fun AddPhotosScreen(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
                   }) {
                     Text(text = stringResource(R.string.add_photos_button))
-                  }
-              Spacer(modifier = Modifier.width(dimensionResource(R.dimen.save_add_button_padding)))
-              // Save photos button
-              Button(
-                  modifier = Modifier.testTag(AddPhotosScreenTestTags.SAVE_BUTTON),
-                  onClick = {
-                    photosViewModel.savePhotos(tripId)
-                    onBack()
-                  }) {
-                    Text(text = stringResource(R.string.add_photos_save_button))
                   }
             }
       }) { pd ->
@@ -153,11 +144,11 @@ fun AddPhotosScreen(
 
 @Composable
 private fun EditButton(
-    photosViewModel: PhotosViewModel
+    onEdit:() -> Unit = {}
 ) {
     IconButton(
         onClick = {
-            photosViewModel.switchOnEditMode()
+            onEdit()
         }
     ) {
         Icon(

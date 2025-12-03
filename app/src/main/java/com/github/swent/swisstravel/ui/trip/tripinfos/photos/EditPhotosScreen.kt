@@ -15,22 +15,27 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.integerResource
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.PhotosUIState
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.add.PhotosViewModel
 
 @Composable
 fun EditPhotosScreen(
-    uiState: PhotosUIState,
-    photosViewModel: PhotosViewModel
+    photosViewModel: PhotosViewModel = viewModel(),
+    onCancel: () -> Unit = {},
+    tripId: String
 ) {
+    LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
+    val uiState by photosViewModel.uiState.collectAsState()
     Scaffold(
         topBar = {
             EditTopBar(
-                photosViewModel = photosViewModel
+                onCancel = onCancel
             )
         }
     ) {
@@ -55,7 +60,7 @@ fun EditPhotosScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditTopBar(
-    photosViewModel: PhotosViewModel
+    onCancel: () -> Unit = {}
 ) {
     TopAppBar(
         title = {
@@ -65,7 +70,7 @@ private fun EditTopBar(
         },
         navigationIcon = {
             CancelButton(
-                photosViewModel
+                onCancel = onCancel
             )
         }
     )
@@ -73,11 +78,11 @@ private fun EditTopBar(
 
 @Composable
 private fun CancelButton(
-    photosViewModel: PhotosViewModel
+    onCancel: () -> Unit = {}
 ) {
     IconButton(
         onClick = {
-            photosViewModel.switchOnEditMode()
+            onCancel()
         }
     ) {
         Icon(
