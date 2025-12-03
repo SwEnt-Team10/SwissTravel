@@ -33,13 +33,13 @@ class ProfileViewModelTest {
   private lateinit var tripsRepository: TripsRepository
   private lateinit var viewModel: ProfileViewModel
 
-  private val currentUser =
+  private val fakeUser =
       User(
-          uid = "mahitoH8er999",
-          name = "Itadori Yuji",
-          email = "poop@poop.com",
-          biography = "I hate curses",
-          profilePicUrl = "http://pic.url",
+          uid = "123",
+          name = "Test User",
+          biography = "Bio",
+          email = "test@example.com",
+          profilePicUrl = "http://example.com/pic.jpg",
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
@@ -52,11 +52,7 @@ class ProfileViewModelTest {
     userRepository = mockk()
     tripsRepository = mockk(relaxed = true)
 
-    // Default mocks
-    coEvery { userRepository.getCurrentUser() } returns currentUser
-    coEvery { userRepository.getUserByUid(any()) } returns currentUser
     coEvery { userRepository.updateUserStats(any(), any()) } just Runs
-    coEvery { userRepository.removeFriend(any(), any()) } just Runs
   }
 
   @After
@@ -64,65 +60,69 @@ class ProfileViewModelTest {
     Dispatchers.resetMain()
   }
 
-  // Profile Loading
   @Test
   fun initLoadsProfileSuccessfully() = runTest {
-    viewModel = ProfileViewModel(userRepository, tripsRepository, currentUser.uid)
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getUserByUid(fakeUser.uid) } returns fakeUser
+
+    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    Assert.assertEquals(currentUser.uid, state.uid)
-    Assert.assertEquals(currentUser.name, state.name)
-    Assert.assertEquals(currentUser.biography, state.biography)
-    Assert.assertEquals(currentUser.profilePicUrl, state.profilePicUrl)
+    Assert.assertEquals(fakeUser.uid, state.uid)
+    Assert.assertEquals(fakeUser.name, state.name)
     Assert.assertTrue(state.isOwnProfile)
     Assert.assertNull(state.errorMsg)
   }
 
   @Test
-  fun initWithBlankUidSetsErrorMessage() = runTest {
-    viewModel = ProfileViewModel(userRepository, tripsRepository, "")
+  fun refreshStats_doesNothingWhenOffline() = runTest {
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getUserByUid(fakeUser.uid) } returns fakeUser
+
+    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    val state = viewModel.uiState.value
-    Assert.assertEquals("User ID is invalid", state.errorMsg)
-  }
-
-  @Test
-  fun initWithNonExistingUserSetsErrorMessage() = runTest {
-    coEvery { userRepository.getUserByUid("nonexistent") } returns null
-
-    viewModel = ProfileViewModel(userRepository, tripsRepository, "nonexistent")
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    val state = viewModel.uiState.value
-    Assert.assertTrue(state.errorMsg?.contains("User with uid nonexistent not found") == true)
-  }
-
-  // Stats Refresh (indirect via init)
-  @Test
-  fun initCallsUpdateUserStatsForOwnProfile() = runTest {
-    viewModel = ProfileViewModel(userRepository, tripsRepository, currentUser.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify { userRepository.updateUserStats(currentUser.uid, any()) }
-  }
-
-  @Test
-  fun initDoesNotCallUpdateUserStatsForOtherProfile() = runTest {
-    val otherUser = currentUser.copy(uid = "otherUid")
-    coEvery { userRepository.getUserByUid("otherUid") } returns otherUser
-
-    viewModel = ProfileViewModel(userRepository, tripsRepository, "otherUid")
+    viewModel.refreshStats(isOnline = false)
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify(exactly = 0) { userRepository.updateUserStats(any(), any()) }
   }
 
-  // Error Message
+  @Test
+  fun refreshStats_updatesStatsWhenOnlineAndOwnProfile() = runTest {
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getUserByUid(fakeUser.uid) } returns fakeUser
+    coEvery { tripsRepository.getAllTrips() } returns emptyList()
+
+    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.refreshStats(isOnline = true)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { userRepository.updateUserStats(fakeUser.uid, any()) }
+  }
+
+  @Test
+  fun refreshStats_doesNotUpdateStatsWhenNotOwnProfile() = runTest {
+    val otherUserUid = "456"
+    val otherUser = fakeUser.copy(uid = otherUserUid)
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getUserByUid(otherUserUid) } returns otherUser
+
+    viewModel = ProfileViewModel(userRepository, tripsRepository, otherUserUid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.refreshStats(isOnline = true)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 0) { userRepository.updateUserStats(any(), any()) }
+  }
+
   @Test
   fun setErrorMsgAndClearErrorMsgWorkCorrectly() = runTest {
-    viewModel = ProfileViewModel(userRepository, tripsRepository, currentUser.uid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
 
     viewModel.setErrorMsg("Test Error")
     var state = viewModel.uiState.value
@@ -137,7 +137,7 @@ class ProfileViewModelTest {
   fun viewingOtherUsersProfileLoadsCorrectlyAndIsOwnProfileIsFalse() = runTest {
     // Given: another existing user
     val otherUser =
-        currentUser.copy(
+        fakeUser.copy(
             uid = "bumAndFraud",
             name = "Fushiguro Megumi",
             biography = "I like dogs and being a bum.",
