@@ -13,7 +13,10 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** UI State for the selectPinnedPhotosScreen */
-data class SelectPinnedPhotosUIState(val listUri: List<Uri> = emptyList())
+data class SelectPinnedPhotosUIState(
+    val listUri: List<Uri> = emptyList(),
+    var errorMsg: String? = null
+)
 
 /** ViewModel for the selectPinnedPhotosScreen */
 class SelectPinnedPhotosViewModel(
@@ -24,6 +27,7 @@ class SelectPinnedPhotosViewModel(
 
   private var currentUser: User? = null
 
+  // Loads the user's photos into the UI state
   init {
     viewModelScope.launch {
       try {
@@ -31,34 +35,34 @@ class SelectPinnedPhotosViewModel(
         currentUser = user
         addUri(user.pinnedImagesUris)
       } catch (e: Exception) {
-        _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data: ${e.message}")
-      } finally {
-        _uiState.update { it.copy(isLoading = false) }
+        _uiState.value = uiState.value.copy(errorMsg = "Error fetching user images: ${e.message}")
       }
     }
   }
 
   /**
-   * Add the uris of photos to the state
+   * Adds a list of URIs to the UI state.
    *
-   * @param uris the uris of photos to add
+   * @param uris The list of URIs to add to the UI state.
    */
   fun addUri(uris: List<Uri>) {
     _uiState.value = _uiState.value.copy(listUri = _uiState.value.listUri + uris)
   }
 
+  /** Saves the selected photos to the user's profile. */
   fun savePhotos() {
     viewModelScope.launch {
-      val oldTrip = tripsRepository.getTrip(tripId)
-      val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
-      tripsRepository.editTrip(tripId, newTrip)
+      val user = currentUser ?: return@launch
+      try {
+        userRepository.updateUser(uid = user.uid, pinnedImagesUris = _uiState.value.listUri)
+      } catch (e: Exception) {
+        _uiState.update { it.copy(errorMsg = "Error saving image(s): ${e.message}") }
+      }
     }
   }
 
-  fun loadPhotos() {
-    viewModelScope.launch {
-      val trip = tripsRepository.getTrip(tripId)
-      _uiState.value = AddPhotosUIState(listUri = trip.listUri)
-    }
+  /** Clears the error message in the UI state. */
+  fun clearErrorMsg() {
+    _uiState.update { it.copy(errorMsg = null) }
   }
 }

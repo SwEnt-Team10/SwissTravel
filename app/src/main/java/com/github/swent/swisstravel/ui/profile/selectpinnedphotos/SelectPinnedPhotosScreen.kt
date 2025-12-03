@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.profile.selectpinnedphotos
 
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -24,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -50,10 +52,11 @@ object SelectPinnedPhotosScreenTestTags {
 }
 
 /**
- * A screen that shows the photos associated to a trip. You can add photos too.
+ * A screen that allows the user to select pinned photos.
  *
- * @param onBack a function that is call when the user click on the back button.
- * @param viewModel the viewmodel used by the screen.
+ * @param onBack The callback for when the back button is clicked.
+ * @param selectPinnedPhotosViewModel The view model for this screen.
+ * @param launchPickerOverride The override for the picker launcher.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,6 +82,15 @@ fun SelectPinnedPhotosScreen(
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
 
   val selectPinnedPhotosUIState by selectPinnedPhotosViewModel.uiState.collectAsState()
+
+  LaunchedEffect(selectPinnedPhotosUIState.errorMsg) {
+    selectPinnedPhotosUIState.errorMsg
+        ?.takeIf { it.isNotBlank() }
+        ?.let {
+          Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+          selectPinnedPhotosViewModel.clearErrorMsg()
+        }
+  }
 
   Scaffold(
       modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.MAIN_SCREEN),
@@ -122,7 +134,7 @@ fun SelectPinnedPhotosScreen(
               Button(
                   modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.SAVE_BUTTON),
                   onClick = {
-                    selectPinnedPhotosViewModel.savePhotos(tripId)
+                    selectPinnedPhotosViewModel.savePhotos()
                     onBack()
                   }) {
                     Text(text = stringResource(R.string.add_photos_save_button))
