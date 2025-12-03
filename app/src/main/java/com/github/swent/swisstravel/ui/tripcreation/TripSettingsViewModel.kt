@@ -345,6 +345,10 @@ open class TripSettingsViewModel(
    * @param context The context, used to access app resources like the Grand Tour locations.
    */
   fun generateSuggestions(context: Context) {
+    if (suggestions.value.isNotEmpty()) {
+      return
+    }
+
     val settings = _tripSettings.value
     val userLocations =
         listOfNotNull(
