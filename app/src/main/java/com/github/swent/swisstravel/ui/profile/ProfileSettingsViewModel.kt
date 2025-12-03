@@ -64,12 +64,25 @@ class ProfileSettingsViewModel(
         val user = userRepository.getCurrentUser()
         currentUser = user
         autoFill(user)
-        refreshStatsForUser(user)
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data: ${e.message}")
       } finally {
         _uiState.update { it.copy(isLoading = false) }
       }
+    }
+  }
+
+  /**
+   * Refreshes the user's stats based on their past trips.
+   *
+   * @param isOnline Whether the device is online.
+   */
+  fun refreshStats(isOnline: Boolean) {
+    if (!isOnline) return
+
+    viewModelScope.launch {
+      val user = currentUser ?: return@launch
+      refreshStatsForUser(user)
     }
   }
 

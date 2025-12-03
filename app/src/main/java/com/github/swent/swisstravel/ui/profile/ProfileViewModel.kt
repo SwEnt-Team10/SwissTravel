@@ -87,14 +87,28 @@ class ProfileViewModel(
         val isOwn = currentUser?.uid == requestedUid
         loadProfile(requestedUid)
         _uiState.update { it.copy(uid = requestedUid, isOwnProfile = isOwn) }
-        if (isOwn) {
-          refreshStatsForUser(currentUser!!)
-        }
       } catch (e: Exception) {
         Log.e("ProfileViewModel", "Error loading profile", e)
         setErrorMsg("Failed to load profile: ${e.message}")
       } finally {
         _uiState.update { it.copy(isLoading = false) }
+      }
+    }
+  }
+
+  /**
+   * Refreshes the user's stats based on their past trips.
+   *
+   * @param isOnline Whether the device is online.
+   */
+  fun refreshStats(isOnline: Boolean) {
+    if (!isOnline) return
+
+    viewModelScope.launch {
+      val user = currentUser ?: return@launch
+      // Only refresh stats if it's the user's own profile
+      if (user.uid == _uiState.value.uid) {
+        refreshStatsForUser(user)
       }
     }
   }
@@ -163,5 +177,16 @@ class ProfileViewModel(
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
+  }
+}
+
+class ProfileViewModelFactory(
+    private val requestedUid: String,
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    private val tripsRepository: TripsRepository = TripsRepositoryFirestore()
+) : androidx.lifecycle.ViewModelProvider.Factory {
+  @Suppress("UNCHECKED_CAST")
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    return ProfileViewModel(userRepository, tripsRepository, requestedUid) as T
   }
 }

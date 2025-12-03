@@ -14,7 +14,6 @@ import kotlinx.coroutines.tasks.await
 class UserRepositoryFirebase(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
     private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
-
 ) : UserRepository {
 
   init {

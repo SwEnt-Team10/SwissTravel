@@ -73,6 +73,7 @@ import com.github.swent.swisstravel.model.user.toData
 import com.github.swent.swisstravel.ui.composable.TripList
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.utils.NetworkUtils
 
 /** Test tags for the profile screen. */
 object ProfileScreenTestTags {
@@ -124,6 +125,9 @@ fun ProfileScreen(
 ) {
   val context = LocalContext.current
   val uiState by profileViewModel.uiState.collectAsState()
+
+  val isOnline = NetworkUtils.isOnline(LocalContext.current)
+  LaunchedEffect(isOnline) { profileViewModel.refreshStats(isOnline) }
 
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg

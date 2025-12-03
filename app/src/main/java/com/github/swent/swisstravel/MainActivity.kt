@@ -54,6 +54,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileViewModelFactory
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
@@ -367,7 +368,10 @@ private fun NavGraphBuilder.profileNavGraph(
     composable(Screen.Profile.route) {
       ProfileScreen(
           profileViewModel =
-              ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
+              viewModel(
+                  factory =
+                      ProfileViewModelFactory(
+                          requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: "")),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
           onEditPinnedTrips = { /* TODO */
