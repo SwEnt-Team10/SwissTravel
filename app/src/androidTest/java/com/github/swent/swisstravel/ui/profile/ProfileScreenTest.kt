@@ -7,12 +7,18 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
+import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.trips.TripElementTestTags
+import com.github.swent.swisstravel.utils.SwissTravelTest
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
@@ -53,9 +59,55 @@ private class TestUserRepository(private val user: User) : UserRepository {
  * Made with the help of AI
  */
 @RunWith(AndroidJUnit4::class)
-class ProfileScreenTest {
+class ProfileScreenTest : SwissTravelTest() {
+
+  override fun createInitializedRepository(): TripsRepository {
+    return TripRepositoryLocal()
+  }
+
+  private val tripOne =
+      Trip(
+          uid = "trip1",
+          name = "Trip One",
+          ownerId = "currentUser",
+          locations = emptyList(),
+          routeSegments = emptyList(),
+          activities = emptyList(),
+          tripProfile =
+              TripProfile(
+                  startDate = Timestamp(0, 0),
+                  endDate = Timestamp(0, 0),
+                  preferredLocations = emptyList(),
+                  preferences = emptyList()),
+          isFavorite = false,
+          isCurrentTrip = false,
+          listUri = emptyList())
+  private val tripTwo =
+      Trip(
+          uid = "trip2",
+          name = "Trip Two",
+          ownerId = "currentUser",
+          locations = emptyList(),
+          routeSegments = emptyList(),
+          activities = emptyList(),
+          tripProfile =
+              TripProfile(
+                  startDate = Timestamp(0, 0),
+                  endDate = Timestamp(0, 0),
+                  preferredLocations = emptyList(),
+                  preferences = emptyList()),
+          isFavorite = false,
+          isCurrentTrip = false,
+          listUri = emptyList())
 
   private val fakeTripRepo = TripRepositoryLocal()
+
+  init {
+    runBlocking {
+      fakeTripRepo.addTrip(tripOne)
+      fakeTripRepo.addTrip(tripTwo)
+    }
+  }
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -386,6 +438,46 @@ class ProfileScreenTest {
 
       // Remove friend button should NOT be displayed
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON).assertDoesNotExist()
+    }
+  }
+
+  @Test
+  fun profileScreen_displaysPinnedTrips() {
+    runBlocking {
+      val currentUser =
+          User(
+              uid = "currentUser",
+              name = "Current User",
+              biography = "",
+              email = "",
+              profilePicUrl = "",
+              preferences = emptyList(),
+              friends = emptyList(),
+              stats = sampleStats,
+              pinnedTripsUids = listOf("trip1", "trip2"), // trips to display
+              pinnedImagesUris = emptyList())
+
+      val viewModel =
+          ProfileViewModel(
+              userRepository = TestUserRepository(currentUser),
+              tripsRepository = fakeTripRepo,
+              requestedUid = "currentUser")
+
+      composeTestRule.setContent {
+        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
+      }
+
+      // Ensure the section title exists
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsDisplayed()
+
+      // Each pinned trip must appear
+      composeTestRule
+          .onNodeWithTag(TripElementTestTags.getTestTagForTrip(tripOne))
+          .assertIsDisplayed()
+
+      composeTestRule
+          .onNodeWithTag(TripElementTestTags.getTestTagForTrip(tripTwo))
+          .assertIsDisplayed()
     }
   }
 }

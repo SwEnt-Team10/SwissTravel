@@ -37,11 +37,13 @@ import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
+import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
@@ -633,6 +635,17 @@ abstract class SwissTravelTest {
     onNodeWithTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN).assertIsDisplayed()
     onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON).assertIsDisplayed()
     onNodeWithTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.selectPinnedTripsScreenIsDisplayed() {
+    onNodeWithTag(SelectPinnedTripsScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
+    onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB).assertIsDisplayed()
+    onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
+
+    // Ensure pinned trip is displayed
+    onNodeWithText("Trip One").assertIsDisplayed()
+    // Non-pinned trips may appear in available list
+    onNodeWithText("Trip Two").assertIsDisplayed()
   }
 
   // TODO : Create helper/companions functions here

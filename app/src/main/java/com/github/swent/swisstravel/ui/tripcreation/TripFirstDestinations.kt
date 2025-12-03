@@ -1,7 +1,7 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,18 +9,30 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -53,7 +65,8 @@ object TripFirstDestinationsTestTags {
 private const val MAX_DESTINATIONS = 24
 
 /**
- * Screen for entering the first destinations of a trip.
+ * Screen for entering the first destinations of a trip. Note that parts of this class was generated
+ * with the help of AI.
  *
  * @param viewModel The ViewModel managing the trip settings state.
  * @param onNext Callback invoked when the user proceeds to the next step.
@@ -73,6 +86,12 @@ fun FirstDestinationScreen(
     }
 ) {
   val destinations = remember { mutableStateListOf<Location>() }
+  val suggestions by viewModel.suggestions.collectAsState()
+  val selectedSuggestions by viewModel.selectedSuggestions.collectAsState()
+  val context = LocalContext.current
+  var isExpanded by remember { mutableStateOf(false) }
+
+  LaunchedEffect(Unit) { viewModel.generateSuggestions(context) }
 
   Scaffold(
       topBar = {
@@ -81,93 +100,190 @@ fun FirstDestinationScreen(
         Surface(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             color = MaterialTheme.colorScheme.background) {
-              Column(
-                  modifier = Modifier.padding(dimensionResource(R.dimen.mid_padding)),
-                  horizontalAlignment = Alignment.CenterHorizontally,
-                  verticalArrangement = Arrangement.SpaceBetween) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        modifier = Modifier.weight(1f)) {
-                          // --- Title ---
-                          Text(
-                              modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
-                              text = stringResource(R.string.first_destinations_title),
-                              textAlign = TextAlign.Center,
-                              style =
-                                  MaterialTheme.typography.headlineMedium.copy(
-                                      fontWeight = FontWeight.Bold))
+              LazyColumn(
+                  modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.mid_padding)),
+                  horizontalAlignment = Alignment.CenterHorizontally) {
+                    item { FirstDestinationsTitle() }
 
-                          Spacer(
-                              modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
+                    item {
+                      AddDestinationButton(
+                          destinations = destinations,
+                          onAddDestination = {
+                            destinations.add(Location(coordinate = Coordinate(0.0, 0.0), name = ""))
+                          })
+                    }
 
-                          // --- List of Destination Input Fields ---
-                          LazyColumn(
-                              modifier = Modifier.fillMaxWidth(),
-                              horizontalAlignment = Alignment.CenterHorizontally) {
-                                itemsIndexed(destinations, key = { index, _ -> index }) { index, _
-                                  ->
-                                  // Create a new ViewModel for each destination input field
-                                  val destinationVm = destinationViewModelFactory(index)
-                                  LocationAutocompleteTextField(
-                                      onLocationSelected = { selectedLocation ->
-                                        destinations[index] = selectedLocation
-                                      },
-                                      addressTextFieldViewModel = destinationVm,
-                                      clearOnSelect = false,
-                                      name = "Destination ${index + 1}",
-                                      showImages = true)
+                    itemsIndexed(destinations, key = { index, _ -> index }) { index, _ ->
+                      val destinationVm = destinationViewModelFactory(index)
+                      DestinationItem(
+                          index = index,
+                          destinationVm = destinationVm,
+                          onLocationSelected = { selectedLocation ->
+                            destinations[index] = selectedLocation
+                          })
+                    }
 
-                                  Spacer(
-                                      modifier =
-                                          Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
-                                }
-                              }
+                    item {
+                      SuggestionsHeader(
+                          isExpanded = isExpanded, onToggleExpand = { isExpanded = !isExpanded })
+                    }
 
-                          Spacer(
-                              modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+                    if (isExpanded) {
+                      SuggestionList(
+                          destinations = selectedSuggestions,
+                          suggestions = suggestions,
+                          onSuggestionSelected = { location ->
+                            viewModel.toggleSuggestion(location)
+                          },
+                          onSuggestionDeselected = { location ->
+                            viewModel.toggleSuggestion(location)
+                          })
+                    }
 
-                          // --- Add Destination Button ---
-                          Button(
-                              modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
-                              onClick = {
-                                destinations.add(
-                                    Location(coordinate = Coordinate(0.0, 0.0), name = ""))
-                              },
-                              enabled =
-                                  (destinations.isEmpty() ||
-                                      destinations.last().name.isNotEmpty()) &&
-                                      destinations.size < MAX_DESTINATIONS,
-                          ) {
-                            Text(
-                                if (destinations.size < MAX_DESTINATIONS) {
-                                  stringResource(R.string.add_first_destination)
-                                } else stringResource(R.string.destination_limited))
-                          }
-                        }
-
-                    // --- Next Button ---
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center) {
-                          Button(
-                              modifier = Modifier.testTag(NEXT_BUTTON),
-                              onClick = {
-                                val finalList = destinations.filter { it.name.isNotEmpty() }
-                                viewModel.setDestinations(finalList)
-                                onNext()
-                              },
-                              colors =
-                                  ButtonDefaults.buttonColors(
-                                      containerColor = MaterialTheme.colorScheme.primary)) {
-                                Text(
-                                    stringResource(R.string.next),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.titleMedium)
-                              }
-                        }
+                    item {
+                      NextButton(
+                          onNext = {
+                            val manualList = destinations.filter { it.name.isNotEmpty() }
+                            val mergedList = manualList + selectedSuggestions
+                            viewModel.setDestinations(mergedList)
+                            onNext()
+                          })
+                    }
                   }
             }
       }
+}
+
+@Composable
+fun FirstDestinationsTitle() {
+  Text(
+      modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
+      text = stringResource(R.string.first_destinations_title),
+      textAlign = TextAlign.Center,
+      style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+}
+
+@Composable
+fun AddDestinationButton(destinations: List<Location>, onAddDestination: () -> Unit) {
+  Button(
+      modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
+      onClick = onAddDestination,
+      enabled =
+          (destinations.isEmpty() || destinations.last().name.isNotEmpty()) &&
+              destinations.size < MAX_DESTINATIONS,
+  ) {
+    Text(
+        if (destinations.size < MAX_DESTINATIONS) {
+          stringResource(R.string.add_first_destination)
+        } else stringResource(R.string.destination_limited))
+  }
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+
+  HorizontalDivider()
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+}
+
+@Composable
+fun DestinationItem(
+    index: Int,
+    destinationVm: AddressTextFieldViewModelContract,
+    onLocationSelected: (Location) -> Unit
+) {
+  LocationAutocompleteTextField(
+      onLocationSelected = onLocationSelected,
+      addressTextFieldViewModel = destinationVm,
+      clearOnSelect = false,
+      name = "Destination ${index + 1}",
+      showImages = true)
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+}
+
+@Composable
+fun SuggestionsHeader(isExpanded: Boolean, onToggleExpand: () -> Unit) {
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .clickable { onToggleExpand() }
+              .padding(vertical = dimensionResource(R.dimen.small_padding)),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(text = "See Our Suggestions For You", style = MaterialTheme.typography.titleMedium)
+        Icon(
+            imageVector =
+                if (isExpanded) androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp
+                else androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown,
+            contentDescription = if (isExpanded) "Collapse" else "Expand")
+      }
+}
+
+@Composable
+fun NextButton(onNext: () -> Unit) {
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+
+  HorizontalDivider()
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+
+  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    Button(
+        modifier = Modifier.testTag(NEXT_BUTTON),
+        onClick = onNext,
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+          Text(
+              stringResource(R.string.next),
+              color = MaterialTheme.colorScheme.onPrimary,
+              style = MaterialTheme.typography.titleMedium)
+        }
+  }
+}
+
+/** Extension function for LazyListScope to display a list of suggested destinations. */
+fun LazyListScope.SuggestionList(
+    destinations: List<Location>,
+    suggestions: List<Location>,
+    onSuggestionSelected: (Location) -> Unit,
+    onSuggestionDeselected: (Location) -> Unit
+) {
+  itemsIndexed(suggestions) { _, location ->
+    val isSelected =
+        destinations.any { it.name == location.name && it.coordinate == location.coordinate }
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable {
+                  if (isSelected) {
+                    onSuggestionDeselected(location)
+                  } else {
+                    onSuggestionSelected(location)
+                  }
+                }
+                .padding(dimensionResource(R.dimen.small_padding))
+                .testTag("suggestion_row_${location.name}"),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = location.name,
+              style = MaterialTheme.typography.bodyLarge,
+              modifier = Modifier.weight(1f))
+          Checkbox(
+              modifier = Modifier.testTag("suggestion_checkbox_${location.name}"),
+              checked = isSelected,
+              onCheckedChange = { checked ->
+                if (checked) {
+                  onSuggestionSelected(location)
+                } else {
+                  onSuggestionDeselected(location)
+                }
+              })
+        }
+    HorizontalDivider()
+  }
 }
 
 @Preview
