@@ -35,11 +35,11 @@ class ProfileViewModelTest {
 
   private val fakeUser =
       User(
-          uid = "123",
-          name = "Test User",
-          biography = "Bio",
-          email = "test@example.com",
-          profilePicUrl = "http://example.com/pic.jpg",
+          uid = "mahitoH8er999",
+          name = "Itadori Yuji",
+          email = "poop@poop.com",
+          biography = "I hate curses",
+          profilePicUrl = "http://pic.url",
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
@@ -165,21 +165,22 @@ class ProfileViewModelTest {
 
   @Test
   fun initRemovesPinnedTripsThatNoLongerExistInTripRepository() = runTest {
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { userRepository.getUserByUid(fakeUser.uid) } returns fakeUser
     // Given: user has two pinned trip UIDs
     val validTripUid = "trip123"
     val deletedTripUid = "tripDeleted"
 
-    val userWithPinnedTrips =
-        currentUser.copy(pinnedTripsUids = listOf(validTripUid, deletedTripUid))
+    val userWithPinnedTrips = fakeUser.copy(pinnedTripsUids = listOf(validTripUid, deletedTripUid))
 
-    coEvery { userRepository.getUserByUid(currentUser.uid) } returns userWithPinnedTrips
+    coEvery { userRepository.getUserByUid(fakeUser.uid) } returns userWithPinnedTrips
     // TripsRepository returns a trip for existingTripUid, throws for deletedTripUid
     coEvery { tripsRepository.getTrip(validTripUid) } returns mockk(relaxed = true)
     coEvery { tripsRepository.getTrip(deletedTripUid) } throws Exception("Trip not found")
 
-    coEvery { userRepository.updateUser(uid = currentUser.uid, pinnedTripsUids = any()) } just Runs
+    coEvery { userRepository.updateUser(uid = fakeUser.uid, pinnedTripsUids = any()) } just Runs
     // When: initializing the ViewModel
-    viewModel = ProfileViewModel(userRepository, tripsRepository, currentUser.uid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // And: UI state pinnedTrips contains only the existing trip
