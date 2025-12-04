@@ -49,10 +49,20 @@ class PhotosViewModel(
     }
   }
 
+  /**
+   * Add the uris of the photos to the PhotosUiState
+   *
+   * @param uris the uris of the photos to add to the state
+   */
   fun addUris(uris: List<Uri>) {
     _uiState.value = _uiState.value.copy(listUri = uris + _uiState.value.listUri)
   }
 
+  /**
+   * Add or remove the index of a photos already added from the state
+   *
+   * @param index the index of the photo to remove or add to the selected photos of the state
+   */
   fun selectToRemove(index: Int) {
     val current = _uiState.value.uriSelected.toMutableList()
     if (current.contains(index)) {
@@ -63,8 +73,11 @@ class PhotosViewModel(
     _uiState.value = _uiState.value.copy(uriSelected = current)
   }
 
-  // Done with AI
+  /**
+   * Remove the photos from the repository depending on the photos selected on edit mode
+   */
   fun removePhotos() {
+    // Done with AI
     val selected = _uiState.value.uriSelected.toSet()
 
     val newList = _uiState.value.listUri

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -30,12 +31,20 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 
+/**
+ * A Screen corresponding to the edit mode of the feature that can add photos to the trip.
+ *
+ * @param photosViewModel the viewModel of the screen
+ * @param onCancel a function called when you want to exit the edit mode
+ * @param tripId the uid of the current trip selected
+ */
 @Composable
 fun EditPhotosScreen(
     photosViewModel: PhotosViewModel = viewModel(),
     onCancel: () -> Unit = {},
     tripId: String
 ) {
+    // Start by loading the photos from the repository
     LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
     val uiState by photosViewModel.uiState.collectAsState()
     Scaffold(
@@ -43,6 +52,7 @@ fun EditPhotosScreen(
             EditTopBar(
                 onCancel =
                     {
+                        // Save then quit
                         photosViewModel.savePhotos(tripId)
                         onCancel()
                     }
@@ -51,6 +61,7 @@ fun EditPhotosScreen(
         bottomBar = {
             EditBottomBar(
                 onRemove = {
+                    // Remove from the state
                     photosViewModel.removePhotos()
                 }
             )
@@ -71,7 +82,7 @@ fun EditPhotosScreen(
                         model = uri,
                         contentDescription = null
                     )
-
+                    // the veil added when a photo is selected
                     if (uiState.uriSelected.contains(index)) {
                         Box(
                             modifier = Modifier
@@ -86,6 +97,11 @@ fun EditPhotosScreen(
         }
     }
 }
+/**
+ * The top app bar of the edit mode. It contains only a button to quit the mode.
+ *
+ * @param onCancel the function to call when you want to quit the mode
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditTopBar(
@@ -105,6 +121,11 @@ private fun EditTopBar(
     )
 }
 
+/**
+ * A button that can exit the edit mode
+ *
+ * @param onCancel the function to call when you click on the button
+ */
 @Composable
 private fun CancelButton(
     onCancel: () -> Unit = {}
@@ -122,6 +143,11 @@ private fun CancelButton(
     }
 }
 
+/**
+ * The bottom bar of the edit mode
+ *
+ * @param onRemove the function to call when you want to remove selected photos
+ */
 @Composable
 private fun EditBottomBar(
     onRemove: () -> Unit = {}

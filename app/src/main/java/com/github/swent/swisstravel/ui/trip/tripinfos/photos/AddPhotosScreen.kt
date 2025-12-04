@@ -143,6 +143,11 @@ fun AddPhotosScreen(
       }
 }
 
+/**
+ * A button that go on edit mode when you click on it.
+ *
+ * @param onEdit the function called when you click on the button
+ */
 @Composable
 private fun EditButton(
     onEdit:() -> Unit = {}
