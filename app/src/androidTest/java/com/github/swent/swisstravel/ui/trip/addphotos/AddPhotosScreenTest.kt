@@ -15,7 +15,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosViewModel
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
 import kotlin.test.Test
@@ -48,9 +48,11 @@ class AddPhotosScreenTest : SwissTravelTest() {
             isCurrentTrip = true,
             listUri = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
-    val fakeModel = AddPhotosViewModel()
+    val fakeModel = PhotosViewModel()
     // UI testing
-    composeTestRule.setContent { AddPhotosScreen(tripId = fakeTrip.uid, viewModel = fakeModel) }
+    composeTestRule.setContent {
+      AddPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)
+    }
     composeTestRule.addPhotosScreenIsDisplayed()
   }
 
@@ -71,9 +73,11 @@ class AddPhotosScreenTest : SwissTravelTest() {
             listUri = listOf("Uri1".toUri(), "AmazingUri2".toUri()))
 
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
-    val fakeModel = AddPhotosViewModel()
+    val fakeModel = PhotosViewModel()
     // UI testing
-    composeTestRule.setContent { AddPhotosScreen(tripId = fakeTrip.uid, viewModel = fakeModel) }
+    composeTestRule.setContent {
+      AddPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)
+    }
     composeTestRule.addPhotosScreenIsDisplayed()
     composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID).isDisplayed()
     for (i in fakeTrip.listUri.indices) {
@@ -96,14 +100,14 @@ class AddPhotosScreenTest : SwissTravelTest() {
             isCurrentTrip = true,
             listUri = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
-    val fakeModel = AddPhotosViewModel()
+    val fakeModel = PhotosViewModel()
 
     composeTestRule.setContent {
       AddPhotosScreen(
           tripId = fakeTrip.uid,
-          viewModel = fakeModel,
+          photosViewModel = fakeModel,
           launchPickerOverride = {
-            fakeModel.addUri(
+            fakeModel.addUris(
                 listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()))
           })
     }
@@ -134,15 +138,15 @@ class AddPhotosScreenTest : SwissTravelTest() {
             isCurrentTrip = true,
             listUri = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
-    val fakeModel = AddPhotosViewModel()
+    val fakeModel = PhotosViewModel()
 
     composeTestRule.setContent {
       AddPhotosScreen(
           tripId = fakeTrip.uid,
-          viewModel = fakeModel,
+          photosViewModel = fakeModel,
           onBack = { backCalled = true },
           launchPickerOverride = {
-            fakeModel.addUri(
+            fakeModel.addUris(
                 listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()))
           })
     }
