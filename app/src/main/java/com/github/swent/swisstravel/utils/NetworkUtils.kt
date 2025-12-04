@@ -35,7 +35,8 @@ object NetworkUtils {
     // Get capabilities for the active network
     val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
 
-    // Check if the network has the INTERNET capability
-    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+    // Check if the network has the INTERNET capability and can send packets to the internet
+    return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+        capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
   }
 }

@@ -190,7 +190,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
   }
 
   @Test
-  fun getTrip_returnsNullOrThrowsForMalformedData() = runBlocking {
+  fun getTrip_ThrowsForMalformedData() = runBlocking {
     // Arrange: create a document with missing fields manually
     val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("BadDataUser", "bad@example.com")
     FirebaseEmulator.createGoogleUser(fakeIdToken)
