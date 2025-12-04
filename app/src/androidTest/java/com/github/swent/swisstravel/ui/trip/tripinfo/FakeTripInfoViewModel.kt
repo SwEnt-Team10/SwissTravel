@@ -7,6 +7,10 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoUIState
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
+import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
+import com.github.swent.swisstravel.ui.tripcreation.TripDate
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.mapbox.geojson.Point
 import java.time.ZoneId
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -113,9 +117,44 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     recomputeSchedule()
   }
 
-  override fun likeActivity(activity: Activity) {
+  override fun likeActivities(activities: List<Activity>) {
     val current = _ui.value
-    val newLiked = current.likedActivities.toMutableList().apply { add(activity) }
+    val newLiked = current.likedActivities.toMutableList().apply { addAll(activities) }
     _ui.value = current.copy(likedActivities = newLiked)
+  }
+
+  override fun unlikeActivities(activities: List<Activity>) {
+    val current = _ui.value
+    val newLiked = current.likedActivities.toMutableList().apply { removeAll(activities) }
+    _ui.value = current.copy(likedActivities = newLiked)
+  }
+
+  override fun mapToTripSettings(): TripSettings {
+    val profile: TripProfile? = uiState.value.tripProfile
+    if (profile == null) return TripSettings(name = uiState.value.name)
+    else
+      return TripSettings(
+        name = uiState.value.name,
+        date =
+          TripDate(
+            profile.startDate
+              .toDate()
+              .toInstant()
+              .atZone(ZoneId.systemDefault())
+              .toLocalDate(),
+            profile.endDate
+              .toDate()
+              .toInstant()
+              .atZone(ZoneId.systemDefault())
+              .toLocalDate()),
+        travelers = TripTravelers(adults = profile.adults, children = profile.children),
+        preferences = profile.preferences,
+        arrivalDeparture =
+          TripArrivalDeparture(
+            arrivalLocation = profile.arrivalLocation,
+            departureLocation = profile.departureLocation),
+        destinations = profile.preferredLocations
+        // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+      )
   }
 }

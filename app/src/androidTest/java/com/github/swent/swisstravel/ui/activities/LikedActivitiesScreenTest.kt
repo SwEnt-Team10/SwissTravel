@@ -27,7 +27,7 @@ class LikedActivitiesScreenTest {
   @Before
   fun setup() {
     vm.setActivities(listOf(fakeActivity))
-    composeTestRule.setContent { LikedActivitiesScreen(tripInfoViewModel = vm) }
+    composeTestRule.setContent { LikedActivitiesScreen(tripInfoVM = vm) }
   }
 
   @Test
@@ -45,7 +45,7 @@ class LikedActivitiesScreenTest {
   @Test
   fun listIsDisplayedWhenNotEmpty() {
     assertTrue(vm.uiState.value.likedActivities.isEmpty())
-    vm.likeActivity(fakeActivity)
+    vm.likeActivities(listOf(fakeActivity))
     assertTrue(vm.uiState.value.likedActivities.isNotEmpty())
     composeTestRule
         .onNodeWithTag(LikedActivitiesScreenTestTags.LIKED_ACTIVITIES_LIST)
