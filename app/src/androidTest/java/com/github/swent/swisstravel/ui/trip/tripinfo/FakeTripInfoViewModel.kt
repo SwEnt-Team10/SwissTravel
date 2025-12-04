@@ -133,28 +133,28 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     val profile: TripProfile? = uiState.value.tripProfile
     if (profile == null) return TripSettings(name = uiState.value.name)
     else
-      return TripSettings(
-        name = uiState.value.name,
-        date =
-          TripDate(
-            profile.startDate
-              .toDate()
-              .toInstant()
-              .atZone(ZoneId.systemDefault())
-              .toLocalDate(),
-            profile.endDate
-              .toDate()
-              .toInstant()
-              .atZone(ZoneId.systemDefault())
-              .toLocalDate()),
-        travelers = TripTravelers(adults = profile.adults, children = profile.children),
-        preferences = profile.preferences,
-        arrivalDeparture =
-          TripArrivalDeparture(
-            arrivalLocation = profile.arrivalLocation,
-            departureLocation = profile.departureLocation),
-        destinations = profile.preferredLocations
-        // InvalidNameMsg should stay null since the tripInfo should already have a valid name
-      )
+        return TripSettings(
+            name = uiState.value.name,
+            date =
+                TripDate(
+                    profile.startDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate(),
+                    profile.endDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()),
+            travelers = TripTravelers(adults = profile.adults, children = profile.children),
+            preferences = profile.preferences,
+            arrivalDeparture =
+                TripArrivalDeparture(
+                    arrivalLocation = profile.arrivalLocation,
+                    departureLocation = profile.departureLocation),
+            destinations = profile.preferredLocations
+            // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+            )
   }
 }
