@@ -161,4 +161,28 @@ class ProfileViewModelTest {
     Assert.assertFalse(state.isOwnProfile)
     Assert.assertNull(state.errorMsg)
   }
+
+  @Test
+  fun initRemovesPinnedTripsThatNoLongerExistInTripRepository() = runTest {
+    // Given: user has two pinned trip UIDs
+    val validTripUid = "trip123"
+    val deletedTripUid = "tripDeleted"
+
+    val userWithPinnedTrips =
+        currentUser.copy(pinnedTripsUids = listOf(validTripUid, deletedTripUid))
+
+    coEvery { userRepository.getUserByUid(currentUser.uid) } returns userWithPinnedTrips
+    // TripsRepository returns a trip for existingTripUid, throws for deletedTripUid
+    coEvery { tripsRepository.getTrip(validTripUid) } returns mockk(relaxed = true)
+    coEvery { tripsRepository.getTrip(deletedTripUid) } throws Exception("Trip not found")
+
+    coEvery { userRepository.updateUser(uid = currentUser.uid, pinnedTripsUids = any()) } just Runs
+    // When: initializing the ViewModel
+    viewModel = ProfileViewModel(userRepository, tripsRepository, currentUser.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // And: UI state pinnedTrips contains only the existing trip
+    val state = viewModel.uiState.value
+    Assert.assertEquals(1, state.pinnedTrips.size)
+  }
 }

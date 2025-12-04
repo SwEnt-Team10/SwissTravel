@@ -109,11 +109,11 @@ class ProfileViewModel(
       val profile =
           userRepository.getUserByUid(uid)
               ?: throw IllegalStateException("User with uid $uid not found")
-      val pinnedTrips = profile.pinnedTripsUids.map { uid -> tripsRepository.getTrip(uid) }
 
+      val pinnedTrips = getValidPinnedTrips(profile)
       val friendsCount = profile.friends.filter { it.status == FriendStatus.ACCEPTED }.size
-
       val achievements = computeAchievements(stats = profile.stats, friendsCount = friendsCount)
+
       _uiState.update {
         it.copy(
             profilePicUrl = profile.profilePicUrl,
@@ -129,6 +129,33 @@ class ProfileViewModel(
       Log.e("ProfileViewModel", "Error loading profile info", e)
       setErrorMsg("Failed to load profile info: ${e.message}")
     }
+  }
+
+  /**
+   * Returns the list of valid pinned trips, removing any invalid UIDs from the user's pinned trips.
+   *
+   * @param user The user to get the pinned trips for.
+   * @return The list of valid pinned trips.
+   */
+  private suspend fun getValidPinnedTrips(user: User): List<Trip> {
+    val pinnedTrips = mutableListOf<Trip>()
+    val invalidPinnedUids = mutableListOf<String>()
+
+    user.pinnedTripsUids.forEach { tripUid ->
+      try {
+        pinnedTrips.add(tripsRepository.getTrip(tripUid))
+      } catch (e: Exception) {
+        Log.e("ProfileViewModel", "Pinned trip $tripUid not found, removing from user", e)
+        invalidPinnedUids.add(tripUid)
+      }
+    }
+
+    if (invalidPinnedUids.isNotEmpty()) {
+      val updatedUids = user.pinnedTripsUids - invalidPinnedUids.toSet()
+      userRepository.updateUser(uid = user.uid, pinnedTripsUids = updatedUids)
+    }
+
+    return pinnedTrips
   }
 
   /**
