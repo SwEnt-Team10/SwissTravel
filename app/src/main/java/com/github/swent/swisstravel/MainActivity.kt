@@ -311,7 +311,7 @@ private fun SwissTravelNavHost(
 ) {
   NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
     authNavGraph(navigationActions, credentialManager)
-    profileNavGraph(navigationActions, context) // TODO context is temporary
+    profileNavGraph(navigationActions)
     currentTripNavGraph(navigationActions)
     myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
@@ -359,10 +359,7 @@ private fun NavGraphBuilder.authNavGraph(
  * @param navigationActions The NavigationActions used for navigation. once edit pinned methods are
  *   implemented
  */
-private fun NavGraphBuilder.profileNavGraph(
-    navigationActions: NavigationActions,
-    context: Context
-) {
+private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions) {
   navigation(
       startDestination = Screen.Profile.route,
       route = Screen.Profile.name,

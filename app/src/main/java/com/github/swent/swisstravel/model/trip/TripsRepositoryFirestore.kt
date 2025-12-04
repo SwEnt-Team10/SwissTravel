@@ -37,8 +37,7 @@ class TripsRepositoryFirestore(
               .await()
         } catch (e: Exception) {
           db.collection(TRIPS_COLLECTION_PATH)
-              .whereEqualTo(ownerAttributeName, ownerId)
-              .get(Source.CACHE)
+              .whereEqualTo(ownerAttributeName, ownerId)[Source.CACHE]
               .await()
         }
 
@@ -50,7 +49,7 @@ class TripsRepositoryFirestore(
         try {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
         } catch (e: Exception) {
-          db.collection(TRIPS_COLLECTION_PATH).document(tripId).get(Source.CACHE).await()
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
         }
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
   }

@@ -105,7 +105,8 @@ class ProfileViewModel(
     if (!isOnline) return
 
     viewModelScope.launch {
-      val user = userRepository.getCurrentUser() ?: return@launch
+      val user = userRepository.getCurrentUser()
+
       // Only refresh stats if it's the user's own profile
       if (user.uid == _uiState.value.uid) {
         refreshStatsForUser(user)
