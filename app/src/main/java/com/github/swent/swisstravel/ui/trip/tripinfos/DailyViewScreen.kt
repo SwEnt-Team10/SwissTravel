@@ -181,9 +181,10 @@ fun DailyViewScreen(
         }
       },
       bottomBar = {
-        DailyViewBottomBar(
-            onSwipeActivities = callbacks.onSwipeActivities,
-            onLikedActivities = callbacks.onLikedActivities)
+        if (ui.currentUserIsOwner)
+            DailyViewBottomBar(
+                onSwipeActivities = callbacks.onSwipeActivities,
+                onLikedActivities = callbacks.onLikedActivities)
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
           if (ui.locations.isEmpty()) {
@@ -330,29 +331,31 @@ private fun DailyViewTopAppBar(
         }
       },
       actions = {
-        AddPhotosButton(onAddPhotos = { onAddPhotos() })
-        IconButton(
-            onClick = onToggleFavorite,
-            modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {
-              if (ui.isFavorite) {
+        if (ui.currentUserIsOwner) {
+          AddPhotosButton(onAddPhotos = { onAddPhotos() })
+          IconButton(
+              onClick = onToggleFavorite,
+              modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {
+                if (ui.isFavorite) {
+                  Icon(
+                      imageVector = Icons.Filled.Star,
+                      contentDescription = stringResource(R.string.unfavorite_icon),
+                      tint = favoriteIcon)
+                } else {
+                  Icon(
+                      imageVector = Icons.Outlined.StarOutline,
+                      contentDescription = stringResource(R.string.favorite_icon_empty),
+                      tint = MaterialTheme.colorScheme.onBackground)
+                }
+              }
+          IconButton(
+              onClick = onEdit, modifier = Modifier.testTag(DailyViewScreenTestTags.EDIT_BUTTON)) {
                 Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = stringResource(R.string.unfavorite_icon),
-                    tint = favoriteIcon)
-              } else {
-                Icon(
-                    imageVector = Icons.Outlined.StarOutline,
-                    contentDescription = stringResource(R.string.favorite_icon_empty),
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.edit_trip),
                     tint = MaterialTheme.colorScheme.onBackground)
               }
-            }
-        IconButton(
-            onClick = onEdit, modifier = Modifier.testTag(DailyViewScreenTestTags.EDIT_BUTTON)) {
-              Icon(
-                  imageVector = Icons.Outlined.Edit,
-                  contentDescription = stringResource(R.string.edit_trip),
-                  tint = MaterialTheme.colorScheme.onBackground)
-            }
+        }
       })
 }
 

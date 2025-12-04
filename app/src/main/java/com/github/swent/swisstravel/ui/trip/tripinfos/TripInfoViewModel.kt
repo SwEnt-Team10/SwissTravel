@@ -49,7 +49,7 @@ data class TripInfoUIState(
     val selectedStep: TripElement? = null,
     val drawFromCurrentPosition: Boolean = false,
     val currentGpsPoint: Point? = null,
-    val currentUserIsOwner: Boolean = true
+    val currentUserIsOwner: Boolean = false
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -121,7 +121,8 @@ class TripInfoViewModel(
                 selectedStep = if (isSameTrip) current.selectedStep else null,
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
-                currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null)
+                currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
+                currentUserIsOwner = userRepository.getCurrentUser().uid == trip.ownerId)
         computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
