@@ -1,11 +1,13 @@
 package com.github.swent.swisstravel.algorithm.selectactivities
 
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import java.time.temporal.ChronoUnit
@@ -30,10 +32,13 @@ private const val NB_ACTIVITIES_PER_DAY = 3
  * preferences.
  *
  * @param tripSettings The settings for the trip, including destinations and preferences.
+ * @param tripInfoVM The information of the trip (This parameter is used to fetch activities if you
+ *   don't have access to the tripSettings anymore, e.g. when the trip is already created)
  * @param activityRepository The repository to fetch activities from.
  */
 class SelectActivities(
-    private val tripSettings: TripSettings,
+    private val tripSettings: TripSettings = TripSettings(),
+    private val tripInfoVM: TripInfoViewModelContract = TripInfoViewModel(),
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
@@ -130,12 +135,12 @@ class SelectActivities(
    * - the likedActivities
    * - the scheduled activities
    */
-  suspend fun fetchSwipeActivities(tripInfoVM: TripInfoViewModelContract): List<Activity> {
-    val allDestinations = buildDestinationList()
-    val prefs = tripSettings.preferences.toMutableList()
+  suspend fun fetchSwipeActivities(): List<Activity> {
+    val state = tripInfoVM.uiState.value
+    val allDestinations = state.locations
+    val prefs = state.tripProfile?.preferences?.toMutableList() ?: mutableListOf()
     val fetchedActivities = mutableListOf<Activity>()
     val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(prefs)
-    val state = tripInfoVM.uiState.value
 
     // Removes preferences that are not supported by mySwitzerland.
     // Avoids unnecessary API calls.
@@ -148,7 +153,7 @@ class SelectActivities(
     val liked = state.likedActivities.map { it.location }.toSet()
     val scheduled = state.activities.map { it.location }.toSet()
 
-    // limit of proposed activities (twice the amount of activities already scheduled)
+    // limit of proposed activities
     val nbProposedActivities = state.activities.size * 2
 
     // fetch activities with preferences
@@ -159,15 +164,15 @@ class SelectActivities(
                 mandatoryPrefs,
                 optionalPrefs)
             .filter { it.location !in liked && it.location !in scheduled }
-    fetchedActivities.addAll(preferred)
+    fetchedActivities.addAll(preferred.shuffled())
 
-    // if not enough activities, fetch and add activities without preferences
+    // if not enough activities, fetch activities without preferences
     if (fetchedActivities.size < nbProposedActivities) {
       val notPreferred =
           fetchWithoutPrefs(locations = allDestinations, fetchLimit = nbProposedActivities).filter {
             it.location !in liked && it.location !in scheduled
           }
-      fetchedActivities.addAll(notPreferred)
+      fetchedActivities.addAll(notPreferred.shuffled())
     }
 
     return fetchedActivities
@@ -181,7 +186,8 @@ class SelectActivities(
    *
    * @param locations The locations were to find activities
    * @param fetchLimit The maximum number of activities to return
-   * @param mandatoryPrefs Preferences that are mandatory (this function should not fetch any activity that don't have these preferences)
+   * @param mandatoryPrefs Preferences that are mandatory (this function should not fetch any
+   *   activity that don't have these preferences)
    * @param optionalPrefs Preferences that are optional
    */
   suspend fun fetchWithPrefs(
@@ -207,10 +213,7 @@ class SelectActivities(
    * @param locations The locations were to find activities
    * @param fetchLimit The maximum number of activities to return
    */
-  suspend fun fetchWithoutPrefs(
-      locations: List<Location>,
-      fetchLimit: Int
-  ): List<Activity> {
+  suspend fun fetchWithoutPrefs(locations: List<Location>, fetchLimit: Int): List<Activity> {
     val activitiesFetched = mutableListOf<Activity>()
     for (loc in locations) {
       val fetched = activityRepository.getActivitiesNear(loc.coordinate, NEAR, fetchLimit)

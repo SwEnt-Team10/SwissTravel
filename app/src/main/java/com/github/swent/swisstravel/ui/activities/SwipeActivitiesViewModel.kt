@@ -22,25 +22,26 @@ data class SwipeActivitiesUIState(
     val activitiesQueue: List<Activity>? = null,
     val currentActivity: Activity? = null,
     val backActivity: Activity? = null,
-    val activitiesFetcher: SelectActivities? = null
+    val activitiesFetcher: SelectActivities = SelectActivities()
 )
 
 /** Done with the help of ChatGPT */
-class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModelContract) :
-    ViewModel() {
+class SwipeActivitiesViewModel(private val tripInfoVM: TripInfoViewModelContract) : ViewModel() {
 
   /** UI state for the Swipe Activities screen */
   private val _uiState = MutableStateFlow(SwipeActivitiesUIState())
   val uiState = _uiState.asStateFlow()
 
   init {
-      var activitiesToPropose: List<Activity>? = null
-        viewModelScope.launch {
-            activitiesToPropose = uiState.value.activitiesFetcher?.fetchSwipeActivities(tripInfoViewModel)
-        }
-      _uiState.value = _uiState.value.copy(activitiesQueue = ArrayDeque(activitiesToPropose ?: emptyList()))
-    // load initial cards
-    updateCards()
+    _uiState.value =
+        _uiState.value.copy(activitiesFetcher = SelectActivities(tripInfoVM = tripInfoVM))
+    viewModelScope.launch {
+      _uiState.value =
+          _uiState.value.copy(
+              activitiesQueue = ArrayDeque(_uiState.value.activitiesFetcher.fetchSwipeActivities()))
+      // load initial cards
+      updateCards()
+    }
   }
 
   /**
@@ -68,7 +69,7 @@ class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModelC
 
     val newQueue =
         if (liked) {
-          tripInfoViewModel.likeActivity(current)
+          tripInfoVM.likeActivities(listOf(current))
           // like => remove the activity from the queue
           _uiState.value.activitiesQueue?.drop(1)
         } else {
