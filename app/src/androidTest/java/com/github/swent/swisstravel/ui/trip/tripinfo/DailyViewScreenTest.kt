@@ -256,4 +256,36 @@ class DailyViewScreenTest {
         .performClick()
     compose.runOnIdle { assert(likeCalled) }
   }
+
+  @Test
+  fun ownerUser_showsButtons() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
+
+    setContent(vm)
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
+    compose.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
+    compose.onNodeWithTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON).assertIsDisplayed()
+    compose.onNodeWithTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun nonOwnerUser_hidesButtons() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(false)
+        }
+
+    setContent(vm)
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).assertDoesNotExist()
+    compose.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).assertDoesNotExist()
+    compose.onNodeWithTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON).assertDoesNotExist()
+    compose.onNodeWithTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON).assertDoesNotExist()
+  }
 }
