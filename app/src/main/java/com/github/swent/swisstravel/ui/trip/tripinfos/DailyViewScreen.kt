@@ -179,9 +179,11 @@ fun DailyViewScreen(
         }
       },
       bottomBar = {
-        DailyViewBottomBar(
-            onSwipeActivities = callbacks.onSwipeActivities,
-            onLikedActivities = callbacks.onLikedActivities)
+        if (!ui.fullscreen) {
+          DailyViewBottomBar(
+              onSwipeActivities = callbacks.onSwipeActivities,
+              onLikedActivities = callbacks.onLikedActivities)
+        }
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
           if (ui.locations.isEmpty()) {
