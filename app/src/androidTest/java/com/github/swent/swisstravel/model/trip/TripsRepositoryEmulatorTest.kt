@@ -143,4 +143,68 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     // Assert
     assertFailsWith<Exception> { repository.getTrip(trip.uid) }
   }
+
+  @Test
+  fun editTrip_updatesTrip() = runBlocking {
+    // Arrange
+    val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("EditUser", "edit@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+
+    val now = Timestamp.now()
+    val trip =
+        Trip(
+            uid = repository.getNewUid(),
+            name = "Original Name",
+            ownerId = uid,
+            locations = emptyList(),
+            activities = emptyList(),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList()),
+            routeSegments = emptyList(),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList())
+    repository.addTrip(trip)
+
+    // Act
+    val updatedTrip = trip.copy(name = "Updated Name", isFavorite = true)
+    repository.editTrip(trip.uid, updatedTrip)
+
+    // Assert
+    val fetched = repository.getTrip(trip.uid)
+    assertEquals("Updated Name", fetched.name)
+    assertTrue(fetched.isFavorite)
+  }
+
+  @Test
+  fun getAllTrips_throwsIfUserNotLoggedIn() = runBlocking {
+    // Arrange: ensure no user is signed in
+    FirebaseEmulator.auth.signOut()
+
+    // Act & Assert
+    assertFailsWith<Exception> { repository.getAllTrips() }
+    Unit
+  }
+
+  @Test
+  fun getTrip_returnsNullOrThrowsForMalformedData() = runBlocking {
+    // Arrange: create a document with missing fields manually
+    val fakeIdToken = FakeJwtGenerator.createFakeGoogleIdToken("BadDataUser", "bad@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
+    
+    val tripId = "malformed_trip"
+    val badData = mapOf("name" to "Bad Trip") // Missing ownerId, tripProfile, etc.
+    
+    FirebaseEmulator.firestore.collection("trips").document(tripId).set(badData).await()
+
+    // Act & Assert
+    // documentToTrip returns null if conversion fails, but getTrip throws if documentToTrip returns null
+    // So we expect an exception with "Trip not found" or similar, or just generic Exception
+    assertFailsWith<Exception> { repository.getTrip(tripId) }
+    Unit
+  }
 }
