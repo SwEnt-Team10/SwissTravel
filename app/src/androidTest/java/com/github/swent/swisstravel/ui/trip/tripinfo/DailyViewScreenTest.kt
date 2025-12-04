@@ -222,7 +222,11 @@ class DailyViewScreenTest {
 
   @Test
   fun swipeActivitiesButtonWorks() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     var swipeCalled = false
 
     compose.setContent {
@@ -243,7 +247,11 @@ class DailyViewScreenTest {
 
   @Test
   fun likedActivitiesButtonWorks() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     var likeCalled = false
 
     compose.setContent {
@@ -264,7 +272,11 @@ class DailyViewScreenTest {
 
   @Test
   fun editButton_callsCallback() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     var editCalled = false
     setContent(vm, onEditTrip = { editCalled = true })
 
@@ -274,7 +286,11 @@ class DailyViewScreenTest {
 
   @Test
   fun favoriteButton_togglesFavorite() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     setContent(vm)
 
     // Initially false (default in FakeTripInfoViewModel)
