@@ -1,5 +1,11 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -35,7 +41,18 @@ fun EditPhotosScreen(
     Scaffold(
         topBar = {
             EditTopBar(
-                onCancel = onCancel
+                onCancel =
+                    {
+                        photosViewModel.savePhotos(tripId)
+                        onCancel()
+                    }
+            )
+        },
+        bottomBar = {
+            EditBottomBar(
+                onRemove = {
+                    photosViewModel.removePhotos()
+                }
             )
         }
     ) {
@@ -45,13 +62,25 @@ fun EditPhotosScreen(
             modifier = Modifier.padding(pd)
         ) {
             itemsIndexed(uiState.listUri) { index, uri ->
-                Button(
-                    onClick = {}
+                Box(
+                    modifier = Modifier.clickable {
+                        photosViewModel.selectToRemove(index)
+                    }
                 ) {
                     AsyncImage(
                         model = uri,
                         contentDescription = null
                     )
+
+                    if (uiState.uriSelected.contains(index)) {
+                        Box(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .background(
+                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
+                                )
+                        )
+                    }
                 }
             }
         }
@@ -90,5 +119,25 @@ private fun CancelButton(
             contentDescription = "Cancel Edit",
             tint = MaterialTheme.colorScheme.onBackground
         )
+    }
+}
+
+@Composable
+private fun EditBottomBar(
+    onRemove: () -> Unit = {}
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.Center
+    ) {
+        Button(
+            onClick = {
+                onRemove()
+            }
+        ) {
+            Text(
+                text = "Remove"
+            )
+        }
     }
 }

@@ -74,7 +74,8 @@ fun AddPhotosScreen(
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-            photosViewModel.addPhotos(tripId = tripId, uris = uris)
+            photosViewModel.addUris(uris)
+            photosViewModel.savePhotos(tripId)
         }
       }
   val launchPicker: (PickVisualMediaRequest) -> Unit =

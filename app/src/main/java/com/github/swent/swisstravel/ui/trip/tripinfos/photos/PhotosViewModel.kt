@@ -12,7 +12,8 @@ import kotlinx.coroutines.launch
 
 /** UI State for the AddPhotosScreen */
 data class PhotosUIState(
-    val listUri: List<Uri> = emptyList()
+    val listUri: List<Uri> = emptyList(),
+  val uriSelected: List<Int> = emptyList()
     )
 
 /** ViewModel for the AddPhotosScreen */
@@ -28,10 +29,10 @@ class PhotosViewModel(
    * @param tripId the uid of the trip
    * @param uris the uris of the photos to add to the trip
    */
-  fun addPhotos(tripId: String, uris: List<Uri>) {
+  fun savePhotos(tripId: String) {
     viewModelScope.launch {
       val oldTrip = tripsRepository.getTrip(tripId)
-      val newTrip = oldTrip.copy(listUri = oldTrip.listUri + uris)
+      val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
       tripsRepository.editTrip(tripId, newTrip)
     }
   }
@@ -46,5 +47,32 @@ class PhotosViewModel(
       val trip = tripsRepository.getTrip(tripId)
       _uiState.value = PhotosUIState(listUri = trip.listUri)
     }
+  }
+
+  fun addUris(uris: List<Uri>) {
+    _uiState.value = _uiState.value.copy(listUri = uris + _uiState.value.listUri)
+  }
+
+  fun selectToRemove(index: Int) {
+    val current = _uiState.value.uriSelected.toMutableList()
+    if (current.contains(index)) {
+      current.remove(index)
+    } else {
+      current.add(index)
+    }
+    _uiState.value = _uiState.value.copy(uriSelected = current)
+  }
+
+  // Done with AI
+  fun removePhotos() {
+    val selected = _uiState.value.uriSelected.toSet()
+
+    val newList = _uiState.value.listUri
+      .filterIndexed { index, _ -> index !in selected }
+
+    _uiState.value = _uiState.value.copy(
+      listUri = newList,
+      uriSelected = emptyList()
+    )
   }
 }

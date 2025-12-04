@@ -5,7 +5,7 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.trip.TripsRepository
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosViewModel
 import com.google.firebase.Timestamp
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
@@ -46,7 +46,7 @@ class AddPhotosViewModelTest {
 
       // Set the model
       val tripRepository = mock(TripsRepository::class.java)
-      val addPhotosViewModel = AddPhotosViewModel(tripRepository)
+      val addPhotosViewModel = PhotosViewModel(tripRepository)
 
       // Set up the mock to return the fake trip
       `when`(tripRepository.getTrip("0")).thenReturn(fakeTrip)
@@ -69,7 +69,7 @@ class AddPhotosViewModelTest {
 
       // Set the model
       val tripRepository = mock(TripsRepository::class.java)
-      val addPhotosViewModel = AddPhotosViewModel(tripRepository)
+      val addPhotosViewModel = PhotosViewModel(tripRepository)
 
       // Set up the mock to return the fake trip
       `when`(tripRepository.getTrip("0")).thenReturn(fakeTrip)
@@ -79,7 +79,7 @@ class AddPhotosViewModelTest {
 
       // Add new photos to the state
       val newUris = listOf("newUri1".toUri(), "newUri2".toUri())
-      addPhotosViewModel.addUri(newUris)
+      addPhotosViewModel.addUris(newUris)
 
       // Verify that the new list of Uris is the concatenation of the
       val expectedList = fakeUris + newUris
@@ -101,14 +101,14 @@ class AddPhotosViewModelTest {
       // Set the model
       val fakeRepo = TripRepositoryLocal()
       fakeRepo.addTrip(fakeTrip)
-      val addPhotosViewModel = AddPhotosViewModel(fakeRepo)
+      val addPhotosViewModel = PhotosViewModel(fakeRepo)
 
       // Load the state
       addPhotosViewModel.loadPhotos("1")
 
       // Add new photos to the state
       val newUris = listOf("newUri1".toUri(), "newUri2".toUri())
-      addPhotosViewModel.addUri(newUris)
+      addPhotosViewModel.addUris(newUris)
 
       // Save to the repository
       addPhotosViewModel.savePhotos("1")
