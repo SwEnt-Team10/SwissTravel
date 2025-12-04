@@ -13,7 +13,7 @@ import kotlinx.coroutines.tasks.await
 
 class UserRepositoryFirebase(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
-    private val db: FirebaseFirestore = FirebaseFirestore.getInstance()
+    private val db: FirebaseFirestore = FirebaseFirestore.getInstance(),
 ) : UserRepository {
 
   init {
@@ -73,8 +73,17 @@ class UserRepositoryFirebase(
       } else {
         null
       }
-    } catch (_: Exception) {
-      null
+    } catch (e: Exception) {
+      try {
+        val doc = db.collection("users").document(uid)[Source.CACHE].await()
+        if (doc.exists()) {
+          createUserFromDoc(doc, uid)
+        } else {
+          null
+        }
+      } catch (_: Exception) {
+        null
+      }
     }
   }
 

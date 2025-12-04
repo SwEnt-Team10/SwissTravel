@@ -47,10 +47,11 @@ data class EditTripUiState(
 class EditTripScreenViewModel(
     private val tripRepository: TripsRepository = TripsRepositoryFirestore(),
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland(),
-    private val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { context, settings ->
-      TripAlgorithm.init(
-          context = context, tripSettings = settings, activityRepository = activityRepository)
-    }
+    private val algorithmFactory: (Context, TripSettings, ActivityRepository) -> TripAlgorithm =
+        { context, settings, activityRepository ->
+          TripAlgorithm.init(
+              context = context, tripSettings = settings, activityRepository = activityRepository)
+        }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(EditTripUiState())
@@ -158,12 +159,12 @@ class EditTripScreenViewModel(
                       TripArrivalDeparture(
                           originalTrip.tripProfile.arrivalLocation,
                           originalTrip.tripProfile.departureLocation),
-                  destinations = originalTrip.locations)
+                  destinations = originalTrip.tripProfile.preferredLocations)
 
           // Run the algorithm
-          val algorithm = algorithmFactory(context, tempTripSettings)
+          val algorithm = algorithmFactory(context, tempTripSettings, activityRepository)
           val schedule =
-              algorithm.runTripAlgorithm(
+              algorithm.computeTrip(
                   tripSettings = tempTripSettings, tripProfile = newTripProfile) { progress ->
                     _uiState.update { it.copy(savingProgress = progress) }
                   }

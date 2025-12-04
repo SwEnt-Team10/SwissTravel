@@ -37,13 +37,17 @@ import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
+import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -138,7 +142,8 @@ abstract class SwissTravelTest {
               preferredLocations = emptyList(),
               preferences = emptyList()),
           isFavorite = false,
-          isCurrentTrip = false)
+          isCurrentTrip = false,
+          listUri = emptyList())
 
   val trip2 =
       Trip(
@@ -154,7 +159,8 @@ abstract class SwissTravelTest {
               preferredLocations = emptyList(),
               preferences = emptyList()),
           isFavorite = false,
-          isCurrentTrip = false)
+          isCurrentTrip = false,
+          listUri = emptyList())
 
   val tripList = listOf(trip1, trip2)
 
@@ -233,9 +239,6 @@ abstract class SwissTravelTest {
 
     // Biography (not displayed cause it's empty)
     // onNodeWithTag(ProfileScreenTestTags.BIOGRAPHY).assertIsDisplayed()
-
-    // Achievements
-    onNodeWithTag(ProfileScreenTestTags.ACHIEVEMENTS).assertIsDisplayed()
 
     // Settings button (own profile)
     onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()
@@ -619,10 +622,39 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
   }
 
+  fun ComposeTestRule.addPhotosScreenIsDisplayed() {
+    onNodeWithTag(AddPhotosScreenTestTags.MAIN_SCREEN).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.editPhotosScreenIsDisplayed() {
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_TOP_BAR).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_TOP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_BOTTOM_BAR).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_REMOVE_BUTTON).assertIsDisplayed()
+  }
+
   fun ComposeTestRule.checkSwipeActivityScreenIsDisplayed() {
     onNodeWithTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN).assertIsDisplayed()
     onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON).assertIsDisplayed()
     onNodeWithTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.selectPinnedTripsScreenIsDisplayed() {
+    onNodeWithTag(SelectPinnedTripsScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
+    onNodeWithTag(SelectPinnedTripsScreenTestTags.SAVE_SELECTED_TRIPS_FAB).assertIsDisplayed()
+    onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
+
+    // Ensure pinned trip is displayed
+    onNodeWithText("Trip One").assertIsDisplayed()
+    // Non-pinned trips may appear in available list
+    onNodeWithText("Trip Two").assertIsDisplayed()
   }
 
   // TODO : Create helper/companions functions here

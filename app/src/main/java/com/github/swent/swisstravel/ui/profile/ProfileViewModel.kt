@@ -8,11 +8,14 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.isPast
+import com.github.swent.swisstravel.model.user.Achievement
+import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.computeAchievements
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -43,7 +46,9 @@ data class ProfileUIState(
     val stats: UserStats = UserStats(),
     val pinnedTrips: List<Trip> = emptyList(),
     val pinnedImages: List<Uri> = emptyList(),
-    var errorMsg: String? = null
+    var errorMsg: String? = null,
+    var achievements: List<Achievement> = emptyList(),
+    val friendsCount: Int = 0,
 )
 
 /**
@@ -82,14 +87,29 @@ class ProfileViewModel(
         val isOwn = currentUser?.uid == requestedUid
         loadProfile(requestedUid)
         _uiState.update { it.copy(uid = requestedUid, isOwnProfile = isOwn) }
-        if (isOwn) {
-          refreshStatsForUser(currentUser!!)
-        }
       } catch (e: Exception) {
         Log.e("ProfileViewModel", "Error loading profile", e)
         setErrorMsg("Failed to load profile: ${e.message}")
       } finally {
         _uiState.update { it.copy(isLoading = false) }
+      }
+    }
+  }
+
+  /**
+   * Refreshes the user's stats based on their past trips.
+   *
+   * @param isOnline Whether the device is online.
+   */
+  fun refreshStats(isOnline: Boolean) {
+    if (!isOnline) return
+
+    viewModelScope.launch {
+      val user = userRepository.getCurrentUser()
+
+      // Only refresh stats if it's the user's own profile
+      if (user.uid == _uiState.value.uid) {
+        refreshStatsForUser(user)
       }
     }
   }
@@ -105,6 +125,10 @@ class ProfileViewModel(
           userRepository.getUserByUid(uid)
               ?: throw IllegalStateException("User with uid $uid not found")
       val pinnedTrips = profile.pinnedTripsUids.map { uid -> tripsRepository.getTrip(uid) }
+
+      val friendsCount = profile.friends.filter { it.status == FriendStatus.ACCEPTED }.size
+
+      val achievements = computeAchievements(stats = profile.stats, friendsCount = friendsCount)
       _uiState.update {
         it.copy(
             profilePicUrl = profile.profilePicUrl,
@@ -112,7 +136,9 @@ class ProfileViewModel(
             biography = profile.biography,
             stats = profile.stats,
             pinnedTrips = pinnedTrips,
-            pinnedImages = profile.pinnedImagesUris)
+            pinnedImages = profile.pinnedImagesUris,
+            achievements = achievements,
+            friendsCount = friendsCount)
       }
     } catch (e: Exception) {
       Log.e("ProfileViewModel", "Error loading profile info", e)
@@ -152,5 +178,16 @@ class ProfileViewModel(
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
+  }
+}
+
+class ProfileViewModelFactory(
+    private val requestedUid: String,
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    private val tripsRepository: TripsRepository = TripsRepositoryFirestore()
+) : androidx.lifecycle.ViewModelProvider.Factory {
+  @Suppress("UNCHECKED_CAST")
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    return ProfileViewModel(userRepository, tripsRepository, requestedUid) as T
   }
 }

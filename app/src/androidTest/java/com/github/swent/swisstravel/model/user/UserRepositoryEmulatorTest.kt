@@ -578,6 +578,38 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         pinnedImagesUris = null)
   }
 
+  @Test
+  fun getUserByUid_handlesMalformedDataGracefully() = runBlocking {
+    // Arrange: create a valid user to satisfy security rules
+    val fakeIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("MalformedUser", "malformed@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+
+    val badData =
+        mapOf(
+            "uid" to uid, // Required by security rules
+            "name" to 12345, // Should be String
+            "email" to "valid@email.com",
+            "preferences" to listOf("INVALID_PREF", "FOODIE"), // One invalid, one valid
+            "stats" to "not_a_map" // Should be Map
+            )
+    FirebaseEmulator.firestore.collection("users").document(uid).set(badData).await()
+
+    // Act
+    val user = repositoryUser.getUserByUid(uid)
+
+    // Assert
+    assertNotNull(user)
+    assertEquals("", user.name) // Default for invalid name
+    assertEquals("valid@email.com", user.email)
+    assertEquals(1, user.preferences.size)
+    assertEquals(Preference.FOODIE, user.preferences[0])
+    assertEquals(0, user.stats.totalTrips) // Default stats
+  }
+
   @After
   override fun tearDown() {
     if (FirebaseEmulator.isRunning) {

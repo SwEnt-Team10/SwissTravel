@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
+import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.cos
 import kotlin.math.pow
@@ -27,5 +28,18 @@ data class Coordinate(val latitude: Double, val longitude: Double) {
             cos(Math.toRadians(latitude)) * cos(Math.toRadians(c.latitude)) * sin(dLon / 2).pow(2)
     val distance = 2 * R * atan2(sqrt(hav), sqrt(1 - hav))
     return (distance * 100).roundToInt() / 100.0
+  }
+
+  /**
+   * Compare two Coordinates by latitude & longitude with tolerance.
+   *
+   * @param b Second coordinate.
+   * @return true if the coordinates are the same within the tolerance, false otherwise.
+   */
+  fun sameLocation(b: Coordinate): Boolean {
+    // Tolerance in degrees — roughly ~1 meter
+    val epsilon = 0.00001
+
+    return abs(latitude - b.latitude) < epsilon && abs(longitude - b.longitude) < epsilon
   }
 }

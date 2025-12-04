@@ -3,6 +3,7 @@ package com.github.swent.swisstravel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -22,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
@@ -52,11 +54,16 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileViewModelFactory
+import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreen
+import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -305,7 +312,7 @@ private fun SwissTravelNavHost(
 ) {
   NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
     authNavGraph(navigationActions, credentialManager)
-    profileNavGraph(navigationActions, context) // TODO context is temporary
+    profileNavGraph(navigationActions)
     currentTripNavGraph(navigationActions)
     myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
@@ -350,13 +357,10 @@ private fun NavGraphBuilder.authNavGraph(
 /**
  * Sets up the profile navigation graph for the Swiss Travel App.
  *
- * @param navigationActions The NavigationActions used for navigation. TODO remove context parameter
- *   once edit pinned methods are implemented
+ * @param navigationActions The NavigationActions used for navigation. once edit pinned methods are
+ *   implemented
  */
-private fun NavGraphBuilder.profileNavGraph(
-    navigationActions: NavigationActions,
-    context: Context
-) {
+private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions) {
   navigation(
       startDestination = Screen.Profile.route,
       route = Screen.Profile.name,
@@ -364,21 +368,26 @@ private fun NavGraphBuilder.profileNavGraph(
     composable(Screen.Profile.route) {
       ProfileScreen(
           profileViewModel =
-              ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
+              viewModel(
+                  factory =
+                      ProfileViewModelFactory(
+                          requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: "")),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
-          onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
-          onEditPinnedTrips = { /* TODO */
-            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
-          },
-          onEditPinnedImages = { /* TODO */
-            Toast.makeText(context, "I don't work yet! :(", Toast.LENGTH_SHORT).show()
-          })
+          onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
+          onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },
+          onEditPinnedImages = { /* TODO */})
     }
     composable(Screen.ProfileSettings.route) {
       ProfileSettingsScreen(
           profileSettingsViewModel = ProfileSettingsViewModel(),
           onBack = { navigationActions.goBack() },
           navigationActions = navigationActions)
+    }
+    composable(Screen.SelectPinnedTrips.route) {
+      SelectPinnedTripsScreen(
+          selectPinnedTripsViewModel = SelectPinnedTripsViewModel(),
+          onBack = { navigationActions.goBack() },
+      )
     }
   }
 }
@@ -488,9 +497,8 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   onActivityClick = { tripActivity ->
                     vm.selectActivity(tripActivity.activity)
                     navigationActions.navigateToActivityInfo(uid)
-                  },
-                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
-                  onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }))
+                  }),
+          onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
 
     composable(
@@ -530,6 +538,28 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
           tripInfoVM = viewModel<TripInfoViewModel>(parentEntry))
+    }
+    composable(Screen.AddPhotos.route) { navBackStackEntry ->
+      val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
+
+      tripId?.let {
+        AddPhotosScreen(
+            onBack = { navController.popBackStack() },
+            tripId = tripId,
+            onEdit = { navigationActions.navigateTo(Screen.EditPhotos(tripId)) })
+      }
+          ?: run {
+            Log.e(
+                stringResource(R.string.add_photos_screen_tag),
+                stringResource(R.string.null_trip_id))
+            Toast.makeText(context, stringResource(R.string.null_trip_id), Toast.LENGTH_SHORT)
+                .show()
+          }
+    }
+    composable(Screen.EditPhotos.route) { navBackStackEntry ->
+      val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
+
+      tripId?.let { EditPhotosScreen(onCancel = { navigationActions.goBack() }, tripId = tripId) }
     }
   }
 }

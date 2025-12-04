@@ -1,12 +1,15 @@
 package com.github.swent.swisstravel.model.trip
 
+import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
 
 const val TRIPS_COLLECTION_PATH = "trips"
@@ -27,13 +30,27 @@ class TripsRepositoryFirestore(
         auth.currentUser?.uid ?: throw Exception("TripsRepositoryFirestore: User not logged in.")
 
     val snapshot =
-        db.collection(TRIPS_COLLECTION_PATH).whereEqualTo(ownerAttributeName, ownerId).get().await()
+        try {
+          db.collection(TRIPS_COLLECTION_PATH)
+              .whereEqualTo(ownerAttributeName, ownerId)
+              .get()
+              .await()
+        } catch (e: Exception) {
+          db.collection(TRIPS_COLLECTION_PATH)
+              .whereEqualTo(ownerAttributeName, ownerId)[Source.CACHE]
+              .await()
+        }
 
     return snapshot.mapNotNull { documentToTrip(it) }
   }
 
   override suspend fun getTrip(tripId: String): Trip {
-    val document = db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
+    val document =
+        try {
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
+        } catch (e: Exception) {
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
+        }
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
   }
 
@@ -83,6 +100,9 @@ class TripsRepositoryFirestore(
       val isFavorite = document.getBoolean("favorite") ?: false
 
       val isCurrentTrip = document.getBoolean("currentTrip") ?: false
+      // With help of AI
+      val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
+      val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
 
       Trip(
           uid = uid,
@@ -93,7 +113,8 @@ class TripsRepositoryFirestore(
           activities = activities,
           tripProfile = tripProfile,
           isFavorite = isFavorite,
-          isCurrentTrip = isCurrentTrip)
+          isCurrentTrip = isCurrentTrip,
+          listUri = listUri)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null

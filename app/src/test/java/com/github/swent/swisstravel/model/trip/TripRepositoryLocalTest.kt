@@ -72,7 +72,8 @@ class TripRepositoryLocalTest {
                           name = "fake place6",
                           imageUrl = "fakeImage6")),
           isFavorite = true,
-          isCurrentTrip = true)
+          isCurrentTrip = true,
+          listUri = emptyList())
 
   @Before
   fun setUp() {

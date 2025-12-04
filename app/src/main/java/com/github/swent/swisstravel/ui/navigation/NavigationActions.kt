@@ -99,6 +99,22 @@ sealed class Screen(
     }
   }
 
+  data class AddPhotos(val tripId: String) :
+      Screen(route = "add_photos/${tripId}", name = "Add Photos") {
+    companion object {
+      const val route = "add_photos/{tripId}"
+    }
+  }
+
+  data class EditPhotos(val tripId: String) :
+      Screen(route = "edit_photos/${tripId}", name = "Edit Photos") {
+    companion object {
+      const val route = "edit_photos/{tripId}"
+    }
+  }
+
+  object SelectPinnedTrips : Screen(route = "select_pinned_trips", name = "Select Pinned Trips")
+
   // TODO change this when there is a new screen
 }
 
