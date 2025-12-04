@@ -11,6 +11,7 @@ import com.google.firebase.Timestamp
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
+import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -21,6 +22,12 @@ import okhttp3.Request
 import org.json.JSONArray
 import org.json.JSONObject
 
+const val DESCRIPTION_FALLBACK = "No description"
+// Frequency to which activities are shuffled to introduce randomness
+const val ACTIVITY_SHUFFLE = 0.5f
+// How many activities we should pull from the API to make activity selection more random
+const val EXTRA_RANDOM_ACTIVITIES = 0.75f
+
 /**
  * Implementation of a repository for activities. Uses the Swiss Tourism API.
  *
@@ -30,7 +37,7 @@ import org.json.JSONObject
 class ActivityRepositoryMySwitzerland(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ActivityRepository {
-
+  private val blacklistedActivityNames = setOf<String>()
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseHttpUrl: HttpUrl =
       urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", top = true)
@@ -42,21 +49,22 @@ class ActivityRepositoryMySwitzerland(
    *
    * @param url The URL to build.
    * @param language The language to use.
+   * @param top Whether to get the top activities.
+   * @return The built URL.
    */
   private fun urlBuilder(url: String, language: String = "en", top: Boolean = false): HttpUrl {
-    val newUrl: HttpUrl =
+    val builder =
         url.toHttpUrl()
             .newBuilder()
             .addQueryParameter("lang", language)
-            .addQueryParameter("page", "0")
             .addQueryParameter("striphtml", "true")
             .addQueryParameter("expand", "true")
-            .build()
 
     if (top) {
-      newUrl.newBuilder().addQueryParameter("top", "true").build()
+      builder.addQueryParameter("top", "true")
     }
-    return newUrl
+
+    return builder.build()
   }
 
   private val client: OkHttpClient by lazy {
@@ -131,7 +139,7 @@ class ActivityRepositoryMySwitzerland(
     if (lat.isNaN() || lon.isNaN()) return null
 
     val name = item.optString("name", "Unknown Activity")
-    val description = item.optString("abstract", "No description")
+    val description = item.optString("abstract", DESCRIPTION_FALLBACK)
 
     val coordinate = Coordinate(lat, lon)
     val photo = item.optString("photo")
@@ -226,20 +234,71 @@ class ActivityRepositoryMySwitzerland(
   }
 
   /**
+   * Fetches valid activities with pagination until the desired limit is reached.
+   *
+   * @param baseUrl The base URL to fetch activities from.
+   * @param limit The limit of the number of valid activities to return.
+   * @return A list of valid activities up to the specified limit.
+   */
+  private suspend fun fetchValidActivitiesPaginated(baseUrl: HttpUrl, limit: Int): List<Activity> {
+
+    val validResults = mutableListOf<Activity>()
+    var page = 0
+
+    while (validResults.size < limit) {
+      // Randomly increase the number of activities pulled to introduce randomness
+      val totalActivityPull = getActivityNumberToPull(limit, Random.nextDouble() < ACTIVITY_SHUFFLE)
+      val url =
+          baseUrl
+              .newBuilder()
+              .setQueryParameter("page", page.toString())
+              .setQueryParameter("hitsPerPage", totalActivityPull.toString())
+              .build()
+
+      val pageActivities = fetchActivitiesFromUrl(url)
+
+      if (pageActivities.isEmpty()) break // no more pages
+
+      val filtered =
+          pageActivities.filter {
+            it.isValid(
+                blacklistedActivityNames = blacklistedActivityNames,
+                invalidDescription = DESCRIPTION_FALLBACK)
+          }
+
+      validResults.addAll(filtered)
+
+      page++
+    }
+    // Shuffle the results to introduce randomness since there can be many valid activities
+    validResults.shuffle()
+    return validResults.take(limit)
+  }
+
+  /**
+   * This is public for testing purposes only and is not dangerous to have in public. Determine the
+   * number of activities to pull from the API, adding randomness.
+   *
+   * @param limit The base limit of activities to pull.
+   * @return The adjusted number of activities to pull.
+   */
+  fun getActivityNumberToPull(limit: Int, random: Boolean): Int {
+    return if (random) {
+      limit + (limit * EXTRA_RANDOM_ACTIVITIES).toInt()
+    } else {
+      limit
+    }
+  }
+
+  /**
    * Get the most popular activities.
    *
    * @param limit The limit of the number of activities to return.
+   * @param page The page number for pagination.
    * @return A list of the most popular activities.
    */
   override suspend fun getMostPopularActivities(limit: Int, page: Int): List<Activity> {
-    val url =
-        baseHttpUrl
-            .newBuilder()
-            .addQueryParameter("hitsPerPage", limit.toString())
-            .setQueryParameter("page", page.toString())
-            .addQueryParameter("top", "true")
-            .build()
-    return fetchActivitiesFromUrl(url)
+    return fetchValidActivitiesPaginated(baseHttpUrl, limit)
   }
 
   /**
@@ -255,15 +314,14 @@ class ActivityRepositoryMySwitzerland(
       radiusMeters: Int,
       limit: Int
   ): List<Activity> {
-    val url =
+    val baseUrl =
         baseHttpUrl
             .newBuilder()
-            .addQueryParameter("hitsPerPage", limit.toString())
             .addQueryParameter(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchActivitiesFromUrl(url)
+    return fetchValidActivitiesPaginated(baseUrl, limit)
   }
 
   /**
@@ -277,7 +335,7 @@ class ActivityRepositoryMySwitzerland(
       preferences: List<Preference>,
       limit: Int
   ): List<Activity> {
-    return fetchActivitiesFromUrl(computeUrlWithPreferences(preferences, limit))
+    return fetchValidActivitiesPaginated(computeUrlWithPreferences(preferences, limit), limit)
   }
   /** Searches for destinations based on a text query. */
   override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {
@@ -306,14 +364,13 @@ class ActivityRepositoryMySwitzerland(
       radiusMeters: Int,
       limit: Int
   ): List<Activity> {
-
-    val url =
+    val baseUrl =
         computeUrlWithPreferences(preferences, limit)
             .newBuilder()
             .addQueryParameter(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchActivitiesFromUrl(url)
+    return fetchValidActivitiesPaginated(baseUrl, limit)
   }
 }

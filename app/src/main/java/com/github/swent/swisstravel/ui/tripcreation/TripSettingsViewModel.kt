@@ -34,6 +34,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 const val DEFAULT_DURATION = 3
+const val MIN_DISTANCE = 15.0
+const val MAX_DISTANCE = 50.0
 
 /** * Data class representing the start and end dates of a trip. */
 data class TripDate(val startDate: LocalDate? = null, val endDate: LocalDate? = null)
@@ -333,28 +335,79 @@ open class TripSettingsViewModel(
   private val _selectedSuggestions = MutableStateFlow<List<Location>>(emptyList())
   val selectedSuggestions: StateFlow<List<Location>> = _selectedSuggestions.asStateFlow()
 
+  /**
+   * Generates location suggestions based on the user's current selections. If the user has not
+   * selected any locations, it provides 5 random suggestions from the Grand Tour. Otherwise, it
+   * suggests locations that are between 15 and 50 km from the already selected arrival, departure,
+   * or intermediate destinations. If no such locations are found, it falls back to suggesting the 5
+   * closest locations.
+   *
+   * @param context The context, used to access app resources like the Grand Tour locations.
+   */
   fun generateSuggestions(context: Context) {
-    if (_suggestions.value.isEmpty()) {
-      val grandTourArray = context.resources.getStringArray(R.array.grand_tour)
-      val newSuggestions =
-          grandTourArray
-              .asSequence()
-              .shuffled()
-              .take(5)
-              .mapNotNull { entry ->
-                val parts = entry.split(";")
-                if (parts.size >= 3) {
-                  val name = parts[0]
-                  val lat = parts[1].toDoubleOrNull()
-                  val lon = parts[2].toDoubleOrNull()
-                  if (lat != null && lon != null) {
-                    Location(Coordinate(lat, lon), name)
-                  } else null
-                } else null
-              }
-              .toList()
-      _suggestions.value = newSuggestions
+    if (suggestions.value.isNotEmpty()) {
+      return
     }
+
+    val settings = _tripSettings.value
+    val userLocations =
+        listOfNotNull(
+            settings.arrivalDeparture.arrivalLocation,
+            settings.arrivalDeparture.departureLocation) + settings.destinations
+
+    val allPossibleLocations =
+        context.resources.getStringArray(R.array.grand_tour).map {
+          val parts = it.split(";")
+          Location(Coordinate(parts[1].toDouble(), parts[2].toDouble()), parts[0], "")
+        }
+
+    // Filter out locations that are already part of the user's trip
+    val availableSuggestions =
+        allPossibleLocations.filterNot { suggestion ->
+          userLocations.any { userLocation -> userLocation.sameLocation(suggestion) }
+        }
+
+    if (userLocations.isEmpty()) {
+      // If no locations are selected yet, provide random suggestions. Should never happen.
+      _suggestions.value = availableSuggestions.shuffled().take(5)
+    } else {
+      // Generate suggestions based on proximity to user's selected locations.
+      _suggestions.value = generateSuggestionsFrom(userLocations, availableSuggestions).take(5)
+    }
+  }
+
+  /**
+   * Helper function to generate location suggestions from a list of available places, based on
+   * proximity to a set of reference locations.
+   *
+   * @param referenceLocations The locations to measure distance from (e.g., user's selected
+   *   places).
+   * @param availableLocations The pool of all possible locations to suggest.
+   * @return A list of suggested locations.
+   */
+  private fun generateSuggestionsFrom(
+      referenceLocations: List<Location>,
+      availableLocations: List<Location>
+  ): List<Location> {
+    // Attempt to find locations within the ideal distance range (>15km and <50km).
+    val idealSuggestions =
+        availableLocations
+            .filter { it.isWithinDistanceOfAny(referenceLocations, MIN_DISTANCE, MAX_DISTANCE) }
+            .shuffled() // Shuffle to provide variety if many options are available.
+
+    if (idealSuggestions.isNotEmpty()) {
+      return idealSuggestions
+    }
+
+    // If no locations are in the ideal range, find the closest ones.
+    // Compute the minimum distance from each available location to any of the reference locations.
+    return availableLocations
+        .map { suggestion ->
+          val minDistance = referenceLocations.minOf { suggestion.haversineDistanceTo(it) }
+          suggestion to minDistance
+        }
+        .sortedBy { it.second } // Sort by the calculated minimum distance.
+        .map { it.first } // Return just the locations.
   }
 
   fun toggleSuggestion(location: Location) {
