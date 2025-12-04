@@ -7,11 +7,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,8 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -61,19 +65,12 @@ fun EditPhotosScreen(
   val uiState by photosViewModel.uiState.collectAsState()
   Scaffold(
       modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD),
-      topBar = {
-        EditTopBar(
-            onCancel = {
-              // Save then quit
-              photosViewModel.savePhotos(tripId)
-              onCancel()
-            })
-      },
+      topBar = { EditTopBar(onCancel = { onCancel() }) },
       bottomBar = {
         EditBottomBar(
             onRemove = {
               // Remove from the state
-              photosViewModel.removePhotos()
+              photosViewModel.removePhotos(tripId)
             },
             uiState = uiState)
       }) { pd ->
@@ -93,6 +90,14 @@ fun EditPhotosScreen(
                         modifier =
                             Modifier.matchParentSize()
                                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)))
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier =
+                            Modifier.matchParentSize()
+                                .padding(dimensionResource(R.dimen.check_pading))
+                                .wrapContentSize(Alignment.Center))
                   }
                 }
               }
@@ -128,7 +133,7 @@ private fun CancelButton(onCancel: () -> Unit = {}) {
       modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON),
       onClick = { onCancel() }) {
         Icon(
-            imageVector = Icons.Filled.Cancel,
+            imageVector = Icons.Filled.Close,
             contentDescription = stringResource(R.string.cancel_edit),
             tint = MaterialTheme.colorScheme.onBackground)
       }
@@ -138,6 +143,7 @@ private fun CancelButton(onCancel: () -> Unit = {}) {
  * The bottom bar of the edit mode
  *
  * @param onRemove the function to call when you want to remove selected photos
+ * @param uiState the state of edit photos screen
  */
 @Composable
 private fun EditBottomBar(onRemove: () -> Unit = {}, uiState: PhotosUIState) {

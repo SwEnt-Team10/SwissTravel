@@ -195,25 +195,24 @@ class PhotosViewModelTest {
       Dispatchers.setMain(testDispatcher)
 
       // Set the model
-      val fakeRepo = mock(TripsRepository::class.java)
+      val fakeRepo = TripRepositoryLocal()
+      fakeRepo.addTrip(fakeTrip)
       val photosViewModel = PhotosViewModel(fakeRepo)
 
-      // Set up the mock to return the fake trip
-      `when`(fakeRepo.getTrip("0")).thenReturn(fakeTrip)
-
       // Load the state
-      photosViewModel.loadPhotos("0")
+      photosViewModel.loadPhotos("1")
 
       // Add photos to remove
       photosViewModel.selectToRemove(0)
       photosViewModel.selectToRemove(1)
 
       // Remove photos
-      photosViewModel.removePhotos()
+      photosViewModel.removePhotos("1")
 
       // Verify
       val expected = emptyList<Uri>()
       assertEquals(expected, photosViewModel.uiState.value.listUri)
+      assertEquals(expected, fakeRepo.getTrip("1").listUri)
     } finally {
       Dispatchers.resetMain()
     }

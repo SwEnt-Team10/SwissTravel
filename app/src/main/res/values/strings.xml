@@ -458,7 +458,6 @@
     <!-- AddPhotosScreen -->
     <string name="add_photos_title">Add photos</string>
     <string name="add_photos_button">Add photos</string>
-    <string name="add_photos_save_button">Save</string>
 
     <!-- EditPhotosScreen -->
 

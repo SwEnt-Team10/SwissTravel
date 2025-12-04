@@ -72,13 +72,22 @@ class PhotosViewModel(
     _uiState.value = _uiState.value.copy(uriSelected = current)
   }
 
-  /** Remove the photos from the repository depending on the photos selected on edit mode */
-  fun removePhotos() {
+  /**
+   * Remove the photos from the repository depending on the photos selected on edit mode
+   *
+   * @param tripId the uid of the trip
+   */
+  fun removePhotos(tripId: String) {
     // Done with AI
     val selected = _uiState.value.uriSelected.toSet()
 
     val newList = _uiState.value.listUri.filterIndexed { index, _ -> index !in selected }
 
     _uiState.value = _uiState.value.copy(listUri = newList, uriSelected = emptyList())
+    viewModelScope.launch {
+      val oldTrip = tripsRepository.getTrip(tripId)
+      val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
+      tripsRepository.editTrip(tripId, newTrip)
+    }
   }
 }
