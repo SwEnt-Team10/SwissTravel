@@ -580,8 +580,14 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun getUserByUid_handlesMalformedDataGracefully() = runBlocking {
-    // Arrange: create a document with mixed/invalid types
-    val uid = "malformed_user"
+    // Arrange: create a valid user to satisfy security rules
+    val fakeIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("MalformedUser", "malformed@example.com")
+    FirebaseEmulator.createGoogleUser(fakeIdToken)
+    val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
+    FirebaseEmulator.auth.signInWithCredential(credential).await()
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+
     val badData =
         mapOf(
             "uid" to uid, // Required by security rules
