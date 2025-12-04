@@ -193,24 +193,26 @@ fun DailyViewScreen(
               Column(
                   horizontalAlignment = Alignment.CenterHorizontally,
                   verticalArrangement = Arrangement.Center) {
-                if (isOnline(context)) {
-                  Text(
-                      text = stringResource(R.string.no_locations_available),
-                      modifier =
-                          Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
-                              .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
-                } else {
-                  CircularProgressIndicator(
-                      modifier = Modifier.testTag(DailyViewScreenTestTags.LOADING))
-                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
-                  Text(
-                      text = stringResource(R.string.loading_from_cache),
-                      modifier =
-                          Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
-                              .testTag(DailyViewScreenTestTags.NO_LOCATIONS).align(Alignment.CenterHorizontally))
-
-                }
-              }
+                    if (isOnline(context)) {
+                      Text(
+                          text = stringResource(R.string.no_locations_available),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
+                    } else {
+                      CircularProgressIndicator(
+                          modifier = Modifier.testTag(DailyViewScreenTestTags.LOADING))
+                      Spacer(
+                          modifier =
+                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+                      Text(
+                          text = stringResource(R.string.loading_from_cache),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS)
+                                  .align(Alignment.CenterHorizontally))
+                    }
+                  }
             }
           } else {
             Column(Modifier.fillMaxSize()) {
