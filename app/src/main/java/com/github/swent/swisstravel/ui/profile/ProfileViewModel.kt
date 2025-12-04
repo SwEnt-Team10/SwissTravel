@@ -211,7 +211,7 @@ class ProfileViewModel(
 class ProfileViewModelFactory(
     private val requestedUid: String,
     private val userRepository: UserRepository = UserRepositoryFirebase(),
-    private val tripsRepository: TripsRepository = TripsRepositoryFirestore()
+    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
 ) : androidx.lifecycle.ViewModelProvider.Factory {
   @Suppress("UNCHECKED_CAST")
   override fun <T : ViewModel> create(modelClass: Class<T>): T {
