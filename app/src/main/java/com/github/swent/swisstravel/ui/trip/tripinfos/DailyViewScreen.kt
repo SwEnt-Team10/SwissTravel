@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,6 +57,7 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
+import com.github.swent.swisstravel.utils.NetworkUtils.isOnline
 import com.mapbox.geojson.Point
 import java.time.LocalDate
 import java.time.ZoneId
@@ -189,11 +191,29 @@ fun DailyViewScreen(
         Box(Modifier.fillMaxSize().padding(pd)) {
           if (ui.locations.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-              Text(
-                  text = stringResource(R.string.no_locations_available),
-                  modifier =
-                      Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
-                          .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
+              Column(
+                  horizontalAlignment = Alignment.CenterHorizontally,
+                  verticalArrangement = Arrangement.Center) {
+                    if (isOnline(context)) {
+                      Text(
+                          text = stringResource(R.string.no_locations_available),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
+                    } else {
+                      CircularProgressIndicator(
+                          modifier = Modifier.testTag(DailyViewScreenTestTags.LOADING))
+                      Spacer(
+                          modifier =
+                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+                      Text(
+                          text = stringResource(R.string.loading_from_cache),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS)
+                                  .align(Alignment.CenterHorizontally))
+                    }
+                  }
             }
           } else {
             Column(Modifier.fillMaxSize()) {

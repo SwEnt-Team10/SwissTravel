@@ -7,7 +7,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onChildren
+import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -31,6 +35,7 @@ import org.junit.runner.RunWith
 class DailyViewScreenTest {
 
   @get:Rule val compose = createComposeRule()
+
   @get:Rule
   val grantPermissionRule: GrantPermissionRule =
       GrantPermissionRule.grant(
@@ -255,6 +260,86 @@ class DailyViewScreenTest {
         .assertIsDisplayed()
         .performClick()
     compose.runOnIdle { assert(likeCalled) }
+  }
+
+  @Test
+  fun editButton_callsCallback() {
+    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    var editCalled = false
+    setContent(vm, onEditTrip = { editCalled = true })
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).performClick()
+    assert(editCalled)
+  }
+
+  @Test
+  fun favoriteButton_togglesFavorite() {
+    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    setContent(vm)
+
+    // Initially false (default in FakeTripInfoViewModel)
+    assert(!vm.uiState.value.isFavorite)
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).performClick()
+    assert(vm.uiState.value.isFavorite)
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).performClick()
+    assert(!vm.uiState.value.isFavorite)
+  }
+
+  @Test
+  fun mapNavigationToggle_updatesViewModel() {
+    val now = Timestamp.now()
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setLocations(listOf(Location(Coordinate(0.0, 0.0), "Loc")))
+          setTripProfile(TripProfile(startDate = now, endDate = now, preferences = emptyList()))
+          // Add a segment so map is shown
+          setRouteSegments(
+              listOf(
+                  RouteSegment(
+                      from = Location(Coordinate(0.0, 0.0), "A"),
+                      to = Location(Coordinate(1.0, 1.0), "B"),
+                      durationMinutes = 10,
+                      transportMode = com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+                      startDate = now,
+                      endDate = now)))
+        }
+    setContent(vm)
+    compose.waitForIdle()
+  }
+
+  @Test
+  fun segmentMapClick_setsSelectedStep() {
+    val now = Timestamp.now()
+    val segment =
+        RouteSegment(
+            from = Location(Coordinate(0.0, 0.0), "A"),
+            to = Location(Coordinate(1.0, 1.0), "B"),
+            durationMinutes = 10,
+            transportMode = com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+            startDate = now,
+            endDate = now)
+
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setLocations(listOf(Location(Coordinate(0.0, 0.0), "Loc")))
+          setTripProfile(TripProfile(startDate = now, endDate = now, preferences = emptyList()))
+          setRouteSegments(listOf(segment))
+        }
+    setContent(vm)
+    compose.waitForIdle()
+
+    // Click the map icon on the segment card
+    // The icon has content description "Show on Map"
+    compose
+        .onNodeWithTag(DailyViewScreenTestTags.STEP_CARD)
+        .onChildren()
+        .filter(hasContentDescription("Show on Map"))
+        .onFirst()
+        .performClick()
   }
 
   @Test

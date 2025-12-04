@@ -63,6 +63,7 @@ import com.github.swent.swisstravel.ui.composable.PreferenceSelector
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
+import com.github.swent.swisstravel.utils.NetworkUtils
 
 /** Test tags for the profile settings screen. */
 object ProfileSettingsScreenTestTags {
@@ -150,6 +151,9 @@ fun ProfileSettingsScreen(
           profileSettingsViewModel.clearErrorMsg()
         }
   }
+
+  val isOnline = NetworkUtils.isOnline(context)
+  LaunchedEffect(isOnline) { profileSettingsViewModel.refreshStats(isOnline) }
 
   Scaffold(
       topBar = {
