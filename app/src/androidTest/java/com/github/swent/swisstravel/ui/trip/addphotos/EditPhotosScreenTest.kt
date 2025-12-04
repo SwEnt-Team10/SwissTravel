@@ -26,6 +26,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
 
   @Test
   fun checkAllComponentsAreDisplayedWithNoImage() = runTest {
+
     // Initialization of the fake repository and model
     val fakeTrip =
         Trip(
@@ -41,6 +42,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
             listUri = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()
+
     // UI testing
     composeTestRule.setContent {
       EditPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)
@@ -50,6 +52,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
 
   @Test
   fun checkAllComponentsAreDisplayedWithImagesNoSelection() = runTest {
+
     // Initialization of the fake repository and model
     val fakeTrip =
         Trip(
@@ -66,6 +69,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
 
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()
+
     // UI testing
     composeTestRule.setContent {
       EditPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)

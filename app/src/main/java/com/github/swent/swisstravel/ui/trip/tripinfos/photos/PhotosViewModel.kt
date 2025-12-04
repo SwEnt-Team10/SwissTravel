@@ -27,7 +27,6 @@ class PhotosViewModel(
    * Add photos to the trip and save the trip on the repo
    *
    * @param tripId the uid of the trip
-   * @param uris the uris of the photos to add to the trip
    */
   fun savePhotos(tripId: String) {
     viewModelScope.launch {
