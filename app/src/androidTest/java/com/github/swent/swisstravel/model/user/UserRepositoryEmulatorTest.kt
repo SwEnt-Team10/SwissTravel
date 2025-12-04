@@ -582,12 +582,13 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
   fun getUserByUid_handlesMalformedDataGracefully() = runBlocking {
     // Arrange: create a document with mixed/invalid types
     val uid = "malformed_user"
-    val badData = mapOf(
-        "name" to 12345, // Should be String
-        "email" to "valid@email.com",
-        "preferences" to listOf("INVALID_PREF", "FOODIE"), // One invalid, one valid
-        "stats" to "not_a_map" // Should be Map
-    )
+    val badData =
+        mapOf(
+            "name" to 12345, // Should be String
+            "email" to "valid@email.com",
+            "preferences" to listOf("INVALID_PREF", "FOODIE"), // One invalid, one valid
+            "stats" to "not_a_map" // Should be Map
+            )
     FirebaseEmulator.firestore.collection("users").document(uid).set(badData).await()
 
     // Act

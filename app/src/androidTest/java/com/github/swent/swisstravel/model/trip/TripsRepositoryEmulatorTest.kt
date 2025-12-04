@@ -195,14 +195,15 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.createGoogleUser(fakeIdToken)
     val credential = GoogleAuthProvider.getCredential(fakeIdToken, null)
     FirebaseEmulator.auth.signInWithCredential(credential).await()
-    
+
     val tripId = "malformed_trip"
     val badData = mapOf("name" to "Bad Trip") // Missing ownerId, tripProfile, etc.
-    
+
     FirebaseEmulator.firestore.collection("trips").document(tripId).set(badData).await()
 
     // Act & Assert
-    // documentToTrip returns null if conversion fails, but getTrip throws if documentToTrip returns null
+    // documentToTrip returns null if conversion fails, but getTrip throws if documentToTrip returns
+    // null
     // So we expect an exception with "Trip not found" or similar, or just generic Exception
     assertFailsWith<Exception> { repository.getTrip(tripId) }
     Unit
