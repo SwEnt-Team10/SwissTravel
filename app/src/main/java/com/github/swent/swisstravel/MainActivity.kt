@@ -529,7 +529,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
-          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry))
+          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry))
     }
   }
 }
