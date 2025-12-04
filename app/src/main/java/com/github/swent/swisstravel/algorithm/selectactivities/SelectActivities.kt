@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.algorithm.selectactivities
 
 import android.util.Log
-import androidx.compose.runtime.mutableStateOf
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
@@ -196,10 +195,7 @@ class SelectActivities(
 
     // Removes preferences that are not supported by mySwitzerland.
     // Avoids unnecessary API calls.
-    prefs.remove(Preference.QUICK)
-    prefs.remove(Preference.SLOW_PACE)
-    prefs.remove(Preference.EARLY_BIRD)
-    prefs.remove(Preference.NIGHT_OWL)
+    removeUnsupportedPreferences(prefs)
 
     // activities to exclude
     val liked = state.likedActivities.map { it.location }.toSet()
