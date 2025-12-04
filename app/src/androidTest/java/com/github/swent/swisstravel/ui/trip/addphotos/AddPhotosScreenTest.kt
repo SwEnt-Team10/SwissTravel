@@ -154,10 +154,5 @@ class AddPhotosScreenTest : SwissTravelTest() {
     // Click on the back button
     composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).performClick()
     assert(backCalled)
-
-    // Reset and click on the save button
-    backCalled = false
-    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.SAVE_BUTTON).performClick()
-    assert(backCalled)
   }
 }

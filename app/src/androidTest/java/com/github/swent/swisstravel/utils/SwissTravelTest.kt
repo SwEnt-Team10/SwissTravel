@@ -627,7 +627,6 @@ abstract class SwissTravelTest {
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
-    onNodeWithTag(AddPhotosScreenTestTags.SAVE_BUTTON).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
   }
 

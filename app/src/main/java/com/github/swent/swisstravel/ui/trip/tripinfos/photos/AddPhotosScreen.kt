@@ -41,7 +41,6 @@ object AddPhotosScreenTestTags {
   const val TOP_APP_BAR_TITLE = "topAppBarTitle"
   const val BACK_BUTTON = "backButton"
   const val BOTTOM_BAR = "bottomBar"
-  const val SAVE_BUTTON = "saveButton"
   const val ADD_PHOTOS_BUTTON = "addPhotosButton"
   const val VERTICAL_GRID = "verticalGrid"
 
