@@ -145,6 +145,7 @@ class ProfileViewModelTest {
             profilePicUrl = "http://bum.url")
 
     coEvery { userRepository.getUserByUid("bumAndFraud") } returns otherUser
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
 
     // When: loading another user's profile
     viewModel = ProfileViewModel(userRepository, tripsRepository, "bumAndFraud")
