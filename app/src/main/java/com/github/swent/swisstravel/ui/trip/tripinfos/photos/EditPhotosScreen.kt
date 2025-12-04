@@ -25,10 +25,23 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.integerResource
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
+
+/** Test tags for the edit screen photos */
+object EditPhotosScreenTestTags {
+  const val EDIT_SCAFFOLD = "editScaffold"
+  const val EDIT_TOP_BAR = "editTopBar"
+  const val EDIT_TOP_BAR_TITLE = "editTopBarTitle"
+  const val EDIT_CANCEL_BUTTON = "editCancelButton"
+  const val EDIT_BOTTOM_BAR = "editBottomBar"
+  const val EDIT_REMOVE_BUTTON = "editRemoveButton"
+  const val EDIT_VERTICAL_GRID = "editVerticalGrid"
+}
 
 /**
  * A Screen corresponding to the edit mode of the feature that can add photos to the trip.
@@ -47,6 +60,7 @@ fun EditPhotosScreen(
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   val uiState by photosViewModel.uiState.collectAsState()
   Scaffold(
+      modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD),
       topBar = {
         EditTopBar(
             onCancel = {
@@ -60,14 +74,19 @@ fun EditPhotosScreen(
             onRemove = {
               // Remove from the state
               photosViewModel.removePhotos()
-            })
+            },
+            uiState = uiState)
       }) { pd ->
+        // Done with AI
         LazyVerticalGrid(
             columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
-            modifier = Modifier.padding(pd)) {
+            modifier = Modifier.padding(pd).testTag(EditPhotosScreenTestTags.EDIT_VERTICAL_GRID)) {
               itemsIndexed(uiState.listUri) { index, uri ->
                 Box(modifier = Modifier.clickable { photosViewModel.selectToRemove(index) }) {
-                  AsyncImage(model = uri, contentDescription = null)
+                  AsyncImage(
+                      model = uri,
+                      contentDescription = null,
+                  )
                   // the veil added when a photo is selected
                   if (uiState.uriSelected.contains(index)) {
                     Box(
@@ -89,7 +108,12 @@ fun EditPhotosScreen(
 @Composable
 private fun EditTopBar(onCancel: () -> Unit = {}) {
   TopAppBar(
-      title = { Text(text = "Select photos") },
+      modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_TOP_BAR),
+      title = {
+        Text(
+            modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_TOP_BAR_TITLE),
+            text = stringResource(R.string.edit_top_bar_title))
+      },
       navigationIcon = { CancelButton(onCancel = onCancel) })
 }
 
@@ -100,12 +124,14 @@ private fun EditTopBar(onCancel: () -> Unit = {}) {
  */
 @Composable
 private fun CancelButton(onCancel: () -> Unit = {}) {
-  IconButton(onClick = { onCancel() }) {
-    Icon(
-        imageVector = Icons.Filled.Cancel,
-        contentDescription = "Cancel Edit",
-        tint = MaterialTheme.colorScheme.onBackground)
-  }
+  IconButton(
+      modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON),
+      onClick = { onCancel() }) {
+        Icon(
+            imageVector = Icons.Filled.Cancel,
+            contentDescription = stringResource(R.string.cancel_edit),
+            tint = MaterialTheme.colorScheme.onBackground)
+      }
 }
 
 /**
@@ -114,8 +140,15 @@ private fun CancelButton(onCancel: () -> Unit = {}) {
  * @param onRemove the function to call when you want to remove selected photos
  */
 @Composable
-private fun EditBottomBar(onRemove: () -> Unit = {}) {
-  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-    Button(onClick = { onRemove() }) { Text(text = "Remove") }
-  }
+private fun EditBottomBar(onRemove: () -> Unit = {}, uiState: PhotosUIState) {
+  Row(
+      modifier = Modifier.fillMaxWidth().testTag(EditPhotosScreenTestTags.EDIT_BOTTOM_BAR),
+      horizontalArrangement = Arrangement.Center) {
+        Button(
+            onClick = { onRemove() },
+            modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_REMOVE_BUTTON),
+            enabled = uiState.uriSelected.isNotEmpty()) {
+              Text(text = stringResource(R.string.remove_button))
+            }
+      }
 }
