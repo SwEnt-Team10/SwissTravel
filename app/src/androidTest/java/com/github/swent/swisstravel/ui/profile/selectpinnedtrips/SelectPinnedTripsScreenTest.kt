@@ -123,7 +123,7 @@ class SelectPinnedTripsScreenTest {
                 friends = emptyList(),
                 stats = UserStats(),
                 pinnedTripsUids = listOf("trip1"),
-                pinnedImagesUris = emptyList())
+                pinnedPicturesUris = emptyList())
 
         override suspend fun getCurrentUser() = user
 
@@ -146,7 +146,7 @@ class SelectPinnedTripsScreenTest {
             profilePicUrl: String?,
             preferences: List<Preference>?,
             pinnedTripsUids: List<String>?,
-            pinnedImagesUris: List<Uri>?
+            pinnedPicturesUrls: List<Uri>?
         ) {
           user =
               user.copy(

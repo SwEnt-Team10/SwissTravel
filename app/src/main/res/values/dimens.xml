@@ -26,10 +26,10 @@
     <dimen name="profile_logo_size">100dp</dimen>
     <dimen name="profile_padding_start_end">16dp</dimen>
     <dimen name="profile_padding_top_bottom">4dp</dimen>
-    <dimen name="pinned_photos_padding">4dp</dimen>
-    <dimen name="pinned_photos_spacing">12dp</dimen>
-    <dimen name="pinned_photos_height">120dp</dimen>
-    <dimen name="pinned_photos_corner">16dp</dimen>
+    <dimen name="pinned_pictures_padding">4dp</dimen>
+    <dimen name="pinned_pictures_spacing">12dp</dimen>
+    <dimen name="pinned_pictures_height">120dp</dimen>
+    <dimen name="pinned_pictures_corner">16dp</dimen>
 
     <!-- Profile Achievements -->
     <dimen name="profile_achievement_min_width">72dp</dimen>

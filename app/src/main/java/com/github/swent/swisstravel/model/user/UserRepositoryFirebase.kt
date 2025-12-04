@@ -39,7 +39,7 @@ class UserRepositoryFirebase(
                 friends = emptyList(),
                 stats = UserStats(),
                 pinnedTripsUids = emptyList(),
-                pinnedImagesUris = emptyList())
+                pinnedPicturesUris = emptyList())
 
     val uid = firebaseUser.uid
     return try {
@@ -330,7 +330,7 @@ class UserRepositoryFirebase(
    * @param profilePicUrl Optional new profile picture URL.
    * @param preferences Optional list of updated preferences.
    * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
-   * @param pinnedImagesUris Optional updated list of pinned image URIs.
+   * @param pinnedPicturesUris Optional updated list of pinned picture URLs.
    */
   override suspend fun updateUser(
       uid: String,
@@ -339,7 +339,7 @@ class UserRepositoryFirebase(
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedImagesUris: List<Uri>?
+      pinnedPicturesUris: List<Uri>?
   ) {
     if (uid == "guest") return
 
@@ -350,8 +350,8 @@ class UserRepositoryFirebase(
     if (profilePicUrl != null) updates["profilePicUrl"] = profilePicUrl
     if (preferences != null) updates["preferences"] = preferences.map { it.name }
     if (pinnedTripsUids != null) updates["pinnedTripsUids"] = pinnedTripsUids
-    if (pinnedImagesUris != null)
-        updates["pinnedImagesUris"] = pinnedImagesUris.map { it.toString() }
+    if (pinnedPicturesUris != null)
+        updates["pinnedPicturesUris"] = pinnedPicturesUris.map { it.toString() }
 
     // If nothing to update, skip Firestore
     if (updates.isEmpty()) return
@@ -377,8 +377,8 @@ class UserRepositoryFirebase(
     val stats = parseStats(doc)
     val pinnedTripsUids =
         (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-    val pinnedImagesUrisStrings = doc["pinnedImagesUris"] as? List<*> ?: emptyList<Uri>()
-    val pinnedImagesUris = pinnedImagesUrisStrings.mapNotNull { (it as? String)?.toUri() }
+    val pinnedPicturesUrisStrings = doc["pinnedPicturesUris"] as? List<*> ?: emptyList<Uri>()
+    val pinnedPicturesUris = pinnedPicturesUrisStrings.mapNotNull { (it as? String)?.toUri() }
 
     return User(
         uid = uid,
@@ -390,7 +390,7 @@ class UserRepositoryFirebase(
         friends = friends,
         stats = stats,
         pinnedTripsUids = pinnedTripsUids,
-        pinnedImagesUris = pinnedImagesUris)
+        pinnedPicturesUris = pinnedPicturesUris)
   }
 
   /**
@@ -412,7 +412,7 @@ class UserRepositoryFirebase(
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedImagesUris = emptyList())
+            pinnedPicturesUris = emptyList())
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser

@@ -81,10 +81,10 @@ object ProfileScreenTestTags {
   const val ACHIEVEMENTS = "achievements"
   const val PINNED_TRIPS_TITLE = "pinnedTripsTitle"
   const val PINNED_TRIPS_EDIT_BUTTON = "pinnedTripsEditButton"
-  const val PINNED_PHOTOS_TITLE = "pinnedPhotosTitle"
-  const val PINNED_PHOTOS_LIST = "pinnedPhotosList"
-  const val EMPTY_PINNED_PHOTOS = "emptyPinnedPhotos"
-  const val PINNED_IMAGES_EDIT_BUTTON = "pinnedImagesEditButton"
+  const val PINNED_PICTURES_TITLE = "pinnedPicturesTitle"
+  const val PINNED_PICTURES_LIST = "pinnedPicturesList"
+  const val EMPTY_PINNED_PICTURES = "emptyPinnedPictures"
+  const val PINNED_PICTURES_EDIT_BUTTON = "pinnedPicturesEditButton"
   const val CONFIRM_UNFRIEND_BUTTON = "confirmUnfriendButton"
   const val CANCEL_UNFRIEND_BUTTON = "cancelUnfriendButton"
   const val LOADING_INDICATOR = "loadingIndicator"
@@ -107,7 +107,7 @@ private const val BIOGRAPHY_MAX_LINES = 3
  * @param onSettings The callback to navigate to the settings screen.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -117,7 +117,7 @@ fun ProfileScreen(
     onSettings: () -> Unit = {},
     onSelectTrip: (String) -> Unit = {},
     onEditPinnedTrips: () -> Unit = {},
-    onEditPinnedImages: () -> Unit = {},
+    onEditPinnedPictures: () -> Unit = {},
     friendsViewModel: FriendsViewModel = viewModel(),
 ) {
   val context = LocalContext.current
@@ -163,7 +163,7 @@ fun ProfileScreen(
               uiState = uiState,
               onSelectTrip = onSelectTrip,
               onEditPinnedTrips = onEditPinnedTrips,
-              onEditPinnedImages = onEditPinnedImages,
+              onEditPinnedPictures = onEditPinnedPictures,
               modifier = Modifier.padding(pd))
         }
       }
@@ -233,7 +233,7 @@ private fun ProfileScreenTopBar(
  * @param uiState The state of the screen.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  * @param modifier The modifier to apply to the content.
  */
 @Composable
@@ -241,7 +241,7 @@ private fun ProfileScreenContent(
     uiState: ProfileUIState,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
-    onEditPinnedImages: () -> Unit = {},
+    onEditPinnedPictures: () -> Unit = {},
     modifier: Modifier
 ) {
   Column(
@@ -277,10 +277,10 @@ private fun ProfileScreenContent(
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-        PinnedPhotos(
-            pinnedPhotos = uiState.pinnedImages,
+        PinnedPictures(
+            pinnedPictures = uiState.pinnedPictures,
             isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedImages = onEditPinnedImages)
+            onEditPinnedPictures = onEditPinnedPictures)
       }
 }
 
@@ -693,55 +693,56 @@ private fun PinnedTrips(
 }
 
 /**
- * The pinned images section of the profile screen.
+ * The pinned pictures section of the profile screen.
  *
- * @param pinnedPhotos The list of pinned images.
+ * @param pinnedPictures The list of pinned pictures.
  * @param isOwnProfile Whether the user is their own profile.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  */
 @Composable
-private fun PinnedPhotos(
-    pinnedPhotos: List<Uri>,
+private fun PinnedPictures(
+    pinnedPictures: List<Uri>,
     isOwnProfile: Boolean,
-    onEditPinnedImages: () -> Unit,
+    onEditPinnedPictures: () -> Unit,
 ) {
   Row(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PHOTOS_TITLE),
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
       horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
-            text = stringResource(R.string.pinned_photos),
+            text = stringResource(R.string.pinned_pictures),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground)
 
         if (isOwnProfile) {
           IconButton(
-              onClick = onEditPinnedImages,
-              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON)) {
+              onClick = onEditPinnedPictures,
+              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.edit_pinned_photos))
+                    contentDescription = stringResource(R.string.edit_pinned_pictures))
               }
         }
       }
-  if (pinnedPhotos.isEmpty()) {
+  if (pinnedPictures.isEmpty()) {
     val text =
-        if (isOwnProfile) stringResource(R.string.edit_no_pinned_photos)
-        else stringResource(R.string.no_pinned_photos)
-    Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PHOTOS))
+        if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
+        else stringResource(R.string.no_pinned_pictures)
+    Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
   } else {
     LazyRow(
-        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PHOTOS_LIST),
+        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
         horizontalArrangement =
-            Arrangement.spacedBy(dimensionResource(R.dimen.pinned_photos_spacing)),
+            Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
         contentPadding =
-            PaddingValues(horizontal = dimensionResource(R.dimen.pinned_photos_padding))) {
-          items(pinnedPhotos) { uri ->
+            PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
+          items(pinnedPictures) { uri ->
             AsyncImage(
                 model = uri,
                 contentDescription = null,
                 modifier =
-                    Modifier.height(dimensionResource(R.dimen.pinned_photos_height))
-                        .clip(RoundedCornerShape(dimensionResource(R.dimen.pinned_photos_corner))),
+                    Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
+                        .clip(
+                            RoundedCornerShape(dimensionResource(R.dimen.pinned_pictures_corner))),
                 contentScale = ContentScale.Crop)
           }
         }

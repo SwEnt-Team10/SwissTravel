@@ -45,7 +45,7 @@ class ProfileSettingsViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
-          pinnedImagesUris = emptyList())
+          pinnedPicturesUris = emptyList())
 
   @Before
   fun setup() {
@@ -173,7 +173,7 @@ class ProfileSettingsViewModelTest {
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedImagesUris = emptyList())
+            pinnedPicturesUris = emptyList())
     coEvery { userRepository.getCurrentUser() } returns guestUser
 
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)

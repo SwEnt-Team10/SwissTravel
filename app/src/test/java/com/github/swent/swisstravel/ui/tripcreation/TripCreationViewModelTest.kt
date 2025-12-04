@@ -349,7 +349,7 @@ class TripCreationViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
-          pinnedImagesUris = emptyList())
+          pinnedPicturesUris = emptyList())
     }
 
     override suspend fun getUserByUid(uid: String): User? {
@@ -387,7 +387,7 @@ class TripCreationViewModelTest {
         profilePicUrl: String?,
         preferences: List<Preference>?,
         pinnedTripsUids: List<String>?,
-        pinnedImagesUris: List<Uri>?
+        pinnedPicturesUrls: List<Uri>?
     ) {
       // no-op for testing
     }

@@ -33,7 +33,7 @@ import kotlinx.coroutines.launch
  * @property biography The user's biography.
  * @property stats The user's stats.
  * @property pinnedTrips The user's pinned trips.
- * @property pinnedImages The user's pinned images.
+ * @property pinnedPictures The user's pinned pictures.
  * @property errorMsg The error message to display.
  */
 data class ProfileUIState(
@@ -45,7 +45,7 @@ data class ProfileUIState(
     val biography: String = "",
     val stats: UserStats = UserStats(),
     val pinnedTrips: List<Trip> = emptyList(),
-    val pinnedImages: List<Uri> = emptyList(),
+    val pinnedPictures: List<Uri> = emptyList(),
     var errorMsg: String? = null,
     var achievements: List<Achievement> = emptyList(),
     val friendsCount: Int = 0,
@@ -121,7 +121,7 @@ class ProfileViewModel(
             biography = profile.biography,
             stats = profile.stats,
             pinnedTrips = pinnedTrips,
-            pinnedImages = profile.pinnedImagesUris,
+            pinnedPictures = profile.pinnedPicturesUris,
             achievements = achievements,
             friendsCount = friendsCount)
       }

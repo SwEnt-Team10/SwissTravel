@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.profile.selectpinnedphotos
+package com.github.swent.swisstravel.ui.profile.selectpinnedpictures
 
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -12,28 +12,28 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** UI State for the selectPinnedPhotosScreen */
-data class SelectPinnedPhotosUIState(
+/** UI State for the selectPinnedPicturesScreen */
+data class SelectPinnedPicturesUIState(
     val listUri: List<Uri> = emptyList(),
     var errorMsg: String? = null
 )
 
-/** ViewModel for the selectPinnedPhotosScreen */
-class SelectPinnedPhotosViewModel(
+/** ViewModel for the selectPinnedPicturesScreen */
+class SelectPinnedPicturesViewModel(
     private val userRepository: UserRepository = UserRepositoryFirebase()
 ) : ViewModel() {
-  private val _uiState = MutableStateFlow(SelectPinnedPhotosUIState())
-  val uiState: StateFlow<SelectPinnedPhotosUIState> = _uiState.asStateFlow()
+  private val _uiState = MutableStateFlow(SelectPinnedPicturesUIState())
+  val uiState: StateFlow<SelectPinnedPicturesUIState> = _uiState.asStateFlow()
 
   private var currentUser: User? = null
 
-  // Loads the user's photos into the UI state
+  // Loads the user's pictures into the UI state
   init {
     viewModelScope.launch {
       try {
         val user = userRepository.getCurrentUser()
         currentUser = user
-        addUri(user.pinnedImagesUris)
+        addUri(user.pinnedPicturesUris)
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error fetching user images: ${e.message}")
       }
@@ -46,15 +46,15 @@ class SelectPinnedPhotosViewModel(
    * @param uris The list of URIs to add to the UI state.
    */
   fun addUri(uris: List<Uri>) {
-    _uiState.value = _uiState.value.copy(listUri = _uiState.value.listUri + uris)
+    _uiState.update { it.copy(listUri = it.listUri + uris) }
   }
 
-  /** Saves the selected photos to the user's profile. */
-  fun savePhotos() {
+  /** Saves the selected pictures to the user's profile. */
+  fun savePictures() {
     viewModelScope.launch {
       val user = currentUser ?: return@launch
       try {
-        userRepository.updateUser(uid = user.uid, pinnedImagesUris = _uiState.value.listUri)
+        userRepository.updateUser(uid = user.uid, pinnedPicturesUris = _uiState.value.listUri)
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error saving image(s): ${e.message}") }
       }

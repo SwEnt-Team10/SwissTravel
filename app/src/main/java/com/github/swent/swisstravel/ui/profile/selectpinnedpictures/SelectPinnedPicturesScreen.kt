@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.profile.selectpinnedphotos
+package com.github.swent.swisstravel.ui.profile.selectpinnedpictures
 
 import android.content.Intent
 import android.widget.Toast
@@ -38,14 +38,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 
-object SelectPinnedPhotosScreenTestTags {
+object SelectPinnedPicturesScreenTestTags {
   const val MAIN_SCREEN = "mainScreen"
   const val TOP_APP_BAR = "topAppBar"
   const val TOP_APP_BAR_TITLE = "topAppBarTitle"
   const val BACK_BUTTON = "backButton"
   const val BOTTOM_BAR = "bottomBar"
   const val SAVE_BUTTON = "saveButton"
-  const val ADD_PHOTOS_BUTTON = "addPhotosButton"
+  const val ADD_PICTURE_BUTTON = "addPictureButton"
   const val VERTICAL_GRID = "verticalGrid"
 
   fun getTestTagForUri(index: Int): String = "UriIndex$index"
@@ -55,14 +55,14 @@ object SelectPinnedPhotosScreenTestTags {
  * A screen that allows the user to select pinned photos.
  *
  * @param onBack The callback for when the back button is clicked.
- * @param selectPinnedPhotosViewModel The view model for this screen.
+ * @param selectPinnedPicturesViewModel The view model for this screen.
  * @param launchPickerOverride The override for the picker launcher.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SelectPinnedPhotosScreen(
+fun SelectPinnedPicturesScreen(
     onBack: () -> Unit = {},
-    selectPinnedPhotosViewModel: SelectPinnedPhotosViewModel = viewModel(),
+    selectPinnedPicturesViewModel: SelectPinnedPicturesViewModel = viewModel(),
     launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
 ) {
   val context = LocalContext.current
@@ -75,32 +75,32 @@ fun SelectPinnedPhotosScreen(
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-          selectPinnedPhotosViewModel.addUri(uris)
+          selectPinnedPicturesViewModel.addUri(uris)
         }
       }
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
 
-  val selectPinnedPhotosUIState by selectPinnedPhotosViewModel.uiState.collectAsState()
+  val selectPinnedPhotosUIState by selectPinnedPicturesViewModel.uiState.collectAsState()
 
   LaunchedEffect(selectPinnedPhotosUIState.errorMsg) {
     selectPinnedPhotosUIState.errorMsg
         ?.takeIf { it.isNotBlank() }
         ?.let {
           Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-          selectPinnedPhotosViewModel.clearErrorMsg()
+          selectPinnedPicturesViewModel.clearErrorMsg()
         }
   }
 
   Scaffold(
-      modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.MAIN_SCREEN),
+      modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.MAIN_SCREEN),
       topBar = {
         TopAppBar(
-            modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.TOP_APP_BAR),
+            modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.TOP_APP_BAR),
             title = {
               Text(
-                  modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.TOP_APP_BAR_TITLE),
-                  text = stringResource(R.string.select_pinned_photos_title),
+                  modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.TOP_APP_BAR_TITLE),
+                  text = stringResource(R.string.select_pinned_pictures_title),
                   style = MaterialTheme.typography.titleLarge,
                   color = MaterialTheme.colorScheme.onBackground)
             },
@@ -108,7 +108,7 @@ fun SelectPinnedPhotosScreen(
               // Back button
               IconButton(
                   onClick = onBack,
-                  modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.BACK_BUTTON)) {
+                  modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.BACK_BUTTON)) {
                     Icon(
                         imageVector = Icons.Default.Close,
                         contentDescription = stringResource(R.string.back_to_profile),
@@ -118,11 +118,13 @@ fun SelectPinnedPhotosScreen(
       },
       bottomBar = {
         Row(
-            modifier = Modifier.fillMaxWidth().testTag(SelectPinnedPhotosScreenTestTags.BOTTOM_BAR),
+            modifier =
+                Modifier.fillMaxWidth().testTag(SelectPinnedPicturesScreenTestTags.BOTTOM_BAR),
             horizontalArrangement = Arrangement.Center) {
               // Add photos to the UI state button
               Button(
-                  modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
+                  modifier =
+                      Modifier.testTag(SelectPinnedPicturesScreenTestTags.ADD_PICTURE_BUTTON),
                   onClick = {
                     launchPicker(
                         PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
@@ -132,9 +134,9 @@ fun SelectPinnedPhotosScreen(
               Spacer(modifier = Modifier.width(dimensionResource(R.dimen.save_add_button_padding)))
               // Save photos button
               Button(
-                  modifier = Modifier.testTag(SelectPinnedPhotosScreenTestTags.SAVE_BUTTON),
+                  modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.SAVE_BUTTON),
                   onClick = {
-                    selectPinnedPhotosViewModel.savePhotos()
+                    selectPinnedPicturesViewModel.savePictures()
                     onBack()
                   }) {
                     Text(text = stringResource(R.string.add_photos_save_button))
@@ -145,12 +147,13 @@ fun SelectPinnedPhotosScreen(
         LazyVerticalGrid(
             columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
             modifier =
-                Modifier.padding(pd).testTag(SelectPinnedPhotosScreenTestTags.VERTICAL_GRID)) {
+                Modifier.padding(pd).testTag(SelectPinnedPicturesScreenTestTags.VERTICAL_GRID)) {
               // AI helped for the itemsIndexed
               itemsIndexed(selectPinnedPhotosUIState.listUri) { index, uri ->
                 AsyncImage(
                     modifier =
-                        Modifier.testTag(SelectPinnedPhotosScreenTestTags.getTestTagForUri(index)),
+                        Modifier.testTag(
+                            SelectPinnedPicturesScreenTestTags.getTestTagForUri(index)),
                     model = uri,
                     contentDescription = null)
               }

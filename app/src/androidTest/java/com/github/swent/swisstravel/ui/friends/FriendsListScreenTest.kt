@@ -193,7 +193,7 @@ class FakeUserRepoForUI(
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedImagesUris: List<Uri>?
+      pinnedPicturesUrls: List<Uri>?
   ) {
     // no-op in test
   }
