@@ -54,6 +54,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileViewModelFactory
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreen
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -359,9 +360,7 @@ private fun NavGraphBuilder.authNavGraph(
  * @param navigationActions The NavigationActions used for navigation. once edit pinned methods are
  *   implemented
  */
-private fun NavGraphBuilder.profileNavGraph(
-    navigationActions: NavigationActions,
-) {
+private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions) {
   navigation(
       startDestination = Screen.Profile.route,
       route = Screen.Profile.name,
@@ -369,7 +368,10 @@ private fun NavGraphBuilder.profileNavGraph(
     composable(Screen.Profile.route) {
       ProfileScreen(
           profileViewModel =
-              ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
+              viewModel(
+                  factory =
+                      ProfileViewModelFactory(
+                          requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: "")),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },

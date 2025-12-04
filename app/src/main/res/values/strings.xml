@@ -259,7 +259,7 @@
 
     <!-- Loading -->
     <string name="loading_trip">We are travelling for you…</string>
-
+    <string name="loading_from_cache">Fetching from the cache &#8230; Please wait.</string>
     <!-- Activity Infos -->
     <string name="about_activity">About this activity</string>
     <string name="estimated_time">Estimated time: %1$s</string>
