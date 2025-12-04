@@ -541,15 +541,10 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
 
       tripId?.let {
-          AddPhotosScreen(
-              onBack = {
-                  navController.popBackStack()
-                       },
-              tripId = tripId,
-              onEdit = {
-                  navigationActions.navigateTo(Screen.EditPhotos(tripId))
-              }
-          )
+        AddPhotosScreen(
+            onBack = { navController.popBackStack() },
+            tripId = tripId,
+            onEdit = { navigationActions.navigateTo(Screen.EditPhotos(tripId)) })
       }
           ?: run {
             Log.e(
@@ -559,19 +554,11 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                 .show()
           }
     }
-      composable(Screen.EditPhotos.route) { navBackStackEntry ->
-          val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
+    composable(Screen.EditPhotos.route) { navBackStackEntry ->
+      val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
 
-          tripId?.let {
-              EditPhotosScreen(
-                  onCancel = {
-                      navigationActions.goBack()
-                  },
-                  tripId = tripId
-              )
-          }
-
-      }
+      tripId?.let { EditPhotosScreen(onCancel = { navigationActions.goBack() }, tripId = tripId) }
+    }
   }
 }
 

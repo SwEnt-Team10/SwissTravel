@@ -122,7 +122,7 @@ data class TripInfoContentCallbacks(
 )
 
 /**
- *A composable that shows a trip's info. It shows the next step the user should do and shows the
+ * A composable that shows a trip's info. It shows the next step the user should do and shows the
  * itinerary on the map It also shows the activities the user has fetched during creation.
  *
  * @param uid The trip's ID.

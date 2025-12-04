@@ -105,8 +105,9 @@ sealed class Screen(
       const val route = "add_photos/{tripId}"
     }
   }
+
   data class EditPhotos(val tripId: String) :
-  Screen(route = "edit_photos/${tripId}", name = "Edit Photos") {
+      Screen(route = "edit_photos/${tripId}", name = "Edit Photos") {
     companion object {
       const val route = "edit_photos/{tripId}"
     }

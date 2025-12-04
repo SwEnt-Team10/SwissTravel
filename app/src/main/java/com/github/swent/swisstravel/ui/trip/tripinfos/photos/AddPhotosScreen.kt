@@ -74,14 +74,14 @@ fun AddPhotosScreen(
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-            photosViewModel.addUris(uris)
-            photosViewModel.savePhotos(tripId)
+          photosViewModel.addUris(uris)
+          photosViewModel.savePhotos(tripId)
         }
       }
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
 
-    val uiState by photosViewModel.uiState.collectAsState()
+  val uiState by photosViewModel.uiState.collectAsState()
 
   Scaffold(
       modifier = Modifier.testTag(AddPhotosScreenTestTags.MAIN_SCREEN),
@@ -106,12 +106,7 @@ fun AddPhotosScreen(
                         tint = MaterialTheme.colorScheme.onBackground)
                   }
             },
-            actions = {
-                EditButton(onEdit = {
-                    onEdit()
-                })
-            }
-            )
+            actions = { EditButton(onEdit = { onEdit() }) })
       },
       bottomBar = {
         Row(
@@ -149,18 +144,11 @@ fun AddPhotosScreen(
  * @param onEdit the function called when you click on the button
  */
 @Composable
-private fun EditButton(
-    onEdit:() -> Unit = {}
-) {
-    IconButton(
-        onClick = {
-            onEdit()
-        }
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Edit,
-            contentDescription = "Edit Mode",
-            tint = MaterialTheme.colorScheme.onBackground
-        )
-    }
+private fun EditButton(onEdit: () -> Unit = {}) {
+  IconButton(onClick = { onEdit() }) {
+    Icon(
+        imageVector = Icons.Filled.Edit,
+        contentDescription = "Edit Mode",
+        tint = MaterialTheme.colorScheme.onBackground)
+  }
 }

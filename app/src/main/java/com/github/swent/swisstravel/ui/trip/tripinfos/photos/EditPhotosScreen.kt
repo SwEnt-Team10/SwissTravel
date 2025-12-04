@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -44,58 +43,42 @@ fun EditPhotosScreen(
     onCancel: () -> Unit = {},
     tripId: String
 ) {
-    // Start by loading the photos from the repository
-    LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
-    val uiState by photosViewModel.uiState.collectAsState()
-    Scaffold(
-        topBar = {
-            EditTopBar(
-                onCancel =
-                    {
-                        // Save then quit
-                        photosViewModel.savePhotos(tripId)
-                        onCancel()
-                    }
-            )
-        },
-        bottomBar = {
-            EditBottomBar(
-                onRemove = {
-                    // Remove from the state
-                    photosViewModel.removePhotos()
-                }
-            )
-        }
-    ) {
-        pd ->
+  // Start by loading the photos from the repository
+  LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
+  val uiState by photosViewModel.uiState.collectAsState()
+  Scaffold(
+      topBar = {
+        EditTopBar(
+            onCancel = {
+              // Save then quit
+              photosViewModel.savePhotos(tripId)
+              onCancel()
+            })
+      },
+      bottomBar = {
+        EditBottomBar(
+            onRemove = {
+              // Remove from the state
+              photosViewModel.removePhotos()
+            })
+      }) { pd ->
         LazyVerticalGrid(
             columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
-            modifier = Modifier.padding(pd)
-        ) {
-            itemsIndexed(uiState.listUri) { index, uri ->
-                Box(
-                    modifier = Modifier.clickable {
-                        photosViewModel.selectToRemove(index)
-                    }
-                ) {
-                    AsyncImage(
-                        model = uri,
-                        contentDescription = null
-                    )
-                    // the veil added when a photo is selected
-                    if (uiState.uriSelected.contains(index)) {
-                        Box(
-                            modifier = Modifier
-                                .matchParentSize()
-                                .background(
-                                    MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)
-                                )
-                        )
-                    }
+            modifier = Modifier.padding(pd)) {
+              itemsIndexed(uiState.listUri) { index, uri ->
+                Box(modifier = Modifier.clickable { photosViewModel.selectToRemove(index) }) {
+                  AsyncImage(model = uri, contentDescription = null)
+                  // the veil added when a photo is selected
+                  if (uiState.uriSelected.contains(index)) {
+                    Box(
+                        modifier =
+                            Modifier.matchParentSize()
+                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)))
+                  }
                 }
+              }
             }
-        }
-    }
+      }
 }
 /**
  * The top app bar of the edit mode. It contains only a button to quit the mode.
@@ -104,21 +87,10 @@ fun EditPhotosScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun EditTopBar(
-    onCancel: () -> Unit = {}
-) {
-    TopAppBar(
-        title = {
-            Text(
-                text = "Select photos"
-            )
-        },
-        navigationIcon = {
-            CancelButton(
-                onCancel = onCancel
-            )
-        }
-    )
+private fun EditTopBar(onCancel: () -> Unit = {}) {
+  TopAppBar(
+      title = { Text(text = "Select photos") },
+      navigationIcon = { CancelButton(onCancel = onCancel) })
 }
 
 /**
@@ -127,20 +99,13 @@ private fun EditTopBar(
  * @param onCancel the function to call when you click on the button
  */
 @Composable
-private fun CancelButton(
-    onCancel: () -> Unit = {}
-) {
-    IconButton(
-        onClick = {
-            onCancel()
-        }
-    ) {
-        Icon(
-            imageVector = Icons.Filled.Cancel,
-            contentDescription = "Cancel Edit",
-            tint = MaterialTheme.colorScheme.onBackground
-        )
-    }
+private fun CancelButton(onCancel: () -> Unit = {}) {
+  IconButton(onClick = { onCancel() }) {
+    Icon(
+        imageVector = Icons.Filled.Cancel,
+        contentDescription = "Cancel Edit",
+        tint = MaterialTheme.colorScheme.onBackground)
+  }
 }
 
 /**
@@ -149,21 +114,8 @@ private fun CancelButton(
  * @param onRemove the function to call when you want to remove selected photos
  */
 @Composable
-private fun EditBottomBar(
-    onRemove: () -> Unit = {}
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center
-    ) {
-        Button(
-            onClick = {
-                onRemove()
-            }
-        ) {
-            Text(
-                text = "Remove"
-            )
-        }
-    }
+private fun EditBottomBar(onRemove: () -> Unit = {}) {
+  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    Button(onClick = { onRemove() }) { Text(text = "Remove") }
+  }
 }

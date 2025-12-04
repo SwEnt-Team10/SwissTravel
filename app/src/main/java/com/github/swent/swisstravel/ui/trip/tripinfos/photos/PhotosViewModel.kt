@@ -13,8 +13,8 @@ import kotlinx.coroutines.launch
 /** UI State for the AddPhotosScreen */
 data class PhotosUIState(
     val listUri: List<Uri> = emptyList(),
-  val uriSelected: List<Int> = emptyList()
-    )
+    val uriSelected: List<Int> = emptyList()
+)
 
 /** ViewModel for the AddPhotosScreen */
 class PhotosViewModel(
@@ -73,19 +73,13 @@ class PhotosViewModel(
     _uiState.value = _uiState.value.copy(uriSelected = current)
   }
 
-  /**
-   * Remove the photos from the repository depending on the photos selected on edit mode
-   */
+  /** Remove the photos from the repository depending on the photos selected on edit mode */
   fun removePhotos() {
     // Done with AI
     val selected = _uiState.value.uriSelected.toSet()
 
-    val newList = _uiState.value.listUri
-      .filterIndexed { index, _ -> index !in selected }
+    val newList = _uiState.value.listUri.filterIndexed { index, _ -> index !in selected }
 
-    _uiState.value = _uiState.value.copy(
-      listUri = newList,
-      uriSelected = emptyList()
-    )
+    _uiState.value = _uiState.value.copy(listUri = newList, uriSelected = emptyList())
   }
 }
