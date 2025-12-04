@@ -1,10 +1,13 @@
 package com.github.swent.swisstravel.ui.activities
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 
 /**
  * UI state for the Swipe Activities screen
@@ -13,27 +16,32 @@ import kotlinx.coroutines.flow.asStateFlow
  * @param currentActivity The current activity being displayed
  * @param backActivity The next activity to be displayed (so that it is more fluid, and to make the
  *   illusion that there is a stack of cards
+ * @param activitiesFetcher A class with functions to fetch activities from the MySwitzerland API
  */
 data class SwipeActivitiesUIState(
     val activitiesQueue: List<Activity>? = null,
     val currentActivity: Activity? = null,
-    val backActivity: Activity? = null
+    val backActivity: Activity? = null,
+    val activitiesFetcher: SelectActivities = SelectActivities()
 )
 
 /** Done with the help of ChatGPT */
-class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModelContract) :
-    ViewModel() {
+class SwipeActivitiesViewModel(private val tripInfoVM: TripInfoViewModelContract) : ViewModel() {
 
   /** UI state for the Swipe Activities screen */
   private val _uiState = MutableStateFlow(SwipeActivitiesUIState())
   val uiState = _uiState.asStateFlow()
 
   init {
-    val all = tripInfoViewModel.uiState.value.activities
-    val liked = tripInfoViewModel.uiState.value.likedActivities
-    _uiState.value = _uiState.value.copy(activitiesQueue = ArrayDeque(all.filter { it !in liked }))
-    // load initial cards
-    updateCards()
+    _uiState.value =
+        _uiState.value.copy(activitiesFetcher = SelectActivities(tripInfoVM = tripInfoVM))
+    viewModelScope.launch {
+      _uiState.value =
+          _uiState.value.copy(
+              activitiesQueue = ArrayDeque(_uiState.value.activitiesFetcher.fetchSwipeActivities()))
+      // load initial cards
+      updateCards()
+    }
   }
 
   /**
@@ -61,7 +69,7 @@ class SwipeActivitiesViewModel(private val tripInfoViewModel: TripInfoViewModelC
 
     val newQueue =
         if (liked) {
-          tripInfoViewModel.likeActivity(current)
+          tripInfoVM.likeActivities(listOf(current))
           // like => remove the activity from the queue
           _uiState.value.activitiesQueue?.drop(1)
         } else {

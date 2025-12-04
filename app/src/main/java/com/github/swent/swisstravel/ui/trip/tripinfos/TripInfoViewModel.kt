@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.trip.tripinfos
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TripElement
@@ -10,6 +11,10 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
+import com.github.swent.swisstravel.ui.tripcreation.TripDate
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.mapbox.geojson.Point
 import java.time.LocalDate
 import java.time.ZoneId
@@ -35,6 +40,7 @@ data class TripInfoUIState(
     val isFavorite: Boolean = false,
     val errorMsg: String? = null,
     val fullscreen: Boolean = false,
+    // fields for swipe and like
     val selectedActivity: Activity? = null,
     val likedActivities: List<Activity> = emptyList(),
     // New fields for DailyViewScreen MVVM refactor
@@ -311,10 +317,52 @@ class TripInfoViewModel(
     _uiState.value = _uiState.value.copy(mapLocations = locations.distinct())
   }
 
-  /** Adds the given activity to the list of liked activities in the UI state. */
-  override fun likeActivity(activity: Activity) {
+  /** Adds the given activities to the list of liked activities in the UI state. */
+  override fun likeActivities(activities: List<Activity>) {
     _uiState.update { current ->
-      current.copy(likedActivities = (current.likedActivities + activity).distinct())
+      current.copy(likedActivities = (current.likedActivities + activities).distinct())
     }
+  }
+
+  /** Removes the given activities from the list of liked activities in the UI state. */
+  override fun unlikeActivities(activities: List<Activity>) {
+    _uiState.update { current ->
+      current.copy(likedActivities = (current.likedActivities - activities).distinct())
+    }
+  }
+
+  /**
+   * Helper to map the tripInfoUIState to a TripSettings.
+   *
+   * If the tripProfile parameter from the uiState is null, it will return TripSettings with default
+   * parameters
+   */
+  override fun mapToTripSettings(): TripSettings {
+    val profile: TripProfile? = _uiState.value.tripProfile
+    if (profile == null) return TripSettings(name = _uiState.value.name)
+    else
+        return TripSettings(
+            name = _uiState.value.name,
+            date =
+                TripDate(
+                    profile.startDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate(),
+                    profile.endDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()),
+            travelers = TripTravelers(adults = profile.adults, children = profile.children),
+            preferences = profile.preferences,
+            arrivalDeparture =
+                TripArrivalDeparture(
+                    arrivalLocation = profile.arrivalLocation,
+                    departureLocation = profile.departureLocation),
+            destinations = profile.preferredLocations
+            // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+            )
   }
 }

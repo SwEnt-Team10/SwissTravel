@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.trip.tripinfos
 
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.StateFlow
 
@@ -63,9 +64,24 @@ interface TripInfoViewModelContract {
   fun updateUserLocation(point: Point)
 
   /**
-   * Likes the given activity, adding it to the list of liked activities.
+   * Likes the given activities, adding them to the list of liked activities.
    *
-   * @param activity The activity to like.
+   * @param activities The activities to like.
    */
-  fun likeActivity(activity: Activity)
+  fun likeActivities(activities: List<Activity>)
+
+  /**
+   * Unlikes the given activities, removing them from the list of liked activities.
+   *
+   * @param activities The activities to unlike.
+   */
+  fun unlikeActivities(activities: List<Activity>)
+
+  /**
+   * Helper to map the tripInfoUIState to a TripSettings.
+   *
+   * If the tripProfile parameter from the uiState is null, it will return TripSettings with default
+   * parameters
+   */
+  fun mapToTripSettings(): TripSettings
 }

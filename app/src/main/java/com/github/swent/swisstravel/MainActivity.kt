@@ -537,7 +537,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
-          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry))
+          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry))
     }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
