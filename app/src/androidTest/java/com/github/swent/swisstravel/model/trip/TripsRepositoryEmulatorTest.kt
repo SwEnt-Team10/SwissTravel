@@ -154,6 +154,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     val now = Timestamp.now()
+    val location = Location(Coordinate(0.0, 0.0), "Loc")
     val trip =
         Trip(
             uid = repository.getNewUid(),
@@ -161,7 +162,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             ownerId = uid,
             locations = emptyList(),
             activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList()),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isFavorite = false,
             isCurrentTrip = false,
@@ -197,7 +198,10 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signInWithCredential(credential).await()
 
     val tripId = "malformed_trip"
-    val badData = mapOf("name" to "Bad Trip") // Missing ownerId, tripProfile, etc.
+    val badData =
+        mapOf(
+            "name" to "Bad Trip",
+            "ownerId" to FirebaseEmulator.auth.currentUser!!.uid) // Missing tripProfile, etc.
 
     FirebaseEmulator.firestore.collection("trips").document(tripId).set(badData).await()
 

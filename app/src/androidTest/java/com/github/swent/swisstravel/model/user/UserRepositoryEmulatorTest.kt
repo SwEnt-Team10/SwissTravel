@@ -584,6 +584,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     val uid = "malformed_user"
     val badData =
         mapOf(
+            "uid" to uid, // Required by security rules
             "name" to 12345, // Should be String
             "email" to "valid@email.com",
             "preferences" to listOf("INVALID_PREF", "FOODIE"), // One invalid, one valid
