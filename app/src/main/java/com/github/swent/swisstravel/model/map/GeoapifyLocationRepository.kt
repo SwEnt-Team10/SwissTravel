@@ -14,6 +14,15 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
 
+/**
+ * Implementation of [LocationRepository]. Parses the JSON response from the Geoapify API and
+ * returns a list of locations.
+ *
+ * @param client The OkHttpClient used to make the API requests.
+ * @param ioDispatcher The coroutine dispatcher used for IO operations.
+ * @param apiKey The API key used to authenticate the requests.
+ * @param baseUrl The base URL of the API.
+ */
 class GeoapifyLocationRepository(
     private val client: OkHttpClient,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO,
