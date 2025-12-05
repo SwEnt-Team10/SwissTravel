@@ -46,7 +46,8 @@ import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -627,8 +628,16 @@ abstract class SwissTravelTest {
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
-    onNodeWithTag(AddPhotosScreenTestTags.SAVE_BUTTON).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.editPhotosScreenIsDisplayed() {
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_TOP_BAR).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_TOP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_BOTTOM_BAR).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_REMOVE_BUTTON).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkSwipeActivityScreenIsDisplayed() {

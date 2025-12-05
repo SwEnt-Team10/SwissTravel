@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.trip.tripinfos.addphotos
+package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -6,15 +6,14 @@ import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -30,7 +29,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,7 +41,6 @@ object AddPhotosScreenTestTags {
   const val TOP_APP_BAR_TITLE = "topAppBarTitle"
   const val BACK_BUTTON = "backButton"
   const val BOTTOM_BAR = "bottomBar"
-  const val SAVE_BUTTON = "saveButton"
   const val ADD_PHOTOS_BUTTON = "addPhotosButton"
   const val VERTICAL_GRID = "verticalGrid"
 
@@ -54,19 +51,20 @@ object AddPhotosScreenTestTags {
  * A screen that shows the photos associated to a trip. You can add photos too.
  *
  * @param onBack a function that is call when the user click on the back button.
- * @param viewModel the viewmodel used by the screen.
+ * @param photosViewModel the viewmodel used by the screen.
  * @param tripId the uid of the trip.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddPhotosScreen(
     onBack: () -> Unit = {},
-    viewModel: AddPhotosViewModel = viewModel(),
+    onEdit: () -> Unit = {},
+    photosViewModel: PhotosViewModel = viewModel(),
     tripId: String,
     launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
 ) {
   val context = LocalContext.current
-  LaunchedEffect(tripId) { viewModel.loadPhotos(tripId) }
+  LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   // AI helped for the picker
   val pickerLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
@@ -75,13 +73,15 @@ fun AddPhotosScreen(
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-          viewModel.addUri(uris)
+          photosViewModel.addUris(uris)
+          photosViewModel.savePhotos(tripId)
         }
       }
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
 
-  val addPhotosUIState by viewModel.uiState.collectAsState()
+  val uiState by photosViewModel.uiState.collectAsState()
+
   Scaffold(
       modifier = Modifier.testTag(AddPhotosScreenTestTags.MAIN_SCREEN),
       topBar = {
@@ -104,7 +104,8 @@ fun AddPhotosScreen(
                         contentDescription = stringResource(R.string.back_to_my_trips),
                         tint = MaterialTheme.colorScheme.onBackground)
                   }
-            })
+            },
+            actions = { EditButton(onEdit = { onEdit() }) })
       },
       bottomBar = {
         Row(
@@ -119,16 +120,6 @@ fun AddPhotosScreen(
                   }) {
                     Text(text = stringResource(R.string.add_photos_button))
                   }
-              Spacer(modifier = Modifier.width(dimensionResource(R.dimen.save_add_button_padding)))
-              // Save photos button
-              Button(
-                  modifier = Modifier.testTag(AddPhotosScreenTestTags.SAVE_BUTTON),
-                  onClick = {
-                    viewModel.savePhotos(tripId)
-                    onBack()
-                  }) {
-                    Text(text = stringResource(R.string.add_photos_save_button))
-                  }
             }
       }) { pd ->
         // Display a grid with the images
@@ -136,7 +127,7 @@ fun AddPhotosScreen(
             columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
             modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
               // AI helped for the itemsIndexed
-              itemsIndexed(addPhotosUIState.listUri) { index, uri ->
+              itemsIndexed(uiState.listUri) { index, uri ->
                 AsyncImage(
                     modifier = Modifier.testTag(AddPhotosScreenTestTags.getTestTagForUri(index)),
                     model = uri,
@@ -144,4 +135,19 @@ fun AddPhotosScreen(
               }
             }
       }
+}
+
+/**
+ * A button that go on edit mode when you click on it.
+ *
+ * @param onEdit the function called when you click on the button
+ */
+@Composable
+private fun EditButton(onEdit: () -> Unit = {}) {
+  IconButton(onClick = { onEdit() }) {
+    Icon(
+        imageVector = Icons.Filled.Edit,
+        contentDescription = "Edit Mode",
+        tint = MaterialTheme.colorScheme.onBackground)
+  }
 }
