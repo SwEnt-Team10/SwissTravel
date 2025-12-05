@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -30,6 +31,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
@@ -73,57 +75,122 @@ fun LocationAutocompleteTextField(
   var expanded by remember { mutableStateOf(false) }
   val wikiRepo = remember(showImages) { if (showImages) WikiImageRepository.default() else null }
 
-  // Derive text to display from the ViewModel's state
   val textToShow = if (clearOnSelect && state.selectedLocation != null) "" else state.locationQuery
+  val isError = textToShow.isNotEmpty() && state.selectedLocation == null
+  val suggestions = state.locationSuggestions.take(3)
 
-  ExposedDropdownMenuBox(expanded = expanded, onExpandedChange = { expanded = it }) {
-    OutlinedTextField(
-        value = textToShow,
-        // When the user types, immediately update the ViewModel.
-        // The ViewModel is now the single source of truth.
-        onValueChange = { newText ->
+  ExposedDropdownMenuBox(
+      expanded = expanded,
+      onExpandedChange = { expanded = it },
+  ) {
+    LocationAutocompleteInputField(
+        modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
+        label = name,
+        text = textToShow,
+        isError = isError,
+        onTextChanged = { newText ->
           addressTextFieldViewModel.setLocationQuery(newText)
           expanded = true
         },
-        modifier = modifier.menuAnchor().testTag(LocationTextTestTags.INPUT_LOCATION),
-        label = { Text(name) },
-        singleLine = true,
-        // Error state logic is simplified
-        isError = textToShow.isNotEmpty() && state.selectedLocation == null,
-        supportingText = {
-          if (textToShow.isNotEmpty() && state.selectedLocation == null) {
-            Text(text = stringResource(R.string.dropdown_menu_choose))
-          }
-        })
-    ExposedDropdownMenu(
-        expanded = expanded && state.locationSuggestions.isNotEmpty(),
-        onDismissRequest = { expanded = false }) {
-          val suggestions = state.locationSuggestions.take(3)
-          suggestions.forEachIndexed { index, location ->
-            DropdownMenuItem(
-                text = {
-                  Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (showImages && wikiRepo != null) {
-                      LocationImage(location = location, wikiRepo = wikiRepo)
-                    }
-                    Text(location.name, modifier = Modifier.weight(1f))
-                  }
-                },
-                onClick = {
-                  addressTextFieldViewModel.setLocation(location)
-                  onLocationSelected(location)
-                  expanded = false
-                },
-                modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION))
+    )
 
-            if (index < suggestions.lastIndex) {
-              HorizontalDivider(
-                  modifier = Modifier.fillMaxWidth(),
-                  thickness = 1.dp,
-                  color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
-            }
-          }
+    LocationSuggestionsMenu(
+        expanded = expanded && suggestions.isNotEmpty(),
+        suggestions = suggestions,
+        showImages = showImages,
+        wikiRepo = wikiRepo,
+        onDismiss = { expanded = false },
+        onLocationClicked = { location ->
+          addressTextFieldViewModel.setLocation(location)
+          onLocationSelected(location)
+          expanded = false
+        },
+    )
+  }
+}
+
+/**
+ * The input field for the location autocomplete text field.
+ *
+ * @param modifier The modifier to be applied to the composable.
+ * @param label The label for the text field.
+ * @param text The current text in the text field.
+ * @param isError Whether the text field has an error.
+ * @param onTextChanged Callback to be invoked when the text in the text field changes.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LocationAutocompleteInputField(
+    modifier: Modifier,
+    label: String,
+    text: String,
+    isError: Boolean,
+    onTextChanged: (String) -> Unit,
+) {
+  OutlinedTextField(
+      value = text,
+      onValueChange = onTextChanged,
+      modifier = modifier,
+      label = { Text(label) },
+      singleLine = true,
+      isError = isError,
+      supportingText = {
+        if (isError) {
+          Text(text = stringResource(R.string.dropdown_menu_choose))
         }
+      },
+  )
+}
+
+/**
+ * The location suggestions dropdown menu.
+ *
+ * @param expanded Whether the dropdown menu is expanded.
+ * @param suggestions The list of location suggestions to display.
+ * @param showImages Whether to show images next to the location suggestions.
+ * @param wikiRepo The repository to fetch the images from.
+ * @param onDismiss Callback to be invoked when the dropdown menu is dismissed.
+ * @param onLocationClicked Callback to be invoked when a location is clicked.
+ */
+@Composable
+private fun LocationSuggestionsMenu(
+    expanded: Boolean,
+    suggestions: List<Location>,
+    showImages: Boolean,
+    wikiRepo: WikiImageRepository?,
+    onDismiss: () -> Unit,
+    onLocationClicked: (Location) -> Unit,
+) {
+  DropdownMenu(
+      expanded = expanded,
+      onDismissRequest = onDismiss,
+      properties = PopupProperties(focusable = false),
+  ) {
+    suggestions.forEachIndexed { index, location ->
+      DropdownMenuItem(
+          text = {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+              if (showImages && wikiRepo != null) {
+                LocationImage(location = location, wikiRepo = wikiRepo)
+              }
+              Text(
+                  text = location.name,
+                  modifier = Modifier.weight(1f),
+              )
+            }
+          },
+          onClick = { onLocationClicked(location) },
+          modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION),
+      )
+
+      if (index < suggestions.lastIndex) {
+        HorizontalDivider(
+            modifier = Modifier.fillMaxWidth(),
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+        )
+      }
+    }
   }
 }
 
