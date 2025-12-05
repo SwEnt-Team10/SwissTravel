@@ -118,4 +118,8 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     val newLiked = current.likedActivities.toMutableList().apply { add(activity) }
     _ui.value = current.copy(likedActivities = newLiked)
   }
+
+  fun setCurrentUserIsOwner(value: Boolean) {
+    _ui.value = _ui.value.copy(currentUserIsOwner = value)
+  }
 }

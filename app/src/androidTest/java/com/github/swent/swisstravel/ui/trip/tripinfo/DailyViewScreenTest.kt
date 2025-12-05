@@ -222,7 +222,11 @@ class DailyViewScreenTest {
 
   @Test
   fun swipeActivitiesButtonWorks() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     var swipeCalled = false
 
     compose.setContent {
@@ -243,7 +247,11 @@ class DailyViewScreenTest {
 
   @Test
   fun likedActivitiesButtonWorks() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     var likeCalled = false
 
     compose.setContent {
@@ -264,7 +272,11 @@ class DailyViewScreenTest {
 
   @Test
   fun editButton_callsCallback() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     var editCalled = false
     setContent(vm, onEditTrip = { editCalled = true })
 
@@ -274,7 +286,11 @@ class DailyViewScreenTest {
 
   @Test
   fun favoriteButton_togglesFavorite() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
     setContent(vm)
 
     // Initially false (default in FakeTripInfoViewModel)
@@ -340,5 +356,37 @@ class DailyViewScreenTest {
         .filter(hasContentDescription("Show on Map"))
         .onFirst()
         .performClick()
+  }
+
+  @Test
+  fun ownerUser_showsButtons() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
+
+    setContent(vm)
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
+    compose.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
+    compose.onNodeWithTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON).assertIsDisplayed()
+    compose.onNodeWithTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun nonOwnerUser_hidesButtons() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(false)
+        }
+
+    setContent(vm)
+
+    compose.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).assertDoesNotExist()
+    compose.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).assertDoesNotExist()
+    compose.onNodeWithTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON).assertDoesNotExist()
+    compose.onNodeWithTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON).assertDoesNotExist()
   }
 }

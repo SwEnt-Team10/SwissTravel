@@ -20,11 +20,10 @@ service cloud.firestore {
         allow create: if request.auth != null &&
               request.auth.uid == request.resource.data.ownerId;
 
-              allow get, update, delete: if request.auth.uid == resource.data.ownerId &&
+              allow update, delete: if request.auth.uid == resource.data.ownerId &&
               request.auth != null;
 
-              allow list : if request.auth != null &&
-                    resource.data.ownerId == request.auth.uid;
+              allow get, list : if request.auth != null;
     }
     match /durationCache/{entryId} {
           allow read, delete: if request.auth != null;

@@ -7,6 +7,9 @@ import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.google.firebase.Timestamp
 import com.mapbox.geojson.Point
@@ -26,6 +29,7 @@ import org.junit.Test
 class TripInfoViewModelTest {
   private val testDispatcher = StandardTestDispatcher()
   private lateinit var tripsRepository: TripsRepository
+  private lateinit var userRepository: UserRepository
   private lateinit var viewModel: TripInfoViewModel
   val now = Timestamp(1600000000, 0)
 
@@ -47,6 +51,19 @@ class TripInfoViewModelTest {
           isCurrentTrip = false,
           listUri = emptyList())
 
+  private val fakeUser =
+      User(
+          uid = "123",
+          name = "Test User",
+          biography = "Bio",
+          email = "test@example.com",
+          profilePicUrl = "http://example.com/pic.jpg",
+          preferences = emptyList(),
+          friends = emptyList(),
+          stats = UserStats(),
+          pinnedTripsUids = emptyList(),
+          pinnedImagesUris = emptyList())
+
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
@@ -55,7 +72,8 @@ class TripInfoViewModelTest {
     every { android.util.Log.e(any(), any(), any()) } returns 0
 
     tripsRepository = mockk()
-    viewModel = TripInfoViewModel(tripsRepository)
+    userRepository = mockk()
+    viewModel = TripInfoViewModel(tripsRepository, userRepository)
   }
 
   @After
@@ -66,6 +84,8 @@ class TripInfoViewModelTest {
   // --- Existing Test ---
   @Test
   fun `toggleFavorite updates UI state and calls repository`() = runTest {
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+
     coEvery { tripsRepository.getTrip(dummyTrip.uid) } returns dummyTrip
     coEvery { tripsRepository.editTrip(dummyTrip.uid, any()) } just Runs
 
@@ -86,6 +106,7 @@ class TripInfoViewModelTest {
   fun `loadTripInfo updates UI state successfully`() = runTest {
     // Arrange
     coEvery { tripsRepository.getTrip(dummyTrip.uid) } returns dummyTrip
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
 
     // Act
     viewModel.loadTripInfo(dummyTrip.uid)
