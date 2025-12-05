@@ -486,8 +486,7 @@ class TripAlgorithm(
     val deficitSeconds = missingSumSec + penaltySec
 
     // 4) Randomly remove activities across the whole trip until we cover the deficit
-    val seed = 12345L
-    val rand = Random(seed)
+    val rand = Random(12345L)
 
     val candidateList = normalActivities.toMutableList()
     candidateList.shuffle(rand)
