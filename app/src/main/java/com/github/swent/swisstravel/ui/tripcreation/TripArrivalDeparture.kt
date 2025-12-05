@@ -118,7 +118,9 @@ fun ArrivalDepartureScreen(
 
                   // --- Title ---
                   Text(
-                      text = stringResource(R.string.arrivalDeparture),
+                      text =
+                          if (isRandomTrip) stringResource(R.string.arrivalRandom)
+                          else stringResource(R.string.arrivalDeparture),
                       textAlign = TextAlign.Center,
                       style =
                           MaterialTheme.typography.headlineMedium.copy(

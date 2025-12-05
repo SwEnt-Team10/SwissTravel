@@ -61,6 +61,7 @@
 
     <!-- Arrival and Departure -->
     <string name="arrivalDeparture">Where are your arrival and departure destinations?</string>
+    <string name="arrivalRandom">Where is your arrival location?</string>
     <string name="enterArrivalLocation">Enter your arrival location</string>
     <string name="enterDepartureLocation">Enter your departure location</string>
     <string name="arrival_location">Arrival location</string>
