@@ -19,12 +19,15 @@ import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import kotlin.collections.zipWithNext
+import kotlin.math.abs
+import kotlin.math.roundToLong
 import kotlin.random.Random
 
 const val DISTANCE_PER_STOP_KM = 90.0
 const val RADIUS_NEW_ACTIVITY_M = 15000
 const val INVALID_DURATION = -1.0
 const val RESCHEDULE_PENALTY_PER_ACTIVITY_SEC = (0.25 * 3600) // 15 minutes
+const val EPSILON = 1e-6f
 /**
  * Data class representing the progression weights for each step of the trip computation.
  *
@@ -43,7 +46,7 @@ data class Progression(
 ) {
   init {
     val sum = selectActivities + optimizeRoute + scheduleTrip + fetchInBetweenActivities
-    require(sum == 1.0f) { "Progression values must sum to 1.0, but got $sum" }
+    require(abs(sum - 1.0f) < EPSILON) { "Progression values must sum to 1.0, but got $sum" }
   }
 }
 
@@ -55,7 +58,7 @@ data class RescheduleProgression(
 ) {
   init {
     val sum = schedule + analyzeAndRemove + recomputeRoute + reschedule
-    require(sum == 1.0f) { "Progression values must sum to 1.0, but got $sum" }
+    require(abs(sum - 1.0f) < EPSILON) { "Progression values must sum to 1.0, but got $sum" }
   }
 }
 
@@ -478,12 +481,14 @@ class TripAlgorithm(
     }
 
     // 3) Compute deficit seconds based on missing activities and penalty-per-activity
-    val missingSumSec = missingActivities.sumOf { it.estimatedTime.toLong() }
+    val missingSumSec = missingActivities.sumOf { it.estimatedTime.toDouble().roundToLong() }
     val penaltySec = missingActivities.size * RESCHEDULE_PENALTY_PER_ACTIVITY_SEC.toLong()
     val deficitSeconds = missingSumSec + penaltySec
 
     // 4) Randomly remove activities across the whole trip until we cover the deficit
-    val rand = Random.Default
+    val seed = 12345L
+    val rand = Random(seed)
+
     val candidateList = normalActivities.toMutableList()
     candidateList.shuffle(rand)
 
