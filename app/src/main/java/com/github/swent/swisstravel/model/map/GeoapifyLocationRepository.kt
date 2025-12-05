@@ -21,6 +21,12 @@ class GeoapifyLocationRepository(
     private val baseUrl: String = "https://api.geoapify.com/v1/geocode/autocomplete"
 ) : LocationRepository {
 
+  /**
+   * Searches for locations matching the given query.
+   *
+   * @param query The search query.
+   * @return A list of matching locations.
+   */
   override suspend fun search(query: String): List<Location> {
     return withContext(ioDispatcher) {
       val url =
@@ -44,14 +50,20 @@ class GeoapifyLocationRepository(
           return@withContext parseBody(body)
         }
       } catch (e: Exception) {
-        Log.e("GeoapifyLocationRepository", "Error while searching for locations", e)
+        Log.e("LocationRepository", "Error while searching for locations", e)
         return@withContext emptyList()
       }
     }
   }
 
+  /**
+   * Parses the JSON response from the Geoapify API and returns a list of locations.
+   *
+   * @param body The JSON response body.
+   * @return A list of locations.
+   */
   private fun parseBody(body: String): List<Location> {
-    Log.d("GeoapifyLocationRepository", "Parsing body: $body")
+    Log.d("LocationRepository", "Parsing body: $body")
     val json = JSONObject(body)
     val results = json.optJSONArray("results") ?: return emptyList()
 
