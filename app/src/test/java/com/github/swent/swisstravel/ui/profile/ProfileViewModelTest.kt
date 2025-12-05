@@ -35,10 +35,10 @@ class ProfileViewModelTest {
 
   private val fakeUser =
       User(
-          uid = "mahitoH8er999",
+          uid = "mahito444",
           name = "Itadori Yuji",
-          email = "poop@poop.com",
-          biography = "I hate curses",
+          email = "hnd@shrine.jp",
+          biography = "I dislike curses",
           profilePicUrl = "http://pic.url",
           preferences = emptyList(),
           friends = emptyList(),
