@@ -34,6 +34,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.composable.BackButton
 
 object AddPhotosScreenTestTags {
   const val MAIN_SCREEN = "mainScreen"
@@ -95,15 +96,13 @@ fun AddPhotosScreen(
                   color = MaterialTheme.colorScheme.onBackground)
             },
             navigationIcon = {
-              // Back button
-              IconButton(
-                  onClick = onBack,
-                  modifier = Modifier.testTag(AddPhotosScreenTestTags.BACK_BUTTON)) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = stringResource(R.string.back_to_my_trips),
-                        tint = MaterialTheme.colorScheme.onBackground)
-                  }
+                BackButton(
+                    onBack = {
+                        onBack()
+                    },
+                    testTag = AddPhotosScreenTestTags.BACK_BUTTON,
+                    contentDescription = "Back to daily view screen"
+                )
             },
             actions = { EditButton(onEdit = { onEdit() }) })
       },
@@ -151,3 +150,4 @@ private fun EditButton(onEdit: () -> Unit = {}) {
         tint = MaterialTheme.colorScheme.onBackground)
   }
 }
+

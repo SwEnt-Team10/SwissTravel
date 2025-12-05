@@ -13,7 +13,11 @@ import kotlinx.coroutines.launch
 /** UI State for the AddPhotosScreen */
 data class PhotosUIState(
     val listUri: List<Uri> = emptyList(),
-    val uriSelected: List<Int> = emptyList()
+    val uriSelected: List<Int> = emptyList(),
+    val error: Boolean = false,
+    val toastMessage: String = "",
+    // With AI
+    val isLoading: Boolean = true
 )
 
 /** ViewModel for the AddPhotosScreen */
@@ -29,11 +33,15 @@ class PhotosViewModel(
    * @param tripId the uid of the trip
    */
   fun savePhotos(tripId: String) {
-    viewModelScope.launch {
-      val oldTrip = tripsRepository.getTrip(tripId)
-      val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
-      tripsRepository.editTrip(tripId, newTrip)
-    }
+      viewModelScope.launch {
+          try {
+              val oldTrip = tripsRepository.getTrip(tripId)
+              val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
+              tripsRepository.editTrip(tripId, newTrip)
+          } catch (e: Exception) {
+              setErrorMessage("Could not save the photos")
+          }
+      }
   }
 
   /**
@@ -42,10 +50,15 @@ class PhotosViewModel(
    * @param tripId the Id of the trip
    */
   fun loadPhotos(tripId: String) {
-    viewModelScope.launch {
-      val trip = tripsRepository.getTrip(tripId)
-      _uiState.value = PhotosUIState(listUri = trip.listUri)
-    }
+      _uiState.value = _uiState.value.copy(isLoading = true, error = false, toastMessage = "")
+      viewModelScope.launch {
+          try {
+              val trip = tripsRepository.getTrip(tripId)
+              _uiState.value = _uiState.value.copy(listUri = trip.listUri, isLoading = false, toastMessage = "Successfully loaded photos")
+          } catch (e: Exception) {
+              setErrorMessage("Could not load the photos")
+          }
+      }
   }
 
   /**
@@ -79,15 +92,32 @@ class PhotosViewModel(
    */
   fun removePhotos(tripId: String) {
     // Done with AI
+      val oldState = _uiState.value
     val selected = _uiState.value.uriSelected.toSet()
 
     val newList = _uiState.value.listUri.filterIndexed { index, _ -> index !in selected }
 
     _uiState.value = _uiState.value.copy(listUri = newList, uriSelected = emptyList())
     viewModelScope.launch {
-      val oldTrip = tripsRepository.getTrip(tripId)
-      val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
-      tripsRepository.editTrip(tripId, newTrip)
+        try {
+            val oldTrip = tripsRepository.getTrip(tripId)
+            val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
+            tripsRepository.editTrip(tripId, newTrip)
+        } catch (e: Exception) {
+            _uiState.value = oldState
+            setErrorMessage("Could not remove photos")
+        }
     }
   }
+
+    /**
+     * Reset the error state of the ui state
+     */
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = false, toastMessage = "")
+    }
+
+    private fun setErrorMessage(message: String) {
+        _uiState.value = _uiState.value.copy(error = true, toastMessage = message, isLoading = false)
+    }
 }
