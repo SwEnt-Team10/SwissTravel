@@ -141,6 +141,7 @@
     <string name="delete_trip_prompt">Are you sure you want to delete this trip? This action cannot be undone.</string>
     <string name="trip_deleted">Trip deleted</string>
     <string name="confirm">Confirm</string>
+    <string name="reroll">Reroll Trip</string>
 
     <!-- Delete Trip Dialog -->
     <plurals name="confirm_delete_title">
