@@ -213,7 +213,7 @@ class TripAlgorithmTest {
     // scheduleTrip empty → should trigger your check
     mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
     coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
-      every { activity.estimatedTime } returns 100
+    every { activity.estimatedTime } returns 100
 
     val settings =
         TripSettings(
@@ -237,10 +237,10 @@ class TripAlgorithmTest {
 
     // Act → should now throw IllegalStateException (not MockKException)
     algorithm.computeTrip(settings, profile)
-      // Check that this was never called for API
-      coVerify(exactly = 0) {
-          routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any())
-      }
+    // Check that this was never called for API
+    coVerify(exactly = 0) {
+      routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any())
+    }
   }
 
   // Done with AI
