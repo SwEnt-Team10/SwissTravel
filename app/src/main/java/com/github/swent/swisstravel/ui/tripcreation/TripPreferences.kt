@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -126,7 +125,7 @@ fun TripPreferencesScreen(
               }
 
           // --- Next button (conditionally visible) ---
-          Done(Modifier.align(Alignment.BottomCenter), isScrolledToEnd, onNext, context)
+          Done(Modifier.align(Alignment.BottomCenter), isScrolledToEnd, onNext)
         }
       }
 }
@@ -137,14 +136,12 @@ fun TripPreferencesScreen(
  * @param modifier Modifier to be applied to the button.
  * @param isScrolledToEnd Whether the LazyColumn has been scrolled to the end.
  * @param onNext Callback to be invoked when the user is done setting preferences.
- * @param context Context to be used for the Toast.
  */
 @Composable
 private fun Done(
     modifier: Modifier = Modifier,
     isScrolledToEnd: Boolean,
     onNext: () -> Unit,
-    context: Context
 ) {
   if (isScrolledToEnd) {
     Button(
