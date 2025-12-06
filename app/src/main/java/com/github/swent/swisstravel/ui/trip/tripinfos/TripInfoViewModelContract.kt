@@ -68,4 +68,6 @@ interface TripInfoViewModelContract {
    * @param activity The activity to like.
    */
   fun likeActivity(activity: Activity)
+
+  fun computeDayPrice(dailySteps: List<TripElement>): TripInfoViewModel.DayPriceSummary
 }

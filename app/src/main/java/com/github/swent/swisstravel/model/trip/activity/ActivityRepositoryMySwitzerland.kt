@@ -147,7 +147,7 @@ class ActivityRepositoryMySwitzerland(
 
     val imageUrls = parseImageUrls(item.optJSONArray("image"))
     val estimatedTime = parseEstimatedTime(item.optJSONArray("classification"))
-    val price = parsePriceChf(item)
+    val price = parsePrice(item)
 
     return Activity(
         Timestamp.now(), Timestamp.now(), location, description, imageUrls, estimatedTime, price)
@@ -194,20 +194,21 @@ class ActivityRepositoryMySwitzerland(
    *
    *     @param item The corresponding JSON object
    */
-  private fun parsePriceChf(item: JSONObject): Int? {
-    // 1) Explicitly free
+  private fun parsePrice(item: JSONObject): Int? {
+    // Case 1: explicitly free
     if (item.has("isAccessibleForFree") && item.optBoolean("isAccessibleForFree")) {
       return 0
     }
 
-    // 2) Structured price object
-    val priceObj = item.optJSONObject("price") ?: return null
-
-    return if (priceObj.has("minPrice")) {
-      priceObj.optInt("minPrice")
-    } else {
-      null
+    // Case 2: structured price
+    val priceObj = item.optJSONObject("price")
+    val minPrice = priceObj?.optDouble("minPrice", Double.NaN)
+    if (minPrice != null && !minPrice.isNaN()) {
+      return minPrice.toInt()
     }
+
+    // Case 3: unknown
+    return null
   }
 
   /**

@@ -151,6 +151,8 @@ fun DailyViewScreen(
   val dailySteps =
       if (currentDay != null) ui.groupedSchedule[currentDay] ?: emptyList() else emptyList()
 
+  val priceSummary = remember(dailySteps) { tripInfoViewModel.computeDayPrice(dailySteps) }
+
   // Map state logic
   val mapState =
       remember(ui.mapLocations, ui.schedule, ui.drawFromCurrentPosition, ui.isComputingSchedule) {
@@ -221,6 +223,7 @@ fun DailyViewScreen(
               DayNavigator(
                   currentDayIndex = ui.currentDayIndex,
                   days = ui.days,
+                  priceSummary = priceSummary,
                   onDayChange = { tripInfoViewModel.setCurrentDayIndex(it) })
 
               if (!ui.fullscreen) {
@@ -384,10 +387,16 @@ private fun DailyViewTopAppBar(
  *
  * @param currentDayIndex The index of the currently displayed day.
  * @param days A list of all available dates for the trip.
+ * @param dayPrice The price of the currently displayed day.
  * @param onDayChange A callback invoked with the new day index when the user navigates.
  */
 @Composable
-private fun DayNavigator(currentDayIndex: Int, days: List<LocalDate>, onDayChange: (Int) -> Unit) {
+private fun DayNavigator(
+    currentDayIndex: Int,
+    days: List<LocalDate>,
+    priceSummary: TripInfoViewModel.DayPriceSummary? = null,
+    onDayChange: (Int) -> Unit
+) {
   val currentDay = days.getOrNull(currentDayIndex)
   val dateFormatter = DateTimeFormatter.ofPattern("EEE, MMM d")
 
@@ -408,11 +417,39 @@ private fun DayNavigator(currentDayIndex: Int, days: List<LocalDate>, onDayChang
               Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, contentDescription = "Previous Day")
             }
 
-        Text(
-            text = currentDay?.format(dateFormatter) ?: "No Days",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.testTag(DailyViewScreenTestTags.CURRENT_DAY_TEXT))
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+          Text(
+              text = currentDay?.format(dateFormatter) ?: "No Days",
+              style = MaterialTheme.typography.titleMedium,
+              fontWeight = FontWeight.Bold,
+              modifier = Modifier.testTag(DailyViewScreenTestTags.CURRENT_DAY_TEXT))
+
+          priceSummary?.let { summary ->
+            when {
+              summary.knownTotal == 0 && summary.unknownCount == 0 -> {
+                // No paid stuff this day
+                Text(
+                    text = "Free day",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+              summary.unknownCount == 0 -> {
+                // Fully known
+                Text(
+                    text = "≈ CHF ${summary.knownTotal}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+              else -> {
+                // Partially known
+                Text(
+                    text = "≥ CHF ${summary.knownTotal} (+${summary.unknownCount} unknown)",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+            }
+          }
+        }
 
         IconButton(
             onClick = { if (currentDayIndex < days.size - 1) onDayChange(currentDayIndex + 1) },

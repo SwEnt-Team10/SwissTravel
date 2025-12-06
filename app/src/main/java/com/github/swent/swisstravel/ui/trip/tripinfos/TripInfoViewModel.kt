@@ -322,4 +322,25 @@ class TripInfoViewModel(
       current.copy(likedActivities = (current.likedActivities + activity).distinct())
     }
   }
+
+  data class DayPriceSummary(
+      val knownTotal: Int, // sum of all non-null prices (free counts as 0)
+      val unknownCount: Int // how many activities had price = null
+  )
+
+  override fun computeDayPrice(dailySteps: List<TripElement>): DayPriceSummary {
+    var total = 0
+    var unknown = 0
+
+    dailySteps.forEach { el ->
+      if (el is TripElement.TripActivity) {
+        when (val p = el.activity.price) {
+          null -> unknown++
+          else -> total += p
+        }
+      }
+    }
+
+    return DayPriceSummary(total, unknown)
+  }
 }

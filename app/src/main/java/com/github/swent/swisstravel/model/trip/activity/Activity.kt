@@ -53,6 +53,9 @@ data class Activity(
     if (description.isBlank()) return false
     // If we had to use a fallback, i.e. no description was provided, discard
     if (description == invalidDescription) return false
+    if (price != null) {
+      if (price == 0) return false
+    }
     if (estimatedTime <= 0) return false
 
     return true
