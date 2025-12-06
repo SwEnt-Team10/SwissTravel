@@ -14,16 +14,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
+object ErrorScreenTestTags {
+    const val ERROR_SCREEN_TOP_BAR = "errorScreenTopBar"
+    const val ERROR_SCREEN_TOP_BAR_TITLE = "errorScreenTopBarTitle"
+    const val ERROR_MESSAGE = "errorMessage"
+    const val RETRY_BUTTON = "retryButton"
+}
 @Composable
 fun ErrorScreen(
     message: String,
-    messageTestTag: String,
     topBarTitle: String,
-    topBarTitleTestTag: String,
-    topBarTestTag: String,
-    backButtonTestTag: String,
     backButtonDescription: String,
-    retryButtonTestTag: String,
     onRetry: () -> Unit,
     onBack: () -> Unit
 ) {
@@ -32,12 +33,9 @@ fun ErrorScreen(
             ErrorScreenTopBar(
                 topBarTitle = topBarTitle,
                 backButtonDescription = backButtonDescription,
-                backButtonTestTag = backButtonTestTag,
                 onBack = {
                     onBack()
-                },
-                topBarTestTag = topBarTestTag,
-                topBarTitleTestTag = topBarTitleTestTag
+                }
             )
         }
     ) { pd ->
@@ -46,14 +44,14 @@ fun ErrorScreen(
         ) {
             Text(
                 text = message,
-                modifier = Modifier.testTag(messageTestTag)
+                modifier = Modifier.testTag(ErrorScreenTestTags.ERROR_MESSAGE)
             )
             Spacer(modifier = Modifier.height(16.dp))
             Button(
                 onClick = {
                     onRetry()
                 },
-                modifier = Modifier.testTag(retryButtonTestTag)
+                modifier = Modifier.testTag(ErrorScreenTestTags.RETRY_BUTTON)
             ) {
                 Text(text = "Retry")
             }
@@ -66,23 +64,19 @@ fun ErrorScreen(
 fun ErrorScreenTopBar(
     topBarTitle: String,
     backButtonDescription: String,
-    backButtonTestTag: String,
     onBack: () -> Unit,
-    topBarTestTag: String,
-    topBarTitleTestTag: String,
 ) {
     TopAppBar(
-        modifier = Modifier.testTag(topBarTestTag),
+        modifier = Modifier.testTag(ErrorScreenTestTags.ERROR_SCREEN_TOP_BAR),
         title = {
             Text(
                 text = topBarTitle,
-                modifier = Modifier.testTag(topBarTitleTestTag)
+                modifier = Modifier.testTag(ErrorScreenTestTags.ERROR_SCREEN_TOP_BAR_TITLE)
             )
                 },
         navigationIcon = {
             BackButton(
                 onBack = { onBack() },
-                testTag = backButtonTestTag,
                 contentDescription = backButtonDescription
             )
         }

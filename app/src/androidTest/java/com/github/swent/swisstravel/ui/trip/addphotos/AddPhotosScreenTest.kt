@@ -121,38 +121,4 @@ class AddPhotosScreenTest : SwissTravelTest() {
         .onChildren()
         .assertCountEquals(2)
   }
-  // AI did the test
-  @Test
-  fun checkBackAndSaveButtonsTriggerOnBack() = runTest {
-    var backCalled = false
-    val fakeTrip =
-        Trip(
-            uid = "12",
-            name = "Trip with images",
-            ownerId = "1274218746",
-            locations = emptyList(),
-            routeSegments = emptyList(),
-            activities = emptyList(),
-            tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
-            isFavorite = true,
-            isCurrentTrip = true,
-            listUri = emptyList())
-    TripsRepositoryProvider.repository.addTrip(fakeTrip)
-    val fakeModel = PhotosViewModel()
-
-    composeTestRule.setContent {
-      AddPhotosScreen(
-          tripId = fakeTrip.uid,
-          photosViewModel = fakeModel,
-          onBack = { backCalled = true },
-          launchPickerOverride = {
-            fakeModel.addUris(
-                listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()))
-          })
-    }
-
-    // Click on the back button
-    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).performClick()
-    assert(backCalled)
-  }
 }

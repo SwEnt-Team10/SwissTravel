@@ -40,7 +40,6 @@ object AddPhotosScreenTestTags {
   const val MAIN_SCREEN = "mainScreen"
   const val TOP_APP_BAR = "topAppBar"
   const val TOP_APP_BAR_TITLE = "topAppBarTitle"
-  const val BACK_BUTTON = "backButton"
   const val BOTTOM_BAR = "bottomBar"
   const val ADD_PHOTOS_BUTTON = "addPhotosButton"
   const val VERTICAL_GRID = "verticalGrid"
@@ -100,7 +99,6 @@ fun AddPhotosScreen(
                     onBack = {
                         onBack()
                     },
-                    testTag = AddPhotosScreenTestTags.BACK_BUTTON,
                     contentDescription = "Back to daily view screen"
                 )
             },

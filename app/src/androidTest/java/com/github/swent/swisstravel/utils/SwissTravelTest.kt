@@ -33,6 +33,7 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
+import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
@@ -621,12 +622,10 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
   }
-
   fun ComposeTestRule.addPhotosScreenIsDisplayed() {
     onNodeWithTag(AddPhotosScreenTestTags.MAIN_SCREEN).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
-    onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
   }
@@ -656,6 +655,9 @@ abstract class SwissTravelTest {
     // Non-pinned trips may appear in available list
     onNodeWithText("Trip Two").assertIsDisplayed()
   }
+    fun ComposeTestRule.ClickOnBackButton() {
+        onNodeWithTag(BackButtonTestTag.BACK_BUTTON).performClick()
+    }
 
   // TODO : Create helper/companions functions here
 

@@ -9,17 +9,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 
+object BackButtonTestTag {
+    const val BACK_BUTTON = "backButton"
+}
 @Composable
 fun BackButton(
     onBack:() -> Unit,
-    testTag: String,
     contentDescription: String
 ) {
     IconButton(
         onClick = {
             onBack()
         },
-        modifier = Modifier.testTag(testTag)
+        modifier = Modifier.testTag(BackButtonTestTag.BACK_BUTTON)
     ) {
         Icon(
             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
