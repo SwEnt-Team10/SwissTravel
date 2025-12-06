@@ -35,7 +35,7 @@ class TripsRepositoryFirestore(
               .whereEqualTo(ownerAttributeName, ownerId)
               .get()
               .await()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
           db.collection(TRIPS_COLLECTION_PATH)
               .whereEqualTo(ownerAttributeName, ownerId)[Source.CACHE]
               .await()
@@ -48,7 +48,7 @@ class TripsRepositoryFirestore(
     val document =
         try {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
         }
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
@@ -160,6 +160,7 @@ class TripsRepositoryFirestore(
     val location = mapToLocation(locationMap) ?: return null
     val description = map["description"] as? String ?: return null
     val estimatedTime = (map["estimatedTime"] as? Number)?.toInt() ?: 0
+    val price = (map["price"] as? Number)?.toInt() ?: 0
     val imageUrls: List<String> =
         when (val raw = map["imageUrls"]) {
           is List<*> -> raw.mapNotNull { it as? String }
@@ -175,7 +176,8 @@ class TripsRepositoryFirestore(
             location = location,
             description = description,
             imageUrls = imageUrls,
-            estimatedTime = estimatedTime)
+            estimatedTime = estimatedTime,
+            price = price)
     return act
   }
 

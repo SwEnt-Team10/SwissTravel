@@ -12,6 +12,8 @@ import com.google.firebase.Timestamp
  * @property description The description of the activity.
  * @property imageUrls The image URLs of the activity.
  * @property estimatedTime The estimated time of the activity.
+ * @property price The price of the activity. Can be null if the price is not applicable for the
+ *   activity
  */
 data class Activity(
     val startDate: Timestamp,
@@ -19,7 +21,8 @@ data class Activity(
     val location: Location,
     val description: String,
     val imageUrls: List<String>,
-    val estimatedTime: Int
+    val estimatedTime: Int,
+    val price: Int?
 ) {
   /** Gets the name of the activity */
   fun getName(): String {

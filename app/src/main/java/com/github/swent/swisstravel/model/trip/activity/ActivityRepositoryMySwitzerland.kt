@@ -147,9 +147,10 @@ class ActivityRepositoryMySwitzerland(
 
     val imageUrls = parseImageUrls(item.optJSONArray("image"))
     val estimatedTime = parseEstimatedTime(item.optJSONArray("classification"))
+    val price = parsePriceChf(item)
 
     return Activity(
-        Timestamp.now(), Timestamp.now(), location, description, imageUrls, estimatedTime)
+        Timestamp.now(), Timestamp.now(), location, description, imageUrls, estimatedTime, price)
   }
 
   /**
@@ -183,6 +184,30 @@ class ActivityRepositoryMySwitzerland(
       }
     }
     return 0
+  }
+
+  /**
+   * Parse a simple price for an attraction:
+   * - if isAccessibleForFree == true -> 0
+   * - else if price.minPrice exists -> that value
+   * - else -> null (unknown / not applicable)
+   *
+   *     @param item The corresponding JSON object
+   */
+  private fun parsePriceChf(item: JSONObject): Int? {
+    // 1) Explicitly free
+    if (item.has("isAccessibleForFree") && item.optBoolean("isAccessibleForFree")) {
+      return 0
+    }
+
+    // 2) Structured price object
+    val priceObj = item.optJSONObject("price") ?: return null
+
+    return if (priceObj.has("minPrice")) {
+      priceObj.optInt("minPrice")
+    } else {
+      null
+    }
   }
 
   /**
