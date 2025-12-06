@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
@@ -12,11 +13,13 @@ import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceRules
+import com.github.swent.swisstravel.ui.tripcreation.RandomTripGenerator
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripDate
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
+import java.time.ZoneId
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +37,8 @@ data class EditTripUiState(
     val tripName: String = "",
     val adults: Int = 1,
     val children: Int = 0,
-    val selectedPrefs: Set<Preference> = emptySet()
+    val selectedPrefs: Set<Preference> = emptySet(),
+    val isRandom: Boolean = false
 )
 
 /**
@@ -79,7 +83,8 @@ class EditTripScreenViewModel(
                 tripName = originalTrip.name,
                 adults = originalTrip.tripProfile.adults,
                 children = originalTrip.tripProfile.children,
-                selectedPrefs = originalTrip.tripProfile.preferences.toSet())
+                selectedPrefs = originalTrip.tripProfile.preferences.toSet(),
+                isRandom = originalTrip.random)
           }
         } catch (e: Exception) {
           _uiState.update { it.copy(isLoading = false, errorMsg = e.message ?: "Failed to load") }
@@ -102,6 +107,60 @@ class EditTripScreenViewModel(
   }
 
   /**
+   * Regenerates the destinations and activities for a random trip.
+   *
+   * @param context The Android context.
+   * @param seed The seed to use for the random number generator.
+   */
+  fun reroll(context: Context, seed: Int? = null) {
+    if (!originalTrip.random) return
+    viewModelScope.launch {
+      _uiState.update { it.copy(isSaving = true, savingProgress = 0f) }
+      try {
+        val tempSettings =
+            TripSettings(
+                name = originalTrip.name,
+                date =
+                    TripDate(
+                        originalTrip.tripProfile.startDate
+                            .toDate()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate(),
+                        originalTrip.tripProfile.endDate
+                            .toDate()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()),
+                travelers =
+                    TripTravelers(
+                        originalTrip.tripProfile.adults, originalTrip.tripProfile.children),
+                preferences = originalTrip.tripProfile.preferences,
+                arrivalDeparture =
+                    TripArrivalDeparture(originalTrip.tripProfile.arrivalLocation, null),
+                destinations = emptyList())
+
+        val (start, end, intermediate) =
+            RandomTripGenerator.generateRandomDestinations(context, tempSettings, seed)
+        val newProfile =
+            originalTrip.tripProfile.copy(
+                arrivalLocation = start, departureLocation = end, preferredLocations = intermediate)
+        originalTrip =
+            originalTrip.copy(
+                tripProfile = newProfile,
+                locations = emptyList(),
+                routeSegments = emptyList(),
+                activities = emptyList())
+        save(context, true)
+      } catch (e: Exception) {
+        val errorMsg = e.message ?: "Failed to re-roll trip"
+        _uiState.update { it.copy(errorMsg = errorMsg, isSaving = false) }
+        _validationEventChannel.send(ValidationEvent.SaveError(errorMsg))
+      }
+    }
+  }
+
+  /**
    * Toggles a preference in the current trip.
    *
    * @param pref The preference to toggle.
@@ -118,7 +177,7 @@ class EditTripScreenViewModel(
    *
    * @param context The Android context.
    */
-  fun save(context: Context) {
+  fun save(context: Context, rerolled: Boolean = false) {
     viewModelScope.launch {
       _uiState.update { it.copy(isSaving = true, savingProgress = 0f) }
       try {
@@ -136,7 +195,8 @@ class EditTripScreenViewModel(
 
         // Updates the activities only if the preferences have changed.
         if (sanitizedPrefs !=
-            PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences)) {
+            PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences) ||
+            rerolled) {
           // Create a temporary TripSettings object to pass to SelectActivities
           val tempTripSettings =
               TripSettings(
@@ -146,12 +206,12 @@ class EditTripScreenViewModel(
                           originalTrip.tripProfile.startDate
                               .toDate()
                               .toInstant()
-                              .atZone(java.time.ZoneId.systemDefault())
+                              .atZone(ZoneId.systemDefault())
                               .toLocalDate(),
                           originalTrip.tripProfile.endDate
                               .toDate()
                               .toInstant()
-                              .atZone(java.time.ZoneId.systemDefault())
+                              .atZone(ZoneId.systemDefault())
                               .toLocalDate()),
                   travelers = TripTravelers(state.adults, state.children),
                   preferences = sanitizedPrefs.toList(),
@@ -190,6 +250,8 @@ class EditTripScreenViewModel(
                 activities = selectedActivities,
                 routeSegments = routeSegments,
                 locations = allLocations)
+
+        Log.d("EditTripScreenViewModel", "Updated trip: $updatedTrip")
 
         tripRepository.editTrip(state.tripId, updatedTrip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)
