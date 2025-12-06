@@ -18,11 +18,17 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import com.google.firebase.Timestamp
+import java.time.ZoneId
+import java.time.temporal.ChronoUnit
 import kotlin.collections.zipWithNext
+import kotlin.math.max
+import kotlin.math.min
 import kotlin.random.Random
 
 const val DISTANCE_PER_STOP_KM = 90.0
 const val RADIUS_NEW_ACTIVITY_M = 15000
+const val RADIUS_EXTENSION_M = 12500
 const val INVALID_DURATION = -1.0
 
 /**
@@ -32,6 +38,7 @@ const val INVALID_DURATION = -1.0
  * @param optimizeRoute Weight for the route optimization step.
  * @param fetchInBetweenActivities Weight for fetching in-between activities step.
  * @param scheduleTrip Weight for the trip scheduling step.
+ * @param finalScheduling Weight for the final scheduling step.
  *
  * The sum of all weights must equal 1.0.
  */
@@ -39,10 +46,12 @@ data class Progression(
     val selectActivities: Float,
     val optimizeRoute: Float,
     val fetchInBetweenActivities: Float,
-    val scheduleTrip: Float
+    val scheduleTrip: Float,
+    val finalScheduling: Float
 ) {
   init {
-    val sum = selectActivities + optimizeRoute + scheduleTrip + fetchInBetweenActivities
+    val sum =
+        selectActivities + optimizeRoute + scheduleTrip + fetchInBetweenActivities + finalScheduling
     require(sum == 1.0f) { "Progression values must sum to 1.0, but got $sum" }
   }
 }
@@ -66,7 +75,8 @@ class TripAlgorithm(
             selectActivities = 0.20f,
             optimizeRoute = 0.40f,
             fetchInBetweenActivities = 0.10f,
-            scheduleTrip = 0.30f)
+            scheduleTrip = 0.20f,
+            finalScheduling = 0.10f)
 ) {
   companion object {
     /**
@@ -190,8 +200,24 @@ class TripAlgorithm(
 
       check(schedule.isNotEmpty()) { "Scheduled trip is empty" }
 
+      // ---- STEP 4: Recomplete schedule if needed ----
+      val finalSchedule =
+          adjustFinalSchedule(
+              originalSchedule = schedule,
+              originalOrderedRoute = optimizedRoute,
+              tripProfile = tripProfile,
+              // isRandom = isRandom // TODO: Uncomment this once the other PR has been merged
+          ) { progress ->
+            onProgress(
+                progression.selectActivities +
+                    progression.optimizeRoute +
+                    progression.fetchInBetweenActivities +
+                    progression.scheduleTrip +
+                    progression.finalScheduling * progress)
+          }
+
       onProgress(1.0f)
-      return schedule
+      return finalSchedule
     } catch (e: Exception) {
       Log.e("TripAlgorithm", "Trip computation failed", e)
       throw e
@@ -338,5 +364,248 @@ class TripAlgorithm(
   private fun ClosedFloatingPointRange<Double>.random(rng: Random = Random.Default): Double {
     // Guarantee closed range by adding the minimal epsilon
     return rng.nextDouble(start, endInclusive + Double.MIN_VALUE)
+  }
+
+  /**
+   * Adjusts the final schedule to ensure it ends on the correct day.
+   *
+   * @param originalSchedule The original schedule to be adjusted.
+   * @param originalOrderedRoute The original ordered route.
+   * @param tripProfile The profile of the trip.
+   * @param isRandom Whether the trip is random.
+   * @param onProgress A callback function to report progress (from 0.0 to 1.0).
+   * @return The adjusted schedule.
+   *
+   * Done with AI
+   */
+  private suspend fun adjustFinalSchedule(
+      originalSchedule: List<TripElement>,
+      originalOrderedRoute: OrderedRoute,
+      tripProfile: TripProfile,
+      isRandom: Boolean = false,
+      onProgress: (Float) -> Unit = {}
+  ): List<TripElement> {
+
+    // Already ending on the correct day → nothing to change
+    if (sameDate(originalSchedule.last().endDate, tripProfile.endDate)) {
+      return originalSchedule
+    }
+
+    val newSchedule = originalSchedule.toMutableList()
+
+    // ---- Extract last segment ----
+    val last = newSchedule.last()
+    val lastSegment =
+        last as? TripElement.TripSegment
+            ?: throw IllegalStateException("Last TripElement must be a TripSegment")
+
+    val startLoc = lastSegment.route.from
+    val endLoc = lastSegment.route.to
+
+    // ---- Compute midpoint ----
+    val midLat = (startLoc.coordinate.latitude + endLoc.coordinate.latitude) / 2.0
+    val midLon = (startLoc.coordinate.longitude + endLoc.coordinate.longitude) / 2.0
+    val midPoint = Location(coordinate = Coordinate(midLat, midLon), name = "Midpoint")
+
+    val listOfLocations = listOf(endLoc, midPoint, startLoc)
+
+    // This will hold the activities that we add during the extension
+    val addedActivities = mutableListOf<Activity>()
+
+    var nearWhich = 0
+    var radius = RADIUS_NEW_ACTIVITY_M
+    var index = 0
+    val maxIndex =
+        computeIndex(
+            targetEndDate = tripProfile.endDate, currentEndDate = originalSchedule.last().endDate)
+
+    // ---- Loop until the final processed schedule reaches correct end date ----
+    try {
+      var ordered = originalOrderedRoute.copy()
+      while (!sameDate(newSchedule.last().endDate, tripProfile.endDate) && index < maxIndex) {
+
+        val targetLoc = listOfLocations[nearWhich].coordinate
+
+        // TODO modify this with a blackList of activities that we already have in the trip
+        val newAct = activitySelector.getOneActivityNearWithPreferences(targetLoc, radius)
+
+        if (newAct != null) {
+          // Verify that the new activity is not already in the trip even though it should never
+          // happen
+          if (addedActivities.any { it.location.sameLocation(newAct.location) } ||
+              originalSchedule.any {
+                it is TripElement.TripActivity && it.activity.location.sameLocation(newAct.location)
+              }) {
+            index += 1
+            continue
+          }
+          addedActivities.add(newAct)
+
+          // ---- Build a temporary OrderedRoute ----
+          ordered =
+              ordered.copy(
+                  orderedLocations = ordered.orderedLocations + addedActivities.last().location,
+                  segmentDuration = ordered.segmentDuration + listOf(INVALID_DURATION),
+                  totalDuration = ordered.totalDuration + INVALID_DURATION)
+
+          val startIndex = ordered.orderedLocations.size - addedActivities.size
+          val indexes = (startIndex until ordered.orderedLocations.size).toList()
+
+          // ---- Recompute new ordered route ----
+          val recomputed =
+              routeOptimizer.recomputeOrderedRoute(
+                  orderedLocations = ordered,
+                  addedIndexes = indexes,
+                  mode = TransportMode.CAR,
+                  invalidDuration = INVALID_DURATION) {}
+
+          // ---- Reschedule using this new route ----
+          val reScheduled =
+              scheduleTrip(
+                  tripProfile = tripProfile,
+                  ordered = recomputed,
+                  activities = addedActivities.toMutableList(),
+                  params = scheduleParams) {}
+
+          // Replace newSchedule so we can test endDate again
+          newSchedule.clear()
+          newSchedule.addAll(reScheduled)
+        }
+
+        // If we completed a full cycle without finishing => widen radius
+        if (nearWhich == 2) {
+          index += 1
+          radius += (RADIUS_EXTENSION_M / index)
+        }
+
+        nearWhich = (nearWhich + 1) % 3
+
+        if (addedActivities.size % 2 == 0 && addedActivities.size < 10) {
+          onProgress(addedActivities.size / 2 * 0.1f)
+        }
+      }
+    } catch (e: Exception) {
+      Log.e("TripAlgorithm", "Final schedule extension failed, using original schedule", e)
+      onProgress(1.0f)
+      return originalSchedule
+    }
+
+    // var startingLocation: Location
+    val allLocations = mutableListOf<Location>()
+    val allActivities = mutableListOf<Activity>()
+
+    // Reoptimize using the last three locations of the original OrderedRoute (if there are 4 or
+    // more)
+    //        val numberOfElementsToTake = minOf(4, originalOrderedRoute.orderedLocations.size - 1)
+    //        val threeBeforeLast =
+    // originalOrderedRoute.orderedLocations.dropLast(1).takeLast(numberOfElementsToTake)
+    //        allLocations.addAll(threeBeforeLast)
+    //        startingLocation = threeBeforeLast.first()
+
+    // Fetch the activities associated with the last three locations
+    val oldActivities = originalSchedule.filterIsInstance<TripElement.TripActivity>()
+    // var oldActivities = originalSchedule.filterIsInstance<TripElement.TripActivity>()
+    // oldActivities = oldActivities.filter { it.activity.location in threeBeforeLast }
+    allActivities.addAll(oldActivities.map { it.activity })
+    allActivities.addAll(addedActivities)
+
+    allLocations.addAll(allActivities.map { it.location })
+    if (isRandom) {
+      allLocations.addAll(tripProfile.preferredLocations)
+    }
+    // Should not be too heavy because most of it should be cached already
+    val finalOrderedRoute =
+        routeOptimizer.optimize(
+            start = startLoc,
+            // start = startingLocation,
+            end = endLoc,
+            allLocations = allLocations,
+            activities = allActivities,
+            mode =
+                if (tripProfile.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
+                  TransportMode.TRAIN
+                } else TransportMode.CAR,
+        ) {
+          onProgress(addedActivities.size / 2 * 0.1f + it)
+        }
+
+    // Remove the locations that we extracted before as well and remove the end location
+    // Remove the segmentDurations associated with them (we keep the one that connects our starting
+    // location
+    // with the location before it as this one won't change)
+    //        val modifiedOrderedRoute =
+    //            OrderedRoute(
+    //                orderedLocations =
+    // originalOrderedRoute.orderedLocations.dropLast(numberOfElementsToTake),
+    //                segmentDuration =
+    // originalOrderedRoute.segmentDuration.dropLast(numberOfElementsToTake - 1),
+    //                totalDuration = originalOrderedRoute.totalDuration)
+
+    // Merge our small orderedRoute to the original one
+    // The totalDuration is wrong but it is not needed except in the scheduleTrip in which it is
+    // computed
+    //        val finalOrderedRoute = OrderedRoute(
+    //            orderedLocations = modifiedOrderedRoute.orderedLocations +
+    // orderedRoute.orderedLocations,
+    //            segmentDuration = modifiedOrderedRoute.segmentDuration +
+    // orderedRoute.segmentDuration,
+    //            totalDuration = modifiedOrderedRoute.totalDuration + orderedRoute.totalDuration
+    //        )
+
+    val finalSchedule =
+        scheduleTrip( // TODO: Change this to the new function that will arrive with the other PR
+            tripProfile = tripProfile,
+            ordered = finalOrderedRoute,
+            //            ordered =
+            //                finalOrderedRoute.copy(totalDuration =
+            // finalOrderedRoute.segmentDuration.sum()),
+            activities = allActivities,
+            params = scheduleParams) {}
+
+    onProgress(1.0f)
+    return finalSchedule
+  }
+
+  /**
+   * Function to compute an index for the while loop in [adjustFinalSchedule] based on the number of
+   * missing days
+   *
+   * @param targetEndDate The target end date for the trip.
+   * @param currentEndDate The current end date of the trip.
+   * @param zone The time zone to use for date comparison.
+   * @return The computed index.
+   */
+  private fun computeIndex(
+      targetEndDate: Timestamp,
+      currentEndDate: Timestamp,
+      zone: ZoneId = ZoneId.systemDefault()
+  ): Int {
+    val currentLocal = currentEndDate.toDate().toInstant().atZone(zone).toLocalDate()
+    val targetLocal = targetEndDate.toDate().toInstant().atZone(zone).toLocalDate()
+
+    // Number of calendar days difference (0 if same day, 1 if target is next day, etc.)
+    val missingDays = ChronoUnit.DAYS.between(currentLocal, targetLocal).coerceAtLeast(0)
+
+    // min 2 iterations, cap at 5 (your earlier requirement)
+    return max(2, min(5, missingDays.toInt()))
+  }
+
+  /**
+   * Checks if two Timestamps represent the same date.
+   *
+   * @param date1 The first Timestamp to compare.
+   * @param date2 The second Timestamp to compare.
+   * @param zone The time zone to use for date comparison.
+   * @return True if the Timestamps represent the same date, false otherwise.
+   */
+  private fun sameDate(
+      date1: Timestamp,
+      date2: Timestamp,
+      zone: ZoneId = ZoneId.systemDefault()
+  ): Boolean {
+    val d1 = date1.toDate().toInstant().atZone(zone).toLocalDate()
+    val d2 = date2.toDate().toInstant().atZone(zone).toLocalDate()
+
+    return d1 == d2
   }
 }
