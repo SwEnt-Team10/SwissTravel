@@ -35,6 +35,7 @@ import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
+import com.github.swent.swisstravel.ui.composable.ErrorScreenTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
@@ -655,10 +656,12 @@ abstract class SwissTravelTest {
     // Non-pinned trips may appear in available list
     onNodeWithText("Trip Two").assertIsDisplayed()
   }
-    fun ComposeTestRule.ClickOnBackButton() {
+    fun ComposeTestRule.clickOnBackButton() {
         onNodeWithTag(BackButtonTestTag.BACK_BUTTON).performClick()
     }
-
+    fun ComposeTestRule.clickOnRetryButton() {
+        onNodeWithTag(ErrorScreenTestTags.RETRY_BUTTON).performClick()
+    }
   // TODO : Create helper/companions functions here
 
 }
