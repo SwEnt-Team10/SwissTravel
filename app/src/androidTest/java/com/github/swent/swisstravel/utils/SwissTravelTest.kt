@@ -623,6 +623,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
     onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertDoesNotExist()
   }
+
   fun ComposeTestRule.addPhotosScreenIsDisplayed() {
     onNodeWithTag(AddPhotosScreenTestTags.MAIN_SCREEN).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
@@ -656,12 +657,14 @@ abstract class SwissTravelTest {
     // Non-pinned trips may appear in available list
     onNodeWithText("Trip Two").assertIsDisplayed()
   }
-    fun ComposeTestRule.clickOnBackButton() {
-        onNodeWithTag(BackButtonTestTag.BACK_BUTTON).performClick()
-    }
-    fun ComposeTestRule.clickOnRetryButton() {
-        onNodeWithTag(ErrorScreenTestTags.RETRY_BUTTON).performClick()
-    }
+
+  fun ComposeTestRule.clickOnBackButton() {
+    onNodeWithTag(BackButtonTestTag.BACK_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnRetryButton() {
+    onNodeWithTag(ErrorScreenTestTags.RETRY_BUTTON).performClick()
+  }
   // TODO : Create helper/companions functions here
 
 }

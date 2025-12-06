@@ -10,23 +10,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 
 object BackButtonTestTag {
-    const val BACK_BUTTON = "backButton"
+  const val BACK_BUTTON = "backButton"
 }
+
 @Composable
-fun BackButton(
-    onBack:() -> Unit,
-    contentDescription: String
-) {
-    IconButton(
-        onClick = {
-            onBack()
-        },
-        modifier = Modifier.testTag(BackButtonTestTag.BACK_BUTTON)
-    ) {
-        Icon(
-            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.onBackground
-        )
-    }
+fun BackButton(onBack: () -> Unit, contentDescription: String) {
+  IconButton(onClick = { onBack() }, modifier = Modifier.testTag(BackButtonTestTag.BACK_BUTTON)) {
+    Icon(
+        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+        contentDescription = contentDescription,
+        tint = MaterialTheme.colorScheme.onBackground)
+  }
 }

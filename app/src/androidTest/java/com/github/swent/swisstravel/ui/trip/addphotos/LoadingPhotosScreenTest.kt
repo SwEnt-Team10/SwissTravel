@@ -9,15 +9,15 @@ import org.junit.Rule
 import org.junit.Test
 
 class LoadingPhotosScreenTest {
-    @get:Rule val composeTestRule = createComposeRule()
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun loadingScreenIsDisplayed() {
-        composeTestRule.setContent {
-            LoadingPhotosScreen()
-        }
-        composeTestRule.onNodeWithTag(LoadingPhotosTestTags.LOADING_PHOTOS_SCAFFOLD).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(LoadingPhotosTestTags.LOADING_PHOTOS_COLUMN).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(LoadingPhotosTestTags.LOADING_PHOTOS_INDICATOR).assertIsDisplayed()
-    }
+  @Test
+  fun loadingScreenIsDisplayed() {
+    composeTestRule.setContent { LoadingPhotosScreen() }
+    composeTestRule.onNodeWithTag(LoadingPhotosTestTags.LOADING_PHOTOS_SCAFFOLD).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LoadingPhotosTestTags.LOADING_PHOTOS_COLUMN).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(LoadingPhotosTestTags.LOADING_PHOTOS_INDICATOR)
+        .assertIsDisplayed()
+  }
 }

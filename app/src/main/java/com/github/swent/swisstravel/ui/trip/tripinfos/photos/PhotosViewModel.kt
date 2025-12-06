@@ -14,13 +14,16 @@ import kotlinx.coroutines.launch
 data class PhotosUIState(
     val listUri: List<Uri> = emptyList(),
     val uriSelected: List<Int> = emptyList(),
-    val error: Boolean = false,
+    val errorLoading: Boolean = false,
     val toastMessage: String = "",
-    // With AI
     val isLoading: Boolean = true
 )
 
-/** ViewModel for the AddPhotosScreen */
+/** ViewModel for the AddPhotosScreen
+ * Note: all the part with the loading has been done with AI
+ *
+ * @param tripsRepository the repository that the model use
+ * */
 class PhotosViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
 ) : ViewModel() {
@@ -33,15 +36,19 @@ class PhotosViewModel(
    * @param tripId the uid of the trip
    */
   fun savePhotos(tripId: String) {
-      viewModelScope.launch {
-          try {
-              val oldTrip = tripsRepository.getTrip(tripId)
-              val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
-              tripsRepository.editTrip(tripId, newTrip)
-          } catch (e: Exception) {
-              setErrorMessage("Could not save the photos")
-          }
+    viewModelScope.launch {
+      try {
+        val oldTrip = tripsRepository.getTrip(tripId)
+        val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
+        tripsRepository.editTrip(tripId, newTrip)
+      } catch (e: Exception) {
+        if (_uiState.value.listUri.size > 1) {
+            setToastMessage("Could not save the photos")
+        } else {
+            setToastMessage("Could not save the photo")
+        }
       }
+    }
   }
 
   /**
@@ -50,15 +57,19 @@ class PhotosViewModel(
    * @param tripId the Id of the trip
    */
   fun loadPhotos(tripId: String) {
-      _uiState.value = _uiState.value.copy(isLoading = true, error = false, toastMessage = "")
-      viewModelScope.launch {
-          try {
-              val trip = tripsRepository.getTrip(tripId)
-              _uiState.value = _uiState.value.copy(listUri = trip.listUri, isLoading = false, toastMessage = "Successfully loaded photos")
-          } catch (e: Exception) {
-              setErrorMessage("Could not load the photos")
-          }
+    _uiState.value = _uiState.value.copy(isLoading = true, errorLoading = false, toastMessage = "")
+    viewModelScope.launch {
+      try {
+        val trip = tripsRepository.getTrip(tripId)
+        _uiState.value =
+            _uiState.value.copy(
+                listUri = trip.listUri,
+                isLoading = false,
+                toastMessage = "Successfully loaded photos")
+      } catch (e: Exception) {
+          _uiState.value = _uiState.value.copy(isLoading = false, errorLoading = true)
       }
+    }
   }
 
   /**
@@ -92,32 +103,41 @@ class PhotosViewModel(
    */
   fun removePhotos(tripId: String) {
     // Done with AI
-      val oldState = _uiState.value
+    val oldState = _uiState.value
     val selected = _uiState.value.uriSelected.toSet()
 
     val newList = _uiState.value.listUri.filterIndexed { index, _ -> index !in selected }
 
     _uiState.value = _uiState.value.copy(listUri = newList, uriSelected = emptyList())
     viewModelScope.launch {
-        try {
-            val oldTrip = tripsRepository.getTrip(tripId)
-            val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
-            tripsRepository.editTrip(tripId, newTrip)
-        } catch (e: Exception) {
-            _uiState.value = oldState
-            setErrorMessage("Could not remove photos")
-        }
+      try {
+        val oldTrip = tripsRepository.getTrip(tripId)
+        val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
+        tripsRepository.editTrip(tripId, newTrip)
+      } catch (e: Exception) {
+        _uiState.value = oldState
+          if (_uiState.value.uriSelected.size > 1) {
+              setToastMessage("Could not remove the photos")
+          } else {
+              setToastMessage("Could not remove the photo")
+          }
+      }
     }
   }
 
     /**
-     * Reset the error state of the ui state
+     * Set the toast message of the state with a given message
+     *
+     * @param message the message to set on the state
      */
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(error = false, toastMessage = "")
+    fun setToastMessage(message: String) {
+        _uiState.value = _uiState.value.copy(toastMessage = message)
     }
 
-    private fun setErrorMessage(message: String) {
-        _uiState.value = _uiState.value.copy(error = true, toastMessage = message, isLoading = false)
+    /**
+     * Reset the toast message on the state
+     */
+    fun clearToastMessage() {
+        _uiState.value = _uiState.value.copy(toastMessage = "")
     }
 }
