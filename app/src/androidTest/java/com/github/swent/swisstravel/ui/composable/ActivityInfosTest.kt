@@ -160,6 +160,7 @@ fun fakeActivity(
     name: String = "Some Activity",
     description: String = "Nice place to visit.",
     estimatedTimeSeconds: Int = 7200,
+    price: Int? = 30,
 ): Activity {
   val now = Timestamp.now()
   val loc =
@@ -175,5 +176,5 @@ fun fakeActivity(
       description = description,
       imageUrls = emptyList(),
       estimatedTime = estimatedTimeSeconds,
-  )
+      price = price)
 }

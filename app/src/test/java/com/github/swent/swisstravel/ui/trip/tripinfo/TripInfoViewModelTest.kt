@@ -243,7 +243,8 @@ class TripInfoViewModelTest {
             location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
             description = "Desc",
             imageUrls = emptyList(),
-            estimatedTime = 60)
+            estimatedTime = 60,
+            price = 30)
     viewModel.selectActivity(activity)
     assertEquals(activity, viewModel.uiState.value.selectedActivity)
   }

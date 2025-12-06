@@ -14,7 +14,8 @@ class ActivityTest {
               Location(name = "Jet d'eau de Genève", coordinate = Coordinate(46.2074, 6.1551)),
           description = "Description",
           imageUrls = emptyList(),
-          estimatedTime = 3600)
+          estimatedTime = 3600,
+          price = 30)
 
   @Test
   fun testGetName() {

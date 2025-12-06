@@ -44,7 +44,8 @@ class TripSchedulerTest {
         location = location,
         description = "Activity at $label",
         imageUrls = emptyList(),
-        estimatedTime = estimatedMinutes * 60)
+        estimatedTime = estimatedMinutes * 60,
+        price = 30)
   }
 
   // Common locations
@@ -374,7 +375,8 @@ class TripSchedulerTest {
             location = loc,
             description = "",
             imageUrls = emptyList(),
-            estimatedTime = mins * 60)
+            estimatedTime = mins * 60,
+            price = 30)
     val activities =
         listOf(
             activityAt(A, 8 * 60), // 8h

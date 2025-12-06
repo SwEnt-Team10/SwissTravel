@@ -30,11 +30,31 @@ class SelectActivitiesTest {
 
   private val activityLausanne =
       Activity(
-          Timestamp.now(), Timestamp.now(), lausanne, "Activity in Lausanne", emptyList(), 3600)
+          Timestamp.now(),
+          Timestamp.now(),
+          lausanne,
+          "Activity in Lausanne",
+          emptyList(),
+          3600,
+          price = 30)
   private val activityGeneva =
-      Activity(Timestamp.now(), Timestamp.now(), geneva, "Activity in Geneva", emptyList(), 3600)
+      Activity(
+          Timestamp.now(),
+          Timestamp.now(),
+          geneva,
+          "Activity in Geneva",
+          emptyList(),
+          3600,
+          price = 30)
   private val activityZurich =
-      Activity(Timestamp.now(), Timestamp.now(), zurich, "Activity in Zurich", emptyList(), 3600)
+      Activity(
+          Timestamp.now(),
+          Timestamp.now(),
+          zurich,
+          "Activity in Zurich",
+          emptyList(),
+          3600,
+          price = 30)
 
   @Before
   fun setUp() {

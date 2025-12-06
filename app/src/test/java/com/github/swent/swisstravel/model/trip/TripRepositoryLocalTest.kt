@@ -54,7 +54,8 @@ class TripRepositoryLocalTest {
                               imageUrl = "fakeImage4"),
                       description = "Of course",
                       imageUrls = listOf("yes", "No"),
-                      estimatedTime = 30)),
+                      estimatedTime = 30,
+                      price = 30)),
           tripProfile =
               TripProfile(
                   startDate = Timestamp.now(),

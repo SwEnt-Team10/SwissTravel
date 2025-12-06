@@ -51,7 +51,8 @@ class TripAlgorithmTest {
             startDate = Timestamp(3900, 0),
             endDate = Timestamp(7500, 0),
             imageUrls = emptyList(),
-            location = coordinates[1])
+            location = coordinates[1],
+            price = 30)
 
     val activityElements = listOf(museumActivity)
 

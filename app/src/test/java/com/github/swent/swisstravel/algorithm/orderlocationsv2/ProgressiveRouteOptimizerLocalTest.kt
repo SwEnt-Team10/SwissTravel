@@ -218,14 +218,16 @@ class ProgressiveRouteOptimizerLocalTest {
                 location = LSN,
                 description = "Lunch",
                 estimatedTime = 60,
-                imageUrls = emptyList()),
+                imageUrls = emptyList(),
+                price = 30),
             Activity(
                 startDate = mockk(),
                 endDate = mockk(),
                 location = MTX,
                 description = "Museum",
                 estimatedTime = 90,
-                imageUrls = emptyList()))
+                imageUrls = emptyList(),
+                price = 30))
 
     val start = ZRH
     val end = GVA

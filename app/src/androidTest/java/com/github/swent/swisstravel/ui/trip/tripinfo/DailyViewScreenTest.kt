@@ -133,7 +133,8 @@ class DailyViewScreenTest {
                       location = Location(Coordinate(0.0, 0.0), "Activity"),
                       description = "Desc",
                       imageUrls = listOf("http://img"),
-                      estimatedTime = 60)))
+                      estimatedTime = 60,
+                      price = 30)))
         }
     var clicked = false
     setContent(vm, onActivityClick = { clicked = true })
