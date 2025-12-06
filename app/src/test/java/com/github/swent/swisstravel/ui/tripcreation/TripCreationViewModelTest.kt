@@ -239,7 +239,7 @@ class TripCreationViewModelTest {
         )
 
     // Algorithm returns empty schedule → no activities or route segments
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
+      coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -278,7 +278,7 @@ class TripCreationViewModelTest {
         )
 
     // Algorithm still returns empty schedule
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
+      coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)

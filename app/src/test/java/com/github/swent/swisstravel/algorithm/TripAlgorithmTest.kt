@@ -142,28 +142,6 @@ class TripAlgorithmTest {
   }
 
   // Done with AI
-  @Test
-  fun `runTripAlgorithm delegates to computeTrip`() = runTest {
-    // Arrange
-    val settings = mockk<TripSettings>()
-    val profile = mockk<TripProfile>()
-
-    // Mock computeTrip directly
-    val expected = emptyList<TripElement>()
-
-    val algorithmSpy = spyk(algorithm)
-
-    coEvery { algorithmSpy.computeTrip(settings, profile, any()) } returns expected
-
-    // Act
-    val result = algorithmSpy.computeTrip(settings, profile) {}
-
-    // Assert
-    assertEquals(expected, result)
-    coVerify(exactly = 1) { algorithmSpy.computeTrip(settings, profile, any()) }
-  }
-
-  // Done with AI
   @Test(expected = IllegalStateException::class)
   fun `computeTrip throws when optimized route duration is zero or negative`() = runTest {
     // Arrange
@@ -235,6 +213,7 @@ class TripAlgorithmTest {
     // scheduleTrip empty → should trigger your check
     mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
     coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
+      every { activity.estimatedTime } returns 100
 
     val settings =
         TripSettings(
@@ -258,6 +237,10 @@ class TripAlgorithmTest {
 
     // Act → should now throw IllegalStateException (not MockKException)
     algorithm.computeTrip(settings, profile)
+      // Check that this was never called for API
+      coVerify(exactly = 0) {
+          routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any())
+      }
   }
 
   // Done with AI

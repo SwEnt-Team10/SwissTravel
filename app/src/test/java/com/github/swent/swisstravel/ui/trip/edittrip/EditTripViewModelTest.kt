@@ -158,7 +158,7 @@ class EditTripScreenViewModelTest {
     coEvery { repo.editTrip(any(), any()) } just Runs
 
     // Mock algorithm to produce no new schedule (so activities/segments stay same)
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any()) } returns emptyList()
 
     // --- Act ---
     vm.loadTrip(sampleTripId)
