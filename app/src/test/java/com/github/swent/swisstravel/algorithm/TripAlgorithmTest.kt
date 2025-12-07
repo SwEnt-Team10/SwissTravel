@@ -12,6 +12,7 @@ import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import com.github.swent.swisstravel.ui.trips.TripElement
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -342,7 +343,7 @@ class TripAlgorithmTest {
     val start = Location(Coordinate(10.0, 10.0), "Start")
     val end = Location(Coordinate(20.0, 20.0), "End")
 
-    val coordinates = listOf(start, end)
+    val locations = listOf(start, end)
     val activity = mockk<Activity>()
     every { activity.location } returns start
     every { activity.estimatedTime } returns 100
@@ -351,9 +352,7 @@ class TripAlgorithmTest {
 
     val orderedRoute =
         OrderedRoute(
-            orderedLocations = coordinates,
-            totalDuration = 1000.0,
-            segmentDuration = listOf(1000.0))
+            orderedLocations = locations, totalDuration = 1000.0, segmentDuration = listOf(1000.0))
 
     coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns
         orderedRoute
@@ -370,7 +369,7 @@ class TripAlgorithmTest {
             name = "Trip",
             arrivalDeparture =
                 TripArrivalDeparture(arrivalLocation = start, departureLocation = end),
-            destinations = coordinates,
+            destinations = locations,
             preferences = listOf(Preference.INTERMEDIATE_STOPS))
 
     val profile =
@@ -416,8 +415,83 @@ class TripAlgorithmTest {
                         rescheduleProgression.analyzeAndRemove +
                         rescheduleProgression.recomputeRoute)))
     assertTrue(progress < 1.0f)
+  }
 
-    // Assert
-    coVerify(exactly = 1) { algorithmSpy.addInBetweenActivities(any(), any(), any()) }
+  @Test
+  fun `algorithm should enter addInBetweenActivities when the preference is selected`() = runTest {
+    // Arrange
+    val start = Location(Coordinate(10.0, 10.0), "Start")
+    val end = Location(Coordinate(10.0, 10.93), "End") // ~100 km away
+
+    val locations = listOf(start, end)
+    val activity = mockk<Activity>()
+    every { activity.location } returns start
+    every { activity.estimatedTime } returns 100
+
+    coEvery { selectActivities.addActivities(any()) } returns listOf(activity)
+
+    val orderedRoute =
+        OrderedRoute(
+            orderedLocations = locations, totalDuration = 1000.0, segmentDuration = listOf(1000.0))
+
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns
+        orderedRoute
+    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
+        {
+          firstArg<OrderedRoute>()
+        }
+
+    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
+    coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
+
+    val settings =
+        TripSettings(
+            name = "Trip",
+            arrivalDeparture =
+                TripArrivalDeparture(arrivalLocation = start, departureLocation = end),
+            destinations = locations,
+            preferences = listOf(Preference.INTERMEDIATE_STOPS))
+
+    val profile =
+        TripProfile(
+            startDate = Timestamp(0, 0),
+            endDate = Timestamp(1000, 0),
+            preferredLocations = emptyList(),
+            preferences = emptyList(),
+            adults = 1,
+            children = 0,
+            arrivalLocation = start,
+            departureLocation = end)
+
+    // Spy the algorithm to intercept addInBetweenActivities
+    val algorithmSpy = spyk(algorithm)
+
+    // Arrange mock for getOneActivityNearWithPreferences
+    val fakeActivity = mockk<Activity>()
+    every { fakeActivity.location } returns Location(Coordinate(10.5, 10.5), "Fake1")
+    every { fakeActivity.estimatedTime } returns 3600
+
+    coEvery { selectActivities.getOneActivityNearWithPreferences(any(), any()) } returns
+        fakeActivity
+
+    // Arrange mock for recomputeOrderedRoute if needed
+    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
+        {
+          firstArg<OrderedRoute>() // just return the route for simplicity
+        }
+
+    coEvery { algorithmSpy.generateActivitiesBetween(any(), any(), any()) } returns emptyList()
+    coEvery { algorithmSpy.attemptRescheduleIfNeeded(any(), any(), any(), any(), any()) } returns
+        locations.map { it ->
+          TripElement.TripSegment(
+              RouteSegment(it, it, 60, TransportMode.CAR, Timestamp(0, 0), Timestamp(3600, 0)))
+        }
+
+    var progress = 0.0f
+    algorithmSpy.computeTrip(settings, profile) { currentProgress -> progress = currentProgress }
+
+    assertEquals(1.0f, progress, 0.001f)
+
+    coVerify(exactly = 1) { algorithmSpy.addInBetweenActivities(any(), any(), any(), any()) }
   }
 }

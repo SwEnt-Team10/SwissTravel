@@ -73,7 +73,7 @@ data class RescheduleProgression(
  * @property scheduleParams Parameters for scheduling the trip.
  * @property progression Weights for each step of the trip computation process.
  */
-class TripAlgorithm(
+open class TripAlgorithm(
     private val activitySelector: SelectActivities,
     private val routeOptimizer: ProgressiveRouteOptimizer,
     private val scheduleParams: ScheduleParams = ScheduleParams(),
@@ -453,7 +453,7 @@ class TripAlgorithm(
    *   (should not remove them)
    * @return The final scheduled trip after rescheduling attempt.
    */
-  private suspend fun attemptRescheduleIfNeeded(
+  open suspend fun attemptRescheduleIfNeeded(
       tripProfile: TripProfile,
       originalOptimizedRoute: OrderedRoute,
       activityList: MutableList<Activity>,
