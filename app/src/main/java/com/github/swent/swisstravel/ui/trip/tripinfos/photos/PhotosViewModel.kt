@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
+import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -16,7 +17,8 @@ data class PhotosUIState(
     val uriSelected: List<Int> = emptyList(),
     val errorLoading: Boolean = false,
     val toastMessage: String = "",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val numberNew: Int = 0
 )
 
 /** ViewModel for the AddPhotosScreen
@@ -41,8 +43,14 @@ class PhotosViewModel(
         val oldTrip = tripsRepository.getTrip(tripId)
         val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
         tripsRepository.editTrip(tripId, newTrip)
+          if (_uiState.value.numberNew > 1) {
+              setToastMessage("Photos saved")
+          } else {
+              setToastMessage("Photo saved")
+          }
+          _uiState.value = _uiState.value.copy(numberNew = 0)
       } catch (e: Exception) {
-        if (_uiState.value.listUri.size > 1) {
+        if (_uiState.value.numberNew > 1) {
             setToastMessage("Could not save the photos")
         } else {
             setToastMessage("Could not save the photo")
@@ -56,16 +64,28 @@ class PhotosViewModel(
    *
    * @param tripId the Id of the trip
    */
+  @SuppressLint("SuspiciousIndentation")
   fun loadPhotos(tripId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorLoading = false, toastMessage = "")
     viewModelScope.launch {
       try {
         val trip = tripsRepository.getTrip(tripId)
-        _uiState.value =
-            _uiState.value.copy(
-                listUri = trip.listUri,
-                isLoading = false,
-                toastMessage = "Successfully loaded photos")
+          if (trip.listUri.size > 1) {
+
+              _uiState.value =
+                  _uiState.value.copy(
+                      listUri = trip.listUri,
+                      isLoading = false,
+                      toastMessage = "Successfully loaded photos"
+                  )
+          } else {
+              _uiState.value =
+                  _uiState.value.copy(
+                      listUri = trip.listUri,
+                      isLoading = false,
+                      toastMessage = "Successfully loaded photo"
+                  )
+          }
       } catch (e: Exception) {
           _uiState.value = _uiState.value.copy(isLoading = false, errorLoading = true)
       }
@@ -78,7 +98,10 @@ class PhotosViewModel(
    * @param uris the uris of the photos to add to the state
    */
   fun addUris(uris: List<Uri>) {
-    _uiState.value = _uiState.value.copy(listUri = uris + _uiState.value.listUri)
+    _uiState.value = _uiState.value.copy(
+        listUri = uris + _uiState.value.listUri,
+        numberNew = uris.size + _uiState.value.numberNew
+    )
   }
 
   /**
@@ -101,6 +124,7 @@ class PhotosViewModel(
    *
    * @param tripId the uid of the trip
    */
+  @SuppressLint("SuspiciousIndentation")
   fun removePhotos(tripId: String) {
     // Done with AI
     val oldState = _uiState.value
@@ -114,6 +138,11 @@ class PhotosViewModel(
         val oldTrip = tripsRepository.getTrip(tripId)
         val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
         tripsRepository.editTrip(tripId, newTrip)
+          if (oldState.uriSelected.size > 1) {
+              setToastMessage("Photos removed")
+          } else {
+              setToastMessage("Photo removed")
+          }
       } catch (e: Exception) {
         _uiState.value = oldState
           if (_uiState.value.uriSelected.size > 1) {
@@ -130,7 +159,7 @@ class PhotosViewModel(
      *
      * @param message the message to set on the state
      */
-    fun setToastMessage(message: String) {
+    private fun setToastMessage(message: String) {
         _uiState.value = _uiState.value.copy(toastMessage = message)
     }
 
@@ -140,4 +169,5 @@ class PhotosViewModel(
     fun clearToastMessage() {
         _uiState.value = _uiState.value.copy(toastMessage = "")
     }
+
 }
