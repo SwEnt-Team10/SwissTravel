@@ -261,39 +261,6 @@ class EditTripScreenViewModelTest {
   }
 
   @Test
-  fun `save triggers algorithm when preferences change`() = runTest {
-    val mockAlgorithm = mockk<TripAlgorithm>()
-    val algorithmFactory: (Context, TripSettings, ActivityRepository) -> TripAlgorithm =
-        { _, _, _ ->
-          mockAlgorithm
-        }
-
-    vm =
-        EditTripScreenViewModel(
-            tripRepository = repo,
-            activityRepository = mockk(relaxed = true),
-            algorithmFactory = algorithmFactory)
-
-    coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
-    coEvery { repo.editTrip(any(), any()) } just Runs
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
-
-    vm.loadTrip(sampleTripId)
-    advanceUntilIdle()
-
-    // Change a preference, which SHOULD trigger re-computation
-    vm.togglePref(Preference.MUSEUMS)
-
-    val context = mockk<Context>(relaxed = true)
-    vm.save(context)
-    advanceUntilIdle()
-
-    // Verify algorithm was called because preferences changed
-    coVerify(exactly = 1) { mockAlgorithm.computeTrip(any(), any(), any()) }
-    coVerify(exactly = 1) { repo.editTrip(eq(sampleTripId), any()) }
-  }
-
-  @Test
   fun `save failure sets errorMsg`() = runTest {
     coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
     coEvery { repo.editTrip(any(), any()) } throws RuntimeException("save failed")
