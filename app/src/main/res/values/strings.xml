@@ -447,4 +447,9 @@
     <string name="edit_button_description">Edit Mode</string>
     <string name="back_edit_photos">Back to daily view screen</string>
 
+    <!-- ============= ALGORITHM ============= -->
+    <string name="city_visit_name">Visit %1$s</string>
+    <string name="city_activity_description">Take time to explore the city’s historic quarters, modern districts, shops, and scenic viewpoints while soaking in its local culture.</string>
+
+
 </resources>

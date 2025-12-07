@@ -309,7 +309,8 @@ open class TripSettingsViewModel(
             algorithm.computeTrip(
                 tripSettings = tripSettings.value,
                 tripProfile = tripProfile,
-                isRandomTrip = isRandomTrip.value) { progress ->
+                isRandomTrip = isRandomTrip.value,
+                context = context) { progress ->
                   _loadingProgress.value = progress
                 }
 

@@ -165,7 +165,9 @@ class EditTripScreenViewModel(
           val algorithm = algorithmFactory(context, tempTripSettings, activityRepository)
           val schedule =
               algorithm.computeTrip(
-                  tripSettings = tempTripSettings, tripProfile = newTripProfile) { progress ->
+                  tripSettings = tempTripSettings,
+                  tripProfile = newTripProfile,
+                  context = context) { progress ->
                     _uiState.update { it.copy(savingProgress = progress) }
                   }
 

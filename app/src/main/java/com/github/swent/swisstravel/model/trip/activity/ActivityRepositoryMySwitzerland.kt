@@ -11,6 +11,7 @@ import com.google.firebase.Timestamp
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
+import kotlin.math.ceil
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +38,7 @@ const val EXTRA_RANDOM_ACTIVITIES = 0.75f
 class ActivityRepositoryMySwitzerland(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ActivityRepository {
-  private val blacklistedActivityNames = setOf<String>()
+  private val blacklistedActivityNames = setOf("Fishing with Balthazar")
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseHttpUrl: HttpUrl =
       urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", top = true)
@@ -286,7 +287,7 @@ class ActivityRepositoryMySwitzerland(
    */
   fun getActivityNumberToPull(limit: Int, random: Boolean): Int {
     return if (random) {
-      limit + (limit * EXTRA_RANDOM_ACTIVITIES).toInt()
+      ceil(limit + (limit * EXTRA_RANDOM_ACTIVITIES)).toInt()
     } else {
       limit
     }
