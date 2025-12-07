@@ -336,7 +336,7 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            random = false) // Add field
+            isRandom = false) // Add field
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
@@ -370,7 +370,7 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            random = false) // Add field
+            isRandom = false) // Add field
 
     every { mockCollection.document("server-id-123") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
@@ -396,7 +396,7 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            random = false) // Add field
+            isRandom = false) // Add field
 
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns
@@ -419,7 +419,7 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            random = false) // Add field
+            isRandom = false) // Add field
 
     every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)

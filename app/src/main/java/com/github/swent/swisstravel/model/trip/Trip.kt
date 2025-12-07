@@ -30,7 +30,7 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  * @property isFavorite Whether the trip is a favorite or not.
  * @property isCurrentTrip Whether the trip is the current trip or not.
  * @property listUri The list of URIs of the trip.
- * @property random Whether the trip is random or not.
+ * @property isRandom Whether the trip is random or not.
  */
 data class Trip(
     val uid: String,
@@ -43,5 +43,5 @@ data class Trip(
     val isFavorite: Boolean,
     val isCurrentTrip: Boolean,
     val listUri: List<Uri>,
-    val random: Boolean = false
+    val isRandom: Boolean = false
 )

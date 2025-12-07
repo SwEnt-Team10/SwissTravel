@@ -23,7 +23,9 @@ import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Timestamp
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -216,8 +218,11 @@ open class TripSettingsViewModel(
 
     // Update the TripSettings state with the new random locations
     _tripSettings.update {
+      val currentTime = LocalDateTime.now()
+      val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm")
+      val formattedTime = currentTime.format(formatter)
       it.copy(
-          name = "Random Swiss Adventure",
+          name = "Random Swiss Adventure $formattedTime",
           arrivalDeparture = TripArrivalDeparture(start, end),
           destinations = intermediateDestinations)
     }
@@ -306,7 +311,7 @@ open class TripSettingsViewModel(
                 isFavorite = false,
                 isCurrentTrip = false,
                 listUri = emptyList(),
-                random = _isRandomTrip.value)
+                isRandom = _isRandomTrip.value)
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

@@ -1,7 +1,7 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
 import android.content.Context
-import android.util.Log
+import android.content.res.Resources
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
@@ -19,6 +19,8 @@ import com.github.swent.swisstravel.ui.tripcreation.TripDate
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
+import com.google.firebase.Timestamp
+import java.time.LocalDate
 import java.time.ZoneId
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -84,7 +86,7 @@ class EditTripScreenViewModel(
                 adults = originalTrip.tripProfile.adults,
                 children = originalTrip.tripProfile.children,
                 selectedPrefs = originalTrip.tripProfile.preferences.toSet(),
-                isRandom = originalTrip.random)
+                isRandom = originalTrip.isRandom)
           }
         } catch (e: Exception) {
           _uiState.update { it.copy(isLoading = false, errorMsg = e.message ?: "Failed to load") }
@@ -113,7 +115,7 @@ class EditTripScreenViewModel(
    * @param seed The seed to use for the random number generator.
    */
   fun reroll(context: Context, seed: Int? = null) {
-    if (!originalTrip.random) return
+    if (!originalTrip.isRandom) return
     viewModelScope.launch {
       _uiState.update { it.copy(isSaving = true, savingProgress = 0f) }
       try {
@@ -122,16 +124,8 @@ class EditTripScreenViewModel(
                 name = originalTrip.name,
                 date =
                     TripDate(
-                        originalTrip.tripProfile.startDate
-                            .toDate()
-                            .toInstant()
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate(),
-                        originalTrip.tripProfile.endDate
-                            .toDate()
-                            .toInstant()
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()),
+                        convertDate(originalTrip.tripProfile.startDate),
+                        convertDate(originalTrip.tripProfile.endDate)),
                 travelers =
                     TripTravelers(
                         originalTrip.tripProfile.adults, originalTrip.tripProfile.children),
@@ -152,7 +146,7 @@ class EditTripScreenViewModel(
                 routeSegments = emptyList(),
                 activities = emptyList())
         save(context, true)
-      } catch (e: Exception) {
+      } catch (e: Resources.NotFoundException) {
         val errorMsg = e.message ?: "Failed to re-roll trip"
         _uiState.update { it.copy(errorMsg = errorMsg, isSaving = false) }
         _validationEventChannel.send(ValidationEvent.SaveError(errorMsg))
@@ -203,16 +197,8 @@ class EditTripScreenViewModel(
                   name = state.tripName,
                   date =
                       TripDate(
-                          originalTrip.tripProfile.startDate
-                              .toDate()
-                              .toInstant()
-                              .atZone(ZoneId.systemDefault())
-                              .toLocalDate(),
-                          originalTrip.tripProfile.endDate
-                              .toDate()
-                              .toInstant()
-                              .atZone(ZoneId.systemDefault())
-                              .toLocalDate()),
+                          convertDate(originalTrip.tripProfile.startDate),
+                          convertDate(originalTrip.tripProfile.endDate)),
                   travelers = TripTravelers(state.adults, state.children),
                   preferences = sanitizedPrefs.toList(),
                   arrivalDeparture =
@@ -251,8 +237,6 @@ class EditTripScreenViewModel(
                 routeSegments = routeSegments,
                 locations = allLocations)
 
-        Log.d("EditTripScreenViewModel", "Updated trip: $updatedTrip")
-
         tripRepository.editTrip(state.tripId, updatedTrip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)
       } catch (e: Exception) {
@@ -263,6 +247,15 @@ class EditTripScreenViewModel(
         _uiState.update { it.copy(isSaving = false) }
       }
     }
+  }
+
+  /**
+   * Converts a Timestamp to a LocalDate.
+   *
+   * @param date The Timestamp to convert.
+   */
+  private fun convertDate(date: Timestamp): LocalDate? {
+    return date.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
   }
 
   /**

@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.algorithm.random
 
 import android.content.Context
-import android.util.Log
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
@@ -49,8 +48,6 @@ object RandomTripGenerator {
     }
 
     end = availableCities.removeAt(random.nextInt(availableCities.size))
-
-    Log.d("RandomTripGenerator", "Start: $start, End: $end")
 
     val tripDurationDays =
         if (settings.date.startDate != null && settings.date.endDate != null) {

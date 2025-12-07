@@ -117,7 +117,7 @@ class TripsRepositoryFirestore(
           isFavorite = isFavorite,
           isCurrentTrip = isCurrentTrip,
           listUri = listUri,
-          random = isRandom)
+          isRandom = isRandom)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null

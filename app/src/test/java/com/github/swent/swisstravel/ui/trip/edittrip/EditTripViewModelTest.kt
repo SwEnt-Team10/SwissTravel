@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
 import android.content.Context
+import android.content.res.Resources
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.algorithm.random.RandomTripGenerator
 import com.github.swent.swisstravel.model.trip.Coordinate
@@ -146,7 +147,7 @@ class EditTripScreenViewModelTest {
   fun `reroll failure sets error message`() = runTest {
     coEvery { repo.getTrip(randomTrip.uid) } returns randomTrip
     every { RandomTripGenerator.generateRandomDestinations(any(), any(), any()) } throws
-        RuntimeException("generator failed")
+        Resources.NotFoundException("generator failed")
     vm.loadTrip(randomTrip.uid)
     advanceUntilIdle()
 
@@ -156,7 +157,7 @@ class EditTripScreenViewModelTest {
 
     val state = vm.state.value
     assertFalse(state.isSaving)
-    assertEquals("generator failed", state.errorMsg)
+    assertEquals("Failed to re-roll trip", state.errorMsg)
   }
 
   // -------------------------
@@ -357,7 +358,7 @@ class EditTripScreenViewModelTest {
         isFavorite = false,
         isCurrentTrip = false,
         listUri = emptyList(),
-        random = random)
+        isRandom = random)
   }
 }
 
