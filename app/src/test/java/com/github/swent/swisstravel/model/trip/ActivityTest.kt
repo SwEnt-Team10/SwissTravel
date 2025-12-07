@@ -40,7 +40,6 @@ class ActivityTest {
 
     // Non-positive estimated time
     val nonPositiveEstimatedTimeActivity = activity.copy(estimatedTime = 0)
-    assertEquals(
-        false, nonPositiveEstimatedTimeActivity.isValid(blacklistedNames))
+    assertEquals(false, nonPositiveEstimatedTimeActivity.isValid(blacklistedNames))
   }
 }

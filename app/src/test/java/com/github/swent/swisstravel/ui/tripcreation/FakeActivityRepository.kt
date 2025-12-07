@@ -10,7 +10,11 @@ import com.github.swent.swisstravel.model.user.Preference
  * calls.
  */
 class FakeActivityRepository : ActivityRepository {
-  override suspend fun getMostPopularActivities(limit: Int, page: Int, activityBlackList: List<String>): List<Activity> {
+  override suspend fun getMostPopularActivities(
+      limit: Int,
+      page: Int,
+      activityBlackList: List<String>
+  ): List<Activity> {
     return emptyList()
   }
 

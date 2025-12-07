@@ -136,7 +136,11 @@ class SelectActivities(
    * @param activityBlackList A list of activity names to exclude from the search.
    * @return A single [Activity] found near the specified location or null.
    */
-  suspend fun getOneActivityNearWithPreferences(coords: Coordinate, radius: Int = NEAR, activityBlackList: List<String> = emptyList()): Activity? {
+  suspend fun getOneActivityNearWithPreferences(
+      coords: Coordinate,
+      radius: Int = NEAR,
+      activityBlackList: List<String> = emptyList()
+  ): Activity? {
     val userPreferences = tripSettings.preferences.toMutableList()
     removeUnsupportedPreferences(userPreferences)
     var fetched: List<Activity>?
@@ -150,7 +154,8 @@ class SelectActivities(
         delay(API_CALL_DELAY_MS) // Respect API rate limit.
       } else {
         fetched =
-            activityRepository.getActivitiesNearWithPreference(mandatoryPrefs, coords, NEAR, 1, activityBlackList)
+            activityRepository.getActivitiesNearWithPreference(
+                mandatoryPrefs, coords, NEAR, 1, activityBlackList)
         delay(API_CALL_DELAY_MS) // Respect API rate limit.
       }
     } else { // No preferences, fetch any activity near the location.

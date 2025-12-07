@@ -240,7 +240,11 @@ class ActivityRepositoryMySwitzerland(
    * @param limit The limit of the number of valid activities to return.
    * @return A list of valid activities up to the specified limit.
    */
-  private suspend fun fetchValidActivitiesPaginated(baseUrl: HttpUrl, limit: Int, activityBlackList: List<String> = emptyList()): List<Activity> {
+  private suspend fun fetchValidActivitiesPaginated(
+      baseUrl: HttpUrl,
+      limit: Int,
+      activityBlackList: List<String> = emptyList()
+  ): List<Activity> {
 
     val validResults = mutableListOf<Activity>()
     var page = 0
@@ -261,8 +265,7 @@ class ActivityRepositoryMySwitzerland(
 
       val filtered =
           pageActivities.filter {
-            it.isValid(
-                blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
+            it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
           }
 
       validResults.addAll(filtered)
@@ -297,7 +300,11 @@ class ActivityRepositoryMySwitzerland(
    * @param activityBlackList The list of activity names to exclude.
    * @return A list of the most popular activities.
    */
-  override suspend fun getMostPopularActivities(limit: Int, page: Int, activityBlackList: List<String>): List<Activity> {
+  override suspend fun getMostPopularActivities(
+      limit: Int,
+      page: Int,
+      activityBlackList: List<String>
+  ): List<Activity> {
     return fetchValidActivitiesPaginated(baseHttpUrl, limit, activityBlackList)
   }
 
@@ -339,7 +346,8 @@ class ActivityRepositoryMySwitzerland(
       limit: Int,
       activityBlackList: List<String>
   ): List<Activity> {
-    return fetchValidActivitiesPaginated(computeUrlWithPreferences(preferences, limit), limit, activityBlackList)
+    return fetchValidActivitiesPaginated(
+        computeUrlWithPreferences(preferences, limit), limit, activityBlackList)
   }
   /** Searches for destinations based on a text query. */
   override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {

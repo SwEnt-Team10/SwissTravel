@@ -13,7 +13,11 @@ interface ActivityRepository {
    * @param activityBlackList The list of activity names to exclude.
    * @return List of activities (could be empty if none found or request fails).
    */
-  suspend fun getMostPopularActivities(limit: Int = 5, page: Int = 0, activityBlackList: List<String> = emptyList()): List<Activity>
+  suspend fun getMostPopularActivities(
+      limit: Int = 5,
+      page: Int = 0,
+      activityBlackList: List<String> = emptyList()
+  ): List<Activity>
 
   /**
    * Fetches a list of activities near a specific coordinate.
