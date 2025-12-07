@@ -39,17 +39,16 @@ data class Activity(
    * Checks if an activity is valid.
    *
    * @param blacklistedActivityNames A set of blacklisted activity names.
-   * @param invalidDescription A string representing an invalid description.
    * @return True if the activity is valid, false otherwise.
    */
-  fun isValid(blacklistedActivityNames: Set<String>, invalidDescription: String): Boolean {
+  fun isValid(blacklistedActivityNames: Set<String>): Boolean {
     // Remove activities with blacklisted names
     if (location.name in blacklistedActivityNames) return false
 
     // Normal validity logic
-    if (description.isBlank()) return false
+    // if (description.isBlank()) return false
     // If we had to use a fallback, i.e. no description was provided, discard
-    if (description == invalidDescription) return false
+    // if (description == invalidDescription) return false
     if (estimatedTime <= 0) return false
 
     return true

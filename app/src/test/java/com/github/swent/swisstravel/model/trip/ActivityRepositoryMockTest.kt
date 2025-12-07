@@ -421,7 +421,7 @@ class ActivityRepositoryMockTest {
                 arg == null ||
                     param.isAssignableFrom(arg::class.java) ||
                     (param == Int::class.javaPrimitiveType && arg is Int) ||
-                    (param == java.lang.Integer::class.java && arg is Int)
+                    (param == Integer::class.java && arg is Int)
               }
         } ?: throw NoSuchMethodException("$method(${args.joinToString()})")
 

@@ -427,7 +427,10 @@ class TripAlgorithm(
         val targetLoc = listOfLocations[nearWhich].coordinate
 
         // TODO modify this with a blackList of activities that we already have in the trip
-        val newAct = activitySelector.getOneActivityNearWithPreferences(targetLoc, radius)
+        val newAct = activitySelector.getOneActivityNearWithPreferences(
+            targetLoc,
+            radius,
+            )
 
         if (newAct != null) {
           // Verify that the new activity is not already in the trip even though it should never

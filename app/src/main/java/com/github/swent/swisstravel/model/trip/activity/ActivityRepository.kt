@@ -10,9 +10,10 @@ interface ActivityRepository {
    *
    * @param limit Maximum number of activities to return.
    * @param page Page number of the response.
+   * @param activityBlackList The list of activity names to exclude.
    * @return List of activities (could be empty if none found or request fails).
    */
-  suspend fun getMostPopularActivities(limit: Int = 5, page: Int = 0): List<Activity>
+  suspend fun getMostPopularActivities(limit: Int = 5, page: Int = 0, activityBlackList: List<String> = emptyList()): List<Activity>
 
   /**
    * Fetches a list of activities near a specific coordinate.
@@ -20,12 +21,14 @@ interface ActivityRepository {
    * @param coordinate The central coordinate to search around.
    * @param radiusMeters Search radius in meters.
    * @param limit Maximum number of activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return List of activities (could be empty if none found or request fails).
    */
   suspend fun getActivitiesNear(
       coordinate: Coordinate,
       radiusMeters: Int = 5000,
-      limit: Int = 5
+      limit: Int = 5,
+      activityBlackList: List<String> = emptyList()
   ): List<Activity>
 
   /**
@@ -33,11 +36,13 @@ interface ActivityRepository {
    *
    * @param category The category of activities to search for.
    * @param limit Maximum number of activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return List of activities (could be empty if none found or request fails).
    */
   suspend fun getActivitiesByPreferences(
       preferences: List<Preference>,
-      limit: Int = 5
+      limit: Int = 5,
+      activityBlackList: List<String> = emptyList()
   ): List<Activity>
 
   /**
@@ -59,12 +64,14 @@ interface ActivityRepository {
    * @param coordinate The coordinate to get activities near.
    * @param radiusMeters The radius in meters to search for activities.
    * @param limit The limit of the number of activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of activities near the given coordinate with the given preferences.
    */
   suspend fun getActivitiesNearWithPreference(
       preferences: List<Preference>,
       coordinate: Coordinate,
       radiusMeters: Int,
-      limit: Int
+      limit: Int,
+      activityBlackList: List<String> = emptyList()
   ): List<Activity>
 }
