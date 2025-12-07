@@ -54,6 +54,7 @@
 
     <!-- Arrival and Departure -->
     <string name="arrivalDeparture">Where are your starting and ending destinations?</string>
+    <string name="arrivalRandom">Where is your starting location?</string>
     <string name="arrival_location">Starting location</string>
     <string name="departure_location">Ending location"</string>
     <!--- First Destinations -->

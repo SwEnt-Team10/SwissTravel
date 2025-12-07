@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
-import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -52,7 +51,6 @@ object TripPreferencesTestTags {
  * @param onNext Callback to be invoked when the user is done setting preferences.
  * @param onPrevious Callback to be invoked when the user navigates back.
  * @param isRandomTrip Whether the trip is random or not.
- * @param onRandom Callback to be invoked when the user wants a random trip.
  */
 @Composable
 fun TripPreferencesScreen(
@@ -60,7 +58,6 @@ fun TripPreferencesScreen(
     onNext: () -> Unit = {},
     onPrevious: () -> Unit = {},
     isRandomTrip: Boolean = false,
-    onRandom: () -> Unit = {}
 ) {
   val tripSettings by viewModel.tripSettings.collectAsState()
   val prefs = tripSettings.preferences
@@ -128,14 +125,7 @@ fun TripPreferencesScreen(
               }
 
           // --- Next button (conditionally visible) ---
-          DoneButton(
-              Modifier.align(Alignment.BottomCenter),
-              viewModel,
-              isRandomTrip,
-              isScrolledToEnd,
-              onNext,
-              onRandom,
-              context)
+          Done(Modifier.align(Alignment.BottomCenter), isScrolledToEnd, onNext)
         }
       }
 }
@@ -144,43 +134,25 @@ fun TripPreferencesScreen(
  * Button to be displayed at the bottom of the screen.
  *
  * @param modifier Modifier to be applied to the button.
- * @param viewModel ViewModel to handle the trip settings logic.
- * @param isRandomTrip Whether the trip is random or not.
  * @param isScrolledToEnd Whether the LazyColumn has been scrolled to the end.
  * @param onNext Callback to be invoked when the user is done setting preferences.
- * @param onRandom Callback to be invoked when the user wants a random trip.
- * @param context Context to be used for the Toast.
  */
 @Composable
-private fun DoneButton(
+private fun Done(
     modifier: Modifier = Modifier,
-    viewModel: TripSettingsViewModel,
-    isRandomTrip: Boolean,
     isScrolledToEnd: Boolean,
     onNext: () -> Unit,
-    onRandom: () -> Unit,
-    context: Context
 ) {
   if (isScrolledToEnd) {
-    val buttonText =
-        if (isRandomTrip) stringResource(R.string.surprise) else stringResource(R.string.next)
-
     Button(
-        onClick = {
-          if (isRandomTrip) {
-            viewModel.randomTrip(context)
-            onRandom()
-          } else {
-            onNext()
-          }
-        },
+        onClick = { onNext() },
         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
         modifier =
             modifier
                 .padding(bottom = dimensionResource(R.dimen.medium_padding))
                 .testTag(TripPreferencesTestTags.DONE)) {
           Text(
-              text = buttonText,
+              text = stringResource(R.string.next),
               color = MaterialTheme.colorScheme.onPrimary,
               style = MaterialTheme.typography.titleMedium)
         }

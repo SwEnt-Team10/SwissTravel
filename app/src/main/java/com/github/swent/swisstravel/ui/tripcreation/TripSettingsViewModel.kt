@@ -92,6 +92,11 @@ open class TripSettingsViewModel(
   private val _isRandomTrip = MutableStateFlow(false)
   val isRandomTrip: StateFlow<Boolean> = _isRandomTrip.asStateFlow()
 
+  /**
+   * Sets the random trip flag.
+   *
+   * @param isRandom Whether the trip is random or not.
+   */
   fun setRandomTrip(isRandom: Boolean) {
     _isRandomTrip.value = isRandom
   }
@@ -107,25 +112,74 @@ open class TripSettingsViewModel(
   private val _loadingProgress = MutableStateFlow(0f)
   val loadingProgress = _loadingProgress.asStateFlow()
 
+  /**
+   * Updates the name of the trip.
+   *
+   * @param name The new name for the trip.
+   */
   fun updateName(name: String) {
     _tripSettings.value =
         _tripSettings.value.copy(
             name = name, invalidNameMsg = if (name.isBlank()) R.string.name_empty else null)
   }
 
+  /**
+   * Updates the start and end dates of the trip.
+   *
+   * @param start The new start date.
+   * @param end The new end date.
+   */
   fun updateDates(start: LocalDate, end: LocalDate) {
     _tripSettings.update { it.copy(name = "Trip from $start", date = TripDate(start, end)) }
   }
 
+  /**
+   * Updates the number of travelers in the trip.
+   *
+   * @param adults The new number of adults.
+   * @param children The new number of children.
+   */
   fun updateTravelers(adults: Int, children: Int) {
     _tripSettings.update { it.copy(travelers = TripTravelers(adults, children)) }
   }
 
+  /**
+   * Updates the list of preferences for the trip.
+   *
+   * @param prefs The new list of preferences.
+   */
   fun updatePreferences(prefs: List<Preference>) {
     _tripSettings.update { it.copy(preferences = prefs) }
     Log.d("TripSettingsViewModel", "Updated preferences: ${_tripSettings.value.preferences}")
   }
 
+  /**
+   * Updates the arrival location of the trip.
+   *
+   * @param location The new arrival location.
+   */
+  fun updateArrivalLocation(location: Location) {
+    _tripSettings.update {
+      it.copy(arrivalDeparture = it.arrivalDeparture.copy(arrivalLocation = location))
+    }
+  }
+
+  /**
+   * Updates the departure location of the trip.
+   *
+   * @param location The new departure location.
+   */
+  fun updateDepartureLocation(location: Location) {
+    _tripSettings.update {
+      it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = location))
+    }
+  }
+
+  /**
+   * Sets the list of destinations for the trip.
+   *
+   * @param destinations The new list of destinations.
+   */
   fun setDestinations(destinations: List<Location>) {
     val settings = _tripSettings.value
 
@@ -166,10 +220,13 @@ open class TripSettingsViewModel(
     val random = seed?.let { Random(it) } ?: Random
     val settings = _tripSettings.value
 
-    // Pick distinct start and end locations at random
-    val availableCities = grandTour.toMutableList()
-    val start = availableCities.removeAt(random.nextInt(availableCities.size))
+    // Pick a random departure location different from the arrival
+    val availableCities =
+        grandTour
+            .filter { it.name != settings.arrivalDeparture.arrivalLocation?.name }
+            .toMutableList()
     val end = availableCities.removeAt(random.nextInt(availableCities.size))
+    updateDepartureLocation(end)
 
     // Determine a manageable number of intermediate destinations based on trip duration
     val tripDurationDays =
@@ -195,10 +252,7 @@ open class TripSettingsViewModel(
 
     // Update the TripSettings state with the new random locations
     _tripSettings.update {
-      it.copy(
-          name = "Random Swiss Adventure",
-          arrivalDeparture = TripArrivalDeparture(start, end),
-          destinations = intermediateDestinations)
+      it.copy(name = "Random Swiss Adventure", destinations = intermediateDestinations)
     }
 
     // Call setDestinations to construct the full list and then save the trip
@@ -313,20 +367,6 @@ open class TripSettingsViewModel(
     }
   }
 
-  /** Update arrival location string in trip settings. */
-  fun updateArrivalLocation(arrival: Location?) {
-    _tripSettings.update {
-      it.copy(arrivalDeparture = it.arrivalDeparture.copy(arrivalLocation = arrival))
-    }
-  }
-
-  /** Update departure location string in trip settings. */
-  fun updateDepartureLocation(departure: Location?) {
-    _tripSettings.update {
-      it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = departure))
-    }
-  }
-
   // --- Suggestions Logic ---
 
   private val _suggestions = MutableStateFlow<List<Location>>(emptyList())
@@ -410,6 +450,11 @@ open class TripSettingsViewModel(
         .map { it.first } // Return just the locations.
   }
 
+  /**
+   * Toggles the selection of a location as a suggestion.
+   *
+   * @param location The location to toggle the selection for.
+   */
   fun toggleSuggestion(location: Location) {
     _selectedSuggestions.update { current ->
       if (current.any { it.name == location.name && it.coordinate == location.coordinate }) {

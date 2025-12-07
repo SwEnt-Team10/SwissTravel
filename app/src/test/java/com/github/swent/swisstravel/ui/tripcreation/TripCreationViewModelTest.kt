@@ -96,6 +96,8 @@ class TripCreationViewModelTest {
     // Setup initial state
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4)) // 4-day trip
     viewModel.setRandomTrip(true) // Simulate being in random mode
+    viewModel.updateArrivalLocation(
+        Location(Coordinate(46.315833, 6.193056), "Coppet", "")) // Arrival location in Coppet
 
     // Use a seed for predictable "randomness"
     viewModel.randomTrip(mockContext, seed = 123)
