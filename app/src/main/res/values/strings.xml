@@ -455,14 +455,15 @@
     Add at least 20 friends.
     </string>
   
-    <!-- AddPhotosScreen -->
+    <!-- PhotosScreen -->
     <string name="add_photos_title">Add photos</string>
     <string name="add_photos_button">Add photos</string>
-
-    <!-- EditPhotosScreen -->
-
     <string name="edit_top_bar_title">Select photos</string>
     <string name="cancel_edit">Cancel Edit</string>
     <string name="remove_button">Remove</string>
+    <string name="error_loading">Could not load the photos</string>
+    <string name="back_add_photos">Back to daily view screen</string>
+    <string name="edit_button_description">Edit Mode</string>
+    <string name="back_edit_photos">Back to daily view screen</string>
 
 </resources>

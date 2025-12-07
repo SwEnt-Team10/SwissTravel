@@ -82,20 +82,23 @@ fun AddPhotosScreen(
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
 
   val uiState by photosViewModel.uiState.collectAsState()
-    LaunchedEffect(uiState.toastMessage) {
-        if (uiState.toastMessage.isNotEmpty()) {
-            Toast.makeText(context, uiState.toastMessage, Toast.LENGTH_SHORT)
-            photosViewModel.clearToastMessage()
-        }
-    }
 
+  // AI gave this part
+  LaunchedEffect(uiState.toastMessage) {
+    if (uiState.toastMessage.isNotEmpty()) {
+      Toast.makeText(context, uiState.toastMessage, Toast.LENGTH_SHORT).show()
+      photosViewModel.clearToastMessage()
+    }
+  }
+
+  // AI gave the structure with the when
   when {
     uiState.isLoading -> LoadingPhotosScreen()
     uiState.errorLoading ->
         ErrorScreen(
-            message = uiState.toastMessage,
+            message = stringResource(R.string.error_loading),
             topBarTitle = stringResource(R.string.add_photos_title),
-            backButtonDescription = "Back to daily view screen",
+            backButtonDescription = stringResource(R.string.back_add_photos),
             onRetry = { photosViewModel.loadPhotos(tripId) },
             onBack = { onBack() })
     else -> {
@@ -113,7 +116,8 @@ fun AddPhotosScreen(
                 },
                 navigationIcon = {
                   BackButton(
-                      onBack = { onBack() }, contentDescription = "Back to daily view screen")
+                      onBack = { onBack() },
+                      contentDescription = stringResource(R.string.back_add_photos))
                 },
                 actions = { EditButton(onEdit = { onEdit() }) })
           },
@@ -161,7 +165,7 @@ private fun EditButton(onEdit: () -> Unit = {}) {
   IconButton(onClick = { onEdit() }) {
     Icon(
         imageVector = Icons.Filled.Edit,
-        contentDescription = "Edit Mode",
+        contentDescription = stringResource(R.string.edit_button_description),
         tint = MaterialTheme.colorScheme.onBackground)
   }
 }

@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
@@ -35,6 +37,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.composable.ErrorScreen
 
 /** Test tags for the edit screen photos */
 object EditPhotosScreenTestTags {
@@ -60,9 +63,31 @@ fun EditPhotosScreen(
     onCancel: () -> Unit = {},
     tripId: String
 ) {
+
+  val context = LocalContext.current
   // Start by loading the photos from the repository
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   val uiState by photosViewModel.uiState.collectAsState()
+
+  // AI gives this part
+  LaunchedEffect(uiState.toastMessage) {
+    if (uiState.toastMessage.isNotEmpty()) {
+      Toast.makeText(context, uiState.toastMessage, Toast.LENGTH_SHORT).show()
+      photosViewModel.clearToastMessage()
+    }
+  }
+
+  // AI gave the structure with the when
+  when {
+    photosViewModel.uiState.value.isLoading -> LoadingPhotosScreen()
+    photosViewModel.uiState.value.errorLoading ->
+        ErrorScreen(
+            message = stringResource(R.string.error_loading),
+            topBarTitle = stringResource(R.string.edit_top_bar_title),
+            backButtonDescription = stringResource(R.string.back_edit_photos),
+            onRetry = { photosViewModel.loadPhotos(tripId) },
+            onBack = { onCancel() })
+  }
   Scaffold(
       modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD),
       topBar = { EditTopBar(onCancel = { onCancel() }) },
