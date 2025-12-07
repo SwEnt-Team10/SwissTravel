@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
-import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -78,7 +77,6 @@ class PhotosViewModel(
    *
    * @param tripId the Id of the trip
    */
-  @SuppressLint("SuspiciousIndentation")
   fun loadPhotos(tripId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true, errorLoading = false, toastMessage = "")
     viewModelScope.launch {
@@ -136,7 +134,6 @@ class PhotosViewModel(
    *
    * @param tripId the uid of the trip
    */
-  @SuppressLint("SuspiciousIndentation")
   fun removePhotos(tripId: String) {
     // Done with AI
     val oldState = _uiState.value

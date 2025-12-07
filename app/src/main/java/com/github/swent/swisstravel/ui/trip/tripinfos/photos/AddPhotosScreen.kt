@@ -46,7 +46,11 @@ object AddPhotosScreenTestTags {
   const val ADD_PHOTOS_BUTTON = "addPhotosButton"
   const val VERTICAL_GRID = "verticalGrid"
   const val EDIT_BUTTON = "editButton"
-
+  /**
+   * This function return a test tag for an indexed uri.
+   *
+   * @Param index the index of the uri
+   */
   fun getTestTagForUri(index: Int): String = "UriIndex$index"
 }
 

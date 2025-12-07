@@ -34,7 +34,7 @@ object ErrorScreenTestTags {
  * @param message the message that describe why the error occurs
  * @param topBarTitle the title of the top bar (generally the same title as the screen where the
  *   user is)
- * @param backButtonDescription the description of th back button
+ * @param backButtonDescription the description of the back button
  * @param onRetry the function that is called when you click on the retry button
  * @param onBack the function that is called when you click on the back button
  */
