@@ -42,7 +42,6 @@ data class PhotosUIState(
  */
 class PhotosViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
-    photosUIState: PhotosUIState = PhotosUIState()
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(PhotosUIState())
   val uiState: StateFlow<PhotosUIState> = _uiState.asStateFlow()

@@ -11,7 +11,6 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreenTestTags
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosUIState
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosViewModel
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
@@ -83,10 +82,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
   // AI did the test
   @Test
   fun editPhotosScreenShowsErrorScreenWhenErrorLoading() {
-    val viewModel =
-        PhotosViewModel(
-            tripsRepository = TripRepositoryLocal(),
-            photosUIState = PhotosUIState(errorLoading = true))
+    val viewModel = PhotosViewModel(tripsRepository = TripRepositoryLocal())
 
     composeTestRule.setContent { EditPhotosScreen(tripId = "0", photosViewModel = viewModel) }
 

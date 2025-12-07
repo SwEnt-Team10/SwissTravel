@@ -16,7 +16,6 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
-import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosUIState
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosViewModel
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
@@ -161,10 +160,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
   // AI did the test
   @Test
   fun addPhotosScreenShowsErrorScreenWhenErrorLoading() {
-    val viewModel =
-        PhotosViewModel(
-            tripsRepository = TripRepositoryLocal(),
-            photosUIState = PhotosUIState(errorLoading = true))
+    val viewModel = PhotosViewModel(tripsRepository = TripRepositoryLocal())
 
     composeTestRule.setContent { AddPhotosScreen(tripId = "0", photosViewModel = viewModel) }
 
