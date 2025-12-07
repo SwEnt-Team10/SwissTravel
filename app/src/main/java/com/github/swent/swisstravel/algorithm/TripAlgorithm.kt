@@ -24,12 +24,16 @@ import java.time.temporal.ChronoUnit
 import kotlin.collections.zipWithNext
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.abs
+import kotlin.math.roundToLong
 import kotlin.random.Random
 
 const val DISTANCE_PER_STOP_KM = 90.0
 const val RADIUS_NEW_ACTIVITY_M = 15000
 const val RADIUS_EXTENSION_M = 12500
 const val INVALID_DURATION = -1.0
+const val RESCHEDULE_PENALTY_PER_ACTIVITY_SEC = (0.25 * 3600) // 15 minutes
+const val EPSILON = 1e-6f
 
 /**
  * Data class representing the progression weights for each step of the trip computation.
@@ -50,9 +54,20 @@ data class Progression(
     val finalScheduling: Float
 ) {
   init {
-    val sum =
-        selectActivities + optimizeRoute + scheduleTrip + fetchInBetweenActivities + finalScheduling
-    require(sum == 1.0f) { "Progression values must sum to 1.0, but got $sum" }
+    val sum = selectActivities + optimizeRoute + scheduleTrip + fetchInBetweenActivities
+    require(abs(sum - 1.0f) < EPSILON) { "Progression values must sum to 1.0, but got $sum" }
+  }
+}
+
+data class RescheduleProgression(
+    val schedule: Float,
+    val analyzeAndRemove: Float,
+    val recomputeRoute: Float,
+    val reschedule: Float
+) {
+  init {
+    val sum = schedule + analyzeAndRemove + recomputeRoute + reschedule
+    require(abs(sum - 1.0f) < EPSILON) { "Progression values must sum to 1.0, but got $sum" }
   }
 }
 
@@ -66,7 +81,7 @@ data class Progression(
  * @property scheduleParams Parameters for scheduling the trip.
  * @property progression Weights for each step of the trip computation process.
  */
-class TripAlgorithm(
+open class TripAlgorithm(
     private val activitySelector: SelectActivities,
     private val routeOptimizer: ProgressiveRouteOptimizer,
     private val scheduleParams: ScheduleParams = ScheduleParams(),
@@ -76,7 +91,10 @@ class TripAlgorithm(
             optimizeRoute = 0.40f,
             fetchInBetweenActivities = 0.10f,
             scheduleTrip = 0.20f,
-            finalScheduling = 0.10f)
+            finalScheduling = 0.10f),
+    private val rescheduleProgression: RescheduleProgression =
+        RescheduleProgression(
+            schedule = 0.30f, analyzeAndRemove = 0.10f, recomputeRoute = 0.40f, reschedule = 0.20f)
 ) {
   companion object {
     /**
@@ -114,11 +132,13 @@ class TripAlgorithm(
    * @param tripProfile The profile of the trip.
    * @param onProgress A callback function to report the progress of the computation (from 0.0 to
    *   1.0).
+   * @param isRandomTrip Whether the trip is random or not.
    * @return A list of [TripElement] representing the computed trip.
    */
   suspend fun computeTrip(
       tripSettings: TripSettings,
       tripProfile: TripProfile,
+      isRandomTrip: Boolean = false,
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
     try {
@@ -141,8 +161,15 @@ class TripAlgorithm(
           }
       onProgress(progression.selectActivities)
       val activityList = selectedActivities.toMutableList()
+      val originalActivityList = selectedActivities
       val fullDestinationList = buildList {
-        addAll(tripSettings.destinations)
+        // If the trip is random, still go to the grand tour spots
+        if (isRandomTrip) {
+          addAll(tripSettings.destinations)
+        } else {
+          add(startLocation)
+          add(endLocation)
+        }
         addAll(selectedActivities.map { it.location })
       }
 
@@ -185,20 +212,22 @@ class TripAlgorithm(
               progression.fetchInBetweenActivities)
 
       // ---- STEP 3: Schedule trip ----
+      val intermediateActivities =
+          activityList.filter { act -> !originalActivityList.contains(act) }
       val schedule =
-          try {
-            scheduleTrip(tripProfile, optimizedRoute, activityList, scheduleParams) { progress ->
-              onProgress(
-                  progression.selectActivities +
-                      progression.optimizeRoute +
-                      progression.fetchInBetweenActivities +
-                      progression.scheduleTrip * progress)
-            }
-          } catch (e: Exception) {
-            throw IllegalStateException("Trip scheduling failed: ${e.message}", e)
-          }
+          attemptRescheduleIfNeeded(
+              tripProfile = tripProfile,
+              originalOptimizedRoute = optimizedRoute,
+              activityList = activityList,
+              intermediateActivities = intermediateActivities) { progress ->
+                onProgress(
+                    progression.selectActivities +
+                        progression.optimizeRoute +
+                        progression.fetchInBetweenActivities +
+                        progression.scheduleTrip * progress)
+              }
 
-      check(schedule.isNotEmpty()) { "Scheduled trip is empty" }
+      check(schedule.isNotEmpty()) { "Rescheduled trip is empty" }
 
       // ---- STEP 4: Recomplete schedule if needed ----
       val finalSchedule =
@@ -365,6 +394,184 @@ class TripAlgorithm(
     // Guarantee closed range by adding the minimal epsilon
     return rng.nextDouble(start, endInclusive + Double.MIN_VALUE)
   }
+    /** Extract scheduled activities from a produced schedule. */
+    private fun extractActivitiesFromSchedule(schedule: List<TripElement>): List<Activity> {
+        return schedule.mapNotNull {
+            when (it) {
+                is TripElement.TripActivity -> it.activity
+                else -> null
+            }
+        }
+    }
+
+    /**
+     * Very conservative activity equality/matching: match by location identity and estimatedTime.
+     * Replace with id-comparison if Activity has an identifier field.
+     */
+    private fun activitiesMatch(a: Activity, b: Activity): Boolean {
+        return a.estimatedTime == b.estimatedTime && a.location.sameLocation(b.location)
+    }
+
+    /**
+     * Build a new OrderedRoute by removing given activity locations and marking affected segments
+     * durations as INVALID_DURATION so that the route optimizer will recompute them.
+     *
+     * Returns Pair(newOrderedRoute, changedIndexes) where changedIndexes are the indices that were
+     * marked invalid/need recomputation.
+     */
+    private fun buildRouteAfterRemovals(
+        optimizedRoute: OrderedRoute,
+        toRemoveLocations: Set<Location>
+    ): Pair<OrderedRoute, List<Int>> {
+        val newOrderedLocations = optimizedRoute.orderedLocations.toMutableList()
+        val newSegmentDurations = optimizedRoute.segmentDuration.toMutableList()
+        val changedIndexes = mutableListOf<Int>()
+
+        // Remove each location (only the first occurrence) and mark adjacent durations invalid.
+        for (loc in toRemoveLocations) {
+            val idx = newOrderedLocations.indexOfFirst { it.sameLocation(loc) }
+            if (idx == -1) continue
+
+            // Mark previous segment as invalid
+            if (idx - 1 >= 0 && idx - 1 < newSegmentDurations.size) {
+                newSegmentDurations[idx - 1] = INVALID_DURATION
+                changedIndexes.add(idx - 1)
+            }
+
+            // If the next segment exists, remove its duration entry (we merge segments)
+            if (idx < newSegmentDurations.size) {
+                // We remove the next segmentDuration entry, but mark the resulting merged segment as
+                // invalid
+                // only if the previous segment index exists; otherwise set the current to INVALID.
+                newSegmentDurations.removeAt(idx)
+                // After removal, ensure the previous index (if exists) is invalid (we already added it).
+            }
+
+            // Remove the location itself
+            newOrderedLocations.removeAt(idx)
+        }
+
+        val newRoute =
+            OrderedRoute(
+                orderedLocations = newOrderedLocations,
+                totalDuration = optimizedRoute.totalDuration,
+                segmentDuration = newSegmentDurations)
+
+        return Pair(newRoute, changedIndexes.distinct())
+    }
+
+    /**
+     * Done with AI Perform the rescheduling stage:
+     * - Compare scheduled result to original activities
+     * - Compute deficitSeconds = sum(missing estimatedTime) + missingCount * penalty
+     * - Randomly remove activities from the full activity list until removedSeconds >= deficitSeconds
+     * - Update the OrderedRoute by removing those locations and invalidating the affected segment
+     *   durations
+     * - Recompute route with routeOptimizer.recomputeOrderedRoute
+     * - Re-run scheduleTrip on the recomputed route and updated activity list
+     *
+     * @param tripProfile The profile of the trip.
+     * @param originalOptimizedRoute The original optimized route before scheduling.
+     * @param activityList The mutable list of activities to schedule.
+     * @param intermediateActivities The list of intermediate activities added between main locations.
+     *   (should not remove them)
+     * @return The final scheduled trip after rescheduling attempt.
+     */
+    open suspend fun attemptRescheduleIfNeeded(
+        tripProfile: TripProfile,
+        originalOptimizedRoute: OrderedRoute,
+        activityList: MutableList<Activity>,
+        intermediateActivities: List<Activity>,
+        onProgress: (Float) -> Unit
+    ): List<TripElement> {
+        // Filter out intermediate activities from the activity list to avoid removing them
+        val normalActivities = activityList.filter { !intermediateActivities.contains(it) }
+
+        // 1) Run first scheduling pass
+        val firstSchedule =
+            scheduleTrip(tripProfile, originalOptimizedRoute, activityList, scheduleParams) {
+                onProgress(rescheduleProgression.schedule * it)
+            }
+
+        // 2) Compute which activities were missing compared to original activity list
+        val scheduledActs = extractActivitiesFromSchedule(firstSchedule)
+        val missingActivities =
+            activityList.filter { act ->
+                scheduledActs.none { scheduled -> activitiesMatch(act, scheduled) }
+            }
+
+        if (missingActivities.isEmpty()) {
+            // Nothing missing — keep the first schedule
+            return firstSchedule
+        }
+
+        // 3) Compute deficit seconds based on missing activities and penalty-per-activity
+        val missingSumSec = missingActivities.sumOf { it.estimatedTime.toDouble().roundToLong() }
+        val penaltySec = missingActivities.size * RESCHEDULE_PENALTY_PER_ACTIVITY_SEC.toLong()
+        val deficitSeconds = missingSumSec + penaltySec
+
+        // 4) Randomly remove activities across the whole trip until we cover the deficit
+        val rand = Random.Default
+
+        val candidateList = normalActivities.toMutableList()
+        candidateList.shuffle(rand)
+
+        val toRemove = mutableListOf<Activity>()
+        var removedSec = 0L
+        val iterator = candidateList.iterator()
+        while (removedSec < deficitSeconds && iterator.hasNext()) {
+            val candidate = iterator.next()
+            toRemove.add(candidate)
+            removedSec += candidate.estimatedTime.toLong()
+            onProgress(rescheduleProgression.analyzeAndRemove * (removedSec.toFloat() / deficitSeconds))
+        }
+
+        if (toRemove.isEmpty()) {
+            // Could not find candidates to remove, return original result
+            return firstSchedule
+        }
+
+        // 5) Update activityList by removing chosen activities
+        val removedLocations = toRemove.map { it.location }.toSet()
+        activityList.removeAll { act -> toRemove.any { rem -> activitiesMatch(act, rem) } }
+
+        // 6) Build new OrderedRoute removing those locations and invalidating durations
+        val (routeAfterRemoval, changedIndexes) =
+            buildRouteAfterRemovals(originalOptimizedRoute, removedLocations)
+
+        // 7) Recompute route durations for invalid segments
+        val finalOptimizedRoute =
+            try {
+                routeOptimizer.recomputeOrderedRoute(
+                    routeAfterRemoval, changedIndexes, TransportMode.CAR, INVALID_DURATION) {
+                    onProgress(
+                        rescheduleProgression.schedule +
+                                rescheduleProgression.analyzeAndRemove +
+                                rescheduleProgression.recomputeRoute * it)
+                }
+            } catch (e: Exception) {
+                // Recompute failed — fall back to firstSchedule
+                Log.w("TripAlgorithm", "Recompute after removals failed: ${e.message}")
+                return firstSchedule
+            }
+
+        // 8) Re-run scheduleTrip with recomputed route and the pruned activity list
+        val finalSchedule =
+            try {
+                scheduleTrip(tripProfile, finalOptimizedRoute, activityList, scheduleParams) {
+                    onProgress(
+                        rescheduleProgression.schedule +
+                                rescheduleProgression.analyzeAndRemove +
+                                rescheduleProgression.recomputeRoute +
+                                rescheduleProgression.reschedule * it)
+                }
+            } catch (e: Exception) {
+                Log.w("TripAlgorithm", "Scheduling after recompute failed: ${e.message}")
+                return firstSchedule
+            }
+
+        return finalSchedule
+    }
 
   /**
    * Adjusts the final schedule to ensure it ends on the correct day.
