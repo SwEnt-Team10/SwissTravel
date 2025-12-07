@@ -630,6 +630,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
   }
 
   fun ComposeTestRule.editPhotosScreenIsDisplayed() {
@@ -664,6 +665,22 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.clickOnRetryButton() {
     onNodeWithTag(ErrorScreenTestTags.RETRY_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnEditPhotos() {
+    onNodeWithTag(AddPhotosScreenTestTags.EDIT_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnAddPhotos() {
+    onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnRemovePhotos() {
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_REMOVE_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.exitEditPhotos() {
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON).performClick()
   }
   // TODO : Create helper/companions functions here
 

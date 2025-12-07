@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.trip.addphotos
 
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
@@ -10,6 +11,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosUIState
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosViewModel
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
@@ -76,5 +78,18 @@ class EditPhotosScreenTest : SwissTravelTest() {
     }
     composeTestRule.editPhotosScreenIsDisplayed()
     composeTestRule.onNodeWithTag(EditPhotosScreenTestTags.EDIT_VERTICAL_GRID)
+  }
+
+  // AI did the test
+  @Test
+  fun editPhotosScreenShowsErrorScreenWhenErrorLoading() {
+    val viewModel =
+        PhotosViewModel(
+            tripsRepository = TripRepositoryLocal(),
+            photosUIState = PhotosUIState(errorLoading = true))
+
+    composeTestRule.setContent { EditPhotosScreen(tripId = "0", photosViewModel = viewModel) }
+
+    composeTestRule.onNodeWithText("Could not load the photos").assertExists()
   }
 }

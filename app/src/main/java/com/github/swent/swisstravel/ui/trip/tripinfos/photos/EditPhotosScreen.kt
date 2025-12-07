@@ -78,6 +78,7 @@ fun EditPhotosScreen(
   }
 
   // AI gave the structure with the when
+  // Choose which screen to display depending on the state of the app
   when {
     uiState.isLoading -> LoadingPhotosScreen()
     uiState.errorLoading ->

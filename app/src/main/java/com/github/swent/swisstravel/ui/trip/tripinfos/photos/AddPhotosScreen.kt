@@ -45,6 +45,7 @@ object AddPhotosScreenTestTags {
   const val BOTTOM_BAR = "bottomBar"
   const val ADD_PHOTOS_BUTTON = "addPhotosButton"
   const val VERTICAL_GRID = "verticalGrid"
+  const val EDIT_BUTTON = "editButton"
 
   fun getTestTagForUri(index: Int): String = "UriIndex$index"
 }
@@ -93,6 +94,7 @@ fun AddPhotosScreen(
   }
 
   // AI gave the structure with the when
+  // Choose which screen to display depending on the state of the app
   when {
     uiState.isLoading -> LoadingPhotosScreen()
     uiState.errorLoading ->
@@ -163,10 +165,11 @@ fun AddPhotosScreen(
  */
 @Composable
 private fun EditButton(onEdit: () -> Unit = {}) {
-  IconButton(onClick = { onEdit() }) {
-    Icon(
-        imageVector = Icons.Filled.Edit,
-        contentDescription = stringResource(R.string.edit_button_description),
-        tint = MaterialTheme.colorScheme.onBackground)
-  }
+  IconButton(
+      modifier = Modifier.testTag(AddPhotosScreenTestTags.EDIT_BUTTON), onClick = { onEdit() }) {
+        Icon(
+            imageVector = Icons.Filled.Edit,
+            contentDescription = stringResource(R.string.edit_button_description),
+            tint = MaterialTheme.colorScheme.onBackground)
+      }
 }
