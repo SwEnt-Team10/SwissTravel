@@ -273,10 +273,12 @@ open class TripSettingsViewModel(
         // Run the algorithm
         val algorithm = algorithmFactory(context, tripSettings.value)
         val schedule =
-            algorithm.computeTrip(tripSettings = tripSettings.value, tripProfile = tripProfile) {
-                progress ->
-              _loadingProgress.value = progress
-            }
+            algorithm.computeTrip(
+                tripSettings = tripSettings.value,
+                tripProfile = tripProfile,
+                isRandomTrip = isRandomTrip.value) { progress ->
+                  _loadingProgress.value = progress
+                }
 
         // Extract activities and route segments
         val selectedActivities: List<Activity> =
