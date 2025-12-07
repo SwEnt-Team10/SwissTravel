@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** The messages that the toast can have. */
 object ToastMessages {
   const val PHOTOS_SAVED = "Photos saved"
   const val PHOTO_SAVED = "Photo saved"
@@ -35,7 +36,7 @@ data class PhotosUIState(
 )
 
 /**
- * ViewModel for the AddPhotosScreen Note: all the part with the loading has been done with AI
+ * ViewModel for the AddPhotosScreen Note: all the part with the loading has been done with AI.
  *
  * @param tripsRepository the repository that the model use
  */
@@ -46,7 +47,7 @@ class PhotosViewModel(
   val uiState: StateFlow<PhotosUIState> = _uiState.asStateFlow()
 
   /**
-   * Add photos to the trip and save the trip on the repo
+   * Add photos to the trip and save the trip on the repo.
    *
    * @param tripId the uid of the trip
    */
@@ -73,7 +74,7 @@ class PhotosViewModel(
   }
 
   /**
-   * Load the Uris of the photos from the trip
+   * Load the Uris of the photos from the trip.
    *
    * @param tripId the Id of the trip
    */
@@ -104,7 +105,7 @@ class PhotosViewModel(
   }
 
   /**
-   * Add the uris of the photos to the PhotosUiState
+   * Add the uris of the photos to the PhotosUiState.
    *
    * @param uris the uris of the photos to add to the state
    */
@@ -116,7 +117,7 @@ class PhotosViewModel(
   }
 
   /**
-   * Add or remove the index of a photos already added from the state
+   * Add or remove the index of a photos already added from the state.
    *
    * @param index the index of the photo to remove or add to the selected photos of the state
    */
@@ -131,7 +132,7 @@ class PhotosViewModel(
   }
 
   /**
-   * Remove the photos from the repository depending on the photos selected on edit mode
+   * Remove the photos from the repository depending on the photos selected on edit mode.
    *
    * @param tripId the uid of the trip
    */
@@ -166,7 +167,7 @@ class PhotosViewModel(
   }
 
   /**
-   * Set the toast message of the state with a given message
+   * Set the toast message of the state with a given message.
    *
    * @param message the message to set on the state
    */
@@ -174,7 +175,7 @@ class PhotosViewModel(
     _uiState.value = _uiState.value.copy(toastMessage = message)
   }
 
-  /** Reset the toast message on the state */
+  /** Reset the toast message on the state. */
   fun clearToastMessage() {
     _uiState.value = _uiState.value.copy(toastMessage = "")
   }

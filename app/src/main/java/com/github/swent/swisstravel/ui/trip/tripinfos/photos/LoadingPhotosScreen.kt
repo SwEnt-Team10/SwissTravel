@@ -11,12 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 
+/** Test tags for the loading screen */
 object LoadingPhotosTestTags {
   const val LOADING_PHOTOS_SCAFFOLD = "loadingPhotosScaffold"
   const val LOADING_PHOTOS_COLUMN = "loadingPhotosColumn"
   const val LOADING_PHOTOS_INDICATOR = "loadingPhotosIndicator"
 }
 
+/** The screen that appears when the app is loading the photos. */
 @Composable
 fun LoadingPhotosScreen() {
   Scaffold(modifier = Modifier.testTag(LoadingPhotosTestTags.LOADING_PHOTOS_SCAFFOLD)) { pd ->

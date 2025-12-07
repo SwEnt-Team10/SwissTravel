@@ -79,8 +79,8 @@ fun EditPhotosScreen(
 
   // AI gave the structure with the when
   when {
-    photosViewModel.uiState.value.isLoading -> LoadingPhotosScreen()
-    photosViewModel.uiState.value.errorLoading ->
+    uiState.isLoading -> LoadingPhotosScreen()
+    uiState.errorLoading ->
         ErrorScreen(
             message = stringResource(R.string.error_loading),
             topBarTitle = stringResource(R.string.edit_top_bar_title),
@@ -148,7 +148,7 @@ private fun EditTopBar(onCancel: () -> Unit = {}) {
 }
 
 /**
- * A button that can exit the edit mode
+ * A button that can exit the edit mode.
  *
  * @param onCancel the function to call when you click on the button
  */

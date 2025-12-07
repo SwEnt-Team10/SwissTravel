@@ -37,6 +37,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.composable.ErrorScreen
 
+/** Test tags for the add photos screen */
 object AddPhotosScreenTestTags {
   const val MAIN_SCREEN = "mainScreen"
   const val TOP_APP_BAR = "topAppBar"

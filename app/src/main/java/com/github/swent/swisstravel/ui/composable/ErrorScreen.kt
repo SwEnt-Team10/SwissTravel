@@ -18,9 +18,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
+/** Test tags for the error screen */
 object ErrorScreenTestTags {
   const val ERROR_SCREEN_TOP_BAR = "errorScreenTopBar"
   const val ERROR_SCREEN_TOP_BAR_TITLE = "errorScreenTopBarTitle"
@@ -28,6 +28,16 @@ object ErrorScreenTestTags {
   const val RETRY_BUTTON = "retryButton"
 }
 
+/**
+ * A screen that is displayed when an error occurs during an app action.
+ *
+ * @param message the message that describe why the error occurs
+ * @param topBarTitle the title of the top bar (generally the same title as the screen where the
+ *   user is)
+ * @param backButtonDescription the description of th back button
+ * @param onRetry the function that is called when you click on the retry button
+ * @param onBack the function that is called when you click on the back button
+ */
 @Composable
 fun ErrorScreen(
     message: String,
@@ -58,9 +68,16 @@ fun ErrorScreen(
       }
 }
 
+/**
+ * The top bar composable of the screen error
+ *
+ * @param topBarTitle the title of the top bar
+ * @param backButtonDescription the description of the back button
+ * @param onBack the function that is called when you click on the back button
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ErrorScreenTopBar(
+private fun ErrorScreenTopBar(
     topBarTitle: String,
     backButtonDescription: String,
     onBack: () -> Unit,
@@ -75,15 +92,4 @@ fun ErrorScreenTopBar(
       navigationIcon = {
         BackButton(onBack = { onBack() }, contentDescription = backButtonDescription)
       })
-}
-
-@Preview
-@Composable
-private fun ErrorScreenPreview() {
-  ErrorScreen(
-      message = "It didn't work",
-      backButtonDescription = "preview",
-      onRetry = {},
-      onBack = {},
-      topBarTitle = "Preview")
 }
