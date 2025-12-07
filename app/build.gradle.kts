@@ -38,6 +38,10 @@ android {
         // Open transport data
         val apiToken = props.getProperty("OPEN_TRANSPORT_DATA_TOKEN") ?: ""
         buildConfigField("String", "OPEN_TRANSPORT_DATA_TOKEN", "\"$apiToken\"")
+
+        // Geoapify
+        val geoapifyKey = props.getProperty("GEOAPIFY_API_KEY") ?: ""
+        buildConfigField("String", "GEOAPIFY_API_KEY", "\"$geoapifyKey\"")
     }
 
     buildTypes {

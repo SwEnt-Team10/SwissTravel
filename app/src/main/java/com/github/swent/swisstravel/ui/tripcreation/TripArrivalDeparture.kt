@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -20,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -27,6 +29,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldState
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.geocoding.LocationAutocompleteTextField
@@ -42,6 +45,17 @@ object ArrivalDepartureTestTags {
 }
 
 /**
+ * Data class representing the state of the arrival and departure locations.
+ *
+ * @property arrivalState The state of the arrival location text field.
+ * @property departureState The state of the departure location text field.
+ */
+data class ArrivalDepartureState(
+    val arrivalState: AddressTextFieldState,
+    val departureState: AddressTextFieldState
+)
+
+/**
  * A composable screen that allows users to set the arrival and departure locations for their trip.
  *
  * This screen features two [LocationAutocompleteTextField] components, one for the arrival location
@@ -55,6 +69,8 @@ object ArrivalDepartureTestTags {
  *   to ensure a distinct instance from the departure view model.
  * @param departureAddressVm The view model for the departure address text field. A unique key is
  *   used to ensure a distinct instance from the arrival view model.
+ * @param isRandomTrip Whether the trip is random or not.
+ * @param onRandom Callback to be invoked when the user wants a random trip.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -63,16 +79,24 @@ fun ArrivalDepartureScreen(
     onNext: () -> Unit = {},
     onPrevious: () -> Unit = {},
     arrivalAddressVm: AddressTextFieldViewModel = viewModel(key = "arrivalAddressVm"),
-    departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm")
+    departureAddressVm: AddressTextFieldViewModel = viewModel(key = "departureAddressVm"),
+    isRandomTrip: Boolean = false,
+    onRandom: () -> Unit = {}
 ) {
   val arrivalState by arrivalAddressVm.addressState.collectAsState()
   val departureState by departureAddressVm.addressState.collectAsState()
+  val state = ArrivalDepartureState(arrivalState, departureState)
+  val isRandomTrip by viewModel.isRandomTrip.collectAsState()
+  val context = LocalContext.current
 
   // Synchronize the selected locations with the TripSettingsViewModel.
-  // This combines the previous two LaunchedEffect blocks into one.
-  LaunchedEffect(arrivalState.selectedLocation, departureState.selectedLocation) {
+  LaunchedEffect(arrivalState.selectedLocation) {
     arrivalState.selectedLocation?.let { viewModel.updateArrivalLocation(it) }
-    departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
+  }
+  LaunchedEffect(state.departureState.selectedLocation) {
+    if (!isRandomTrip) {
+      state.departureState.selectedLocation?.let { viewModel.updateDepartureLocation(it) }
+    }
   }
 
   Scaffold(
@@ -94,7 +118,9 @@ fun ArrivalDepartureScreen(
 
                   // --- Title ---
                   Text(
-                      text = stringResource(R.string.arrivalDeparture),
+                      text =
+                          if (isRandomTrip) stringResource(R.string.arrivalRandom)
+                          else stringResource(R.string.arrivalDeparture),
                       textAlign = TextAlign.Center,
                       style =
                           MaterialTheme.typography.headlineMedium.copy(
@@ -112,36 +138,77 @@ fun ArrivalDepartureScreen(
                   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.large_spacer)))
 
                   // --- Departure Destination (autocomplete) ---
-                  LocationAutocompleteTextField(
-                      addressTextFieldViewModel = departureAddressVm,
-                      modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
-                      name = stringResource(R.string.departure_location),
-                      showImages = false)
+                  if (!isRandomTrip) {
+                    LocationAutocompleteTextField(
+                        addressTextFieldViewModel = departureAddressVm,
+                        modifier = Modifier.testTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD),
+                        name = stringResource(R.string.departure_location),
+                        showImages = false)
+                  }
 
                   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
                 }
 
                 // --- Done button ---
-                Button(
-                    modifier = Modifier.testTag(NEXT_BUTTON),
-                    enabled =
-                        arrivalState.selectedLocation != null &&
-                            departureState.selectedLocation != null,
-                    onClick = {
-                      // Simplified validation logic for the Next button.
-                      // Since the button is only enabled when both locations are selected,
-                      // we can directly call onNext(). The complex checks are no longer needed.
-                      onNext()
-                    },
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.primary)) {
-                      Text(
-                          stringResource(R.string.next),
-                          color = MaterialTheme.colorScheme.onPrimary,
-                          style = MaterialTheme.typography.titleMedium)
-                    }
+                DoneButton(
+                    viewModel = viewModel,
+                    isRandomTrip = isRandomTrip,
+                    state = state,
+                    onNext = onNext,
+                    onRandom = onRandom,
+                    context = context)
               }
         }
+      }
+}
+
+/**
+ * Button to be displayed at the bottom of the screen.
+ *
+ * @param modifier Modifier to be applied to the button.
+ * @param viewModel ViewModel to handle the trip settings logic.
+ * @param state State of the arrival and departure locations.
+ * @param isRandomTrip Whether the trip is random or not.
+ * @param onNext Callback to be invoked when the user is done setting preferences.
+ * @param onRandom Callback to be invoked when the user wants a random trip.
+ * @param context Context to be used for the Toast.
+ */
+@Composable
+private fun DoneButton(
+    modifier: Modifier = Modifier,
+    viewModel: TripSettingsViewModel,
+    state: ArrivalDepartureState,
+    isRandomTrip: Boolean,
+    onNext: () -> Unit,
+    onRandom: () -> Unit,
+    context: Context
+) {
+
+  val buttonText =
+      if (isRandomTrip) stringResource(R.string.surprise) else stringResource(R.string.next)
+
+  Button(
+      onClick = {
+        if (isRandomTrip) {
+          viewModel.randomTrip(context)
+          onRandom()
+        } else {
+          onNext()
+        }
+      },
+      enabled =
+          if (isRandomTrip) state.arrivalState.selectedLocation != null
+          else
+              state.arrivalState.selectedLocation != null &&
+                  state.departureState.selectedLocation != null,
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+      modifier =
+          modifier
+              .padding(bottom = dimensionResource(R.dimen.medium_padding))
+              .testTag(NEXT_BUTTON)) {
+        Text(
+            text = buttonText,
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.titleMedium)
       }
 }

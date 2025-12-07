@@ -1,8 +1,6 @@
 <resources>
     <string name="app_name">SwissTravel</string>
     <string name="name_lower">swisstravel</string>
-    <string name="title_activity_main">MainActivity</string>
-    <string name="title_activity_second">SecondActivity</string>
 
     <!-- Main Activity -->
     <string name="trip_id_route">tripId</string>
@@ -17,7 +15,6 @@
     <string name="google_sign_in">Sign in with Google</string>
     <string name="google_sign_up">Sign up with Google</string>
     <string name="app_logo_desc">App Logo</string>
-    <string name="google_logo_desc">Google Logo</string>
     <string name="sign_out">Sign Out</string>
     <string name="sign_in">Sign In</string>
     <string name="signup_success">Thank you for joining Swisstravel !</string>
@@ -27,7 +24,6 @@
     <string name="create_account">Create Your Account</string>
     <string name="first_name">First Name</string>
     <string name="last_name">Last Name</string>
-    <string name="Email">Email</string>
     <string name="password">Password</string>
     <string name="sign_in_account">Sign in to your account</string>
     <string name="no_email_received">Didn\'t receive an email? Resend</string>
@@ -56,33 +52,24 @@
     <string name="end_date">End date</string>
     <string name="end_date_error">End date must be on or after start date.</string>
 
-    <!-- Trip Name -->
-    <string name="trip_name">How do you want to name your trip?</string>
-
     <!-- Arrival and Departure -->
-    <string name="arrivalDeparture">Where are your arrival and departure destinations?</string>
-    <string name="enterArrivalLocation">Enter your arrival location</string>
-    <string name="enterDepartureLocation">Enter your departure location</string>
-    <string name="arrival_location">Arrival location</string>
-    <string name="departure_location">Departure location"</string>
+    <string name="arrivalDeparture">Where are your starting and ending destinations?</string>
+    <string name="arrivalRandom">Where is your starting location?</string>
+    <string name="arrival_location">Starting location</string>
+    <string name="departure_location">Ending location"</string>
     <!--- First Destinations -->
     <string name="add_first_destination">Add a destination</string>
     <string name="destination_limited">Destination limit attained</string>
     <string name="first_destinations_title">Select any location you already know you want to visit</string>
-    <string name="cannot_be_empty">cannot be empty</string>
     <string name="dropdown_menu_choose">Choose your location on the dropdown menu</string>
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
     <string name="when_travelling">When are you travelling?</string>
     <string name="log_in_to_display">You must be logged in to display a current trip a create one.</string>
 
-    <!-- Geocoding -->
-    <string name="address">Address</string>
-
     <!-- Map -->
     <string name="location_required_to_display">Location is required to display your position on the map.</string>
     <string name="allow_location">Allow location</string>
-    <string name="exit_map_desc">Exit Map Icon</string>
 
     <!-- Trips -->
     <string name="go_trip_details">Go to Trip details</string>
@@ -131,8 +118,6 @@
     <string name="about_minutes">About %1$d min</string>
     <string name="previous_step">Previous step</string>
     <string name="next_step">Next step</string>
-    <string name="draw_from_current_position">Draw route from current position</string>
-    <string name="draw_from_previous_step">Draw route from previous step</string>
     <string name="swipe_activities">Swipe activities</string>
     <string name="liked_activities">Liked Activities</string>
     <string name="trip_id_missing">Trip ID is missing</string>
@@ -149,7 +134,6 @@
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
     <string name="travelers">Travelers</string>
-    <string name="editing_trip_title">Editing %1$s</string>
     <string name="preferences">Preferences</string>
     <string name="confirm_changes">Save</string>
     <string name="delete_trip">Delete Trip</string>
@@ -245,12 +229,9 @@
     <string name="child">Child</string>
     <string name="children">Children</string>
     <string name="travelling_preferences_summary">Travelling preferences</string>
-    <string name="departure">Departure</string>
-    <string name="arrival">Arrival</string>
+    <string name="departure">Ending</string>
+    <string name="arrival">Starting</string>
     <string name="places">Places you want to visit</string>
-    <string name="departure_required">Departure required</string>
-    <string name="arrival_required">Arrival required</string>
-    <string name="departure_and_arrival_required">Departure and Arrival required</string>
     <string name="no_wanted_places">No wanted places</string>
     <string name="no_preferences">No preferences</string>
     <string name="from_summary">From:</string>
