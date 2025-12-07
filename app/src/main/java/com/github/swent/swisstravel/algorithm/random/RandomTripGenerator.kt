@@ -1,10 +1,12 @@
-package com.github.swent.swisstravel.ui.tripcreation
+package com.github.swent.swisstravel.algorithm.random
 
 import android.content.Context
 import android.util.Log
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.ui.tripcreation.DEFAULT_DURATION
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import java.time.temporal.ChronoUnit
 import kotlin.random.Random
 
