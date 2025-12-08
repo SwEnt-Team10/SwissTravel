@@ -55,6 +55,7 @@ class ImageRepositoryFirebase(
       imageCollection.document(imageUid).delete().await()
     } catch (e: Exception) {
       Log.e("ImageRepositoryFirebase", "Error deleting image", e)
+      throw e
     }
   }
 
