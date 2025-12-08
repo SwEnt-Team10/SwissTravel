@@ -7,6 +7,8 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isCurrent
 import com.github.swent.swisstravel.model.trip.isUpcoming
+import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import kotlinx.coroutines.launch
 
 /**
@@ -22,8 +24,10 @@ import kotlinx.coroutines.launch
  *
  * @property tripsRepository The repository to fetch trips from.
  */
-class MyTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvider.repository) :
-    TripsViewModel(tripsRepository) {
+class MyTripsViewModel(
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    tripsRepository: TripsRepository = TripsRepositoryProvider.repository
+) : TripsViewModel(tripsRepository = tripsRepository) {
 
   /** Initializes the ViewModel by loading all trips. */
   init {
@@ -43,8 +47,13 @@ class MyTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvide
         val currentTrip = trips.find { it.isCurrent() }
         val upcomingTrips = trips.filter { it.isUpcoming() }
         val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
+        val collaboratorsByTrip = buildCollaboratorsByTrip(trips)
 
-        _uiState.value = _uiState.value.copy(currentTrip = currentTrip, tripsList = sortedTrips)
+        _uiState.value =
+            _uiState.value.copy(
+                currentTrip = currentTrip,
+                tripsList = sortedTrips,
+                collaboratorsByTripId = collaboratorsByTrip)
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error fetching trips", e)
         setErrorMsg("Failed to load trips.")

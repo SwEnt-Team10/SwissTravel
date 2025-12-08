@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 class SelectPinnedTripsViewModel(
     tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
     private val userRepository: UserRepository = UserRepositoryFirebase()
-) : TripsViewModel(tripsRepository) {
+) : TripsViewModel(tripsRepository = tripsRepository) {
 
   private var currentUser: User? = null
 
@@ -46,7 +46,12 @@ class SelectPinnedTripsViewModel(
         val selected =
             user.pinnedTripsUids.mapNotNull { uid -> trips.find { it.uid == uid } }.toSet()
         val sortedTrips = sortTrips(trips, _uiState.value.sortType)
-        _uiState.value = _uiState.value.copy(tripsList = sortedTrips, selectedTrips = selected)
+        val collaboratorsByTrip = buildCollaboratorsByTrip(trips)
+        _uiState.value =
+            _uiState.value.copy(
+                tripsList = sortedTrips,
+                selectedTrips = selected,
+                collaboratorsByTripId = collaboratorsByTrip)
       } catch (e: Exception) {
         setErrorMsg("Failed to load pinned trips: ${e.message}")
         Log.e("SelectPinnedTripsViewModel", "Error initializing", e)
