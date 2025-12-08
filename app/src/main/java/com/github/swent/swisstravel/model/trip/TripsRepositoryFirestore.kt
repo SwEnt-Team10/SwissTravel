@@ -103,6 +103,8 @@ class TripsRepositoryFirestore(
       // With help of AI
       val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
       val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
+      val collaboratorsId = document.get("collaboratorsId") as? List<*> ?: emptyList<String>()
+      val listCollaboratorsId = collaboratorsId.mapNotNull { (it as? String) }
 
       Trip(
           uid = uid,
@@ -114,7 +116,8 @@ class TripsRepositoryFirestore(
           tripProfile = tripProfile,
           isFavorite = isFavorite,
           isCurrentTrip = isCurrentTrip,
-          listUri = listUri)
+          listUri = listUri,
+          collaboratorsId = listCollaboratorsId)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null

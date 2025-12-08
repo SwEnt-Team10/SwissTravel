@@ -45,7 +45,8 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     assertTrue(trip.isUpcoming())
     assertFalse(trip.isCurrent())
@@ -73,7 +74,8 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = true,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     assertTrue(trip.isCurrent())
     assertFalse(trip.isUpcoming())
@@ -101,7 +103,8 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     assertTrue(trip.isPast())
     assertFalse(trip.isCurrent())

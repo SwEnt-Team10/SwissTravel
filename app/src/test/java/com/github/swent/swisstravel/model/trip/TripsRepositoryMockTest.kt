@@ -103,6 +103,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("favorite") } returns true
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
+    every { doc.get("collaboratorsId") } returns emptyList<String>()
 
     val trip = repo.getTrip("trip1")
 
@@ -164,6 +165,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
+    every { doc.get("collaboratorsId") } returns emptyList<String>()
 
     val trip = repo.getTrip("tripImgUrls")
 
@@ -208,6 +210,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("locations") } returns emptyList<Map<String, Any>>()
     every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
     every { doc.get("listUri") } returns emptyList<Uri>()
+    every { doc.get("collaboratorsId") } returns emptyList<Uri>()
     every { doc.get("tripProfile") } returns
         mapOf(
             "startDate" to Timestamp.now(),
@@ -243,6 +246,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
     every { doc.get("activities") } returns emptyList<Map<String, Any>>()
     every { doc.get("listUri") } returns emptyList<Uri>()
+    every { doc.get("collaboratorsId") } returns emptyList<Uri>()
     every { doc.get("tripProfile") } returns
         mapOf(
             "startDate" to Timestamp.now(),
@@ -330,7 +334,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
@@ -363,7 +368,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     every { mockCollection.document("server-id-123") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
@@ -388,7 +394,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns
@@ -410,7 +417,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)

@@ -40,7 +40,8 @@ class EditPhotosScreenTest : SwissTravelTest() {
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
             isFavorite = true,
             isCurrentTrip = true,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()
 
@@ -66,7 +67,8 @@ class EditPhotosScreenTest : SwissTravelTest() {
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
             isFavorite = true,
             isCurrentTrip = true,
-            listUri = listOf("Uri1".toUri(), "AmazingUri2".toUri()))
+            listUri = listOf("Uri1".toUri(), "AmazingUri2".toUri()),
+            collaboratorsId = emptyList())
 
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()

@@ -234,7 +234,8 @@ class EditTripScreenTest {
         tripProfile = profile,
         isFavorite = false,
         isCurrentTrip = false,
-        listUri = emptyList())
+        listUri = emptyList(),
+        collaboratorsId = emptyList())
   }
 
   // inside your EditTripScreenTest.kt

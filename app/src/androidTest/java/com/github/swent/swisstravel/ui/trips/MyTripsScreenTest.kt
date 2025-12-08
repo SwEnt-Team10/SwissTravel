@@ -138,7 +138,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     runBlocking { fakeRepo.addTrip(newUpcomingTrip) }
 
@@ -173,7 +174,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val tripB =
         Trip(
@@ -190,7 +192,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
     val viewModel = MyTripsViewModel(fakeRepo)
@@ -364,7 +367,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferences = emptyList()),
             isFavorite = true,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val nonFavoriteTrip =
         Trip(
@@ -382,7 +386,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
     val viewModel = MyTripsViewModel(fakeRepo)
