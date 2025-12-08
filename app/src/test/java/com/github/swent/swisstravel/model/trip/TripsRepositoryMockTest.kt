@@ -272,8 +272,10 @@ class TripsRepositoryFirestorePublicTest {
   // ---------------------------------------------------
   @Test
   fun `getAllTrips returns trips for current user`() = runTest {
-    val mockQuery = mockk<Query>()
-    val mockQuerySnapshot = mockk<QuerySnapshot>(relaxed = true)
+    val mockOwnerQuery = mockk<Query>()
+    val mockCollaboratorQuery = mockk<Query>()
+    val mockOwnerSnapshot = mockk<QuerySnapshot>(relaxed = true)
+    val mockCollaboratorSnapshot = mockk<QuerySnapshot>(relaxed = true)
     val doc = mockk<QueryDocumentSnapshot>(relaxed = true)
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
@@ -281,19 +283,29 @@ class TripsRepositoryFirestorePublicTest {
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.uid } returns "owner123"
 
+    // 1) Trips where current user is the owner
     every { mockDb.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", "owner123") } returns
-        mockQuery
-    every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
-    every { mockQuerySnapshot.documents } returns listOf(doc)
-    every { mockQuerySnapshot.iterator() } returns
+        mockOwnerQuery
+    every { mockOwnerQuery.get() } returns Tasks.forResult(mockOwnerSnapshot)
+    every { mockOwnerSnapshot.documents } returns listOf(doc)
+    every { mockOwnerSnapshot.iterator() } returns
         listOf(doc).iterator() as MutableIterator<QueryDocumentSnapshot?>
 
+    // 2) Trips where current user is a collaborator (return empty list)
+    every {
+      mockDb.collection(TRIPS_COLLECTION_PATH).whereArrayContains("collaboratorsId", "owner123")
+    } returns mockCollaboratorQuery
+    every { mockCollaboratorQuery.get() } returns Tasks.forResult(mockCollaboratorSnapshot)
+    every { mockCollaboratorSnapshot.documents } returns emptyList()
+
+    // Document fields used by documentToTrip
     every { doc.id } returns "tripX"
     every { doc.getString("name") } returns "Trip X"
     every { doc.getString("ownerId") } returns "owner123"
     every { doc.get("locations") } returns emptyList<Map<String, Any>>()
     every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
     every { doc.get("activities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("collaboratorsId") } returns emptyList<String>()
     every { doc.get("tripProfile") } returns
         mapOf(
             "startDate" to Timestamp.now(),
@@ -304,10 +316,14 @@ class TripsRepositoryFirestorePublicTest {
             "children" to 0L,
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
-    every { doc.getBoolean("isFavorite") } returns false
+    // IMPORTANT: use the same key as in documentToTrip
+    every { doc.getBoolean("favorite") } returns false
+    every { doc.getBoolean("currentTrip") } returns false
 
+    // Act
     val trips = repo.getAllTrips()
 
+    // Assert
     assertEquals(1, trips.size)
     assertEquals("Trip X", trips.first().name)
   }
