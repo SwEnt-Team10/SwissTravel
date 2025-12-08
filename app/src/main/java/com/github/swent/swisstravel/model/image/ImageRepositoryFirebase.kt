@@ -15,11 +15,7 @@ class ImageRepositoryFirebase(
 ) : ImageRepository {
   val imageCollection = db.collection(IMAGES_COLLECTION_PATH)
 
-  /**
-   * Adds a new image to the repository.
-   *
-   * @return A new unique identifier.
-   */
+  /** Adds a new image to the repository. */
   override suspend fun addImage(base64: String) {
     val uid = imageCollection.document().id
     val image =
@@ -43,7 +39,7 @@ class ImageRepositoryFirebase(
           imageCollection.document(imageUid).get().await()
         } catch (e: Exception) {
           Log.e("ImageRepositoryFirebase", "Error retrieving image", e)
-          imageCollection.document(imageUid).get(Source.CACHE).await()
+          imageCollection.document(imageUid)[Source.CACHE].await()
         }
     return documentToImage(document) ?: throw Exception("ImageRepositoryFirebase: Image not found")
   }
