@@ -157,4 +157,8 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
             // InvalidNameMsg should stay null since the tripInfo should already have a valid name
             )
   }
+
+  fun setCurrentUserIsOwner(value: Boolean) {
+    _ui.value = _ui.value.copy(currentUserIsOwner = value)
+  }
 }

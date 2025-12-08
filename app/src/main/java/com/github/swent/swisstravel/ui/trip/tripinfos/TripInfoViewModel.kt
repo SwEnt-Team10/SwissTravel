@@ -11,6 +11,8 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripDate
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
@@ -52,12 +54,14 @@ data class TripInfoUIState(
     val isComputingSchedule: Boolean = false,
     val selectedStep: TripElement? = null,
     val drawFromCurrentPosition: Boolean = false,
-    val currentGpsPoint: Point? = null
+    val currentGpsPoint: Point? = null,
+    val currentUserIsOwner: Boolean = false
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
 class TripInfoViewModel(
-    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
+    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
+    private val userRepository: UserRepository = UserRepositoryFirebase()
 ) : ViewModel(), TripInfoViewModelContract {
   private val _uiState = MutableStateFlow(TripInfoUIState())
   override val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
@@ -123,7 +127,8 @@ class TripInfoViewModel(
                 selectedStep = if (isSameTrip) current.selectedStep else null,
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
-                currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null)
+                currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
+                currentUserIsOwner = userRepository.getCurrentUser().uid == trip.ownerId)
         computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
