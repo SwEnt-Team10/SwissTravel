@@ -1,1 +1,9 @@
 package com.github.swent.swisstravel.model.image
+
+/**
+ * Represents an image.
+ *
+ * @property uid The unique identifier of the image.
+ * @property base64 The base64-encoded representation of the image.
+ */
+data class Image(val uid: String, val base64: String)
