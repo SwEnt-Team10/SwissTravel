@@ -83,7 +83,7 @@ sealed class Screen(
 
   object Loading : Screen(route = "loading", name = "Loading")
 
-  object FriendsList : Screen(route = "friends_list", name = "Friends")
+  object FriendsList : Screen(route = "friends_list", name = "Friends", isTopLevelDestination = true)
 
   object AddFriend : Screen(route = "add_friend", name = "Add Friend")
 
@@ -147,7 +147,8 @@ class NavigationActions(
       } else {
         if (destination.isTopLevelDestination) {
           // Pop up to start of the graph to avoid large stacks
-          popUpTo(destination.route) { inclusive = true }
+          popUpTo(destination.route) { inclusive = true
+          }
         }
         restoreState = true
       }

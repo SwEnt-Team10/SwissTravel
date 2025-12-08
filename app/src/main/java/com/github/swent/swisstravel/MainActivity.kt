@@ -697,10 +697,8 @@ private fun NavGraphBuilder.friendsListNavGraph(
   ) {
     // Friends List Screen
     composable(Screen.FriendsList.route) {
-      val vm = friendsViewModel(navController)
 
       FriendsListScreen(
-          friendsViewModel = vm,
           onSelectFriend = { navigationActions.navigateTo(Screen.FriendProfile(it)) },
           onAddFriend = { navigationActions.navigateTo(Screen.AddFriend) })
     }
