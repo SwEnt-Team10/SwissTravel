@@ -21,12 +21,9 @@ import java.io.InputStream
 import java.io.OutputStream
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -45,16 +42,13 @@ class ImageHelperTest {
 
   @Before
   fun setup() {
-    // 1. Set Coroutine Dispatchers to run immediately for testing
-    Dispatchers.setMain(testDispatcher)
-
-    // 2. Mock Android Static Classes
+    // 1. Mock Android Static Classes
     mockkStatic(Bitmap::class)
     mockkStatic(BitmapFactory::class)
     mockkStatic(Base64::class)
     mockkStatic(Log::class)
 
-    // 3. Setup common mocks
+    // 2. Setup common mocks
     mockContext = mockk()
     mockContentResolver = mockk()
     mockUri = mockk()
@@ -68,7 +62,6 @@ class ImageHelperTest {
   @After
   fun teardown() {
     unmockkAll()
-    Dispatchers.resetMain()
   }
 
   /** Helper for setup */
@@ -104,7 +97,7 @@ class ImageHelperTest {
         every { mockContentResolver.openInputStream(mockUri) } throws Exception("File not found")
 
         // When
-        val result = ImageHelper.uriCompressedToBase64(mockContext, mockUri)
+        val result = ImageHelper.uriCompressedToBase64(mockContext, mockUri, testDispatcher)
 
         // Then
         assertNull(result)
@@ -120,7 +113,7 @@ class ImageHelperTest {
         every { BitmapFactory.decodeStream(any<InputStream>()) } returns null
 
         // When
-        val result = ImageHelper.uriCompressedToBase64(mockContext, mockUri)
+        val result = ImageHelper.uriCompressedToBase64(mockContext, mockUri, testDispatcher)
 
         // Then
         assertNull(result)
@@ -135,7 +128,7 @@ class ImageHelperTest {
         setupMockBitmapProcess(original = mockBitmap, resized = mockResizedBitmap)
 
         // When
-        ImageHelper.uriCompressedToBase64(mockContext, mockUri)
+        ImageHelper.uriCompressedToBase64(mockContext, mockUri, testDispatcher)
 
         // Then
         verify { mockBitmap.recycle() } // Should recycle the original
@@ -153,7 +146,7 @@ class ImageHelperTest {
         every { Base64.encodeToString(any(), Base64.NO_WRAP) } returns "success_base64"
 
         // When
-        val result = ImageHelper.uriCompressedToBase64(mockContext, mockUri)
+        val result = ImageHelper.uriCompressedToBase64(mockContext, mockUri, testDispatcher)
 
         // Then
         assertEquals("success_base64", result)
@@ -197,7 +190,7 @@ class ImageHelperTest {
         every { Base64.encodeToString(capture(slot), Base64.NO_WRAP) } returns "final_string"
 
         // When
-        ImageHelper.uriCompressedToBase64(mockContext, mockUri)
+        ImageHelper.uriCompressedToBase64(mockContext, mockUri, testDispatcher)
 
         // Then
         // Verify it was encoded with the SMALL array, not the huge one
@@ -222,7 +215,7 @@ class ImageHelperTest {
             expectedBitmap
 
         // When
-        val result = ImageHelper.base64ToBitmap(base64Str)
+        val result = ImageHelper.base64ToBitmap(base64Str, testDispatcher)
 
         // Then
         assertEquals(expectedBitmap, result)
@@ -239,7 +232,7 @@ class ImageHelperTest {
         setupMockBitmapProcess(original = bigLandscape, resized = mockResizedBitmap)
 
         // When
-        ImageHelper.uriCompressedToBase64(mockContext, mockUri)
+        ImageHelper.uriCompressedToBase64(mockContext, mockUri, testDispatcher)
 
         // New Width = 1024. New Height = 1024 / 2 = 512. (Ratio = 2000/1000 = 2)
         verify { Bitmap.createScaledBitmap(bigLandscape, 1024, 512, true) }
@@ -256,7 +249,7 @@ class ImageHelperTest {
         setupMockBitmapProcess(original = bigPortrait, resized = mockResizedBitmap)
 
         // When
-        ImageHelper.uriCompressedToBase64(mockContext, mockUri)
+        ImageHelper.uriCompressedToBase64(mockContext, mockUri, testDispatcher)
 
         // Then: Max dim is 1024.
         // New Height = 1024. New Width = 512.

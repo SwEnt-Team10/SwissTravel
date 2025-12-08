@@ -6,7 +6,9 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Base64
 import android.util.Log
+import androidx.core.graphics.scale
 import java.io.ByteArrayOutputStream
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -24,10 +26,15 @@ object ImageHelper {
    *
    * @param context The application context.
    * @param uri The URI to convert.
+   * @param dispatcher The dispatcher to use for the conversion. Default is Dispatchers.IO.
    * @return The base64-encoded string.
    */
-  suspend fun uriCompressedToBase64(context: Context, uri: Uri): String? =
-      withContext(Dispatchers.IO) {
+  suspend fun uriCompressedToBase64(
+      context: Context,
+      uri: Uri,
+      dispatcher: CoroutineDispatcher = Dispatchers.IO
+  ): String? =
+      withContext(dispatcher) {
         val originalBitmap = loadBitmapFromUri(context, uri) ?: return@withContext null
         val resizedBitmap = scaleBitmap(originalBitmap)
         // To avoid taking up unnecessary memory
@@ -42,10 +49,14 @@ object ImageHelper {
    * Converts a base64-encoded string to a bitmap.
    *
    * @param base64 The base64-encoded string to convert.
+   * @param dispatcher The dispatcher to use for the conversion. Default is Dispatchers.Default.
    * @return The converted bitmap.
    */
-  suspend fun base64ToBitmap(base64: String): Bitmap =
-      withContext(Dispatchers.Default) {
+  suspend fun base64ToBitmap(
+      base64: String,
+      dispatcher: CoroutineDispatcher = Dispatchers.Default
+  ): Bitmap =
+      withContext(dispatcher) {
         val decodedBytes = decodeBase64(base64)
         BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
       }
@@ -94,7 +105,7 @@ object ImageHelper {
       newWidth = (newHeight * ratio).toInt()
     }
 
-    return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    return bitmap.scale(newWidth, newHeight)
   }
 
   /**

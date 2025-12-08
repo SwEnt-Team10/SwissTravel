@@ -166,6 +166,41 @@ class ImageRepositoryFirebaseTest {
     assertFailsWith<Exception> { repo.getImage(imageUid) }
   }
 
+  @Test
+  fun getImageThrowsExceptionWhenBase64FieldIsMissing() = runTest {
+    // Given
+    val imageUid = "img-no-base64"
+    val docSnapshot = mockk<DocumentSnapshot>()
+
+    every { mockCollection.document(imageUid).get() } returns Tasks.forResult(docSnapshot)
+
+    // Mock valid owner, but NULL base64
+    every { docSnapshot.id } returns imageUid
+    every { docSnapshot.getString("ownerId") } returns "owner-1"
+    every { docSnapshot.getString("base64") } returns null
+
+    // Then
+    assertFailsWith<Exception> { repo.getImage(imageUid) }
+  }
+
+  @Test
+  fun getImageThrowsExceptionWhenParsingFailsUnexpectedly() = runTest {
+    // Given
+    val imageUid = "img-crash-parsing"
+    val docSnapshot = mockk<DocumentSnapshot>()
+
+    every { mockCollection.document(imageUid).get() } returns Tasks.forResult(docSnapshot)
+
+    // Mock id works, but accessing "ownerId" throws a RuntimeException
+    // This forces execution into the `catch(e: Exception)` block inside documentToImage
+    every { docSnapshot.id } returns imageUid
+    every { docSnapshot.getString("ownerId") } throws RuntimeException("Simulated Firestore Crash")
+
+    // Then
+    // repo.getImage should catch the internal null return and throw its own Exception
+    assertFailsWith<Exception> { repo.getImage(imageUid) }
+  }
+
   // deleteImage tests
   @Test
   fun deleteImageCallsDeleteOnDocument() = runTest {
