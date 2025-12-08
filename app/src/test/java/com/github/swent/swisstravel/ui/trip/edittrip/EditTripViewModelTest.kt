@@ -297,7 +297,8 @@ class EditTripScreenViewModelTest {
         tripProfile = profile,
         isFavorite = false,
         isCurrentTrip = false,
-        listUri = emptyList())
+        listUri = emptyList(),
+        collaboratorsId = emptyList())
   }
 }
 
