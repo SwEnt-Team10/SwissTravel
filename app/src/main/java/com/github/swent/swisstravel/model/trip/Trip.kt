@@ -31,6 +31,7 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  * @property isCurrentTrip Whether the trip is the current trip or not.
  * @property listUri The list of URIs of the pictures of the trip.
  * @property collaboratorsId The list of unique identifiers of the collaborators of the trip.
+ * @property isRandom Whether the trip is random or not.
  */
 data class Trip(
     val uid: String,
@@ -43,7 +44,8 @@ data class Trip(
     val isFavorite: Boolean,
     val isCurrentTrip: Boolean,
     val listUri: List<Uri>,
-    val collaboratorsId: List<String>
+    val collaboratorsId: List<String>,
+    val isRandom: Boolean = false
 ) {
   /**
    * Checks if the user is the owner of the trip.

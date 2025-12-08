@@ -104,6 +104,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("collaboratorsId") } returns emptyList<String>()
+    every { doc.getBoolean("random") } returns false
 
     val trip = repo.getTrip("trip1")
 
@@ -166,6 +167,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("collaboratorsId") } returns emptyList<String>()
+    every { doc.getBoolean("random") } returns false
 
     val trip = repo.getTrip("tripImgUrls")
 
@@ -223,6 +225,7 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.getBoolean("random") } returns false // Add this line
 
     val trip = repo.getTrip("tripWithBadActivities")
 
@@ -259,6 +262,7 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.getBoolean("random") } returns false // Add this line
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)
@@ -319,6 +323,8 @@ class TripsRepositoryFirestorePublicTest {
     // IMPORTANT: use the same key as in documentToTrip
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.getBoolean("isFavorite") } returns false
+    every { doc.getBoolean("random") } returns false
 
     // Act
     val trips = repo.getAllTrips()
@@ -351,7 +357,8 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            collaboratorsId = emptyList())
+            collaboratorsId = emptyList(),
+            isRandom = false)
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
@@ -385,7 +392,8 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            collaboratorsId = emptyList())
+            collaboratorsId = emptyList(),
+            isRandom = false)
 
     every { mockCollection.document("server-id-123") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
@@ -411,7 +419,8 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            collaboratorsId = emptyList())
+            collaboratorsId = emptyList(),
+            isRandom = false)
 
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns
@@ -434,7 +443,8 @@ class TripsRepositoryFirestorePublicTest {
             isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
-            collaboratorsId = emptyList())
+            collaboratorsId = emptyList(),
+            isRandom = false)
 
     every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
