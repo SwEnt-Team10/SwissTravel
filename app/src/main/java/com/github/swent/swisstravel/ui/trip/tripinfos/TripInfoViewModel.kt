@@ -49,7 +49,8 @@ data class TripInfoUIState(
     val selectedStep: TripElement? = null,
     val drawFromCurrentPosition: Boolean = false,
     val currentGpsPoint: Point? = null,
-    val currentUserIsOwner: Boolean = false
+    val currentUserIsOwner: Boolean = false,
+    val isLoading: Boolean = false
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -100,6 +101,7 @@ class TripInfoViewModel(
       return
     }
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true) }
       try {
         val current = _uiState.value
         val trip = tripsRepository.getTrip(uid)
@@ -122,12 +124,14 @@ class TripInfoViewModel(
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
-                currentUserIsOwner = userRepository.getCurrentUser().uid == trip.ownerId)
+                currentUserIsOwner = userRepository.getCurrentUser().uid == trip.ownerId,
+                isLoading = false)
         computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
         Log.e("TripInfoViewModel", "Error loading trip info", e)
         setErrorMsg("Failed to load trip info: ${e.message}")
+        _uiState.update { it.copy(isLoading = false) }
       }
     }
   }

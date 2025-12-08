@@ -11,6 +11,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -38,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 
 object FriendsScreenTestTags {
   const val FRIENDS_LIST = "friendsList"
@@ -106,25 +110,32 @@ fun FriendsListScreen(
                   contentDescription = stringResource(R.string.add_friend))
             }
       }) { padding ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(padding)
-                    .padding(
-                        start = dimensionResource(R.dimen.my_trip_padding_start_end),
-                        end = dimensionResource(R.dimen.my_trip_padding_start_end),
-                        bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
-              PendingFriendRequestsSection(
-                  pendingFriends = uiState.pendingFriends,
-                  onAccept = { friendUid -> friendsViewModel.acceptFriendRequest(friendUid) },
-                  onDecline = { friendUid -> friendsViewModel.removeFriend(friendUid) })
+      PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { friendsViewModel.refreshFriends() },
+            modifier = Modifier.padding(padding)) {
+              LazyColumn(
+                  modifier =
+                      Modifier.fillMaxSize()
+                          .padding(
+                              start = dimensionResource(R.dimen.my_trip_padding_start_end),
+                              end = dimensionResource(R.dimen.my_trip_padding_start_end),
+                              bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))
+                          .testTag(FriendsScreenTestTags.FRIENDS_LIST)) {
+                    item {
+                      PendingFriendRequestsSection(
+                          pendingFriends = uiState.pendingFriends,
+                          onAccept = { friendUid -> friendsViewModel.acceptFriendRequest(friendUid) },
+                          onDecline = { friendUid -> friendsViewModel.removeFriend(friendUid) })
+                    }
 
-              Spacer(modifier = Modifier.height(dimensionResource(R.dimen.friends_spacer)))
+                    item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.friends_spacer))) }
 
-              FriendsListSection(
-                  friends = friendsViewModel.friendsToDisplay,
-                  onSelectFriend = onSelectFriend,
-              )
+                    friendsListItems(
+                        friends = friendsViewModel.friendsToDisplay,
+                        onSelectFriend = onSelectFriend,
+                        noFriendsText ="No friends")
+                  }
             }
       }
 }
@@ -195,25 +206,22 @@ private fun FriendsTopAppBar(
  * @param friends The list of friends to display.
  * @param onSelectFriend The function to call when a friend is selected.
  */
-@Composable
-private fun FriendsListSection(
+private fun LazyListScope.friendsListItems(
     friends: List<User>,
     onSelectFriend: (String) -> Unit,
+    noFriendsText: String
 ) {
   if (friends.isEmpty()) {
-    Text(
-        text = stringResource(R.string.no_friends),
-        style = MaterialTheme.typography.bodyMedium,
-    )
+    item {
+      Text(
+          text = noFriendsText,
+          style = MaterialTheme.typography.bodyMedium,
+      )
+    }
   } else {
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().testTag(FriendsScreenTestTags.FRIENDS_LIST),
-        verticalArrangement =
-            Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement))) {
-          items(items = friends, key = { it.uid }) { friend ->
-            FriendElement(userToDisplay = friend, onClick = { onSelectFriend(friend.uid) })
-          }
-        }
+    items(items = friends, key = { it.uid }) { friend ->
+      FriendElement(userToDisplay = friend, onClick = { onSelectFriend(friend.uid) })
+    }
   }
 }
 

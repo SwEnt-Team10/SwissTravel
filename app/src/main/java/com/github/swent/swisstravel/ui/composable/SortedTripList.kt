@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -103,4 +104,41 @@ fun SortedTripList(
         noIconTripElement = listState.noIconTripElement,
         emptyListString = listState.emptyListString)
   }
+}
+
+fun LazyListScope.sortedTripListItems(
+    title: String = "",
+    listState: TripListState,
+    listEvents: TripListEvents,
+    onClickDropDownMenu: (TripSortType) -> Unit = {},
+    selectedSortType: TripSortType,
+) {
+  item {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(
+                    top = dimensionResource(R.dimen.sorted_trip_list_top_padding),
+                    bottom = dimensionResource(R.dimen.sorted_trip_list_bottom_padding))
+                .testTag(SortedTripListTestTags.TITLE_BUTTON_ROW),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = title,
+              style = MaterialTheme.typography.headlineLarge,
+              color = MaterialTheme.colorScheme.onBackground,
+              modifier = Modifier.testTag(SortedTripListTestTags.TITLE))
+
+          SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
+        }
+  }
+
+  tripListItems(
+      trips = listState.trips,
+      onClickTripElement = listEvents.onClickTripElement,
+      onLongPress = listEvents.onLongPress,
+      isSelected = listState.isSelected,
+      isSelectionMode = listState.isSelectionMode,
+      noIconTripElement = listState.noIconTripElement,
+      emptyListString = listState.emptyListString)
 }

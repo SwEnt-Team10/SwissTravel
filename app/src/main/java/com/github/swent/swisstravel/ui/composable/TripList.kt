@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.composable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -55,5 +56,32 @@ fun TripList(
         }
   } else {
     Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
+  }
+}
+//This function was made using AI
+fun LazyListScope.tripListItems(
+    trips: List<Trip> = emptyList(),
+    onClickTripElement: (Trip?) -> Unit = {},
+    onLongPress: (Trip?) -> Unit = {},
+    isSelected: (Trip) -> Boolean = { false },
+    isSelectionMode: Boolean = false,
+    noIconTripElement: Boolean = false,
+    emptyListString: String = "",
+) {
+  if (trips.isNotEmpty()) {
+    items(trips.size) { index ->
+      val trip = trips[index]
+      TripElement(
+          trip = trip,
+          onClick = { onClickTripElement(trip) },
+          onLongPress = { onLongPress(trip) },
+          isSelected = isSelected(trip),
+          isSelectionMode = isSelectionMode,
+          noIcon = noIconTripElement)
+    }
+  } else {
+    item {
+      Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
+    }
   }
 }

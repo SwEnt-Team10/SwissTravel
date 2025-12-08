@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -30,10 +31,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import com.github.swent.swisstravel.ui.composable.sortedTripListItems
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -170,27 +173,54 @@ fun MyTripsScreen(
         }
       },
       content = { padding ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(padding)
-                    .padding(
-                        start = dimensionResource(R.dimen.my_trip_padding_start_end),
-                        end = dimensionResource(R.dimen.my_trip_padding_start_end),
-                        bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
-              CurrentTripSection(
-                  myTripsViewModel = myTripsViewModel,
-                  onSelectTrip = onSelectTrip,
-                  onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
-                  onEditCurrentTrip = onEditCurrentTrip)
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { myTripsViewModel.refreshUIState() },
+            modifier = Modifier.padding(padding)) {
+              LazyColumn(
+                  modifier =
+                      Modifier.fillMaxSize()
+                          .padding(
+                              start = dimensionResource(R.dimen.my_trip_padding_start_end),
+                              end = dimensionResource(R.dimen.my_trip_padding_start_end),
+                              bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
+                    item {
+                      CurrentTripSection(
+                          myTripsViewModel = myTripsViewModel,
+                          onSelectTrip = onSelectTrip,
+                          onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
+                          onEditCurrentTrip = onEditCurrentTrip)
+                    }
 
-              UpcomingTripsSection(
-                  trips = uiState.tripsList,
-                  uiState = uiState,
-                  onSelectTrip = onSelectTrip,
-                  onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
-                  onEnterSelectionMode = { myTripsViewModel.toggleSelectionMode(true) },
-                  onSortSelected = { myTripsViewModel.updateSortType(it) })
+                    val listState =
+                        TripListState(
+                            trips = uiState.tripsList,
+                            isSelectionMode = uiState.isSelectionMode,
+                            isSelected = { trip -> trip in uiState.selectedTrips },
+                        )
+                    val listEvent =
+                        TripListEvents(
+                            onClickTripElement = {
+                                it?.let { trip ->
+                                    if (uiState.isSelectionMode) myTripsViewModel.toggleTripSelection(trip)
+                                    else onSelectTrip(trip.uid)
+                                }
+                            },
+                            onLongPress = {
+                                it?.let { trip ->
+                                    myTripsViewModel.toggleSelectionMode(true)
+                                    myTripsViewModel.toggleTripSelection(trip)
+                                }
+                            },
+                        )
+
+                    sortedTripListItems(
+                        listState = listState,
+                        listEvents = listEvent,
+                        onClickDropDownMenu = { myTripsViewModel.updateSortType(it) },
+                        selectedSortType = uiState.sortType,
+                    )
+                  }
             }
       })
 }
@@ -386,42 +416,4 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
  * @param onEnterSelectionMode Activates selection mode.
  * @param onSortSelected Updates trip sort order.
  */
-@Composable
-private fun UpcomingTripsSection(
-    trips: List<Trip>,
-    uiState: TripsViewModel.TripsUIState,
-    onSelectTrip: (String) -> Unit,
-    onToggleSelection: (Trip) -> Unit,
-    onEnterSelectionMode: () -> Unit,
-    onSortSelected: (TripSortType) -> Unit,
-) {
-  val listState =
-      TripListState(
-          trips = trips,
-          emptyListString = stringResource(R.string.no_upcoming_trips),
-          isSelectionMode = uiState.isSelectionMode,
-          isSelected = { trip -> trip in uiState.selectedTrips },
-      )
-  val listEvent =
-      TripListEvents(
-          onClickTripElement = {
-            it?.let { trip ->
-              if (uiState.isSelectionMode) onToggleSelection(trip) else onSelectTrip(trip.uid)
-            }
-          },
-          onLongPress = {
-            it?.let { trip ->
-              onEnterSelectionMode()
-              onToggleSelection(trip)
-            }
-          },
-      )
 
-  SortedTripList(
-      title = stringResource(R.string.upcoming_trips),
-      listState = listState,
-      listEvents = listEvent,
-      onClickDropDownMenu = { type -> onSortSelected(type) },
-      selectedSortType = uiState.sortType,
-  )
-}

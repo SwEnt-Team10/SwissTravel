@@ -45,6 +45,7 @@ abstract class TripsViewModel(protected val tripsRepository: TripsRepository) : 
       val sortType: TripSortType = TripSortType.START_DATE_ASC,
       val isSelectionMode: Boolean = false,
       val selectedTrips: Set<Trip> = emptySet(),
+      val isLoading: Boolean = false,
   )
 
   /**

@@ -18,8 +18,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
@@ -36,6 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -157,32 +160,39 @@ fun ProfileScreen(
             onSettings = onSettings,
             onUnfriend = { showUnfriendConfirmation = true })
       }) { pd ->
-        if (uiState.isLoading) {
-          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
-                  CircularProgressIndicator(
-                      modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
-                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+      PullToRefreshBox(
+          isRefreshing = uiState.isLoading,
+          onRefresh = { profileViewModel.refreshStats(NetworkUtils.isOnline(context)) },
+          modifier = Modifier.padding(pd)) {
+            if (uiState.isLoading && uiState.stats.totalTrips == -1) {
+              Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center) {
+                      CircularProgressIndicator(
+                          modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
+                      Spacer(
+                          modifier =
+                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
 
-                  if (!isOnline) {
-                    Text(
-                        text = stringResource(R.string.loading_from_cache),
-                        modifier = Modifier.align(Alignment.CenterHorizontally))
-                  }
-                }
+                      if (!isOnline) {
+                        Text(
+                            text = stringResource(R.string.loading_from_cache),
+                            modifier = Modifier.align(Alignment.CenterHorizontally))
+                      }
+                    }
+              }
+            } else {
+              ProfileScreenContent(
+                  uiState = uiState,
+                  onSelectTrip = onSelectTrip,
+                  onEditPinnedTrips = onEditPinnedTrips,
+                  onEditPinnedImages = {
+                    Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
+                  }, // todo onEditPinnedImages,
+                  modifier = Modifier)
+            }
           }
-        } else {
-          ProfileScreenContent(
-              uiState = uiState,
-              onSelectTrip = onSelectTrip,
-              onEditPinnedTrips = onEditPinnedTrips,
-              onEditPinnedImages = {
-                Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
-              }, // todo onEditPinnedImages,
-              modifier = Modifier.padding(pd))
-        }
       }
 }
 
@@ -265,6 +275,7 @@ private fun ProfileScreenContent(
       modifier =
           modifier
               .fillMaxSize()
+              .verticalScroll(rememberScrollState())
               .padding(
                   top = dimensionResource(R.dimen.profile_padding_top_bottom),
                   start = dimensionResource(R.dimen.profile_padding_start_end),
