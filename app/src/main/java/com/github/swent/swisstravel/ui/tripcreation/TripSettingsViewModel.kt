@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.algorithm.random.RandomTripGenerator
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
@@ -22,9 +23,9 @@ import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Timestamp
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.temporal.ChronoUnit
-import kotlin.random.Random
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -211,48 +212,19 @@ open class TripSettingsViewModel(
    *   used.
    */
   fun randomTrip(context: Context, seed: Int? = null) {
-    val grandTour =
-        context.resources.getStringArray(R.array.grand_tour).map {
-          val parts = it.split(";")
-          Location(Coordinate(parts[1].toDouble(), parts[2].toDouble()), parts[0], "")
-        }
-
-    val random = seed?.let { Random(it) } ?: Random
     val settings = _tripSettings.value
-
-    // Pick a random departure location different from the arrival
-    val availableCities =
-        grandTour
-            .filter { it.name != settings.arrivalDeparture.arrivalLocation?.name }
-            .toMutableList()
-    val end = availableCities.removeAt(random.nextInt(availableCities.size))
-    updateDepartureLocation(end)
-
-    // Determine a manageable number of intermediate destinations based on trip duration
-    val tripDurationDays =
-        if (settings.date.startDate != null && settings.date.endDate != null) {
-          val duration =
-              ChronoUnit.DAYS.between(settings.date.startDate, settings.date.endDate).toInt() + 1
-          Log.d("TripSettingsViewModel", "Trip duration in days: $duration")
-          duration
-        } else {
-          Log.d("TripSettingsViewModel", "Dates are null")
-          DEFAULT_DURATION // Default to a 3-day trip if dates are not set, should not happen
-        }
-    // Rule: roughly one new city every 2 days. Minimum 0, max 3.
-    val numIntermediateDestinations = (tripDurationDays / 2).coerceAtMost(3).coerceAtLeast(0)
-
-    // Select random, distinct intermediate destinations
-    val intermediateDestinations =
-        if (numIntermediateDestinations > 0) {
-          availableCities.shuffled(random).take(numIntermediateDestinations)
-        } else {
-          emptyList()
-        }
+    val (start, end, intermediateDestinations) =
+        RandomTripGenerator.generateRandomDestinations(context, settings, seed)
 
     // Update the TripSettings state with the new random locations
     _tripSettings.update {
-      it.copy(name = "Random Swiss Adventure", destinations = intermediateDestinations)
+      val currentTime = LocalDateTime.now()
+      val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm")
+      val formattedTime = currentTime.format(formatter)
+      it.copy(
+          name = "Random Swiss Adventure $formattedTime",
+          arrivalDeparture = TripArrivalDeparture(start, end),
+          destinations = intermediateDestinations)
     }
 
     // Call setDestinations to construct the full list and then save the trip
@@ -338,7 +310,8 @@ open class TripSettingsViewModel(
                 tripProfile = tripProfile,
                 isFavorite = false,
                 isCurrentTrip = false,
-                listUri = emptyList())
+                listUri = emptyList(),
+                isRandom = _isRandomTrip.value)
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)
