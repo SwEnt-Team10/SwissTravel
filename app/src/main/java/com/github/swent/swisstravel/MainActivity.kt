@@ -697,7 +697,6 @@ private fun NavGraphBuilder.friendsListNavGraph(
   ) {
     // Friends List Screen
     composable(Screen.FriendsList.route) {
-
       FriendsListScreen(
           onSelectFriend = { navigationActions.navigateTo(Screen.FriendProfile(it)) },
           onAddFriend = { navigationActions.navigateTo(Screen.AddFriend) })

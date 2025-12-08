@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.model.user.Achievement
@@ -60,7 +61,7 @@ data class ProfileUIState(
  */
 class ProfileViewModel(
     private val userRepository: UserRepository = UserRepositoryFirebase(),
-    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
+    private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
     requestedUid: String
 ) : ViewModel() {
 

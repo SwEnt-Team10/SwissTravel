@@ -126,7 +126,9 @@ fun ProfileScreen(
 
   val isOnline = NetworkUtils.isOnline(LocalContext.current)
   LaunchedEffect(isOnline) { profileViewModel.refreshStats(isOnline) }
-
+  if (isOnline) {
+    profileViewModel.refreshStats(isOnline)
+  }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
