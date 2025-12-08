@@ -187,8 +187,17 @@ open class TripAlgorithm(
           Pair(Location(Coordinate(46.8490, 9.5300), "Chur"), 5), // Chur
           Pair(Location(Coordinate(47.3490, 8.7186), "Uster"), 4), // Uster (ZH agglomeration)
           Pair(Location(Coordinate(46.2335, 7.3573), "Sion"), 5), // Sion
-          Pair(Location(Coordinate(46.1890, 6.1515), "Vernier"), 4) // Vernier (near Geneva)
-          )
+          Pair(Location(Coordinate(46.4300, 6.9100), "Vevey"), 3), // Vevey
+          Pair(Location(Coordinate(46.4310, 6.9110), "Montreux"), 4), // Montreux
+          Pair(Location(Coordinate(46.1697, 8.7971), "Locarno"), 5)) // Locarno
+
+  /**
+   * A data class used to store the result of [addGrandTourActivities]
+   *
+   * @param added Whether at least one activity was successfully added.
+   * @param shouldRetryCenter Whether the center should be retried next time.
+   */
+  private data class AddGrandTourResult(val added: Boolean, val shouldRetryCenter: Boolean)
 
   /**
    * Computes a trip based on the provided settings and profile.
@@ -532,8 +541,8 @@ open class TripAlgorithm(
 
   /**
    * Done with AI Perform the rescheduling stage:
-   * - Compare scheduled result to original activities
-   * - Compute deficitSeconds = sum(missing estimatedTime) + missingCount * penalty
+   * - Compute deficitSeconds = sum(missing estimatedTime) + missingCount * penalty (the overtime of
+   *   the trip)
    * - Randomly remove activities from the full activity list until removedSeconds >= deficitSeconds
    * - Update the OrderedRoute by removing those locations and invalidating the affected segment
    *   durations
@@ -586,16 +595,71 @@ open class TripAlgorithm(
     val candidateList = normalActivities.toMutableList()
     candidateList.shuffle(rand)
 
+    data class Cluster(val center: Location, val acts: MutableList<Activity>)
+
+    // Build map: preferredLocation -> closest activities
+    val clusters =
+        tripProfile.preferredLocations.map { prefLoc ->
+          Cluster(center = prefLoc, acts = mutableListOf())
+        }
+
+    // Assign each candidate activity to the nearest preferred location
+    for (act in candidateList) {
+      val loc = act.location
+      val nearestCluster =
+          clusters.minByOrNull { cluster ->
+            loc.coordinate.haversineDistanceTo(cluster.center.coordinate)
+          }!!
+      nearestCluster.acts.add(act)
+    }
+
+    // Identify clusters that have only ONE activity → “protected”
+    val protectedActivities =
+        clusters
+            .filter { it.acts.size <= 1 } // clusters with <= 1 activity
+            .flatMap { it.acts }
+            .toMutableSet()
+
+    // Also protect intermediate activities
+    protectedActivities.addAll(intermediateActivities)
+
     val toRemove = mutableListOf<Activity>()
-    var removedSec = 0L
-    val iterator = candidateList.iterator()
-    while (removedSec < deficitSeconds && iterator.hasNext()) {
-      val candidate = iterator.next()
-      toRemove.add(candidate)
-      removedSec += candidate.estimatedTime.toLong()
+    var remainingDeficit = deficitSeconds
+    val pool = candidateList.toMutableList()
+
+    while (remainingDeficit > 0 && pool.isNotEmpty()) {
+
+      // Respect protected clusters unless impossible
+      val allowedPool =
+          pool
+              .filter { it !in protectedActivities }
+              .ifEmpty { pool } // fallback to full pool if needed
+
+      // 1) overshoots
+      val overshoots = allowedPool.filter { it.estimatedTime.toLong() >= remainingDeficit }
+      val bestOvershoot = overshoots.minByOrNull { it.estimatedTime.toLong() - remainingDeficit }
+
+      // 2) undershoot fallback
+      val bestUndershoot =
+          allowedPool
+              .filter { it.estimatedTime.toLong() < remainingDeficit }
+              .maxByOrNull { it.estimatedTime.toLong() }
+
+      val chosen = bestOvershoot ?: bestUndershoot ?: break
+
+      toRemove.add(chosen)
+      remainingDeficit -= chosen.estimatedTime.toLong()
+      pool.remove(chosen)
+
+      // If a protected activity had to be removed (fallback case), unprotect the cluster
+      if (chosen in protectedActivities) {
+        protectedActivities.remove(chosen)
+      }
+
       onProgress(
           rescheduleProgression.schedule +
-              rescheduleProgression.analyzeAndRemove * (removedSec.toFloat() / deficitSeconds))
+              rescheduleProgression.analyzeAndRemove *
+                  (1f - remainingDeficit.toFloat() / deficitSeconds))
     }
 
     if (toRemove.isEmpty()) {
@@ -605,7 +669,9 @@ open class TripAlgorithm(
 
     // 5) Update activityList by removing chosen activities
     val removedLocations = toRemove.map { it.location }.toSet()
-    activityList.removeAll { act -> toRemove.any { rem -> activitiesMatch(act, rem) } }
+    activityList.removeAll { act ->
+      !intermediateActivities.contains(act) && toRemove.any { rem -> activitiesMatch(act, rem) }
+    }
 
     // 6) Build new OrderedRoute removing those locations and invalidating durations
     val (routeAfterRemoval, changedIndexes) =
@@ -730,11 +796,26 @@ open class TripAlgorithm(
           activityBlackList.add(newAct.getName())
 
           // ---- Build a temporary OrderedRoute ----
+          val newLocation = addedActivities.last().location
+
+          // Append location to the orderedLocations list
+          val newOrderedLocations = ordered.orderedLocations + newLocation
+
+          // Keep existing segment durations for the old route
+          val existingDurations = ordered.segmentDuration.toMutableList()
+
+          // Add a single INVALID_DURATION for the new segment
+          existingDurations.add(INVALID_DURATION)
+
+          // Update total duration
+          val newTotalDuration = existingDurations.sum()
+
+          // Build updated OrderedRoute
           ordered =
               ordered.copy(
-                  orderedLocations = ordered.orderedLocations + addedActivities.last().location,
-                  segmentDuration = ordered.segmentDuration + listOf(INVALID_DURATION),
-                  totalDuration = ordered.totalDuration + INVALID_DURATION)
+                  orderedLocations = newOrderedLocations,
+                  segmentDuration = existingDurations,
+                  totalDuration = newTotalDuration)
 
           val startIndex = ordered.orderedLocations.size - addedActivities.size
           val indexes = (startIndex until ordered.orderedLocations.size).toList()
@@ -752,7 +833,7 @@ open class TripAlgorithm(
               scheduleTrip(
                   tripProfile = tripProfile,
                   ordered = recomputed,
-                  activities = addedActivities.toMutableList(),
+                  activities = (oldActivities + addedActivities).toMutableList(),
                   params = scheduleParams) {}
 
           // Replace newSchedule so we can test endDate again
@@ -761,9 +842,12 @@ open class TripAlgorithm(
         }
 
         // If we completed a full cycle without finishing => widen radius
-        if (nearWhich == 2) {
+        val cycleSize = listOfLocations.size
+
+        nearWhich = (nearWhich + 1) % cycleSize
+        if (nearWhich == cycleSize - 1) {
           index += 1
-          radius += (RADIUS_EXTENSION_M / index)
+          radius += RADIUS_EXTENSION_M / (index + 1)
         }
 
         nearWhich = (nearWhich + 1) % 3
@@ -854,7 +938,7 @@ open class TripAlgorithm(
       originalOrderedRoute: OrderedRoute,
       activityList: List<Activity>,
       tripProfile: TripProfile,
-      intermediateActivities: List<Activity> = emptyList(),
+      intermediateActivities: List<Activity>,
       context: Context,
       onProgress: (Float) -> Unit = {},
   ): List<TripElement> {
@@ -867,17 +951,18 @@ open class TripAlgorithm(
               onProgress(it * 0.25f)
             }
 
+    val hasUrbanPreference = tripProfile.preferences.contains(Preference.URBAN)
+    val hasIntermediatePreference = tripProfile.preferences.contains(Preference.INTERMEDIATE_STOPS)
+
     var addCityWorks = true
     var addGrandTourWorks = true
+    var stayAtCenterRetry = true
     val visitedLocations = mutableListOf<Location>()
     var numberOfCycle = 0
-    val limit = 10
+    val limit = computeIndex(tripProfile.endDate, schedule.last().endDate) + 1
     while ((addCityWorks || addGrandTourWorks) &&
-        numberOfCycle < limit &&
+        numberOfCycle <= limit &&
         !sameDate(schedule.last().endDate, tripProfile.endDate)) {
-      val hasUrbanPreference = tripProfile.preferences.contains(Preference.URBAN)
-      val hasIntermediatePreference =
-          tripProfile.preferences.contains(Preference.INTERMEDIATE_STOPS)
       val rand = Random.Default
 
       // This part was done with AI
@@ -887,9 +972,11 @@ open class TripAlgorithm(
           if (rand.nextBoolean()) {
             addCityWorks = addCityActivity(tripProfile, allActivities, context)
           } else {
-            addGrandTourWorks =
+            val result =
                 addGrandTourActivities(
-                    tripProfile, allActivities, visitedLocations, addGrandTourWorks, context)
+                    tripProfile, allActivities, visitedLocations, stayAtCenterRetry, context)
+            addGrandTourWorks = result.added
+            stayAtCenterRetry = result.shouldRetryCenter
           }
         }
 
@@ -900,24 +987,29 @@ open class TripAlgorithm(
 
         // Only Grand Tour
         addGrandTourWorks && hasIntermediatePreference -> {
-          addGrandTourWorks =
+          val result =
               addGrandTourActivities(
-                  tripProfile, allActivities, visitedLocations, addGrandTourWorks, context)
+                  tripProfile, allActivities, visitedLocations, stayAtCenterRetry, context)
+          addGrandTourWorks = result.added
+          stayAtCenterRetry = result.shouldRetryCenter
         }
 
         // Fallback: try both randomly
         else -> {
-          if (rand.nextBoolean()) {
+          if (rand.nextBoolean() && addCityWorks) {
             addCityWorks = addCityActivity(tripProfile, allActivities, context)
           } else {
-            addGrandTourWorks =
+            val result =
                 addGrandTourActivities(
-                    tripProfile, allActivities, visitedLocations, addGrandTourWorks, context)
+                    tripProfile, allActivities, visitedLocations, stayAtCenterRetry, context)
+            addGrandTourWorks = result.added
+            stayAtCenterRetry = result.shouldRetryCenter
           }
         }
       }
 
-      val newActivities = allActivities.filter { !activityList.contains(it) }
+      val newActivities =
+          allActivities.filter { act -> activityList.none { it.location == act.location } }
       val optimizedRoute =
           routeOptimizer.optimize(
               tripProfile.arrivalLocation!!,
@@ -1064,9 +1156,9 @@ open class TripAlgorithm(
       visitedList: MutableList<Location>,
       stayAtCenter: Boolean,
       context: Context
-  ): Boolean {
+  ): AddGrandTourResult {
     val preferred = tripProfile.preferredLocations
-    if (preferred.isEmpty()) return false
+    if (preferred.isEmpty()) return AddGrandTourResult(false, stayAtCenter)
 
     // Load Grand Tour cities from resources
     val grandTour =
@@ -1106,8 +1198,8 @@ open class TripAlgorithm(
         }
 
     // ---- Try each candidate location ----
-    var radius = 30000.0
-    while (radius <= 120_000.0) {
+    var radius = 30
+    while (radius <= 120) {
       for (loc in targetCities) {
         // Skip already visited
         if (visitedList.any { it.name == loc.name }) continue
@@ -1123,7 +1215,8 @@ open class TripAlgorithm(
               loc
             } ?: continue
 
-        // Fetch 1-2 activities near the city
+        // Fetch 1-2 activities near the
+        var added = false
         for (i in 1..2) {
           val newActivity =
               activitySelector.getOneActivityNearWithPreferences(
@@ -1132,16 +1225,20 @@ open class TripAlgorithm(
                   activityBlackList = activityList.map { it.getName() })
           if (newActivity != null) {
             activityList.add(newActivity)
-          } else break
+            added = true
+          } else
+              break // No need to search for a second activity if we didn't find one to begin with
         }
 
-        visitedList.add(matchingCity)
-        return true
+        if (added) {
+          visitedList.add(matchingCity)
+          return AddGrandTourResult(true, stayAtCenter)
+        }
       }
-      radius += 30_000.0
+      radius += 30
     }
 
-    return false
+    return AddGrandTourResult(false, stayAtCenter)
   }
 
   /**
