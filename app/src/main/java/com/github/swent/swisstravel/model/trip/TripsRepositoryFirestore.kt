@@ -47,7 +47,7 @@ class TripsRepositoryFirestore(
                   .get()
                   .await()
           (ownerSnapshot.documents + collaboratorSnapshot.documents).distinctBy { it.id }
-        } catch (e: Exception) {
+        } catch (_: Exception) {
           val ownerSnapshot =
               db.collection(TRIPS_COLLECTION_PATH)
                   .whereEqualTo(ownerAttributeName, currentUserId)[Source.CACHE]
@@ -68,7 +68,7 @@ class TripsRepositoryFirestore(
     val document =
         try {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
-        } catch (e: Exception) {
+        } catch (_: Exception) {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
         }
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
@@ -142,9 +142,9 @@ class TripsRepositoryFirestore(
 
       val isCurrentTrip = document.getBoolean("currentTrip") ?: false
       // With help of AI
-      val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
+      val listUriStrings = document["listUri"] as? List<*> ?: emptyList<Uri>()
       val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
-      val collaboratorsId = document.get("collaboratorsId") as? List<*> ?: emptyList<String>()
+      val collaboratorsId = document["collaboratorsId"] as? List<*> ?: emptyList<String>()
       val listCollaboratorsId = collaboratorsId.mapNotNull { (it as? String) }
 
       Trip(

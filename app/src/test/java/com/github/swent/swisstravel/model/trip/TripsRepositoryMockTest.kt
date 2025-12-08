@@ -445,4 +445,67 @@ class TripsRepositoryFirestorePublicTest {
     verify { mockCollection.document("authoritative-server-id") }
     verify { mockDocumentRef.set(updated) }
   }
+
+  @Test
+  fun `getAllTrips falls back to cache when online query fails`() = runTest {
+    val mockOwnerQuery = mockk<Query>()
+    val mockCollaboratorQuery = mockk<Query>()
+    val mockOwnerCacheSnapshot = mockk<QuerySnapshot>(relaxed = true)
+    val mockCollaboratorCacheSnapshot = mockk<QuerySnapshot>(relaxed = true)
+    val doc = mockk<QueryDocumentSnapshot>(relaxed = true)
+    val locationMap =
+        mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
+
+    every { mockAuth.currentUser } returns mockUser
+    every { mockUser.uid } returns "owner123"
+
+    // -------- ONLINE QUERIES (will fail) --------
+    every { mockDb.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", "owner123") } returns
+        mockOwnerQuery
+    every {
+      mockDb.collection(TRIPS_COLLECTION_PATH).whereArrayContains("collaboratorsId", "owner123")
+    } returns mockCollaboratorQuery
+
+    // Make the ONLINE .get() fail so we enter the catch block
+    every { mockOwnerQuery.get() } returns Tasks.forException(RuntimeException("Network error"))
+    every { mockCollaboratorQuery.get() } returns
+        Tasks.forException(RuntimeException("Network error"))
+
+    // -------- CACHE QUERIES (used in catch block) --------
+    // This uses the operator fun Query.get(Source): Task<QuerySnapshot>
+    every { mockOwnerQuery[Source.CACHE] } returns Tasks.forResult(mockOwnerCacheSnapshot)
+    every { mockCollaboratorQuery[Source.CACHE] } returns
+        Tasks.forResult(mockCollaboratorCacheSnapshot)
+
+    every { mockOwnerCacheSnapshot.documents } returns listOf(doc)
+    every { mockCollaboratorCacheSnapshot.documents } returns emptyList()
+
+    // Document fields used by documentToTrip
+    every { doc.id } returns "tripCache"
+    every { doc.getString("name") } returns "Cached Trip"
+    every { doc.getString("ownerId") } returns "owner123"
+    every { doc.get("locations") } returns emptyList<Map<String, Any>>()
+    every { doc.get("routeSegments") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("collaboratorsId") } returns emptyList<String>()
+    every { doc.get("tripProfile") } returns
+        mapOf(
+            "startDate" to Timestamp.now(),
+            "endDate" to Timestamp.now(),
+            "preferredLocations" to emptyList<Map<String, Any>>(),
+            "preferences" to emptyList<Map<String, Any>>(),
+            "adults" to 1L,
+            "children" to 0L,
+            "arrivalLocation" to locationMap,
+            "departureLocation" to locationMap)
+    every { doc.getBoolean("favorite") } returns false
+    every { doc.getBoolean("currentTrip") } returns false
+
+    // Act
+    val trips = repo.getAllTrips()
+
+    // Assert – result comes from cache path
+    assertEquals(1, trips.size)
+    assertEquals("Cached Trip", trips.first().name)
+  }
 }
