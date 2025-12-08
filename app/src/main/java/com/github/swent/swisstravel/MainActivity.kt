@@ -497,7 +497,9 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   onActivityClick = { tripActivity ->
                     vm.selectActivity(tripActivity.activity)
                     navigationActions.navigateToActivityInfo(uid)
-                  }),
+                  },
+                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
+                  onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
           onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
 
