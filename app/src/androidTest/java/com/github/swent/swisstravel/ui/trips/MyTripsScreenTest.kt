@@ -40,6 +40,14 @@ class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()
   }
 
   override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
+
+  override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+    /* no-op */
+  }
+
+  override suspend fun removeCollaborator(tripId: String, userId: String) {
+    /* no-op */
+  }
 }
 
 class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {

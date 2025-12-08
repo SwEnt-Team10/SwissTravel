@@ -217,4 +217,141 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     assertFailsWith<Exception> { repository.getTrip(tripId) }
     Unit
   }
+
+  @Test
+  fun shareTripWithUsers_addsCollaborators() = runBlocking {
+    // Arrange: create owner and collaborator users
+    val ownerToken = FakeJwtGenerator.createFakeGoogleIdToken("Owner", "owner@example.com")
+    FirebaseEmulator.createGoogleUser(ownerToken)
+    val ownerCredential = GoogleAuthProvider.getCredential(ownerToken, null)
+    FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
+    val ownerUid = FirebaseEmulator.auth.currentUser!!.uid
+
+    val collabToken = FakeJwtGenerator.createFakeGoogleIdToken("Collab", "collab@example.com")
+    FirebaseEmulator.createGoogleUser(collabToken)
+    val collabCredential = GoogleAuthProvider.getCredential(collabToken, null)
+    FirebaseEmulator.auth.signInWithCredential(collabCredential).await()
+    val collabUid = FirebaseEmulator.auth.currentUser!!.uid
+
+    // Sign back in as owner to create the trip and share it
+    FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
+
+    val now = Timestamp.now()
+    val location = Location(Coordinate(0.0, 0.0), "Loc")
+    val trip =
+        Trip(
+            uid = repository.getNewUid(),
+            name = "Shared Trip",
+            ownerId = ownerUid,
+            locations = listOf(location),
+            activities = emptyList(),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
+            routeSegments = emptyList(),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
+
+    repository.addTrip(trip)
+
+    // Act: share the trip with the collaborator
+    repository.shareTripWithUsers(trip.uid, listOf(collabUid))
+
+    val fetched = repository.getTrip(trip.uid)
+    assertTrue(fetched.collaboratorsId.contains(collabUid))
+  }
+
+  @Test
+  fun getAllTrips_includesTripsWhereUserIsCollaborator() = runBlocking {
+    // Arrange: create owner and collaborator
+    val ownerToken = FakeJwtGenerator.createFakeGoogleIdToken("Owner2", "owner2@example.com")
+    FirebaseEmulator.createGoogleUser(ownerToken)
+    val ownerCredential = GoogleAuthProvider.getCredential(ownerToken, null)
+    FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
+    val ownerUid = FirebaseEmulator.auth.currentUser!!.uid
+
+    val collabToken = FakeJwtGenerator.createFakeGoogleIdToken("Collab2", "collab2@example.com")
+    FirebaseEmulator.createGoogleUser(collabToken)
+    val collabCredential = GoogleAuthProvider.getCredential(collabToken, null)
+    FirebaseEmulator.auth.signInWithCredential(collabCredential).await()
+    val collabUid = FirebaseEmulator.auth.currentUser!!.uid
+
+    // Back to owner to create and share trip
+    FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
+
+    val now = Timestamp.now()
+    val location = Location(Coordinate(0.0, 0.0), "Loc")
+    val trip =
+        Trip(
+            uid = repository.getNewUid(),
+            name = "Owner Shared Trip",
+            ownerId = ownerUid,
+            locations = listOf(location),
+            activities = emptyList(),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
+            routeSegments = emptyList(),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
+
+    repository.addTrip(trip)
+    repository.shareTripWithUsers(trip.uid, listOf(collabUid))
+
+    // Act: sign in as collaborator and list trips
+    FirebaseEmulator.auth.signInWithCredential(collabCredential).await()
+    val tripsForCollab = repository.getAllTrips()
+
+    // Assert: collaborator should see the shared trip even though they're not the owner
+    assertTrue(tripsForCollab.any { it.uid == trip.uid })
+  }
+
+  @Test
+  fun removeTripCollaborator_removesUserFromCollaborators() = runBlocking {
+    // Arrange
+    val ownerToken = FakeJwtGenerator.createFakeGoogleIdToken("Owner3", "owner3@example.com")
+    FirebaseEmulator.createGoogleUser(ownerToken)
+    val ownerCredential = GoogleAuthProvider.getCredential(ownerToken, null)
+    FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
+    val ownerUid = FirebaseEmulator.auth.currentUser!!.uid
+
+    val collabToken = FakeJwtGenerator.createFakeGoogleIdToken("Collab3", "collab3@example.com")
+    FirebaseEmulator.createGoogleUser(collabToken)
+    val collabCredential = GoogleAuthProvider.getCredential(collabToken, null)
+    FirebaseEmulator.auth.signInWithCredential(collabCredential).await()
+    val collabUid = FirebaseEmulator.auth.currentUser!!.uid
+
+    // Back to owner
+    FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
+
+    val now = Timestamp.now()
+    val location = Location(Coordinate(0.0, 0.0), "Loc")
+    val trip =
+        Trip(
+            uid = repository.getNewUid(),
+            name = "Trip With Collab",
+            ownerId = ownerUid,
+            locations = listOf(location),
+            activities = emptyList(),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
+            routeSegments = emptyList(),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
+
+    repository.addTrip(trip)
+    repository.shareTripWithUsers(trip.uid, listOf(collabUid))
+
+    // Sanity check
+    val withCollab = repository.getTrip(trip.uid)
+    assertTrue(withCollab.collaboratorsId.contains(collabUid))
+
+    // Act: remove collaborator
+    repository.removeCollaborator(trip.uid, collabUid)
+
+    // Assert
+    val fetched = repository.getTrip(trip.uid)
+    assertTrue(!fetched.collaboratorsId.contains(collabUid))
+  }
 }

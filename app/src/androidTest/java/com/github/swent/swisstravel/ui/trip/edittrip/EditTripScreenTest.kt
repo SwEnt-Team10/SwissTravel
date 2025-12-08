@@ -264,6 +264,14 @@ class EditTripScreenTest {
       /* no-op */
     }
 
+    override suspend fun removeCollaborator(tripId: String, userId: String) {
+      /* no-op */
+    }
+
+    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+      /* no-op */
+    }
+
     var lastEditedTripId: String? = null
     var lastEditedTrip: Trip? = null
 
