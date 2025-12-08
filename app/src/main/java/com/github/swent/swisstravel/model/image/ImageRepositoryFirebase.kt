@@ -43,7 +43,7 @@ class ImageRepositoryFirebase(
           imageCollection.document(imageUid).get().await()
         } catch (e: Exception) {
           Log.e("ImageRepositoryFirebase", "Error retrieving image", e)
-          imageCollection.document(imageUid)[Source.CACHE].await()
+          imageCollection.document(imageUid).get(Source.CACHE).await()
         }
     return documentToImage(document) ?: throw Exception("ImageRepositoryFirebase: Image not found")
   }

@@ -49,7 +49,8 @@ class TripsRepositoryFirestore(
         try {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
         } catch (e: Exception) {
-          db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
+          Log.e("TripsRepositoryFirestore", "Error retrieving trip", e)
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId).get(Source.CACHE).await()
         }
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
   }
