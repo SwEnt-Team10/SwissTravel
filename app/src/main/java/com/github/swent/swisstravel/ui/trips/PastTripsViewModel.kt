@@ -20,7 +20,7 @@ import kotlinx.coroutines.launch
  * @param tripsRepository The repository responsible for managing user trips.
  */
 class PastTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvider.repository) :
-    TripsViewModel(tripsRepository) {
+    TripsViewModel(tripsRepository = tripsRepository) {
 
   /** Initializes the ViewModel by loading all trips. */
   init {
@@ -32,8 +32,10 @@ class PastTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvi
       val trips = tripsRepository.getAllTrips()
       val pastTrips = trips.filter { it.isPast() }
       val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType)
+      val collaboratorsByTrip = buildCollaboratorsByTrip(trips)
 
-      _uiState.value = _uiState.value.copy(tripsList = sortedTrips)
+      _uiState.value =
+          _uiState.value.copy(tripsList = sortedTrips, collaboratorsByTripId = collaboratorsByTrip)
     } catch (e: Exception) {
       Log.e("PastTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")
