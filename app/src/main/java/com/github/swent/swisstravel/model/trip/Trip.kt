@@ -44,4 +44,18 @@ data class Trip(
     val isCurrentTrip: Boolean,
     val listUri: List<Uri>,
     val collaboratorsId: List<String>
-)
+) {
+  /**
+   * Checks if the user is the owner of the trip.
+   *
+   * @param userId The unique identifier of the user.
+   */
+  fun isOwner(userId: String): Boolean = ownerId == userId
+
+  /**
+   * Checks if the user can edit the trip.
+   *
+   * @param userId The unique identifier of the user.
+   */
+  fun canEdit(userId: String): Boolean = isOwner(userId) || collaboratorsId.contains(userId)
+}
