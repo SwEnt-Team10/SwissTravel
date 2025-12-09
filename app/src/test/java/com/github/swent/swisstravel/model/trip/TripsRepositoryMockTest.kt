@@ -59,8 +59,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip returns Trip with all nested fields`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockCollection.document("trip1").get(Source.SERVER) } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("trip1").get(Source.SERVER) } returns Tasks.forResult(doc)
 
     // Base document
     every { doc.id } returns "trip1"
@@ -119,8 +118,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip throws when required fields missing`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockCollection.document("badTrip").get(Source.SERVER) } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("badTrip").get(Source.SERVER) } returns Tasks.forResult(doc)
     every { doc.id } returns "badTrip"
     every { doc.getString("name") } returns null // triggers documentToTrip null
     every { doc.getString("ownerId") } returns "owner1"
@@ -131,8 +129,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip handles singleton imageUrls by treating as singleton list`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockCollection.document("tripImgUrls").get(Source.SERVER) } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("tripImgUrls").get(Source.SERVER) } returns Tasks.forResult(doc)
     every { doc.id } returns "tripImgUrls"
     every { doc.getString("name") } returns "TripImageUrls"
     every { doc.getString("ownerId") } returns "owner1"
@@ -176,9 +173,8 @@ class TripsRepositoryFirestorePublicTest {
     val doc = mockk<DocumentSnapshot>()
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
-    every {
-      mockCollection.document("tripWithBadActivities").get(Source.SERVER)
-    } returns Tasks.forResult(doc)
+    every { mockCollection.document("tripWithBadActivities").get(Source.SERVER) } returns
+        Tasks.forResult(doc)
     every { doc.id } returns "tripWithBadActivities"
     every { doc.getString("name") } returns "TripWithBadActivities"
     every { doc.getString("ownerId") } returns "owner1"
@@ -234,8 +230,7 @@ class TripsRepositoryFirestorePublicTest {
     val doc = mockk<DocumentSnapshot>()
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
-    every { mockCollection.document("tripEmpty").get(Source.SERVER) } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("tripEmpty").get(Source.SERVER) } returns Tasks.forResult(doc)
     every { doc.id } returns "tripEmpty"
     every { doc.getString("name") } returns "EmptyTrip"
     every { doc.getString("ownerId") } returns "owner1"
@@ -277,8 +272,7 @@ class TripsRepositoryFirestorePublicTest {
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.uid } returns "owner123"
 
-    every { mockCollection.whereEqualTo("ownerId", "owner123") } returns
-        mockQuery
+    every { mockCollection.whereEqualTo("ownerId", "owner123") } returns mockQuery
     every { mockQuery.get(Source.SERVER) } returns Tasks.forResult(mockQuerySnapshot)
     every { mockQuerySnapshot.documents } returns listOf(doc)
     every { mockQuerySnapshot.iterator() } returns
