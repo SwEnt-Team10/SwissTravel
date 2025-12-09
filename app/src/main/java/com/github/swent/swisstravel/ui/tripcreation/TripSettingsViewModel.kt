@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.algorithm.random.RandomTripGenerator
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
@@ -22,9 +23,9 @@ import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.google.firebase.Timestamp
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.time.ZoneId
-import java.time.temporal.ChronoUnit
-import kotlin.random.Random
+import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -92,6 +93,11 @@ open class TripSettingsViewModel(
   private val _isRandomTrip = MutableStateFlow(false)
   val isRandomTrip: StateFlow<Boolean> = _isRandomTrip.asStateFlow()
 
+  /**
+   * Sets the random trip flag.
+   *
+   * @param isRandom Whether the trip is random or not.
+   */
   fun setRandomTrip(isRandom: Boolean) {
     _isRandomTrip.value = isRandom
   }
@@ -107,25 +113,74 @@ open class TripSettingsViewModel(
   private val _loadingProgress = MutableStateFlow(0f)
   val loadingProgress = _loadingProgress.asStateFlow()
 
+  /**
+   * Updates the name of the trip.
+   *
+   * @param name The new name for the trip.
+   */
   fun updateName(name: String) {
     _tripSettings.value =
         _tripSettings.value.copy(
             name = name, invalidNameMsg = if (name.isBlank()) R.string.name_empty else null)
   }
 
+  /**
+   * Updates the start and end dates of the trip.
+   *
+   * @param start The new start date.
+   * @param end The new end date.
+   */
   fun updateDates(start: LocalDate, end: LocalDate) {
     _tripSettings.update { it.copy(name = "Trip from $start", date = TripDate(start, end)) }
   }
 
+  /**
+   * Updates the number of travelers in the trip.
+   *
+   * @param adults The new number of adults.
+   * @param children The new number of children.
+   */
   fun updateTravelers(adults: Int, children: Int) {
     _tripSettings.update { it.copy(travelers = TripTravelers(adults, children)) }
   }
 
+  /**
+   * Updates the list of preferences for the trip.
+   *
+   * @param prefs The new list of preferences.
+   */
   fun updatePreferences(prefs: List<Preference>) {
     _tripSettings.update { it.copy(preferences = prefs) }
     Log.d("TripSettingsViewModel", "Updated preferences: ${_tripSettings.value.preferences}")
   }
 
+  /**
+   * Updates the arrival location of the trip.
+   *
+   * @param location The new arrival location.
+   */
+  fun updateArrivalLocation(location: Location) {
+    _tripSettings.update {
+      it.copy(arrivalDeparture = it.arrivalDeparture.copy(arrivalLocation = location))
+    }
+  }
+
+  /**
+   * Updates the departure location of the trip.
+   *
+   * @param location The new departure location.
+   */
+  fun updateDepartureLocation(location: Location) {
+    _tripSettings.update {
+      it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = location))
+    }
+  }
+
+  /**
+   * Sets the list of destinations for the trip.
+   *
+   * @param destinations The new list of destinations.
+   */
   fun setDestinations(destinations: List<Location>) {
     val settings = _tripSettings.value
 
@@ -157,46 +212,17 @@ open class TripSettingsViewModel(
    *   used.
    */
   fun randomTrip(context: Context, seed: Int? = null) {
-    val grandTour =
-        context.resources.getStringArray(R.array.grand_tour).map {
-          val parts = it.split(";")
-          Location(Coordinate(parts[1].toDouble(), parts[2].toDouble()), parts[0], "")
-        }
-
-    val random = seed?.let { Random(it) } ?: Random
     val settings = _tripSettings.value
-
-    // Pick distinct start and end locations at random
-    val availableCities = grandTour.toMutableList()
-    val start = availableCities.removeAt(random.nextInt(availableCities.size))
-    val end = availableCities.removeAt(random.nextInt(availableCities.size))
-
-    // Determine a manageable number of intermediate destinations based on trip duration
-    val tripDurationDays =
-        if (settings.date.startDate != null && settings.date.endDate != null) {
-          val duration =
-              ChronoUnit.DAYS.between(settings.date.startDate, settings.date.endDate).toInt() + 1
-          Log.d("TripSettingsViewModel", "Trip duration in days: $duration")
-          duration
-        } else {
-          Log.d("TripSettingsViewModel", "Dates are null")
-          DEFAULT_DURATION // Default to a 3-day trip if dates are not set, should not happen
-        }
-    // Rule: roughly one new city every 2 days. Minimum 0, max 3.
-    val numIntermediateDestinations = (tripDurationDays / 2).coerceAtMost(3).coerceAtLeast(0)
-
-    // Select random, distinct intermediate destinations
-    val intermediateDestinations =
-        if (numIntermediateDestinations > 0) {
-          availableCities.shuffled(random).take(numIntermediateDestinations)
-        } else {
-          emptyList()
-        }
+    val (start, end, intermediateDestinations) =
+        RandomTripGenerator.generateRandomDestinations(context, settings, seed)
 
     // Update the TripSettings state with the new random locations
     _tripSettings.update {
+      val currentTime = LocalDateTime.now()
+      val formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy-HH-mm")
+      val formattedTime = currentTime.format(formatter)
       it.copy(
-          name = "Random Swiss Adventure",
+          name = "Random Swiss Adventure $formattedTime",
           arrivalDeparture = TripArrivalDeparture(start, end),
           destinations = intermediateDestinations)
     }
@@ -252,10 +278,12 @@ open class TripSettingsViewModel(
         // Run the algorithm
         val algorithm = algorithmFactory(context, tripSettings.value)
         val schedule =
-            algorithm.computeTrip(tripSettings = tripSettings.value, tripProfile = tripProfile) {
-                progress ->
-              _loadingProgress.value = progress
-            }
+            algorithm.computeTrip(
+                tripSettings = tripSettings.value,
+                tripProfile = tripProfile,
+                isRandomTrip = isRandomTrip.value) { progress ->
+                  _loadingProgress.value = progress
+                }
 
         // Extract activities and route segments
         val selectedActivities: List<Activity> =
@@ -282,7 +310,8 @@ open class TripSettingsViewModel(
                 tripProfile = tripProfile,
                 isFavorite = false,
                 isCurrentTrip = false,
-                listUri = emptyList())
+                listUri = emptyList(),
+                isRandom = _isRandomTrip.value)
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)
@@ -310,20 +339,6 @@ open class TripSettingsViewModel(
       } else {
         _validationEventChannel.send(ValidationEvent.Proceed)
       }
-    }
-  }
-
-  /** Update arrival location string in trip settings. */
-  fun updateArrivalLocation(arrival: Location?) {
-    _tripSettings.update {
-      it.copy(arrivalDeparture = it.arrivalDeparture.copy(arrivalLocation = arrival))
-    }
-  }
-
-  /** Update departure location string in trip settings. */
-  fun updateDepartureLocation(departure: Location?) {
-    _tripSettings.update {
-      it.copy(arrivalDeparture = it.arrivalDeparture.copy(departureLocation = departure))
     }
   }
 
@@ -410,6 +425,11 @@ open class TripSettingsViewModel(
         .map { it.first } // Return just the locations.
   }
 
+  /**
+   * Toggles the selection of a location as a suggestion.
+   *
+   * @param location The location to toggle the selection for.
+   */
   fun toggleSuggestion(location: Location) {
     _selectedSuggestions.update { current ->
       if (current.any { it.name == location.name && it.coordinate == location.coordinate }) {

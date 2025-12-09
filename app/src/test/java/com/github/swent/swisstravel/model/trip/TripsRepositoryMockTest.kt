@@ -103,6 +103,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("favorite") } returns true
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
+    every { doc.getBoolean("random") } returns false // Add this line
 
     val trip = repo.getTrip("trip1")
 
@@ -164,6 +165,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
+    every { doc.getBoolean("random") } returns false // Add this line
 
     val trip = repo.getTrip("tripImgUrls")
 
@@ -220,6 +222,7 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.getBoolean("random") } returns false // Add this line
 
     val trip = repo.getTrip("tripWithBadActivities")
 
@@ -255,6 +258,7 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.getBoolean("random") } returns false // Add this line
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)
@@ -301,6 +305,7 @@ class TripsRepositoryFirestorePublicTest {
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
     every { doc.getBoolean("isFavorite") } returns false
+    every { doc.getBoolean("random") } returns false // Add this line
 
     val trips = repo.getAllTrips()
 
@@ -330,7 +335,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            isRandom = false) // Add field
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(trip) } returns Tasks.forResult(null)
 
@@ -363,7 +369,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            isRandom = false) // Add field
 
     every { mockCollection.document("server-id-123") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
@@ -388,7 +395,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            isRandom = false) // Add field
 
     every { mockCollection.document("t1") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns
@@ -410,7 +418,8 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            isRandom = false) // Add field
 
     every { mockCollection.document("authoritative-server-id") } returns mockDocumentRef
     every { mockDocumentRef.set(updated) } returns Tasks.forResult(null)
