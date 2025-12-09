@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.trips
 
 import com.github.swent.swisstravel.model.trip.*
+import com.github.swent.swisstravel.model.user.UserRepository
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -18,18 +19,26 @@ import org.junit.Test
 class PastTripsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
+
   private lateinit var repository: TripsRepository
   private lateinit var viewModel: PastTripsViewModel
+  private lateinit var userRepository: UserRepository
 
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
     repository = mockk()
+    userRepository = mockk()
   }
 
   @After
   fun teardown() {
     Dispatchers.resetMain()
+  }
+
+  // Helper to instantiate VM with mocks
+  private fun createViewModel() {
+    viewModel = PastTripsViewModel(userRepository = userRepository, tripsRepository = repository)
   }
 
   @Test
@@ -74,7 +83,7 @@ class PastTripsViewModelTest {
             collaboratorsId = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -85,7 +94,7 @@ class PastTripsViewModelTest {
   fun uiStateShowsEmptyWhenNoTrips() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -97,7 +106,7 @@ class PastTripsViewModelTest {
   fun uiStateShowsErrorMessageOnException() = runTest {
     coEvery { repository.getAllTrips() } throws Exception("Fake network error")
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -108,7 +117,7 @@ class PastTripsViewModelTest {
   fun clearErrorMsgClearsTheError() = runTest {
     coEvery { repository.getAllTrips() } throws Exception("Fake network error")
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     assert(viewModel.uiState.value.errorMsg != null)
@@ -120,7 +129,7 @@ class PastTripsViewModelTest {
   @Test
   fun toggleSelectionModeEnablesAndDisablesSelectionCorrectly() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     val trip1 =
@@ -154,7 +163,7 @@ class PastTripsViewModelTest {
   @Test
   fun toggleTripSelectionAddsAndRemovesTripsFromSelection() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     val trip1 =
@@ -203,7 +212,7 @@ class PastTripsViewModelTest {
   @Test
   fun toggleTripSelectionDisablesSelectionModeWhenLastTripUnselected() = runTest {
     coEvery { repository.getAllTrips() } returns emptyList()
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     val trip =
@@ -262,7 +271,7 @@ class PastTripsViewModelTest {
     coEvery { repository.getAllTrips() } returns listOf(trip1, trip2)
     coEvery { repository.deleteTrip(any()) } returns Unit
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.toggleSelectionMode(true)
@@ -318,7 +327,7 @@ class PastTripsViewModelTest {
             collaboratorsId = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.selectAllTrips()
@@ -346,7 +355,7 @@ class PastTripsViewModelTest {
     coEvery { repository.getAllTrips() } returns listOf(trip1)
     coEvery { repository.deleteTrip(any()) } throws Exception("DB failure")
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.toggleSelectionMode(true)
@@ -416,7 +425,7 @@ class PastTripsViewModelTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.updateSortType(TripSortType.START_DATE_ASC)
@@ -431,7 +440,7 @@ class PastTripsViewModelTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.updateSortType(TripSortType.START_DATE_DESC)
@@ -446,7 +455,7 @@ class PastTripsViewModelTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.updateSortType(TripSortType.END_DATE_ASC)
@@ -461,7 +470,7 @@ class PastTripsViewModelTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.updateSortType(TripSortType.END_DATE_DESC)
@@ -476,7 +485,7 @@ class PastTripsViewModelTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.updateSortType(TripSortType.NAME_ASC)
@@ -491,7 +500,7 @@ class PastTripsViewModelTest {
     val trips = createTrips()
     coEvery { repository.getAllTrips() } returns trips
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.updateSortType(TripSortType.NAME_DESC)
@@ -520,7 +529,7 @@ class PastTripsViewModelTest {
     coEvery { repository.getAllTrips() } returns listOf(trip)
     coEvery { repository.editTrip(any(), any()) } returns Unit
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.toggleSelectionMode(true)
@@ -549,7 +558,7 @@ class PastTripsViewModelTest {
 
     coEvery { repository.editTrip(any(), any()) } throws Exception("Firestore edit failed")
 
-    viewModel = PastTripsViewModel(repository)
+    createViewModel()
     viewModel.toggleTripSelection(trip)
     testDispatcher.scheduler.advanceUntilIdle()
 
