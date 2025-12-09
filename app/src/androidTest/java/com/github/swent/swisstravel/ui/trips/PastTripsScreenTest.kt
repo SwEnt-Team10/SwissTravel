@@ -70,7 +70,8 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   /** Helper to launch PastTripsScreen with custom trips */
   private fun launchScreen(vararg trips: Trip): PastTripsViewModel {
-    val viewModel = PastTripsViewModel(FakePastTripsRepository(trips.toMutableList()))
+    val viewModel =
+        PastTripsViewModel(tripsRepository = FakePastTripsRepository(trips.toMutableList()))
     composeTestRule.setContent {
       SwissTravelTheme { PastTripsScreen(pastTripsViewModel = viewModel) }
     }
@@ -155,7 +156,7 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val fakeRepo =
         FakePastTripsRepository(
             mutableListOf(pastTrip1.copy(isFavorite = false), pastTrip2.copy(isFavorite = false)))
-    val viewModel = PastTripsViewModel(fakeRepo)
+    val viewModel = PastTripsViewModel(tripsRepository = fakeRepo)
 
     composeTestRule.setContent {
       SwissTravelTheme { PastTripsScreen(pastTripsViewModel = viewModel) }
