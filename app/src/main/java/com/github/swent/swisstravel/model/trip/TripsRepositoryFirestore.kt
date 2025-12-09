@@ -36,13 +36,15 @@ class TripsRepositoryFirestore(
           // Trips where I'm the owner
           val ownerSnapshot =
               db.collection(TRIPS_COLLECTION_PATH)
-                  .whereEqualTo(ownerAttributeName, currentUserId)[Source.SERVER]
+                  .whereEqualTo(ownerAttributeName, currentUserId)
+                  .get()
                   .await()
 
           // Trips where I'm a collaborator
           val collaboratorSnapshot =
               db.collection(TRIPS_COLLECTION_PATH)
-                  .whereArrayContains(collaboratorsAttributeName, currentUserId)[Source.SERVER]
+                  .whereArrayContains(collaboratorsAttributeName, currentUserId)
+                  .get()
                   .await()
           (ownerSnapshot.documents + collaboratorSnapshot.documents).distinctBy { it.id }
         } catch (_: Exception) {

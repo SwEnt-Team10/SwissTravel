@@ -283,15 +283,14 @@ class TripsRepositoryFirestorePublicTest {
     every { mockUser.uid } returns "owner123"
 
     every { mockCollection.whereEqualTo("ownerId", "owner123") } returns mockOwnerQuery
-    every { mockOwnerQuery.get(Source.SERVER) } returns Tasks.forResult(mockOwnerSnapshot)
+    every { mockOwnerQuery.get() } returns Tasks.forResult(mockOwnerSnapshot)
     every { mockOwnerSnapshot.documents } returns listOf(doc)
     every { mockOwnerSnapshot.iterator() } returns
         listOf(doc).iterator() as MutableIterator<QueryDocumentSnapshot?>
 
     // 2) Trips where current user is a collaborator (return empty list)
-    every {
-      mockDb.collection(TRIPS_COLLECTION_PATH).whereArrayContains("collaboratorsId", "owner123")
-    } returns mockCollaboratorQuery
+    every { mockCollection.whereArrayContains("collaboratorsId", "owner123") } returns
+        mockCollaboratorQuery
     every { mockCollaboratorQuery.get() } returns Tasks.forResult(mockCollaboratorSnapshot)
     every { mockCollaboratorSnapshot.documents } returns emptyList()
 
