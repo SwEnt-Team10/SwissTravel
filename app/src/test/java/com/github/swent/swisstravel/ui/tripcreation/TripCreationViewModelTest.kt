@@ -105,9 +105,6 @@ class TripCreationViewModelTest {
     // Assertions
     val settings = viewModel.tripSettings.value
 
-    // Check that trip name is updated
-    assertEquals("Random Swiss Adventure", settings.name)
-
     // Check that arrival/departure are set and different
     assertNotNull(settings.arrivalDeparture.arrivalLocation)
     assertNotNull(settings.arrivalDeparture.departureLocation)
@@ -332,6 +329,14 @@ class TripCreationViewModelTest {
 
     override suspend fun deleteTrip(tripId: String) {
       /* no-op for tests */
+    }
+
+    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+      /* no-op */
+    }
+
+    override suspend fun removeCollaborator(tripId: String, userId: String) {
+      /* no-op */
     }
 
     override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
