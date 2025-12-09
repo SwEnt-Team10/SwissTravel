@@ -49,7 +49,8 @@ class TripInfoViewModelTest {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   private val fakeUser =
       User(

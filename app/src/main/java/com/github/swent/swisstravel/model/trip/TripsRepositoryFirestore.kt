@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Source
 import kotlinx.coroutines.tasks.await
@@ -20,25 +21,44 @@ class TripsRepositoryFirestore(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()
 ) : TripsRepository {
   private val ownerAttributeName = "ownerId"
+  private val collaboratorsAttributeName = "collaboratorsId"
 
   override fun getNewUid(): String {
     return db.collection(TRIPS_COLLECTION_PATH).document().id
   }
 
   override suspend fun getAllTrips(): List<Trip> {
-    val ownerId =
+    val currentUserId =
         auth.currentUser?.uid ?: throw Exception("TripsRepositoryFirestore: User not logged in.")
 
     val snapshot =
         try {
-          db.collection(TRIPS_COLLECTION_PATH)
-              .whereEqualTo(ownerAttributeName, ownerId)
-              .get()
-              .await()
-        } catch (e: Exception) {
-          db.collection(TRIPS_COLLECTION_PATH)
-              .whereEqualTo(ownerAttributeName, ownerId)[Source.CACHE]
-              .await()
+          // Trips where I'm the owner
+          val ownerSnapshot =
+              db.collection(TRIPS_COLLECTION_PATH)
+                  .whereEqualTo(ownerAttributeName, currentUserId)
+                  .get()
+                  .await()
+
+          // Trips where I'm a collaborator
+          val collaboratorSnapshot =
+              db.collection(TRIPS_COLLECTION_PATH)
+                  .whereArrayContains(collaboratorsAttributeName, currentUserId)
+                  .get()
+                  .await()
+          (ownerSnapshot.documents + collaboratorSnapshot.documents).distinctBy { it.id }
+        } catch (_: Exception) {
+          val ownerSnapshot =
+              db.collection(TRIPS_COLLECTION_PATH)
+                  .whereEqualTo(ownerAttributeName, currentUserId)[Source.CACHE]
+                  .await()
+
+          val collaboratorSnapshot =
+              db.collection(TRIPS_COLLECTION_PATH)
+                  .whereArrayContains(collaboratorsAttributeName, currentUserId)[Source.CACHE]
+                  .await()
+
+          (ownerSnapshot.documents + collaboratorSnapshot.documents).distinctBy { it.id }
         }
 
     return snapshot.mapNotNull { documentToTrip(it) }
@@ -47,8 +67,8 @@ class TripsRepositoryFirestore(
   override suspend fun getTrip(tripId: String): Trip {
     val document =
         try {
-          db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
-        } catch (e: Exception) {
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.SERVER].await()
+        } catch (_: Exception) {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
         }
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
@@ -66,6 +86,27 @@ class TripsRepositoryFirestore(
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
   }
 
+  override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+    val docRef = db.collection(TRIPS_COLLECTION_PATH).document(tripId)
+
+    val update =
+        mapOf(
+            collaboratorsAttributeName to FieldValue.arrayUnion(*userIds.toTypedArray()),
+        )
+
+    docRef.update(update).await()
+  }
+
+  override suspend fun removeCollaborator(tripId: String, userId: String) {
+    val docRef = db.collection(TRIPS_COLLECTION_PATH).document(tripId)
+
+    val update =
+        mapOf(
+            collaboratorsAttributeName to FieldValue.arrayRemove(userId),
+        )
+
+    docRef.update(update).await()
+  }
   // The following code was made with the help of AI
   /**
    * Converts a Firestore document to a Trip object.
@@ -101,8 +142,10 @@ class TripsRepositoryFirestore(
 
       val isCurrentTrip = document.getBoolean("currentTrip") ?: false
       // With help of AI
-      val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
+      val listUriStrings = document["listUri"] as? List<*> ?: emptyList<Uri>()
       val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
+      val collaboratorsId = document["collaboratorsId"] as? List<*> ?: emptyList<String>()
+      val listCollaboratorsId = collaboratorsId.mapNotNull { (it as? String) }
 
       val isRandom = document.getBoolean("random") ?: false
 
@@ -117,6 +160,7 @@ class TripsRepositoryFirestore(
           isFavorite = isFavorite,
           isCurrentTrip = isCurrentTrip,
           listUri = listUri,
+          collaboratorsId = listCollaboratorsId,
           isRandom = isRandom)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)

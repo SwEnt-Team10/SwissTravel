@@ -38,7 +38,8 @@ class PhotosViewModelTest {
           tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
           isFavorite = true,
           isCurrentTrip = true,
-          listUri = fakeUris)
+          listUri = fakeUris,
+          collaboratorsId = emptyList())
 
   private val testDispatcher = UnconfinedTestDispatcher()
 
