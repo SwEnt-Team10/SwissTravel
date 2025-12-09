@@ -25,9 +25,9 @@ import kotlinx.coroutines.launch
  * @property tripsRepository The repository to fetch trips from.
  */
 class MyTripsViewModel(
-    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    userRepository: UserRepository = UserRepositoryFirebase(),
     tripsRepository: TripsRepository = TripsRepositoryProvider.repository
-) : TripsViewModel(tripsRepository = tripsRepository) {
+) : TripsViewModel(userRepository = userRepository, tripsRepository = tripsRepository) {
 
   /** Initializes the ViewModel by loading all trips. */
   init {
