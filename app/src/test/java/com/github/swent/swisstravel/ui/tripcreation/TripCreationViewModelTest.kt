@@ -331,6 +331,14 @@ class TripCreationViewModelTest {
       /* no-op for tests */
     }
 
+    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+      /* no-op */
+    }
+
+    override suspend fun removeCollaborator(tripId: String, userId: String) {
+      /* no-op */
+    }
+
     override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
       /* no-op for tests */
     }

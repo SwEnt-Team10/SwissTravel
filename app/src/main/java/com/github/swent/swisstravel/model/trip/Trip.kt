@@ -29,7 +29,8 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  * @property tripProfile The profile of the trip.
  * @property isFavorite Whether the trip is a favorite or not.
  * @property isCurrentTrip Whether the trip is the current trip or not.
- * @property listUri The list of URIs of the trip.
+ * @property listUri The list of URIs of the pictures of the trip.
+ * @property collaboratorsId The list of unique identifiers of the collaborators of the trip.
  * @property isRandom Whether the trip is random or not.
  */
 data class Trip(
@@ -43,5 +44,20 @@ data class Trip(
     val isFavorite: Boolean,
     val isCurrentTrip: Boolean,
     val listUri: List<Uri>,
+    val collaboratorsId: List<String>,
     val isRandom: Boolean = false
-)
+) {
+  /**
+   * Checks if the user is the owner of the trip.
+   *
+   * @param userId The unique identifier of the user.
+   */
+  fun isOwner(userId: String): Boolean = ownerId == userId
+
+  /**
+   * Checks if the user can edit the trip.
+   *
+   * @param userId The unique identifier of the user.
+   */
+  fun canEdit(userId: String): Boolean = isOwner(userId) || collaboratorsId.contains(userId)
+}

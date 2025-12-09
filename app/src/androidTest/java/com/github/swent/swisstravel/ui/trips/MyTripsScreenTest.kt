@@ -40,6 +40,14 @@ class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()
   }
 
   override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
+
+  override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+    /* no-op */
+  }
+
+  override suspend fun removeCollaborator(tripId: String, userId: String) {
+    /* no-op */
+  }
 }
 
 class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
@@ -138,7 +146,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     runBlocking { fakeRepo.addTrip(newUpcomingTrip) }
 
@@ -173,7 +182,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val tripB =
         Trip(
@@ -190,7 +200,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
     val viewModel = MyTripsViewModel(fakeRepo)
@@ -364,7 +375,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferences = emptyList()),
             isFavorite = true,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val nonFavoriteTrip =
         Trip(
@@ -382,7 +394,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
     val viewModel = MyTripsViewModel(fakeRepo)
