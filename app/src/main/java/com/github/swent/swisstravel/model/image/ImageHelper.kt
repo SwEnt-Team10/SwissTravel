@@ -50,15 +50,21 @@ object ImageHelper {
    *
    * @param base64 The base64-encoded string to convert.
    * @param dispatcher The dispatcher to use for the conversion. Default is Dispatchers.Default.
-   * @return The converted bitmap.
+   * @return The converted bitmap, or null if decoding fails.
+   * @throws Exception if decoding fails.
    */
   suspend fun base64ToBitmap(
       base64: String,
       dispatcher: CoroutineDispatcher = Dispatchers.Default
-  ): Bitmap =
+  ): Bitmap? =
       withContext(dispatcher) {
-        val decodedBytes = decodeBase64(base64)
-        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        try {
+          val decodedBytes = decodeBase64(base64)
+          BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+        } catch (e: Exception) {
+          Log.e("ImageHelper", "Error converting base64 to bitmap", e)
+          null
+        }
       }
 
   /**
@@ -84,6 +90,7 @@ object ImageHelper {
    * Resizes the bitmap so strictly neither side is larger than MAX_DIMENSION
    *
    * @param bitmap The bitmap to resize
+   * @param maxDimension The maximum dimension to resize to
    * @return The resized bitmap
    */
   private fun scaleBitmap(bitmap: Bitmap, maxDimension: Int = DEFAULT_MAX_DIMENSION): Bitmap {
@@ -113,6 +120,7 @@ object ImageHelper {
    *
    * @param bitmap The bitmap to compress.
    * @return The compressed byte array.
+   * @throws Exception if the image cannot be compressed enough to fit the limit.
    */
   private fun compressBitmap(bitmap: Bitmap): ByteArray {
     var quality = 75 // Start with decent quality
@@ -130,7 +138,10 @@ object ImageHelper {
       bitmap.compress(Bitmap.CompressFormat.JPEG, quality, stream)
       byteArray = stream.toByteArray()
     }
-    // Image is sufficiently compressed at this point (I hope so at least ...)
+    // If image is still too big after dropping quality, give up and throw.
+    if (byteArray.size > MAX_BYTE_SIZE) {
+      throw Exception("Image is too large (${byteArray.size} bytes) to be stored.")
+    }
     return byteArray
   }
 

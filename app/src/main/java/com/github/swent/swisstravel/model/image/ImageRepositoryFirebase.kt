@@ -15,7 +15,11 @@ class ImageRepositoryFirebase(
 ) : ImageRepository {
   val imageCollection = db.collection(IMAGES_COLLECTION_PATH)
 
-  /** Adds a new image to the repository. */
+  /**
+   * Adds a new image to the repository.
+   *
+   * @param base64 The base64-encoded representation of the image.
+   */
   override suspend fun addImage(base64: String) {
     val uid = imageCollection.document().id
     val image =

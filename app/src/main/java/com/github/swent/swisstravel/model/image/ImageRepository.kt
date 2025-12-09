@@ -3,7 +3,11 @@ package com.github.swent.swisstravel.model.image
 /** Represents a repository that manages Images. */
 interface ImageRepository {
 
-  /** Adds a new image to the repository. */
+  /**
+   * Adds a new image to the repository.
+   *
+   * @param base64 The base64-encoded representation of the image.
+   */
   suspend fun addImage(base64: String)
 
   /**

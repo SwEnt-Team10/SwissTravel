@@ -20,6 +20,7 @@ import java.io.ByteArrayInputStream
 import java.io.InputStream
 import java.io.OutputStream
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -153,6 +154,40 @@ class ImageHelperTest {
       }
 
   @Test
+  fun uriCompressedToBase64ThrowsExceptionWhenImageCannotBeCompressedEnough() = runTest {
+    // Given
+    // 1. Prepare the bitmaps
+    every { mockBitmap.width } returns 2048
+    every { mockBitmap.height } returns 2048
+    // Use the helper to setup the loading/scaling part
+    setupMockBitmapProcess(original = mockBitmap, resized = mockResizedBitmap)
+
+    // 2. Define a "Huge" byte array (1MB) that exceeds the 700KB limit
+    val hugeArray = ByteArray(1_000_000) { 1 }
+
+    // 3. Mock compress to always fail (write huge array), regardless of quality
+    every {
+      mockResizedBitmap.compress(Bitmap.CompressFormat.JPEG, any(), any<OutputStream>())
+    } answers
+        {
+          val stream = arg<OutputStream>(2)
+          stream.write(hugeArray)
+          true
+        }
+
+    // When & Then
+    val dispatcher = UnconfinedTestDispatcher(testScheduler)
+
+    val exception =
+        assertFailsWith<Exception> {
+          ImageHelper.uriCompressedToBase64(mockContext, mockUri, dispatcher)
+        }
+
+    // Verify the message says it's too large
+    assert(exception.message?.contains("Image is too large") == true)
+  }
+
+  @Test
   fun compressBitmapReducesQualityUntilSizeIsSmallEnough() =
       runTest(testDispatcher) {
         // 1. Setup the Bitmap to be processed
@@ -220,6 +255,24 @@ class ImageHelperTest {
         // Then
         assertEquals(expectedBitmap, result)
       }
+
+  @Test
+  fun base64ToBitmapReturnsNullIfDecodingFails() = runTest {
+    // Given
+    val invalidBase64 = "invalid_data"
+    // Simulate a crash during decoding (e.g. bad input)
+    every { Base64.decode(invalidBase64, Base64.NO_WRAP) } throws
+        IllegalArgumentException("Bad Base64")
+
+    // When
+    val dispatcher = UnconfinedTestDispatcher(testScheduler)
+    val result = ImageHelper.base64ToBitmap(invalidBase64, dispatcher)
+
+    // Then
+    assertNull(result)
+    // Verify that the exception was caught and logged
+    verify { Log.e("ImageHelper", "Error converting base64 to bitmap", any()) }
+  }
 
   @Test
   fun scaleBitmapCalculatesCorrectDimensionsForLargeLandscapeImage() =
