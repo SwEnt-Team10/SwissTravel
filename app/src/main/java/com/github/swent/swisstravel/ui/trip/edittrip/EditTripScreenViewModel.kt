@@ -1,9 +1,11 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
 import android.content.Context
+import android.content.res.Resources
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.algorithm.random.RandomTripGenerator
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripsRepository
@@ -17,6 +19,9 @@ import com.github.swent.swisstravel.ui.tripcreation.TripDate
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.github.swent.swisstravel.ui.tripcreation.ValidationEvent
+import com.google.firebase.Timestamp
+import java.time.LocalDate
+import java.time.ZoneId
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -34,7 +39,8 @@ data class EditTripUiState(
     val tripName: String = "",
     val adults: Int = 1,
     val children: Int = 0,
-    val selectedPrefs: Set<Preference> = emptySet()
+    val selectedPrefs: Set<Preference> = emptySet(),
+    val isRandom: Boolean = false
 )
 
 /**
@@ -79,7 +85,8 @@ class EditTripScreenViewModel(
                 tripName = originalTrip.name,
                 adults = originalTrip.tripProfile.adults,
                 children = originalTrip.tripProfile.children,
-                selectedPrefs = originalTrip.tripProfile.preferences.toSet())
+                selectedPrefs = originalTrip.tripProfile.preferences.toSet(),
+                isRandom = originalTrip.isRandom)
           }
         } catch (e: Exception) {
           _uiState.update { it.copy(isLoading = false, errorMsg = e.message ?: "Failed to load") }
@@ -102,6 +109,52 @@ class EditTripScreenViewModel(
   }
 
   /**
+   * Regenerates the destinations and activities for a random trip.
+   *
+   * @param context The Android context.
+   * @param seed The seed to use for the random number generator.
+   */
+  fun reroll(context: Context, seed: Int? = null) {
+    if (!originalTrip.isRandom) return
+    viewModelScope.launch {
+      _uiState.update { it.copy(isSaving = true, savingProgress = 0f) }
+      try {
+        val tempSettings =
+            TripSettings(
+                name = originalTrip.name,
+                date =
+                    TripDate(
+                        convertDate(originalTrip.tripProfile.startDate),
+                        convertDate(originalTrip.tripProfile.endDate)),
+                travelers =
+                    TripTravelers(
+                        originalTrip.tripProfile.adults, originalTrip.tripProfile.children),
+                preferences = originalTrip.tripProfile.preferences,
+                arrivalDeparture =
+                    TripArrivalDeparture(originalTrip.tripProfile.arrivalLocation, null),
+                destinations = emptyList())
+
+        val (start, end, intermediate) =
+            RandomTripGenerator.generateRandomDestinations(context, tempSettings, seed)
+        val newProfile =
+            originalTrip.tripProfile.copy(
+                arrivalLocation = start, departureLocation = end, preferredLocations = intermediate)
+        originalTrip =
+            originalTrip.copy(
+                tripProfile = newProfile,
+                locations = emptyList(),
+                routeSegments = emptyList(),
+                activities = emptyList())
+        save(context, true)
+      } catch (e: Resources.NotFoundException) {
+        val errorMsg = e.message ?: "Failed to re-roll trip"
+        _uiState.update { it.copy(errorMsg = errorMsg, isSaving = false) }
+        _validationEventChannel.send(ValidationEvent.SaveError(errorMsg))
+      }
+    }
+  }
+
+  /**
    * Toggles a preference in the current trip.
    *
    * @param pref The preference to toggle.
@@ -118,7 +171,7 @@ class EditTripScreenViewModel(
    *
    * @param context The Android context.
    */
-  fun save(context: Context) {
+  fun save(context: Context, rerolled: Boolean = false) {
     viewModelScope.launch {
       _uiState.update { it.copy(isSaving = true, savingProgress = 0f) }
       try {
@@ -136,23 +189,16 @@ class EditTripScreenViewModel(
 
         // Updates the activities only if the preferences have changed.
         if (sanitizedPrefs !=
-            PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences)) {
+            PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences) ||
+            rerolled) {
           // Create a temporary TripSettings object to pass to SelectActivities
           val tempTripSettings =
               TripSettings(
                   name = state.tripName,
                   date =
                       TripDate(
-                          originalTrip.tripProfile.startDate
-                              .toDate()
-                              .toInstant()
-                              .atZone(java.time.ZoneId.systemDefault())
-                              .toLocalDate(),
-                          originalTrip.tripProfile.endDate
-                              .toDate()
-                              .toInstant()
-                              .atZone(java.time.ZoneId.systemDefault())
-                              .toLocalDate()),
+                          convertDate(originalTrip.tripProfile.startDate),
+                          convertDate(originalTrip.tripProfile.endDate)),
                   travelers = TripTravelers(state.adults, state.children),
                   preferences = sanitizedPrefs.toList(),
                   arrivalDeparture =
@@ -203,6 +249,15 @@ class EditTripScreenViewModel(
         _uiState.update { it.copy(isSaving = false) }
       }
     }
+  }
+
+  /**
+   * Converts a Timestamp to a LocalDate.
+   *
+   * @param date The Timestamp to convert.
+   */
+  private fun convertDate(date: Timestamp): LocalDate? {
+    return date.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
   }
 
   /**

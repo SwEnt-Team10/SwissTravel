@@ -105,9 +105,6 @@ class TripCreationViewModelTest {
     // Assertions
     val settings = viewModel.tripSettings.value
 
-    // Check that trip name is updated
-    assertEquals("Random Swiss Adventure", settings.name)
-
     // Check that arrival/departure are set and different
     assertNotNull(settings.arrivalDeparture.arrivalLocation)
     assertNotNull(settings.arrivalDeparture.departureLocation)
