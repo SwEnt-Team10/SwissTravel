@@ -54,6 +54,7 @@
 
     <!-- Arrival and Departure -->
     <string name="arrivalDeparture">Where are your starting and ending destinations?</string>
+    <string name="arrivalRandom">Where is your starting location?</string>
     <string name="arrival_location">Starting location</string>
     <string name="departure_location">Ending location"</string>
     <!--- First Destinations -->
@@ -140,6 +141,7 @@
     <string name="delete_trip_prompt">Are you sure you want to delete this trip? This action cannot be undone.</string>
     <string name="trip_deleted">Trip deleted</string>
     <string name="confirm">Confirm</string>
+    <string name="reroll">Reroll Trip</string>
 
     <!-- Delete Trip Dialog -->
     <plurals name="confirm_delete_title">
@@ -435,14 +437,15 @@
     Add at least 20 friends.
     </string>
   
-    <!-- AddPhotosScreen -->
+    <!-- PhotosScreen -->
     <string name="add_photos_title">Add photos</string>
     <string name="add_photos_button">Add photos</string>
-
-    <!-- EditPhotosScreen -->
-
     <string name="edit_top_bar_title">Select photos</string>
     <string name="cancel_edit">Cancel Edit</string>
     <string name="remove_button">Remove</string>
+    <string name="error_loading">Could not load the photos</string>
+    <string name="back_add_photos">Back to daily view screen</string>
+    <string name="edit_button_description">Edit Mode</string>
+    <string name="back_edit_photos">Back to daily view screen</string>
 
 </resources>

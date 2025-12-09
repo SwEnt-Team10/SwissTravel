@@ -5,6 +5,7 @@ import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.core.net.toUri
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -152,7 +153,17 @@ class AddPhotosScreenTest : SwissTravelTest() {
     }
 
     // Click on the back button
-    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
     assert(backCalled)
+  }
+
+  // AI did the test
+  @Test
+  fun addPhotosScreenShowsErrorScreenWhenErrorLoading() {
+    val viewModel = PhotosViewModel(tripsRepository = TripRepositoryLocal())
+
+    composeTestRule.setContent { AddPhotosScreen(tripId = "0", photosViewModel = viewModel) }
+
+    composeTestRule.onNodeWithText("Could not load the photos").assertExists()
   }
 }

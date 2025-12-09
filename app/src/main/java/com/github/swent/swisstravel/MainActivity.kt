@@ -644,14 +644,17 @@ private fun NavGraphBuilder.tripSettingsNavGraph(
           viewModel = vm,
           onNext = { navigationActions.navigateTo(Screen.TripSettingsArrivalDeparture) },
           onPrevious = { navigationActions.goBack() },
-          isRandomTrip = isRandomTrip,
-          onRandom = { navigationActions.navigateTo(Screen.Loading) })
+          isRandomTrip = isRandomTrip)
     }
     composable(Screen.TripSettingsArrivalDeparture.route) {
+      val vm = tripSettingsViewModel(navController)
+      val isRandomTrip by vm.isRandomTrip.collectAsState()
       ArrivalDepartureScreen(
-          viewModel = tripSettingsViewModel(navController),
+          viewModel = vm,
           onNext = { navigationActions.navigateTo(Screen.TripSettingsFirstDestination) },
-          onPrevious = { navigationActions.goBack() })
+          onPrevious = { navigationActions.goBack() },
+          isRandomTrip = isRandomTrip,
+          onRandom = { navigationActions.navigateTo(Screen.Loading) })
     }
     composable(Screen.TripSettingsFirstDestination.route) {
       FirstDestinationScreen(

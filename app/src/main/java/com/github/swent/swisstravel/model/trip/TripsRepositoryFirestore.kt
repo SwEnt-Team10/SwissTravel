@@ -103,6 +103,8 @@ class TripsRepositoryFirestore(
       val listUriStrings = document.get("listUri") as? List<*> ?: emptyList<Uri>()
       val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
 
+      val isRandom = document.getBoolean("random") ?: false
+
       Trip(
           uid = uid,
           name = name,
@@ -113,7 +115,8 @@ class TripsRepositoryFirestore(
           tripProfile = tripProfile,
           isFavorite = isFavorite,
           isCurrentTrip = isCurrentTrip,
-          listUri = listUri)
+          listUri = listUri,
+          isRandom = isRandom)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null
