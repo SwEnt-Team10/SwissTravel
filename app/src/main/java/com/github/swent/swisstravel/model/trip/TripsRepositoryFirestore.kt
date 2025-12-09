@@ -46,9 +46,9 @@ class TripsRepositoryFirestore(
   override suspend fun getTrip(tripId: String): Trip {
     val document =
         try {
-          db.collection(TRIPS_COLLECTION_PATH).document(tripId).get(Source.SERVER).await()
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.SERVER].await()
         } catch (e: Exception) {
-          db.collection(TRIPS_COLLECTION_PATH).document(tripId).get(Source.CACHE).await()
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
         }
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
   }
