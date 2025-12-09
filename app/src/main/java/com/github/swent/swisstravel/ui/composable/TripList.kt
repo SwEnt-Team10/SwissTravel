@@ -27,6 +27,8 @@ object TripListTestTags {
  * @param isSelected Function to determine if a trip is selected.
  * @param isSelectionMode Whether the selection mode is active.
  * @param emptyListString The string to display when the list is empty.
+ * @param collaboratorsLookup A function that retrieves the list of collaborators for a given trip
+ *   UID.
  */
 @Composable
 fun TripList(

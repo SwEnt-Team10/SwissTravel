@@ -39,6 +39,7 @@ object SortedTripListTestTags {
  * @param isSelectionMode Whether the selection mode is active.
  * @param noIconTripElement Whether to hide the icon in the trip element.
  * @param isSelected Function to determine if a trip is selected.
+ * @param collaboratorsLookup Function to retrieve collaborators for a specific trip.
  */
 data class TripListState(
     val trips: List<Trip> = emptyList(),
