@@ -471,13 +471,15 @@ private fun DailyViewBottomBar(
 
 /**
  * The top app bar for the Daily View screen. Displays the trip title and action buttons for
- * navigation, favoriting, and editing.
+ * navigation, favoriting, editing, and sharing.
  *
  * @param ui The current UI state of the trip.
  * @param isOnCurrentTripScreen A boolean to control the visibility of the back button.
  * @param onBack Callback for when the back button is clicked.
  * @param onToggleFavorite Callback for when the favorite button is clicked.
  * @param onEdit Callback for when the edit button is clicked.
+ * @param onAddPhotos Callback for when the add photos button is clicked.
+ * @param onShare Callback for when the share button is clicked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

@@ -61,6 +61,7 @@ object TripElementTestTags {
  * @param isSelectionMode Whether the UI is currently in selection mode.
  * @param noIcon If true, no icon is displayed when isSelected is false. Otherwise, shows a check
  *   icon.
+ * @param collaborators The list of collaborators to display as overlapping avatars.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -132,6 +133,14 @@ private fun TripNameSection(trip: Trip, modifier: Modifier) {
   }
 }
 
+/**
+ * Displays a row of overlapping avatars for the given collaborators.
+ *
+ * Shows up to 3 profile pictures. If there are more, the last bubble displays the remaining count
+ * (e.g., "+2").
+ *
+ * @param collaborators The list of collaborators to display.
+ */
 @Composable
 private fun CollaboratorsPreview(collaborators: List<TripsViewModel.CollaboratorUi>) {
   Row(
