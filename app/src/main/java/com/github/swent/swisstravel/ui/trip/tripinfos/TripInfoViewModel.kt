@@ -111,6 +111,21 @@ class TripInfoViewModel(
     }
   }
 
+  override fun removeCollaborator(user: User) {
+    val currentTripId = _uiState.value.uid
+    if (currentTripId.isBlank()) return
+
+    viewModelScope.launch {
+      try {
+        tripsRepository.removeCollaborator(currentTripId, user.uid)
+
+        loadCollaboratorData()
+      } catch (e: Exception) {
+        setErrorMsg("Failed to remove collaborator: ${e.message}")
+      }
+    }
+  }
+
   init {
     // Debounce favorite changes to avoid spamming database
     viewModelScope.launch {
