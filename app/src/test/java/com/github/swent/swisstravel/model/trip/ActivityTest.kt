@@ -29,7 +29,6 @@ class ActivityTest {
   @Test
   fun testIsValid() {
     val blacklistedNames = setOf("Banned Activity")
-    val invalidDescription = "No description available"
 
     // Valid activity
     assertEquals(true, activity.isValid(blacklistedNames))
@@ -41,7 +40,6 @@ class ActivityTest {
 
     // Non-positive estimated time
     val nonPositiveEstimatedTimeActivity = activity.copy(estimatedTime = 0)
-    assertEquals(
-        false, nonPositiveEstimatedTimeActivity.isValid(blacklistedNames))
+    assertEquals(false, nonPositiveEstimatedTimeActivity.isValid(blacklistedNames))
   }
 }
