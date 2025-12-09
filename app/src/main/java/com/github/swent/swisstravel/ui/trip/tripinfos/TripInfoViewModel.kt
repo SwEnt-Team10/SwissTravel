@@ -10,6 +10,8 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.FriendStatus
+import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.mapbox.geojson.Point
@@ -49,7 +51,9 @@ data class TripInfoUIState(
     val selectedStep: TripElement? = null,
     val drawFromCurrentPosition: Boolean = false,
     val currentGpsPoint: Point? = null,
-    val currentUserIsOwner: Boolean = false
+    val currentUserIsOwner: Boolean = false,
+    val availableFriends: List<User> = emptyList(),
+    val collaborators: List<User> = emptyList()
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -62,6 +66,50 @@ class TripInfoViewModel(
 
   private val favoriteDebounceMs = 800L
   private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
+
+  override fun loadCollaboratorData() {
+    viewModelScope.launch {
+      try {
+        val currentUser = userRepository.getCurrentUser()
+        val currentTrip = _uiState.value
+
+        // 1. Load Friends (Accepted only)
+        val friendUids =
+            currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }.map { it.uid }
+
+        val friends = friendUids.mapNotNull { uid -> userRepository.getUserByUid(uid) }
+
+        // 2. Load Collaborators for the trip
+        val freshTrip = tripsRepository.getTrip(currentTrip.uid)
+        val collaborators =
+            freshTrip.collaboratorsId.mapNotNull { uid -> userRepository.getUserByUid(uid) }
+
+        _uiState.update {
+          it.copy(
+              availableFriends =
+                  friends.filter { friend -> friend.uid !in freshTrip.collaboratorsId },
+              collaborators = collaborators)
+        }
+      } catch (e: Exception) {
+        Log.e("TripInfoViewModel", "Error loading collaborators", e)
+      }
+    }
+  }
+
+  override fun addCollaborator(user: User) {
+    val currentTripId = _uiState.value.uid
+    if (currentTripId.isBlank()) return
+
+    viewModelScope.launch {
+      try {
+        tripsRepository.shareTripWithUsers(currentTripId, listOf(user.uid))
+        // Reload local state
+        loadCollaboratorData()
+      } catch (e: Exception) {
+        setErrorMsg("Failed to add collaborator: ${e.message}")
+      }
+    }
+  }
 
   init {
     // Debounce favorite changes to avoid spamming database
@@ -122,7 +170,7 @@ class TripInfoViewModel(
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
-                currentUserIsOwner = userRepository.getCurrentUser().uid == trip.ownerId)
+                currentUserIsOwner = trip.isOwner(userRepository.getCurrentUser().uid))
         computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
