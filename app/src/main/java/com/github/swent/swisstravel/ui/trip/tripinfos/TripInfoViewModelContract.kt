@@ -73,4 +73,6 @@ interface TripInfoViewModelContract {
   fun addCollaborator(user: User)
 
   fun loadCollaboratorData()
+
+  fun removeCollaborator(user: User)
 }

@@ -14,15 +14,19 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Share
@@ -37,6 +41,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -53,12 +58,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
@@ -294,30 +303,129 @@ fun DailyViewScreen(
                 onDismissRequest = { showShareDialog = false },
                 title = { Text(stringResource(R.string.share_trip)) },
                 text = {
-                  if (ui.availableFriends.isEmpty()) {
-                    Text(stringResource(R.string.no_friends_to_share))
-                  } else {
-                    LazyColumn(
-                        modifier =
-                            Modifier.heightIn(
-                                max = dimensionResource(R.dimen.daily_view_share_dialog_max)),
-                        verticalArrangement =
-                            Arrangement.spacedBy(
-                                dimensionResource(R.dimen.daily_view_card_elevation_on))) {
-                          items(ui.availableFriends) { friend ->
-                            FriendElement(
-                                userToDisplay = friend,
-                                onClick = {
-                                  tripInfoViewModel.addCollaborator(friend)
-                                  showShareDialog = false
-                                })
+                  Column {
+                    // --- REMOVE COLLABORATORS ---
+                    if (ui.collaborators.isNotEmpty()) {
+                      Text(
+                          text = stringResource(R.string.current_collaborators),
+                          style = MaterialTheme.typography.titleSmall,
+                          color = MaterialTheme.colorScheme.primary,
+                          modifier =
+                              Modifier.padding(
+                                  bottom =
+                                      dimensionResource(
+                                          R.dimen.trip_element_collaborators_padding)))
+
+                      LazyColumn(
+                          modifier =
+                              Modifier.heightIn(
+                                  max =
+                                      dimensionResource(
+                                          R.dimen.share_dialog_collaborators_list_height)),
+                          verticalArrangement =
+                              Arrangement.spacedBy(
+                                  dimensionResource(R.dimen.trip_element_collaborators_padding))) {
+                            items(ui.collaborators) { collaborator ->
+                              Row(
+                                  modifier = Modifier.fillMaxWidth(),
+                                  verticalAlignment = Alignment.CenterVertically,
+                                  horizontalArrangement = Arrangement.SpaceBetween) {
+                                    // Profile Pic & Name
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.weight(1f)) {
+                                          AsyncImage(
+                                              model =
+                                                  collaborator.profilePicUrl.ifBlank {
+                                                    R.drawable.default_profile_pic
+                                                  },
+                                              contentDescription = null,
+                                              contentScale = ContentScale.Crop,
+                                              modifier =
+                                                  Modifier.size(
+                                                          dimensionResource(
+                                                              R.dimen.trip_top_circle_size))
+                                                      .clip(CircleShape))
+                                          Spacer(
+                                              modifier =
+                                                  Modifier.width(
+                                                      dimensionResource(
+                                                          R.dimen.share_dialog_spacer)))
+                                          Text(
+                                              text = collaborator.name,
+                                              style = MaterialTheme.typography.bodyMedium,
+                                              maxLines = 1,
+                                              overflow = TextOverflow.Ellipsis)
+                                        }
+
+                                    // Remove Button
+                                    IconButton(
+                                        onClick = {
+                                          tripInfoViewModel.removeCollaborator(collaborator)
+                                          Toast.makeText(
+                                                  context,
+                                                  "Friend successfully removed from the trip!",
+                                                  Toast.LENGTH_SHORT)
+                                              .show()
+                                        }) {
+                                          Icon(
+                                              imageVector = Icons.Filled.Delete,
+                                              contentDescription = stringResource(R.string.delete),
+                                              tint = MaterialTheme.colorScheme.error)
+                                        }
+                                  }
+                            }
                           }
-                        }
+                      // Divider between sections
+                      HorizontalDivider(
+                          modifier =
+                              Modifier.padding(
+                                  vertical = dimensionResource(R.dimen.share_dialog_spacer)))
+                    }
+
+                    // --- SECTION 2: ADD FRIENDS ---
+                    Text(
+                        text = stringResource(R.string.add_friend),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier =
+                            Modifier.padding(
+                                bottom =
+                                    dimensionResource(R.dimen.trip_element_collaborators_padding)))
+
+                    if (ui.availableFriends.isEmpty()) {
+                      Text(
+                          text = stringResource(R.string.no_friends_to_share),
+                          style = MaterialTheme.typography.bodyMedium,
+                          color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    } else {
+                      LazyColumn(
+                          modifier =
+                              Modifier.heightIn(
+                                  max =
+                                      dimensionResource(R.dimen.share_dialog_friends_list_height)),
+                          verticalArrangement =
+                              Arrangement.spacedBy(
+                                  dimensionResource(R.dimen.trip_element_collaborators_padding))) {
+                            items(ui.availableFriends) { friend ->
+                              FriendElement(
+                                  userToDisplay = friend,
+                                  onClick = {
+                                    tripInfoViewModel.addCollaborator(friend)
+                                    Toast.makeText(
+                                            context,
+                                            "Friend successfully added to the trip!",
+                                            Toast.LENGTH_SHORT)
+                                        .show()
+                                  })
+                            }
+                          }
+                    }
                   }
                 },
                 confirmButton = {
                   TextButton(onClick = { showShareDialog = false }) {
-                    Text(stringResource(R.string.cancel))
+                    Text(stringResource(R.string.ok))
                   }
                 })
           }

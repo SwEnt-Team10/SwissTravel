@@ -153,7 +153,10 @@ fun PastTripsScreen(
                   },
                   isSelected = { trip -> trip in uiState.selectedTrips },
                   isSelectionMode = uiState.isSelectionMode,
-                  emptyListString = stringResource(R.string.no_past_trips))
+                  emptyListString = stringResource(R.string.no_past_trips),
+                  collaboratorsLookup = { uid ->
+                    uiState.collaboratorsByTripId[uid] ?: emptyList()
+                  })
             }
       })
 }
