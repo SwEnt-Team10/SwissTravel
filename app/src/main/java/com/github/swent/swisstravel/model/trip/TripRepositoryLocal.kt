@@ -39,4 +39,12 @@ class TripRepositoryLocal(
       throw Exception(errorMessage)
     }
   }
+
+  override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+    /* no-op */
+  }
+
+  override suspend fun removeCollaborator(tripId: String, userId: String) {
+    /* no-op */
+  }
 }

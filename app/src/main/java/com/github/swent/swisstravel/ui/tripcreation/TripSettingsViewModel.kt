@@ -312,6 +312,7 @@ open class TripSettingsViewModel(
                 isFavorite = false,
                 isCurrentTrip = false,
                 listUri = emptyList(),
+                collaboratorsId = emptyList(),
                 isRandom = _isRandomTrip.value)
 
         tripsRepository.addTrip(trip)

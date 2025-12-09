@@ -288,6 +288,7 @@ class EditTripScreenTest {
         isFavorite = false,
         isCurrentTrip = false,
         listUri = emptyList(),
+        collaboratorsId = emptyList(),
         isRandom = random)
   }
 
@@ -309,6 +310,14 @@ class EditTripScreenTest {
     }
 
     override suspend fun addTrip(trip: Trip) {
+      /* no-op */
+    }
+
+    override suspend fun removeCollaborator(tripId: String, userId: String) {
+      /* no-op */
+    }
+
+    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
       /* no-op */
     }
 

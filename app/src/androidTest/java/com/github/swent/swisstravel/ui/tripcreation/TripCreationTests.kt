@@ -50,6 +50,14 @@ class TripCreationTests : InMemorySwissTravelTest() {
     }
 
     override fun getNewUid(): String = "fake-uid"
+
+    override suspend fun removeCollaborator(tripId: String, userId: String) {
+      /* no-op */
+    }
+
+    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+      /* no-op */
+    }
   }
 
   private val fakeRepo = FakeTripsRepository(emptyList())

@@ -81,7 +81,8 @@ class ProfileScreenTest : SwissTravelTest() {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
   private val tripTwo =
       Trip(
           uid = "trip2",
@@ -98,7 +99,8 @@ class ProfileScreenTest : SwissTravelTest() {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   private val fakeTripRepo = TripRepositoryLocal()
 
@@ -424,9 +426,7 @@ class ProfileScreenTest : SwissTravelTest() {
               tripsRepository = fakeTripRepo,
               requestedUid = "currentUser")
 
-      composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
-      }
+      composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       // Settings button should be displayed
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()

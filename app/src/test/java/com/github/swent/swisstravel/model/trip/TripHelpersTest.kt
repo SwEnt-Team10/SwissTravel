@@ -45,7 +45,8 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     assertTrue(trip.isUpcoming())
     assertFalse(trip.isCurrent())
@@ -73,7 +74,8 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = true,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     assertTrue(trip.isCurrent())
     assertFalse(trip.isUpcoming())
@@ -101,10 +103,64 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     assertTrue(trip.isPast())
     assertFalse(trip.isCurrent())
     assertFalse(trip.isUpcoming())
+  }
+
+  @Test
+  fun `isOwner returns true only for ownerId`() {
+    val trip =
+        Trip(
+            uid = "testUid",
+            name = "testName",
+            ownerId = "owner-123",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile =
+                TripProfile(
+                    startDate = tsFromInstant(Instant.now()),
+                    endDate = tsFromInstant(Instant.now()),
+                    preferredLocations = emptyList(),
+                    preferences = emptyList()),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList(),
+            collaboratorsId = listOf("collab-1", "collab-2"))
+
+    assertTrue(trip.isOwner("owner-123"))
+    assertFalse(trip.isOwner("collab-1"))
+    assertFalse(trip.isOwner("random-user"))
+  }
+
+  @Test
+  fun `canEdit returns true for owner and collaborators only`() {
+    val trip =
+        Trip(
+            uid = "testUid",
+            name = "testName",
+            ownerId = "owner-123",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile =
+                TripProfile(
+                    startDate = tsFromInstant(Instant.now()),
+                    endDate = tsFromInstant(Instant.now()),
+                    preferredLocations = emptyList(),
+                    preferences = emptyList()),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList(),
+            collaboratorsId = listOf("collab-1", "collab-2"))
+
+    assertTrue(trip.canEdit("owner-123")) // owner can edit
+    assertTrue(trip.canEdit("collab-1")) // collaborator can edit
+    assertTrue(trip.canEdit("collab-2")) // collaborator can edit
+    assertFalse(trip.canEdit("random-user")) // others cannot edit
   }
 }
