@@ -59,8 +59,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip returns Trip with all nested fields`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("trip1").get() } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("trip1").get(Source.SERVER) } returns Tasks.forResult(doc)
 
     // Base document
     every { doc.id } returns "trip1"
@@ -121,8 +120,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip throws when required fields missing`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("badTrip").get() } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("badTrip").get(Source.SERVER) } returns Tasks.forResult(doc)
     every { doc.id } returns "badTrip"
     every { doc.getString("name") } returns null // triggers documentToTrip null
     every { doc.getString("ownerId") } returns "owner1"
@@ -133,8 +131,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip handles singleton imageUrls by treating as singleton list`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("tripImgUrls").get() } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("tripImgUrls").get(Source.SERVER) } returns Tasks.forResult(doc)
     every { doc.id } returns "tripImgUrls"
     every { doc.getString("name") } returns "TripImageUrls"
     every { doc.getString("ownerId") } returns "owner1"
@@ -180,9 +177,8 @@ class TripsRepositoryFirestorePublicTest {
     val doc = mockk<DocumentSnapshot>()
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
-    every {
-      mockDb.collection(TRIPS_COLLECTION_PATH).document("tripWithBadActivities").get()
-    } returns Tasks.forResult(doc)
+    every { mockCollection.document("tripWithBadActivities").get(Source.SERVER) } returns
+        Tasks.forResult(doc)
     every { doc.id } returns "tripWithBadActivities"
     every { doc.getString("name") } returns "TripWithBadActivities"
     every { doc.getString("ownerId") } returns "owner1"
@@ -240,8 +236,7 @@ class TripsRepositoryFirestorePublicTest {
     val doc = mockk<DocumentSnapshot>()
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("tripEmpty").get() } returns
-        Tasks.forResult(doc)
+    every { mockCollection.document("tripEmpty").get(Source.SERVER) } returns Tasks.forResult(doc)
     every { doc.id } returns "tripEmpty"
     every { doc.getString("name") } returns "EmptyTrip"
     every { doc.getString("ownerId") } returns "owner1"
@@ -287,18 +282,15 @@ class TripsRepositoryFirestorePublicTest {
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.uid } returns "owner123"
 
-    // 1) Trips where current user is the owner
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", "owner123") } returns
-        mockOwnerQuery
+    every { mockCollection.whereEqualTo("ownerId", "owner123") } returns mockOwnerQuery
     every { mockOwnerQuery.get() } returns Tasks.forResult(mockOwnerSnapshot)
     every { mockOwnerSnapshot.documents } returns listOf(doc)
     every { mockOwnerSnapshot.iterator() } returns
         listOf(doc).iterator() as MutableIterator<QueryDocumentSnapshot?>
 
     // 2) Trips where current user is a collaborator (return empty list)
-    every {
-      mockDb.collection(TRIPS_COLLECTION_PATH).whereArrayContains("collaboratorsId", "owner123")
-    } returns mockCollaboratorQuery
+    every { mockCollection.whereArrayContains("collaboratorsId", "owner123") } returns
+        mockCollaboratorQuery
     every { mockCollaboratorQuery.get() } returns Tasks.forResult(mockCollaboratorSnapshot)
     every { mockCollaboratorSnapshot.documents } returns emptyList()
 

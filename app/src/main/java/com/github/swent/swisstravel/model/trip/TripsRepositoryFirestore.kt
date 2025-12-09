@@ -67,7 +67,7 @@ class TripsRepositoryFirestore(
   override suspend fun getTrip(tripId: String): Trip {
     val document =
         try {
-          db.collection(TRIPS_COLLECTION_PATH).document(tripId).get().await()
+          db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.SERVER].await()
         } catch (_: Exception) {
           db.collection(TRIPS_COLLECTION_PATH).document(tripId)[Source.CACHE].await()
         }

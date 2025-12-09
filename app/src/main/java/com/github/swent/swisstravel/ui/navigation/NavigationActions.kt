@@ -83,7 +83,8 @@ sealed class Screen(
 
   object Loading : Screen(route = "loading", name = "Loading")
 
-  object FriendsList : Screen(route = "friends_list", name = "Friends")
+  object FriendsList :
+      Screen(route = "friends_list", name = "Friends", isTopLevelDestination = true)
 
   object AddFriend : Screen(route = "add_friend", name = "Add Friend")
 
