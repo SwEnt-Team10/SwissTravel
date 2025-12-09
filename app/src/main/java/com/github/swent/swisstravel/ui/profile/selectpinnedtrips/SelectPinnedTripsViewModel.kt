@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 class SelectPinnedTripsViewModel(
     tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
     private val userRepository: UserRepository = UserRepositoryFirebase()
-) : TripsViewModel(tripsRepository = tripsRepository) {
+) : TripsViewModel(userRepository = userRepository, tripsRepository = tripsRepository) {
 
   private var currentUser: User? = null
 
