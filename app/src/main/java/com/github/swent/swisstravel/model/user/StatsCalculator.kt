@@ -27,7 +27,7 @@ object StatsCalculator {
 
     val allRouteSegments: List<RouteSegment> = trips.flatMap { it.routeSegments }
 
-    val longestRouteSegmentMin = allRouteSegments.maxOf { segment -> segment.durationMinutes }
+    val longestRouteSegmentMin = allRouteSegments.maxOfOrNull { segment -> segment.durationMinutes } ?: 0
 
     val mostUsedTransportMode: TransportMode? =
         allRouteSegments.groupingBy { it.transportMode }.eachCount().maxByOrNull { it.value }?.key

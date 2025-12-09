@@ -425,7 +425,7 @@ class ProfileScreenTest : SwissTravelTest() {
               requestedUid = "currentUser")
 
       composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
+        ProfileScreen(profileViewModel = viewModel)
       }
 
       // Settings button should be displayed
