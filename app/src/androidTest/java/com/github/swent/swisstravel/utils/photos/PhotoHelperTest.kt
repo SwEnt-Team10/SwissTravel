@@ -1,11 +1,14 @@
 package com.github.swent.swisstravel.utils.photos
 
+import android.content.ContentResolver
 import android.content.Context
 import android.graphics.Bitmap
 import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import io.mockk.every
+import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
 import org.junit.Assert.assertEquals
@@ -28,30 +31,24 @@ class PhotoHelperTest {
   }
 
   @Test
-  fun getPhotoLocation_returnsCorrectCoordinatesAndName_whenImageHasGpsData() {
+  fun getPhotoLocationReturnsCorrectCoordinatesAndNameWhenImageHasGpsData() {
     // Create a temporary dummy image
     val file = createTempJpegFile(context)
 
     // Inject GPS data (Example: Eiffel Tower)
-    // Lat: 48.8584 N, Long: 2.2945 E
     val lat = 48.8584
     val lon = 2.2945
     writeGeoLocationToImage(file, lat, lon)
 
-    // Define a name for the location
     val locationName = "Eiffel Tower"
 
-    // Call the helper function with the name
+    // Call the helper function
     val uri = Uri.fromFile(file)
     val location = context.getPhotoLocation(uri, locationName)
 
     // Assertions
     assertNotNull("Location should not be null", location)
-
-    // Check if the name is correctly assigned
     assertEquals("Incorrect location name", locationName, location!!.name)
-
-    // We use a delta (0.01) because EXIF conversion loses a tiny bit of precision
     assertEquals("Incorrect latitude", lat, location.coordinate.latitude, 0.01)
     assertEquals("Incorrect longitude", lon, location.coordinate.longitude, 0.01)
 
@@ -60,19 +57,32 @@ class PhotoHelperTest {
   }
 
   @Test
-  fun getPhotoLocation_returnsNull_whenImageHasNoGpsData() {
-    // Create an image without EXIF data
+  fun getPhotoLocationReturnsNullWhenImageHasNoGpsData() {
     val file = createTempJpegFile(context)
-
-    // Call the helper function with a dummy name
     val uri = Uri.fromFile(file)
     val location = context.getPhotoLocation(uri, "No GPS Location")
 
-    // Verify that the result is null
     assertNull("Location should be null for an image without GPS data", location)
-
-    // Cleanup
     file.delete()
+  }
+
+  @Test
+  fun getPhotoLocationReturnsNullWhenSecurityExceptionOccurs() {
+    // Setup mocks
+    val mockContext = mockk<Context>()
+    val mockContentResolver = mockk<ContentResolver>()
+    val uri = Uri.parse("content://fake/uri")
+
+    every { mockContext.contentResolver } returns mockContentResolver
+
+    // Force a SecurityException (e.g., permission denied)
+    every { mockContentResolver.openInputStream(uri) } throws SecurityException("Permission denied")
+
+    // Test execution
+    val location = mockContext.getPhotoLocation(uri, "Test Security")
+
+    // Verification
+    assertNull("Should handle SecurityException gracefully", location)
   }
 
   // --- Test Utilities ---
