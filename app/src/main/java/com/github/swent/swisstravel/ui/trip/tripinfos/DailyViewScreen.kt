@@ -12,8 +12,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,11 +25,13 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -38,12 +42,15 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -55,6 +62,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.ui.friends.FriendElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.github.swent.swisstravel.utils.NetworkUtils.isOnline
@@ -162,10 +170,18 @@ fun DailyViewScreen(
                 ui.isComputingSchedule || (ui.locations.isNotEmpty() && ui.schedule.isEmpty()))
       }
 
+  var showShareDialog by remember { mutableStateOf(false) }
+
   LaunchedEffect(ui.errorMsg) {
     ui.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       tripInfoViewModel.clearErrorMsg()
+    }
+  }
+
+  LaunchedEffect(ui.uid) {
+    if (ui.currentUserIsOwner) {
+      tripInfoViewModel.loadCollaboratorData()
     }
   }
 
@@ -179,7 +195,8 @@ fun DailyViewScreen(
               onBack = callbacks.onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
               onEdit = callbacks.onEditTrip,
-              onAddPhotos = { onAddPhotos() })
+              onAddPhotos = { onAddPhotos() },
+              onShare = { showShareDialog = true })
         }
       },
       bottomBar = {
@@ -271,6 +288,39 @@ fun DailyViewScreen(
                 onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
                 mapContent = mapContent)
           }
+
+          if (showShareDialog) {
+            AlertDialog(
+                onDismissRequest = { showShareDialog = false },
+                title = { Text(stringResource(R.string.share_trip)) },
+                text = {
+                  if (ui.availableFriends.isEmpty()) {
+                    Text(stringResource(R.string.no_friends))
+                  } else {
+                    LazyColumn(
+                        modifier =
+                            Modifier.heightIn(
+                                max = dimensionResource(R.dimen.daily_view_share_dialog_max)),
+                        verticalArrangement =
+                            Arrangement.spacedBy(
+                                dimensionResource(R.dimen.daily_view_card_elevation_on))) {
+                          items(ui.availableFriends) { friend ->
+                            FriendElement(
+                                userToDisplay = friend,
+                                onClick = {
+                                  tripInfoViewModel.addCollaborator(friend)
+                                  showShareDialog = false
+                                })
+                          }
+                        }
+                  }
+                },
+                confirmButton = {
+                  TextButton(onClick = { showShareDialog = false }) {
+                    Text(stringResource(R.string.cancel))
+                  }
+                })
+          }
         }
       }
 }
@@ -329,7 +379,8 @@ private fun DailyViewTopAppBar(
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
     onEdit: () -> Unit,
-    onAddPhotos: () -> Unit = {}
+    onAddPhotos: () -> Unit = {},
+    onShare: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
@@ -352,6 +403,12 @@ private fun DailyViewTopAppBar(
       },
       actions = {
         if (ui.currentUserIsOwner) {
+          IconButton(onClick = onShare) {
+            Icon(
+                imageVector = Icons.Filled.Share,
+                contentDescription = stringResource(R.string.share_trip),
+                tint = MaterialTheme.colorScheme.onBackground)
+          }
           AddPhotosButton(onAddPhotos = { onAddPhotos() })
           IconButton(
               onClick = onToggleFavorite,

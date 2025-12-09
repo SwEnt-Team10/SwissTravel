@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.trip.tripinfos
 
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.User
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.StateFlow
 
@@ -68,4 +69,8 @@ interface TripInfoViewModelContract {
    * @param activity The activity to like.
    */
   fun likeActivity(activity: Activity)
+
+  fun addCollaborator(user: User)
+
+  fun loadCollaboratorData()
 }
