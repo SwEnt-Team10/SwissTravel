@@ -59,7 +59,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip returns Trip with all nested fields`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("trip1").get() } returns
+    every { mockCollection.document("trip1").get(Source.SERVER) } returns
         Tasks.forResult(doc)
 
     // Base document
@@ -119,7 +119,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip throws when required fields missing`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("badTrip").get() } returns
+    every { mockCollection.document("badTrip").get(Source.SERVER) } returns
         Tasks.forResult(doc)
     every { doc.id } returns "badTrip"
     every { doc.getString("name") } returns null // triggers documentToTrip null
@@ -131,7 +131,7 @@ class TripsRepositoryFirestorePublicTest {
   @Test
   fun `getTrip handles singleton imageUrls by treating as singleton list`() = runTest {
     val doc = mockk<DocumentSnapshot>()
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("tripImgUrls").get() } returns
+    every { mockCollection.document("tripImgUrls").get(Source.SERVER) } returns
         Tasks.forResult(doc)
     every { doc.id } returns "tripImgUrls"
     every { doc.getString("name") } returns "TripImageUrls"
@@ -177,7 +177,7 @@ class TripsRepositoryFirestorePublicTest {
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
     every {
-      mockDb.collection(TRIPS_COLLECTION_PATH).document("tripWithBadActivities").get()
+      mockCollection.document("tripWithBadActivities").get(Source.SERVER)
     } returns Tasks.forResult(doc)
     every { doc.id } returns "tripWithBadActivities"
     every { doc.getString("name") } returns "TripWithBadActivities"
@@ -234,7 +234,7 @@ class TripsRepositoryFirestorePublicTest {
     val doc = mockk<DocumentSnapshot>()
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).document("tripEmpty").get() } returns
+    every { mockCollection.document("tripEmpty").get(Source.SERVER) } returns
         Tasks.forResult(doc)
     every { doc.id } returns "tripEmpty"
     every { doc.getString("name") } returns "EmptyTrip"
@@ -277,9 +277,9 @@ class TripsRepositoryFirestorePublicTest {
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.uid } returns "owner123"
 
-    every { mockDb.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", "owner123") } returns
+    every { mockCollection.whereEqualTo("ownerId", "owner123") } returns
         mockQuery
-    every { mockQuery.get() } returns Tasks.forResult(mockQuerySnapshot)
+    every { mockQuery.get(Source.SERVER) } returns Tasks.forResult(mockQuerySnapshot)
     every { mockQuerySnapshot.documents } returns listOf(doc)
     every { mockQuerySnapshot.iterator() } returns
         listOf(doc).iterator() as MutableIterator<QueryDocumentSnapshot?>
