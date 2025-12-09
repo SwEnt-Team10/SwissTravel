@@ -53,7 +53,7 @@ class CurrentTripScreenTest {
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
-      val viewModel = MyTripsViewModel(fakeRepo)
+      val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
       CurrentTripScreen(isLoggedIn = true, myTripsViewModel = viewModel)
     }
 
@@ -90,7 +90,7 @@ class CurrentTripScreenTest {
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(notCurrentTrip))
-      val viewModel = MyTripsViewModel(fakeRepo)
+      val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
       CurrentTripScreen(isLoggedIn = true, myTripsViewModel = viewModel)
     }
 

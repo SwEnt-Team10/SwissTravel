@@ -63,7 +63,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun displaysCurrentAndUpcomingTrips_usingRealViewModel() {
     val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip, upcomingTrip))
-    val viewModel = MyTripsViewModel(fakeRepo)
+    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -82,7 +82,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun displaysEmptyMessagesWhenNoTrips() {
-    val viewModel = MyTripsViewModel(FakeTripsRepository())
+    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -93,7 +93,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun pastTripsButton_clickTriggersCallback() {
     var clicked = false
-    val viewModel = MyTripsViewModel(FakeTripsRepository())
+    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
       SwissTravelTheme {
@@ -108,7 +108,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun addTripButton_triggersAddTripCallback() {
     var createClicked = false
-    val viewModel = MyTripsViewModel(FakeTripsRepository())
+    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
       SwissTravelTheme {
@@ -123,7 +123,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun addingTrip_updatesUpcomingTripsList() {
     val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
-    val viewModel = MyTripsViewModel(fakeRepo)
+    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -204,7 +204,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
-    val viewModel = MyTripsViewModel(fakeRepo)
+    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -247,7 +247,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   /** Helper to launch screen with trips */
   private fun launchScreen(vararg trips: Trip): MyTripsViewModel {
-    val viewModel = MyTripsViewModel(FakeTripsRepository(trips.toMutableList()))
+    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository(trips.toMutableList()))
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
     return viewModel
   }
@@ -398,7 +398,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
-    val viewModel = MyTripsViewModel(fakeRepo)
+    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -443,7 +443,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val fakeRepo =
         FakeTripsRepository(
             mutableListOf(trip1.copy(isFavorite = false), trip2.copy(isFavorite = false)))
-    val viewModel = MyTripsViewModel(fakeRepo)
+    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -469,7 +469,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun pastTripsButton_clickNavigatesToPastTrips() {
     var pastTripsClicked = false
-    val viewModel = MyTripsViewModel(FakeTripsRepository())
+    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
       SwissTravelTheme {
