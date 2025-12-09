@@ -295,7 +295,7 @@ fun DailyViewScreen(
                 title = { Text(stringResource(R.string.share_trip)) },
                 text = {
                   if (ui.availableFriends.isEmpty()) {
-                    Text(stringResource(R.string.no_friends))
+                    Text(stringResource(R.string.no_friends_to_share))
                   } else {
                     LazyColumn(
                         modifier =
