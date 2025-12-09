@@ -61,7 +61,7 @@ data class ProfileUIState(
  */
 class ProfileViewModel(
     private val userRepository: UserRepository = UserRepositoryFirebase(),
-    private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
+    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
     requestedUid: String
 ) : ViewModel() {
 

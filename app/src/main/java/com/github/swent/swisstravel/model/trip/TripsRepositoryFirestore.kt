@@ -32,13 +32,11 @@ class TripsRepositoryFirestore(
     val snapshot =
         try {
           db.collection(TRIPS_COLLECTION_PATH)
-              .whereEqualTo(ownerAttributeName, ownerId)
-              .get(Source.SERVER)
+              .whereEqualTo(ownerAttributeName, ownerId)[Source.SERVER]
               .await()
         } catch (e: Exception) {
           db.collection(TRIPS_COLLECTION_PATH)
-              .whereEqualTo(ownerAttributeName, ownerId)
-              .get(Source.CACHE)
+              .whereEqualTo(ownerAttributeName, ownerId)[Source.CACHE]
               .await()
         }
 
