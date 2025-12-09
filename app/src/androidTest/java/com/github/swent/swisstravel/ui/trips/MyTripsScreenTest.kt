@@ -1,12 +1,17 @@
 package com.github.swent.swisstravel.ui.trips
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.*
+import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -50,6 +55,52 @@ class FakeTripsRepository(private val trips: MutableList<Trip> = mutableListOf()
   }
 }
 
+/** Fake UserRepository to handle collaborator lookups without Firebase. */
+class FakeUserRepository : UserRepository {
+  private val users = mutableMapOf<String, User>()
+
+  fun addUser(user: User) {
+    users[user.uid] = user
+  }
+
+  override suspend fun getCurrentUser(): User =
+      User(
+          "current",
+          "Current User",
+          "",
+          "email",
+          "",
+          emptyList(),
+          emptyList(),
+          UserStats(),
+          emptyList(),
+          emptyList())
+
+  override suspend fun getUserByUid(uid: String): User? = users[uid]
+
+  override suspend fun getUserByNameOrEmail(query: String): List<User> = emptyList()
+
+  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
+
+  override suspend fun updateUserStats(uid: String, stats: UserStats) {}
+
+  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {}
+
+  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
+
+  override suspend fun removeFriend(uid: String, friendUid: String) {}
+
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedImagesUris: List<Uri>?
+  ) {}
+}
+
 class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
@@ -59,6 +110,19 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   private val currentTrip = trip1.copy(isCurrentTrip = true)
 
   private val upcomingTrip = trip2
+
+  /** Helper to launch screen with trips and optional collaborator data. */
+  private fun launchScreen(trips: List<Trip>, users: List<User> = emptyList()): MyTripsViewModel {
+    val fakeTripRepo = FakeTripsRepository(trips.toMutableList())
+    val fakeUserRepo = FakeUserRepository()
+    users.forEach { fakeUserRepo.addUser(it) }
+
+    // IMPORTANT: Pass BOTH repositories to avoid default Firebase init
+    val viewModel = MyTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeTripRepo)
+
+    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    return viewModel
+  }
 
   @Test
   fun displaysCurrentAndUpcomingTrips_usingRealViewModel() {
@@ -486,5 +550,44 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     // Verify that the callback was triggered
     assertTrue(
         pastTripsClicked, "Clicking the Past Trips button should trigger the onPastTrips callback")
+  }
+
+  @Test
+  fun displaysCollaboratorsOnTripCard() {
+    // 1. Create a collaborator
+    val collaborator =
+        User(
+            uid = "collab1",
+            name = "Alice Collaborator",
+            biography = "",
+            email = "alice@test.com",
+            profilePicUrl = "",
+            preferences = emptyList(),
+            friends = emptyList(),
+            stats = UserStats(),
+            pinnedTripsUids = emptyList(),
+            pinnedImagesUris = emptyList())
+
+    // 2. Create a trip linked to this collaborator
+    val sharedTrip =
+        upcomingTrip.copy(
+            uid = "sharedTrip",
+            name = "Shared Adventure",
+            collaboratorsId = listOf(collaborator.uid))
+
+    // 3. Launch screen with the trip and user data
+    launchScreen(listOf(sharedTrip), listOf(collaborator))
+
+    composeTestRule.waitForIdle()
+
+    // 4. Verify the trip card is displayed
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(sharedTrip))
+        .assertIsDisplayed()
+
+    // 5. Verify the collaborator's name (content description) is displayed
+    composeTestRule
+        .onNodeWithContentDescription("Alice Collaborator", useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }
