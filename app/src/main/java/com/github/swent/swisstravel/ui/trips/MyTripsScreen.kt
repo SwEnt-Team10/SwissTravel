@@ -401,6 +401,7 @@ private fun UpcomingTripsSection(
           emptyListString = stringResource(R.string.no_upcoming_trips),
           isSelectionMode = uiState.isSelectionMode,
           isSelected = { trip -> trip in uiState.selectedTrips },
+          collaboratorsLookup = { uid -> uiState.collaboratorsByTripId[uid] ?: emptyList() },
       )
   val listEvent =
       TripListEvents(

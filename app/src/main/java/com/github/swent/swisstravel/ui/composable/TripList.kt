@@ -11,6 +11,7 @@ import androidx.compose.ui.res.dimensionResource
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.TripElement
+import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
 object TripListTestTags {
   const val TRIP_LIST = "TripListLazyColumn"
@@ -36,6 +37,7 @@ fun TripList(
     isSelectionMode: Boolean = false,
     noIconTripElement: Boolean = false,
     emptyListString: String = "",
+    collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
 ) {
   if (trips.isNotEmpty()) {
     LazyColumn(
@@ -44,13 +46,15 @@ fun TripList(
         modifier = Modifier.fillMaxWidth().testTag(TripListTestTags.TRIP_LIST)) {
           items(trips.size) { index ->
             val trip = trips[index]
+            val collaboratorsForThisTrip = collaboratorsLookup(trip.uid)
             TripElement(
                 trip = trip,
                 onClick = { onClickTripElement(trip) },
                 onLongPress = { onLongPress(trip) },
                 isSelected = isSelected(trip),
                 isSelectionMode = isSelectionMode,
-                noIcon = noIconTripElement)
+                noIcon = noIconTripElement,
+                collaborators = collaboratorsForThisTrip)
           }
         }
   } else {

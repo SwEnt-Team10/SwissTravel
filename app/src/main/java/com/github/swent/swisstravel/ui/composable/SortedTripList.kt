@@ -15,6 +15,7 @@ import androidx.compose.ui.res.dimensionResource
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.TripSortType
+import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
 /** Object containing test tags for the [SortedTripList] composable. */
 object SortedTripListTestTags {
@@ -44,7 +45,8 @@ data class TripListState(
     val emptyListString: String = "",
     val isSelectionMode: Boolean = false,
     val noIconTripElement: Boolean = false,
-    val isSelected: (Trip) -> Boolean = { false }
+    val isSelected: (Trip) -> Boolean = { false },
+    val collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
 )
 
 /**
@@ -101,6 +103,7 @@ fun SortedTripList(
         isSelected = listState.isSelected,
         isSelectionMode = listState.isSelectionMode,
         noIconTripElement = listState.noIconTripElement,
-        emptyListString = listState.emptyListString)
+        emptyListString = listState.emptyListString,
+        collaboratorsLookup = listState.collaboratorsLookup)
   }
 }
