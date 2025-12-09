@@ -29,7 +29,7 @@ class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
   /** Launches the screen with a fake repository and returns the ViewModel. */
   private fun launchScreen(vararg trips: Trip, flags: TestFlags = TestFlags()): MyTripsViewModel {
     val fakeRepo = FakeTripsRepository(trips.toMutableList())
-    val viewModel = MyTripsViewModel(fakeRepo)
+    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
 
     composeTestRule.setContent {
       SwissTravelTheme {
