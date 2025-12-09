@@ -95,7 +95,8 @@ class TripTest {
           tripProfile = tripProfile,
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   @Test
   fun testGetAllTripElementsOrdered() {

@@ -60,5 +60,13 @@ open class InMemorySwissTravelTest : SwissTravelTest() {
     override suspend fun deleteTrip(tripId: String) {
       tripList.removeIf { it.uid == tripId }
     }
+
+    override suspend fun removeCollaborator(tripId: String, userId: String) {
+      /* no-op */
+    }
+
+    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+      /* no-op */
+    }
   }
 }

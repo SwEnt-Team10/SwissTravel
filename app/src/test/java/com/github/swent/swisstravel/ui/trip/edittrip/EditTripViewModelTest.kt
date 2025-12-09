@@ -358,6 +358,7 @@ class EditTripScreenViewModelTest {
         isFavorite = false,
         isCurrentTrip = false,
         listUri = emptyList(),
+        collaboratorsId = emptyList(),
         isRandom = random)
   }
 }

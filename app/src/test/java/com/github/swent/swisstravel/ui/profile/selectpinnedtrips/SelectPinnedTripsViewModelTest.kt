@@ -42,7 +42,8 @@ class SelectPinnedTripsViewModelTest {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
   private val tripB =
       Trip(
           uid = "B",
@@ -59,7 +60,8 @@ class SelectPinnedTripsViewModelTest {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
   private val tripC =
       Trip(
           uid = "C",
@@ -76,7 +78,8 @@ class SelectPinnedTripsViewModelTest {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
   private val tripD =
       Trip(
           uid = "D",
@@ -93,7 +96,8 @@ class SelectPinnedTripsViewModelTest {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   private val user =
       User(
