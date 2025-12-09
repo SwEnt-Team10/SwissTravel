@@ -11,6 +11,7 @@ import io.mockk.every
 import io.mockk.mockk
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
@@ -83,6 +84,26 @@ class PhotoHelperTest {
 
     // Verification
     assertNull("Should handle SecurityException gracefully", location)
+  }
+
+  @Test
+  fun getPhotoLocationReturnsNullWhenIOExceptionOccurs() {
+    // Mock Context and ContentResolver
+    val mockContext = mockk<Context>()
+    val mockContentResolver = mockk<ContentResolver>()
+    val uri = Uri.parse("content://fake/uri")
+
+    // Configure the mock to return our mocked ContentResolver
+    every { mockContext.contentResolver } returns mockContentResolver
+
+    // Force openInputStream to throw an IOException
+    every { mockContentResolver.openInputStream(uri) } throws IOException("Disk error simulation")
+
+    // Call the function on the mock
+    val location = mockContext.getPhotoLocation(uri, "Test IO")
+
+    // Verify that it returns null gracefully
+    assertNull("Should handle IOException gracefully", location)
   }
 
   // --- Test Utilities ---
