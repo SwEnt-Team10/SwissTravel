@@ -145,7 +145,8 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   val trip2 =
       Trip(
@@ -162,7 +163,8 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   val tripList = listOf(trip1, trip2)
 
