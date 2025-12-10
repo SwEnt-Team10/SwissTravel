@@ -498,7 +498,12 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                     vm.selectActivity(tripActivity.activity)
                     navigationActions.navigateToActivityInfo(uid)
                   },
-                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
+                  onSwipeActivities = {
+                    navigationActions.navigateTo(Screen.SwipeActivities)
+                    if (vm.uiState.value.activitiesQueue.isEmpty()) {
+                      vm.fetchFirstActivities()
+                    }
+                  },
                   onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
           onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
@@ -530,7 +535,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       SwipeActivitiesScreen(
           onTripInfo = { navController.popBackStack() },
-          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry),
+          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry),
       )
     }
 
