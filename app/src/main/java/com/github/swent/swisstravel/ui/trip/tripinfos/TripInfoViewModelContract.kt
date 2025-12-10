@@ -78,10 +78,29 @@ interface TripInfoViewModelContract {
   fun unlikeActivities(activities: List<Activity>)
 
   /**
-   * Helper to map the tripInfoUIState to a TripSettings.
+   * Updates the activities queue in the UI state and in the Trip.
    *
-   * If the tripProfile parameter from the uiState is null, it will return TripSettings with default
-   * parameters
+   * @param newQueue The queue of activities that will be set.
    */
+  fun updateQueue(newQueue: ArrayDeque<Activity>)
+
+  /**
+   * Updates the set of all activities that have been fetched for swiping in the UI state and in the
+   * Trip.
+   *
+   * @param newFetched The list of all activities that have been fetched for swiping.
+   */
+  fun updateAllFetchedForSwipe(newFetched: List<Activity>)
+
+  /**
+   * If you liked the activity, it will add the activity to the liked activities list of the trip.
+   *
+   * Otherwise, it is considered as a dislike
+   *
+   * @param liked a boolean indicating whether you liked the activity or not
+   */
+  fun swipeActivity(liked: Boolean)
+
+  /** Helper to map the tripInfoUIState to a TripSettings. */
   fun mapToTripSettings(): TripSettings
 }

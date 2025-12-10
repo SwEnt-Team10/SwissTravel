@@ -32,6 +32,9 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  * @property listUri The list of URIs of the pictures of the trip.
  * @property collaboratorsId The list of unique identifiers of the collaborators of the trip.
  * @property isRandom Whether the trip is random or not.
+ * @property likedActivities The list of liked activities in the trip.
+ * @property activitiesQueue The queue of activities to be swiped for the trip.
+ * @property allFetchedForSwipe The list of all activities that have been fetched for swiping.
  */
 data class Trip(
     val uid: String,
@@ -45,7 +48,11 @@ data class Trip(
     val isCurrentTrip: Boolean,
     val listUri: List<Uri>,
     val collaboratorsId: List<String>,
-    val isRandom: Boolean = false
+    val isRandom: Boolean = false,
+    // fields for swipe and like activities
+    val likedActivities: List<Activity> = emptyList(),
+    val activitiesQueue: ArrayDeque<Activity> = ArrayDeque(),
+    val allFetchedForSwipe: List<Activity> = emptyList()
 ) {
   /**
    * Checks if the user is the owner of the trip.
