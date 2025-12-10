@@ -464,7 +464,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
-    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
+    val viewModel =
+        MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
