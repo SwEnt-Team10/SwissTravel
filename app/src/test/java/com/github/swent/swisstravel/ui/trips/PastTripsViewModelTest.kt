@@ -29,6 +29,7 @@ class PastTripsViewModelTest {
     Dispatchers.setMain(testDispatcher)
     repository = mockk()
     userRepository = mockk()
+    coEvery { userRepository.getUserByUid(any()) } returns null
   }
 
   @After

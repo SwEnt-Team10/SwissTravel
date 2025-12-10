@@ -7,6 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
+import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
@@ -71,7 +72,9 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   /** Helper to launch PastTripsScreen with custom trips */
   private fun launchScreen(vararg trips: Trip): PastTripsViewModel {
     val viewModel =
-        PastTripsViewModel(tripsRepository = FakePastTripsRepository(trips.toMutableList()))
+        PastTripsViewModel(
+            userRepository = FakeUserRepository(),
+            tripsRepository = FakePastTripsRepository(trips.toMutableList()))
     composeTestRule.setContent {
       SwissTravelTheme { PastTripsScreen(pastTripsViewModel = viewModel) }
     }
@@ -156,7 +159,8 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val fakeRepo =
         FakePastTripsRepository(
             mutableListOf(pastTrip1.copy(isFavorite = false), pastTrip2.copy(isFavorite = false)))
-    val viewModel = PastTripsViewModel(tripsRepository = fakeRepo)
+    val viewModel =
+        PastTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
     composeTestRule.setContent {
       SwissTravelTheme { PastTripsScreen(pastTripsViewModel = viewModel) }

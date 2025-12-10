@@ -127,7 +127,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun displaysCurrentAndUpcomingTrips_usingRealViewModel() {
     val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip, upcomingTrip))
-    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
+    val viewModel =
+        MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -146,7 +147,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun displaysEmptyMessagesWhenNoTrips() {
-    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
+    val viewModel =
+        MyTripsViewModel(
+            userRepository = FakeUserRepository(), tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -157,7 +160,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun pastTripsButton_clickTriggersCallback() {
     var clicked = false
-    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
+    val viewModel =
+        MyTripsViewModel(
+            userRepository = FakeUserRepository(), tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
       SwissTravelTheme {
@@ -172,7 +177,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun addTripButton_triggersAddTripCallback() {
     var createClicked = false
-    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
+    val viewModel =
+        MyTripsViewModel(
+            userRepository = FakeUserRepository(), tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
       SwissTravelTheme {
@@ -187,7 +194,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun addingTrip_updatesUpcomingTripsList() {
     val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
-    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
+    val viewModel =
+        MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -268,7 +276,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
-    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
+    val viewModel =
+        MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
@@ -309,16 +318,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         "Trip A should appear before Trip B when sorted DESC by start date")
   }
 
-  /** Helper to launch screen with trips */
-  private fun launchScreen(vararg trips: Trip): MyTripsViewModel {
-    val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository(trips.toMutableList()))
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
-    return viewModel
-  }
-
   @Test
   fun longPressTripEntersSelectionMode() {
-    launchScreen(trip1, trip2)
+    launchScreen(listOf(trip1, trip2))
 
     // Long press trip1 to enter selection mode
     composeTestRule
@@ -332,7 +334,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun selectAllButtonSelectsAllTrips() {
-    launchScreen(trip1, trip2)
+    launchScreen(listOf(trip1, trip2))
 
     // Enter selection mode
     composeTestRule
@@ -356,7 +358,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun deleteConfirmationDialogAppearsAndCancels() {
-    val viewModel = launchScreen(trip1, trip2)
+    val viewModel = launchScreen(listOf(trip1, trip2))
 
     // Enter selection mode and select a trip
     composeTestRule
@@ -380,7 +382,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun deleteSelectedTripsRemovesTrip() {
-    val viewModel = launchScreen(trip1, trip2)
+    val viewModel = launchScreen(listOf(trip1, trip2))
 
     // Enter selection mode and select a trip
     composeTestRule
@@ -402,7 +404,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun checkEditCurrentTripButtonDisplays() {
-    launchScreen(trip1, trip2)
+    launchScreen(listOf(trip1, trip2))
 
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)
@@ -411,7 +413,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun checkEditCurrentTripButtonIsNotDisplayedWhenNoTrips() {
-    launchScreen()
+    launchScreen(emptyList())
 
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)
@@ -491,7 +493,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun favoriteButtonAppearsInSelectionMode() {
-    launchScreen(trip1, trip2)
+    launchScreen(listOf(trip1, trip2))
 
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip1))
@@ -507,7 +509,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val fakeRepo =
         FakeTripsRepository(
             mutableListOf(trip1.copy(isFavorite = false), trip2.copy(isFavorite = false)))
-    val viewModel = MyTripsViewModel(tripsRepository = fakeRepo)
+    val viewModel =
+        MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
