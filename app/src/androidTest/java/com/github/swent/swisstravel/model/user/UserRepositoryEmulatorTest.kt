@@ -501,7 +501,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     val storedTrips = doc.get("pinnedTripsUids") as List<*>
     assertEquals(newPinnedTripsUids, storedTrips)
 
-    val storedImages = doc.get("pinnedPicturesUris") as List<*>
+    val storedImages = doc.get("pinnedPicturesUids") as List<*>
     assertEquals(newPinnedImagesUids, storedImages)
   }
 

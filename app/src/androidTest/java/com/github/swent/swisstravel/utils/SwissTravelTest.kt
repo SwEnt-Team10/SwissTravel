@@ -259,7 +259,7 @@ abstract class SwissTravelTest {
 
     // Pinned images section
     onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE).assertIsDisplayed()
-    onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_LIST).assertExists()
+    onNodeWithTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES).assertExists()
     onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON).assertExists()
   }
 
