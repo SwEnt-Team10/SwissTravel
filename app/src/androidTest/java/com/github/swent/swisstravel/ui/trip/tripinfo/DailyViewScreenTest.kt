@@ -12,7 +12,9 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onChildren
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.rule.GrantPermissionRule
@@ -21,6 +23,8 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
@@ -388,5 +392,115 @@ class DailyViewScreenTest {
     compose.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).assertDoesNotExist()
     compose.onNodeWithTag(DailyViewScreenTestTags.SWIPE_ACTIVITIES_BUTTON).assertDoesNotExist()
     compose.onNodeWithTag(DailyViewScreenTestTags.LIKED_ACTIVITIES_BUTTON).assertDoesNotExist()
+  }
+
+  @Test
+  fun shareButton_isDisplayedForOwner() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
+    setContent(vm)
+
+    // Check for the share icon/button
+    compose.onNodeWithContentDescription("Share Trip").assertIsDisplayed()
+  }
+
+  @Test
+  fun shareButton_opensDialogAndShowsFriends() {
+    // Create a dummy user
+    val friend =
+        User(
+            "f1",
+            "Friend 1",
+            "",
+            "f1@test.com",
+            "",
+            emptyList(),
+            emptyList(),
+            UserStats(),
+            emptyList(),
+            emptyList())
+
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+          // Use the helper to populate the list
+          setAvailableFriends(listOf(friend))
+        }
+
+    setContent(vm)
+
+    // Click the Share button (icon content description)
+    compose.onNodeWithContentDescription("Share Trip").performClick()
+
+    // Verify Dialog Title appears
+    compose.onNodeWithText("Share Trip").assertIsDisplayed()
+
+    // Verify "Add Friends" section header exists
+    compose.onNodeWithText("Add Friend").assertIsDisplayed()
+
+    // Verify the friend is listed
+    compose.onNodeWithText("Friend 1").assertIsDisplayed()
+  }
+
+  @Test
+  fun shareDialog_closeButtonDismissesDialog() {
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+        }
+    setContent(vm)
+
+    compose.onNodeWithContentDescription("Share Trip").performClick()
+    compose.onNodeWithText("Share Trip").assertIsDisplayed()
+
+    compose.onNodeWithText("OK").performClick()
+    compose.onNodeWithText("Share Trip").assertDoesNotExist()
+  }
+
+  @Test
+  fun shareDialog_showsCurrentCollaborators_andAllowsRemoval() {
+    // 1. Create a dummy collaborator
+    val collaborator =
+        User(
+            uid = "collab1",
+            name = "Existing Friend",
+            biography = "",
+            email = "collab@test.com",
+            profilePicUrl = "",
+            preferences = emptyList(),
+            friends = emptyList(),
+            stats = UserStats(),
+            pinnedTripsUids = emptyList(),
+            pinnedImagesUris = emptyList())
+
+    // 2. Init VM with this collaborator
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+          // Pre-add the collaborator so they appear in the "Remove" list
+          addCollaborator(collaborator)
+        }
+
+    setContent(vm)
+
+    // 3. Open Dialog
+    compose.onNodeWithContentDescription("Share Trip").performClick()
+
+    // 4. Verify "Current Collaborators" section headers and content
+    compose.onNodeWithText("Current Collaborators").assertIsDisplayed()
+    compose.onNodeWithText("Existing Friend").assertIsDisplayed()
+
+    // 5. Verify Delete Button Exists and Click it
+    compose.onNodeWithContentDescription("Delete").assertIsDisplayed().performClick()
+
+    // 6. Verify Removal
+    // The user should disappear from the list immediately
+    compose.onNodeWithText("Existing Friend").assertDoesNotExist()
   }
 }

@@ -124,6 +124,10 @@
     <string name="liked_activities">Liked Activities</string>
     <string name="trip_id_missing">Trip ID is missing</string>
     <string name="add_photo">Add photos</string>
+    <string name="share_trip">Share Trip</string>
+    <string name="no_friends_to_share">No friends to share with.</string>
+    <string name="ok">OK</string>
+    <string name="current_collaborators">Current Collaborators</string>
 
     <!-- Swipe Activities -->
     <string name="no_activities_to_propose">No more activities to show</string>

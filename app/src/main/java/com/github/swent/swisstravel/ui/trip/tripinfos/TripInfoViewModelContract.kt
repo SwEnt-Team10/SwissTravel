@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.ui.trip.tripinfos
 
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.User
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.StateFlow
 
@@ -68,4 +69,33 @@ interface TripInfoViewModelContract {
    * @param activity The activity to like.
    */
   fun likeActivity(activity: Activity)
+
+  /**
+   * Adds a user as a collaborator to the current trip.
+   *
+   * Updates the trip in the repository by appending the user's UID to the collaborators list and
+   * reloads the local collaborator data.
+   *
+   * @param user The user to add as a collaborator.
+   */
+  fun addCollaborator(user: User)
+
+  /**
+   * Loads the list of friends available to be added as collaborators and the list of current
+   * collaborators for the trip.
+   *
+   * Fetches the current user's friends (accepted status only) and filters out those who are already
+   * collaborators. Also fetches the full User objects for the current trip's collaborators.
+   */
+  fun loadCollaboratorData()
+
+  /**
+   * Removes a user from the current trip's collaborators.
+   *
+   * Updates the trip in the repository by removing the user's UID from the collaborators list and
+   * reloads the local collaborator data.
+   *
+   * @param user The user to remove.
+   */
+  fun removeCollaborator(user: User)
 }

@@ -27,6 +27,8 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.composable.TripListEvents
+import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 
