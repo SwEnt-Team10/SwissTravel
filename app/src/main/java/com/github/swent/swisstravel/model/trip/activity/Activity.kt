@@ -46,9 +46,6 @@ data class Activity(
     if (location.name in blacklistedActivityNames) return false
 
     // Normal validity logic
-    // if (description.isBlank()) return false
-    // If we had to use a fallback, i.e. no description was provided, discard
-    // if (description == invalidDescription) return false
     if (estimatedTime <= 0) return false
 
     return true

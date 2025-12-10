@@ -209,14 +209,34 @@ class ActivityRepositoryMySwitzerland(
    * @return The URL to fetch activities from.
    */
   private fun computeUrlWithPreferences(preferences: List<Preference>, limit: Int): HttpUrl {
+    // 1. If no preferences, just return the builder as is
     if (preferences.isEmpty()) return baseHttpUrl
+    val (mandatory, optional) = separateMandatoryPreferences(preferences.toMutableList())
 
-    val facetsParam = preferences.joinToString(",") { it.toSwissTourismFacet() }
+    // 2. Add the 'facets' parameter (Original Logic)
+    // This tells the API which facets to aggregate in the response.
+    val allPreferences = mandatory + optional
+    val facetsParam = allPreferences.joinToString(",") { it.toSwissTourismFacet() }
 
-    val facetFilters =
-        preferences.joinToString(",") {
-          "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
-        }
+    // 3. Build the 'facet.filter' parameter (Boolean Logic)
+    val parts = mutableListOf<String>()
+
+    // Add Mandatory preferences (Top level = AND)
+    // Format: "facetName:facetValue"
+    mandatory.forEach { parts.add("${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}") }
+
+    // Add Optional preferences (Nested list = OR)
+    // Format: "[facetName:facetValue, facetName:facetValue]"
+    if (optional.isNotEmpty()) {
+      val orPart =
+          optional.joinToString(",", prefix = "[", postfix = "]") {
+            "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
+          }
+      parts.add(orPart)
+    }
+
+    // Construct the final string: mandatory1, mandatory2, [optional1, optional2]
+    val finalFacetFilter = parts.joinToString(",")
 
     // Build manually – no encoding issues
     val url =
@@ -227,7 +247,7 @@ class ActivityRepositoryMySwitzerland(
             .append("&facets=")
             .append(facetsParam)
             .append("&facet.filter=")
-            .append("[$facetFilters]")
+            .append(finalFacetFilter)
             .toString()
 
     Log.d("URL", "Final MySwitzerland URL: $url")
@@ -239,6 +259,7 @@ class ActivityRepositoryMySwitzerland(
    *
    * @param baseUrl The base URL to fetch activities from.
    * @param limit The limit of the number of valid activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of valid activities up to the specified limit.
    */
   private suspend fun fetchValidActivitiesPaginated(
@@ -387,5 +408,29 @@ class ActivityRepositoryMySwitzerland(
             .build()
 
     return fetchValidActivitiesPaginated(baseUrl, limit, activityBlackList)
+  }
+
+  /**
+   * Separates user preferences into mandatory and optional categories. Mandatory preferences (e.g.,
+   * wheelchair accessibility) are applied to all searches.
+   *
+   * @param preferences The list of user preferences.
+   * @return A Pair containing a list of mandatory preferences and a list of optional ones.
+   */
+  private fun separateMandatoryPreferences(
+      preferences: MutableList<Preference>
+  ): Pair<List<Preference>, List<Preference>> {
+    val mandatoryPrefs = mutableListOf<Preference>()
+
+    if (preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE)) {
+      mandatoryPrefs.add(Preference.WHEELCHAIR_ACCESSIBLE)
+      preferences.remove(Preference.WHEELCHAIR_ACCESSIBLE)
+    }
+    if (preferences.contains(Preference.PUBLIC_TRANSPORT)) {
+      mandatoryPrefs.add(Preference.PUBLIC_TRANSPORT)
+      preferences.remove(Preference.PUBLIC_TRANSPORT)
+    }
+
+    return Pair(mandatoryPrefs, preferences)
   }
 }
