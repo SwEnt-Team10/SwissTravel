@@ -138,8 +138,6 @@ class TripsRepositoryFirestore(
       val tripProfile =
           (document["tripProfile"] as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
 
-      val isFavorite = document.getBoolean("favorite") ?: false
-
       val isCurrentTrip = document.getBoolean("currentTrip") ?: false
       // With help of AI
       val listUriStrings = document["listUri"] as? List<*> ?: emptyList<Uri>()
@@ -157,7 +155,6 @@ class TripsRepositoryFirestore(
           routeSegments = routeSegments,
           activities = activities,
           tripProfile = tripProfile,
-          isFavorite = isFavorite,
           isCurrentTrip = isCurrentTrip,
           listUri = listUri,
           collaboratorsId = listCollaboratorsId,
