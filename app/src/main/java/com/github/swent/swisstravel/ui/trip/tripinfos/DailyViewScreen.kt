@@ -12,49 +12,67 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.ZoomInMap
 import androidx.compose.material.icons.filled.ZoomOutMap
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.StarOutline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.friends.FriendElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.github.swent.swisstravel.utils.NetworkUtils.isOnline
@@ -162,10 +180,18 @@ fun DailyViewScreen(
                 ui.isComputingSchedule || (ui.locations.isNotEmpty() && ui.schedule.isEmpty()))
       }
 
+  var showShareDialog by remember { mutableStateOf(false) }
+
   LaunchedEffect(ui.errorMsg) {
     ui.errorMsg?.let {
       Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
       tripInfoViewModel.clearErrorMsg()
+    }
+  }
+
+  LaunchedEffect(ui.uid) {
+    if (ui.currentUserIsOwner) {
+      tripInfoViewModel.loadCollaboratorData()
     }
   }
 
@@ -179,7 +205,8 @@ fun DailyViewScreen(
               onBack = callbacks.onMyTrips,
               onToggleFavorite = { tripInfoViewModel.toggleFavorite() },
               onEdit = callbacks.onEditTrip,
-              onAddPhotos = { onAddPhotos() })
+              onAddPhotos = { onAddPhotos() },
+              onShare = { showShareDialog = true })
         }
       },
       bottomBar = {
@@ -271,8 +298,145 @@ fun DailyViewScreen(
                 onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
                 mapContent = mapContent)
           }
+
+          if (showShareDialog) {
+            ShareTripDialog(
+                onDismiss = { showShareDialog = false },
+                collaborators = ui.collaborators,
+                availableFriends = ui.availableFriends,
+                onRemoveCollaborator = { user ->
+                  tripInfoViewModel.removeCollaborator(user)
+                  Toast.makeText(
+                          context, "Friend successfully removed from the trip!", Toast.LENGTH_SHORT)
+                      .show()
+                },
+                onAddCollaborator = { user ->
+                  tripInfoViewModel.addCollaborator(user)
+                  Toast.makeText(
+                          context, "Friend successfully added to the trip!", Toast.LENGTH_SHORT)
+                      .show()
+                })
+          }
         }
       }
+}
+
+/**
+ * The share trip dialog. Allows users to share the trip with their friends
+ *
+ * @param onDismiss Callback to dismiss the dialog.
+ * @param collaborators List of collaborators for the trip.
+ * @param availableFriends List of available friends to share the trip with.
+ * @param onRemoveCollaborator Callback to remove a collaborator from the trip.
+ * @param onAddCollaborator Callback to add a collaborator to the trip
+ */
+@Composable
+private fun ShareTripDialog(
+    onDismiss: () -> Unit,
+    collaborators: List<User>,
+    availableFriends: List<User>,
+    onRemoveCollaborator: (User) -> Unit,
+    onAddCollaborator: (User) -> Unit
+) {
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      title = { Text(stringResource(R.string.share_trip)) },
+      text = {
+        Column {
+          // --- CURRENT COLLABORATORS SECTION ---
+          if (collaborators.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.current_collaborators),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier =
+                    Modifier.padding(
+                        bottom = dimensionResource(R.dimen.trip_element_collaborators_padding)))
+
+            LazyColumn(
+                modifier =
+                    Modifier.heightIn(
+                        max = dimensionResource(R.dimen.share_dialog_collaborators_list_height)),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        dimensionResource(R.dimen.trip_element_collaborators_padding))) {
+                  items(collaborators) { collaborator ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                          // Profile Pic & Name
+                          Row(
+                              verticalAlignment = Alignment.CenterVertically,
+                              modifier = Modifier.weight(1f)) {
+                                AsyncImage(
+                                    model =
+                                        collaborator.profilePicUrl.ifBlank {
+                                          R.drawable.default_profile_pic
+                                        },
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier =
+                                        Modifier.size(
+                                                dimensionResource(R.dimen.trip_top_circle_size))
+                                            .clip(CircleShape))
+                                Spacer(
+                                    modifier =
+                                        Modifier.width(
+                                            dimensionResource(R.dimen.share_dialog_spacer)))
+                                Text(
+                                    text = collaborator.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis)
+                              }
+
+                          // Remove Button
+                          IconButton(onClick = { onRemoveCollaborator(collaborator) }) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = MaterialTheme.colorScheme.error)
+                          }
+                        }
+                  }
+                }
+            // Divider between sections
+            HorizontalDivider(
+                modifier =
+                    Modifier.padding(vertical = dimensionResource(R.dimen.share_dialog_spacer)))
+          }
+
+          // --- ADD FRIENDS SECTION ---
+          Text(
+              text = stringResource(R.string.add_friend),
+              style = MaterialTheme.typography.titleSmall,
+              color = MaterialTheme.colorScheme.primary,
+              modifier =
+                  Modifier.padding(
+                      bottom = dimensionResource(R.dimen.trip_element_collaborators_padding)))
+
+          if (availableFriends.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_friends_to_share),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+          } else {
+            LazyColumn(
+                modifier =
+                    Modifier.heightIn(
+                        max = dimensionResource(R.dimen.share_dialog_friends_list_height)),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        dimensionResource(R.dimen.trip_element_collaborators_padding))) {
+                  items(availableFriends) { friend ->
+                    FriendElement(userToDisplay = friend, onClick = { onAddCollaborator(friend) })
+                  }
+                }
+          }
+        }
+      },
+      confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } })
 }
 
 /**
@@ -313,13 +477,15 @@ private fun DailyViewBottomBar(
 
 /**
  * The top app bar for the Daily View screen. Displays the trip title and action buttons for
- * navigation, favoriting, and editing.
+ * navigation, favoriting, editing, and sharing.
  *
  * @param ui The current UI state of the trip.
  * @param isOnCurrentTripScreen A boolean to control the visibility of the back button.
  * @param onBack Callback for when the back button is clicked.
  * @param onToggleFavorite Callback for when the favorite button is clicked.
  * @param onEdit Callback for when the edit button is clicked.
+ * @param onAddPhotos Callback for when the add photos button is clicked.
+ * @param onShare Callback for when the share button is clicked.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -329,7 +495,8 @@ private fun DailyViewTopAppBar(
     onBack: () -> Unit,
     onToggleFavorite: () -> Unit,
     onEdit: () -> Unit,
-    onAddPhotos: () -> Unit = {}
+    onAddPhotos: () -> Unit = {},
+    onShare: () -> Unit = {}
 ) {
   TopAppBar(
       title = {
@@ -352,6 +519,12 @@ private fun DailyViewTopAppBar(
       },
       actions = {
         if (ui.currentUserIsOwner) {
+          IconButton(onClick = onShare) {
+            Icon(
+                imageVector = Icons.Filled.Share,
+                contentDescription = stringResource(R.string.share_trip),
+                tint = MaterialTheme.colorScheme.onBackground)
+          }
           AddPhotosButton(onAddPhotos = { onAddPhotos() })
           IconButton(
               onClick = onToggleFavorite,
