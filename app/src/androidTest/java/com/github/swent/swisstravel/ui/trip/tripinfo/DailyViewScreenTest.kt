@@ -461,4 +461,46 @@ class DailyViewScreenTest {
     compose.onNodeWithText("OK").performClick()
     compose.onNodeWithText("Share Trip").assertDoesNotExist()
   }
+
+  @Test
+  fun shareDialog_showsCurrentCollaborators_andAllowsRemoval() {
+    // 1. Create a dummy collaborator
+    val collaborator =
+        User(
+            uid = "collab1",
+            name = "Existing Friend",
+            biography = "",
+            email = "collab@test.com",
+            profilePicUrl = "",
+            preferences = emptyList(),
+            friends = emptyList(),
+            stats = UserStats(),
+            pinnedTripsUids = emptyList(),
+            pinnedImagesUris = emptyList())
+
+    // 2. Init VM with this collaborator
+    val vm =
+        FakeTripInfoViewModel().apply {
+          loadTripInfo("TEST")
+          setCurrentUserIsOwner(true)
+          // Pre-add the collaborator so they appear in the "Remove" list
+          addCollaborator(collaborator)
+        }
+
+    setContent(vm)
+
+    // 3. Open Dialog
+    compose.onNodeWithContentDescription("Share Trip").performClick()
+
+    // 4. Verify "Current Collaborators" section headers and content
+    compose.onNodeWithText("Current Collaborators").assertIsDisplayed()
+    compose.onNodeWithText("Existing Friend").assertIsDisplayed()
+
+    // 5. Verify Delete Button Exists and Click it
+    compose.onNodeWithContentDescription("Delete").assertIsDisplayed().performClick()
+
+    // 6. Verify Removal
+    // The user should disappear from the list immediately
+    compose.onNodeWithText("Existing Friend").assertDoesNotExist()
+  }
 }

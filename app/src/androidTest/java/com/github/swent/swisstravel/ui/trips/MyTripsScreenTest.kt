@@ -590,4 +590,71 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         .onNodeWithContentDescription("Alice Collaborator", useUnmergedTree = true)
         .assertIsDisplayed()
   }
+
+  @Test
+  fun tripElement_showsCollaboratorIndicator() {
+    val dummyTrip =
+        Trip(
+            uid = "1",
+            name = "Test Trip",
+            ownerId = "owner",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
+    // Case: exactly 3 or fewer (no overflow)
+    val collaborators =
+        listOf(
+            TripsViewModel.CollaboratorUi("1", "User1", ""),
+            TripsViewModel.CollaboratorUi("2", "User2", ""))
+
+    composeTestRule.setContent {
+      SwissTravelTheme {
+        TripElement(trip = dummyTrip, onClick = {}, collaborators = collaborators)
+      }
+    }
+
+    // Verify avatars are shown
+    composeTestRule.onNodeWithContentDescription("User1").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("User2").assertIsDisplayed()
+    // Verify overflow text is NOT shown
+    composeTestRule.onNodeWithText("+", substring = true).assertDoesNotExist()
+  }
+
+  @Test
+  fun tripElement_showsOverflowIndicator_whenMoreThanThree() {
+    val dummyTrip =
+        Trip(
+            uid = "1",
+            name = "Test Trip",
+            ownerId = "owner",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
+            isFavorite = false,
+            isCurrentTrip = false,
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
+    // Case: 4 collaborators (3 shown + 1 overflow)
+    val collaborators =
+        listOf(
+            TripsViewModel.CollaboratorUi("1", "User1", ""),
+            TripsViewModel.CollaboratorUi("2", "User2", ""),
+            TripsViewModel.CollaboratorUi("3", "User3", ""),
+            TripsViewModel.CollaboratorUi("4", "User4", ""))
+
+    composeTestRule.setContent {
+      SwissTravelTheme {
+        TripElement(trip = dummyTrip, onClick = {}, collaborators = collaborators)
+      }
+    }
+
+    // Verify overflow text "+1" is displayed
+    composeTestRule.onNodeWithText("+1").assertIsDisplayed()
+  }
 }
