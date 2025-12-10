@@ -15,6 +15,7 @@ import com.github.swent.swisstravel.model.trip.TransportMode
  * @property friends List of user's friends.
  * @property stats User statistics.
  * @property pinnedTripsUids List of trip UIDs that the user has pinned.
+ * @property pinnedImagesUris List of image URIs that the user has pinned.
  */
 data class User(
     val uid: String,
@@ -27,6 +28,7 @@ data class User(
     val stats: UserStats = UserStats(),
     val pinnedTripsUids: List<String>,
     val pinnedImagesUris: List<Uri>,
+    val favoriteTripsUids: List<String>,
 )
 
 /**
