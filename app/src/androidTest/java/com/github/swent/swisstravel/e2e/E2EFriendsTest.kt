@@ -63,10 +63,10 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
           android.Manifest.permission.ACCESS_COARSE_LOCATION)
 
   private val aliceName = "Alice Tester"
-  private val aliceEmail = "alice@example.com"
+  private val aliceEmail = "alice.tester@example.com"
 
   private val bobName = "Bob Builder"
-  private val bobEmail = "bob@example.com"
+  private val bobEmail = "bob.builder@example.com"
 
   @Before
   override fun setUp() {
