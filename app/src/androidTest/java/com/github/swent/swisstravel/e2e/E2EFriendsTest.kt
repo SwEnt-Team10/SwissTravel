@@ -9,6 +9,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.github.swent.swisstravel.SwissTravelApp
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
@@ -19,11 +25,13 @@ import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Rule
@@ -33,19 +41,16 @@ import org.junit.Test
  * Done with the help of AI.
  *
  * End-to-end Friend Flow Test:
- * 1) Alice logs in.
- * 2) Alice checks her UID/Name (to ensure she exists in DB).
- * 3) Alice logs out.
- * 4) Bob logs in.
- * 5) Bob navigates to Friends -> Add Friend.
- * 6) Bob searches for "Alice".
- * 7) Bob sends a friend request to Alice.
- * 8) Bob logs out.
- * 9) Alice logs in again.
- * 10) Alice navigates to Friends.
- * 11) Alice sees a pending request from Bob.
- * 12) Alice accepts the request.
- * 13) Alice verifies Bob is now in her friends list.
+ * 1) Alice logs in (account creation).
+ * 2) Alice logs out.
+ * 3) Bob logs in.
+ * 4) Add Bob's dummy trip and pins it to his profile.
+ * 5) Bob sends a friend request to Alice.
+ * 6) Bob logs out.
+ * 7) Alice logs in again.
+ * 8) Alice accepts the friend request.
+ * 9) Alice clicks on Bob in the friends list.
+ * 10) Alice sees Bob's pinned trip.
  */
 class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
@@ -71,13 +76,13 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
   }
 
   @Test
-  fun user_can_send_and_accept_friend_request() {
+  fun user_can_send_and_accept_friend_request_and_view_pinned_trips() {
     // --- STEP 0: SETUP
     // Create tokens for two distinct users
     val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email = aliceEmail)
     val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
 
-    // Sequence the logins: 1. Alice, 2. Bob, 3. Alice
+    // Sequence: Alice (init), Bob (setup), Alice (accept & view)
     val fakeCredentialManager = FakeCredentialManager.sequence(aliceToken, bobToken, aliceToken)
 
     // Start app
@@ -85,7 +90,7 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
       SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) }
     }
 
-    // --- STEP 1: LOGIN AS ALICE ---
+    // --- STEP 1: Alice logs in (account creation). ---
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
     composeTestRule.waitForIdle()
     loginWithGoogle()
@@ -93,14 +98,31 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
 
-    // --- STEP 2: LOGOUT ALICE ---
+    // --- STEP 2: Alice logs out. ---
     logout()
 
-    // --- STEP 3: LOGIN AS BOB ---
+    // --- STEP 3: Bob logs in. ---
     loginWithGoogle()
 
-    // --- STEP 4: BOB SENDS REQUEST TO ALICE ---
-    // Go to Friends Tab
+    // --- STEP 4: Add Bob's dummy trip and pins it to his profile. ---
+    // We do this while Bob is logged in so we have permission
+    runBlocking {
+      val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
+      val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
+
+      // 1. Get Bob's User object (Wait for it to be created by the app logic if needed,
+      // usually quick, but querying by email is safe).
+      val bobUser = userRepo.getUserByNameOrEmail(bobEmail).first()
+
+      // 2. Create a dummy trip owned by Bob
+      val trip = createDummyTrip(ownerId = bobUser.uid, tripName = "bobTripName")
+      tripsRepo.addTrip(trip)
+
+      // 3. Pin the trip to Bob's profile
+      userRepo.updateUser(uid = bobUser.uid, pinnedTripsUids = listOf(trip.uid))
+    }
+
+    // --- STEP 5: Bob sends a friend request to Alice. ---
     composeTestRule.onNodeWithTag(NavigationTestTags.FRIENDS_TAB).performClick()
     waitForTag(FriendsScreenTestTags.ADD_FRIEND_BUTTON)
 
@@ -128,16 +150,15 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
     composeTestRule.waitForIdle()
 
-    // --- STEP 5: LOGOUT BOB ---
-    // Need to go to profile to logout
+    // --- STEP 6: Bob logs out. ---
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     waitForTag(ProfileScreenTestTags.SETTINGS_BUTTON)
     logout()
 
-    // --- STEP 6: LOGIN AS ALICE AGAIN ---
+    // --- STEP 7: Alice logs in again. ---
     loginWithGoogle()
 
-    // --- STEP 7: ALICE ACCEPTS REQUEST ---
+    // --- STEP 8: Alice accepts the friend request. ---
     composeTestRule.onNodeWithTag(NavigationTestTags.FRIENDS_TAB).performClick()
     waitForTag(FriendsScreenTestTags.PENDING_SECTION_CARD)
 
@@ -149,11 +170,8 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
     // Accept Bob
     composeTestRule.onNodeWithTag(FriendElementTestTags.ACCEPT_BUTTON).performClick()
-
-    // --- STEP 8: VERIFY FRIENDSHIP ---
     composeTestRule.waitForIdle()
 
-    // Bob should now be in the main friend list
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule
           .onAllNodesWithTag(FriendsScreenTestTags.FRIENDS_LIST)
@@ -162,6 +180,25 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     }
 
     composeTestRule.onNodeWithText(bobName).assertIsDisplayed()
+
+    // --- STEP 9: Alice clicks on Bob in the friends list. ---
+    // Click on Bob in the friend list
+    composeTestRule
+        .onNodeWithTag(
+            FriendElementTestTags.getTestTagForFriend(
+                runBlocking { userRepo.getUserByNameOrEmail(bobName).first() }))
+        .performClick()
+
+    // Verify we are on the profile screen
+    waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
+
+    // Verify Pinned Trips Title is visible
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsDisplayed()
+
+    // --- STEP 10: Alice sees Bob's pinned trip. ---
+    composeTestRule.onNodeWithText("bobTripName").assertIsDisplayed().performClick()
+    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
   }
 
   // -- Helper functions --
@@ -194,5 +231,37 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
       composeTestRule.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty()
     }
+  }
+
+  /** Creates a valid dummy trip object for testing. */
+  private fun createDummyTrip(ownerId: String, tripName: String): Trip {
+    val loc = Location(coordinate = Coordinate(0.0, 0.0), name = "Test Location", imageUrl = null)
+
+    val now = Timestamp.now()
+
+    val profile =
+        TripProfile(
+            adults = 1,
+            children = 0,
+            departureLocation = loc,
+            arrivalLocation = loc,
+            startDate = now,
+            endDate = now,
+            preferredLocations = listOf(loc),
+            preferences = listOf(Preference.SCENIC_VIEWS))
+
+    return Trip(
+        uid = "trip_${System.currentTimeMillis()}",
+        name = tripName,
+        ownerId = ownerId,
+        locations = listOf(loc),
+        routeSegments = emptyList(),
+        activities = emptyList(),
+        tripProfile = profile,
+        isFavorite = false,
+        isCurrentTrip = false,
+        listUri = emptyList(),
+        collaboratorsId = emptyList(),
+        isRandom = false)
   }
 }
