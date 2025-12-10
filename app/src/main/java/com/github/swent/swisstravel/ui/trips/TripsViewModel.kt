@@ -62,6 +62,7 @@ abstract class TripsViewModel(
       val isSelectionMode: Boolean = false,
       val selectedTrips: Set<Trip> = emptySet(),
       val collaboratorsByTripId: Map<String, List<CollaboratorUi>> = emptyMap(),
+      val favoriteTrips: Set<String> = emptySet()
   )
 
   /**
@@ -202,7 +203,7 @@ abstract class TripsViewModel(
    * @param sortType The sorting order to apply.
    * @return The sorted list of trips.
    */
-  fun sortTrips(trips: List<Trip>, sortType: TripSortType): List<Trip> {
+  fun sortTrips(trips: List<Trip>, sortType: TripSortType, favoriteTrips: Set<String>): List<Trip> {
     return when (sortType) {
       TripSortType.START_DATE_ASC -> trips.sortedBy { it.tripProfile.startDate }
       TripSortType.START_DATE_DESC -> trips.sortedByDescending { it.tripProfile.startDate }
@@ -210,7 +211,7 @@ abstract class TripsViewModel(
       TripSortType.END_DATE_DESC -> trips.sortedByDescending { it.tripProfile.endDate }
       TripSortType.NAME_ASC -> trips.sortedBy { it.name.lowercase() }
       TripSortType.NAME_DESC -> trips.sortedByDescending { it.name.lowercase() }
-      TripSortType.FAVORITES_FIRST -> trips.sortedByDescending { it.isFavorite }
+      TripSortType.FAVORITES_FIRST -> trips.sortedByDescending { it.uid in favoriteTrips }
     }
   }
 
@@ -221,8 +222,9 @@ abstract class TripsViewModel(
    */
   fun updateSortType(sortType: TripSortType) {
     val trips = _uiState.value.tripsList
+    val favorites = _uiState.value.favoriteTrips
     _uiState.value =
-        _uiState.value.copy(sortType = sortType, tripsList = sortTrips(trips, sortType))
+        _uiState.value.copy(sortType = sortType, tripsList = sortTrips(trips, sortType, favorites))
   }
 }
 

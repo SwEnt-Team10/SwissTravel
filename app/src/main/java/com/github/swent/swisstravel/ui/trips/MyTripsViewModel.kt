@@ -43,17 +43,21 @@ class MyTripsViewModel(
   override suspend fun getAllTrips() {
     viewModelScope.launch {
       try {
+        val currentUser = userRepository.getCurrentUser()
+        val favoriteTrips = currentUser.favoriteTripsUids.toSet()
+
         val trips = tripsRepository.getAllTrips()
         val currentTrip = trips.find { it.isCurrent() }
         val upcomingTrips = trips.filter { it.isUpcoming() }
-        val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
+        val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType, favoriteTrips)
         val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
         _uiState.value =
             _uiState.value.copy(
                 currentTrip = currentTrip,
                 tripsList = sortedTrips,
-                collaboratorsByTripId = collaboratorsByTrip)
+                collaboratorsByTripId = collaboratorsByTrip,
+                favoriteTrips = favoriteTrips)
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error fetching trips", e)
         setErrorMsg("Failed to load trips.")
