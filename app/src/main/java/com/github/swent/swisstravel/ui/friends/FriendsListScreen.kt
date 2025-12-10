@@ -215,10 +215,20 @@ private fun LazyListScope.friendsListItems(
 ) {
   if (friends.isEmpty()) {
     item {
-      Text(
-          text = noFriendsText,
-          style = MaterialTheme.typography.bodyMedium,
-      )
+      Column(
+          modifier = Modifier.fillParentMaxSize(),
+          horizontalAlignment = Alignment.CenterHorizontally,
+          verticalArrangement = Arrangement.Center) {
+            Text(
+                text = noFriendsText,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+            Text(
+                text = stringResource(R.string.add_friends_encouragement),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+          }
     }
   } else {
     items(items = friends, key = { it.uid }) { friend ->

@@ -171,6 +171,7 @@
     <string name="confirm_unfriend_title">Are you sure you want to unfriend %1$s?</string>
     <string name="confirm_unfriend_text">If you change your mind, you can friend them again through the \"Add Friend\" menu.</string>
     <string name="unfriend">Unfriend</string>
+    <string name="add_friends_encouragement">You don\'t have any friends yet. Try adding some !</string>
     <!-- Profile Settings -->
     <string name="settings">Settings</string>
     <string name="profile_info">Profile Information</string>
