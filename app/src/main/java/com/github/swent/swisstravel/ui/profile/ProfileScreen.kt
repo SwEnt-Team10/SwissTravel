@@ -163,7 +163,7 @@ fun ProfileScreen(
             isRefreshing = uiState.isLoading,
             onRefresh = { profileViewModel.refreshStats(NetworkUtils.isOnline(context)) },
             modifier = Modifier.padding(pd)) {
-              if (uiState.isLoading && uiState.stats.totalTrips == -1) {
+              if (uiState.isLoading && (uiState.stats.totalTrips == -1 || !isOnline)) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                   Column(
                       horizontalAlignment = Alignment.CenterHorizontally,

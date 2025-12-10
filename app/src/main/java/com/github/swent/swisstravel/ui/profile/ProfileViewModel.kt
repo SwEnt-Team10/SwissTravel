@@ -102,7 +102,7 @@ class ProfileViewModel(
    * @param isOnline Whether the device is online.
    */
   fun refreshStats(isOnline: Boolean) {
-    if (!isOnline) return
+    // if (!isOnline) return // Allow fetching from cache
 
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true) }
