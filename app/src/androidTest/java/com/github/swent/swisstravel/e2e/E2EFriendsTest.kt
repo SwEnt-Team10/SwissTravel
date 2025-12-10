@@ -66,6 +66,15 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
+
+    val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email = aliceEmail)
+    val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
+
+    // Sequence: Alice (init), Bob (setup), Alice (accept & view)
+    val fakeCredentialManager = FakeCredentialManager.sequence(aliceToken, bobToken, aliceToken)
+
+    // Start app
+    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
   }
 
   @After
@@ -76,17 +85,6 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
   @Test
   fun user_can_send_and_accept_friend_request_and_view_pinned_trips() {
-    // --- STEP 0: SETUP
-    // Create tokens for two distinct users
-    val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email = aliceEmail)
-    val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
-
-    // Sequence: Alice (init), Bob (setup), Alice (accept & view)
-    val fakeCredentialManager = FakeCredentialManager.sequence(aliceToken, bobToken, aliceToken)
-
-    // Start app
-    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
-
     // --- STEP 1: Alice logs in (account creation). ---
     loginWithGoogle()
 
