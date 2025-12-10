@@ -5,12 +5,10 @@ import android.net.Uri
 import androidx.exifinterface.media.ExifInterface
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import java.io.IOException
 
 // Code done by an AI
 /**
- * A function for Context that get the meta data from a photo's uri and
- * converts it to a Location.
+ * A function for Context that get the meta data from a photo's uri and converts it to a Location.
  *
  * @param uri the uri of the image you want the location
  * @param name the name you want to assign to the location
