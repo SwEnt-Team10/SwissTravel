@@ -15,6 +15,7 @@ import androidx.compose.ui.res.dimensionResource
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.TripSortType
+import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
 /** Object containing test tags for the [SortedTripList] composable. */
 object SortedTripListTestTags {
@@ -38,13 +39,15 @@ object SortedTripListTestTags {
  * @param isSelectionMode Whether the selection mode is active.
  * @param noIconTripElement Whether to hide the icon in the trip element.
  * @param isSelected Function to determine if a trip is selected.
+ * @param collaboratorsLookup Function to retrieve collaborators for a specific trip.
  */
 data class TripListState(
     val trips: List<Trip> = emptyList(),
     val emptyListString: String = "",
     val isSelectionMode: Boolean = false,
     val noIconTripElement: Boolean = false,
-    val isSelected: (Trip) -> Boolean = { false }
+    val isSelected: (Trip) -> Boolean = { false },
+    val collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
 )
 
 /**
@@ -94,13 +97,6 @@ fun SortedTripList(
           SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
         }
 
-    TripList(
-        trips = listState.trips,
-        onClickTripElement = listEvents.onClickTripElement,
-        onLongPress = listEvents.onLongPress,
-        isSelected = listState.isSelected,
-        isSelectionMode = listState.isSelectionMode,
-        noIconTripElement = listState.noIconTripElement,
-        emptyListString = listState.emptyListString)
+    TripList(listState = listState, listEvents = listEvents)
   }
 }

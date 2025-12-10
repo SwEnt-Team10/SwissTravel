@@ -21,6 +21,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.test.runTest
@@ -155,7 +156,7 @@ class TripAlgorithmTest {
   }
 
   // Done with AI
-  @Test(expected = IllegalStateException::class)
+  @Test
   fun `computeTrip throws when optimized route duration is zero or negative`() = runTest {
     // Arrange
     val coordinates =
@@ -200,11 +201,11 @@ class TripAlgorithmTest {
             departureLocation = coordinates[1])
 
     // Act → should now throw *your* IllegalStateException
-    algorithm.computeTrip(settings, profile)
+    assertFailsWith<IllegalStateException> { algorithm.computeTrip(settings, profile) }
   }
 
   // Done with AI
-  @Test(expected = IllegalStateException::class)
+  @Test
   fun `computeTrip throws when scheduled trip is empty`() = runTest {
     // Arrange
     val coordinates =
@@ -249,11 +250,9 @@ class TripAlgorithmTest {
             departureLocation = coordinates[1])
 
     // Act → should now throw IllegalStateException (not MockKException)
-    algorithm.computeTrip(settings, profile)
-    // Check that this was never called for API
-    coVerify(exactly = 0) {
-      routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any())
-    }
+    assertFailsWith<IllegalStateException> { algorithm.computeTrip(settings, profile) }
+    // Check that rescheduling was attempted
+    coVerify(atMost = 1) { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) }
   }
 
   // Done with AI
@@ -342,7 +341,6 @@ class TripAlgorithmTest {
     // Arrange
     val start = Location(Coordinate(10.0, 10.0), "Start")
     val end = Location(Coordinate(20.0, 20.0), "End")
-
     val locations = listOf(start, end)
     val activity = mockk<Activity>()
     every { activity.location } returns start

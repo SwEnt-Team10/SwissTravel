@@ -73,32 +73,16 @@ class SelectActivities(
 
     val filteredActivities =
         if (userPreferences.isNotEmpty()) {
-          val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(userPreferences)
-
-          // Fetch all activities that match any of the optional preferences for each destination.
           val allFetchedActivities = mutableListOf<Activity>()
           for (destination in allDestinations) {
-            if (optionalPrefs.isNotEmpty()) {
-              val fetched =
-                  activityRepository.getActivitiesNearWithPreference(
-                      mandatoryPrefs + optionalPrefs,
-                      destination.coordinate,
-                      NEAR,
-                      numberOfActivityToFetchPerStep)
-              allFetchedActivities.addAll(fetched)
-              // Update progress after each API call.
-              completedSteps++
-              onProgress(completedSteps.toFloat() / totalSteps)
-              delay(API_CALL_DELAY_MS) // Respect API rate limit.
-            } else {
-              val fetched =
-                  activityRepository.getActivitiesNearWithPreference(
-                      mandatoryPrefs, destination.coordinate, NEAR, numberOfActivityToFetchPerStep)
-              allFetchedActivities.addAll(fetched)
-              completedSteps++
-              onProgress(completedSteps.toFloat() / totalSteps)
-              delay(API_CALL_DELAY_MS) // Respect API rate limit.
-            }
+            val fetched =
+                activityRepository.getActivitiesNearWithPreference(
+                    userPreferences, destination.coordinate, NEAR, numberOfActivityToFetchPerStep)
+            allFetchedActivities.addAll(fetched)
+            // Update progress after each API call.
+            completedSteps++
+            onProgress(completedSteps.toFloat() / totalSteps)
+            delay(API_CALL_DELAY_MS) // Respect API rate limit.
           }
           // Remove duplicate activities that may have been fetched for different preferences.
           allFetchedActivities.distinctBy { it.location }
@@ -139,19 +123,9 @@ class SelectActivities(
     val userPreferences = tripSettings.preferences.toMutableList()
     removeUnsupportedPreferences(userPreferences)
     var fetched: List<Activity>?
-    // If the user has preferences, separate mandatory and optional ones and fetch accordingly.
     if (userPreferences.isNotEmpty()) {
-      val (mandatoryPrefs, optionalPrefs) = separateMandatoryPreferences(userPreferences)
-      if (optionalPrefs.isNotEmpty()) {
-        fetched =
-            activityRepository.getActivitiesNearWithPreference(
-                mandatoryPrefs + optionalPrefs, coords, NEAR, 1)
-        delay(API_CALL_DELAY_MS) // Respect API rate limit.
-      } else {
-        fetched =
-            activityRepository.getActivitiesNearWithPreference(mandatoryPrefs, coords, NEAR, 1)
-        delay(API_CALL_DELAY_MS) // Respect API rate limit.
-      }
+      fetched = activityRepository.getActivitiesNearWithPreference(userPreferences, coords, NEAR, 1)
+      delay(API_CALL_DELAY_MS) // Respect API rate limit.
     } else { // No preferences, fetch any activity near the location.
       fetched = activityRepository.getActivitiesNear(coords, radius, 1)
     }
@@ -200,29 +174,5 @@ class SelectActivities(
     tripSettings.arrivalDeparture.arrivalLocation?.let { allDestinations.add(it) }
     tripSettings.arrivalDeparture.departureLocation?.let { allDestinations.add(it) }
     return allDestinations.distinctBy { it.coordinate } // Ensure all locations are unique.
-  }
-
-  /**
-   * Separates user preferences into mandatory and optional categories. Mandatory preferences (e.g.,
-   * wheelchair accessibility) are applied to all searches.
-   *
-   * @param preferences The list of user preferences.
-   * @return A Pair containing a list of mandatory preferences and a list of optional ones.
-   */
-  private fun separateMandatoryPreferences(
-      preferences: MutableList<Preference>
-  ): Pair<List<Preference>, List<Preference>> {
-    val mandatoryPrefs = mutableListOf<Preference>()
-
-    if (preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE)) {
-      mandatoryPrefs.add(Preference.WHEELCHAIR_ACCESSIBLE)
-      preferences.remove(Preference.WHEELCHAIR_ACCESSIBLE)
-    }
-    if (preferences.contains(Preference.PUBLIC_TRANSPORT)) {
-      mandatoryPrefs.add(Preference.PUBLIC_TRANSPORT)
-      preferences.remove(Preference.PUBLIC_TRANSPORT)
-    }
-
-    return Pair(mandatoryPrefs, preferences)
   }
 }

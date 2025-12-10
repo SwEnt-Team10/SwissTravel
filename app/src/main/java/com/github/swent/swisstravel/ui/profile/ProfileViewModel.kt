@@ -188,6 +188,9 @@ class ProfileViewModel(
 
       val stats = StatsCalculator.computeStats(pastTrips)
       userRepository.updateUserStats(user.uid, stats)
+
+      val achievements = computeAchievements(stats, _uiState.value.friendsCount)
+      _uiState.update { it.copy(stats = stats, achievements = achievements) }
     } catch (e: Exception) {
       _uiState.update { it.copy(errorMsg = it.errorMsg ?: "Error updating stats: ${e.message}") }
     }

@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isPast
+import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import kotlinx.coroutines.launch
 
 /**
@@ -19,8 +21,10 @@ import kotlinx.coroutines.launch
  *
  * @param tripsRepository The repository responsible for managing user trips.
  */
-class PastTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvider.repository) :
-    TripsViewModel(tripsRepository) {
+class PastTripsViewModel(
+    userRepository: UserRepository = UserRepositoryFirebase(),
+    tripsRepository: TripsRepository = TripsRepositoryProvider.repository
+) : TripsViewModel(userRepository = userRepository, tripsRepository = tripsRepository) {
 
   /** Initializes the ViewModel by loading all trips. */
   init {
@@ -32,8 +36,10 @@ class PastTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvi
       val trips = tripsRepository.getAllTrips()
       val pastTrips = trips.filter { it.isPast() }
       val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType)
+      val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
-      _uiState.value = _uiState.value.copy(tripsList = sortedTrips)
+      _uiState.value =
+          _uiState.value.copy(tripsList = sortedTrips, collaboratorsByTripId = collaboratorsByTrip)
     } catch (e: Exception) {
       Log.e("PastTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")

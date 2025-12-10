@@ -5,6 +5,7 @@ import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoUIState
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import com.mapbox.geojson.Point
@@ -117,6 +118,30 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     val current = _ui.value
     val newLiked = current.likedActivities.toMutableList().apply { add(activity) }
     _ui.value = current.copy(likedActivities = newLiked)
+  }
+
+  override fun addCollaborator(user: User) {
+    // Add the user to the collaborators list in the fake state
+    val currentCollaborators = _ui.value.collaborators.toMutableList()
+    if (!currentCollaborators.any { it.uid == user.uid }) {
+      currentCollaborators.add(user)
+    }
+    _ui.value = _ui.value.copy(collaborators = currentCollaborators)
+  }
+
+  override fun loadCollaboratorData() {
+    // no op
+  }
+
+  override fun removeCollaborator(user: User) {
+    // Remove the user from the collaborators list
+    val currentCollaborators = _ui.value.collaborators.filter { it.uid != user.uid }
+    _ui.value = _ui.value.copy(collaborators = currentCollaborators)
+  }
+
+  // Helper to set friends for testing the dialog
+  fun setAvailableFriends(friends: List<User>) {
+    _ui.value = _ui.value.copy(availableFriends = friends)
   }
 
   fun setCurrentUserIsOwner(value: Boolean) {
