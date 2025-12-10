@@ -24,7 +24,6 @@ import com.github.swent.swisstravel.ui.friends.FriendsScreenTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
@@ -86,9 +85,7 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     val fakeCredentialManager = FakeCredentialManager.sequence(aliceToken, bobToken, aliceToken)
 
     // Start app
-    composeTestRule.setContent {
-      SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) }
-    }
+    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
 
     // --- STEP 1: Alice logs in (account creation). ---
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
