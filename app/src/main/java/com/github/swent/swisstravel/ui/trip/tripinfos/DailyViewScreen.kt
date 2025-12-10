@@ -71,6 +71,7 @@ import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.ui.friends.FriendElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
@@ -299,138 +300,143 @@ fun DailyViewScreen(
           }
 
           if (showShareDialog) {
-            AlertDialog(
-                onDismissRequest = { showShareDialog = false },
-                title = { Text(stringResource(R.string.share_trip)) },
-                text = {
-                  Column {
-                    // --- REMOVE COLLABORATORS ---
-                    if (ui.collaborators.isNotEmpty()) {
-                      Text(
-                          text = stringResource(R.string.current_collaborators),
-                          style = MaterialTheme.typography.titleSmall,
-                          color = MaterialTheme.colorScheme.primary,
-                          modifier =
-                              Modifier.padding(
-                                  bottom =
-                                      dimensionResource(
-                                          R.dimen.trip_element_collaborators_padding)))
-
-                      LazyColumn(
-                          modifier =
-                              Modifier.heightIn(
-                                  max =
-                                      dimensionResource(
-                                          R.dimen.share_dialog_collaborators_list_height)),
-                          verticalArrangement =
-                              Arrangement.spacedBy(
-                                  dimensionResource(R.dimen.trip_element_collaborators_padding))) {
-                            items(ui.collaborators) { collaborator ->
-                              Row(
-                                  modifier = Modifier.fillMaxWidth(),
-                                  verticalAlignment = Alignment.CenterVertically,
-                                  horizontalArrangement = Arrangement.SpaceBetween) {
-                                    // Profile Pic & Name
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.weight(1f)) {
-                                          AsyncImage(
-                                              model =
-                                                  collaborator.profilePicUrl.ifBlank {
-                                                    R.drawable.default_profile_pic
-                                                  },
-                                              contentDescription = null,
-                                              contentScale = ContentScale.Crop,
-                                              modifier =
-                                                  Modifier.size(
-                                                          dimensionResource(
-                                                              R.dimen.trip_top_circle_size))
-                                                      .clip(CircleShape))
-                                          Spacer(
-                                              modifier =
-                                                  Modifier.width(
-                                                      dimensionResource(
-                                                          R.dimen.share_dialog_spacer)))
-                                          Text(
-                                              text = collaborator.name,
-                                              style = MaterialTheme.typography.bodyMedium,
-                                              maxLines = 1,
-                                              overflow = TextOverflow.Ellipsis)
-                                        }
-
-                                    // Remove Button
-                                    IconButton(
-                                        onClick = {
-                                          tripInfoViewModel.removeCollaborator(collaborator)
-                                          Toast.makeText(
-                                                  context,
-                                                  "Friend successfully removed from the trip!",
-                                                  Toast.LENGTH_SHORT)
-                                              .show()
-                                        }) {
-                                          Icon(
-                                              imageVector = Icons.Filled.Delete,
-                                              contentDescription = stringResource(R.string.delete),
-                                              tint = MaterialTheme.colorScheme.error)
-                                        }
-                                  }
-                            }
-                          }
-                      // Divider between sections
-                      HorizontalDivider(
-                          modifier =
-                              Modifier.padding(
-                                  vertical = dimensionResource(R.dimen.share_dialog_spacer)))
-                    }
-
-                    // --- SECTION 2: ADD FRIENDS ---
-                    Text(
-                        text = stringResource(R.string.add_friend),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        modifier =
-                            Modifier.padding(
-                                bottom =
-                                    dimensionResource(R.dimen.trip_element_collaborators_padding)))
-
-                    if (ui.availableFriends.isEmpty()) {
-                      Text(
-                          text = stringResource(R.string.no_friends_to_share),
-                          style = MaterialTheme.typography.bodyMedium,
-                          color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    } else {
-                      LazyColumn(
-                          modifier =
-                              Modifier.heightIn(
-                                  max =
-                                      dimensionResource(R.dimen.share_dialog_friends_list_height)),
-                          verticalArrangement =
-                              Arrangement.spacedBy(
-                                  dimensionResource(R.dimen.trip_element_collaborators_padding))) {
-                            items(ui.availableFriends) { friend ->
-                              FriendElement(
-                                  userToDisplay = friend,
-                                  onClick = {
-                                    tripInfoViewModel.addCollaborator(friend)
-                                    Toast.makeText(
-                                            context,
-                                            "Friend successfully added to the trip!",
-                                            Toast.LENGTH_SHORT)
-                                        .show()
-                                  })
-                            }
-                          }
-                    }
-                  }
+            ShareTripDialog(
+                onDismiss = { showShareDialog = false },
+                collaborators = ui.collaborators,
+                availableFriends = ui.availableFriends,
+                onRemoveCollaborator = { user ->
+                  tripInfoViewModel.removeCollaborator(user)
+                  Toast.makeText(
+                          context, "Friend successfully removed from the trip!", Toast.LENGTH_SHORT)
+                      .show()
                 },
-                confirmButton = {
-                  TextButton(onClick = { showShareDialog = false }) {
-                    Text(stringResource(R.string.ok))
-                  }
+                onAddCollaborator = { user ->
+                  tripInfoViewModel.addCollaborator(user)
+                  Toast.makeText(
+                          context, "Friend successfully added to the trip!", Toast.LENGTH_SHORT)
+                      .show()
                 })
           }
         }
       }
+}
+
+/**
+ * The share trip dialog. Allows users to share the trip with their friends
+ *
+ * @param onDismiss Callback to dismiss the dialog.
+ * @param collaborators List of collaborators for the trip.
+ * @param availableFriends List of available friends to share the trip with.
+ * @param onRemoveCollaborator Callback to remove a collaborator from the trip.
+ * @param onAddCollaborator Callback to add a collaborator to the trip
+ */
+@Composable
+private fun ShareTripDialog(
+    onDismiss: () -> Unit,
+    collaborators: List<User>,
+    availableFriends: List<User>,
+    onRemoveCollaborator: (User) -> Unit,
+    onAddCollaborator: (User) -> Unit
+) {
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      title = { Text(stringResource(R.string.share_trip)) },
+      text = {
+        Column {
+          // --- CURRENT COLLABORATORS SECTION ---
+          if (collaborators.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.current_collaborators),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier =
+                    Modifier.padding(
+                        bottom = dimensionResource(R.dimen.trip_element_collaborators_padding)))
+
+            LazyColumn(
+                modifier =
+                    Modifier.heightIn(
+                        max = dimensionResource(R.dimen.share_dialog_collaborators_list_height)),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        dimensionResource(R.dimen.trip_element_collaborators_padding))) {
+                  items(collaborators) { collaborator ->
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween) {
+                          // Profile Pic & Name
+                          Row(
+                              verticalAlignment = Alignment.CenterVertically,
+                              modifier = Modifier.weight(1f)) {
+                                AsyncImage(
+                                    model =
+                                        collaborator.profilePicUrl.ifBlank {
+                                          R.drawable.default_profile_pic
+                                        },
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier =
+                                        Modifier.size(
+                                                dimensionResource(R.dimen.trip_top_circle_size))
+                                            .clip(CircleShape))
+                                Spacer(
+                                    modifier =
+                                        Modifier.width(
+                                            dimensionResource(R.dimen.share_dialog_spacer)))
+                                Text(
+                                    text = collaborator.name,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis)
+                              }
+
+                          // Remove Button
+                          IconButton(onClick = { onRemoveCollaborator(collaborator) }) {
+                            Icon(
+                                imageVector = Icons.Filled.Delete,
+                                contentDescription = stringResource(R.string.delete),
+                                tint = MaterialTheme.colorScheme.error)
+                          }
+                        }
+                  }
+                }
+            // Divider between sections
+            HorizontalDivider(
+                modifier =
+                    Modifier.padding(vertical = dimensionResource(R.dimen.share_dialog_spacer)))
+          }
+
+          // --- ADD FRIENDS SECTION ---
+          Text(
+              text = stringResource(R.string.add_friend),
+              style = MaterialTheme.typography.titleSmall,
+              color = MaterialTheme.colorScheme.primary,
+              modifier =
+                  Modifier.padding(
+                      bottom = dimensionResource(R.dimen.trip_element_collaborators_padding)))
+
+          if (availableFriends.isEmpty()) {
+            Text(
+                text = stringResource(R.string.no_friends_to_share),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+          } else {
+            LazyColumn(
+                modifier =
+                    Modifier.heightIn(
+                        max = dimensionResource(R.dimen.share_dialog_friends_list_height)),
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        dimensionResource(R.dimen.trip_element_collaborators_padding))) {
+                  items(availableFriends) { friend ->
+                    FriendElement(userToDisplay = friend, onClick = { onAddCollaborator(friend) })
+                  }
+                }
+          }
+        }
+      },
+      confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.ok)) } })
 }
 
 /**

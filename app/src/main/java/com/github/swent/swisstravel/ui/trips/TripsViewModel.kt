@@ -227,37 +227,57 @@ abstract class TripsViewModel(
 }
 
 /**
- * Builds the collaborators map for each trip.
+ * Builds the collaborators map for each trip. Made with the help of an AI.
  *
  * @param trips The list of trips to build the collaborators map for.
+ * @param userRepository The repository responsible for managing user data.
+ * @return A map where each key is a trip ID and the corresponding value is a list of collaborators
+ *   for that trip.
  */
 internal suspend fun buildCollaboratorsByTrip(
     trips: List<Trip>,
     userRepository: UserRepository
 ): Map<String, List<CollaboratorUi>> = coroutineScope {
-  // 1) all unique collaborator ids
-  val allCollaboratorIds = trips.flatMap { it.collaboratorsId }.distinct()
+  // 0) Get current user ID to filter self out of the preview
+  val currentUser =
+      try {
+        userRepository.getCurrentUser()
+      } catch (_: Exception) {
+        null
+      }
+  val currentUserId = currentUser?.uid ?: ""
 
-  // 2) fetch all users in parallel using getUserByUid
+  // 1) Get ALL unique user ids involved (Collaborators + Owners)
+  // We need to fetch owners too so we can display them to collaborators
+  val allUserIds = trips.flatMap { it.collaboratorsId + it.ownerId }.distinct()
+
+  // 2) Fetch all users in parallel using getUserByUid
   val usersById: Map<String, User> =
-      allCollaboratorIds
+      allUserIds
           .map { uid -> async { uid to userRepository.getUserByUid(uid) } }
           .awaitAll()
           .mapNotNull { (uid, user) -> user?.let { uid to it } }
           .toMap()
 
-  // 3) build tripId -> list of CollaboratorUi
+  // 3) Build tripId -> list of CollaboratorUi
   trips.associate { trip ->
+    // We want to show everyone involved (Owner + Collaborators) EXCEPT the current user.
+    // - If I am the Owner: I see (Owner + Collabs) - Owner = All Collaborators.
+    // - If I am a Collaborator: I see (Owner + Collabs) - Me = Owner + Other Collaborators.
+    val allParticipants = (listOf(trip.ownerId) + trip.collaboratorsId).distinct()
+
     val collaboratorsForTrip =
-        trip.collaboratorsId.mapNotNull { id ->
-          usersById[id]?.let { user ->
-            TripsViewModel.CollaboratorUi(
-                userId = user.uid,
-                displayName = user.name,
-                avatarUrl = user.profilePicUrl,
-            )
-          }
-        }
+        allParticipants
+            .filter { it != currentUserId } // Filter out yourself
+            .mapNotNull { id ->
+              usersById[id]?.let { user ->
+                CollaboratorUi(
+                    userId = user.uid,
+                    displayName = user.name,
+                    avatarUrl = user.profilePicUrl,
+                )
+              }
+            }
     trip.uid to collaboratorsForTrip
   }
 }
