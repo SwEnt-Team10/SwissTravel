@@ -186,10 +186,15 @@ class ComposableTests : InMemorySwissTravelTest() {
     var longPressed: Trip? = null
 
     composeTestRule.setContent {
-      TripList(
-          trips = tripList,
-          onClickTripElement = { clicked = it },
-          onLongPress = { longPressed = it })
+      // 1. Create the State object
+      val state = TripListState(trips = tripList)
+
+      // 2. Create the Events object
+      val events =
+          TripListEvents(onClickTripElement = { clicked = it }, onLongPress = { longPressed = it })
+
+      // 3. Pass them to the composable
+      TripList(listState = state, listEvents = events)
     }
 
     composeTestRule.onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()

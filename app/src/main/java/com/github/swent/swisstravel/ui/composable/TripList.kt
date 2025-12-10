@@ -9,9 +9,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.TripElement
-import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
 object TripListTestTags {
   const val TRIP_LIST = "TripListLazyColumn"
@@ -21,45 +19,33 @@ object TripListTestTags {
 /**
  * A composable that displays a list of trips.
  *
- * @param trips The list of trips to display.
- * @param onClickTripElement Callback when a trip element is clicked.
- * @param onLongPress Callback when a trip element is long-pressed.
- * @param isSelected Function to determine if a trip is selected.
- * @param isSelectionMode Whether the selection mode is active.
- * @param emptyListString The string to display when the list is empty.
- * @param collaboratorsLookup A function that retrieves the list of collaborators for a given trip
- *   UID.
+ * @param listState The state object for the underlying trip list.
+ * @param listEvents The event handler for the underlying trip list.
  */
 @Composable
-fun TripList(
-    trips: List<Trip> = emptyList(),
-    onClickTripElement: (Trip?) -> Unit = {},
-    onLongPress: (Trip?) -> Unit = {},
-    isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false,
-    noIconTripElement: Boolean = false,
-    emptyListString: String = "",
-    collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
-) {
-  if (trips.isNotEmpty()) {
+fun TripList(listState: TripListState, listEvents: TripListEvents) {
+  if (listState.trips.isNotEmpty()) {
     LazyColumn(
         verticalArrangement =
             Arrangement.spacedBy(dimensionResource(R.dimen.trip_list_vertical_arrangement)),
         modifier = Modifier.fillMaxWidth().testTag(TripListTestTags.TRIP_LIST)) {
-          items(trips.size) { index ->
-            val trip = trips[index]
-            val collaboratorsForThisTrip = collaboratorsLookup(trip.uid)
+          items(listState.trips.size) { index ->
+            val trip = listState.trips[index]
+            val collaboratorsForThisTrip = listState.collaboratorsLookup(trip.uid)
+
             TripElement(
                 trip = trip,
-                onClick = { onClickTripElement(trip) },
-                onLongPress = { onLongPress(trip) },
-                isSelected = isSelected(trip),
-                isSelectionMode = isSelectionMode,
-                noIcon = noIconTripElement,
+                onClick = { listEvents.onClickTripElement(trip) },
+                onLongPress = { listEvents.onLongPress(trip) },
+                isSelected = listState.isSelected(trip),
+                isSelectionMode = listState.isSelectionMode,
+                noIcon = listState.noIconTripElement,
                 collaborators = collaboratorsForThisTrip)
           }
         }
   } else {
-    Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
+    Text(
+        text = listState.emptyListString,
+        modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
   }
 }

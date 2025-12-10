@@ -97,14 +97,6 @@ fun SortedTripList(
           SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
         }
 
-    TripList(
-        trips = listState.trips,
-        onClickTripElement = listEvents.onClickTripElement,
-        onLongPress = listEvents.onLongPress,
-        isSelected = listState.isSelected,
-        isSelectionMode = listState.isSelectionMode,
-        noIconTripElement = listState.noIconTripElement,
-        emptyListString = listState.emptyListString,
-        collaboratorsLookup = listState.collaboratorsLookup)
+    TripList(listState = listState, listEvents = listEvents)
   }
 }

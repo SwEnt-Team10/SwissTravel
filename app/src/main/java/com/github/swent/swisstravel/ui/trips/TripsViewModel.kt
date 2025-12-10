@@ -213,40 +213,45 @@ abstract class TripsViewModel(
     }
   }
 
-  // Made with the help of AI
-  suspend fun buildCollaboratorsByTrip(trips: List<Trip>): Map<String, List<CollaboratorUi>> =
-      coroutineScope {
-        // 1) all unique collaborator ids
-        val allCollaboratorIds = trips.flatMap { it.collaboratorsId }.distinct()
+  /**
+   * Builds the collaborators map for each trip.
+   *
+   * @param trips The list of trips to build the collaborators map for.
+   */
+  protected suspend fun buildCollaboratorsByTrip(
+      trips: List<Trip>
+  ): Map<String, List<CollaboratorUi>> = coroutineScope {
+    // 1) all unique collaborator ids
+    val allCollaboratorIds = trips.flatMap { it.collaboratorsId }.distinct()
 
-        // 2) fetch all users in parallel using getUserByUid
-        val usersById: Map<String, User> =
-            allCollaboratorIds
-                .map { uid ->
-                  async {
-                    // each async returns Pair<uid, User?>
-                    uid to userRepository.getUserByUid(uid)
-                  }
-                }
-                .awaitAll()
-                .mapNotNull { (uid, user) -> user?.let { uid to it } }
-                .toMap()
-
-        // 3) build tripId -> list of CollaboratorUi
-        trips.associate { trip ->
-          val collaboratorsForTrip =
-              trip.collaboratorsId.mapNotNull { id ->
-                usersById[id]?.let { user ->
-                  CollaboratorUi(
-                      userId = user.uid,
-                      displayName = user.name,
-                      avatarUrl = user.profilePicUrl,
-                  )
-                }
+    // 2) fetch all users in parallel using getUserByUid
+    val usersById: Map<String, User> =
+        allCollaboratorIds
+            .map { uid ->
+              async {
+                // each async returns Pair<uid, User?>
+                uid to userRepository.getUserByUid(uid)
               }
-          trip.uid to collaboratorsForTrip
-        }
-      }
+            }
+            .awaitAll()
+            .mapNotNull { (uid, user) -> user?.let { uid to it } }
+            .toMap()
+
+    // 3) build tripId -> list of CollaboratorUi
+    trips.associate { trip ->
+      val collaboratorsForTrip =
+          trip.collaboratorsId.mapNotNull { id ->
+            usersById[id]?.let { user ->
+              CollaboratorUi(
+                  userId = user.uid,
+                  displayName = user.name,
+                  avatarUrl = user.profilePicUrl,
+              )
+            }
+          }
+      trip.uid to collaboratorsForTrip
+    }
+  }
 
   /**
    * Updates the current sort type and re-sorts the list of upcoming trips.

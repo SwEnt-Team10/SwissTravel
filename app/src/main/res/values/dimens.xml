@@ -100,10 +100,8 @@
     <dimen name="daily_view_date_end_padding">16dp</dimen>
     <dimen name="daily_view_date_separator_padding">8dp</dimen>
     <dimen name="daily_view_map_button_padding">16dp</dimen>
-    <dimen name="daily_view_share_dialog_max">300dp</dimen>
     <dimen name="share_dialog_collaborators_list_height">150dp</dimen>
     <dimen name="share_dialog_friends_list_height">200dp</dimen>
-    <dimen name="share_dialog_avatar_size">40dp</dimen>
     <dimen name="share_dialog_spacer">12dp</dimen>
 
     <!-- Current Trip Screen -->
