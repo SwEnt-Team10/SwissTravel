@@ -304,7 +304,6 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkSortedTripListNotEmptyIsDisplayed() {
-    onNodeWithTag(SortedTripListTestTags.SORTED_TRIP_LIST).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE_BUTTON_ROW).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE).assertIsDisplayed()

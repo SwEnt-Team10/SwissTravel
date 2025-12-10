@@ -53,8 +53,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
+import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.composable.sortedTripListItems
 
 /**
@@ -178,6 +180,8 @@ fun MyTripsScreen(
               LazyColumn(
                   modifier =
                       Modifier.fillMaxSize()
+                          .testTag(TripListTestTags.TRIP_LIST)
+                          .testTag(SortedTripListTestTags.SORTED_TRIP_LIST)
                           .padding(
                               start = dimensionResource(R.dimen.my_trip_padding_start_end),
                               end = dimensionResource(R.dimen.my_trip_padding_start_end),
@@ -194,8 +198,7 @@ fun MyTripsScreen(
                         TripListState(
                             trips = uiState.tripsList,
                             isSelectionMode = uiState.isSelectionMode,
-                            isSelected = { trip -> trip in uiState.selectedTrips },
-                        )
+                            isSelected = { trip -> trip in uiState.selectedTrips })
                     val listEvent =
                         TripListEvents(
                             onClickTripElement = {

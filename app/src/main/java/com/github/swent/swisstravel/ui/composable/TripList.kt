@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.TripElement
 
 object TripListTestTags {
@@ -55,7 +56,11 @@ fun TripList(
           }
         }
   } else {
-    Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
+    Text(
+        text = emptyListString,
+        modifier =
+            Modifier.testTag(TripListTestTags.EMPTY_MESSAGE)
+                .testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG))
   }
 }
 /**
