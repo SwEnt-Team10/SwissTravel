@@ -8,6 +8,13 @@ import com.github.swent.swisstravel.model.trip.Location
 import java.io.IOException
 
 // Code done by an AI
+/**
+ * A function for Context that get the meta data from a photo's uri and
+ * converts it to a Location.
+ *
+ * @param uri the uri of the image you want the location
+ * @param name the name you want to assign to the location
+ */
 fun Context.getPhotoLocation(uri: Uri, name: String): Location? {
   return try {
     // Open the data stream from the URI
@@ -27,10 +34,7 @@ fun Context.getPhotoLocation(uri: Uri, name: String): Location? {
         null // No GPS data found
       }
     }
-  } catch (e: IOException) {
-    e.printStackTrace()
-    null
-  } catch (e: SecurityException) {
+  } catch (e: Exception) {
     e.printStackTrace()
     null
   }
