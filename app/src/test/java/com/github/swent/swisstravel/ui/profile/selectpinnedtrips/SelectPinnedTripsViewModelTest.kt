@@ -121,6 +121,7 @@ class SelectPinnedTripsViewModelTest {
 
     coEvery { userRepository.getCurrentUser() } returns user
     coEvery { tripsRepository.getAllTrips() } returns listOf(tripA, tripB, tripC, tripD)
+    coEvery { userRepository.getUserByUid(any()) } returns null
 
     viewModel =
         SelectPinnedTripsViewModel(
