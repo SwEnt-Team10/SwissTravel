@@ -2,7 +2,6 @@ package com.github.swent.swisstravel.ui.tripcreation
 
 import android.content.Context
 import android.content.res.Resources
-import android.net.Uri
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Coordinate
@@ -394,7 +393,7 @@ class TripCreationViewModelTest {
         profilePicUrl: String?,
         preferences: List<Preference>?,
         pinnedTripsUids: List<String>?,
-        pinnedPicturesUrls: List<Uri>?
+        pinnedPicturesUids: List<String>?
     ) {
       // no-op for testing
     }

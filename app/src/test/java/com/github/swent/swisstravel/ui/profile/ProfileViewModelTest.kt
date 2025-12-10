@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.profile
 
+import com.github.swent.swisstravel.model.image.ImageRepository
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
@@ -31,6 +32,7 @@ class ProfileViewModelTest {
   private val testDispatcher = StandardTestDispatcher()
   private lateinit var userRepository: UserRepository
   private lateinit var tripsRepository: TripsRepository
+  private lateinit var imageRepository: ImageRepository
   private lateinit var viewModel: ProfileViewModel
 
   private val fakeUser =
@@ -51,6 +53,7 @@ class ProfileViewModelTest {
     Dispatchers.setMain(testDispatcher)
     userRepository = mockk()
     tripsRepository = mockk(relaxed = true)
+    imageRepository = mockk()
 
     coEvery { userRepository.updateUserStats(any(), any()) } just Runs
   }
@@ -65,7 +68,7 @@ class ProfileViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.getUserByUid(fakeUser.uid) } returns fakeUser
 
-    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -80,7 +83,7 @@ class ProfileViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.getUserByUid(fakeUser.uid) } returns fakeUser
 
-    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.refreshStats(isOnline = false)
@@ -95,7 +98,7 @@ class ProfileViewModelTest {
     coEvery { userRepository.getUserByUid(fakeUser.uid) } returns fakeUser
     coEvery { tripsRepository.getAllTrips() } returns emptyList()
 
-    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.refreshStats(isOnline = true)
@@ -111,7 +114,7 @@ class ProfileViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.getUserByUid(otherUserUid) } returns otherUser
 
-    viewModel = ProfileViewModel(userRepository, tripsRepository, otherUserUid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, otherUserUid)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.refreshStats(isOnline = true)
@@ -122,7 +125,7 @@ class ProfileViewModelTest {
 
   @Test
   fun setErrorMsgAndClearErrorMsgWorkCorrectly() = runTest {
-    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
 
     viewModel.setErrorMsg("Test Error")
     var state = viewModel.uiState.value
@@ -148,7 +151,7 @@ class ProfileViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
 
     // When: loading another user's profile
-    viewModel = ProfileViewModel(userRepository, tripsRepository, "bumAndFraud")
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, "bumAndFraud")
     testDispatcher.scheduler.advanceUntilIdle()
 
     // Then: UI state loads their data, but isOwnProfile is false
@@ -180,7 +183,7 @@ class ProfileViewModelTest {
 
     coEvery { userRepository.updateUser(uid = fakeUser.uid, pinnedTripsUids = any()) } just Runs
     // When: initializing the ViewModel
-    viewModel = ProfileViewModel(userRepository, tripsRepository, fakeUser.uid)
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // And: UI state pinnedTrips contains only the existing trip
