@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.friends
 
-import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -72,7 +71,7 @@ class AddFriendScreenTest {
         profilePicUrl: String?,
         preferences: List<Preference>?,
         pinnedTripsUids: List<String>?,
-        pinnedPicturesUrls: List<Uri>?
+        pinnedPicturesUids: List<String>?
     ) {
       // no op in test
     }

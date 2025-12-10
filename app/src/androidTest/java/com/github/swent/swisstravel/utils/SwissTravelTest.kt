@@ -45,6 +45,11 @@ import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.ADD_PICTURE_BUTTON
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.LOADING_INDICATOR
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.MAIN_SCREEN
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.SAVE_BUTTON
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.VERTICAL_GRID
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
@@ -659,6 +664,18 @@ abstract class SwissTravelTest {
     onNodeWithText("Trip One").assertIsDisplayed()
     // Non-pinned trips may appear in available list
     onNodeWithText("Trip Two").assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.selectPinnedPicturesScreenIsDisplayed() {
+    // Verify Screen Content
+    onNodeWithTag(MAIN_SCREEN).assertIsDisplayed()
+    onNodeWithTag(VERTICAL_GRID).assertIsDisplayed()
+
+    // Verify buttons
+    onNodeWithTag(ADD_PICTURE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(SAVE_BUTTON).assertIsDisplayed()
+
+    onNodeWithTag(LOADING_INDICATOR).assertDoesNotExist()
   }
 
   fun ComposeTestRule.clickOnBackButton() {

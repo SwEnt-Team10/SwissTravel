@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.profile.selectpinnedtrips
 
-import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -150,7 +149,7 @@ class SelectPinnedTripsScreenTest {
             profilePicUrl: String?,
             preferences: List<Preference>?,
             pinnedTripsUids: List<String>?,
-            pinnedPicturesUrls: List<Uri>?
+            pinnedPicturesUids: List<String>?
         ) {
           user =
               user.copy(

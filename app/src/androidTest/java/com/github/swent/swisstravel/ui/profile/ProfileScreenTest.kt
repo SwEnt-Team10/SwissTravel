@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.profile
 
-import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -47,7 +46,7 @@ private class TestUserRepository(private val user: User) : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedPicturesUrls: List<Uri>?
+      pinnedPicturesUids: List<String>?
   ) {}
 
   override suspend fun updateUserStats(uid: String, stats: UserStats) {}

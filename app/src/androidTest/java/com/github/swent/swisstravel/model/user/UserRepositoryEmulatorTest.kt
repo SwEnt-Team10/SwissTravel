@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.model.user
 
-import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
@@ -478,7 +477,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     val newProfilePicUrl = "http://example.com/new_avatar.png"
     val newPreferences = listOf(Preference.MUSEUMS, Preference.SCENIC_VIEWS)
     val newPinnedTripsUids = listOf("trip1", "trip2")
-    val newPinnedImagesUris = listOf("file://image1".toUri(), "file://image2".toUri())
+    val newPinnedImagesUids = listOf("image1uid", "image2uid")
 
     repositoryUser.updateUser(
         uid = uid,
@@ -487,7 +486,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = newProfilePicUrl,
         preferences = newPreferences,
         pinnedTripsUids = newPinnedTripsUids,
-        pinnedPicturesUids = newPinnedImagesUris)
+        pinnedPicturesUids = newPinnedImagesUids)
 
     // Assert: read back the document
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -503,7 +502,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     assertEquals(newPinnedTripsUids, storedTrips)
 
     val storedImages = doc.get("pinnedPicturesUris") as List<*>
-    assertEquals(newPinnedImagesUris.map { it.toString() }, storedImages)
+    assertEquals(newPinnedImagesUids, storedImages)
   }
 
   @Test
@@ -555,7 +554,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = "http://example.com/guest.png",
         preferences = listOf(Preference.SCENIC_VIEWS),
         pinnedTripsUids = listOf("tripX"),
-        pinnedPicturesUids = listOf("file://imageX".toUri()))
+        pinnedPicturesUids = listOf("imageUid"))
 
     // Assert: the document must still NOT exist after the update
     val after = FirebaseEmulator.firestore.collection("users").document(guestUid).get().await()
