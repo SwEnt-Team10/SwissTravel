@@ -36,7 +36,7 @@ class PastTripsViewModel(
       val trips = tripsRepository.getAllTrips()
       val pastTrips = trips.filter { it.isPast() }
       val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType)
-      val collaboratorsByTrip = buildCollaboratorsByTrip(trips)
+      val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
       _uiState.value =
           _uiState.value.copy(tripsList = sortedTrips, collaboratorsByTripId = collaboratorsByTrip)

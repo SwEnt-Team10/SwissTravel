@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.ui.trips.TripsViewModel.CollaboratorUi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -34,7 +35,7 @@ enum class TripSortType {
  * @param tripsRepository The repository responsible for managing trip data.
  */
 abstract class TripsViewModel(
-    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    protected val userRepository: UserRepository = UserRepositoryFirebase(),
     protected val tripsRepository: TripsRepository
 ) : ViewModel() {
   data class CollaboratorUi(
@@ -214,46 +215,6 @@ abstract class TripsViewModel(
   }
 
   /**
-   * Builds the collaborators map for each trip.
-   *
-   * @param trips The list of trips to build the collaborators map for.
-   */
-  protected suspend fun buildCollaboratorsByTrip(
-      trips: List<Trip>
-  ): Map<String, List<CollaboratorUi>> = coroutineScope {
-    // 1) all unique collaborator ids
-    val allCollaboratorIds = trips.flatMap { it.collaboratorsId }.distinct()
-
-    // 2) fetch all users in parallel using getUserByUid
-    val usersById: Map<String, User> =
-        allCollaboratorIds
-            .map { uid ->
-              async {
-                // each async returns Pair<uid, User?>
-                uid to userRepository.getUserByUid(uid)
-              }
-            }
-            .awaitAll()
-            .mapNotNull { (uid, user) -> user?.let { uid to it } }
-            .toMap()
-
-    // 3) build tripId -> list of CollaboratorUi
-    trips.associate { trip ->
-      val collaboratorsForTrip =
-          trip.collaboratorsId.mapNotNull { id ->
-            usersById[id]?.let { user ->
-              CollaboratorUi(
-                  userId = user.uid,
-                  displayName = user.name,
-                  avatarUrl = user.profilePicUrl,
-              )
-            }
-          }
-      trip.uid to collaboratorsForTrip
-    }
-  }
-
-  /**
    * Updates the current sort type and re-sorts the list of upcoming trips.
    *
    * @param sortType The new sorting preference selected by the user.
@@ -262,5 +223,41 @@ abstract class TripsViewModel(
     val trips = _uiState.value.tripsList
     _uiState.value =
         _uiState.value.copy(sortType = sortType, tripsList = sortTrips(trips, sortType))
+  }
+}
+
+/**
+ * Builds the collaborators map for each trip.
+ *
+ * @param trips The list of trips to build the collaborators map for.
+ */
+internal suspend fun buildCollaboratorsByTrip(
+    trips: List<Trip>,
+    userRepository: UserRepository
+): Map<String, List<CollaboratorUi>> = coroutineScope {
+  // 1) all unique collaborator ids
+  val allCollaboratorIds = trips.flatMap { it.collaboratorsId }.distinct()
+
+  // 2) fetch all users in parallel using getUserByUid
+  val usersById: Map<String, User> =
+      allCollaboratorIds
+          .map { uid -> async { uid to userRepository.getUserByUid(uid) } }
+          .awaitAll()
+          .mapNotNull { (uid, user) -> user?.let { uid to it } }
+          .toMap()
+
+  // 3) build tripId -> list of CollaboratorUi
+  trips.associate { trip ->
+    val collaboratorsForTrip =
+        trip.collaboratorsId.mapNotNull { id ->
+          usersById[id]?.let { user ->
+            TripsViewModel.CollaboratorUi(
+                userId = user.uid,
+                displayName = user.name,
+                avatarUrl = user.profilePicUrl,
+            )
+          }
+        }
+    trip.uid to collaboratorsForTrip
   }
 }

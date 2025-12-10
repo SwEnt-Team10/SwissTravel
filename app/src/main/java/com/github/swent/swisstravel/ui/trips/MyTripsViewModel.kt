@@ -47,7 +47,7 @@ class MyTripsViewModel(
         val currentTrip = trips.find { it.isCurrent() }
         val upcomingTrips = trips.filter { it.isUpcoming() }
         val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
-        val collaboratorsByTrip = buildCollaboratorsByTrip(trips)
+        val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
         _uiState.value =
             _uiState.value.copy(
