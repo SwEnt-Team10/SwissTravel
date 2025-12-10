@@ -96,11 +96,8 @@ fun LazyListScope.tripListItems(
           noIcon = noIconTripElement)
     }
   } else {
-      item{
-          Text(
-              text = emptyListString,
-              modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
-
-      }
-   }
+    item {
+      Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
+    }
+  }
 }
