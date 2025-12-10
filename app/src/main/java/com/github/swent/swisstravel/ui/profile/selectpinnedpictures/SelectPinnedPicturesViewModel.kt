@@ -1,67 +1,224 @@
 package com.github.swent.swisstravel.ui.profile.selectpinnedpictures
 
+import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.image.ImageHelper
+import com.github.swent.swisstravel.model.image.ImageRepository
+import com.github.swent.swisstravel.model.image.ImageRepositoryFirebase
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** UI State for the selectPinnedPicturesScreen */
-data class SelectPinnedPicturesUIState(
-    val listUri: List<Uri> = emptyList(),
-    var errorMsg: String? = null
+/**
+ * Helper data class to manage images in the UI.
+ *
+ * @property uid The Firestore UID. If null, it means this is a NEW image not yet saved.
+ * @property bitmap The visual representation for the UI.
+ * @property base64String The raw data. Only needed for NEW images to upload them.
+ */
+data class PinnedImage(
+    val uid: String? = null,
+    val bitmap: Bitmap,
+    val base64String: String? = null
 )
 
-/** ViewModel for the selectPinnedPicturesScreen */
+/**
+ * UI State for the selectPinnedPicturesScreen.
+ *
+ * @property images The list of Pinned Images.
+ * @property isLoading Whether the screen is currently loading.
+ * @property errorMsg The error message, if any.
+ */
+data class SelectPinnedPicturesUIState(
+    val images: List<PinnedImage> = emptyList(),
+    val isLoading: Boolean = false,
+    val errorMsg: String? = null
+)
+
+/**
+ * ViewModel for the selectPinnedPicturesScreen. Some of these functions were made with the help of
+ * AI.
+ *
+ * @param userRepository The repository for the user.
+ * @param imageRepository The repository for the images.
+ */
 class SelectPinnedPicturesViewModel(
-    private val userRepository: UserRepository = UserRepositoryFirebase()
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    private val imageRepository: ImageRepository = ImageRepositoryFirebase()
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SelectPinnedPicturesUIState())
   val uiState: StateFlow<SelectPinnedPicturesUIState> = _uiState.asStateFlow()
 
   private var currentUser: User? = null
 
+  private val _imagesToDelete = mutableListOf<String>()
+
   // Loads the user's pictures into the UI state
   init {
+    loadExistingImages()
+  }
+
+  /** Loads existing images from the repository into the UI state. */
+  private fun loadExistingImages() {
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true) }
       try {
         val user = userRepository.getCurrentUser()
         currentUser = user
-        addUri(user.pinnedPicturesUids)
+
+        // Fetch all existing images in parallel
+        val loadedImages =
+            user.pinnedPicturesUids
+                .map { uid ->
+                  async {
+                    try {
+                      val imageObj = imageRepository.getImage(uid)
+                      val bitmap = ImageHelper.base64ToBitmap(imageObj.base64)
+                      if (bitmap != null) {
+                        PinnedImage(uid = uid, bitmap = bitmap)
+                      } else {
+                        null
+                      }
+                    } catch (e: Exception) {
+                      Log.e("SelectPinnedPictures", "Failed to load image $uid", e)
+                      null
+                    }
+                  }
+                }
+                .awaitAll()
+                .filterNotNull()
+
+        _uiState.update { it.copy(images = loadedImages, isLoading = false) }
       } catch (e: Exception) {
-        _uiState.value = uiState.value.copy(errorMsg = "Error fetching user images: ${e.message}")
+        _uiState.update {
+          it.copy(isLoading = false, errorMsg = "Error loading profile: ${e.message}")
+        }
       }
     }
   }
 
   /**
-   * Adds a list of URIs to the UI state.
+   * Processes new URIs selected from the gallery. Compresses them immediately so they are ready for
+   * upload.
    *
-   * @param uris The list of URIs to add to the UI state.
+   * @param context The application context.
+   * @param uris The list of URIs to process.
    */
-  fun addUri(uris: List<Uri>) {
-    _uiState.update { it.copy(listUri = it.listUri + uris) }
+  fun addNewImages(context: Context, uris: List<Uri>) {
+    if (uris.isEmpty()) return
+
+    viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true) }
+
+      val newImages =
+          uris
+              .map { uri ->
+                async {
+                  try {
+                    // Compress & Convert to Base64
+                    val base64 =
+                        ImageHelper.uriCompressedToBase64(context, uri)
+                            ?: throw Exception("Failed to process image")
+
+                    // Convert back to Bitmap for preview
+                    val bitmap =
+                        ImageHelper.base64ToBitmap(base64)
+                            ?: throw Exception("Failed to decode processed image")
+
+                    PinnedImage(uid = null, bitmap = bitmap, base64String = base64)
+                  } catch (e: Exception) {
+                    Log.e("SelectPinnedPictures", "Error adding image", e)
+                    null
+                  }
+                }
+              }
+              .awaitAll()
+              .filterNotNull()
+
+      _uiState.update { it.copy(images = it.images + newImages, isLoading = false) }
+    }
   }
 
-  /** Saves the selected pictures to the user's profile. */
-  fun savePictures() {
+  /**
+   * Uploads new images to Firestore and updates the User profile with the list of IDs.
+   *
+   * @param onSuccess Callback to be executed when the operation is successful.
+   */
+  fun savePictures(onSuccess: () -> Unit) {
+    val user = currentUser ?: return
+    val currentImages = _uiState.value.images
+
     viewModelScope.launch {
-      val user = currentUser ?: return@launch
+      _uiState.update { it.copy(isLoading = true) }
       try {
-        userRepository.updateUser(uid = user.uid, pinnedPicturesUids = _uiState.value.listUri)
+        val finalUids = mutableListOf<String>()
+
+        // Process all images
+        currentImages.forEach { image ->
+          if (image.uid != null) {
+            // Already exists, just keep the ID
+            finalUids.add(image.uid)
+          } else if (image.base64String != null) {
+            // New image! Upload it.
+            val newUid = imageRepository.addImage(image.base64String)
+            finalUids.add(newUid)
+          }
+        }
+
+        // Update profile first
+        userRepository.updateUser(uid = user.uid, pinnedPicturesUids = finalUids)
+
+        // Delete marked images from Firestore
+        _imagesToDelete
+            .map { uid ->
+              async {
+                try {
+                  imageRepository.deleteImage(uid)
+                } catch (e: Exception) {
+                  Log.e("SelectPinnedPictures", "Failed to delete image: $uid", e)
+                }
+              }
+            }
+            .awaitAll()
+
+        _uiState.update { it.copy(isLoading = false) }
+        onSuccess()
       } catch (e: Exception) {
-        _uiState.update { it.copy(errorMsg = "Error saving image(s): ${e.message}") }
+        _uiState.update { it.copy(isLoading = false, errorMsg = "Failed to save: ${e.message}") }
       }
     }
   }
 
-  /** Clears the error message in the UI state. */
+  /**
+   * Removes an image from the UI state.
+   *
+   * @param index The index of the image to remove.
+   */
+  fun removeImage(index: Int) {
+    val currentList = _uiState.value.images.toMutableList()
+    if (index !in currentList.indices) return
+    val imageToRemove = currentList[index]
+    // If it exists in the cloud, mark it for deletion later
+    if (imageToRemove.uid != null) {
+      _imagesToDelete.add(imageToRemove.uid)
+    }
+    // Remove from UI immediately
+    currentList.removeAt(index)
+    _uiState.update { it.copy(images = currentList) }
+  }
+
+  /** Clears the current error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
   }

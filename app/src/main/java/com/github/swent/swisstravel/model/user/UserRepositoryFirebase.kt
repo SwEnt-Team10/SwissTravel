@@ -384,7 +384,7 @@ class UserRepositoryFirebase(
     val pinnedTripsUids =
         (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val pinnedPicturesUids =
-        (doc["pinnedPictureUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+        (doc["pinnedPicturesUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
     return User(
         uid = uid,

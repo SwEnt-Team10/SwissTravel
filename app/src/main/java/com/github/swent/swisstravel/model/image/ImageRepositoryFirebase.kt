@@ -19,8 +19,10 @@ class ImageRepositoryFirebase(
    * Adds a new image to the repository.
    *
    * @param base64 The base64-encoded representation of the image.
+   * @return The unique identifier of the newly added image.
+   * @throws Exception if the image could not be added.
    */
-  override suspend fun addImage(base64: String) {
+  override suspend fun addImage(base64: String): String {
     val uid = imageCollection.document().id
     val image =
         Image(
@@ -28,6 +30,7 @@ class ImageRepositoryFirebase(
             ownerId = auth.currentUser?.uid ?: throw Exception("User not logged in."),
             base64 = base64)
     imageCollection.document(uid).set(image).await()
+    return uid
   }
 
   /**
