@@ -16,12 +16,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
@@ -63,7 +62,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.TransportMode
-import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Achievement
 import com.github.swent.swisstravel.model.user.AchievementCategory
 import com.github.swent.swisstravel.model.user.AchievementId
@@ -71,7 +69,7 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
-import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.utils.NetworkUtils
@@ -102,6 +100,11 @@ private const val NAME_MAX_LINES = 1
 
 /** The maximum number of lines for the biography. */
 private const val BIOGRAPHY_MAX_LINES = 3
+
+private const val NO_USER_PINNED_TRIPS =
+    "You don't have any pinned trips. Press the edit button to pin some!"
+
+private const val NO_PINNED_TRIPS = "No pinned trips here!"
 
 /**
  * A screen that shows the user's profile information.
@@ -270,44 +273,49 @@ private fun ProfileScreenContent(
     onEditPinnedImages: () -> Unit = {},
     modifier: Modifier
 ) {
-  Column(
+  LazyColumn(
       modifier =
           modifier
               .fillMaxSize()
-              .verticalScroll(rememberScrollState())
               .padding(
                   top = dimensionResource(R.dimen.profile_padding_top_bottom),
                   start = dimensionResource(R.dimen.profile_padding_start_end),
                   end = dimensionResource(R.dimen.profile_padding_start_end),
                   bottom = dimensionResource(R.dimen.profile_padding_top_bottom)),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
+        item {
+          ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
-        BiographyDisplay(biography = uiState.biography)
+          BiographyDisplay(biography = uiState.biography)
 
-        AchievementsDisplay(
-            uiState.achievements,
-            uiState.stats,
-            uiState.friendsCount,
-            isOwnProfile = uiState.isOwnProfile,
-            profileName = uiState.name)
+          AchievementsDisplay(
+              uiState.achievements,
+              uiState.stats,
+              uiState.friendsCount,
+              isOwnProfile = uiState.isOwnProfile,
+              profileName = uiState.name)
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-        PinnedTrips(
-            pinnedTrips = uiState.pinnedTrips,
-            isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedTrips = onEditPinnedTrips,
-            onSelectTrip = onSelectTrip)
+          PinnedTripsHeader(
+              isOwnProfile = uiState.isOwnProfile, onEditPinnedTrips = onEditPinnedTrips)
+        }
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+        tripListItems(
+            trips = uiState.pinnedTrips,
+            onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
+            emptyListString = if (uiState.isOwnProfile) NO_USER_PINNED_TRIPS else NO_PINNED_TRIPS)
 
-        PinnedImages(
-            pinnedImages = uiState.pinnedImages,
-            isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedImages = onEditPinnedImages)
+        item {
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+          PinnedImages(
+              pinnedImages = uiState.pinnedImages,
+              isOwnProfile = uiState.isOwnProfile,
+              onEditPinnedImages = onEditPinnedImages)
+        }
       }
 }
 
@@ -677,19 +685,15 @@ private fun AchievementTierRow(
 }
 
 /**
- * The pinned trips section of the profile screen.
+ * The pinned trips section header of the profile screen.
  *
- * @param pinnedTrips The list of pinned trips.
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onSelectTrip The callback to select a trip.
  */
 @Composable
-private fun PinnedTrips(
-    pinnedTrips: List<Trip>,
+private fun PinnedTripsHeader(
     isOwnProfile: Boolean,
     onEditPinnedTrips: () -> Unit,
-    onSelectTrip: (String) -> Unit,
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE),
@@ -709,14 +713,6 @@ private fun PinnedTrips(
               }
         }
       }
-
-  TripList(
-      trips = pinnedTrips,
-      onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
-      emptyListString =
-          if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
-          else stringResource(R.string.no_pinned_trips),
-  )
 }
 
 /**
