@@ -11,6 +11,7 @@ import com.google.firebase.Timestamp
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
+import kotlin.math.ceil
 import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -37,7 +38,7 @@ const val EXTRA_RANDOM_ACTIVITIES = 0.75f
 class ActivityRepositoryMySwitzerland(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ActivityRepository {
-  private val blacklistedActivityNames = setOf<String>()
+  private val blacklistedActivityNames = setOf("Fishing with Balthazar")
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseHttpUrl: HttpUrl =
       urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", top = true)
@@ -208,14 +209,34 @@ class ActivityRepositoryMySwitzerland(
    * @return The URL to fetch activities from.
    */
   private fun computeUrlWithPreferences(preferences: List<Preference>, limit: Int): HttpUrl {
+    // 1. If no preferences, just return the builder as is
     if (preferences.isEmpty()) return baseHttpUrl
+    val (mandatory, optional) = separateMandatoryPreferences(preferences.toMutableList())
 
-    val facetsParam = preferences.joinToString(",") { it.toSwissTourismFacet() }
+    // 2. Add the 'facets' parameter (Original Logic)
+    // This tells the API which facets to aggregate in the response.
+    val allPreferences = mandatory + optional
+    val facetsParam = allPreferences.joinToString(",") { it.toSwissTourismFacet() }
 
-    val facetFilters =
-        preferences.joinToString(",") {
-          "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
-        }
+    // 3. Build the 'facet.filter' parameter (Boolean Logic)
+    val parts = mutableListOf<String>()
+
+    // Add Mandatory preferences (Top level = AND)
+    // Format: "facetName:facetValue"
+    mandatory.forEach { parts.add("${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}") }
+
+    // Add Optional preferences (Nested list = OR)
+    // Format: "[facetName:facetValue, facetName:facetValue]"
+    if (optional.isNotEmpty()) {
+      val orPart =
+          optional.joinToString(",", prefix = "[", postfix = "]") {
+            "${it.toSwissTourismFacet()}:${it.toSwissTourismFacetFilter()}"
+          }
+      parts.add(orPart)
+    }
+
+    // Construct the final string: mandatory1, mandatory2, [optional1, optional2]
+    val finalFacetFilter = parts.joinToString(",")
 
     // Build manually – no encoding issues
     val url =
@@ -226,7 +247,7 @@ class ActivityRepositoryMySwitzerland(
             .append("&facets=")
             .append(facetsParam)
             .append("&facet.filter=")
-            .append("[$facetFilters]")
+            .append(finalFacetFilter)
             .toString()
 
     Log.d("URL", "Final MySwitzerland URL: $url")
@@ -238,9 +259,14 @@ class ActivityRepositoryMySwitzerland(
    *
    * @param baseUrl The base URL to fetch activities from.
    * @param limit The limit of the number of valid activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of valid activities up to the specified limit.
    */
-  private suspend fun fetchValidActivitiesPaginated(baseUrl: HttpUrl, limit: Int): List<Activity> {
+  private suspend fun fetchValidActivitiesPaginated(
+      baseUrl: HttpUrl,
+      limit: Int,
+      activityBlackList: List<String> = emptyList()
+  ): List<Activity> {
 
     val validResults = mutableListOf<Activity>()
     var page = 0
@@ -261,9 +287,7 @@ class ActivityRepositoryMySwitzerland(
 
       val filtered =
           pageActivities.filter {
-            it.isValid(
-                blacklistedActivityNames = blacklistedActivityNames,
-                invalidDescription = DESCRIPTION_FALLBACK)
+            it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
           }
 
       validResults.addAll(filtered)
@@ -284,7 +308,7 @@ class ActivityRepositoryMySwitzerland(
    */
   fun getActivityNumberToPull(limit: Int, random: Boolean): Int {
     return if (random) {
-      limit + (limit * EXTRA_RANDOM_ACTIVITIES).toInt()
+      ceil(limit + (limit * EXTRA_RANDOM_ACTIVITIES)).toInt()
     } else {
       limit
     }
@@ -295,10 +319,15 @@ class ActivityRepositoryMySwitzerland(
    *
    * @param limit The limit of the number of activities to return.
    * @param page The page number for pagination.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of the most popular activities.
    */
-  override suspend fun getMostPopularActivities(limit: Int, page: Int): List<Activity> {
-    return fetchValidActivitiesPaginated(baseHttpUrl, limit)
+  override suspend fun getMostPopularActivities(
+      limit: Int,
+      page: Int,
+      activityBlackList: List<String>
+  ): List<Activity> {
+    return fetchValidActivitiesPaginated(baseHttpUrl, limit, activityBlackList)
   }
 
   /**
@@ -307,12 +336,14 @@ class ActivityRepositoryMySwitzerland(
    * @param coordinate The coordinate to get activities near.
    * @param radiusMeters The radius in meters to search for activities.
    * @param limit The limit of the number of activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of activities near the given coordinate.
    */
   override suspend fun getActivitiesNear(
       coordinate: Coordinate,
       radiusMeters: Int,
-      limit: Int
+      limit: Int,
+      activityBlackList: List<String>
   ): List<Activity> {
     val baseUrl =
         baseHttpUrl
@@ -321,7 +352,7 @@ class ActivityRepositoryMySwitzerland(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchValidActivitiesPaginated(baseUrl, limit)
+    return fetchValidActivitiesPaginated(baseUrl, limit, activityBlackList)
   }
 
   /**
@@ -329,13 +360,16 @@ class ActivityRepositoryMySwitzerland(
    *
    * @param preferences The preferences to use.
    * @param limit The limit of the number of activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of activities by the given preferences.
    */
   override suspend fun getActivitiesByPreferences(
       preferences: List<Preference>,
-      limit: Int
+      limit: Int,
+      activityBlackList: List<String>
   ): List<Activity> {
-    return fetchValidActivitiesPaginated(computeUrlWithPreferences(preferences, limit), limit)
+    return fetchValidActivitiesPaginated(
+        computeUrlWithPreferences(preferences, limit), limit, activityBlackList)
   }
   /** Searches for destinations based on a text query. */
   override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {
@@ -356,13 +390,15 @@ class ActivityRepositoryMySwitzerland(
    * @param coordinate The coordinate to get activities near.
    * @param radiusMeters The radius in meters to search for activities.
    * @param limit The limit of the number of activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of activities near the given coordinate with the given preferences.
    */
   override suspend fun getActivitiesNearWithPreference(
       preferences: List<Preference>,
       coordinate: Coordinate,
       radiusMeters: Int,
-      limit: Int
+      limit: Int,
+      activityBlackList: List<String>
   ): List<Activity> {
     val baseUrl =
         computeUrlWithPreferences(preferences, limit)
@@ -371,6 +407,30 @@ class ActivityRepositoryMySwitzerland(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchValidActivitiesPaginated(baseUrl, limit)
+    return fetchValidActivitiesPaginated(baseUrl, limit, activityBlackList)
+  }
+
+  /**
+   * Separates user preferences into mandatory and optional categories. Mandatory preferences (e.g.,
+   * wheelchair accessibility) are applied to all searches.
+   *
+   * @param preferences The list of user preferences.
+   * @return A Pair containing a list of mandatory preferences and a list of optional ones.
+   */
+  private fun separateMandatoryPreferences(
+      preferences: MutableList<Preference>
+  ): Pair<List<Preference>, List<Preference>> {
+    val mandatoryPrefs = mutableListOf<Preference>()
+
+    if (preferences.contains(Preference.WHEELCHAIR_ACCESSIBLE)) {
+      mandatoryPrefs.add(Preference.WHEELCHAIR_ACCESSIBLE)
+      preferences.remove(Preference.WHEELCHAIR_ACCESSIBLE)
+    }
+    if (preferences.contains(Preference.PUBLIC_TRANSPORT)) {
+      mandatoryPrefs.add(Preference.PUBLIC_TRANSPORT)
+      preferences.remove(Preference.PUBLIC_TRANSPORT)
+    }
+
+    return Pair(mandatoryPrefs, preferences)
   }
 }
