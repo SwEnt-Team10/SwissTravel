@@ -32,6 +32,7 @@ import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -74,6 +75,12 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.clearAuthEmulator()
   }
 
+  @After
+  override fun tearDown() {
+    FirebaseEmulator.clearAuthEmulator()
+    FirebaseEmulator.clearFirestoreEmulator()
+  }
+
   @Test
   fun user_can_send_and_accept_friend_request_and_view_pinned_trips() {
     // --- STEP 0: SETUP
@@ -88,8 +95,6 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
 
     // --- STEP 1: Alice logs in (account creation). ---
-    composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
-    composeTestRule.waitForIdle()
     loginWithGoogle()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -201,6 +206,8 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
   // -- Helper functions --
 
   private fun loginWithGoogle() {
+    composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertExists().performClick()
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertExists().performClick()
 
     // Wait for main app to load
@@ -220,7 +227,7 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
     // Wait for Landing Screen
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
-      composeTestRule.onAllNodesWithTag(GOOGLE_LOGIN_BUTTON).fetchSemanticsNodes().isNotEmpty()
+      composeTestRule.onAllNodesWithTag(SIGN_IN_BUTTON).fetchSemanticsNodes().isNotEmpty()
     }
   }
 
