@@ -33,7 +33,7 @@ class SelectPinnedPicturesViewModel(
       try {
         val user = userRepository.getCurrentUser()
         currentUser = user
-        addUri(user.pinnedPicturesUris)
+        addUri(user.pinnedPicturesUids)
       } catch (e: Exception) {
         _uiState.value = uiState.value.copy(errorMsg = "Error fetching user images: ${e.message}")
       }
@@ -54,7 +54,7 @@ class SelectPinnedPicturesViewModel(
     viewModelScope.launch {
       val user = currentUser ?: return@launch
       try {
-        userRepository.updateUser(uid = user.uid, pinnedPicturesUris = _uiState.value.listUri)
+        userRepository.updateUser(uid = user.uid, pinnedPicturesUids = _uiState.value.listUri)
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error saving image(s): ${e.message}") }
       }

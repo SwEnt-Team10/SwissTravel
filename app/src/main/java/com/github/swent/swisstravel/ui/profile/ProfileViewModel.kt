@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.profile
 
-import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -45,7 +44,7 @@ data class ProfileUIState(
     val biography: String = "",
     val stats: UserStats = UserStats(),
     val pinnedTrips: List<Trip> = emptyList(),
-    val pinnedPictures: List<Uri> = emptyList(),
+    val pinnedPictures: List<String> = emptyList(),
     var errorMsg: String? = null,
     var achievements: List<Achievement> = emptyList(),
     val friendsCount: Int = 0,
@@ -136,7 +135,7 @@ class ProfileViewModel(
             biography = profile.biography,
             stats = profile.stats,
             pinnedTrips = pinnedTrips,
-            pinnedPictures = profile.pinnedPicturesUris,
+            pinnedPictures = profile.pinnedPicturesUids,
             achievements = achievements,
             friendsCount = friendsCount)
       }

@@ -487,7 +487,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = newProfilePicUrl,
         preferences = newPreferences,
         pinnedTripsUids = newPinnedTripsUids,
-        pinnedPicturesUris = newPinnedImagesUris)
+        pinnedPicturesUids = newPinnedImagesUris)
 
     // Assert: read back the document
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -524,7 +524,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = null,
         preferences = null,
         pinnedTripsUids = null,
-        pinnedPicturesUris = null)
+        pinnedPicturesUids = null)
 
     // Assert
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -555,7 +555,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = "http://example.com/guest.png",
         preferences = listOf(Preference.SCENIC_VIEWS),
         pinnedTripsUids = listOf("tripX"),
-        pinnedPicturesUris = listOf("file://imageX".toUri()))
+        pinnedPicturesUids = listOf("file://imageX".toUri()))
 
     // Assert: the document must still NOT exist after the update
     val after = FirebaseEmulator.firestore.collection("users").document(guestUid).get().await()
@@ -575,7 +575,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = null,
         preferences = null,
         pinnedTripsUids = null,
-        pinnedPicturesUris = null)
+        pinnedPicturesUids = null)
   }
 
   @Test

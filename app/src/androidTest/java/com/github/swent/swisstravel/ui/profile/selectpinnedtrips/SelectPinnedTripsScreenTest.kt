@@ -127,7 +127,7 @@ class SelectPinnedTripsScreenTest {
                 friends = emptyList(),
                 stats = UserStats(),
                 pinnedTripsUids = listOf("trip1"),
-                pinnedPicturesUris = emptyList())
+                pinnedPicturesUids = emptyList())
 
         override suspend fun getCurrentUser() = user
 

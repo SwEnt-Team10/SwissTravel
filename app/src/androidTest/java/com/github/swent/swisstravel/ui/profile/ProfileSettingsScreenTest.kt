@@ -35,7 +35,7 @@ class FakeUserRepository : UserRepository {
         friends = emptyList(),
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
-        pinnedPicturesUris = emptyList())
+        pinnedPicturesUids = emptyList())
   }
 
   override suspend fun getUserByUid(uid: String): User? {
@@ -94,7 +94,7 @@ val emptyUserRepo =
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedPicturesUris = emptyList())
+            pinnedPicturesUids = emptyList())
       }
 
       override suspend fun getUserByUid(uid: String): User? {

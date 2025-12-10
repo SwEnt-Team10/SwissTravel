@@ -89,7 +89,7 @@ class UserRepositoryMockTest {
         profilePicUrl = "http://pic",
         preferences = listOf(Preference.SCENIC_VIEWS, Preference.WHEELCHAIR_ACCESSIBLE),
         pinnedTripsUids = listOf("t1", "t2"),
-        pinnedPicturesUris = null // not updated
+        pinnedPicturesUids = null // not updated
         )
 
     // Assert: update() must have been called

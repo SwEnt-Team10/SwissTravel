@@ -44,7 +44,7 @@ class ProfileViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
-          pinnedPicturesUris = emptyList())
+          pinnedPicturesUids = emptyList())
 
   @Before
   fun setup() {

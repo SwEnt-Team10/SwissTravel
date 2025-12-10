@@ -110,7 +110,7 @@ class SelectPinnedTripsViewModelTest {
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
-          pinnedPicturesUris = emptyList())
+          pinnedPicturesUids = emptyList())
 
   @Before
   fun setup() {
