@@ -1,5 +1,8 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.graphics.Bitmap
+import com.github.swent.swisstravel.model.image.Image
+import com.github.swent.swisstravel.model.image.ImageHelper
 import com.github.swent.swisstravel.model.image.ImageRepository
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.User
@@ -10,6 +13,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -55,11 +60,14 @@ class ProfileViewModelTest {
     tripsRepository = mockk(relaxed = true)
     imageRepository = mockk()
 
+    mockkObject(ImageHelper)
+
     coEvery { userRepository.updateUserStats(any(), any()) } just Runs
   }
 
   @After
   fun tearDown() {
+    unmockkAll()
     Dispatchers.resetMain()
   }
 
@@ -189,5 +197,72 @@ class ProfileViewModelTest {
     // And: UI state pinnedTrips contains only the existing trip
     val state = viewModel.uiState.value
     Assert.assertEquals(1, state.pinnedTrips.size)
+  }
+
+  @Test
+  fun fetchPinnedPictures_loadsValidImagesSuccessfully() = runTest {
+    // Given: A user with one pinned picture UID
+    val picUid = "pic-123"
+    val base64String = "fakeBase64"
+    val userWithPic = fakeUser.copy(pinnedPicturesUids = listOf(picUid))
+    val mockBitmap = mockk<Bitmap>()
+
+    coEvery { userRepository.getCurrentUser() } returns userWithPic
+    coEvery { userRepository.getUserByUid(fakeUser.uid) } returns userWithPic
+
+    coEvery { imageRepository.getImage(picUid) } returns Image(picUid, fakeUser.uid, base64String)
+
+    coEvery { ImageHelper.base64ToBitmap(base64String) } returns mockBitmap
+
+    // When: ViewModel is initialized
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Then: The UI state should contain the bitmap
+    val state = viewModel.uiState.value
+    Assert.assertEquals(1, state.pinnedBitmaps.size)
+    Assert.assertEquals(mockBitmap, state.pinnedBitmaps[0])
+    Assert.assertFalse(state.isLoadingImages)
+  }
+
+  @Test
+  fun fetchPinnedPictures_removesInvalidUidsAndUpdatesUser() = runTest {
+    // Given: User has one VALID uid and one INVALID uid
+    val validUid = "valid-uid"
+    val invalidUid = "invalid-uid"
+    val userWithPics = fakeUser.copy(pinnedPicturesUids = listOf(validUid, invalidUid))
+    val validBase64 = "validBase64"
+    val mockBitmap = mockk<Bitmap>()
+
+    coEvery { userRepository.getCurrentUser() } returns userWithPics
+    coEvery { userRepository.getUserByUid(fakeUser.uid) } returns userWithPics
+
+    // 1. Valid image returns successfully
+    coEvery { imageRepository.getImage(validUid) } returns
+        Image(validUid, fakeUser.uid, validBase64)
+    // 2. Invalid image throws an exception (simulating 404/not found)
+    coEvery { imageRepository.getImage(invalidUid) } throws Exception("Image not found")
+
+    coEvery { ImageHelper.base64ToBitmap(validBase64) } returns mockBitmap
+
+    // Mock User Update (should be called to cleanup the invalid ID)
+    coEvery { userRepository.updateUser(uid = any(), pinnedPicturesUids = any()) } just Runs
+
+    // When: ViewModel is initialized
+    viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Then 1: UI should only show the 1 valid bitmap
+    val state = viewModel.uiState.value
+    Assert.assertEquals(1, state.pinnedBitmaps.size)
+    Assert.assertEquals(mockBitmap, state.pinnedBitmaps[0])
+
+    // Then 2: updateUser should be called with only the valid UID
+    coVerify {
+      userRepository.updateUser(
+          uid = fakeUser.uid,
+          pinnedPicturesUids = listOf(validUid) // 'invalidUid' should be removed
+          )
+    }
   }
 }
