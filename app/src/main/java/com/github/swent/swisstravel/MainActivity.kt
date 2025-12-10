@@ -145,7 +145,6 @@ fun rememberCurrentUser(): State<FirebaseUser?> {
     auth.addAuthStateListener(listener)
     onDispose { auth.removeAuthStateListener(listener) }
   }
-  Log.d("rememberCurrentUser", "Current user: ${currentUser.value}")
 
   return currentUser
 }

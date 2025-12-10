@@ -7,7 +7,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.test.rule.GrantPermissionRule
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
@@ -56,12 +55,6 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
 
-  @get:Rule
-  val permissionRule: GrantPermissionRule =
-      GrantPermissionRule.grant(
-          android.Manifest.permission.ACCESS_FINE_LOCATION,
-          android.Manifest.permission.ACCESS_COARSE_LOCATION)
-
   private val aliceName = "Alice Tester"
   private val aliceEmail = "alice.tester@example.com"
 
@@ -77,7 +70,7 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
   @After
   override fun tearDown() {
-    FirebaseEmulator.clearAuthEmulator()
+    super.tearDown()
     FirebaseEmulator.clearFirestoreEmulator()
   }
 
