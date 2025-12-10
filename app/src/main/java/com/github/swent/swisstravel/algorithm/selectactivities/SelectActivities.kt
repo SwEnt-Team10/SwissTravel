@@ -182,16 +182,15 @@ class SelectActivities(
 
     // fetch activities with preferences
     val preferred =
-        fetchWithPrefs(locations = allDestinations, fetchLimit = nbProposedActivities, prefs)
+        fetchFromLocations(locations = allDestinations, fetchLimit = nbProposedActivities, prefs)
             .filter { swipeActivityIsValid(it, toExclude) }
     fetchedActivities.addAll(preferred.shuffled())
 
     // if not enough activities, fetch activities without preferences
     if (fetchedActivities.size < nbProposedActivities) {
       val notPreferred =
-          fetchWithoutPrefs(locations = allDestinations, fetchLimit = nbProposedActivities).filter {
-            swipeActivityIsValid(it, toExclude)
-          }
+          fetchFromLocations(locations = allDestinations, fetchLimit = nbProposedActivities)
+              .filter { swipeActivityIsValid(it, toExclude) }
       fetchedActivities.addAll(notPreferred.shuffled())
     }
     fetchedActivities.distinct().take(nbProposedActivities)
@@ -207,34 +206,23 @@ class SelectActivities(
    *
    * @param locations The locations were to find activities
    * @param fetchLimit The maximum number of activities to return
-   * @param prefs The preferences to filter activities
+   * @param prefs The preferences to filter activities (empty by default, so that it fetches without
+   *   preferences)
    */
-  suspend fun fetchWithPrefs(
+  suspend fun fetchFromLocations(
       locations: List<Location>,
       fetchLimit: Int,
-      prefs: List<Preference>
+      prefs: List<Preference> = emptyList()
   ): List<Activity> {
     val activitiesFetched = mutableListOf<Activity>()
     for (loc in locations) {
       val fetched =
-          activityRepository.getActivitiesNearWithPreference(
-              prefs, loc.coordinate, NEAR, fetchLimit)
-      activitiesFetched.addAll(fetched)
-      delay(API_CALL_DELAY_MS) // Respect API rate limit.
-    }
-    return activitiesFetched
-  }
-
-  /**
-   * Fetches activities from MySwitzerland API at the given locations, without any preferences
-   *
-   * @param locations The locations were to find activities
-   * @param fetchLimit The maximum number of activities to return
-   */
-  suspend fun fetchWithoutPrefs(locations: List<Location>, fetchLimit: Int): List<Activity> {
-    val activitiesFetched = mutableListOf<Activity>()
-    for (loc in locations) {
-      val fetched = activityRepository.getActivitiesNear(loc.coordinate, NEAR, fetchLimit)
+          if (prefs.isNotEmpty()) {
+            activityRepository.getActivitiesNearWithPreference(
+                prefs, loc.coordinate, NEAR, fetchLimit)
+          } else {
+            activityRepository.getActivitiesNear(loc.coordinate, NEAR, fetchLimit)
+          }
       activitiesFetched.addAll(fetched)
       delay(API_CALL_DELAY_MS) // Respect API rate limit.
     }
@@ -277,12 +265,9 @@ class SelectActivities(
     // Avoids unnecessary API calls.
     removeUnsupportedPreferences(prefs)
 
+    // if prefs is empty, it will fetch without preferences
     val activity =
-        if (prefs.isNotEmpty()) {
-          fetchWithPrefs(locations = listOf(allDestinations.random()), fetchLimit = 1, prefs)
-        } else {
-          fetchWithoutPrefs(locations = listOf(allDestinations.random()), fetchLimit = 1)
-        }
+        fetchFromLocations(locations = listOf(allDestinations.random()), fetchLimit = 1, prefs)
 
     val filtered = activity.filter { act -> swipeActivityIsValid(act, toExclude) }
 
