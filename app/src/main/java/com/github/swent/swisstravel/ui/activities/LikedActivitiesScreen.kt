@@ -27,7 +27,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,12 +50,9 @@ object LikedActivitiesScreenTestTags {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModelContract) {
-  val likedActivitiesVM: LikedActivitiesViewModel = remember {
-    LikedActivitiesViewModel(tripInfoVM)
-  }
-  val uiState = tripInfoVM.uiState.collectAsState()
-  val likedActivities = uiState.value.likedActivities
-  val selectedActivities = likedActivitiesVM.state.collectAsState().value.selectedLikedActivities
+  val state = tripInfoVM.uiState.collectAsState().value
+  val likedActivities = state.likedActivities
+  val selectedActivities = state.selectedLikedActivities
   val context = LocalContext.current
   val errorText = stringResource(R.string.no_activities_selected)
 
@@ -91,7 +87,7 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModel
             onUnlike = {
               if (selectedActivities.isEmpty()) {
                 Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
-              } else likedActivitiesVM.unlikeSelectedActivities()
+              } else tripInfoVM.unlikeSelectedActivities()
             },
         )
       }) { pd ->
@@ -111,7 +107,7 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModel
                     Arrangement.spacedBy(dimensionResource(R.dimen.smaller_padding)),
                 contentPadding = PaddingValues(dimensionResource(R.dimen.small_padding))) {
                   itemsIndexed(likedActivities) { _, activity ->
-                    LikedActivityItem(activity, likedActivitiesVM)
+                    LikedActivityItem(activity, tripInfoVM)
                   }
                 }
           }
@@ -123,12 +119,11 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModel
  * Composable to display a liked activity item in a list.
  *
  * @param activity The activity to display.
- * @param likedActivitiesVM The viewModel for the liked activities, used to select, schedule or
- *   unlike activities.
+ * @param tripInfoVM The viewModel of the trip info, used to select, schedule or unlike activities.
  */
 @Composable
-fun LikedActivityItem(activity: Activity, likedActivitiesVM: LikedActivitiesViewModel) {
-  val vmState = likedActivitiesVM.state.collectAsState()
+fun LikedActivityItem(activity: Activity, tripInfoVM: TripInfoViewModelContract) {
+  val state = tripInfoVM.uiState.collectAsState().value
   Card(
       modifier = Modifier.fillMaxWidth(),
       elevation = CardDefaults.cardElevation(dimensionResource(R.dimen.mini_padding))) {
@@ -139,10 +134,10 @@ fun LikedActivityItem(activity: Activity, likedActivitiesVM: LikedActivitiesView
           }
           // each liked activity has a button to select it (to later unlike it or schedule it)
           Checkbox(
-              checked = activity in vmState.value.selectedLikedActivities,
+              checked = activity in state.selectedLikedActivities,
               onCheckedChange = { checked ->
-                if (checked) likedActivitiesVM.selectActivity(activity)
-                else likedActivitiesVM.deselectActivity(activity)
+                if (checked) tripInfoVM.selectLikedActivity(activity)
+                else tripInfoVM.deselectLikedActivity(activity)
               },
               modifier =
                   Modifier.testTag(LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY)

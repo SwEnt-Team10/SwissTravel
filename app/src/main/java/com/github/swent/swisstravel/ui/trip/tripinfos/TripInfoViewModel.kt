@@ -1,8 +1,10 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.content.Context
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
@@ -12,6 +14,7 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
@@ -24,6 +27,7 @@ import com.mapbox.geojson.Point
 import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.collections.ArrayDeque
+import kotlin.collections.plus
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -53,6 +57,7 @@ data class TripInfoUIState(
     val allFetchedForSwipe: List<Activity> = emptyList(),
     val currentActivity: Activity? = null,
     val backActivity: Activity? = null,
+    val selectedLikedActivities: List<Activity> = emptyList(),
     // New fields for DailyViewScreen MVVM refactor
     val schedule: List<TripElement> = emptyList(),
     val groupedSchedule: Map<LocalDate, List<TripElement>> = emptyMap(),
@@ -355,6 +360,8 @@ class TripInfoViewModel(
    *   schedule them)
    * - the Trip (its new values are kept on the database, so that, when the user quits the app and
    *   comes back later, the values are the same)
+   *
+   * @param activities The activities to like.
    */
   override fun likeActivities(activities: List<Activity>) {
     _uiState.update { state ->
@@ -371,14 +378,17 @@ class TripInfoViewModel(
 
   /**
    * Removes the given activities from the list of liked activities in :
-   * - the UI state (because the tripInfoUIState is used to display the liked activities and
-   *     * schedule them)
+   * - the UI state (because the tripInfoUIState is used to display the liked activities in the
+   *   LikedActivitiesScreen and schedule them)
    * - the Trip (its new values are kept on the database, so that, when the user quits the app and
    *   comes back later, the values are the same)
    */
-  override fun unlikeActivities(activities: List<Activity>) {
+  override fun unlikeSelectedActivities() {
+    val selected = _uiState.value.selectedLikedActivities
     _uiState.update { state ->
-      state.copy(likedActivities = (state.likedActivities - activities).distinct())
+      state.copy(
+          likedActivities = (state.likedActivities - selected).distinct(),
+          selectedLikedActivities = emptyList())
     }
     // also update the trip on the repository
     viewModelScope.launch {
@@ -386,7 +396,7 @@ class TripInfoViewModel(
           trip.value!!.uid,
           updatedTrip =
               trip.value!!.copy(
-                  likedActivities = (trip.value!!.likedActivities - activities).distinct()))
+                  likedActivities = (trip.value!!.likedActivities - selected).distinct()))
     }
   }
 
@@ -448,7 +458,7 @@ class TripInfoViewModel(
    */
   override fun swipeActivity(liked: Boolean) {
     val current = _uiState.value.currentActivity ?: return
-    val newQueue = _uiState.value.activitiesQueue
+    val newQueue = ArrayDeque(_uiState.value.activitiesQueue)
 
     if (liked) likeActivities(listOf(current))
 
@@ -503,12 +513,12 @@ class TripInfoViewModel(
               activitiesFetcher.fetchSwipeActivities(
                   toExclude = (state.allFetchedForSwipe + state.activities).toSet()))
 
-      Log.d("TRIP_INFO_VM", "current activity = ${state.currentActivity}")
+      Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
       // update the tripInfo and the Trip on the repo
       updateQueue(initialActivities)
       updateAllFetchedForSwipe(initialActivities)
 
-      Log.d("TRIP_INFO_VM", "current activity = ${state.currentActivity}")
+      Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
     }
   }
 
@@ -546,6 +556,49 @@ class TripInfoViewModel(
             // InvalidNameMsg should stay null since the tripInfo should already have a valid name
             )
   }
+
+  /**
+   * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  override fun selectLikedActivity(activity: Activity) {
+    _uiState.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities + activity)
+    }
+  }
+
+  /**
+   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule the activity or unlike it)
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  override fun deselectLikedActivity(activity: Activity) {
+    _uiState.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities - activity)
+    }
+  }
+
+  /**
+   * Schedules the selected liked activities.
+   *
+   * If there is no room for selected activities to be scheduled, it will respond with a toast
+   */
+  fun scheduleSelectedActivities(context: Context) {
+    val tripAlgo =
+        TripAlgorithm.init(
+            tripSettings = this.mapToTripSettings(),
+            activityRepository = ActivityRepositoryMySwitzerland(),
+            context = context)
+    // TODO : finish scheduling code
+
+    // at the end, don't remove the selected activities from the liked activities in case the user
+    // un-schedules
+    // them but wants to re-schedule them afterwards (so that the user doesn't have to find them by
+    // swiping)
+  }
+
+  // ========== Functions for managing collaborators ==========
 
   /**
    * Loads the list of friends available to be added as collaborators and the list of current

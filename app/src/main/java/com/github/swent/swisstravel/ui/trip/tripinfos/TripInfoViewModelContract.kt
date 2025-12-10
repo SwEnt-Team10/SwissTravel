@@ -71,12 +71,8 @@ interface TripInfoViewModelContract {
    */
   fun likeActivities(activities: List<Activity>)
 
-  /**
-   * Unlikes the given activities, removing them from the list of liked activities.
-   *
-   * @param activities The activities to unlike.
-   */
-  fun unlikeActivities(activities: List<Activity>)
+  /** Unlikes the selected activities, removing them from the list of liked activities. */
+  fun unlikeSelectedActivities()
 
   /**
    * Updates the activities queue in the UI state and in the Trip.
@@ -101,6 +97,20 @@ interface TripInfoViewModelContract {
    * @param liked a boolean indicating whether you liked the activity or not
    */
   fun swipeActivity(liked: Boolean)
+
+  /**
+   * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  fun selectLikedActivity(activity: Activity)
+
+  /**
+   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule the activity or unlike it)
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  fun deselectLikedActivity(activity: Activity)
 
   /** Helper to map the tripInfoUIState to a TripSettings. */
   fun mapToTripSettings(): TripSettings
