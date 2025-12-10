@@ -129,7 +129,9 @@ class SelectActivities(
     removeUnsupportedPreferences(userPreferences)
     var fetched: List<Activity>?
     if (userPreferences.isNotEmpty()) {
-      fetched = activityRepository.getActivitiesNearWithPreference(userPreferences, coords, NEAR, 1)
+      fetched =
+          activityRepository.getActivitiesNearWithPreference(
+              userPreferences, coords, radius, 1, activityBlackList)
       delay(API_CALL_DELAY_MS) // Respect API rate limit.
     } else { // No preferences, fetch any activity near the location.
       fetched = activityRepository.getActivitiesNear(coords, radius, 1, activityBlackList)

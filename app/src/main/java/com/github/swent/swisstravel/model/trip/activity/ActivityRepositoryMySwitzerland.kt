@@ -307,7 +307,10 @@ class ActivityRepositoryMySwitzerland(
    * @return The adjusted number of activities to pull.
    */
   fun getActivityNumberToPull(limit: Int, random: Boolean): Int {
-    return if (random) {
+    // Take at least 3 so that we don't end up at the 6th page if we fetch 1 or 2 activities at a
+    // time
+    return if (limit < 3) 3
+    else if (random) {
       ceil(limit + (limit * EXTRA_RANDOM_ACTIVITIES)).toInt()
     } else {
       limit
