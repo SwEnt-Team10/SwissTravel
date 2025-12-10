@@ -259,6 +259,7 @@ class ActivityRepositoryMySwitzerland(
    *
    * @param baseUrl The base URL to fetch activities from.
    * @param limit The limit of the number of valid activities to return.
+   * @param activityBlackList The list of activity names to exclude.
    * @return A list of valid activities up to the specified limit.
    */
   private suspend fun fetchValidActivitiesPaginated(
