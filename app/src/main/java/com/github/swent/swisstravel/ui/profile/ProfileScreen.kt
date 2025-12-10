@@ -231,26 +231,24 @@ private fun ProfileScreenTopBar(
         }
       },
       actions = {
-        if (!uiState.isLoading) {
-          if (uiState.isOwnProfile) {
-            IconButton(
-                onClick = onSettings,
-                modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.Settings,
-                      contentDescription = stringResource(R.string.settings),
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-          } else {
-            IconButton(
-                onClick = onUnfriend,
-                modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.PersonRemove,
-                      contentDescription = stringResource(R.string.unfriend),
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-          }
+        if (uiState.isOwnProfile) {
+          IconButton(
+              onClick = onSettings,
+              modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = stringResource(R.string.settings),
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
+        } else {
+          IconButton(
+              onClick = onUnfriend,
+              modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.PersonRemove,
+                    contentDescription = stringResource(R.string.unfriend),
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
         }
       },
       modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))

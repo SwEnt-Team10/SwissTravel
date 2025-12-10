@@ -214,6 +214,7 @@ fun MyTripsScreen(
                         )
 
                     sortedTripListItems(
+                        title = "Upcoming Trips",
                         listState = listState,
                         listEvents = listEvent,
                         onClickDropDownMenu = { myTripsViewModel.updateSortType(it) },

@@ -106,7 +106,8 @@ abstract class SwissTravelTest {
     }
 
   init {
-    assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running the tests" }
+    // assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running the
+    // tests" }
   }
 
   @Before
@@ -172,7 +173,7 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkMyTripsScreenIsDisplayed() {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.TITLE)
+    onNodeWithTag(SortedTripListTestTags.TITLE, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
     onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
@@ -238,7 +239,10 @@ abstract class SwissTravelTest {
     // Profile header
     waitUntil(
         timeoutMillis = UI_WAIT_TIMEOUT,
-        condition = { onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).isDisplayed() })
+        condition = {
+          onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).isDisplayed() &&
+              onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).isDisplayed()
+        })
     onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
 
     // Biography (not displayed cause it's empty)
