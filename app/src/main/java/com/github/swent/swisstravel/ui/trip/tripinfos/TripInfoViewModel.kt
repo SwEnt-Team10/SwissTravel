@@ -10,6 +10,8 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.FriendStatus
+import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.mapbox.geojson.Point
@@ -49,7 +51,9 @@ data class TripInfoUIState(
     val selectedStep: TripElement? = null,
     val drawFromCurrentPosition: Boolean = false,
     val currentGpsPoint: Point? = null,
-    val currentUserIsOwner: Boolean = false
+    val currentUserIsOwner: Boolean = false,
+    val availableFriends: List<User> = emptyList(),
+    val collaborators: List<User> = emptyList()
 )
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -122,7 +126,7 @@ class TripInfoViewModel(
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
-                currentUserIsOwner = userRepository.getCurrentUser().uid == trip.ownerId)
+                currentUserIsOwner = trip.isOwner(userRepository.getCurrentUser().uid))
         computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
@@ -320,6 +324,88 @@ class TripInfoViewModel(
   override fun likeActivity(activity: Activity) {
     _uiState.update { current ->
       current.copy(likedActivities = (current.likedActivities + activity).distinct())
+    }
+  }
+
+  /**
+   * Loads the list of friends available to be added as collaborators and the list of current
+   * collaborators for the trip.
+   *
+   * Fetches the current user's friends (accepted status only) and filters out those who are already
+   * collaborators. Also fetches the full User objects for the current trip's collaborators.
+   */
+  override fun loadCollaboratorData() {
+    viewModelScope.launch {
+      try {
+        val currentUser = userRepository.getCurrentUser()
+        val currentTrip = _uiState.value
+
+        // 1. Load Friends (Accepted only)
+        val friendUids =
+            currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }.map { it.uid }
+
+        val friends = friendUids.mapNotNull { uid -> userRepository.getUserByUid(uid) }
+
+        // 2. Load Collaborators for the trip
+        val freshTrip = tripsRepository.getTrip(currentTrip.uid)
+        val collaborators =
+            freshTrip.collaboratorsId.mapNotNull { uid -> userRepository.getUserByUid(uid) }
+
+        _uiState.update {
+          it.copy(
+              availableFriends =
+                  friends.filter { friend -> friend.uid !in freshTrip.collaboratorsId },
+              collaborators = collaborators)
+        }
+      } catch (e: Exception) {
+        Log.e("TripInfoViewModel", "Error loading collaborators", e)
+      }
+    }
+  }
+
+  /**
+   * Adds a user as a collaborator to the current trip.
+   *
+   * Updates the trip in the repository by appending the user's UID to the collaborators list and
+   * reloads the local collaborator data.
+   *
+   * @param user The user to add as a collaborator.
+   */
+  override fun addCollaborator(user: User) {
+    val currentTripId = _uiState.value.uid
+    if (currentTripId.isBlank()) return
+
+    viewModelScope.launch {
+      try {
+        tripsRepository.shareTripWithUsers(currentTripId, listOf(user.uid))
+        // Reload local state
+        loadCollaboratorData()
+      } catch (e: Exception) {
+        setErrorMsg("Failed to add collaborator: ${e.message}")
+      }
+    }
+  }
+
+  /**
+   * Removes a user from the current trip's collaborators.
+   *
+   * Updates the trip in the repository by removing the user's UID from the collaborators list and
+   * reloads the local collaborator data.
+   *
+   * @param user The user to remove.
+   */
+  override fun removeCollaborator(user: User) {
+    val currentTripId = _uiState.value.uid
+    if (currentTripId.isBlank()) return
+
+    viewModelScope.launch {
+      try {
+        tripsRepository.removeCollaborator(currentTripId, user.uid)
+
+        loadCollaboratorData()
+      } catch (e: Exception) {
+        setErrorMsg("Failed to remove collaborator: ${e.message}")
+      }
     }
   }
 }
