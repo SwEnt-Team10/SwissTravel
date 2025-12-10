@@ -100,6 +100,9 @@
     <dimen name="daily_view_date_end_padding">16dp</dimen>
     <dimen name="daily_view_date_separator_padding">8dp</dimen>
     <dimen name="daily_view_map_button_padding">16dp</dimen>
+    <dimen name="share_dialog_collaborators_list_height">150dp</dimen>
+    <dimen name="share_dialog_friends_list_height">200dp</dimen>
+    <dimen name="share_dialog_spacer">12dp</dimen>
 
     <!-- Current Trip Screen -->
     <dimen name="current_trip_icon_bottom_padding">16dp</dimen>
@@ -135,6 +138,10 @@
     <dimen name="trip_element_border">3dp</dimen>
     <dimen name="trip_element_width">16dp</dimen>
     <dimen name="trip_top_circle_size">40dp</dimen>
+    <dimen name="trip_element_collaborators_padding">8dp</dimen>
+    <dimen name="trip_element_collaborators_overlap">-8dp</dimen>
+    <dimen name="trip_element_collaborators_avatar_size">24dp</dimen>
+    <dimen name="trip_element_collaborators_border_size">1dp</dimen>
 
     <!--Button dimension -->
     <dimen name="medium_button_height">48dp</dimen>

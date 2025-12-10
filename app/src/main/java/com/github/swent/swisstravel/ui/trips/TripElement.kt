@@ -15,7 +15,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -25,6 +27,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.zIndex
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
@@ -57,6 +61,7 @@ object TripElementTestTags {
  * @param isSelectionMode Whether the UI is currently in selection mode.
  * @param noIcon If true, no icon is displayed when isSelected is false. Otherwise, shows a check
  *   icon.
+ * @param collaborators The list of collaborators to display as overlapping avatars.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -66,7 +71,8 @@ fun TripElement(
     onLongPress: () -> Unit = {},
     isSelected: Boolean = false,
     isSelectionMode: Boolean = false,
-    noIcon: Boolean = false
+    noIcon: Boolean = false,
+    collaborators: List<TripsViewModel.CollaboratorUi> = emptyList()
 ) {
   Card(
       modifier =
@@ -86,9 +92,19 @@ fun TripElement(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(horizontal = dimensionResource(R.dimen.trip_element_padding)),
-            horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
-              TripNameSection(trip = trip)
+              TripNameSection(trip = trip, modifier = Modifier.weight(1f))
+
+              if (collaborators.isNotEmpty()) {
+                CollaboratorsPreview(collaborators)
+                Spacer(
+                    modifier =
+                        Modifier.width(
+                            dimensionResource(R.dimen.trip_element_collaborators_padding)))
+              }
+
+              Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
+
               TripStatusSection(
                   trip = trip,
                   isSelected = isSelected,
@@ -104,19 +120,69 @@ fun TripElement(
  * @param trip The [Trip] displayed in this element.
  */
 @Composable
-private fun TripNameSection(trip: Trip) {
-  Row(verticalAlignment = Alignment.CenterVertically) {
+private fun TripNameSection(trip: Trip, modifier: Modifier) {
+  Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
     TripCircle(tripName = trip.name)
     Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
-    Box(modifier = Modifier.fillMaxWidth(if (trip.isFavorite) 0.75f else 0.9f)) {
-      Text(
-          text = trip.name,
-          style = MaterialTheme.typography.bodyLarge,
-          color = MaterialTheme.colorScheme.onSurface,
-          maxLines = 1,
-          overflow = TextOverflow.Ellipsis)
-    }
+    Text(
+        text = trip.name,
+        style = MaterialTheme.typography.bodyLarge,
+        color = MaterialTheme.colorScheme.onSurface,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis)
   }
+}
+
+/**
+ * Displays a row of overlapping avatars for the given collaborators.
+ *
+ * Shows up to 3 profile pictures. If there are more, the last bubble displays the remaining count
+ * (e.g., "+2").
+ *
+ * @param collaborators The list of collaborators to display.
+ */
+@Composable
+private fun CollaboratorsPreview(collaborators: List<TripsViewModel.CollaboratorUi>) {
+  Row(
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement =
+          Arrangement.spacedBy(
+              dimensionResource(R.dimen.trip_element_collaborators_overlap)) // Overlap effect
+      ) {
+        collaborators.take(3).forEachIndexed { index, user ->
+          AsyncImage(
+              model = user.avatarUrl.ifBlank { R.drawable.default_profile_pic },
+              contentDescription = user.displayName,
+              contentScale = ContentScale.Crop,
+              modifier =
+                  Modifier.size(dimensionResource(R.dimen.trip_element_collaborators_avatar_size))
+                      .clip(CircleShape)
+                      .border(
+                          dimensionResource(R.dimen.trip_element_collaborators_border_size),
+                          MaterialTheme.colorScheme.surface,
+                          CircleShape)
+                      .zIndex((3 - index).toFloat()) // First one on top
+              )
+        }
+        if (collaborators.size > 3) {
+          Box(
+              modifier =
+                  Modifier.size(dimensionResource(R.dimen.trip_element_collaborators_avatar_size))
+                      .clip(CircleShape)
+                      .background(MaterialTheme.colorScheme.secondaryContainer)
+                      .border(
+                          dimensionResource(R.dimen.trip_element_collaborators_border_size),
+                          MaterialTheme.colorScheme.surface,
+                          CircleShape)
+                      .zIndex(0f),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    text = "+${collaborators.size - 3}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer)
+              }
+        }
+      }
 }
 
 /**
