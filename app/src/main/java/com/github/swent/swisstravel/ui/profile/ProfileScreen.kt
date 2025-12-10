@@ -70,6 +70,7 @@ import com.github.swent.swisstravel.model.user.toData
 import com.github.swent.swisstravel.ui.composable.TripList
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+import com.github.swent.swisstravel.utils.NetworkUtils
 
 /** Test tags for the profile screen. */
 object ProfileScreenTestTags {
@@ -123,6 +124,11 @@ fun ProfileScreen(
   val context = LocalContext.current
   val uiState by profileViewModel.uiState.collectAsState()
 
+  val isOnline = NetworkUtils.isOnline(LocalContext.current)
+  LaunchedEffect(isOnline) { profileViewModel.refreshStats(isOnline) }
+  if (isOnline) {
+    profileViewModel.refreshStats(isOnline)
+  }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
@@ -155,8 +161,19 @@ fun ProfileScreen(
       }) { pd ->
         if (uiState.isLoading) {
           Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            CircularProgressIndicator(
-                modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center) {
+                  CircularProgressIndicator(
+                      modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
+                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+
+                  if (!isOnline) {
+                    Text(
+                        text = stringResource(R.string.loading_from_cache),
+                        modifier = Modifier.align(Alignment.CenterHorizontally))
+                  }
+                }
           }
         } else {
           ProfileScreenContent(

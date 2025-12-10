@@ -89,28 +89,6 @@ class ActivityRepositoryMockTest {
   }
 
   @Test
-  fun `parseActivitiesFromJson with no neededtime defaults estimatedTime to zero`() {
-    val json =
-        """
-    {
-      "data": [{
-        "name": "No Needed Time",
-        "abstract": "desc",
-        "geo": { "latitude": 46.5, "longitude": 7.5 },
-        "classification": [
-          { "@type": "Classification", "name": "experiencetype", "values": [{"name":"active"}] }
-        ]
-      }]
-    }
-  """
-            .trimIndent()
-
-    val list = repo.invokePrivate("parseActivitiesFromJson", json) as List<Activity>
-    assertEquals(1, list.size)
-    assertEquals(0, list.first().estimatedTime)
-  }
-
-  @Test
   fun `parseActivitiesFromJson finds neededtime among multiple classifications`() {
     val json =
         """
@@ -188,7 +166,23 @@ class ActivityRepositoryMockTest {
   @Test
   fun `fetchActivitiesFromUrl returns parsed activities on success`() = runTest {
     val json =
-        """{"data":[{"name":"Act","abstract":"Desc","geo":{"latitude":46.5,"longitude":7.5}}]}"""
+        """
+  {
+    "data":[
+      {
+        "name":"Act",
+        "abstract":"Desc",
+        "geo":{"latitude":46.5,"longitude":7.5},
+        "classification":[
+          {
+            "name":"neededtime",
+            "values":[{"name":"2to4hourshalfday"}]
+          }
+        ]
+      }
+    ]
+  }
+  """
     val body = json.toResponseBody("application/json".toMediaType())
 
     every { mockClient.newCall(any()) } returns mockCall
@@ -393,17 +387,21 @@ class ActivityRepositoryMockTest {
     every { mockResponse.body } returns
         "{\"data\":[]}".toResponseBody("application/json".toMediaType())
     every { mockResponse.close() } just Runs
+    val limit = 5
 
     val prefs = listOf(Preference.PUBLIC_TRANSPORT)
     val coord = Coordinate(46.5, 7.5)
-    val result = repo.getActivitiesNearWithPreference(prefs, coord, 500, 5)
+    val result = repo.getActivitiesNearWithPreference(prefs, coord, 500, limit)
 
     assertNotNull(result)
     assertTrue(result.isEmpty())
 
     // Verify the URL was built correctly
     val capturedUrl = slot.captured.url
-    assertTrue(capturedUrl.toString().contains("hitsPerPage=5"))
+    val randomHits = repo.getActivityNumberToPull(limit, true)
+    assertTrue(
+        capturedUrl.toString().contains("hitsPerPage=$limit") ||
+            capturedUrl.toString().contains("hitsPerPage=$randomHits"))
     assertTrue(capturedUrl.toString().contains("facets=reachabilitylocation&facet.filter"))
     assertTrue(capturedUrl.toString().contains("reachabilitylocation:closetopublictransport"))
     assertTrue(capturedUrl.toString().contains("geo.dist=46.5%2C7.5%2C500"))

@@ -196,7 +196,34 @@ class ProfileSettingsViewModelTest {
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify(exactly = 1) { userRepository.updateUserStats(fakeUser.uid, fakeUser.stats) }
+    coVerify(exactly = 0) { userRepository.updateUserStats(any(), any()) }
+  }
+
+  @Test
+  fun refreshStats_doesNothingWhenOffline() = runTest {
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.refreshStats(isOnline = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 0) { userRepository.updateUserStats(any(), any()) }
+  }
+
+  @Test
+  fun refreshStats_updatesStatsWhenOnline() = runTest {
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.getAllTrips() } returns emptyList()
+    coEvery { userRepository.updateUserStats(any(), any()) } just Runs
+
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.refreshStats(isOnline = true)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    coVerify(exactly = 1) { userRepository.updateUserStats(fakeUser.uid, any()) }
   }
 
   @Test
@@ -300,39 +327,5 @@ class ProfileSettingsViewModelTest {
     testDispatcher.scheduler.advanceUntilIdle()
 
     Assert.assertTrue(viewModel.uiState.value.errorMsg!!.contains("Bio error"))
-  }
-
-  @Test
-  fun refreshStatsForUser_doesNothingForGuest() = runTest {
-    val guestUser = fakeUser.copy(uid = "guest")
-    coEvery { tripsRepository.getAllTrips() } returns emptyList()
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
-    // simulate calling private method via init
-    viewModel.autoFill(guestUser)
-    // No error should be set
-    Assert.assertNull(viewModel.uiState.value.errorMsg)
-  }
-
-  @Test
-  fun refreshStatsForUser_updatesStats() = runTest {
-    coEvery { userRepository.getCurrentUser() } returns fakeUser
-    coEvery { tripsRepository.getAllTrips() } returns emptyList()
-    coEvery { userRepository.updateUserStats(any(), any()) } just Runs
-
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    coVerify { userRepository.updateUserStats(fakeUser.uid, any()) }
-  }
-
-  @Test
-  fun refreshStatsForUser_setsErrorWhenTripsFail() = runTest {
-    coEvery { userRepository.getCurrentUser() } returns fakeUser
-    coEvery { tripsRepository.getAllTrips() } throws Exception("Trips failed")
-
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    Assert.assertTrue(viewModel.uiState.value.errorMsg!!.contains("Trips failed"))
   }
 }

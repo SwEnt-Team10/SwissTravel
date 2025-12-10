@@ -8,6 +8,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
@@ -33,6 +34,7 @@ object EditTripScreenTestTags {
   const val LOADING = "editTripLoading"
   const val TRIP_NAME = "editTripName"
   const val CONFIRM_TOP_BAR = "editTripConfirmTopBar"
+  const val REROLL = "editTripReroll"
   const val DELETE = "editTripDelete"
   const val DELETE_DIALOG = "editTripDeleteDialog"
   const val DELETE_CONFIRM = "editTripDeleteConfirm"
@@ -43,6 +45,7 @@ object EditTripScreenTestTags {
  * Screen for editing a trip.
  *
  * @param tripId The ID of the trip to edit.
+ * @param editTripViewModel The ViewModel for editing the trip.
  * @param onBack Called when the back button is pressed.
  * @param onSaved Called when the trip is saved.
  * @param onDelete Called when the trip is deleted.
@@ -165,19 +168,39 @@ fun EditTripScreen(
               SectionHeader(stringResource(R.string.preferences))
               PreferenceSelector(
                   isChecked = { pref -> state.selectedPrefs.contains(pref) },
-                  onCheckedChange = editTripViewModel::togglePref)
+                  onCheckedChange = editTripViewModel::togglePref,
+                  isRandomTrip = state.isRandom)
 
-              Button(
-                  onClick = { showDeleteDialog = true },
-                  colors =
-                      ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                  shape = RoundedCornerShape(dimensionResource(R.dimen.edit_screen_big_radius)),
-                  modifier =
-                      Modifier.align(Alignment.CenterHorizontally)
-                          .testTag(EditTripScreenTestTags.DELETE)) {
-                    Icon(Icons.Filled.Delete, contentDescription = null)
-                    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
-                    Text(stringResource(R.string.delete_trip))
+              Row(
+                  modifier = Modifier.fillMaxWidth(),
+                  horizontalArrangement = Arrangement.Center,
+                  verticalAlignment = Alignment.CenterVertically) {
+                    if (state.isRandom) {
+                      Button(
+                          onClick = { editTripViewModel.reroll(context) },
+                          shape =
+                              RoundedCornerShape(dimensionResource(R.dimen.edit_screen_big_radius)),
+                          modifier = Modifier.testTag(EditTripScreenTestTags.REROLL)) {
+                            Icon(Icons.Filled.Refresh, contentDescription = null)
+                            Spacer(
+                                modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+                            Text(stringResource(R.string.reroll))
+                          }
+                      Spacer(modifier = Modifier.width(dimensionResource(R.dimen.small_padding)))
+                    }
+
+                    Button(
+                        onClick = { showDeleteDialog = true },
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.error),
+                        shape =
+                            RoundedCornerShape(dimensionResource(R.dimen.edit_screen_big_radius)),
+                        modifier = Modifier.testTag(EditTripScreenTestTags.DELETE)) {
+                          Icon(Icons.Filled.Delete, contentDescription = null)
+                          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+                          Text(stringResource(R.string.delete_trip))
+                        }
                   }
 
               if (showDeleteDialog) {

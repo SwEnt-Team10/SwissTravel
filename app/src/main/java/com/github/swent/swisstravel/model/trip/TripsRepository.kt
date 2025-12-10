@@ -49,4 +49,20 @@ interface TripsRepository {
    * @throws Exception if the Trip is not found.
    */
   suspend fun deleteTrip(tripId: String)
+
+  /**
+   * Shares the current trip with the given users.
+   *
+   * @param tripId The unique identifier of the trip to share.
+   * @param userIds The list of user IDs to share the trip with.
+   */
+  suspend fun shareTripWithUsers(tripId: String, userIds: List<String>)
+
+  /**
+   * Removes a collaborator from the trip.
+   *
+   * @param tripId The unique identifier of the trip.
+   * @param userId The unique identifier of the user to remove.
+   */
+  suspend fun removeCollaborator(tripId: String, userId: String)
 }

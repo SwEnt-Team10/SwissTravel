@@ -83,7 +83,8 @@ sealed class Screen(
 
   object Loading : Screen(route = "loading", name = "Loading")
 
-  object FriendsList : Screen(route = "friends_list", name = "Friends")
+  object FriendsList :
+      Screen(route = "friends_list", name = "Friends", isTopLevelDestination = true)
 
   object AddFriend : Screen(route = "add_friend", name = "Add Friend")
 
@@ -103,6 +104,13 @@ sealed class Screen(
       Screen(route = "add_photos/${tripId}", name = "Add Photos") {
     companion object {
       const val route = "add_photos/{tripId}"
+    }
+  }
+
+  data class EditPhotos(val tripId: String) :
+      Screen(route = "edit_photos/${tripId}", name = "Edit Photos") {
+    companion object {
+      const val route = "edit_photos/{tripId}"
     }
   }
 

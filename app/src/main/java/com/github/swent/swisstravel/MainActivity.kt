@@ -56,6 +56,7 @@ import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreen
 import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesViewModel
+import com.github.swent.swisstravel.ui.profile.ProfileViewModelFactory
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreen
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -63,7 +64,8 @@ import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreen
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureScreen
 import com.github.swent.swisstravel.ui.tripcreation.FirstDestinationScreen
 import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
@@ -360,9 +362,7 @@ private fun NavGraphBuilder.authNavGraph(
  * @param navigationActions The NavigationActions used for navigation. once edit pinned methods are
  *   implemented
  */
-private fun NavGraphBuilder.profileNavGraph(
-    navigationActions: NavigationActions,
-) {
+private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions) {
   navigation(
       startDestination = Screen.Profile.route,
       route = Screen.Profile.name,
@@ -370,7 +370,10 @@ private fun NavGraphBuilder.profileNavGraph(
     composable(Screen.Profile.route) {
       ProfileScreen(
           profileViewModel =
-              ProfileViewModel(requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: ""),
+              viewModel(
+                  factory =
+                      ProfileViewModelFactory(
+                          requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: "")),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },
@@ -546,7 +549,12 @@ private fun NavGraphBuilder.tripInfoNavGraph(
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
 
-      tripId?.let { AddPhotosScreen(onBack = { navController.popBackStack() }, tripId = tripId) }
+      tripId?.let {
+        AddPhotosScreen(
+            onBack = { navController.popBackStack() },
+            tripId = tripId,
+            onEdit = { navigationActions.navigateTo(Screen.EditPhotos(tripId)) })
+      }
           ?: run {
             Log.e(
                 stringResource(R.string.add_photos_screen_tag),
@@ -554,6 +562,11 @@ private fun NavGraphBuilder.tripInfoNavGraph(
             Toast.makeText(context, stringResource(R.string.null_trip_id), Toast.LENGTH_SHORT)
                 .show()
           }
+    }
+    composable(Screen.EditPhotos.route) { navBackStackEntry ->
+      val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))
+
+      tripId?.let { EditPhotosScreen(onCancel = { navigationActions.goBack() }, tripId = tripId) }
     }
   }
 }
@@ -638,14 +651,17 @@ private fun NavGraphBuilder.tripSettingsNavGraph(
           viewModel = vm,
           onNext = { navigationActions.navigateTo(Screen.TripSettingsArrivalDeparture) },
           onPrevious = { navigationActions.goBack() },
-          isRandomTrip = isRandomTrip,
-          onRandom = { navigationActions.navigateTo(Screen.Loading) })
+          isRandomTrip = isRandomTrip)
     }
     composable(Screen.TripSettingsArrivalDeparture.route) {
+      val vm = tripSettingsViewModel(navController)
+      val isRandomTrip by vm.isRandomTrip.collectAsState()
       ArrivalDepartureScreen(
-          viewModel = tripSettingsViewModel(navController),
+          viewModel = vm,
           onNext = { navigationActions.navigateTo(Screen.TripSettingsFirstDestination) },
-          onPrevious = { navigationActions.goBack() })
+          onPrevious = { navigationActions.goBack() },
+          isRandomTrip = isRandomTrip,
+          onRandom = { navigationActions.navigateTo(Screen.Loading) })
     }
     composable(Screen.TripSettingsFirstDestination.route) {
       FirstDestinationScreen(
@@ -691,10 +707,7 @@ private fun NavGraphBuilder.friendsListNavGraph(
   ) {
     // Friends List Screen
     composable(Screen.FriendsList.route) {
-      val vm = friendsViewModel(navController)
-
       FriendsListScreen(
-          friendsViewModel = vm,
           onSelectFriend = { navigationActions.navigateTo(Screen.FriendProfile(it)) },
           onAddFriend = { navigationActions.navigateTo(Screen.AddFriend) })
     }
@@ -722,7 +735,7 @@ private fun NavGraphBuilder.friendsListNavGraph(
           ProfileScreen(
               profileViewModel = ProfileViewModel(requestedUid = uid),
               onBack = { navigationActions.goBack() },
-              onSelectTrip = { navigationActions.navigateTo(Screen.TripInfo(it)) },
+              onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
               friendsViewModel = friendsViewModel(navController))
         }
   }

@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
-import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.isPast
 import com.github.swent.swisstravel.model.user.Achievement
 import com.github.swent.swisstravel.model.user.FriendStatus
@@ -60,7 +60,7 @@ data class ProfileUIState(
  */
 class ProfileViewModel(
     private val userRepository: UserRepository = UserRepositoryFirebase(),
-    private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
+    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
     requestedUid: String
 ) : ViewModel() {
 
@@ -87,14 +87,29 @@ class ProfileViewModel(
         val isOwn = currentUser?.uid == requestedUid
         loadProfile(requestedUid)
         _uiState.update { it.copy(uid = requestedUid, isOwnProfile = isOwn) }
-        if (isOwn) {
-          refreshStatsForUser(currentUser!!)
-        }
       } catch (e: Exception) {
         Log.e("ProfileViewModel", "Error loading profile", e)
         setErrorMsg("Failed to load profile: ${e.message}")
       } finally {
         _uiState.update { it.copy(isLoading = false) }
+      }
+    }
+  }
+
+  /**
+   * Refreshes the user's stats based on their past trips.
+   *
+   * @param isOnline Whether the device is online.
+   */
+  fun refreshStats(isOnline: Boolean) {
+    if (!isOnline) return
+
+    viewModelScope.launch {
+      val user = userRepository.getCurrentUser()
+
+      // Only refresh stats if it's the user's own profile
+      if (user.uid == _uiState.value.uid) {
+        refreshStatsForUser(user)
       }
     }
   }
@@ -109,11 +124,11 @@ class ProfileViewModel(
       val profile =
           userRepository.getUserByUid(uid)
               ?: throw IllegalStateException("User with uid $uid not found")
-      val pinnedTrips = profile.pinnedTripsUids.map { uid -> tripsRepository.getTrip(uid) }
 
+      val pinnedTrips = getValidPinnedTrips(profile)
       val friendsCount = profile.friends.filter { it.status == FriendStatus.ACCEPTED }.size
-
       val achievements = computeAchievements(stats = profile.stats, friendsCount = friendsCount)
+
       _uiState.update {
         it.copy(
             profilePicUrl = profile.profilePicUrl,
@@ -132,6 +147,33 @@ class ProfileViewModel(
   }
 
   /**
+   * Returns the list of valid pinned trips, removing any invalid UIDs from the user's pinned trips.
+   *
+   * @param user The user to get the pinned trips for.
+   * @return The list of valid pinned trips.
+   */
+  private suspend fun getValidPinnedTrips(user: User): List<Trip> {
+    val pinnedTrips = mutableListOf<Trip>()
+    val invalidPinnedUids = mutableListOf<String>()
+
+    user.pinnedTripsUids.forEach { tripUid ->
+      try {
+        pinnedTrips.add(tripsRepository.getTrip(tripUid))
+      } catch (e: Exception) {
+        Log.e("ProfileViewModel", "Pinned trip $tripUid not found, removing from user", e)
+        invalidPinnedUids.add(tripUid)
+      }
+    }
+
+    if (invalidPinnedUids.isNotEmpty()) {
+      val updatedUids = user.pinnedTripsUids - invalidPinnedUids.toSet()
+      userRepository.updateUser(uid = user.uid, pinnedTripsUids = updatedUids)
+    }
+
+    return pinnedTrips
+  }
+
+  /**
    * Refreshes the user's stats based on their past trips.
    *
    * @param user The user to refresh stats for.
@@ -146,6 +188,9 @@ class ProfileViewModel(
 
       val stats = StatsCalculator.computeStats(pastTrips)
       userRepository.updateUserStats(user.uid, stats)
+
+      val achievements = computeAchievements(stats, _uiState.value.friendsCount)
+      _uiState.update { it.copy(stats = stats, achievements = achievements) }
     } catch (e: Exception) {
       _uiState.update { it.copy(errorMsg = it.errorMsg ?: "Error updating stats: ${e.message}") }
     }
@@ -163,5 +208,16 @@ class ProfileViewModel(
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
+  }
+}
+
+class ProfileViewModelFactory(
+    private val requestedUid: String,
+    private val userRepository: UserRepository = UserRepositoryFirebase(),
+    private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository
+) : androidx.lifecycle.ViewModelProvider.Factory {
+  @Suppress("UNCHECKED_CAST")
+  override fun <T : ViewModel> create(modelClass: Class<T>): T {
+    return ProfileViewModel(userRepository, tripsRepository, requestedUid) as T
   }
 }

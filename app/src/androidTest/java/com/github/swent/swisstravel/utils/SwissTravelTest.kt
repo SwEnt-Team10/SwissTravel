@@ -33,7 +33,9 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
+import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
+import com.github.swent.swisstravel.ui.composable.ErrorScreenTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
@@ -46,7 +48,8 @@ import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
-import com.github.swent.swisstravel.ui.trip.tripinfos.addphotos.AddPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
+import com.github.swent.swisstravel.ui.trip.tripinfos.photos.EditPhotosScreenTestTags
 import com.github.swent.swisstravel.ui.tripcreation.ArrivalDepartureTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripDateTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags
@@ -142,7 +145,8 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   val trip2 =
       Trip(
@@ -159,7 +163,8 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList())
+          listUri = emptyList(),
+          collaboratorsId = emptyList())
 
   val tripList = listOf(trip1, trip2)
 
@@ -625,10 +630,18 @@ abstract class SwissTravelTest {
     onNodeWithTag(AddPhotosScreenTestTags.MAIN_SCREEN).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.TOP_APP_BAR_TITLE).assertIsDisplayed()
-    onNodeWithTag(AddPhotosScreenTestTags.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.BOTTOM_BAR).assertIsDisplayed()
-    onNodeWithTag(AddPhotosScreenTestTags.SAVE_BUTTON).assertIsDisplayed()
     onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).assertIsDisplayed()
+    onNodeWithTag(AddPhotosScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.editPhotosScreenIsDisplayed() {
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_TOP_BAR).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_TOP_BAR_TITLE).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_BOTTOM_BAR).assertIsDisplayed()
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_REMOVE_BUTTON).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkSwipeActivityScreenIsDisplayed() {
@@ -648,6 +661,29 @@ abstract class SwissTravelTest {
     onNodeWithText("Trip Two").assertIsDisplayed()
   }
 
+  fun ComposeTestRule.clickOnBackButton() {
+    onNodeWithTag(BackButtonTestTag.BACK_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnRetryButton() {
+    onNodeWithTag(ErrorScreenTestTags.RETRY_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnEditPhotos() {
+    onNodeWithTag(AddPhotosScreenTestTags.EDIT_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnAddPhotos() {
+    onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnRemovePhotos() {
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_REMOVE_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.exitEditPhotos() {
+    onNodeWithTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON).performClick()
+  }
   // TODO : Create helper/companions functions here
 
 }

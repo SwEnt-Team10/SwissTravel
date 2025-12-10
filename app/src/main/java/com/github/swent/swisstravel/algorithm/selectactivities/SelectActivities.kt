@@ -197,7 +197,6 @@ class SelectActivities(
    */
   private fun buildDestinationList(): List<Location> {
     val allDestinations = tripSettings.destinations.toMutableList()
-    // TODO: Implement logic to add locations along the route between destinations.
     tripSettings.arrivalDeparture.arrivalLocation?.let { allDestinations.add(it) }
     tripSettings.arrivalDeparture.departureLocation?.let { allDestinations.add(it) }
     return allDestinations.distinctBy { it.coordinate } // Ensure all locations are unique.

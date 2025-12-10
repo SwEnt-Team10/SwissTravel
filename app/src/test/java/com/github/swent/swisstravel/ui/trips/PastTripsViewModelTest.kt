@@ -51,7 +51,8 @@ class PastTripsViewModelTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = true,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     // Upcoming trip: start > now
     val pastTrip2 =
@@ -69,7 +70,8 @@ class PastTripsViewModelTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
     viewModel = PastTripsViewModel(repository)
@@ -132,7 +134,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     // Initially disabled
     assertEquals(false, viewModel.uiState.value.isSelectionMode)
@@ -165,7 +168,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val trip2 =
         Trip(
@@ -178,7 +182,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     viewModel.toggleSelectionMode(true)
 
@@ -212,7 +217,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     viewModel.toggleSelectionMode(true)
     viewModel.toggleTripSelection(trip)
@@ -236,7 +242,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val trip2 =
         Trip(
@@ -249,7 +256,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(trip1, trip2)
     coEvery { repository.deleteTrip(any()) } returns Unit
@@ -288,7 +296,8 @@ class PastTripsViewModelTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     val pastTrip2 =
         Trip(
@@ -305,7 +314,8 @@ class PastTripsViewModelTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
     viewModel = PastTripsViewModel(repository)
@@ -330,7 +340,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(trip1)
     coEvery { repository.deleteTrip(any()) } throws Exception("DB failure")
@@ -364,7 +375,8 @@ class PastTripsViewModelTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList()),
+            listUri = emptyList(),
+            collaboratorsId = emptyList()),
         Trip(
             "2",
             "Beta",
@@ -379,7 +391,8 @@ class PastTripsViewModelTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList()),
+            listUri = emptyList(),
+            collaboratorsId = emptyList()),
         Trip(
             "3",
             "Gamma",
@@ -394,7 +407,8 @@ class PastTripsViewModelTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList()))
+            listUri = emptyList(),
+            collaboratorsId = emptyList()))
   }
 
   @Test
@@ -500,7 +514,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            emptyList())
+            emptyList(),
+            collaboratorsId = emptyList())
 
     coEvery { repository.getAllTrips() } returns listOf(trip)
     coEvery { repository.editTrip(any(), any()) } returns Unit
@@ -529,7 +544,8 @@ class PastTripsViewModelTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     coEvery { repository.editTrip(any(), any()) } throws Exception("Firestore edit failed")
 

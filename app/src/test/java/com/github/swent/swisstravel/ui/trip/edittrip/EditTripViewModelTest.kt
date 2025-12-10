@@ -1,7 +1,9 @@
 package com.github.swent.swisstravel.ui.trip.edittrip
 
 import android.content.Context
+import android.content.res.Resources
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.algorithm.random.RandomTripGenerator
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
@@ -41,15 +43,35 @@ class EditTripScreenViewModelTest {
           adults = 2,
           children = 1,
           prefs = listOf(Preference.FOODIE, Preference.SPORTS),
-          arrivalLocation = Location(Coordinate(0.0, 0.0), ""),
-          departureLocation = Location(Coordinate(0.0, 0.0), ""))
+          arrivalLocation = Location(Coordinate(0.0, 0.0), "Lausanne"),
+          departureLocation = Location(Coordinate(1.1, 1.1), "Geneva"),
+          random = false)
+
+  private val randomTrip =
+      makeTrip(
+          uid = "random-456",
+          name = "Random Trip",
+          adults = 1,
+          children = 0,
+          prefs = listOf(Preference.PUBLIC_TRANSPORT),
+          arrivalLocation = Location(Coordinate(0.0, 0.0), "Zurich"),
+          departureLocation = Location(Coordinate(1.1, 1.1), "Bern"),
+          random = true)
 
   @Before
   fun setUp() {
     repo = mockk(relaxed = true)
     // Relaxed mock for ActivityRepository to avoid mocking every call in `save`
     val activityRepo: ActivityRepository = mockk(relaxed = true)
-    vm = EditTripScreenViewModel(tripRepository = repo)
+    vm = EditTripScreenViewModel(tripRepository = repo, activityRepository = activityRepo)
+
+    // Mock the static RandomTripGenerator object
+    mockkObject(RandomTripGenerator)
+    every { RandomTripGenerator.generateRandomDestinations(any(), any(), any()) } returns
+        Triple(
+            Location(Coordinate(2.0, 2.0), "NewStart"),
+            Location(Coordinate(3.0, 3.0), "NewEnd"),
+            listOf(Location(Coordinate(4.0, 4.0), "NewIntermediate")))
   }
 
   @After
@@ -75,6 +97,18 @@ class EditTripScreenViewModelTest {
     assertEquals(2, s.adults)
     assertEquals(1, s.children)
     assertEquals(setOf(Preference.FOODIE, Preference.SPORTS), s.selectedPrefs)
+    assertFalse(s.isRandom)
+  }
+
+  @Test
+  fun `loadTrip on random trip sets isRandom to true`() = runTest {
+    coEvery { repo.getTrip(randomTrip.uid) } returns randomTrip
+
+    vm.loadTrip(randomTrip.uid)
+    advanceUntilIdle()
+
+    val s = vm.state.value
+    assertTrue(s.isRandom)
   }
 
   @Test
@@ -88,6 +122,42 @@ class EditTripScreenViewModelTest {
     assertFalse(s.isLoading)
     assertEquals("boom", s.errorMsg)
     assertEquals(sampleTripId, s.tripId) // still set
+  }
+
+  // -------------------------
+  // reroll
+  // -------------------------
+
+  @Test
+  fun `reroll does nothing if trip is not random`() = runTest {
+    coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
+    vm.loadTrip(sampleTripId)
+    advanceUntilIdle()
+
+    val context = mockk<Context>(relaxed = true)
+    vm.reroll(context)
+    advanceUntilIdle()
+
+    // Verify that the generator and save were NOT called
+    verify { RandomTripGenerator wasNot Called }
+    coVerify(exactly = 0) { repo.editTrip(any(), any()) }
+  }
+
+  @Test
+  fun `reroll failure sets error message`() = runTest {
+    coEvery { repo.getTrip(randomTrip.uid) } returns randomTrip
+    every { RandomTripGenerator.generateRandomDestinations(any(), any(), any()) } throws
+        Resources.NotFoundException("generator failed")
+    vm.loadTrip(randomTrip.uid)
+    advanceUntilIdle()
+
+    val context = mockk<Context>(relaxed = true)
+    vm.reroll(context)
+    advanceUntilIdle()
+
+    val state = vm.state.value
+    assertFalse(state.isSaving)
+    assertEquals("Failed to re-roll trip", state.errorMsg)
   }
 
   // -------------------------
@@ -152,24 +222,26 @@ class EditTripScreenViewModelTest {
           mockAlgorithm
         }
 
-    vm = EditTripScreenViewModel(tripRepository = repo, algorithmFactory = algorithmFactory)
+    vm =
+        EditTripScreenViewModel(
+            tripRepository = repo,
+            activityRepository = mockk(relaxed = true),
+            algorithmFactory = algorithmFactory)
 
     coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
     coEvery { repo.editTrip(any(), any()) } just Runs
 
-    // Mock algorithm to produce no new schedule (so activities/segments stay same)
+    // Mock algorithm to produce no new schedule
     coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
 
     // --- Act ---
     vm.loadTrip(sampleTripId)
     advanceUntilIdle()
 
-    // change some values
+    // change some values that DON'T trigger re-computation
     vm.editTripName("Alps Adventure")
     vm.setAdults(4)
     vm.setChildren(0)
-    vm.togglePref(Preference.FOODIE) // remove FOODIE
-    vm.togglePref(Preference.MUSEUMS) // add MUSEUMS
 
     val tripSlot = slot<Trip>()
     coEvery { repo.editTrip(eq(sampleTripId), capture(tripSlot)) } just Runs
@@ -178,34 +250,21 @@ class EditTripScreenViewModelTest {
     vm.save(context)
     advanceUntilIdle()
 
+    // Algorithm should NOT be called if only metadata changes
+    coVerify(exactly = 0) { mockAlgorithm.computeTrip(any(), any(), any()) }
     coVerify(exactly = 1) { repo.editTrip(eq(sampleTripId), any()) }
 
     val sentTrip = tripSlot.captured
     assertEquals(4, sentTrip.tripProfile.adults)
     assertEquals(0, sentTrip.tripProfile.children)
-    assertTrue(sentTrip.tripProfile.preferences.contains(Preference.MUSEUMS))
-    assertFalse(sentTrip.tripProfile.preferences.contains(Preference.FOODIE))
-    // Check that trip name is updated
     assertEquals("Alps Adventure", sentTrip.name)
-    // Unchanged fields stay the same
     assertEquals(sampleTrip.uid, sentTrip.uid)
   }
 
   @Test
   fun `save failure sets errorMsg`() = runTest {
-    val mockAlgorithm = mockk<TripAlgorithm>()
-    val algorithmFactory: (Context, TripSettings, ActivityRepository) -> TripAlgorithm =
-        { _, _, _ ->
-          mockAlgorithm
-        }
-
-    vm = EditTripScreenViewModel(tripRepository = repo, algorithmFactory = algorithmFactory)
-
     coEvery { repo.getTrip(sampleTripId) } returns sampleTrip
     coEvery { repo.editTrip(any(), any()) } throws RuntimeException("save failed")
-
-    // Mock algorithm behavior
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
 
     vm.loadTrip(sampleTripId)
     advanceUntilIdle()
@@ -274,7 +333,8 @@ class EditTripScreenViewModelTest {
       children: Int,
       prefs: List<Preference>,
       arrivalLocation: Location,
-      departureLocation: Location
+      departureLocation: Location,
+      random: Boolean
   ): Trip {
     val now = Timestamp.now()
     val profile =
@@ -297,7 +357,9 @@ class EditTripScreenViewModelTest {
         tripProfile = profile,
         isFavorite = false,
         isCurrentTrip = false,
-        listUri = emptyList())
+        listUri = emptyList(),
+        collaboratorsId = emptyList(),
+        isRandom = random)
   }
 }
 

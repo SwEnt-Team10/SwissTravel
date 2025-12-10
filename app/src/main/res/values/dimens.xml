@@ -178,6 +178,6 @@
     <!-- Tonal Elevation -->
     <dimen name="tiny_tonal_elevation">2dp</dimen>
 
-    <!-- Add photos Screen -->
-    <dimen name="save_add_button_padding">16dp</dimen>
+    <!-- Edit photos Screen -->
+    <dimen name="check_pading">16dp</dimen>
 </resources>

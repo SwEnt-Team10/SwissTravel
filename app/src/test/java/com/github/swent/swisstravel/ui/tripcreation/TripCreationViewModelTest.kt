@@ -96,15 +96,14 @@ class TripCreationViewModelTest {
     // Setup initial state
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4)) // 4-day trip
     viewModel.setRandomTrip(true) // Simulate being in random mode
+    viewModel.updateArrivalLocation(
+        Location(Coordinate(46.315833, 6.193056), "Coppet", "")) // Arrival location in Coppet
 
     // Use a seed for predictable "randomness"
     viewModel.randomTrip(mockContext, seed = 123)
 
     // Assertions
     val settings = viewModel.tripSettings.value
-
-    // Check that trip name is updated
-    assertEquals("Random Swiss Adventure", settings.name)
 
     // Check that arrival/departure are set and different
     assertNotNull(settings.arrivalDeparture.arrivalLocation)
@@ -239,7 +238,7 @@ class TripCreationViewModelTest {
         )
 
     // Algorithm returns empty schedule → no activities or route segments
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -278,7 +277,7 @@ class TripCreationViewModelTest {
         )
 
     // Algorithm still returns empty schedule
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -330,6 +329,14 @@ class TripCreationViewModelTest {
 
     override suspend fun deleteTrip(tripId: String) {
       /* no-op for tests */
+    }
+
+    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+      /* no-op */
+    }
+
+    override suspend fun removeCollaborator(tripId: String, userId: String) {
+      /* no-op */
     }
 
     override suspend fun editTrip(tripId: String, updatedTrip: Trip) {

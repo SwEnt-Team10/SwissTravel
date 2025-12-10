@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -56,6 +57,7 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
+import com.github.swent.swisstravel.utils.NetworkUtils.isOnline
 import com.mapbox.geojson.Point
 import java.time.LocalDate
 import java.time.ZoneId
@@ -181,18 +183,37 @@ fun DailyViewScreen(
         }
       },
       bottomBar = {
-        DailyViewBottomBar(
-            onSwipeActivities = callbacks.onSwipeActivities,
-            onLikedActivities = callbacks.onLikedActivities)
+        if (ui.currentUserIsOwner)
+            DailyViewBottomBar(
+                onSwipeActivities = callbacks.onSwipeActivities,
+                onLikedActivities = callbacks.onLikedActivities)
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
           if (ui.locations.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-              Text(
-                  text = stringResource(R.string.no_locations_available),
-                  modifier =
-                      Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
-                          .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
+              Column(
+                  horizontalAlignment = Alignment.CenterHorizontally,
+                  verticalArrangement = Arrangement.Center) {
+                    if (isOnline(context)) {
+                      Text(
+                          text = stringResource(R.string.no_locations_available),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
+                    } else {
+                      CircularProgressIndicator(
+                          modifier = Modifier.testTag(DailyViewScreenTestTags.LOADING))
+                      Spacer(
+                          modifier =
+                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+                      Text(
+                          text = stringResource(R.string.loading_from_cache),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS)
+                                  .align(Alignment.CenterHorizontally))
+                    }
+                  }
             }
           } else {
             Column(Modifier.fillMaxSize()) {
@@ -330,29 +351,31 @@ private fun DailyViewTopAppBar(
         }
       },
       actions = {
-        AddPhotosButton(onAddPhotos = { onAddPhotos() })
-        IconButton(
-            onClick = onToggleFavorite,
-            modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {
-              if (ui.isFavorite) {
+        if (ui.currentUserIsOwner) {
+          AddPhotosButton(onAddPhotos = { onAddPhotos() })
+          IconButton(
+              onClick = onToggleFavorite,
+              modifier = Modifier.testTag(DailyViewScreenTestTags.FAVORITE_BUTTON)) {
+                if (ui.isFavorite) {
+                  Icon(
+                      imageVector = Icons.Filled.Star,
+                      contentDescription = stringResource(R.string.unfavorite_icon),
+                      tint = favoriteIcon)
+                } else {
+                  Icon(
+                      imageVector = Icons.Outlined.StarOutline,
+                      contentDescription = stringResource(R.string.favorite_icon_empty),
+                      tint = MaterialTheme.colorScheme.onBackground)
+                }
+              }
+          IconButton(
+              onClick = onEdit, modifier = Modifier.testTag(DailyViewScreenTestTags.EDIT_BUTTON)) {
                 Icon(
-                    imageVector = Icons.Filled.Star,
-                    contentDescription = stringResource(R.string.unfavorite_icon),
-                    tint = favoriteIcon)
-              } else {
-                Icon(
-                    imageVector = Icons.Outlined.StarOutline,
-                    contentDescription = stringResource(R.string.favorite_icon_empty),
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.edit_trip),
                     tint = MaterialTheme.colorScheme.onBackground)
               }
-            }
-        IconButton(
-            onClick = onEdit, modifier = Modifier.testTag(DailyViewScreenTestTags.EDIT_BUTTON)) {
-              Icon(
-                  imageVector = Icons.Outlined.Edit,
-                  contentDescription = stringResource(R.string.edit_trip),
-                  tint = MaterialTheme.colorScheme.onBackground)
-            }
+        }
       })
 }
 

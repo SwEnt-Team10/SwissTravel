@@ -48,7 +48,8 @@ class CurrentTripScreenTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = true,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
@@ -84,7 +85,8 @@ class CurrentTripScreenTest {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList())
+            listUri = emptyList(),
+            collaboratorsId = emptyList())
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(notCurrentTrip))
