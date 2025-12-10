@@ -62,10 +62,12 @@
     <string name="destination_limited">Destination limit attained</string>
     <string name="first_destinations_title">Select any location you already know you want to visit</string>
     <string name="dropdown_menu_choose">Choose your location on the dropdown menu</string>
+
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
     <string name="when_travelling">When are you travelling?</string>
     <string name="log_in_to_display">You must be logged in to display a current trip a create one.</string>
+    <string name="current_trip_welcome">Start planning your next adventure!</string>
 
     <!-- Map -->
     <string name="location_required_to_display">Location is required to display your position on the map.</string>

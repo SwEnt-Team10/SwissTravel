@@ -106,6 +106,16 @@ fun SortedTripList(
   }
 }
 
+/**
+ * An extension function for [LazyListScope] that adds a sorted list of trips with a header. This
+ * was made with the help of AI.
+ *
+ * @param title The title to display above the trip list.
+ * @param listState The state object for the underlying trip list.
+ * @param listEvents The event handler for the underlying trip list.
+ * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
+ * @param selectedSortType The currently selected sorting option.
+ */
 fun LazyListScope.sortedTripListItems(
     title: String = "",
     listState: TripListState,

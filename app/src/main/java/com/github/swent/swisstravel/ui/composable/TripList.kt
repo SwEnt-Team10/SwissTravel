@@ -58,7 +58,18 @@ fun TripList(
     Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
   }
 }
-// This function was made using AI
+/**
+ * An extension function for [LazyListScope] that adds a list of trips. This was made with the help
+ * of AI.
+ *
+ * @param trips The list of trips to display.
+ * @param onClickTripElement Callback when a trip element is clicked.
+ * @param onLongPress Callback when a trip element is long-pressed.
+ * @param isSelected Function to determine if a trip is selected.
+ * @param isSelectionMode Whether the selection mode is active.
+ * @param noIconTripElement Whether to hide the icon in the trip element.
+ * @param emptyListString The string to display when the list is empty.
+ */
 fun LazyListScope.tripListItems(
     trips: List<Trip> = emptyList(),
     onClickTripElement: (Trip?) -> Unit = {},

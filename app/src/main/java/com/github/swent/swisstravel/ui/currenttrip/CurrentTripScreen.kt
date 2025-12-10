@@ -116,7 +116,7 @@ fun CurrentTripScreen(
                           modifier = Modifier.testTag(CurrentTripScreenTestTags.CREATE_TRIP_TEXT))
                       Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
                       Text(
-                          text = "Start planning your next adventure!",
+                          text = stringResource(R.string.current_trip_welcome),
                           style = MaterialTheme.typography.bodyLarge,
                           color = MaterialTheme.colorScheme.onSurfaceVariant)
                       Spacer(
