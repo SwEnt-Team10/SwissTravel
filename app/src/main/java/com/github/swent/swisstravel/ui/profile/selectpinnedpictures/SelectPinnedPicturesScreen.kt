@@ -31,9 +31,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
@@ -131,7 +131,7 @@ fun SelectPinnedPicturesScreen(
                   }) {
                     Text(text = stringResource(R.string.add_photos_button))
                   }
-              Spacer(modifier = Modifier.width(dimensionResource(R.dimen.save_add_button_padding)))
+              Spacer(modifier = Modifier.width(16.dp))
               // Save photos button
               Button(
                   modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.SAVE_BUTTON),
@@ -139,7 +139,7 @@ fun SelectPinnedPicturesScreen(
                     selectPinnedPicturesViewModel.savePictures()
                     onBack()
                   }) {
-                    Text(text = stringResource(R.string.add_photos_save_button))
+                    Text(text = "test")
                   }
             }
       }) { pd ->

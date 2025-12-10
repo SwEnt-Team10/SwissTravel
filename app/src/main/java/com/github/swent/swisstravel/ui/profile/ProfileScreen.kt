@@ -1,7 +1,8 @@
 package com.github.swent.swisstravel.ui.profile
 
-import android.net.Uri
+import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -295,9 +297,10 @@ private fun ProfileScreenContent(
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
         PinnedPictures(
-            pinnedPictures = uiState.pinnedPictures,
+            pinnedBitmaps = uiState.pinnedBitmaps,
             isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedPictures = onEditPinnedPictures)
+            onEditPinnedPictures = onEditPinnedPictures,
+            isLoadingImages = uiState.isLoadingImages)
       }
 }
 
@@ -712,15 +715,16 @@ private fun PinnedTrips(
 /**
  * The pinned pictures section of the profile screen.
  *
- * @param pinnedPictures The list of pinned pictures.
+ * @param pinnedBitmaps The list of pinned pictures as bitmaps.
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  */
 @Composable
 private fun PinnedPictures(
-    pinnedPictures: List<Uri>,
+    pinnedBitmaps: List<Bitmap>,
     isOwnProfile: Boolean,
     onEditPinnedPictures: () -> Unit,
+    isLoadingImages: Boolean
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
@@ -740,29 +744,34 @@ private fun PinnedPictures(
               }
         }
       }
-  if (pinnedPictures.isEmpty()) {
+  if (pinnedBitmaps.isEmpty()) {
     val text =
         if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
         else stringResource(R.string.no_pinned_pictures)
     Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
   } else {
-    LazyRow(
-        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
-        horizontalArrangement =
-            Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
-        contentPadding =
-            PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
-          items(pinnedPictures) { uri ->
-            AsyncImage(
-                model = uri,
-                contentDescription = null,
-                modifier =
-                    Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
-                        .clip(
-                            RoundedCornerShape(dimensionResource(R.dimen.pinned_pictures_corner))),
-                contentScale = ContentScale.Crop)
+    if (isLoadingImages) {
+      CircularProgressIndicator()
+    } else {
+      LazyRow(
+          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
+          horizontalArrangement =
+              Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
+          contentPadding =
+              PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
+            items(pinnedBitmaps) { bitmap ->
+              Image(
+                  bitmap = bitmap.asImageBitmap(),
+                  contentDescription = null,
+                  modifier =
+                      Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
+                          .clip(
+                              RoundedCornerShape(
+                                  dimensionResource(R.dimen.pinned_pictures_corner))),
+                  contentScale = ContentScale.Crop)
+            }
           }
-        }
+    }
   }
 }
 
