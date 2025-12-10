@@ -69,6 +69,8 @@ import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
 import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.composable.TripListEvents
+import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.utils.NetworkUtils
@@ -702,12 +704,19 @@ private fun PinnedTrips(
         }
       }
 
+  val listState =
+      TripListState(
+          trips = pinnedTrips,
+          emptyListString =
+              if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
+              else stringResource(R.string.no_pinned_trips))
+
+  val listEvents =
+      TripListEvents(onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } })
+
   TripList(
-      trips = pinnedTrips,
-      onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
-      emptyListString =
-          if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
-          else stringResource(R.string.no_pinned_trips),
+      listState = listState,
+      listEvents = listEvents,
   )
 }
 

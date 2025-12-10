@@ -7,6 +7,7 @@ import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
@@ -247,5 +248,104 @@ class TripInfoViewModelTest {
             estimatedTime = 60)
     viewModel.selectActivity(activity)
     assertEquals(activity, viewModel.uiState.value.selectedActivity)
+  }
+
+  @Test
+  fun `loadCollaboratorData updates availableFriends and collaborators`() = runTest {
+    // Arrange
+    val ownerId = fakeUser.uid
+    val friend1 = fakeUser.copy(uid = "friend1", name = "Friend One")
+    val friend2 = fakeUser.copy(uid = "friend2", name = "Friend Two") // Already a collaborator
+    val collaboratorUser = friend2
+
+    val tripWithCollaborator =
+        dummyTrip.copy(ownerId = ownerId, collaboratorsId = listOf("friend2"))
+
+    // User has friend1 and friend2
+    val userWithFriends =
+        fakeUser.copy(
+            friends =
+                listOf(
+                    com.github.swent.swisstravel.model.user.Friend(
+                        "friend1", FriendStatus.ACCEPTED),
+                    com.github.swent.swisstravel.model.user.Friend(
+                        "friend2", FriendStatus.ACCEPTED)))
+
+    coEvery { userRepository.getCurrentUser() } returns userWithFriends
+    coEvery { tripsRepository.getTrip(tripWithCollaborator.uid) } returns tripWithCollaborator
+    coEvery { userRepository.getUserByUid("friend1") } returns friend1
+    coEvery { userRepository.getUserByUid("friend2") } returns collaboratorUser
+
+    // Initialize VM with the trip
+    viewModel.loadTripInfo(tripWithCollaborator.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Act
+    viewModel.loadCollaboratorData()
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Assert
+    val state = viewModel.uiState.value
+    // collaborators should contain friend2
+    assertEquals(1, state.collaborators.size)
+    assertEquals("friend2", state.collaborators[0].uid)
+
+    // availableFriends should contain friend1 but NOT friend2 (already collaborator)
+    assertEquals(1, state.availableFriends.size)
+    assertEquals("friend1", state.availableFriends[0].uid)
+  }
+
+  @Test
+  fun `addCollaborator calls shareTripWithUsers and reloads data`() = runTest {
+    // Arrange
+    val tripId = "trip1"
+    val initialTrip = dummyTrip.copy(uid = tripId, collaboratorsId = emptyList())
+    val newCollaborator = fakeUser.copy(uid = "newCollab")
+
+    coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+
+    // Mock the specific share method
+    coEvery { tripsRepository.shareTripWithUsers(tripId, any()) } just Runs
+
+    // Mock get user for the reload part
+    coEvery { userRepository.getUserByUid("newCollab") } returns newCollaborator
+
+    viewModel.loadTripInfo(tripId)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Act
+    viewModel.addCollaborator(newCollaborator)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Assert
+    coVerify { tripsRepository.shareTripWithUsers(tripId, listOf(newCollaborator.uid)) }
+  }
+
+  @Test
+  fun `removeCollaborator calls removeCollaborator and reloads data`() = runTest {
+    // Arrange
+    val tripId = "trip1"
+    val collaboratorToRemove = fakeUser.copy(uid = "collab1")
+    val initialTrip = dummyTrip.copy(uid = tripId, collaboratorsId = listOf("collab1", "collab2"))
+
+    coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+
+    // Mock the specific remove method
+    coEvery { tripsRepository.removeCollaborator(tripId, any()) } just Runs
+
+    // Mock loading the remaining collaborator (for reload)
+    coEvery { userRepository.getUserByUid("collab2") } returns fakeUser.copy(uid = "collab2")
+
+    viewModel.loadTripInfo(tripId)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Act
+    viewModel.removeCollaborator(collaboratorToRemove)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Assert
+    coVerify { tripsRepository.removeCollaborator(tripId, collaboratorToRemove.uid) }
   }
 }
