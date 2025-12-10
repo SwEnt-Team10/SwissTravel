@@ -60,13 +60,15 @@ class ImageRepositoryFirebaseTest {
     every { mockCollection.document(newUid).set(capture(slot)) } returns Tasks.forResult(null)
 
     // When
-    repo.addImage(base64)
+    val returnedUid = repo.addImage(base64)
 
     // Then
     verify { mockCollection.document(newUid).set(any()) }
     assertEquals(newUid, slot.captured.uid)
     assertEquals(userId, slot.captured.ownerId)
     assertEquals(base64, slot.captured.base64)
+    // Verify the function returned the correct UID
+    assertEquals(newUid, returnedUid)
   }
 
   @Test
