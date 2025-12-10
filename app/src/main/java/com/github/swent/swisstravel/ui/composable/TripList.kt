@@ -58,7 +58,7 @@ fun TripList(
     Text(text = emptyListString, modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
   }
 }
-//This function was made using AI
+// This function was made using AI
 fun LazyListScope.tripListItems(
     trips: List<Trip> = emptyList(),
     onClickTripElement: (Trip?) -> Unit = {},

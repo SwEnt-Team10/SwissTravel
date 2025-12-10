@@ -45,8 +45,7 @@ class MyTripsViewModel(tripsRepository: TripsRepository = TripsRepositoryProvide
       val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
 
       _uiState.value =
-          _uiState.value.copy(
-              currentTrip = currentTrip, tripsList = sortedTrips, isLoading = false)
+          _uiState.value.copy(currentTrip = currentTrip, tripsList = sortedTrips, isLoading = false)
     } catch (e: Exception) {
       Log.e("MyTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")

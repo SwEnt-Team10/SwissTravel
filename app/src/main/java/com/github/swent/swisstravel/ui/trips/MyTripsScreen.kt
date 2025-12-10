@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,7 +35,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
-import com.github.swent.swisstravel.ui.composable.sortedTripListItems
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,9 +53,9 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
-import com.github.swent.swisstravel.ui.composable.SortedTripList
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.sortedTripListItems
 
 /**
  * Contains constants for test tags used within [MyTripsScreen].
@@ -201,16 +199,17 @@ fun MyTripsScreen(
                     val listEvent =
                         TripListEvents(
                             onClickTripElement = {
-                                it?.let { trip ->
-                                    if (uiState.isSelectionMode) myTripsViewModel.toggleTripSelection(trip)
-                                    else onSelectTrip(trip.uid)
-                                }
+                              it?.let { trip ->
+                                if (uiState.isSelectionMode)
+                                    myTripsViewModel.toggleTripSelection(trip)
+                                else onSelectTrip(trip.uid)
+                              }
                             },
                             onLongPress = {
-                                it?.let { trip ->
-                                    myTripsViewModel.toggleSelectionMode(true)
-                                    myTripsViewModel.toggleTripSelection(trip)
-                                }
+                              it?.let { trip ->
+                                myTripsViewModel.toggleSelectionMode(true)
+                                myTripsViewModel.toggleTripSelection(trip)
+                              }
                             },
                         )
 
@@ -416,4 +415,3 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
  * @param onEnterSelectionMode Activates selection mode.
  * @param onSortSelected Updates trip sort order.
  */
-

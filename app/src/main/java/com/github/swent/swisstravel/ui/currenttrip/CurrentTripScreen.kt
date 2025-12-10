@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -25,15 +27,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
-import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenCallbacks
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
 
 /** Object for test tags */
@@ -70,21 +70,21 @@ fun CurrentTripScreen(
   val tripInfoState = tripInfoViewModel.uiState.collectAsState()
 
   if (currentTrip != null) {
-      PullToRefreshBox(
-          isRefreshing = tripInfoState.value.isLoading,
-          onRefresh = { tripInfoViewModel.loadTripInfo(currentTrip.uid) }) {
-            DailyViewScreen(
-                currentTrip.uid,
-                tripInfoViewModel = tripInfoViewModel,
-                isOnCurrentTripScreen = true,
-                callbacks =
-                    DailyViewScreenCallbacks(
-                        onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
-                        onSwipeActivities = { navigationActions?.navigateTo(Screen.SwipeActivities) },
-                        onLikedActivities = {
-                          navigationActions?.navigateTo(Screen.LikedActivities)
-                        }))
-          }
+    PullToRefreshBox(
+        isRefreshing = tripInfoState.value.isLoading,
+        onRefresh = { tripInfoViewModel.loadTripInfo(currentTrip.uid) }) {
+          DailyViewScreen(
+              currentTrip.uid,
+              tripInfoViewModel = tripInfoViewModel,
+              isOnCurrentTripScreen = true,
+              callbacks =
+                  DailyViewScreenCallbacks(
+                      onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
+                      onSwipeActivities = { navigationActions?.navigateTo(Screen.SwipeActivities) },
+                      onLikedActivities = {
+                        navigationActions?.navigateTo(Screen.LikedActivities)
+                      }))
+        }
   } else {
     PullToRefreshBox(
         isRefreshing = tripsState.value.isLoading,
@@ -127,8 +127,7 @@ fun CurrentTripScreen(
                           onClick = { navigationActions?.navigateTo(Screen.TripSettingsDates) },
                           enabled = isLoggedIn,
                           modifier =
-                              Modifier.height(
-                                      dimensionResource(R.dimen.current_trip_button_height))
+                              Modifier.height(dimensionResource(R.dimen.current_trip_button_height))
                                   .testTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)) {
                             Text(
                                 text = stringResource(R.string.when_travelling),

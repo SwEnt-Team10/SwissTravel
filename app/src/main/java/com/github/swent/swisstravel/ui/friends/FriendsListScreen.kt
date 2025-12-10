@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -23,6 +21,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.PersonAddAlt
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -41,7 +40,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 
 object FriendsScreenTestTags {
   const val FRIENDS_LIST = "friendsList"
@@ -110,7 +108,7 @@ fun FriendsListScreen(
                   contentDescription = stringResource(R.string.add_friend))
             }
       }) { padding ->
-      PullToRefreshBox(
+        PullToRefreshBox(
             isRefreshing = uiState.isLoading,
             onRefresh = { friendsViewModel.refreshFriends() },
             modifier = Modifier.padding(padding)) {
@@ -125,16 +123,20 @@ fun FriendsListScreen(
                     item {
                       PendingFriendRequestsSection(
                           pendingFriends = uiState.pendingFriends,
-                          onAccept = { friendUid -> friendsViewModel.acceptFriendRequest(friendUid) },
+                          onAccept = { friendUid ->
+                            friendsViewModel.acceptFriendRequest(friendUid)
+                          },
                           onDecline = { friendUid -> friendsViewModel.removeFriend(friendUid) })
                     }
 
-                    item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.friends_spacer))) }
+                    item {
+                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.friends_spacer)))
+                    }
 
                     friendsListItems(
                         friends = friendsViewModel.friendsToDisplay,
                         onSelectFriend = onSelectFriend,
-                        noFriendsText ="No friends")
+                        noFriendsText = "No friends")
                   }
             }
       }

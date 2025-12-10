@@ -129,9 +129,6 @@ fun ProfileScreen(
 
   val isOnline = NetworkUtils.isOnline(LocalContext.current)
   LaunchedEffect(isOnline) { profileViewModel.refreshStats(isOnline) }
-  if (isOnline) {
-    profileViewModel.refreshStats(isOnline)
-  }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
@@ -162,39 +159,39 @@ fun ProfileScreen(
             onSettings = onSettings,
             onUnfriend = { showUnfriendConfirmation = true })
       }) { pd ->
-      PullToRefreshBox(
-          isRefreshing = uiState.isLoading,
-          onRefresh = { profileViewModel.refreshStats(NetworkUtils.isOnline(context)) },
-          modifier = Modifier.padding(pd)) {
-            if (uiState.isLoading && uiState.stats.totalTrips == -1) {
-              Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center) {
-                      CircularProgressIndicator(
-                          modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
-                      Spacer(
-                          modifier =
-                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { profileViewModel.refreshStats(NetworkUtils.isOnline(context)) },
+            modifier = Modifier.padding(pd)) {
+              if (uiState.isLoading && uiState.stats.totalTrips == -1) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                  Column(
+                      horizontalAlignment = Alignment.CenterHorizontally,
+                      verticalArrangement = Arrangement.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
+                        Spacer(
+                            modifier =
+                                Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
 
-                      if (!isOnline) {
-                        Text(
-                            text = stringResource(R.string.loading_from_cache),
-                            modifier = Modifier.align(Alignment.CenterHorizontally))
+                        if (!isOnline) {
+                          Text(
+                              text = stringResource(R.string.loading_from_cache),
+                              modifier = Modifier.align(Alignment.CenterHorizontally))
+                        }
                       }
-                    }
+                }
+              } else {
+                ProfileScreenContent(
+                    uiState = uiState,
+                    onSelectTrip = onSelectTrip,
+                    onEditPinnedTrips = onEditPinnedTrips,
+                    onEditPinnedImages = {
+                      Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
+                    }, // todo onEditPinnedImages,
+                    modifier = Modifier)
               }
-            } else {
-              ProfileScreenContent(
-                  uiState = uiState,
-                  onSelectTrip = onSelectTrip,
-                  onEditPinnedTrips = onEditPinnedTrips,
-                  onEditPinnedImages = {
-                    Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
-                  }, // todo onEditPinnedImages,
-                  modifier = Modifier)
             }
-          }
       }
 }
 
