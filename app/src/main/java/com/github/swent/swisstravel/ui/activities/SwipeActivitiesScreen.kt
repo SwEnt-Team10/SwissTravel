@@ -55,12 +55,11 @@ object SwipeActivitiesScreenTestTags {
 @Composable
 fun SwipeActivitiesScreen(
     onTripInfo: () -> Unit = {},
-    tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
+    tripInfoVM: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
-  val viewModel = remember { SwipeActivitiesViewModel(tripInfoViewModel) }
   Scaffold(
       topBar = {
-        if (viewModel.uiState.collectAsState().value.currentActivity == null) {
+        if (tripInfoVM.uiState.collectAsState().value.currentActivity == null) {
           IconButton(
               onClick = onTripInfo,
               modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.BACK_BUTTON)) {
@@ -75,7 +74,7 @@ fun SwipeActivitiesScreen(
             modifier =
                 Modifier.padding(pd)
                     .testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) {
-              SwipeActivitiesStack(viewModel, onTripInfo)
+              SwipeActivitiesStack(tripInfoVM, onTripInfo)
             }
       }
 }
@@ -89,8 +88,8 @@ fun SwipeActivitiesScreen(
  * @param onTripInfo Callback to be called when navigating back to trip info.
  */
 @Composable
-fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> Unit) {
-  val state = viewModel.uiState.collectAsState().value
+fun SwipeActivitiesStack(tripInfoVM: TripInfoViewModelContract, onTripInfo: () -> Unit) {
+  val state = tripInfoVM.uiState.collectAsState().value
   val current = state.currentActivity
   val next = state.backActivity
 
@@ -106,13 +105,13 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
         key(activity.getName()) {
           SwipeableCard(
               activity = activity,
-              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onSwiped = { liked -> tripInfoVM.swipeActivity(liked) },
               onTripInfo)
         }
       }
     }
 
-    // Front card (current)
+    // Current card displayed on the screen
     current.let { activity ->
       if (activity == null) {
         Text(
@@ -122,7 +121,7 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
         key(activity.getName()) {
           SwipeableCard(
               activity = activity,
-              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onSwiped = { liked -> tripInfoVM.swipeActivity(liked) },
               onTripInfo = onTripInfo)
         }
       }
