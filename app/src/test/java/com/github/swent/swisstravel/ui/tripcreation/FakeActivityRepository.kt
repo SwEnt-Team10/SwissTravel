@@ -10,21 +10,27 @@ import com.github.swent.swisstravel.model.user.Preference
  * calls.
  */
 class FakeActivityRepository : ActivityRepository {
-  override suspend fun getMostPopularActivities(limit: Int, page: Int): List<Activity> {
+  override suspend fun getMostPopularActivities(
+      limit: Int,
+      page: Int,
+      activityBlackList: List<String>
+  ): List<Activity> {
     return emptyList()
   }
 
   override suspend fun getActivitiesNear(
       coordinate: Coordinate,
       radiusMeters: Int,
-      limit: Int
+      limit: Int,
+      activityBlackList: List<String>
   ): List<Activity> {
     return emptyList()
   }
 
   override suspend fun getActivitiesByPreferences(
       preferences: List<Preference>,
-      limit: Int
+      limit: Int,
+      activityBlackList: List<String>
   ): List<Activity> {
     return emptyList()
   }
@@ -37,7 +43,8 @@ class FakeActivityRepository : ActivityRepository {
       preferences: List<Preference>,
       coordinate: Coordinate,
       radiusMeters: Int,
-      limit: Int
+      limit: Int,
+      activityBlackList: List<String>
   ): List<Activity> {
     // This is the function called by SelectActivities.
     // Return an empty list or a specific list of mock activities if needed for your test.

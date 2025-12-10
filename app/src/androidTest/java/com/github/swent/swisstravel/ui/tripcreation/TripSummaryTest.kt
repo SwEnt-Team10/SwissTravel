@@ -68,18 +68,23 @@ class TripSummaryTest {
   }
   /** A fake implementation of ActivityRepository for UI testing. Avoids real API calls. */
   private class FakeActivityRepository : ActivityRepository {
-    override suspend fun getMostPopularActivities(limit: Int, page: Int): List<Activity> =
-        emptyList()
+    override suspend fun getMostPopularActivities(
+        limit: Int,
+        page: Int,
+        activityBlackList: List<String>
+    ): List<Activity> = emptyList()
 
     override suspend fun getActivitiesNear(
         coordinate: Coordinate,
         radiusMeters: Int,
-        limit: Int
+        limit: Int,
+        activityBlackList: List<String>
     ): List<Activity> = emptyList()
 
     override suspend fun getActivitiesByPreferences(
         preferences: List<Preference>,
-        limit: Int
+        limit: Int,
+        activityBlackList: List<String>
     ): List<Activity> = emptyList()
 
     override suspend fun searchDestinations(query: String, limit: Int): List<Activity> = emptyList()
@@ -88,7 +93,8 @@ class TripSummaryTest {
         preferences: List<Preference>,
         coordinate: Coordinate,
         radiusMeters: Int,
-        limit: Int
+        limit: Int,
+        activityBlackList: List<String>
     ): List<Activity> = emptyList()
   }
 }
