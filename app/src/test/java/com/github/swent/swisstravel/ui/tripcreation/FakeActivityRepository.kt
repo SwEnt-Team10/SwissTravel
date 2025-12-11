@@ -13,7 +13,8 @@ class FakeActivityRepository : ActivityRepository {
   override suspend fun getMostPopularActivities(
       limit: Int,
       page: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
     return emptyList()
   }
@@ -22,7 +23,8 @@ class FakeActivityRepository : ActivityRepository {
       coordinate: Coordinate,
       radiusMeters: Int,
       limit: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
     return emptyList()
   }
@@ -30,7 +32,8 @@ class FakeActivityRepository : ActivityRepository {
   override suspend fun getActivitiesByPreferences(
       preferences: List<Preference>,
       limit: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
     return emptyList()
   }
@@ -44,7 +47,8 @@ class FakeActivityRepository : ActivityRepository {
       coordinate: Coordinate,
       radiusMeters: Int,
       limit: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
     // This is the function called by SelectActivities.
     // Return an empty list or a specific list of mock activities if needed for your test.
