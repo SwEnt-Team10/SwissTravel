@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.friends
 
-import android.net.Uri
 import com.github.swent.swisstravel.model.user.Friend
 import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.Preference
@@ -119,7 +118,7 @@ private class FakeUserRepository : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedImagesUris: List<Uri>?
+      pinnedPicturesUids: List<String>?
   ) {
     // no-op in test
   }

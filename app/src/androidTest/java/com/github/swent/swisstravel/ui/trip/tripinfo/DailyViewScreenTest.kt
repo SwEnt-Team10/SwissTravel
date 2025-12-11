@@ -476,7 +476,7 @@ class DailyViewScreenTest {
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedImagesUris = emptyList())
+            pinnedPicturesUids = emptyList())
 
     // 2. Init VM with this collaborator
     val vm =

@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.ui.trips
 
 import android.content.Context
-import android.net.Uri
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
@@ -97,7 +96,7 @@ class FakeUserRepository : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedImagesUris: List<Uri>?
+      pinnedPicturesUids: List<String>?
   ) {}
 }
 
@@ -571,7 +570,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedImagesUris = emptyList())
+            pinnedPicturesUids = emptyList())
 
     // 2. Create a trip linked to this collaborator
     val sharedTrip =
