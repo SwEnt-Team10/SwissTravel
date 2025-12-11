@@ -97,10 +97,10 @@ class MapScreenViewModel : ViewModel() {
     if (_uiState.value.locationsList.size >= 2) requestRoute()
   }
 
-    fun updatePhotoPins(points: List<Point>) {
-        if (points == _uiState.value.photoPinsList) return
-        _uiState.value = _uiState.value.copy(photoPinsList = points)
-    }
+  fun updatePhotoPins(points: List<Point>) {
+    if (points == _uiState.value.photoPinsList) return
+    _uiState.value = _uiState.value.copy(photoPinsList = points)
+  }
 
   /**
    * Update the list of navigation points. Automatically requests a new route if there are at least

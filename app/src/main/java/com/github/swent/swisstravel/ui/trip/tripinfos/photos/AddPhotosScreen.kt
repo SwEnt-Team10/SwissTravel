@@ -3,7 +3,6 @@ package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -85,9 +84,7 @@ fun AddPhotosScreen(
         }
       }
   val launchPicker: (String) -> Unit =
-      launchPickerOverride ?: { type ->
-          pickerLauncher.launch(arrayOf(type))
-      }
+      launchPickerOverride ?: { type -> pickerLauncher.launch(arrayOf(type)) }
 
   val uiState by photosViewModel.uiState.collectAsState()
 
@@ -137,9 +134,7 @@ fun AddPhotosScreen(
                   // Add photos to the UI state button
                   Button(
                       modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
-                      onClick = {
-                        launchPicker("image/*")
-                      }) {
+                      onClick = { launchPicker("image/*") }) {
                         Text(text = stringResource(R.string.add_photos_button))
                       }
                 }
@@ -149,7 +144,7 @@ fun AddPhotosScreen(
                 columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
                 modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
                   // AI helped for the itemsIndexed
-                val displayList = uiState.uriLocation.keys.toList()
+                  val displayList = uiState.uriLocation.keys.toList()
                   itemsIndexed(displayList) { index, uri ->
                     AsyncImage(
                         modifier =

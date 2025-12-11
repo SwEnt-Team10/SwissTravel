@@ -104,8 +104,8 @@ fun EditPhotosScreen(
         LazyVerticalGrid(
             columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
             modifier = Modifier.padding(pd).testTag(EditPhotosScreenTestTags.EDIT_VERTICAL_GRID)) {
-            val displayList = uiState.uriLocation.keys.toList()
-            itemsIndexed(displayList) { index, uri ->
+              val displayList = uiState.uriLocation.keys.toList()
+              itemsIndexed(displayList) { index, uri ->
                 Box(modifier = Modifier.clickable { photosViewModel.selectToRemove(index) }) {
                   AsyncImage(
                       model = uri,

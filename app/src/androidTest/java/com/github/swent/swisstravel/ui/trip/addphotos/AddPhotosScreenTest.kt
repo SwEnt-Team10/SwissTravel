@@ -8,7 +8,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.core.net.toUri
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
@@ -33,6 +36,9 @@ class AddPhotosScreenTest : SwissTravelTest() {
     return TripRepositoryLocal()
   }
 
+  // Location factice pour les tests
+  private val dummyLocation = Location(Coordinate(0.0, 0.0), "Test Location")
+
   @Test
   fun checkAllComponentsAreDisplayedWithNoImage() = runTest {
     // Initialization of the fake repository and model
@@ -47,7 +53,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
             isFavorite = true,
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()
@@ -61,6 +67,8 @@ class AddPhotosScreenTest : SwissTravelTest() {
   @Test
   fun checkAllComponentsAreDisplayedWithImages() = runTest {
     // Initialization of the fake repository and model
+    val uri1 = "Uri1".toUri()
+    val uri2 = "AmazingUri2".toUri()
     val fakeTrip =
         Trip(
             uid = "10",
@@ -72,7 +80,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
             isFavorite = true,
             isCurrentTrip = true,
-            listUri = listOf("Uri1".toUri(), "AmazingUri2".toUri()),
+            uriLocation = mapOf(uri1 to dummyLocation, uri2 to dummyLocation),
             collaboratorsId = emptyList())
 
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
@@ -83,10 +91,14 @@ class AddPhotosScreenTest : SwissTravelTest() {
     }
     composeTestRule.addPhotosScreenIsDisplayed()
     composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID).isDisplayed()
-    for (i in fakeTrip.listUri.indices) {
+
+    // On itère sur le nombre d'éléments dans la map
+    val uriCount = fakeTrip.uriLocation.size
+    for (i in 0 until uriCount) {
       composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(i)).isDisplayed()
     }
   }
+
   // AI did the test
   @Test
   fun checkAddingImagesViaButton() = runTest {
@@ -101,7 +113,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
             isFavorite = true,
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()
@@ -111,8 +123,11 @@ class AddPhotosScreenTest : SwissTravelTest() {
           tripId = fakeTrip.uid,
           photosViewModel = fakeModel,
           launchPickerOverride = {
+            // Context requis pour addUris
             fakeModel.addUris(
-                listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()))
+                listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()),
+                ApplicationProvider.getApplicationContext(),
+                fakeTrip.uid)
           })
     }
 
@@ -125,6 +140,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
         .onChildren()
         .assertCountEquals(2)
   }
+
   // AI did the test
   @Test
   fun checkBackAndSaveButtonsTriggerOnBack() = runTest {
@@ -140,7 +156,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
             isFavorite = true,
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()
@@ -152,7 +168,9 @@ class AddPhotosScreenTest : SwissTravelTest() {
           onBack = { backCalled = true },
           launchPickerOverride = {
             fakeModel.addUris(
-                listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()))
+                listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()),
+                ApplicationProvider.getApplicationContext(),
+                fakeTrip.uid)
           })
     }
 

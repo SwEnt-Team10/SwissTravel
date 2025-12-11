@@ -9,7 +9,6 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.utils.photos.getPhotoLocation
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -49,13 +48,8 @@ class PhotosViewModel(
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(PhotosUIState())
   val uiState: StateFlow<PhotosUIState> = _uiState.asStateFlow()
-    private val defaultLocation = Location(
-        Coordinate(
-            latitude = 0.0,
-            longitude = 0.0
-        ),
-        name = "No location"
-    )
+  private val defaultLocation =
+      Location(Coordinate(latitude = 0.0, longitude = 0.0), name = "No location")
 
   /**
    * Add photos to the trip and save the trip on the repo.
@@ -101,7 +95,7 @@ class PhotosViewModel(
                   uriLocation = trip.uriLocation,
                   isLoading = false,
                   toastMessage = ToastMessages.LOAD_PHOTOS_SUCCESS,
-                  )
+              )
         } else {
           _uiState.value =
               _uiState.value.copy(
@@ -121,10 +115,9 @@ class PhotosViewModel(
    * @param uris the uris of the photos to add to the state
    */
   fun addUris(uris: List<Uri>, context: Context, tripId: String) {
-      val newEntries = uris.associateWith { uri ->
-          context.getPhotoLocation(uri, "Photo") ?: defaultLocation
-      }
-      _uiState.value = _uiState.value.copy(uriLocation = _uiState.value.uriLocation + newEntries)
+    val newEntries =
+        uris.associateWith { uri -> context.getPhotoLocation(uri, "Photo") ?: defaultLocation }
+    _uiState.value = _uiState.value.copy(uriLocation = _uiState.value.uriLocation + newEntries)
   }
 
   /**
@@ -152,11 +145,12 @@ class PhotosViewModel(
     val oldState = _uiState.value
     val selected = _uiState.value.uriSelected.toSet()
 
-      val currentKeys = oldState.uriLocation.keys.toList()
-      val newMap = oldState.uriLocation.filterKeys { uri ->
+    val currentKeys = oldState.uriLocation.keys.toList()
+    val newMap =
+        oldState.uriLocation.filterKeys { uri ->
           val index = currentKeys.indexOf(uri)
           index !in selected
-      }
+        }
 
     _uiState.value = _uiState.value.copy(uriLocation = newMap, uriSelected = emptyList())
     viewModelScope.launch {

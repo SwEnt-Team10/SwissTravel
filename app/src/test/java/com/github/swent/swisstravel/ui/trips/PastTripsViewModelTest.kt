@@ -525,8 +525,7 @@ class PastTripsViewModelTest {
             isFavorite = false,
             isCurrentTrip = false,
             emptyList(),
-            uriLocation = emptyMap()
-            )
+            uriLocation = emptyMap())
 
     coEvery { repository.getAllTrips() } returns listOf(trip)
     coEvery { repository.editTrip(any(), any()) } returns Unit
