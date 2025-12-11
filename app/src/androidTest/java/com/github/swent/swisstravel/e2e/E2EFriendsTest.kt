@@ -1,45 +1,45 @@
-//package com.github.swent.swisstravel.e2e
+// package com.github.swent.swisstravel.e2e
 //
-//import androidx.compose.ui.test.assertIsDisplayed
-//import androidx.compose.ui.test.junit4.createComposeRule
-//import androidx.compose.ui.test.onAllNodesWithTag
-//import androidx.compose.ui.test.onNodeWithTag
-//import androidx.compose.ui.test.onNodeWithText
-//import androidx.compose.ui.test.performClick
-//import androidx.compose.ui.test.performTextInput
-//import androidx.compose.ui.test.performTouchInput
-//import androidx.compose.ui.test.swipeDown
-//import androidx.test.espresso.action.ViewActions.swipeDown
-//import com.github.swent.swisstravel.SwissTravelApp
-//import com.github.swent.swisstravel.model.trip.Coordinate
-//import com.github.swent.swisstravel.model.trip.Location
-//import com.github.swent.swisstravel.model.trip.Trip
-//import com.github.swent.swisstravel.model.trip.TripProfile
-//import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
-//import com.github.swent.swisstravel.model.user.Preference
-//import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
-//import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
-//import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
-//import com.github.swent.swisstravel.ui.friends.AddFriendsScreenTestTags
-//import com.github.swent.swisstravel.ui.friends.FriendElementTestTags
-//import com.github.swent.swisstravel.ui.friends.FriendsScreenTestTags
-//import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-//import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
-//import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
-//import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
-//import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
-//import com.github.swent.swisstravel.utils.FakeCredentialManager
-//import com.github.swent.swisstravel.utils.FakeJwtGenerator
-//import com.github.swent.swisstravel.utils.FirebaseEmulator
-//import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
-//import com.google.firebase.Timestamp
-//import kotlinx.coroutines.runBlocking
-//import org.junit.After
-//import org.junit.Before
-//import org.junit.Rule
-//import org.junit.Test
+// import androidx.compose.ui.test.assertIsDisplayed
+// import androidx.compose.ui.test.junit4.createComposeRule
+// import androidx.compose.ui.test.onAllNodesWithTag
+// import androidx.compose.ui.test.onNodeWithTag
+// import androidx.compose.ui.test.onNodeWithText
+// import androidx.compose.ui.test.performClick
+// import androidx.compose.ui.test.performTextInput
+// import androidx.compose.ui.test.performTouchInput
+// import androidx.compose.ui.test.swipeDown
+// import androidx.test.espresso.action.ViewActions.swipeDown
+// import com.github.swent.swisstravel.SwissTravelApp
+// import com.github.swent.swisstravel.model.trip.Coordinate
+// import com.github.swent.swisstravel.model.trip.Location
+// import com.github.swent.swisstravel.model.trip.Trip
+// import com.github.swent.swisstravel.model.trip.TripProfile
+// import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+// import com.github.swent.swisstravel.model.user.Preference
+// import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+// import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
+// import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
+// import com.github.swent.swisstravel.ui.friends.AddFriendsScreenTestTags
+// import com.github.swent.swisstravel.ui.friends.FriendElementTestTags
+// import com.github.swent.swisstravel.ui.friends.FriendsScreenTestTags
+// import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
+// import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
+// import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
+// import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
+// import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
+// import com.github.swent.swisstravel.utils.FakeCredentialManager
+// import com.github.swent.swisstravel.utils.FakeJwtGenerator
+// import com.github.swent.swisstravel.utils.FirebaseEmulator
+// import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+// import com.google.firebase.Timestamp
+// import kotlinx.coroutines.runBlocking
+// import org.junit.After
+// import org.junit.Before
+// import org.junit.Rule
+// import org.junit.Test
 //
-///**
+/// **
 // * Done with the help of AI.
 // *
 // * End-to-end Friend Flow Test:
@@ -54,7 +54,7 @@
 // * 9) Alice clicks on Bob in the friends list.
 // * 10) Alice sees Bob's pinned trip.
 // */
-//class E2EFriendFlowTest : FirestoreSwissTravelTest() {
+// class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 //
 //  @get:Rule val composeTestRule = createComposeRule()
 //
@@ -70,7 +70,8 @@
 //    FirebaseEmulator.auth.signOut()
 //    FirebaseEmulator.clearAuthEmulator()
 //
-//    val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email = aliceEmail)
+//    val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email =
+// aliceEmail)
 //    val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
 //
 //    // Sequence: Alice (init), Bob (setup), Alice (accept & view)
@@ -276,4 +277,4 @@
 //        collaboratorsId = emptyList(),
 //        isRandom = false)
 //  }
-//}
+// }
