@@ -104,6 +104,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("collaboratorsId") } returns emptyList<String>()
     every { doc.getBoolean("random") } returns false
+    every { doc.get("cachedActivities") } returns emptyList<Map<String, Any>>()
 
     val trip = repo.getTrip("trip1")
 
@@ -165,6 +166,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("collaboratorsId") } returns emptyList<String>()
     every { doc.getBoolean("random") } returns false
+    every { doc.get("cachedActivities") } returns emptyList<Map<String, Any>>()
 
     val trip = repo.getTrip("tripImgUrls")
 
@@ -221,7 +223,8 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
-    every { doc.getBoolean("random") } returns false // Add this line
+    every { doc.getBoolean("random") } returns false
+    every { doc.get("cachedActivities") } returns emptyList<Map<String, Any>>()
 
     val trip = repo.getTrip("tripWithBadActivities")
 
@@ -257,7 +260,8 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap)
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
-    every { doc.getBoolean("random") } returns false // Add this line
+    every { doc.getBoolean("random") } returns false
+    every { doc.get("cachedActivities") } returns emptyList<Map<String, Any>>()
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)

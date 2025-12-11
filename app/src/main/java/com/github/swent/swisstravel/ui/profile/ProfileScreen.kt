@@ -1,7 +1,8 @@
 package com.github.swent.swisstravel.ui.profile
 
-import android.net.Uri
+import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,7 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -55,7 +56,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
@@ -85,9 +85,10 @@ object ProfileScreenTestTags {
   const val ACHIEVEMENTS = "achievements"
   const val PINNED_TRIPS_TITLE = "pinnedTripsTitle"
   const val PINNED_TRIPS_EDIT_BUTTON = "pinnedTripsEditButton"
-  const val PINNED_IMAGES_TITLE = "pinnedImagesTitle"
-  const val PINNED_IMAGES_LIST = "pinnedImagesList"
-  const val PINNED_IMAGES_EDIT_BUTTON = "pinnedImagesEditButton"
+  const val PINNED_PICTURES_TITLE = "pinnedPicturesTitle"
+  const val PINNED_PICTURES_LIST = "pinnedPicturesList"
+  const val EMPTY_PINNED_PICTURES = "emptyPinnedPictures"
+  const val PINNED_PICTURES_EDIT_BUTTON = "pinnedPicturesEditButton"
   const val CONFIRM_UNFRIEND_BUTTON = "confirmUnfriendButton"
   const val CANCEL_UNFRIEND_BUTTON = "cancelUnfriendButton"
   const val LOADING_INDICATOR = "loadingIndicator"
@@ -110,7 +111,7 @@ private const val BIOGRAPHY_MAX_LINES = 3
  * @param onSettings The callback to navigate to the settings screen.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,7 +121,7 @@ fun ProfileScreen(
     onSettings: () -> Unit = {},
     onSelectTrip: (String) -> Unit = {},
     onEditPinnedTrips: () -> Unit = {},
-    onEditPinnedImages: () -> Unit = {},
+    onEditPinnedPictures: () -> Unit = {},
     friendsViewModel: FriendsViewModel = viewModel(),
 ) {
   val context = LocalContext.current
@@ -182,9 +183,7 @@ fun ProfileScreen(
               uiState = uiState,
               onSelectTrip = onSelectTrip,
               onEditPinnedTrips = onEditPinnedTrips,
-              onEditPinnedImages = {
-                Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
-              }, // todo onEditPinnedImages,
+              onEditPinnedPictures = onEditPinnedPictures,
               modifier = Modifier.padding(pd))
         }
       }
@@ -254,7 +253,7 @@ private fun ProfileScreenTopBar(
  * @param uiState The state of the screen.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  * @param modifier The modifier to apply to the content.
  */
 @Composable
@@ -262,7 +261,7 @@ private fun ProfileScreenContent(
     uiState: ProfileUIState,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
-    onEditPinnedImages: () -> Unit = {},
+    onEditPinnedPictures: () -> Unit = {},
     modifier: Modifier
 ) {
   Column(
@@ -298,10 +297,11 @@ private fun ProfileScreenContent(
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-        PinnedImages(
-            pinnedImages = uiState.pinnedImages,
+        PinnedPictures(
+            pinnedBitmaps = uiState.pinnedBitmaps,
             isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedImages = onEditPinnedImages)
+            onEditPinnedPictures = onEditPinnedPictures,
+            isLoadingImages = uiState.isLoadingImages)
       }
 }
 
@@ -721,49 +721,65 @@ private fun PinnedTrips(
 }
 
 /**
- * The pinned images section of the profile screen.
+ * The pinned pictures section of the profile screen.
  *
- * @param pinnedImages The list of pinned images.
+ * @param pinnedBitmaps The list of pinned pictures as bitmaps.
  * @param isOwnProfile Whether the user is their own profile.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  */
 @Composable
-private fun PinnedImages(
-    pinnedImages: List<Uri>,
+private fun PinnedPictures(
+    pinnedBitmaps: List<Bitmap>,
     isOwnProfile: Boolean,
-    onEditPinnedImages: () -> Unit,
+    onEditPinnedPictures: () -> Unit,
+    isLoadingImages: Boolean
 ) {
   Row(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE),
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
       horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
-            text = stringResource(R.string.pinned_images),
+            text = stringResource(R.string.pinned_pictures),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground)
 
         if (isOwnProfile) {
           IconButton(
-              onClick = onEditPinnedImages,
-              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON)) {
+              onClick = onEditPinnedPictures,
+              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.edit_pinned_images))
+                    contentDescription = stringResource(R.string.edit_pinned_pictures))
               }
         }
       }
-  // TODO unfinished
-  LazyRow(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES_LIST),
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
-      contentPadding = PaddingValues(horizontal = 4.dp)) {
-        items(pinnedImages) { uri ->
-          AsyncImage(
-              model = uri,
-              contentDescription = null,
-              modifier = Modifier.height(120.dp).clip(RoundedCornerShape(16.dp)),
-              contentScale = ContentScale.Crop)
-        }
-      }
+  if (pinnedBitmaps.isEmpty()) {
+    val text =
+        if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
+        else stringResource(R.string.no_pinned_pictures)
+    Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
+  } else {
+    if (isLoadingImages) {
+      CircularProgressIndicator()
+    } else {
+      LazyRow(
+          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
+          horizontalArrangement =
+              Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
+          contentPadding =
+              PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
+            items(pinnedBitmaps) { bitmap ->
+              Image(
+                  bitmap = bitmap.asImageBitmap(),
+                  contentDescription = null,
+                  modifier =
+                      Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
+                          .clip(
+                              RoundedCornerShape(
+                                  dimensionResource(R.dimen.pinned_pictures_corner))))
+            }
+          }
+    }
+  }
 }
 
 /**

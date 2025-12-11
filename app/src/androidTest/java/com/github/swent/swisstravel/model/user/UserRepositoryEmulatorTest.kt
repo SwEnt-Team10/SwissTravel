@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.model.user
 
-import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
@@ -478,7 +477,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     val newProfilePicUrl = "http://example.com/new_avatar.png"
     val newPreferences = listOf(Preference.MUSEUMS, Preference.SCENIC_VIEWS)
     val newPinnedTripsUids = listOf("trip1", "trip2")
-    val newPinnedImagesUris = listOf("file://image1".toUri(), "file://image2".toUri())
+    val newPinnedImagesUids = listOf("image1uid", "image2uid")
 
     repositoryUser.updateUser(
         uid = uid,
@@ -487,7 +486,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = newProfilePicUrl,
         preferences = newPreferences,
         pinnedTripsUids = newPinnedTripsUids,
-        pinnedImagesUris = newPinnedImagesUris)
+        pinnedPicturesUids = newPinnedImagesUids)
 
     // Assert: read back the document
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -502,8 +501,8 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     val storedTrips = doc.get("pinnedTripsUids") as List<*>
     assertEquals(newPinnedTripsUids, storedTrips)
 
-    val storedImages = doc.get("pinnedImagesUris") as List<*>
-    assertEquals(newPinnedImagesUris.map { it.toString() }, storedImages)
+    val storedImages = doc.get("pinnedPicturesUids") as List<*>
+    assertEquals(newPinnedImagesUids, storedImages)
   }
 
   @Test
@@ -524,7 +523,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = null,
         preferences = null,
         pinnedTripsUids = null,
-        pinnedImagesUris = null)
+        pinnedPicturesUids = null)
 
     // Assert
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -535,7 +534,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     assertEquals("http://example.com/avatar.png", doc.getString("profilePicUrl"))
     assertTrue((doc.get("preferences") as? List<*>)?.isEmpty() ?: true)
     assertTrue((doc.get("pinnedTripsUids") as? List<*>)?.isEmpty() ?: true)
-    assertTrue((doc.get("pinnedImagesUris") as? List<*>)?.isEmpty() ?: true)
+    assertTrue((doc.get("pinnedPicturesUris") as? List<*>)?.isEmpty() ?: true)
   }
 
   @Test
@@ -555,7 +554,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = "http://example.com/guest.png",
         preferences = listOf(Preference.SCENIC_VIEWS),
         pinnedTripsUids = listOf("tripX"),
-        pinnedImagesUris = listOf("file://imageX".toUri()))
+        pinnedPicturesUids = listOf("imageUid"))
 
     // Assert: the document must still NOT exist after the update
     val after = FirebaseEmulator.firestore.collection("users").document(guestUid).get().await()
@@ -575,7 +574,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
         profilePicUrl = null,
         preferences = null,
         pinnedTripsUids = null,
-        pinnedImagesUris = null)
+        pinnedPicturesUids = null)
   }
 
   @Test

@@ -11,12 +11,14 @@ interface ActivityRepository {
    * @param limit Maximum number of activities to return.
    * @param page Page number of the response.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @return List of activities (could be empty if none found or request fails).
    */
   suspend fun getMostPopularActivities(
       limit: Int = 5,
       page: Int = 0,
-      activityBlackList: List<String> = emptyList()
+      activityBlackList: List<String> = emptyList(),
+      cachedActivities: MutableList<Activity> = mutableListOf()
   ): List<Activity>
 
   /**
@@ -26,27 +28,31 @@ interface ActivityRepository {
    * @param radiusMeters Search radius in meters.
    * @param limit Maximum number of activities to return.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @return List of activities (could be empty if none found or request fails).
    */
   suspend fun getActivitiesNear(
       coordinate: Coordinate,
       radiusMeters: Int = 5000,
       limit: Int = 5,
-      activityBlackList: List<String> = emptyList()
+      activityBlackList: List<String> = emptyList(),
+      cachedActivities: MutableList<Activity> = mutableListOf()
   ): List<Activity>
 
   /**
    * Fetches activities by category (e.g. "hiking", "museum") optionally filtered by area.
    *
-   * @param category The category of activities to search for.
+   * @param preferences The category of activities to search for.
    * @param limit Maximum number of activities to return.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @return List of activities (could be empty if none found or request fails).
    */
   suspend fun getActivitiesByPreferences(
       preferences: List<Preference>,
       limit: Int = 5,
-      activityBlackList: List<String> = emptyList()
+      activityBlackList: List<String> = emptyList(),
+      cachedActivities: MutableList<Activity> = mutableListOf()
   ): List<Activity>
 
   /**
@@ -69,6 +75,7 @@ interface ActivityRepository {
    * @param radiusMeters The radius in meters to search for activities.
    * @param limit The limit of the number of activities to return.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @return A list of activities near the given coordinate with the given preferences.
    */
   suspend fun getActivitiesNearWithPreference(
@@ -76,6 +83,7 @@ interface ActivityRepository {
       coordinate: Coordinate,
       radiusMeters: Int,
       limit: Int,
-      activityBlackList: List<String> = emptyList()
+      activityBlackList: List<String> = emptyList(),
+      cachedActivities: MutableList<Activity> = mutableListOf()
   ): List<Activity>
 }

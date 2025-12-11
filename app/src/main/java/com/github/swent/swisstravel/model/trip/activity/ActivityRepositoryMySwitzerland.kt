@@ -12,7 +12,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
 import kotlin.math.ceil
-import kotlin.random.Random
+import kotlin.math.max
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -260,43 +260,37 @@ class ActivityRepositoryMySwitzerland(
    * @param baseUrl The base URL to fetch activities from.
    * @param limit The limit of the number of valid activities to return.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities The list of activities to cache.
    * @return A list of valid activities up to the specified limit.
    */
   private suspend fun fetchValidActivitiesPaginated(
       baseUrl: HttpUrl,
       limit: Int,
-      activityBlackList: List<String> = emptyList()
+      activityBlackList: List<String> = emptyList(),
+      cachedActivities: MutableList<Activity> = mutableListOf()
   ): List<Activity> {
 
     val validResults = mutableListOf<Activity>()
-    var page = 0
 
-    while (validResults.size < limit) {
-      // Randomly increase the number of activities pulled to introduce randomness
-      val totalActivityPull = getActivityNumberToPull(limit, Random.nextDouble() < ACTIVITY_SHUFFLE)
-      val url =
-          baseUrl
-              .newBuilder()
-              .setQueryParameter("page", page.toString())
-              .setQueryParameter("hitsPerPage", totalActivityPull.toString())
-              .build()
+    val numberToFetch = max(10, ceil(limit * 1.5).toInt())
 
-      val pageActivities = fetchActivitiesFromUrl(url)
+    val url =
+        baseUrl.newBuilder().setQueryParameter("hitsPerPage", numberToFetch.toString()).build()
 
-      if (pageActivities.isEmpty()) break // no more pages
+    val pageActivities = fetchActivitiesFromUrl(url)
 
-      val filtered =
-          pageActivities.filter {
-            it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
-          }
+    val filtered =
+        pageActivities.filter {
+          it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
+        }
 
-      validResults.addAll(filtered)
-
-      page++
-    }
-    // Shuffle the results to introduce randomness since there can be many valid activities
+    validResults.addAll(filtered)
     validResults.shuffle()
-    return validResults.take(limit)
+
+    val returnedActivities = validResults.take(limit)
+    cachedActivities.addAll(validResults.drop(limit))
+
+    return returnedActivities
   }
 
   /**
@@ -323,14 +317,17 @@ class ActivityRepositoryMySwitzerland(
    * @param limit The limit of the number of activities to return.
    * @param page The page number for pagination.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities The list of activities to cache.
    * @return A list of the most popular activities.
    */
   override suspend fun getMostPopularActivities(
       limit: Int,
       page: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
-    return fetchValidActivitiesPaginated(baseHttpUrl, limit, activityBlackList)
+    return fetchValidActivitiesPaginated(
+        baseHttpUrl, limit, activityBlackList, cachedActivities = cachedActivities)
   }
 
   /**
@@ -340,13 +337,15 @@ class ActivityRepositoryMySwitzerland(
    * @param radiusMeters The radius in meters to search for activities.
    * @param limit The limit of the number of activities to return.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities The list of activities to cache.
    * @return A list of activities near the given coordinate.
    */
   override suspend fun getActivitiesNear(
       coordinate: Coordinate,
       radiusMeters: Int,
       limit: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
     val baseUrl =
         baseHttpUrl
@@ -355,7 +354,8 @@ class ActivityRepositoryMySwitzerland(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchValidActivitiesPaginated(baseUrl, limit, activityBlackList)
+    return fetchValidActivitiesPaginated(
+        baseUrl, limit, activityBlackList, cachedActivities = cachedActivities)
   }
 
   /**
@@ -364,15 +364,20 @@ class ActivityRepositoryMySwitzerland(
    * @param preferences The preferences to use.
    * @param limit The limit of the number of activities to return.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities The list of activities to cache.
    * @return A list of activities by the given preferences.
    */
   override suspend fun getActivitiesByPreferences(
       preferences: List<Preference>,
       limit: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
     return fetchValidActivitiesPaginated(
-        computeUrlWithPreferences(preferences, limit), limit, activityBlackList)
+        computeUrlWithPreferences(preferences, limit),
+        limit,
+        activityBlackList,
+        cachedActivities = cachedActivities)
   }
   /** Searches for destinations based on a text query. */
   override suspend fun searchDestinations(query: String, limit: Int): List<Activity> {
@@ -394,6 +399,7 @@ class ActivityRepositoryMySwitzerland(
    * @param radiusMeters The radius in meters to search for activities.
    * @param limit The limit of the number of activities to return.
    * @param activityBlackList The list of activity names to exclude.
+   * @param cachedActivities The list of activities to cache.
    * @return A list of activities near the given coordinate with the given preferences.
    */
   override suspend fun getActivitiesNearWithPreference(
@@ -401,7 +407,8 @@ class ActivityRepositoryMySwitzerland(
       coordinate: Coordinate,
       radiusMeters: Int,
       limit: Int,
-      activityBlackList: List<String>
+      activityBlackList: List<String>,
+      cachedActivities: MutableList<Activity>
   ): List<Activity> {
     val baseUrl =
         computeUrlWithPreferences(preferences, limit)
@@ -410,7 +417,8 @@ class ActivityRepositoryMySwitzerland(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchValidActivitiesPaginated(baseUrl, limit, activityBlackList)
+    return fetchValidActivitiesPaginated(
+        baseUrl, limit, activityBlackList, cachedActivities = cachedActivities)
   }
 
   /**
