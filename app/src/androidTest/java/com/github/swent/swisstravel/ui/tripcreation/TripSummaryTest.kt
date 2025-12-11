@@ -71,20 +71,23 @@ class TripSummaryTest {
     override suspend fun getMostPopularActivities(
         limit: Int,
         page: Int,
-        activityBlackList: List<String>
+        activityBlackList: List<String>,
+        cachedActivities: MutableList<Activity>
     ): List<Activity> = emptyList()
 
     override suspend fun getActivitiesNear(
         coordinate: Coordinate,
         radiusMeters: Int,
         limit: Int,
-        activityBlackList: List<String>
+        activityBlackList: List<String>,
+        cachedActivities: MutableList<Activity>
     ): List<Activity> = emptyList()
 
     override suspend fun getActivitiesByPreferences(
         preferences: List<Preference>,
         limit: Int,
-        activityBlackList: List<String>
+        activityBlackList: List<String>,
+        cachedActivities: MutableList<Activity>
     ): List<Activity> = emptyList()
 
     override suspend fun searchDestinations(query: String, limit: Int): List<Activity> = emptyList()
@@ -94,7 +97,8 @@ class TripSummaryTest {
         coordinate: Coordinate,
         radiusMeters: Int,
         limit: Int,
-        activityBlackList: List<String>
+        activityBlackList: List<String>,
+        cachedActivities: MutableList<Activity>
     ): List<Activity> = emptyList()
   }
 }

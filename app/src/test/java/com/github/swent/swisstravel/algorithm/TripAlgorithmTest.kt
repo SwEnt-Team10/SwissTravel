@@ -69,7 +69,8 @@ class TripAlgorithmTest {
 
     val activityElements = listOf(museumActivity)
 
-    coEvery { selectActivities.addActivities(any<(Float) -> Unit>()) } returns activityElements
+    coEvery { selectActivities.addActivities(any(), any<(Float) -> Unit>()) } returns
+        activityElements
 
     val orderedRoute =
         OrderedRoute(
@@ -166,7 +167,7 @@ class TripAlgorithmTest {
     val activity = mockk<Activity>()
     every { activity.location } returns coordinates[0]
 
-    coEvery { selectActivities.addActivities(any()) } returns listOf(activity)
+    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
 
     val invalidRoute =
         OrderedRoute(
@@ -214,7 +215,7 @@ class TripAlgorithmTest {
     val activity = mockk<Activity>()
     every { activity.location } returns coordinates[0]
 
-    coEvery { selectActivities.addActivities(any()) } returns listOf(activity)
+    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
 
     val validRoute =
         OrderedRoute(
@@ -346,7 +347,7 @@ class TripAlgorithmTest {
     every { activity.location } returns start
     every { activity.estimatedTime } returns 100
 
-    coEvery { selectActivities.addActivities(any()) } returns listOf(activity)
+    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
 
     val orderedRoute =
         OrderedRoute(
@@ -426,7 +427,7 @@ class TripAlgorithmTest {
     every { activity.location } returns start
     every { activity.estimatedTime } returns 100
 
-    coEvery { selectActivities.addActivities(any()) } returns listOf(activity)
+    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
 
     val orderedRoute =
         OrderedRoute(
