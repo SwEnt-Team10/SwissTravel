@@ -15,8 +15,12 @@ import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.TripElement
 import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
+/** Test tags for the [TripList] composable. */
 object TripListTestTags {
+  /** The tag for the lazy column containing the trips. */
   const val TRIP_LIST = "TripListLazyColumn"
+
+  /** The tag for the empty message text. */
   const val EMPTY_MESSAGE = "TripListEmptyMessage"
 }
 

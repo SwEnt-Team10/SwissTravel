@@ -42,14 +42,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
@@ -410,17 +408,3 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
         }
       }
 }
-
-/**
- * Displays the "Upcoming Trips" section.
- * - Shows a list of future trips.
- * - Allows sorting and trip selection.
- * - Handles empty-state UI.
- *
- * @param trips List of upcoming trips.
- * @param uiState Current trips UI state.
- * @param onSelectTrip Invoked when a trip is clicked.
- * @param onToggleSelection Toggles selection state of a trip.
- * @param onEnterSelectionMode Activates selection mode.
- * @param onSortSelected Updates trip sort order.
- */
