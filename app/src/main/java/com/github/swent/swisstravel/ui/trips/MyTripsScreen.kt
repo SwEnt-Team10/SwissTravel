@@ -198,7 +198,10 @@ fun MyTripsScreen(
                         TripListState(
                             trips = uiState.tripsList,
                             isSelectionMode = uiState.isSelectionMode,
-                            isSelected = { trip -> trip in uiState.selectedTrips })
+                            isSelected = { trip -> trip in uiState.selectedTrips },
+                            collaboratorsLookup = { uid ->
+                              uiState.collaboratorsByTripId[uid] ?: emptyList()
+                            })
                     val listEvent =
                         TripListEvents(
                             onClickTripElement = {
@@ -365,7 +368,8 @@ private fun CurrentTripSection(
           onToggleSelection(it)
         },
         isSelected = it in selectedTrips,
-        isSelectionMode = isSelectionMode)
+        isSelectionMode = isSelectionMode,
+        collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
   }
       ?: Text(
           text = stringResource(R.string.no_current_trip),
