@@ -169,8 +169,6 @@
     <string name="achievements">Achievements</string>
     <string name="pinned_trips">Pinned Trips</string>
     <string name="edit_pinned_trips">Edit Pinned Trips</string>
-    <string name="edit_no_pinned_trips">You don\'t have any pinned trips. Press the edit button to pin some!</string>
-    <string name="no_pinned_trips">No pinned trips here!</string>
     <string name="pinned_pictures">Pinned Pictures</string>
     <string name="edit_pinned_pictures">Edit Pinned Pictures</string>
     <string name="edit_no_pinned_pictures">You don\'t have any pinned pictures. Press the edit button to pin some!</string>
@@ -262,7 +260,6 @@
 
     <!-- Friends List -->
     <string name="friends_list">Friends</string>
-    <string name="no_friends">You have no friends added.</string>
     <string name="add_friend">Add Friend</string>
     <string name="search_friends">Search</string>
     <string name="close_search">Close Search</string>

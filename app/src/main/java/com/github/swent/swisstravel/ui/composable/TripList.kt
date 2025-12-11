@@ -24,19 +24,15 @@ object TripListTestTags {
  * A composable that displays a list of trips.
  *
  * @param trips The list of trips to display.
- * @param onClickTripElement Callback when a trip element is clicked.
- * @param onLongPress Callback when a trip element is long-pressed.
- * @param isSelected Function to determine if a trip is selected.
- * @param isSelectionMode Whether the selection mode is active.
+ * @param interaction The interaction and selection parameters.
+ * @param noIconTripElement Whether to hide the icon in the trip element.
  * @param emptyListString The string to display when the list is empty.
+ * @param collaboratorsLookup Function to lookup collaborators for a trip.
  */
 @Composable
 fun TripList(
     trips: List<Trip> = emptyList(),
-    onClickTripElement: (Trip?) -> Unit = {},
-    onLongPress: (Trip?) -> Unit = {},
-    isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false,
+    interaction: TripInteraction = TripInteraction(),
     noIconTripElement: Boolean = false,
     emptyListString: String = "",
     collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
@@ -50,10 +46,10 @@ fun TripList(
             val trip = trips[index]
             TripElement(
                 trip = trip,
-                onClick = { onClickTripElement(trip) },
-                onLongPress = { onLongPress(trip) },
-                isSelected = isSelected(trip),
-                isSelectionMode = isSelectionMode,
+                onClick = { interaction.onClick(trip) },
+                onLongPress = { interaction.onLongPress(trip) },
+                isSelected = interaction.isSelected(trip),
+                isSelectionMode = interaction.isSelectionMode,
                 noIcon = noIconTripElement,
                 collaborators = collaboratorsLookup(trip.uid))
           }
@@ -71,19 +67,14 @@ fun TripList(
  * of AI.
  *
  * @param trips The list of trips to display.
- * @param onClickTripElement Callback when a trip element is clicked.
- * @param onLongPress Callback when a trip element is long-pressed.
- * @param isSelected Function to determine if a trip is selected.
- * @param isSelectionMode Whether the selection mode is active.
+ * @param interaction The interaction and selection parameters.
  * @param noIconTripElement Whether to hide the icon in the trip element.
  * @param emptyListString The string to display when the list is empty.
+ * @param collaboratorsLookup Function to lookup collaborators for a trip.
  */
 fun LazyListScope.tripListItems(
     trips: List<Trip> = emptyList(),
-    onClickTripElement: (Trip?) -> Unit = {},
-    onLongPress: (Trip?) -> Unit = {},
-    isSelected: (Trip) -> Boolean = { false },
-    isSelectionMode: Boolean = false,
+    interaction: TripInteraction = TripInteraction(),
     noIconTripElement: Boolean = false,
     emptyListString: String = "",
     collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
@@ -93,10 +84,10 @@ fun LazyListScope.tripListItems(
       val trip = trips[index]
       TripElement(
           trip = trip,
-          onClick = { onClickTripElement(trip) },
-          onLongPress = { onLongPress(trip) },
-          isSelected = isSelected(trip),
-          isSelectionMode = isSelectionMode,
+          onClick = { interaction.onClick(trip) },
+          onLongPress = { interaction.onLongPress(trip) },
+          isSelected = interaction.isSelected(trip),
+          isSelectionMode = interaction.isSelectionMode,
           noIcon = noIconTripElement,
           collaborators = collaboratorsLookup(trip.uid))
     }

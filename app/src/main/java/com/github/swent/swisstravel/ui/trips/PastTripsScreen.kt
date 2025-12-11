@@ -40,6 +40,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
+import com.github.swent.swisstravel.ui.composable.TripInteraction
 import com.github.swent.swisstravel.ui.composable.TripList
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
@@ -136,23 +137,25 @@ fun PastTripsScreen(
                         bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))) {
               TripList(
                   trips = uiState.tripsList,
-                  onClickTripElement = {
-                    it?.let { trip ->
-                      if (uiState.isSelectionMode) {
-                        pastTripsViewModel.toggleTripSelection(it)
-                      } else {
-                        onSelectTrip(trip.uid)
-                      }
-                    }
-                  },
-                  onLongPress = {
-                    it?.let { _ ->
-                      pastTripsViewModel.toggleSelectionMode(true)
-                      pastTripsViewModel.toggleTripSelection(it)
-                    }
-                  },
-                  isSelected = { trip -> trip in uiState.selectedTrips },
-                  isSelectionMode = uiState.isSelectionMode,
+                  interaction =
+                      TripInteraction(
+                          onClick = {
+                            it?.let { trip ->
+                              if (uiState.isSelectionMode) {
+                                pastTripsViewModel.toggleTripSelection(it)
+                              } else {
+                                onSelectTrip(trip.uid)
+                              }
+                            }
+                          },
+                          onLongPress = {
+                            it?.let { _ ->
+                              pastTripsViewModel.toggleSelectionMode(true)
+                              pastTripsViewModel.toggleTripSelection(it)
+                            }
+                          },
+                          isSelected = { trip -> trip in uiState.selectedTrips },
+                          isSelectionMode = uiState.isSelectionMode),
                   emptyListString = stringResource(R.string.no_past_trips))
             }
       })

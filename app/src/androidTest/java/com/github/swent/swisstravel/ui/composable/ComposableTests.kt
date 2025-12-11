@@ -84,7 +84,10 @@ class ComposableTests : InMemorySwissTravelTest() {
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.PREFERENCE_SELECTOR)
         .assertIsDisplayed()
-    for (preference in Preference.values().filter { it != Preference.WHEELCHAIR_ACCESSIBLE }) {
+    for (preference in
+        Preference.values().filter {
+          it != Preference.WHEELCHAIR_ACCESSIBLE && it != Preference.PUBLIC_TRANSPORT
+        }) {
       composeTestRule
           .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(preference))
           .assertIsDisplayed()
@@ -188,8 +191,8 @@ class ComposableTests : InMemorySwissTravelTest() {
     composeTestRule.setContent {
       TripList(
           trips = tripList,
-          onClickTripElement = { clicked = it },
-          onLongPress = { longPressed = it })
+          interaction =
+              TripInteraction(onClick = { clicked = it }, onLongPress = { longPressed = it }))
     }
 
     composeTestRule.onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()

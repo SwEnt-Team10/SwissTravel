@@ -69,6 +69,7 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
+import com.github.swent.swisstravel.ui.composable.TripInteraction
 import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -296,7 +297,10 @@ fun ProfileScreenContent(
 
         tripListItems(
             trips = uiState.pinnedTrips,
-            onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } },
+            interaction =
+                TripInteraction(
+                    onClick = { trip -> trip?.let { onSelectTrip(it.uid) } },
+                ),
             emptyListString = if (uiState.isOwnProfile) NO_USER_PINNED_TRIPS else NO_PINNED_TRIPS)
 
         item {

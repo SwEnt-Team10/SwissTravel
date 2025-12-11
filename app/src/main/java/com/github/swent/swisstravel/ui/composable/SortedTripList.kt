@@ -100,10 +100,12 @@ fun SortedTripList(
 
     TripList(
         trips = listState.trips,
-        onClickTripElement = listEvents.onClickTripElement,
-        onLongPress = listEvents.onLongPress,
-        isSelected = listState.isSelected,
-        isSelectionMode = listState.isSelectionMode,
+        interaction =
+            TripInteraction(
+                onClick = listEvents.onClickTripElement,
+                onLongPress = listEvents.onLongPress,
+                isSelected = listState.isSelected,
+                isSelectionMode = listState.isSelectionMode),
         noIconTripElement = listState.noIconTripElement,
         emptyListString = listState.emptyListString,
         collaboratorsLookup = listState.collaboratorsLookup)
@@ -149,10 +151,12 @@ fun LazyListScope.sortedTripListItems(
 
   tripListItems(
       trips = listState.trips,
-      onClickTripElement = listEvents.onClickTripElement,
-      onLongPress = listEvents.onLongPress,
-      isSelected = listState.isSelected,
-      isSelectionMode = listState.isSelectionMode,
+      interaction =
+          TripInteraction(
+              onClick = listEvents.onClickTripElement,
+              onLongPress = listEvents.onLongPress,
+              isSelected = listState.isSelected,
+              isSelectionMode = listState.isSelectionMode),
       noIconTripElement = listState.noIconTripElement,
       emptyListString = listState.emptyListString,
       collaboratorsLookup = listState.collaboratorsLookup)

@@ -49,6 +49,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
@@ -115,7 +116,7 @@ fun MyTripsScreen(
   // Handle back press while in selection mode
   BackHandler(enabled = uiState.isSelectionMode) { myTripsViewModel.toggleSelectionMode(false) }
 
-  val lifecycleOwner = LocalLifecycleOwner.current
+  val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
   // This piece of code is to make sure that the trips recompose after creating a trip, had issues
   // before
