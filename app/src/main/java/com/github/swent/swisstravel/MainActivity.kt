@@ -57,6 +57,8 @@ import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModelFactory
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreen
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesViewModel
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreen
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsViewModel
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
@@ -398,7 +400,7 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },
-          onEditPinnedImages = { /* TODO */})
+          onEditPinnedPictures = { navigationActions.navigateTo(Screen.SelectPinnedPictures) })
     }
     composable(Screen.ProfileSettings.route) {
       ProfileSettingsScreen(
@@ -411,6 +413,11 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
           selectPinnedTripsViewModel = SelectPinnedTripsViewModel(),
           onBack = { navigationActions.goBack() },
       )
+    }
+    composable(Screen.SelectPinnedPictures.route) {
+      SelectPinnedPicturesScreen(
+          selectPinnedPicturesViewModel = SelectPinnedPicturesViewModel(),
+          onBack = { navigationActions.goBack() })
     }
   }
 }

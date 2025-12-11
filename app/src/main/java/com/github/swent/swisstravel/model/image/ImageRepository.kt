@@ -7,8 +7,10 @@ interface ImageRepository {
    * Adds a new image to the repository.
    *
    * @param base64 The base64-encoded representation of the image.
+   * @return The unique identifier of the newly added image.
+   * @throws Exception if the image could not be added.
    */
-  suspend fun addImage(base64: String)
+  suspend fun addImage(base64: String): String
 
   /**
    * Retrieves an image by its unique identifier.

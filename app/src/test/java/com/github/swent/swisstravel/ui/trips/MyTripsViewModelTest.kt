@@ -692,7 +692,7 @@ class MyTripsViewModelTest {
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedImagesUris = emptyList())
+            pinnedPicturesUids = emptyList())
 
     // Mock behaviors
     coEvery { userRepository.getUserByUid(collaboratorId) } returns user
