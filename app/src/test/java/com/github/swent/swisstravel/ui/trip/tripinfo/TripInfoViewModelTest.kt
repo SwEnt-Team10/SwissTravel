@@ -64,7 +64,7 @@ class TripInfoViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
-          pinnedImagesUris = emptyList())
+          pinnedPicturesUids = emptyList())
 
   @Before
   fun setup() {

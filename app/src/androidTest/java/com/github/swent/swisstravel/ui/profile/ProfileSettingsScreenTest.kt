@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.profile
 
-import android.net.Uri
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
@@ -35,7 +34,7 @@ class FakeUserRepository : UserRepository {
         friends = emptyList(),
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
-        pinnedImagesUris = emptyList())
+        pinnedPicturesUids = emptyList())
   }
 
   override suspend fun getUserByUid(uid: String): User? {
@@ -71,7 +70,7 @@ class FakeUserRepository : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedImagesUris: List<Uri>?
+      pinnedPicturesUids: List<String>?
   ) {
     // no-op in tests
   }
@@ -94,7 +93,7 @@ val emptyUserRepo =
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedImagesUris = emptyList())
+            pinnedPicturesUids = emptyList())
       }
 
       override suspend fun getUserByUid(uid: String): User? {
@@ -132,7 +131,7 @@ val emptyUserRepo =
           profilePicUrl: String?,
           preferences: List<Preference>?,
           pinnedTripsUids: List<String>?,
-          pinnedImagesUris: List<Uri>?
+          pinnedPicturesUids: List<String>?
       ) {
         /** no-op for tests* */
       }

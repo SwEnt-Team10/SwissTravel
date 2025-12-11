@@ -1,7 +1,5 @@
 package com.github.swent.swisstravel.model.user
 
-import android.net.Uri
-import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -40,8 +38,8 @@ class UserRepositoryFirebase(
                 friends = emptyList(),
                 stats = UserStats(),
                 pinnedTripsUids = emptyList(),
-                pinnedImagesUris = emptyList(),
-                favoriteTripsUids = emptyList(),
+                pinnedPicturesUids = emptyList(),
+                favoriteTripsUids = emptyList()
             )
 
     val uid = firebaseUser.uid
@@ -342,7 +340,7 @@ class UserRepositoryFirebase(
    * @param profilePicUrl Optional new profile picture URL.
    * @param preferences Optional list of updated preferences.
    * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
-   * @param pinnedImagesUris Optional updated list of pinned image URIs.
+   * @param pinnedPicturesUids Optional updated list of pinned picture UIDs.
    */
   override suspend fun updateUser(
       uid: String,
@@ -351,7 +349,7 @@ class UserRepositoryFirebase(
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedImagesUris: List<Uri>?
+      pinnedPicturesUids: List<String>?
   ) {
     if (uid == "guest") return
 
@@ -362,8 +360,7 @@ class UserRepositoryFirebase(
     if (profilePicUrl != null) updates["profilePicUrl"] = profilePicUrl
     if (preferences != null) updates["preferences"] = preferences.map { it.name }
     if (pinnedTripsUids != null) updates["pinnedTripsUids"] = pinnedTripsUids
-    if (pinnedImagesUris != null)
-        updates["pinnedImagesUris"] = pinnedImagesUris.map { it.toString() }
+    if (pinnedPicturesUids != null) updates["pinnedPicturesUids"] = pinnedPicturesUids
 
     // If nothing to update, skip Firestore
     if (updates.isEmpty()) return
@@ -418,8 +415,8 @@ class UserRepositoryFirebase(
     val stats = parseStats(doc)
     val pinnedTripsUids =
         (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
-    val pinnedImagesUrisStrings = doc["pinnedImagesUris"] as? List<*> ?: emptyList<Uri>()
-    val pinnedImagesUris = pinnedImagesUrisStrings.mapNotNull { (it as? String)?.toUri() }
+    val pinnedPicturesUids =
+        (doc["pinnedPicturesUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val favoriteTripsUids =
         (doc["favoriteTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
@@ -433,7 +430,7 @@ class UserRepositoryFirebase(
         friends = friends,
         stats = stats,
         pinnedTripsUids = pinnedTripsUids,
-        pinnedImagesUris = pinnedImagesUris,
+        pinnedPicturesUids = pinnedPicturesUids,
         favoriteTripsUids = favoriteTripsUids)
   }
 
@@ -456,7 +453,7 @@ class UserRepositoryFirebase(
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedImagesUris = emptyList(),
+            pinnedPicturesUids = emptyList(),
             favoriteTripsUids = emptyList())
 
     db.collection("users").document(uid).set(newUser).await()
