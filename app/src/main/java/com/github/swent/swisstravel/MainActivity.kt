@@ -14,7 +14,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -79,6 +81,7 @@ import com.github.swent.swisstravel.ui.trips.MyTripsViewModel
 import com.github.swent.swisstravel.ui.trips.PastTripsScreen
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreen
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import okhttp3.OkHttpClient
 
 /**
@@ -130,6 +133,22 @@ class MainActivity : ComponentActivity() {
       }
     }
   }
+}
+
+/** Helper to observe the current Firebase user reactively. */
+@Composable
+fun rememberCurrentUser(): State<FirebaseUser?> {
+  val auth = remember { FirebaseAuth.getInstance() }
+  val currentUser = remember { mutableStateOf(auth.currentUser) }
+
+  DisposableEffect(auth) {
+    val listener =
+        FirebaseAuth.AuthStateListener { authState -> currentUser.value = authState.currentUser }
+    auth.addAuthStateListener(listener)
+    onDispose { auth.removeAuthStateListener(listener) }
+  }
+
+  return currentUser
 }
 
 /**
@@ -195,17 +214,22 @@ fun SwissTravelApp(
   val myTripsViewModel: MyTripsViewModel = viewModel()
   val myTripsUiState by myTripsViewModel.uiState.collectAsState()
 
-  val currentUser = FirebaseAuth.getInstance().currentUser
-  val startDestination =
-      if ((currentUser != null && currentUser.isEmailVerified) ||
-          currentUser?.isAnonymous == true) {
-        Screen.CurrentTrip.name
-      } else {
-        if (currentUser != null) {
-          FirebaseAuth.getInstance().signOut()
-        }
-        Screen.Landing.name
-      }
+  val currentUser = rememberCurrentUser().value
+
+  val isUserValid =
+      (currentUser != null && currentUser.isEmailVerified) || currentUser?.isAnonymous == true
+
+  // Only determine start destination once based on initial state
+  val startDestination = remember {
+    if (isUserValid) Screen.CurrentTrip.name else Screen.Landing.name
+  }
+
+  // Redirect to Landing if user becomes invalid (e.g. logs out)
+  LaunchedEffect(isUserValid) {
+    if (!isUserValid) {
+      FirebaseAuth.getInstance().signOut()
+    }
+  }
 
   val navBackStackEntry by navController.currentBackStackEntryAsState()
   val currentRoute = navBackStackEntry?.destination?.route
@@ -368,12 +392,11 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
       route = Screen.Profile.name,
   ) {
     composable(Screen.Profile.route) {
+      val uid = rememberCurrentUser().value?.uid ?: ""
+
       ProfileScreen(
           profileViewModel =
-              viewModel(
-                  factory =
-                      ProfileViewModelFactory(
-                          requestedUid = FirebaseAuth.getInstance().currentUser?.uid ?: "")),
+              viewModel(key = uid, factory = ProfileViewModelFactory(requestedUid = uid)),
           onSettings = { navigationActions.navigateTo(Screen.ProfileSettings) },
           onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
           onEditPinnedTrips = { navigationActions.navigateTo(Screen.SelectPinnedTrips) },
