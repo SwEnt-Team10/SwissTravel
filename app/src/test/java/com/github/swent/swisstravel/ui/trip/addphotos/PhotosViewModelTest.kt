@@ -1,7 +1,9 @@
 package com.github.swent.swisstravel.ui.trip.addphotos
 
+import android.content.Context
 import android.net.Uri
-import androidx.core.net.toUri
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
@@ -24,343 +26,365 @@ import org.mockito.Mockito.`when`
 /** Unit tests for AddPhotosViewModel */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PhotosViewModelTest {
-  // Fake values
-  private val fakeUris = listOf("uri1".toUri(), "uri2".toUri())
-  // Fake trip
-  private val fakeTrip =
-      Trip(
-          uid = "1",
-          name = "fake trip",
-          ownerId = "100",
-          locations = emptyList(),
-          routeSegments = emptyList(),
-          activities = emptyList(),
-          tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
-          isFavorite = true,
-          isCurrentTrip = true,
-          listUri = fakeUris,
-          collaboratorsId = emptyList())
+    // Fake values
+    // Utilisation de mocks pour éviter les problèmes de toUri() qui renvoie null en test unitaire
+    private val fakeUri1 = mock(Uri::class.java)
+    private val fakeUri2 = mock(Uri::class.java)
+    private val fakeLocation1 = Location(Coordinate(0.0, 1.0), "No location1")
+    private val fakeLocation2 = Location(Coordinate(0.0, 0.0), "No location2")
 
-  private val testDispatcher = UnconfinedTestDispatcher()
+    // Cette location correspond à la valeur par défaut dans le ViewModel
+    private val defaultLocation = Location(Coordinate(0.0, 0.0), "No location")
 
-  @Before
-  fun setup() {
-    Dispatchers.setMain(testDispatcher)
-  }
+    private val fakeUriLocation = mapOf(fakeUri1 to fakeLocation1, fakeUri2 to fakeLocation2)
 
-  @After
-  fun tearDown() {
-    Dispatchers.resetMain()
-  }
+    // Fake trip
+    private val fakeTrip =
+        Trip(
+            uid = "1",
+            name = "fake trip",
+            ownerId = "100",
+            locations = emptyList(),
+            routeSegments = emptyList(),
+            activities = emptyList(),
+            tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
+            isFavorite = true,
+            isCurrentTrip = true,
+            collaboratorsId = emptyList(),
+            uriLocation = fakeUriLocation
+        )
 
-  @Test
-  fun `test loadPhotos correctly load the photos`() = runTest {
+    private val testDispatcher = UnconfinedTestDispatcher()
 
-    // Set the model
-    val tripRepository = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(tripRepository)
+    @Before
+    fun setup() {
+        Dispatchers.setMain(testDispatcher)
+    }
 
-    // Set up the mock to return the fake trip
-    `when`(tripRepository.getTrip("0")).thenReturn(fakeTrip)
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
 
-    // Load photos and verify that it is correctly done
-    photosViewModel.loadPhotos("0")
-    assertEquals(fakeUris, photosViewModel.uiState.value.listUri)
-    assertEquals(false, photosViewModel.uiState.value.isLoading)
-    assertEquals("Successfully loaded the photos", photosViewModel.uiState.value.toastMessage)
-  }
+    @Test
+    fun `test loadPhotos correctly load the photos`() = runTest {
+        // Set the model
+        val tripRepository = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(tripRepository)
 
-  @Test
-  fun `test loadPhotos correctly load the photo`() = runTest {
+        // Set up the mock to return the fake trip
+        `when`(tripRepository.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
 
-    // Set the model
-    val tripRepository = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(tripRepository)
+        // Load photos and verify that it is correctly done
+        photosViewModel.loadPhotos(fakeTrip.uid)
+        assertEquals(fakeUriLocation, photosViewModel.uiState.value.uriLocation)
+        assertEquals(false, photosViewModel.uiState.value.isLoading)
+        assertEquals("Successfully loaded the photos", photosViewModel.uiState.value.toastMessage)
+    }
 
-    val fakeTripNoPhoto = fakeTrip.copy(listUri = emptyList())
-    // Set up the mock to return the fake trip
-    `when`(tripRepository.getTrip(fakeTripNoPhoto.uid)).thenReturn(fakeTripNoPhoto)
+    @Test
+    fun `test loadPhotos correctly load the photo`() = runTest {
+        // Set the model
+        val tripRepository = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(tripRepository)
 
-    // Load photos and verify that it is correctly done
-    photosViewModel.loadPhotos(fakeTripNoPhoto.uid)
-    val state = photosViewModel.uiState
-    assertEquals(fakeTripNoPhoto.listUri, state.value.listUri)
-    assertEquals(false, state.value.isLoading)
-    assertEquals("Successfully loaded the photo", state.value.toastMessage)
-  }
+        val fakeTripNoPhoto = fakeTrip.copy(uriLocation = emptyMap())
+        // Set up the mock to return the fake trip
+        `when`(tripRepository.getTrip(fakeTripNoPhoto.uid)).thenReturn(fakeTripNoPhoto)
 
-  @Test
-  fun `loadPhotos will fail on getTrip for a trip with photos`() = runTest {
+        // Load photos and verify that it is correctly done
+        photosViewModel.loadPhotos(fakeTripNoPhoto.uid)
+        val state = photosViewModel.uiState
+        assertEquals(fakeTripNoPhoto.uriLocation, state.value.uriLocation)
+        assertEquals(false, state.value.isLoading)
+        assertEquals("Successfully loaded the photo", state.value.toastMessage)
+    }
 
-    // Set the model
-    val fakeRepository = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(fakeRepository)
-    `when`(fakeRepository.getTrip(fakeTrip.uid)).thenThrow(RuntimeException("Could not get trip"))
+    @Test
+    fun `loadPhotos will fail on getTrip for a trip with photos`() = runTest {
+        // Set the model
+        val fakeRepository = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(fakeRepository)
+        `when`(fakeRepository.getTrip(fakeTrip.uid)).thenThrow(RuntimeException("Could not get trip"))
 
-    // Try to load
-    photosViewModel.loadPhotos(fakeTrip.uid)
+        // Try to load
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Verify
-    assertEquals(false, photosViewModel.uiState.value.isLoading)
-    assert(photosViewModel.uiState.value.errorLoading)
-  }
+        // Verify
+        assertEquals(false, photosViewModel.uiState.value.isLoading)
+        assert(photosViewModel.uiState.value.errorLoading)
+    }
 
-  @Test
-  fun `test addUri correctly adds new uri to the list`() = runTest {
+    @Test
+    fun `test addUri correctly adds new uri to the list`() = runTest {
+        // Set the model
+        val tripRepository = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(tripRepository)
+        val mockContext = mock(Context::class.java)
 
-    // Set the model
-    val tripRepository = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(tripRepository)
+        // Set up the mock to return the fake trip
+        `when`(tripRepository.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
 
-    // Set up the mock to return the fake trip
-    `when`(tripRepository.getTrip("0")).thenReturn(fakeTrip)
+        // Load the state
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Load the state
-    photosViewModel.loadPhotos("0")
+        // Add new photos to the state (USING MOCKS)
+        val newUri1 = mock(Uri::class.java)
+        val newUri2 = mock(Uri::class.java)
+        val newUris = listOf(newUri1, newUri2)
 
-    // Add new photos to the state
-    val newUris = listOf("newUri1".toUri(), "newUri2".toUri())
-    photosViewModel.addUris(newUris)
+        photosViewModel.addUris(newUris, mockContext, fakeTrip.uid)
 
-    // Verify that the new list of Uris is the concatenation of the
-    val expectedList = fakeUris + newUris
-    assertEquals(expectedList, photosViewModel.uiState.value.listUri)
-    assertEquals(newUris.size + fakeTrip.listUri.size, photosViewModel.uiState.value.listUri.size)
-  }
+        // Verify that the new list of Uris is the concatenation
+        val expectedMap = fakeUriLocation + newUris.associateWith { defaultLocation }
 
-  @Test
-  fun `test savePhotos correctly adds new uris to the repository`() = runTest {
+        assertEquals(expectedMap, photosViewModel.uiState.value.uriLocation)
+        assertEquals(expectedMap.size, photosViewModel.uiState.value.uriLocation.size)
+    }
 
-    // Set the model
-    val fakeRepo = TripRepositoryLocal()
-    fakeRepo.addTrip(fakeTrip)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+    @Test
+    fun `test savePhotos correctly adds new uris to the repository`() = runTest {
+        // Set the model
+        val fakeRepo = TripRepositoryLocal()
+        fakeRepo.addTrip(fakeTrip)
+        val photosViewModel = PhotosViewModel(fakeRepo)
+        val mockContext = mock(Context::class.java)
 
-    // Load the state
-    photosViewModel.loadPhotos("1")
+        // Load the state
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Add new photos to the state
-    val newUris = listOf("newUri1".toUri(), "newUri2".toUri())
-    photosViewModel.addUris(newUris)
+        // Add new photos to the state (USING MOCKS)
+        val newUri1 = mock(Uri::class.java)
+        val newUri2 = mock(Uri::class.java)
+        val newUris = listOf(newUri1, newUri2)
 
-    // Save to the repository
-    photosViewModel.savePhotos("1")
-    val expectedList = fakeUris + newUris
+        photosViewModel.addUris(newUris, mockContext, fakeTrip.uid)
 
-    // Verify
-    assertEquals(expectedList, fakeRepo.getTrip("1").listUri)
-    assertEquals("Photos saved", photosViewModel.uiState.value.toastMessage)
-  }
+        // Save to the repository
+        photosViewModel.savePhotos(fakeTrip.uid)
 
-  @Test
-  fun `test savePhotos correctly adds new uri to the repository`() = runTest {
+        // The expected map contains old uris + new uris
+        val expectedMap = fakeUriLocation + newUris.associateWith { defaultLocation }
 
-    // Set the model
-    val fakeRepo = TripRepositoryLocal()
-    fakeRepo.addTrip(fakeTrip)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+        // Verify
+        assertEquals(expectedMap, fakeRepo.getTrip(fakeTrip.uid).uriLocation)
+        assertEquals("Photo saved", photosViewModel.uiState.value.toastMessage)
+    }
 
-    // Load the state
-    photosViewModel.loadPhotos("1")
+    @Test
+    fun `test savePhotos correctly adds new uri to the repository`() = runTest {
+        // Set the model
+        val fakeRepo = TripRepositoryLocal()
+        fakeRepo.addTrip(fakeTrip)
+        val photosViewModel = PhotosViewModel(fakeRepo)
+        val mockContext = mock(Context::class.java)
 
-    // Add new photos to the state
-    val newUris = listOf("newUri1".toUri())
-    photosViewModel.addUris(newUris)
+        // Load the state
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Save to the repository
-    photosViewModel.savePhotos("1")
-    val expectedList = fakeUris + newUris
+        // Add new photos to the state (USING MOCK)
+        val newUri = mock(Uri::class.java)
+        val newUris = listOf(newUri)
 
-    // Verify
-    assertEquals(expectedList, fakeRepo.getTrip("1").listUri)
-    assertEquals("Photo saved", photosViewModel.uiState.value.toastMessage)
-  }
+        photosViewModel.addUris(newUris, mockContext, fakeTrip.uid)
 
-  @Test
-  fun `savePhotos correctly set the toast message when getTrip throws exception`() = runTest {
-    // Set up
-    val mockRepo = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(mockRepo)
+        // Save to the repository
+        photosViewModel.savePhotos(fakeTrip.uid)
+        val expectedMap = fakeUriLocation + newUris.associateWith { defaultLocation }
 
-    // New Uris
-    photosViewModel.addUris(listOf("newUri1".toUri(), "newUri2".toUri()))
+        // Verify
+        assertEquals(expectedMap, fakeRepo.getTrip(fakeTrip.uid).uriLocation)
+        assertEquals("Photo saved", photosViewModel.uiState.value.toastMessage)
+    }
 
-    // Get trip will fail
-    `when`(mockRepo.getTrip("0")).thenThrow(RuntimeException("Could not get the trip"))
-
-    // Try to save
-    photosViewModel.savePhotos("0")
-
-    // Verify
-    assertEquals("Could not save the photos", photosViewModel.uiState.value.toastMessage)
-  }
-
-  @Test
-  fun `savePhotos correctly sets toast message when getTrip throws exception with one photo`() =
-      runTest {
-
+    @Test
+    fun `savePhotos correctly set the toast message when getTrip throws exception`() = runTest {
         // Set up
         val mockRepo = mock(TripsRepository::class.java)
         val photosViewModel = PhotosViewModel(mockRepo)
+        val mockContext = mock(Context::class.java)
 
-        // The trip has no photo
-        val fakeTripNoPhoto = fakeTrip.copy(listUri = emptyList())
+        // New Uris (USING MOCKS)
+        val newUri1 = mock(Uri::class.java)
+        val newUri2 = mock(Uri::class.java)
+        val newUris = listOf(newUri1, newUri2)
 
-        // Add one uri
-        val newUri = listOf("newUri1".toUri())
+        photosViewModel.addUris(newUris, mockContext, fakeTrip.uid)
 
-        // getTrip will fail
-        `when`(mockRepo.getTrip(fakeTripNoPhoto.uid))
-            .thenThrow(RuntimeException("Could not get the trip"))
+        // Get trip will fail
+        `when`(mockRepo.getTrip(fakeTrip.uid)).thenThrow(RuntimeException("Could not get the trip"))
 
-        photosViewModel.addUris(newUri)
-
-        photosViewModel.savePhotos(fakeTripNoPhoto.uid)
+        // Try to save
+        photosViewModel.savePhotos(fakeTrip.uid)
 
         // Verify
         assertEquals("Could not save the photo", photosViewModel.uiState.value.toastMessage)
-      }
+    }
 
-  @Test
-  fun `selectToRemove correctly add index when there is not the index`() = runTest {
-    // Set the model
-    val fakeRepo = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+    @Test
+    fun `savePhotos correctly sets toast message when getTrip throws exception with one photo`() =
+        runTest {
+            // Set up
+            val mockRepo = mock(TripsRepository::class.java)
+            val photosViewModel = PhotosViewModel(mockRepo)
+            val mockContext = mock(Context::class.java)
 
-    // Set up the mock to return the fake trip
-    `when`(fakeRepo.getTrip("0")).thenReturn(fakeTrip)
+            // The trip has no photo
+            val fakeTripNoPhoto = fakeTrip.copy(uriLocation = emptyMap())
 
-    // Load the state
-    photosViewModel.loadPhotos("0")
+            // Add one uri (USING MOCK)
+            val newUri = mock(Uri::class.java)
+            val newUris = listOf(newUri)
 
-    // Add first photo to remove
-    photosViewModel.selectToRemove(0)
+            // getTrip will fail
+            `when`(mockRepo.getTrip(fakeTripNoPhoto.uid))
+                .thenThrow(RuntimeException("Could not get the trip"))
 
-    // Verify
-    val expected = listOf(0)
-    assertEquals(expected, photosViewModel.uiState.value.uriSelected)
-  }
+            photosViewModel.addUris(newUris, mockContext, fakeTripNoPhoto.uid)
 
-  @Test
-  fun `selectToRemove correctly remove index when the index is already there`() = runTest {
-    // Set the model
-    val fakeRepo = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+            photosViewModel.savePhotos(fakeTripNoPhoto.uid)
 
-    // Set up the mock to return the fake trip
-    `when`(fakeRepo.getTrip("0")).thenReturn(fakeTrip)
+            // Verify
+            assertEquals("Could not save the photo", photosViewModel.uiState.value.toastMessage)
+        }
 
-    // Load the state
-    photosViewModel.loadPhotos("0")
+    @Test
+    fun `selectToRemove correctly add index when there is not the index`() = runTest {
+        // Set the model
+        val fakeRepo = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(fakeRepo)
 
-    // Add first photo to remove
-    photosViewModel.selectToRemove(0)
+        // Set up the mock to return the fake trip
+        `when`(fakeRepo.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
 
-    // Remove first photo to remove
-    photosViewModel.selectToRemove(0)
+        // Load the state
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Verify
-    val expected = emptyList<Int>()
-    assertEquals(expected, photosViewModel.uiState.value.uriSelected)
-  }
+        // Add first photo to remove
+        photosViewModel.selectToRemove(0)
 
-  @Test
-  fun `removePhotos correctly remove selected photos to the state`() = runTest {
+        // Verify
+        val expected = listOf(0)
+        assertEquals(expected, photosViewModel.uiState.value.uriSelected)
+    }
 
-    // Set the model
-    val fakeRepo = TripRepositoryLocal()
-    fakeRepo.addTrip(fakeTrip)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+    @Test
+    fun `selectToRemove correctly remove index when the index is already there`() = runTest {
+        // Set the model
+        val fakeRepo = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(fakeRepo)
 
-    // Load the state
-    photosViewModel.loadPhotos("1")
+        // Set up the mock to return the fake trip
+        `when`(fakeRepo.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
 
-    // Add photos to remove
-    photosViewModel.selectToRemove(0)
-    photosViewModel.selectToRemove(1)
+        // Load the state
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Remove photos
-    photosViewModel.removePhotos("1")
+        // Add first photo to remove
+        photosViewModel.selectToRemove(0)
 
-    // Verify
-    val expected = emptyList<Uri>()
-    assertEquals(expected, photosViewModel.uiState.value.listUri)
-    assertEquals(expected, fakeRepo.getTrip("1").listUri)
-    assertEquals("Photos removed", photosViewModel.uiState.value.toastMessage)
-  }
+        // Remove first photo to remove
+        photosViewModel.selectToRemove(0)
 
-  @Test
-  fun `removePhotos correctly remove selected photo to the state`() = runTest {
+        // Verify
+        val expected = emptyList<Int>()
+        assertEquals(expected, photosViewModel.uiState.value.uriSelected)
+    }
 
-    // Set the model
-    val fakeRepo = TripRepositoryLocal()
-    fakeRepo.addTrip(fakeTrip)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+    @Test
+    fun `removePhotos correctly remove selected photos to the state`() = runTest {
+        // Set the model
+        val fakeRepo = TripRepositoryLocal()
+        fakeRepo.addTrip(fakeTrip)
+        val photosViewModel = PhotosViewModel(fakeRepo)
 
-    // Load the state
-    photosViewModel.loadPhotos("1")
+        // Load the state
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Add photos to remove
-    photosViewModel.selectToRemove(1)
+        // Add photos to remove
+        photosViewModel.selectToRemove(0)
+        photosViewModel.selectToRemove(1)
 
-    // Remove photos
-    photosViewModel.removePhotos("1")
+        // Remove photos
+        photosViewModel.removePhotos(fakeTrip.uid)
 
-    // Verify
-    val expected = listOf(fakeTrip.listUri[0])
-    assertEquals(expected, photosViewModel.uiState.value.listUri)
-    assertEquals(expected, fakeRepo.getTrip("1").listUri)
-    assertEquals("Photo removed", photosViewModel.uiState.value.toastMessage)
-  }
+        // Verify
+        val expected = emptyMap<Uri, Location>()
+        assertEquals(expected, photosViewModel.uiState.value.uriLocation)
+        assertEquals(expected, fakeRepo.getTrip(fakeTrip.uid).uriLocation)
+        assertEquals("Photos removed", photosViewModel.uiState.value.toastMessage)
+    }
 
-  @Test
-  fun `removePhotos fails on getTrip case several photos`() = runTest {
+    @Test
+    fun `removePhotos correctly remove selected photo to the state`() = runTest {
+        // Set the model
+        val fakeRepo = TripRepositoryLocal()
+        fakeRepo.addTrip(fakeTrip)
+        val photosViewModel = PhotosViewModel(fakeRepo)
 
-    // Set the model
-    val fakeRepo = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+        // Load the state
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Load photos
-    `when`(fakeRepo.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
-    photosViewModel.loadPhotos(fakeTrip.uid)
+        // Add photos to remove
+        photosViewModel.selectToRemove(1)
 
-    // Select to remove
-    photosViewModel.selectToRemove(0)
-    photosViewModel.selectToRemove(1)
-    val selected = listOf(0, 1)
+        // Remove photos
+        photosViewModel.removePhotos(fakeTrip.uid)
 
-    // Try to remove
-    `when`(fakeRepo.getTrip(fakeTrip.uid)).thenThrow(RuntimeException("Could not get trip"))
-    photosViewModel.removePhotos(fakeTrip.uid)
+        // Verify
+        // fakeUriLocation uses fakeUri1 (index 0) and fakeUri2 (index 1). Removing index 1 leaves fakeUri1.
+        val expected = mapOf(fakeUri1 to fakeLocation1)
+        assertEquals(expected, photosViewModel.uiState.value.uriLocation)
+        assertEquals(expected, fakeRepo.getTrip(fakeTrip.uid).uriLocation)
+        assertEquals("Photo removed", photosViewModel.uiState.value.toastMessage)
+    }
 
-    // Verify
-    val state = photosViewModel.uiState
-    assertEquals("Could not remove the photos", state.value.toastMessage)
-    assertEquals(selected, state.value.uriSelected)
-  }
+    @Test
+    fun `removePhotos fails on getTrip case several photos`() = runTest {
+        // Set the model
+        val fakeRepo = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(fakeRepo)
 
-  @Test
-  fun `removePhotos fails on getTrip case one photo`() = runTest {
+        // Load photos
+        `when`(fakeRepo.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
+        photosViewModel.loadPhotos(fakeTrip.uid)
 
-    // Set the model
-    val fakeRepo = mock(TripsRepository::class.java)
-    val photosViewModel = PhotosViewModel(fakeRepo)
+        // Select to remove
+        photosViewModel.selectToRemove(0)
+        photosViewModel.selectToRemove(1)
+        val selected = listOf(0, 1)
 
-    // Load photos
-    `when`(fakeRepo.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
-    photosViewModel.loadPhotos(fakeTrip.uid)
+        // Try to remove
+        `when`(fakeRepo.getTrip(fakeTrip.uid)).thenThrow(RuntimeException("Could not get trip"))
+        photosViewModel.removePhotos(fakeTrip.uid)
 
-    // Select to remove
-    photosViewModel.selectToRemove(0)
-    val selected = listOf(0)
+        // Verify
+        val state = photosViewModel.uiState
+        assertEquals("Could not remove the photos", state.value.toastMessage)
+        assertEquals(selected, state.value.uriSelected)
+    }
 
-    // Try to remove
-    `when`(fakeRepo.getTrip(fakeTrip.uid)).thenThrow(RuntimeException("Could not get trip"))
-    photosViewModel.removePhotos(fakeTrip.uid)
+    @Test
+    fun `removePhotos fails on getTrip case one photo`() = runTest {
+        // Set the model
+        val fakeRepo = mock(TripsRepository::class.java)
+        val photosViewModel = PhotosViewModel(fakeRepo)
 
-    // Verify
-    val state = photosViewModel.uiState
-    assertEquals("Could not remove the photo", state.value.toastMessage)
-    assertEquals(selected, state.value.uriSelected)
-  }
+        // Load photos
+        `when`(fakeRepo.getTrip(fakeTrip.uid)).thenReturn(fakeTrip)
+        photosViewModel.loadPhotos(fakeTrip.uid)
+
+        // Select to remove
+        photosViewModel.selectToRemove(0)
+        val selected = listOf(0)
+
+        // Try to remove
+        `when`(fakeRepo.getTrip(fakeTrip.uid)).thenThrow(RuntimeException("Could not get trip"))
+        photosViewModel.removePhotos(fakeTrip.uid)
+
+        // Verify
+        val state = photosViewModel.uiState
+        assertEquals("Could not remove the photo", state.value.toastMessage)
+        assertEquals(selected, state.value.uriSelected)
+    }
 }

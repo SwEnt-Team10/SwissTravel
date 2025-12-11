@@ -348,7 +348,7 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
     every { mockCollection.document("t1") } returns mockDocumentRef
@@ -383,7 +383,7 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
 
@@ -410,7 +410,7 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
 
@@ -434,7 +434,7 @@ class TripsRepositoryFirestorePublicTest {
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
 

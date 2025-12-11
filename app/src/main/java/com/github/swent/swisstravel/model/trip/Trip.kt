@@ -46,6 +46,7 @@ data class Trip(
     val collaboratorsId: List<String>,
     val isRandom: Boolean = false,
     val uriLocation: Map<Uri, Location>
+
 ) {
   /**
    * Checks if the user is the owner of the trip.
