@@ -28,9 +28,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.SortMenu
+import com.github.swent.swisstravel.ui.composable.TripInteraction
 import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.composable.TripListEvents
-import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.trips.TripSortType
 import com.github.swent.swisstravel.ui.trips.TripsViewModel
@@ -120,20 +119,16 @@ fun SelectPinnedTripsScreen(
                         start = dimensionResource(R.dimen.past_trips_padding_start_end),
                         end = dimensionResource(R.dimen.past_trips_padding_start_end),
                         bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))) {
-              val listState =
-                  TripListState(
-                      trips = uiState.tripsList,
-                      isSelected = { trip -> trip in uiState.selectedTrips },
-                      isSelectionMode = uiState.isSelectionMode,
-                      emptyListString = stringResource(R.string.no_trips))
-
-              val listEvents =
-                  TripListEvents(
-                      onClickTripElement = {
-                        it?.let { selectPinnedTripsViewModel.toggleTripSelection(it) }
-                      })
-
-              TripList(listState = listState, listEvents = listEvents)
+              TripList(
+                  trips = uiState.tripsList,
+                  interaction =
+                      TripInteraction(
+                          onClick = {
+                            it?.let { selectPinnedTripsViewModel.toggleTripSelection(it) }
+                          },
+                          isSelected = { trip -> trip in uiState.selectedTrips },
+                          isSelectionMode = uiState.isSelectionMode),
+                  emptyListString = stringResource(R.string.no_trips))
             }
       })
 }

@@ -41,23 +41,24 @@ class MyTripsViewModel(
    * active sorting type to upcoming trips.
    */
   override suspend fun getAllTrips() {
-    viewModelScope.launch {
-      try {
-        val trips = tripsRepository.getAllTrips()
-        val currentTrip = trips.find { it.isCurrent() }
-        val upcomingTrips = trips.filter { it.isUpcoming() }
-        val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
-        val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
+    _uiState.value = _uiState.value.copy(isLoading = true)
+    try {
+      val trips = tripsRepository.getAllTrips()
+      val currentTrip = trips.find { it.isCurrent() }
+      val upcomingTrips = trips.filter { it.isUpcoming() }
+      val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType)
+      val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
-        _uiState.value =
-            _uiState.value.copy(
-                currentTrip = currentTrip,
-                tripsList = sortedTrips,
-                collaboratorsByTripId = collaboratorsByTrip)
-      } catch (e: Exception) {
-        Log.e("MyTripsViewModel", "Error fetching trips", e)
-        setErrorMsg("Failed to load trips.")
-      }
+      _uiState.value =
+          _uiState.value.copy(
+              currentTrip = currentTrip,
+              tripsList = sortedTrips,
+              collaboratorsByTripId = collaboratorsByTrip,
+              isLoading = false)
+    } catch (e: Exception) {
+      Log.e("MyTripsViewModel", "Error fetching trips", e)
+      setErrorMsg("Failed to load trips.")
+      _uiState.value = _uiState.value.copy(isLoading = false)
     }
   }
 

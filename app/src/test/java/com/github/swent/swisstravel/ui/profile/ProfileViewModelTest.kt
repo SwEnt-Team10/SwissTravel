@@ -94,7 +94,7 @@ class ProfileViewModelTest {
     viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    viewModel.refreshStats(isOnline = false)
+    viewModel.refresh(isOnline = false)
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify(exactly = 0) { userRepository.updateUserStats(any(), any()) }
@@ -109,7 +109,7 @@ class ProfileViewModelTest {
     viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    viewModel.refreshStats(isOnline = true)
+    viewModel.refresh(isOnline = true)
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify(exactly = 1) { userRepository.updateUserStats(fakeUser.uid, any()) }
@@ -125,7 +125,7 @@ class ProfileViewModelTest {
     viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, otherUserUid)
     testDispatcher.scheduler.advanceUntilIdle()
 
-    viewModel.refreshStats(isOnline = true)
+    viewModel.refresh(isOnline = true)
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify(exactly = 0) { userRepository.updateUserStats(any(), any()) }
