@@ -40,7 +40,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
@@ -58,7 +57,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
@@ -76,7 +74,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
@@ -94,7 +91,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
@@ -110,7 +106,8 @@ class SelectPinnedTripsViewModelTest {
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
-          pinnedPicturesUids = emptyList())
+          pinnedPicturesUids = emptyList(),
+          favoriteTripsUids = emptyList())
 
   @Before
   fun setup() {

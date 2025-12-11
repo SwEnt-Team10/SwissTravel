@@ -39,8 +39,7 @@ class UserRepositoryFirebase(
                 stats = UserStats(),
                 pinnedTripsUids = emptyList(),
                 pinnedPicturesUids = emptyList(),
-                favoriteTripsUids = emptyList()
-            )
+                favoriteTripsUids = emptyList())
 
     val uid = firebaseUser.uid
     return try {

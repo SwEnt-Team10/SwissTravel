@@ -99,7 +99,6 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.get("routeSegments") } returns listOf(routeSegmentMap)
     every { doc.get("activities") } returns listOf(activityMap)
     every { doc.get("tripProfile") } returns tripProfileMap
-    every { doc.getBoolean("favorite") } returns true
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("collaboratorsId") } returns emptyList<String>()
@@ -114,7 +113,6 @@ class TripsRepositoryFirestorePublicTest {
     assertTrue(trip.routeSegments.isNotEmpty())
     assertTrue(trip.activities.isNotEmpty())
     assertEquals(1, trip.tripProfile.preferences.size)
-    assertTrue(trip.isFavorite)
   }
 
   @Test
@@ -160,7 +158,6 @@ class TripsRepositoryFirestorePublicTest {
             "children" to 0L,
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
-    every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.get("listUri") } returns emptyList<Uri>()
     every { doc.get("collaboratorsId") } returns emptyList<String>()
@@ -219,7 +216,6 @@ class TripsRepositoryFirestorePublicTest {
             "children" to 0L,
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
-    every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.getBoolean("random") } returns false // Add this line
 
@@ -255,7 +251,6 @@ class TripsRepositoryFirestorePublicTest {
             "children" to 0L,
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
-    every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.getBoolean("random") } returns false // Add this line
 
@@ -313,9 +308,7 @@ class TripsRepositoryFirestorePublicTest {
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
     // IMPORTANT: use the same key as in documentToTrip
-    every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
-    every { doc.getBoolean("isFavorite") } returns false
     every { doc.getBoolean("random") } returns false
 
     // Act
@@ -346,7 +339,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList(),
@@ -381,7 +373,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList(),
@@ -408,7 +399,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList(),
@@ -432,7 +422,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList(),
@@ -500,7 +489,6 @@ class TripsRepositoryFirestorePublicTest {
             "children" to 0L,
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
-    every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
 
     // Act
