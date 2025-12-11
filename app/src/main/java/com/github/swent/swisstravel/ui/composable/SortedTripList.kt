@@ -105,7 +105,8 @@ fun SortedTripList(
         isSelected = listState.isSelected,
         isSelectionMode = listState.isSelectionMode,
         noIconTripElement = listState.noIconTripElement,
-        emptyListString = listState.emptyListString)
+        emptyListString = listState.emptyListString,
+        collaboratorsLookup = listState.collaboratorsLookup)
   }
 }
 
@@ -153,5 +154,6 @@ fun LazyListScope.sortedTripListItems(
       isSelected = listState.isSelected,
       isSelectionMode = listState.isSelectionMode,
       noIconTripElement = listState.noIconTripElement,
-      emptyListString = listState.emptyListString)
+      emptyListString = listState.emptyListString,
+      collaboratorsLookup = listState.collaboratorsLookup)
 }

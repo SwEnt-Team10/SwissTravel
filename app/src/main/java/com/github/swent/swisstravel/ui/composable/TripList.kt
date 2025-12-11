@@ -13,6 +13,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trips.TripElement
+import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
 object TripListTestTags {
   const val TRIP_LIST = "TripListLazyColumn"
@@ -38,6 +39,7 @@ fun TripList(
     isSelectionMode: Boolean = false,
     noIconTripElement: Boolean = false,
     emptyListString: String = "",
+    collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
 ) {
   if (trips.isNotEmpty()) {
     LazyColumn(
@@ -52,7 +54,8 @@ fun TripList(
                 onLongPress = { onLongPress(trip) },
                 isSelected = isSelected(trip),
                 isSelectionMode = isSelectionMode,
-                noIcon = noIconTripElement)
+                noIcon = noIconTripElement,
+                collaborators = collaboratorsLookup(trip.uid))
           }
         }
   } else {
@@ -83,6 +86,7 @@ fun LazyListScope.tripListItems(
     isSelectionMode: Boolean = false,
     noIconTripElement: Boolean = false,
     emptyListString: String = "",
+    collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
 ) {
   if (trips.isNotEmpty()) {
     items(trips.size) { index ->
@@ -93,7 +97,8 @@ fun LazyListScope.tripListItems(
           onLongPress = { onLongPress(trip) },
           isSelected = isSelected(trip),
           isSelectionMode = isSelectionMode,
-          noIcon = noIconTripElement)
+          noIcon = noIconTripElement,
+          collaborators = collaboratorsLookup(trip.uid))
     }
   } else {
     item {
