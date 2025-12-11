@@ -77,12 +77,12 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
     }
 
     kotlinOptions {
-        jvmTarget = "1.8"
+        jvmTarget = "11"
     }
 
     packaging {
@@ -223,6 +223,9 @@ dependencies {
     implementation(libs.retrofit2)
     implementation(libs.moshikotlin)
     implementation(libs.convertermoshi)
+
+    //---------    Exif interface       --------
+    implementation(libs.androidx.exifinterface)
 
     //----- Test units ----------------
     // Testing Unit
