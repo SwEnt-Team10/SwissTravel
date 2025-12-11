@@ -1,10 +1,15 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
+import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
+import com.github.swent.swisstravel.utils.photos.getPhotoLocation
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -26,7 +31,7 @@ object ToastMessages {
 
 /** UI State for the AddPhotosScreen */
 data class PhotosUIState(
-    val listUri: List<Uri> = emptyList(),
+    val uriLocation: Map<Uri, Location> = emptyMap(),
     val uriSelected: List<Int> = emptyList(),
     val errorLoading: Boolean = false,
     val toastMessage: String = "",
@@ -44,6 +49,13 @@ class PhotosViewModel(
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(PhotosUIState())
   val uiState: StateFlow<PhotosUIState> = _uiState.asStateFlow()
+    private val defaultLocation = Location(
+        Coordinate(
+            latitude = 0.0,
+            longitude = 0.0
+        ),
+        name = "No location"
+    )
 
   /**
    * Add photos to the trip and save the trip on the repo.
@@ -54,7 +66,7 @@ class PhotosViewModel(
     viewModelScope.launch {
       try {
         val oldTrip = tripsRepository.getTrip(tripId)
-        val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
+        val newTrip = oldTrip.copy(uriLocation = _uiState.value.uriLocation)
         tripsRepository.editTrip(tripId, newTrip)
         if (_uiState.value.numberNew > 1) {
           setToastMessage(ToastMessages.PHOTOS_SAVED)
@@ -82,17 +94,18 @@ class PhotosViewModel(
     viewModelScope.launch {
       try {
         val trip = tripsRepository.getTrip(tripId)
-        if (trip.listUri.size > 1) {
+        if (trip.uriLocation.size > 1) {
 
           _uiState.value =
               _uiState.value.copy(
-                  listUri = trip.listUri,
+                  uriLocation = trip.uriLocation,
                   isLoading = false,
-                  toastMessage = ToastMessages.LOAD_PHOTOS_SUCCESS)
+                  toastMessage = ToastMessages.LOAD_PHOTOS_SUCCESS,
+                  )
         } else {
           _uiState.value =
               _uiState.value.copy(
-                  listUri = trip.listUri,
+                  uriLocation = trip.uriLocation,
                   isLoading = false,
                   toastMessage = ToastMessages.LOAD_PHOTO_SUCCESS)
         }
@@ -107,11 +120,11 @@ class PhotosViewModel(
    *
    * @param uris the uris of the photos to add to the state
    */
-  fun addUris(uris: List<Uri>) {
-    _uiState.value =
-        _uiState.value.copy(
-            listUri = uris + _uiState.value.listUri,
-            numberNew = uris.size + _uiState.value.numberNew)
+  fun addUris(uris: List<Uri>, context: Context, tripId: String) {
+      val newEntries = uris.associateWith { uri ->
+          context.getPhotoLocation(uri, "Photo") ?: defaultLocation
+      }
+      _uiState.value = _uiState.value.copy(uriLocation = _uiState.value.uriLocation + newEntries)
   }
 
   /**
@@ -139,13 +152,17 @@ class PhotosViewModel(
     val oldState = _uiState.value
     val selected = _uiState.value.uriSelected.toSet()
 
-    val newList = _uiState.value.listUri.filterIndexed { index, _ -> index !in selected }
+      val currentKeys = oldState.uriLocation.keys.toList()
+      val newMap = oldState.uriLocation.filterKeys { uri ->
+          val index = currentKeys.indexOf(uri)
+          index !in selected
+      }
 
-    _uiState.value = _uiState.value.copy(listUri = newList, uriSelected = emptyList())
+    _uiState.value = _uiState.value.copy(uriLocation = newMap, uriSelected = emptyList())
     viewModelScope.launch {
       try {
         val oldTrip = tripsRepository.getTrip(tripId)
-        val newTrip = oldTrip.copy(listUri = _uiState.value.listUri)
+        val newTrip = oldTrip.copy(uriLocation = _uiState.value.uriLocation)
         tripsRepository.editTrip(tripId, newTrip)
         if (oldState.uriSelected.size > 1) {
           setToastMessage(ToastMessages.REMOVE_PHOTOS_SUCCESS)

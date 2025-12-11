@@ -35,6 +35,7 @@ data class NavigationMapUIState(
     val routeLineDrawData: Expected<RouteLineError, RouteSetValue>? = null,
     val isRouteRendered: Boolean = false,
     val locationsList: List<Point>,
+    val photoPinsList: List<Point> = emptyList(), // done by AI
     val mapboxNavigation: MapboxNavigation?,
     val routeLineApi: MapboxRouteLineApi?,
     val permissionGranted: Boolean = false,
@@ -95,6 +96,11 @@ class MapScreenViewModel : ViewModel() {
     // request route if we already have points
     if (_uiState.value.locationsList.size >= 2) requestRoute()
   }
+
+    fun updatePhotoPins(points: List<Point>) {
+        if (points == _uiState.value.photoPinsList) return
+        _uiState.value = _uiState.value.copy(photoPinsList = points)
+    }
 
   /**
    * Update the list of navigation points. Automatically requests a new route if there are at least

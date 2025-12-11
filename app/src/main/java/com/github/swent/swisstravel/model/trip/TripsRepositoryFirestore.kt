@@ -74,13 +74,17 @@ class TripsRepositoryFirestore(
     return documentToTrip(document) ?: throw Exception("TripsRepositoryFirestore: Trip not found")
   }
 
-  override suspend fun addTrip(trip: Trip) {
-    db.collection(TRIPS_COLLECTION_PATH).document(trip.uid).set(trip).await()
-  }
+    override suspend fun addTrip(trip: Trip) {
+        // On convertit avant d'envoyer
+        val documentData = tripToDocument(trip)
+        db.collection(TRIPS_COLLECTION_PATH).document(trip.uid).set(documentData).await()
+    }
 
-  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
-    db.collection(TRIPS_COLLECTION_PATH).document(tripId).set(updatedTrip).await()
-  }
+    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+        // Idem pour l'édition
+        val documentData = tripToDocument(updatedTrip)
+        db.collection(TRIPS_COLLECTION_PATH).document(tripId).set(documentData).await()
+    }
 
   override suspend fun deleteTrip(tripId: String) {
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).delete().await()
@@ -125,6 +129,19 @@ class TripsRepositoryFirestore(
             (locationMap as? Map<*, *>)?.let { mapToLocation(it) }
           } ?: emptyList()
 
+        val uriLocationRaw = document["uriLocation"] as? Map<*, *> ?: emptyMap<String, Any>()
+
+        val uriLocation = uriLocationRaw.entries.mapNotNull { (key, value) ->
+            val uriStr = key as? String
+            val locMap = value as? Map<*, *>
+            if (uriStr != null && locMap != null) {
+                val location = mapToLocation(locMap)
+                if (location != null) {
+                    Uri.parse(uriStr) to location
+                } else null
+            } else null
+        }.toMap()
+
       val routeSegments =
           (document["routeSegments"] as? List<*>)?.mapNotNull { routeSegmentMap ->
             (routeSegmentMap as? Map<*, *>)?.let { mapToRouteSegment(it) }
@@ -141,9 +158,6 @@ class TripsRepositoryFirestore(
       val isFavorite = document.getBoolean("favorite") ?: false
 
       val isCurrentTrip = document.getBoolean("currentTrip") ?: false
-      // With help of AI
-      val listUriStrings = document["listUri"] as? List<*> ?: emptyList<Uri>()
-      val listUri = listUriStrings.mapNotNull { (it as? String)?.toUri() }
       val collaboratorsId = document["collaboratorsId"] as? List<*> ?: emptyList<String>()
       val listCollaboratorsId = collaboratorsId.mapNotNull { (it as? String) }
 
@@ -154,12 +168,12 @@ class TripsRepositoryFirestore(
           name = name,
           ownerId = ownerId,
           locations = locations,
+          uriLocation = uriLocation,
           routeSegments = routeSegments,
           activities = activities,
           tripProfile = tripProfile,
           isFavorite = isFavorite,
           isCurrentTrip = isCurrentTrip,
-          listUri = listUri,
           collaboratorsId = listCollaboratorsId,
           isRandom = isRandom)
     } catch (e: Exception) {
@@ -296,4 +310,22 @@ class TripsRepositoryFirestore(
     val preference = Preference.valueOf(preferenceStr)
     return preference
   }
+
+    private fun tripToDocument(trip: Trip): Map<String, Any?> {
+        return mapOf(
+            "uid" to trip.uid,
+            "name" to trip.name,
+            "ownerId" to trip.ownerId,
+            "locations" to trip.locations,
+            "routeSegments" to trip.routeSegments,
+            "activities" to trip.activities,
+            "tripProfile" to trip.tripProfile,
+            "favorite" to trip.isFavorite,
+            "currentTrip" to trip.isCurrentTrip,
+            "collaboratorsId" to trip.collaboratorsId,
+            "random" to trip.isRandom,
+            // Conversion critique ici : Uri -> String
+            "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() }
+        )
+    }
 }

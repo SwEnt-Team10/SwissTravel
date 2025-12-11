@@ -80,7 +80,7 @@ fun AddPhotosScreen(
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-          photosViewModel.addUris(uris)
+          photosViewModel.addUris(uris, context, tripId)
           photosViewModel.savePhotos(tripId)
         }
       }
@@ -149,7 +149,8 @@ fun AddPhotosScreen(
                 columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
                 modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
                   // AI helped for the itemsIndexed
-                  itemsIndexed(uiState.listUri) { index, uri ->
+                val displayList = uiState.uriLocation.keys.toList()
+                  itemsIndexed(displayList) { index, uri ->
                     AsyncImage(
                         modifier =
                             Modifier.testTag(AddPhotosScreenTestTags.getTestTagForUri(index)),
