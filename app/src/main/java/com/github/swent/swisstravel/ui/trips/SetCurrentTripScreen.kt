@@ -86,7 +86,9 @@ fun SetCurrentTripScreen(
                   isSelected = isSelected,
                   isSelectionMode = false,
                   noIconTripElement = true,
-                  emptyListString = stringResource(R.string.no_upcoming_trips))
+                  emptyListString = stringResource(R.string.no_upcoming_trips),
+                  favoriteTripsUids = uiState.favoriteTripsUids,
+              )
 
           val onClickAction: (Trip?) -> Unit = { trip ->
             trip?.let {

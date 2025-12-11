@@ -125,7 +125,8 @@ fun SelectPinnedTripsScreen(
                       trips = uiState.tripsList,
                       isSelected = { trip -> trip in uiState.selectedTrips },
                       isSelectionMode = uiState.isSelectionMode,
-                      emptyListString = stringResource(R.string.no_trips))
+                      emptyListString = stringResource(R.string.no_trips),
+                      favoriteTripsUids = uiState.favoriteTripsUids)
 
               val listEvents =
                   TripListEvents(

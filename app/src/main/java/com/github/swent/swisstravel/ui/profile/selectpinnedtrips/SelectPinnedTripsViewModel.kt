@@ -54,7 +54,7 @@ class SelectPinnedTripsViewModel(
                 tripsList = sortedTrips,
                 selectedTrips = selected,
                 collaboratorsByTripId = collaboratorsByTrip,
-                favoriteTrips = favoriteTrips)
+                favoriteTripsUids = favoriteTrips)
       } catch (e: Exception) {
         setErrorMsg("Failed to load pinned trips: ${e.message}")
         Log.e("SelectPinnedTripsViewModel", "Error initializing", e)
@@ -72,7 +72,7 @@ class SelectPinnedTripsViewModel(
           _uiState.value.copy(
               tripsList = sortedTrips,
               selectedTrips = _uiState.value.selectedTrips,
-              favoriteTrips = favoriteTrips)
+              favoriteTripsUids = favoriteTrips)
     } catch (e: Exception) {
       Log.e("SelectPinnedTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")

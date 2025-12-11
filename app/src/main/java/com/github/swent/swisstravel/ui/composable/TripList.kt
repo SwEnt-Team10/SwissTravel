@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.trips.TripElement
+import com.github.swent.swisstravel.ui.trips.TripElementState
 
 object TripListTestTags {
   const val TRIP_LIST = "TripListLazyColumn"
@@ -33,14 +34,20 @@ fun TripList(listState: TripListState, listEvents: TripListEvents) {
             val trip = listState.trips[index]
             val collaboratorsForThisTrip = listState.collaboratorsLookup(trip.uid)
 
+            val elementState =
+                TripElementState(
+                    trip = trip,
+                    isSelected = listState.isSelected(trip),
+                    isSelectionMode = listState.isSelectionMode,
+                    noIcon = listState.noIconTripElement,
+                    collaborators = collaboratorsForThisTrip,
+                    isFavorite = trip.uid in listState.favoriteTripsUids)
+
             TripElement(
-                trip = trip,
+                tripElementState = elementState,
                 onClick = { listEvents.onClickTripElement(trip) },
                 onLongPress = { listEvents.onLongPress(trip) },
-                isSelected = listState.isSelected(trip),
-                isSelectionMode = listState.isSelectionMode,
-                noIcon = listState.noIconTripElement,
-                collaborators = collaboratorsForThisTrip)
+            )
           }
         }
   } else {

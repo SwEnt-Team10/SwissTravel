@@ -108,6 +108,8 @@ class TripInfoViewModel(
         val current = _uiState.value
         val trip = tripsRepository.getTrip(uid)
         val isSameTrip = current.uid == trip.uid
+        val currentUser = userRepository.getCurrentUser()
+        val isFavorite = currentUser.favoriteTripsUids.contains(trip.uid)
 
         _uiState.value =
             TripInfoUIState(
@@ -118,7 +120,7 @@ class TripInfoViewModel(
                 routeSegments = trip.routeSegments,
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,
-                isFavorite = trip.isFavorite,
+                isFavorite = isFavorite,
                 likedActivities = _uiState.value.likedActivities,
                 // Preserve transient state if reloading the same trip
                 currentDayIndex = if (isSameTrip) current.currentDayIndex else 0,
@@ -126,7 +128,7 @@ class TripInfoViewModel(
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
-                currentUserIsOwner = trip.isOwner(userRepository.getCurrentUser().uid))
+                currentUserIsOwner = trip.isOwner(currentUser.uid))
         computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
@@ -165,12 +167,16 @@ class TripInfoViewModel(
     val current = _uiState.value
     try {
       val trip = tripsRepository.getTrip(current.uid)
+      val currentUser = userRepository.getCurrentUser()
 
       // Avoid redundant write if already correct
-      if (trip.isFavorite == newFavorite) return
+      if (currentUser.favoriteTripsUids.contains(trip.uid) == newFavorite) return
 
-      val updatedTrip = trip.copy(isFavorite = newFavorite)
-      tripsRepository.editTrip(current.uid, updatedTrip)
+      if (newFavorite) {
+        userRepository.addFavoriteTrip(currentUser.uid, current.uid)
+      } else {
+        userRepository.removeFavoriteTrip(currentUser.uid, current.uid)
+      }
 
       Log.d("TripInfoViewModel", "Favorite state updated: $newFavorite")
     } catch (e: Exception) {

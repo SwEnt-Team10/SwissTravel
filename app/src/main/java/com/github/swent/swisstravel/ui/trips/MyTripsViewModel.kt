@@ -57,7 +57,7 @@ class MyTripsViewModel(
                 currentTrip = currentTrip,
                 tripsList = sortedTrips,
                 collaboratorsByTripId = collaboratorsByTrip,
-                favoriteTrips = favoriteTrips)
+                favoriteTripsUids = favoriteTrips)
       } catch (e: Exception) {
         Log.e("MyTripsViewModel", "Error fetching trips", e)
         setErrorMsg("Failed to load trips.")

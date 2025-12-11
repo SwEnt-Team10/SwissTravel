@@ -308,7 +308,6 @@ open class TripSettingsViewModel(
                 routeSegments = routeSegments,
                 activities = selectedActivities,
                 tripProfile = tripProfile,
-                isFavorite = false,
                 isCurrentTrip = false,
                 listUri = emptyList(),
                 collaboratorsId = emptyList(),

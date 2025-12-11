@@ -40,6 +40,7 @@ object SortedTripListTestTags {
  * @param noIconTripElement Whether to hide the icon in the trip element.
  * @param isSelected Function to determine if a trip is selected.
  * @param collaboratorsLookup Function to retrieve collaborators for a specific trip.
+ * @param favoriteTripsUids The set of favorite trip UIDs.
  */
 data class TripListState(
     val trips: List<Trip> = emptyList(),
@@ -47,7 +48,8 @@ data class TripListState(
     val isSelectionMode: Boolean = false,
     val noIconTripElement: Boolean = false,
     val isSelected: (Trip) -> Boolean = { false },
-    val collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() }
+    val collaboratorsLookup: (String) -> List<TripsViewModel.CollaboratorUi> = { emptyList() },
+    val favoriteTripsUids: Set<String> = emptySet(),
 )
 
 /**

@@ -45,7 +45,7 @@ class PastTripsViewModel(
           _uiState.value.copy(
               tripsList = sortedTrips,
               collaboratorsByTripId = collaboratorsByTrip,
-              favoriteTrips = favoriteTrips)
+              favoriteTripsUids = favoriteTrips)
     } catch (e: Exception) {
       Log.e("PastTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")

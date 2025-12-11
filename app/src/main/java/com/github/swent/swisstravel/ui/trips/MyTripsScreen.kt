@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.DropdownMenu
@@ -219,6 +220,9 @@ private fun MyTripsTopAppBar(
     onSelectAll: () -> Unit,
     onPastTrips: () -> Unit,
 ) {
+  val allSelectedFavorites =
+      uiState.selectedTrips.isNotEmpty() &&
+          uiState.selectedTrips.all { it.uid in uiState.favoriteTripsUids }
   TopAppBar(
       title = {
         val title =
@@ -248,7 +252,8 @@ private fun MyTripsTopAppBar(
               onClick = onFavoriteSelected,
               modifier = Modifier.testTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)) {
                 Icon(
-                    Icons.Default.StarOutline,
+                    imageVector =
+                        if (allSelectedFavorites) Icons.Default.Star else Icons.Default.StarOutline,
                     contentDescription = stringResource(R.string.favorite_selected))
               }
           IconButton(
@@ -323,16 +328,21 @@ private fun CurrentTripSection(
   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
   currentTrip?.let {
+    val tripElementState =
+        TripElementState(
+            trip = it,
+            isSelected = it in selectedTrips,
+            isSelectionMode = isSelectionMode,
+            isFavorite = it.uid in uiState.favoriteTripsUids,
+        )
     TripElement(
-        trip = it,
+        tripElementState = tripElementState,
         onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
         onLongPress = {
           // Enter selection mode
           myTripsViewModel.toggleSelectionMode(true)
           onToggleSelection(it)
-        },
-        isSelected = it in selectedTrips,
-        isSelectionMode = isSelectionMode)
+        })
   }
       ?: Text(
           text = stringResource(R.string.no_current_trip),
@@ -402,6 +412,7 @@ private fun UpcomingTripsSection(
           isSelectionMode = uiState.isSelectionMode,
           isSelected = { trip -> trip in uiState.selectedTrips },
           collaboratorsLookup = { uid -> uiState.collaboratorsByTripId[uid] ?: emptyList() },
+          favoriteTripsUids = uiState.favoriteTripsUids,
       )
   val listEvent =
       TripListEvents(

@@ -11,6 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -144,7 +145,8 @@ fun PastTripsScreen(
                       emptyListString = stringResource(R.string.no_past_trips),
                       collaboratorsLookup = { uid ->
                         uiState.collaboratorsByTripId[uid] ?: emptyList()
-                      })
+                      },
+                      favoriteTripsUids = uiState.favoriteTripsUids)
 
               // Construct Events
               val listEvents =
@@ -196,6 +198,9 @@ private fun PastTripsTopAppBar(
     onDeleteSelected: () -> Unit,
     onSelectAll: () -> Unit,
 ) {
+  val allSelectedFavorites =
+      uiState.selectedTrips.isNotEmpty() &&
+          uiState.selectedTrips.all { it.uid in uiState.favoriteTripsUids }
   TopAppBar(
       title = {
         val title =
@@ -233,7 +238,8 @@ private fun PastTripsTopAppBar(
               onClick = onFavoriteSelected,
               modifier = Modifier.testTag(PastTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)) {
                 Icon(
-                    Icons.Default.StarOutline,
+                    imageVector =
+                        if (allSelectedFavorites) Icons.Default.Star else Icons.Default.StarOutline,
                     contentDescription = stringResource(R.string.favorite_selected))
               }
           IconButton(
