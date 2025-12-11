@@ -31,7 +31,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
     return TripRepositoryLocal()
   }
 
-  // Location factice pour les tests
+  // Fake location for testing
   private val dummyLocation = Location(Coordinate(0.0, 0.0), "Test Location")
 
   @Test

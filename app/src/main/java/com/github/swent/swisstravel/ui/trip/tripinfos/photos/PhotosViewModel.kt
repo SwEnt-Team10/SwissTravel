@@ -116,6 +116,7 @@ class PhotosViewModel(
    */
   fun addUris(uris: List<Uri>, context: Context, tripId: String) {
     val newEntries =
+        // AI helped for this part
         uris.associateWith { uri -> context.getPhotoLocation(uri, "Photo") ?: defaultLocation }
     _uiState.value = _uiState.value.copy(uriLocation = _uiState.value.uriLocation + newEntries)
   }

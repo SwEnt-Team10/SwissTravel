@@ -119,7 +119,7 @@ fun MapScreen(
 
   LaunchedEffect(Unit) { viewModel.attachMapObjects(mapboxNavigation, routeLineApi) }
 
-  // On met à jour les locations de la route (Ligne bleue)
+  // Update route locations (Blue line)
   LaunchedEffect(locations) { viewModel.updateLocations(locationsAsPoints(locations)) }
 
   val ui by viewModel.uiState.collectAsState()
@@ -155,7 +155,24 @@ fun MapScreen(
 
 /* --------------------------- Split-out content blocks --------------------------- */
 
-/** The inner content of the map screen. */
+/**
+ * The inner content of the map screen that handles the Mapbox map instance and its layers.
+ *
+ * This composable is responsible for: Rendering the MapboxMap. Initializing the map style and route
+ * layers. Managing side effects (MapEffect) for drawing routes, pins, and the user location puck.
+ * Handling camera transitions to fit content. Note: this documentation has been done by AI and the
+ * code partially too.
+ *
+ * @param mapViewportState The state object controlling the map's camera position and zoom.
+ * @param drawRoute If true, draws the navigation route between locations. If false, shows
+ *   individual pins.
+ * @param ui The current UI state containing the list of locations, permissions, and navigation
+ *   APIs.
+ * @param photoEntries A list of (Uri, Location) pairs to display as "Polaroid" style pins on the
+ *   map.
+ * @param onUserLocationUpdate Callback function triggered when the user's location changes
+ *   (requires permission).
+ */
 @Composable
 private fun MapContent(
     mapViewportState: MapViewportState,
@@ -183,20 +200,19 @@ private fun MapContent(
   MapboxMap(
       modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
       mapViewportState = mapViewportState,
-      // On ne met PAS de paramètre 'style = {}' ici pour éviter les conflits,
-      // on le gère manuellement dans le MapEffect ci-dessous.
   ) {
 
-    // 1. Affichage des Pins Photos
+    // Display Photo Pins
     photoEntries.forEach { (uri, location) ->
       key(uri) { PhotoPinAnnotation(uri = uri, location = location) }
     }
 
-    // 2. Initialisation du Style et des Calques (CRITIQUE)
+    // Initialize Style and Layers
+    // Code done by AI
     MapEffect(Unit) { mapView ->
-      // On force le chargement du style OUTDOORS
+      // Force load the OUTDOORS style
       mapView.mapboxMap.loadStyleUri(Style.OUTDOORS) { style ->
-        // Une fois le style chargé, on initialise tout le reste
+        // Initialize layers once the style is loaded
         initRouteLayersOnce(
             style = style,
             routeLineView = routeLineView,
@@ -205,12 +221,13 @@ private fun MapContent(
 
         ensurePinsSourceAndLayer(style)
 
-        // C'est ce flag qui déclenchera l'affichage de la route dans les autres MapEffect
+        // This flag triggers route display in other MapEffects
         styleReady = true
       }
     }
 
-    // 3. User Location Listener
+    // User Location Listener
+    // Code done by AI
     MapEffect(ui.permissionGranted) { mapView ->
       if (ui.permissionGranted) {
         mapView.location.addOnIndicatorPositionChangedListener { point ->
@@ -219,7 +236,8 @@ private fun MapContent(
       }
     }
 
-    // 4. Nettoyage de la route (si on désactive le mode route)
+    // Route cleanup (if route mode is disabled)
+    // Code done by AI
     MapEffect(styleReady to drawRoute) { mapView ->
       if (styleReady && !drawRoute) {
         val api = ui.routeLineApi
@@ -232,7 +250,8 @@ private fun MapContent(
       }
     }
 
-    // 5. Dessin de la route (si styleReady est true)
+    // Draw the route (if styleReady is true)
+    // Code done by AI
     MapEffect(styleReady to drawRoute to renderKey) { mapView ->
       if (styleReady && drawRoute) {
         val api = ui.routeLineApi
@@ -244,44 +263,56 @@ private fun MapContent(
       }
     }
 
-    // 6. Mise à jour des pins de navigation (Start/End)
+    // Update navigation pins (Start/End)
+    // Code done by AI
     MapEffect(styleReady to points to drawRoute) { mapView ->
       if (styleReady) {
         mapView.mapboxMap.getStyle { style -> updatePins(style, points, drawRoute) }
       }
     }
 
-    // 7. Centrage de la caméra (Fit Camera)
+    // Center camera (Fit Camera)
+    // Code done by AI
     MapEffect(points to drawRoute) {
       fitCamera(mapViewportState, points, drawRoute, lastFitHash) { lastFitHash = it }
     }
 
-    // 8. Puck (Position utilisateur)
+    // Puck (User position)
+    // Code done by AI
     MapEffect(ui.permissionGranted) { mapView -> updatePuck(mapView, ui.permissionGranted) }
   }
 }
 
-/** Composant personnalisé : Photo Pin "Polaroid" */
+/**
+ * A custom map annotation that displays a photo in a "Polaroid" style frame.
+ *
+ * This composable uses Mapbox's [ViewAnnotation] system to render a native Compose UI element
+ * attached to a specific geographical coordinate. Note: this code has been done by AI.
+ *
+ * @param uri The Android [Uri] of the image to display.
+ * @param location The [Location] object determining where to place the pin on the map. The
+ *   [Location.name] is used for the content description.
+ */
 @Composable
 fun PhotoPinAnnotation(uri: Uri, location: Location) {
   val mapPoint = Point.fromLngLat(location.coordinate.longitude, location.coordinate.latitude)
 
-  // 1. On crée la configuration de l'ancre
+  // Create anchor configuration
   val anchorConfig =
       com.mapbox.maps.ViewAnnotationAnchorConfig.Builder()
-          .anchor(com.mapbox.maps.ViewAnnotationAnchor.BOTTOM) // On fixe l'ancre en bas
+          .anchor(com.mapbox.maps.ViewAnnotationAnchor.BOTTOM) // Anchor at the bottom
           .build()
 
-  // 2. On construit les options en passant la liste de configs
+  // Build options passing the config list
   val options =
       ViewAnnotationOptions.Builder()
           .geometry(mapPoint)
           .allowOverlap(true)
-          .variableAnchors(listOf(anchorConfig)) // C'est ici que ça bloquait !
+          .variableAnchors(listOf(anchorConfig)) // Set variable anchors
           .build()
 
   ViewAnnotation(options = options) {
-    // Le design "Polaroid"
+    // "Polaroid" design
     Surface(
         modifier = Modifier.size(60.dp).shadow(elevation = 6.dp, shape = RoundedCornerShape(4.dp)),
         shape = RoundedCornerShape(4.dp),
@@ -298,6 +329,12 @@ fun PhotoPinAnnotation(uri: Uri, location: Location) {
   }
 }
 
+/**
+ * The map overlays (i.e the buttons)
+ *
+ * @param permissionGranted Whether the location permission is granted
+ * @param mapViewportState The state of the map viewport
+ */
 @Composable
 private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewportState) {
   Box(Modifier.fillMaxSize()) {
@@ -324,6 +361,14 @@ private fun MapOverlays(permissionGranted: Boolean, mapViewportState: MapViewpor
 
 /* --------------------------- Small helpers --------------------------- */
 
+/**
+ * A function to initialize the routing layers
+ *
+ * @param style The style to add to the layers
+ * @param routeLineView The route line view to initialize
+ * @param alreadyInitialized Whether the layers are already initialized
+ * @param setInitialized A callback to set the layers as initialized
+ */
 private fun initRouteLayersOnce(
     style: Style,
     routeLineView: MapboxRouteLineView,
@@ -334,7 +379,11 @@ private fun initRouteLayersOnce(
   routeLineView.initializeLayers(style)
   setInitialized(true)
 }
-
+/**
+ * A function to create the necessary layers for the pins
+ *
+ * @param style The style to add to the layers
+ */
 private fun ensurePinsSourceAndLayer(style: Style) {
   style.getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
       ?: geoJsonSource(PINS_SOURCE_ID) {}.also(style::addSource)
@@ -348,7 +397,13 @@ private fun ensurePinsSourceAndLayer(style: Style) {
         })
   }
 }
-
+/**
+ * A function to update the state of the pins
+ *
+ * @param style The style to update
+ * @param locationsList The list of locations to update
+ * @param drawRoute Whether to draw a route
+ */
 private fun updatePins(style: Style, locationsList: List<Point>, drawRoute: Boolean) {
   style
       .getSourceAs<GeoJsonSource>(PINS_SOURCE_ID)
@@ -358,6 +413,15 @@ private fun updatePins(style: Style, locationsList: List<Point>, drawRoute: Bool
   style.getLayer(PINS_LAYER_ID)?.visibility(if (drawRoute) Visibility.NONE else Visibility.VISIBLE)
 }
 
+/**
+ * A function to fit the camera depending on the points and if the routes are drawn
+ *
+ * @param mapViewportState The state of the map viewport
+ * @param points The list of points to fit
+ * @param drawRoute Whether to draw a route
+ * @param lastHash The last hash of the points
+ * @param setHash A callback to set the hash of the points
+ */
 private suspend fun fitCamera(
     mapViewportState: MapViewportState,
     points: List<Point>,
@@ -379,7 +443,11 @@ private suspend fun fitCamera(
     mapViewportState.setCameraOptions(cam)
   }
 }
-
+/**
+ * A function to update the location puck
+ *
+ * @param mapView The map view to update
+ */
 private fun updatePuck(mapView: MapView, permissionGranted: Boolean) {
   mapView.location.updateSettings {
     enabled = permissionGranted
@@ -390,6 +458,6 @@ private fun updatePuck(mapView: MapView, permissionGranted: Boolean) {
     }
   }
 }
-
+/** Convert a list of Location to a list of Mapbox Points */
 private fun locationsAsPoints(locations: List<Location>) =
     locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }

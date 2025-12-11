@@ -19,19 +19,20 @@ fun Context.getPhotoLocation(uri: Uri, name: String): Location? {
   val tempFile = File(cacheDir, "temp_gps_check.jpg")
 
   try {
-    // 1. ON COPIE LE FICHIER CHEZ NOUS (C'est la clé !)
-    // Cela contourne les problèmes de droits de lecture directe sur l'URI
+    // Copy the file to the app's local cache.
+    // This is a workaround to avoid permission issues when reading EXIF data directly from a
+    // content URI.
     contentResolver.openInputStream(uri)?.use { input ->
       FileOutputStream(tempFile).use { output -> input.copyTo(output) }
     }
 
-    // 2. ON LIT LES DONNÉES DEPUIS NOTRE COPIE LOCALE
-    // Ici, plus de censure Android, c'est notre fichier.
+    // Read the metadata from the local copy.
+    // Now that the file is in our cache, we can access it directly without restrictions.
     val exif = ExifInterface(tempFile.absolutePath)
     val latLong = FloatArray(2)
 
     if (exif.getLatLong(latLong)) {
-      // Vérification anti-zéros
+      // Check for invalid coordinates (0.0, 0.0 often means no GPS data found)
       if (latLong[0] == 0f && latLong[1] == 0f) {
         return null
       }
@@ -44,7 +45,7 @@ fun Context.getPhotoLocation(uri: Uri, name: String): Location? {
   } catch (e: Exception) {
     e.printStackTrace()
   } finally {
-    // 3. MENAGE : On supprime le fichier temporaire
+    // Cleanup: delete the temporary file to save space.
     if (tempFile.exists()) {
       tempFile.delete()
     }

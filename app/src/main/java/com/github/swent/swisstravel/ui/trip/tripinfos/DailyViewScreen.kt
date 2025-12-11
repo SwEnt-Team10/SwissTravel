@@ -151,6 +151,7 @@ fun DailyViewScreen(
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val ui by tripInfoViewModel.uiState.collectAsState()
+  // done by AI
   val validPhotoEntries =
       remember(ui.uriLocation) {
         ui.uriLocation
@@ -159,6 +160,7 @@ fun DailyViewScreen(
             }
             .toList()
       }
+  // Done by AI
   val actualMapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit =
       { locations, drawRoute, onUserLocationUpdate ->
         MapScreen(

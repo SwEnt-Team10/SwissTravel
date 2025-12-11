@@ -134,6 +134,7 @@ fun AddPhotosScreen(
                   // Add photos to the UI state button
                   Button(
                       modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
+                      // AI give the function onClick
                       onClick = { launchPicker("image/*") }) {
                         Text(text = stringResource(R.string.add_photos_button))
                       }

@@ -36,7 +36,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
     return TripRepositoryLocal()
   }
 
-  // Location factice pour les tests
+  // Fake location for testing
   private val dummyLocation = Location(Coordinate(0.0, 0.0), "Test Location")
 
   @Test
@@ -92,7 +92,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
     composeTestRule.addPhotosScreenIsDisplayed()
     composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID).isDisplayed()
 
-    // On itère sur le nombre d'éléments dans la map
+    // We go through the map
     val uriCount = fakeTrip.uriLocation.size
     for (i in 0 until uriCount) {
       composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(i)).isDisplayed()
@@ -123,7 +123,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
           tripId = fakeTrip.uid,
           photosViewModel = fakeModel,
           launchPickerOverride = {
-            // Context requis pour addUris
+            // Context required for addUris
             fakeModel.addUris(
                 listOf("content://fake/photo1".toUri(), "content://fake/photo2".toUri()),
                 ApplicationProvider.getApplicationContext(),

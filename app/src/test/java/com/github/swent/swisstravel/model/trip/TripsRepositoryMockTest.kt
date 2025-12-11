@@ -17,6 +17,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+/** Note: the adaptation with the mapping for uri and location has been done by AI */
 class TripsRepositoryFirestorePublicTest {
 
   private lateinit var mockDb: FirebaseFirestore
@@ -34,7 +35,8 @@ class TripsRepositoryFirestorePublicTest {
     mockAuth = mockk()
     mockUser = mockk()
 
-    // IMPORTANT : On doit mocker Uri.parse car il est utilisé dans documentToTrip
+    // Mock Uri.parse since it is used in documentToTrip
+    // Done by AI
     mockkStatic(Uri::class)
     every { Uri.parse(any()) } answers
         {
@@ -106,7 +108,8 @@ class TripsRepositoryFirestorePublicTest {
             "departureLocation" to locationMap,
         )
 
-    // Simulation de la Map uriLocation stockée dans Firestore
+    // Simulate the uriLocation Map stored in Firestore
+    // Done by AI
     val uriLocationMap = mapOf("http://fake.uri" to locationMap)
 
     every { doc.get("locations") } returns listOf(locationMap)
@@ -138,7 +141,7 @@ class TripsRepositoryFirestorePublicTest {
     val doc = mockk<DocumentSnapshot>()
     every { mockCollection.document("badTrip").get(Source.SERVER) } returns Tasks.forResult(doc)
     every { doc.id } returns "badTrip"
-    every { doc.getString("name") } returns null
+    every { doc.getString("name") } returns null // triggers documentToTrip null
     every { doc.getString("ownerId") } returns "owner1"
 
     assertFailsWith<Exception> { repo.getTrip("badTrip") }
@@ -200,6 +203,7 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getString("name") } returns "TripWithBadActivities"
     every { doc.getString("ownerId") } returns "owner1"
 
+    // One valid activity, one invalid (missing location)
     val validActivityMap =
         mapOf(
             "startDate" to Timestamp.now(),
@@ -241,6 +245,7 @@ class TripsRepositoryFirestorePublicTest {
 
     val trip = repo.getTrip("tripWithBadActivities")
 
+    // Then
     assertEquals("tripWithBadActivities", trip.uid)
     assertEquals(1, trip.activities.size)
     assertEquals("Valid activity", trip.activities.first().description)
@@ -304,11 +309,13 @@ class TripsRepositoryFirestorePublicTest {
     every { mockOwnerSnapshot.iterator() } returns
         listOf(doc).iterator() as MutableIterator<QueryDocumentSnapshot?>
 
+    // 2) Trips where current user is a collaborator (return empty list)
     every { mockCollection.whereArrayContains("collaboratorsId", "owner123") } returns
         mockCollaboratorQuery
     every { mockCollaboratorQuery.get() } returns Tasks.forResult(mockCollaboratorSnapshot)
     every { mockCollaboratorSnapshot.documents } returns emptyList()
 
+    // Document fields used by documentToTrip
     every { doc.id } returns "tripX"
     every { doc.getString("name") } returns "Trip X"
     every { doc.getString("ownerId") } returns "owner123"
@@ -327,13 +334,16 @@ class TripsRepositoryFirestorePublicTest {
             "children" to 0L,
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
+    // IMPORTANT: use the same key as in documentToTrip
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.getBoolean("isFavorite") } returns false
     every { doc.getBoolean("random") } returns false
 
+    // Act
     val trips = repo.getAllTrips()
 
+    // Assert
     assertEquals(1, trips.size)
     assertEquals("Trip X", trips.first().name)
   }
@@ -368,7 +378,7 @@ class TripsRepositoryFirestorePublicTest {
 
     repo.addTrip(trip)
 
-    // CORRECTION : On spécifie <Map<String, Any?>> explicitement
+    // Verify the data by explicitly checking the Map content
     verify {
       mockDocumentRef.set(withArg<Map<String, Any?>> { data -> assertEquals("t1", data["uid"]) })
     }
@@ -408,6 +418,7 @@ class TripsRepositoryFirestorePublicTest {
 
     repo.editTrip("server-id-123", updated)
 
+    // Verify we wrote to the doc identified by the tripId and passed the updatedTrip as payload
     verify { mockCollection.document("server-id-123") }
     verify { mockDocumentRef.set(any()) }
   }
@@ -458,6 +469,7 @@ class TripsRepositoryFirestorePublicTest {
 
     repo.editTrip("authoritative-server-id", updated)
 
+    // Ensures repository doesn't derive the path from updatedTrip.uid
     verify { mockCollection.document("authoritative-server-id") }
     verify { mockDocumentRef.set(any()) }
   }
@@ -475,16 +487,20 @@ class TripsRepositoryFirestorePublicTest {
     every { mockAuth.currentUser } returns mockUser
     every { mockUser.uid } returns "owner123"
 
+    // -------- ONLINE QUERIES (will fail) --------
     every { mockDb.collection(TRIPS_COLLECTION_PATH).whereEqualTo("ownerId", "owner123") } returns
         mockOwnerQuery
     every {
       mockDb.collection(TRIPS_COLLECTION_PATH).whereArrayContains("collaboratorsId", "owner123")
     } returns mockCollaboratorQuery
 
+    // Make the ONLINE .get() fail so we enter the catch block
     every { mockOwnerQuery.get() } returns Tasks.forException(RuntimeException("Network error"))
     every { mockCollaboratorQuery.get() } returns
         Tasks.forException(RuntimeException("Network error"))
 
+    // -------- CACHE QUERIES (used in catch block) --------
+    // This uses the operator fun Query.get(Source): Task<QuerySnapshot>
     every { mockOwnerQuery[Source.CACHE] } returns Tasks.forResult(mockOwnerCacheSnapshot)
     every { mockCollaboratorQuery[Source.CACHE] } returns
         Tasks.forResult(mockCollaboratorCacheSnapshot)
@@ -492,6 +508,7 @@ class TripsRepositoryFirestorePublicTest {
     every { mockOwnerCacheSnapshot.documents } returns listOf(doc)
     every { mockCollaboratorCacheSnapshot.documents } returns emptyList()
 
+    // Document fields used by documentToTrip
     every { doc.id } returns "tripCache"
     every { doc.getString("name") } returns "Cached Trip"
     every { doc.getString("ownerId") } returns "owner123"
@@ -513,8 +530,10 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
 
+    // Act
     val trips = repo.getAllTrips()
 
+    // Assert - result comes from cache path
     assertEquals(1, trips.size)
     assertEquals("Cached Trip", trips.first().name)
   }

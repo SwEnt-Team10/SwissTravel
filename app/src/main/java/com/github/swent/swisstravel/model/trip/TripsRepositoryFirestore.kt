@@ -74,13 +74,13 @@ class TripsRepositoryFirestore(
   }
 
   override suspend fun addTrip(trip: Trip) {
-    // On convertit avant d'envoyer
+    // convert before sending
     val documentData = tripToDocument(trip)
     db.collection(TRIPS_COLLECTION_PATH).document(trip.uid).set(documentData).await()
   }
 
   override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
-    // Idem pour l'édition
+    // As for addTrip we convert before sending
     val documentData = tripToDocument(updatedTrip)
     db.collection(TRIPS_COLLECTION_PATH).document(tripId).set(documentData).await()
   }
@@ -319,6 +319,11 @@ class TripsRepositoryFirestore(
     return preference
   }
 
+  /**
+   * A function to facilitate conversion from trip to document Note: AI did this code
+   *
+   * @param trip the trip you want to convert
+   */
   private fun tripToDocument(trip: Trip): Map<String, Any?> {
     return mapOf(
         "uid" to trip.uid,
@@ -332,7 +337,6 @@ class TripsRepositoryFirestore(
         "currentTrip" to trip.isCurrentTrip,
         "collaboratorsId" to trip.collaboratorsId,
         "random" to trip.isRandom,
-        // Conversion critique ici : Uri -> String
         "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() })
   }
 }
