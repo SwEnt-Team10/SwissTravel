@@ -68,13 +68,13 @@ fun AddPhotosScreen(
     onEdit: () -> Unit = {},
     photosViewModel: PhotosViewModel = viewModel(),
     tripId: String,
-    launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
+    launchPickerOverride: ((String) -> Unit)? = null
 ) {
   val context = LocalContext.current
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   // AI helped for the picker
   val pickerLauncher =
-      rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
+      rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) {
           uris.forEach { uri ->
             context.contentResolver.takePersistableUriPermission(
@@ -84,8 +84,10 @@ fun AddPhotosScreen(
           photosViewModel.savePhotos(tripId)
         }
       }
-  val launchPicker: (PickVisualMediaRequest) -> Unit =
-      launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
+  val launchPicker: (String) -> Unit =
+      launchPickerOverride ?: { type ->
+          pickerLauncher.launch(arrayOf(type))
+      }
 
   val uiState by photosViewModel.uiState.collectAsState()
 
@@ -136,9 +138,7 @@ fun AddPhotosScreen(
                   Button(
                       modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
                       onClick = {
-                        launchPicker(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        launchPicker("image/*")
                       }) {
                         Text(text = stringResource(R.string.add_photos_button))
                       }
