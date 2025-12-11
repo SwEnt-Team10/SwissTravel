@@ -111,7 +111,7 @@ class ProfileViewModel(
    *
    * @param isOnline Whether the device is online.
    */
-  fun refreshStats(isOnline: Boolean) {
+  fun refresh(isOnline: Boolean) {
     if (!isOnline) return // Allow fetching from cache
 
     viewModelScope.launch {
@@ -122,6 +122,7 @@ class ProfileViewModel(
         // Only refresh stats if it's the user's own profile
         if (user.uid == _uiState.value.uid) {
           refreshStatsForUser(user)
+          loadProfile(user.uid)
         }
       } finally {
         _uiState.update { it.copy(isLoading = false) }

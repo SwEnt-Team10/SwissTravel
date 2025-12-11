@@ -132,7 +132,7 @@ fun ProfileScreen(
   val uiState by profileViewModel.uiState.collectAsState()
 
   val isOnline = NetworkUtils.isOnline(LocalContext.current)
-  LaunchedEffect(isOnline) { profileViewModel.refreshStats(isOnline) }
+  LaunchedEffect(isOnline) { profileViewModel.refresh(isOnline) }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
@@ -162,11 +162,9 @@ fun ProfileScreen(
             onBack = onBack,
             onSettings = onSettings,
             onUnfriend = { showUnfriendConfirmation = true })
-      }) { pd ->
+      }) {
         PullToRefreshBox(
-            isRefreshing = uiState.isLoading,
-            onRefresh = { profileViewModel.refreshStats(NetworkUtils.isOnline(context)) },
-            modifier = Modifier.padding(pd)) {
+            isRefreshing = uiState.isLoading, onRefresh = { profileViewModel.refresh(isOnline) }) {
               if (uiState.isLoading && (uiState.stats.totalTrips == -1 || !isOnline)) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                   Column(
@@ -174,9 +172,6 @@ fun ProfileScreen(
                       verticalArrangement = Arrangement.Center) {
                         CircularProgressIndicator(
                             modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
-                        Spacer(
-                            modifier =
-                                Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
 
                         if (!isOnline) {
                           Text(
@@ -191,7 +186,7 @@ fun ProfileScreen(
                     onSelectTrip = onSelectTrip,
                     onEditPinnedTrips = onEditPinnedTrips,
                     onEditPinnedPictures = onEditPinnedPictures,
-                    modifier = Modifier.padding(pd))
+                    modifier = Modifier.padding(it))
               }
             }
       }
