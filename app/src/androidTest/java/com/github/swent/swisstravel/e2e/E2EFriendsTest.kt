@@ -7,6 +7,9 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeDown
+import androidx.test.espresso.action.ViewActions.swipeDown
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
@@ -152,7 +155,15 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
     loginWithGoogle()
 
     // --- STEP 8: Alice accepts the friend request. ---
-    composeTestRule.onNodeWithTag(NavigationTestTags.FRIENDS_TAB).performClick()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.FRIENDS_TAB, useUnmergedTree = true)
+        .performClick()
+
+    // Refresh to see the new friend request
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_LIST).performTouchInput {
+      swipeDown()
+    }
+
     waitForTag(FriendsScreenTestTags.PENDING_SECTION_CARD)
 
     // Open Pending Section
@@ -171,7 +182,10 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
           .fetchSemanticsNodes()
           .isNotEmpty()
     }
-
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_LIST).performTouchInput {
+      swipeDown()
+    }
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithText(bobName).assertIsDisplayed()
 
     // --- STEP 9: Alice clicks on Bob in the friends list. ---
@@ -184,6 +198,7 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
     // Verify we are on the profile screen
     waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertIsDisplayed()
 
     // Verify Pinned Trips Title is visible
@@ -191,6 +206,8 @@ class E2EFriendFlowTest : FirestoreSwissTravelTest() {
 
     // --- STEP 10: Alice sees Bob's pinned trip. ---
     composeTestRule.onNodeWithText("bobTripName").assertIsDisplayed().performClick()
+
+    waitForTag(DailyViewScreenTestTags.TITLE)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
   }
 

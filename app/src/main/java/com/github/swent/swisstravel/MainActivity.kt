@@ -55,7 +55,6 @@ import com.github.swent.swisstravel.ui.navigation.Tab
 import com.github.swent.swisstravel.ui.profile.ProfileScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreen
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsViewModel
-import com.github.swent.swisstravel.ui.profile.ProfileViewModel
 import com.github.swent.swisstravel.ui.profile.ProfileViewModelFactory
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreen
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsViewModel
@@ -749,7 +748,8 @@ private fun NavGraphBuilder.friendsListNavGraph(
           }
 
           ProfileScreen(
-              profileViewModel = ProfileViewModel(requestedUid = uid),
+              profileViewModel =
+                  viewModel(key = uid, factory = ProfileViewModelFactory(requestedUid = uid)),
               onBack = { navigationActions.goBack() },
               onSelectTrip = { navigationActions.navigateTo(Screen.DailyView(it)) },
               friendsViewModel = friendsViewModel(navController))
