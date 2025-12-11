@@ -224,7 +224,6 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("favorite") } returns false
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.getBoolean("random") } returns false
-    // NEW: Mock the cachedActivities field
     every { doc.get("cachedActivities") } returns emptyList<Map<String, Any>>()
 
     val trip = repo.getTrip("tripWithBadActivities")

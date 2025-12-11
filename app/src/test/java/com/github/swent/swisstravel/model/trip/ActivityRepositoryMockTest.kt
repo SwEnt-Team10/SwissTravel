@@ -400,7 +400,6 @@ class ActivityRepositoryMockTest {
     // Verify the URL was built correctly
     val capturedUrl = slot.captured.url
 
-    // Logic changed: max(10, ceil(limit * 1.5)). For limit=5, this is 10.
     val expectedHits = 10
     assertTrue(capturedUrl.toString().contains("hitsPerPage=$expectedHits"))
 
