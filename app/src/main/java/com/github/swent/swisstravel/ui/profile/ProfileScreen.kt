@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -37,6 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,7 +62,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.TransportMode
-import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Achievement
 import com.github.swent.swisstravel.model.user.AchievementCategory
 import com.github.swent.swisstravel.model.user.AchievementId
@@ -68,9 +69,8 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
-import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.composable.TripListEvents
-import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.TripInteraction
+import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.utils.NetworkUtils
@@ -103,6 +103,11 @@ private const val NAME_MAX_LINES = 1
 /** The maximum number of lines for the biography. */
 private const val BIOGRAPHY_MAX_LINES = 3
 
+private const val NO_USER_PINNED_TRIPS =
+    "You don't have any pinned trips. Press the edit button to pin some!"
+
+private const val NO_PINNED_TRIPS = "No pinned trips here!"
+
 /**
  * A screen that shows the user's profile information.
  *
@@ -128,10 +133,7 @@ fun ProfileScreen(
   val uiState by profileViewModel.uiState.collectAsState()
 
   val isOnline = NetworkUtils.isOnline(LocalContext.current)
-  LaunchedEffect(isOnline) { profileViewModel.refreshStats(isOnline) }
-  if (isOnline) {
-    profileViewModel.refreshStats(isOnline)
-  }
+  LaunchedEffect(isOnline) { profileViewModel.refresh(isOnline) }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
@@ -161,31 +163,33 @@ fun ProfileScreen(
             onBack = onBack,
             onSettings = onSettings,
             onUnfriend = { showUnfriendConfirmation = true })
-      }) { pd ->
-        if (uiState.isLoading) {
-          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
-                  CircularProgressIndicator(
-                      modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
-                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+      }) {
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading, onRefresh = { profileViewModel.refresh(isOnline) }) {
+              if (uiState.isLoading && (uiState.stats.totalTrips == -1 || !isOnline)) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                  Column(
+                      horizontalAlignment = Alignment.CenterHorizontally,
+                      verticalArrangement = Arrangement.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
 
-                  if (!isOnline) {
-                    Text(
-                        text = stringResource(R.string.loading_from_cache),
-                        modifier = Modifier.align(Alignment.CenterHorizontally))
-                  }
+                        if (!isOnline) {
+                          Text(
+                              text = stringResource(R.string.loading_from_cache),
+                              modifier = Modifier.align(Alignment.CenterHorizontally))
+                        }
+                      }
                 }
-          }
-        } else {
-          ProfileScreenContent(
-              uiState = uiState,
-              onSelectTrip = onSelectTrip,
-              onEditPinnedTrips = onEditPinnedTrips,
-              onEditPinnedPictures = onEditPinnedPictures,
-              modifier = Modifier.padding(pd))
-        }
+              } else {
+                ProfileScreenContent(
+                    uiState = uiState,
+                    onSelectTrip = onSelectTrip,
+                    onEditPinnedTrips = onEditPinnedTrips,
+                    onEditPinnedPictures = onEditPinnedPictures,
+                    modifier = Modifier.padding(it))
+              }
+            }
       }
 }
 
@@ -199,7 +203,7 @@ fun ProfileScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProfileScreenTopBar(
+fun ProfileScreenTopBar(
     uiState: ProfileUIState,
     onBack: () -> Unit,
     onSettings: () -> Unit,
@@ -222,26 +226,24 @@ private fun ProfileScreenTopBar(
         }
       },
       actions = {
-        if (!uiState.isLoading) {
-          if (uiState.isOwnProfile) {
-            IconButton(
-                onClick = onSettings,
-                modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.Settings,
-                      contentDescription = stringResource(R.string.settings),
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-          } else {
-            IconButton(
-                onClick = onUnfriend,
-                modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.PersonRemove,
-                      contentDescription = stringResource(R.string.unfriend),
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-          }
+        if (uiState.isOwnProfile) {
+          IconButton(
+              onClick = onSettings,
+              modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = stringResource(R.string.settings),
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
+        } else {
+          IconButton(
+              onClick = onUnfriend,
+              modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.PersonRemove,
+                    contentDescription = stringResource(R.string.unfriend),
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
         }
       },
       modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
@@ -257,14 +259,14 @@ private fun ProfileScreenTopBar(
  * @param modifier The modifier to apply to the content.
  */
 @Composable
-private fun ProfileScreenContent(
+fun ProfileScreenContent(
     uiState: ProfileUIState,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
     onEditPinnedPictures: () -> Unit = {},
     modifier: Modifier
 ) {
-  Column(
+  LazyColumn(
       modifier =
           modifier
               .fillMaxSize()
@@ -274,34 +276,42 @@ private fun ProfileScreenContent(
                   end = dimensionResource(R.dimen.profile_padding_start_end),
                   bottom = dimensionResource(R.dimen.profile_padding_top_bottom)),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
+        item {
+          ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
-        BiographyDisplay(biography = uiState.biography)
+          BiographyDisplay(biography = uiState.biography)
 
-        AchievementsDisplay(
-            uiState.achievements,
-            uiState.stats,
-            uiState.friendsCount,
-            isOwnProfile = uiState.isOwnProfile,
-            profileName = uiState.name)
+          AchievementsDisplay(
+              uiState.achievements,
+              uiState.stats,
+              uiState.friendsCount,
+              isOwnProfile = uiState.isOwnProfile,
+              profileName = uiState.name)
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-        PinnedTrips(
-            pinnedTrips = uiState.pinnedTrips,
-            isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedTrips = onEditPinnedTrips,
-            onSelectTrip = onSelectTrip)
+          PinnedTrips(isOwnProfile = uiState.isOwnProfile, onEditPinnedTrips = onEditPinnedTrips)
+        }
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+        tripListItems(
+            trips = uiState.pinnedTrips,
+            interaction =
+                TripInteraction(
+                    onClick = { trip -> trip?.let { onSelectTrip(it.uid) } },
+                ),
+            emptyListString = if (uiState.isOwnProfile) NO_USER_PINNED_TRIPS else NO_PINNED_TRIPS)
 
-        PinnedPictures(
-            pinnedBitmaps = uiState.pinnedBitmaps,
-            isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedPictures = onEditPinnedPictures,
-            isLoadingImages = uiState.isLoadingImages)
+        item {
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+          PinnedPictures(
+              pinnedBitmaps = uiState.pinnedBitmaps,
+              isOwnProfile = uiState.isOwnProfile,
+              onEditPinnedPictures = onEditPinnedPictures,
+              isLoadingImages = uiState.isLoadingImages)
+        }
       }
 }
 
@@ -312,7 +322,7 @@ private fun ProfileScreenContent(
  * @param name The name of the user.
  */
 @Composable
-private fun ProfileHeader(photoUrl: String, name: String) {
+fun ProfileHeader(photoUrl: String, name: String) {
   Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     AsyncImage(
         model = photoUrl.ifBlank { R.drawable.default_profile_pic },
@@ -339,7 +349,7 @@ private fun ProfileHeader(photoUrl: String, name: String) {
  * @param biography The biography of the user.
  */
 @Composable
-private fun BiographyDisplay(biography: String) {
+fun BiographyDisplay(biography: String) {
   if (!biography.isBlank()) {
     Row(
         modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.BIOGRAPHY),
@@ -562,7 +572,7 @@ private fun AchievementMainText(
  * @param profileName The name of the user.
  */
 @Composable
-private fun StatAchievementText(
+fun StatAchievementText(
     currentValue: Int,
     unitLabel: String,
     isOwnProfile: Boolean,
@@ -671,19 +681,15 @@ private fun AchievementTierRow(
 }
 
 /**
- * The pinned trips section of the profile screen.
+ * The pinned trips section header of the profile screen.
  *
- * @param pinnedTrips The list of pinned trips.
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onSelectTrip The callback to select a trip.
  */
 @Composable
 private fun PinnedTrips(
-    pinnedTrips: List<Trip>,
     isOwnProfile: Boolean,
     onEditPinnedTrips: () -> Unit,
-    onSelectTrip: (String) -> Unit,
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE),
@@ -703,21 +709,6 @@ private fun PinnedTrips(
               }
         }
       }
-
-  val listState =
-      TripListState(
-          trips = pinnedTrips,
-          emptyListString =
-              if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
-              else stringResource(R.string.no_pinned_trips))
-
-  val listEvents =
-      TripListEvents(onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } })
-
-  TripList(
-      listState = listState,
-      listEvents = listEvents,
-  )
 }
 
 /**

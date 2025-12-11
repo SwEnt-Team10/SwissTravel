@@ -26,9 +26,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.SortMenu
+import com.github.swent.swisstravel.ui.composable.TripInteraction
 import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.composable.TripListEvents
-import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 
@@ -80,26 +79,26 @@ fun SetCurrentTripScreen(
           Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.small_padding))) {
           pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
-          val listState =
-              TripListState(
-                  trips = trips,
-                  isSelected = isSelected,
-                  isSelectionMode = false,
-                  noIconTripElement = true,
-                  emptyListString = stringResource(R.string.no_upcoming_trips))
-
-          val onClickAction: (Trip?) -> Unit = { trip ->
-            trip?.let {
-              viewModel.changeCurrentTrip(it)
-              navigationActions?.navigateTo(Screen.MyTrips)
-              Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT).show()
-            }
-          }
-
-          val listEvents =
-              TripListEvents(onClickTripElement = onClickAction, onLongPress = onClickAction)
-
-          TripList(listState = listState, listEvents = listEvents)
+          TripList(
+              trips = trips,
+              interaction =
+                  TripInteraction(
+                      onClick = { trip ->
+                        viewModel.changeCurrentTrip(trip!!)
+                        navigationActions?.navigateTo(Screen.MyTrips)
+                        Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT)
+                            .show()
+                      },
+                      onLongPress = { trip ->
+                        viewModel.changeCurrentTrip(trip!!)
+                        navigationActions?.navigateTo(Screen.MyTrips)
+                        Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT)
+                            .show()
+                      },
+                      isSelected = isSelected,
+                      isSelectionMode = false),
+              noIconTripElement = true,
+              emptyListString = stringResource(R.string.no_upcoming_trips))
         }
       }
 }
