@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.profile
 
-import android.net.Uri
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -47,7 +46,7 @@ private class TestUserRepository(private val user: User) : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedImagesUris: List<Uri>?
+      pinnedPicturesUids: List<String>?
   ) {}
 
   override suspend fun updateUserStats(uid: String, stats: UserStats) {}
@@ -136,7 +135,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -166,9 +165,11 @@ class ProfileScreenTest : SwissTravelTest() {
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
 
       // Pinned images section
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE).assertIsDisplayed()
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_LIST).assertExists()
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertExists()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES).assertExists()
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)
+          .assertExists()
     }
   }
 
@@ -187,7 +188,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val otherUser =
           User(
@@ -200,7 +201,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -241,7 +242,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val otherUser =
           User(
@@ -254,7 +255,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -302,7 +303,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val otherUser =
           User(
@@ -315,7 +316,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -363,7 +364,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val otherUser =
           User(
@@ -376,7 +377,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -393,7 +394,7 @@ class ProfileScreenTest : SwissTravelTest() {
           .onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON)
           .assertDoesNotExist()
       composeTestRule
-          .onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON)
+          .onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)
           .assertDoesNotExist()
 
       // Settings button should not exist
@@ -418,7 +419,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -434,7 +435,9 @@ class ProfileScreenTest : SwissTravelTest() {
       // Edit buttons for pinned trips/images should be visible (even if features not implemented
       // yet)
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON).assertExists()
+      composeTestRule
+          .onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)
+          .assertExists()
 
       // Remove friend button should NOT be displayed
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON).assertDoesNotExist()
@@ -455,7 +458,7 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = listOf("trip1", "trip2"), // trips to display
-              pinnedImagesUris = emptyList())
+              pinnedPicturesUids = emptyList())
 
       val viewModel =
           ProfileViewModel(

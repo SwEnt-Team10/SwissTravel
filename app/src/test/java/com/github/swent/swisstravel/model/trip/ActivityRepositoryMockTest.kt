@@ -391,6 +391,7 @@ class ActivityRepositoryMockTest {
 
     val prefs = listOf(Preference.PUBLIC_TRANSPORT)
     val coord = Coordinate(46.5, 7.5)
+    // Call the repository method
     val result = repo.getActivitiesNearWithPreference(prefs, coord, 500, limit)
 
     assertNotNull(result)
@@ -398,10 +399,10 @@ class ActivityRepositoryMockTest {
 
     // Verify the URL was built correctly
     val capturedUrl = slot.captured.url
-    val randomHits = repo.getActivityNumberToPull(limit, true)
-    assertTrue(
-        capturedUrl.toString().contains("hitsPerPage=$limit") ||
-            capturedUrl.toString().contains("hitsPerPage=$randomHits"))
+
+    val expectedHits = 10
+    assertTrue(capturedUrl.toString().contains("hitsPerPage=$expectedHits"))
+
     assertTrue(capturedUrl.toString().contains("facets=reachabilitylocation&facet.filter"))
     assertTrue(capturedUrl.toString().contains("reachabilitylocation:closetopublictransport"))
     assertTrue(capturedUrl.toString().contains("geo.dist=46.5%2C7.5%2C500"))
