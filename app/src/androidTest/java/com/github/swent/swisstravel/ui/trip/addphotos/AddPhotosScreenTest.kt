@@ -45,7 +45,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
-            isFavorite = true,
             isCurrentTrip = true,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -70,7 +69,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
-            isFavorite = true,
             isCurrentTrip = true,
             listUri = listOf("Uri1".toUri(), "AmazingUri2".toUri()),
             collaboratorsId = emptyList())
@@ -99,7 +97,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
-            isFavorite = true,
             isCurrentTrip = true,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -138,7 +135,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
-            isFavorite = true,
             isCurrentTrip = true,
             listUri = emptyList(),
             collaboratorsId = emptyList())

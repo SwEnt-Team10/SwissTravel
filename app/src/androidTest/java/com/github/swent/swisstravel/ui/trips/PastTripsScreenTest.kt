@@ -5,9 +5,12 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.model.trip.*
+import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
-import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
@@ -46,6 +49,59 @@ class FakePastTripsRepository(private val trips: MutableList<Trip> = mutableList
   override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
     // no-op
   }
+}
+
+/** Fake UserRepository to handle favorites logic for tests. */
+class FakeUserRepository : UserRepository {
+  private val users = mutableMapOf<String, User>()
+  private val currentUserId = "current"
+
+  init {
+    // Initialize current user state
+    users[currentUserId] =
+        User(
+            currentUserId,
+            "Current User",
+            "",
+            "email",
+            "",
+            emptyList(),
+            emptyList(),
+            UserStats(),
+            emptyList(),
+            emptyList(),
+            emptyList())
+  }
+
+  override suspend fun getCurrentUser(): User = users[currentUserId]!!
+
+  override suspend fun getUserByUid(uid: String): User? = users[uid]
+
+  override suspend fun getUserByNameOrEmail(query: String): List<User> = emptyList()
+
+  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
+
+  override suspend fun updateUserStats(uid: String, stats: UserStats) {}
+
+  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {}
+
+  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
+
+  override suspend fun removeFriend(uid: String, friendUid: String) {}
+
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedPicturesUids: List<String>?
+  ) {}
+
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {}
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {}
 }
 
 /** Tests for the past trips screen. */
@@ -156,11 +212,9 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun favoriteSelectedTrips_togglesFavoriteStatus() {
-    val fakeRepo =
-        FakePastTripsRepository(
-            mutableListOf(pastTrip1.copy(isFavorite = false), pastTrip2.copy(isFavorite = false)))
-    val viewModel =
-        PastTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
+    val fakeRepo = FakePastTripsRepository(mutableListOf(pastTrip1, pastTrip2))
+    val fakeUserRepo = FakeUserRepository()
+    val viewModel = PastTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeRepo)
 
     composeTestRule.setContent {
       SwissTravelTheme { PastTripsScreen(pastTripsViewModel = viewModel) }
@@ -178,7 +232,10 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     composeTestRule.waitForIdle()
     assertTrue(viewModel.uiState.value.selectedTrips.isEmpty())
-    val updatedTrips = runBlocking { fakeRepo.getAllTrips() }
-    assertTrue(updatedTrips.all { it.isFavorite })
+
+    // Verify via User object
+    val currentUser = runBlocking { fakeUserRepo.getCurrentUser() }
+    assertTrue(currentUser.favoriteTripsUids.contains(pastTrip1.uid))
+    assertTrue(currentUser.favoriteTripsUids.contains(pastTrip2.uid))
   }
 }

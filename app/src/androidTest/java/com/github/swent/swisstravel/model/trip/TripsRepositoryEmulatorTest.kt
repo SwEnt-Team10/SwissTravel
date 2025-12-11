@@ -50,7 +50,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
-            isFavorite = true,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -85,7 +84,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -98,7 +96,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -134,7 +131,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList()),
             routeSegments = emptyList(),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -168,20 +164,18 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())
     repository.addTrip(trip)
 
     // Act
-    val updatedTrip = trip.copy(name = "Updated Name", isFavorite = true)
+    val updatedTrip = trip.copy(name = "Updated Name")
     repository.editTrip(trip.uid, updatedTrip)
 
     // Assert
     val fetched = repository.getTrip(trip.uid)
     assertEquals("Updated Name", fetched.name)
-    assertTrue(fetched.isFavorite)
   }
 
   @Test
@@ -247,7 +241,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -290,7 +283,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())
@@ -335,7 +327,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
-            isFavorite = false,
             isCurrentTrip = false,
             listUri = emptyList(),
             collaboratorsId = emptyList())

@@ -49,6 +49,14 @@ private class TestUserRepository(private val user: User) : UserRepository {
       pinnedPicturesUids: List<String>?
   ) {}
 
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
   override suspend fun updateUserStats(uid: String, stats: UserStats) {}
 }
 
@@ -78,7 +86,6 @@ class ProfileScreenTest : SwissTravelTest() {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
@@ -96,7 +103,6 @@ class ProfileScreenTest : SwissTravelTest() {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
@@ -135,7 +141,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -188,7 +195,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val otherUser =
           User(
@@ -201,7 +209,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -242,7 +251,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val otherUser =
           User(
@@ -255,7 +265,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -303,7 +314,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val otherUser =
           User(
@@ -316,7 +328,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -364,7 +377,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val otherUser =
           User(
@@ -377,7 +391,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -419,7 +434,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -458,7 +474,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = listOf("trip1", "trip2"), // trips to display
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(

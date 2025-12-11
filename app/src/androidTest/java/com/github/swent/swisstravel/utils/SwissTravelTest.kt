@@ -148,7 +148,6 @@ abstract class SwissTravelTest {
               endDate = Timestamp(now.seconds + 3600, 0),
               preferredLocations = emptyList(),
               preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
@@ -166,7 +165,6 @@ abstract class SwissTravelTest {
               endDate = Timestamp(now.seconds + 10800, 0),
               preferredLocations = emptyList(),
               preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           listUri = emptyList(),
           collaboratorsId = emptyList())
