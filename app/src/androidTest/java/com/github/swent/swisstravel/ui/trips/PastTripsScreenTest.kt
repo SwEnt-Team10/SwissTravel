@@ -6,7 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
-import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
@@ -95,7 +95,7 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun emptyStateMessage_showsWhenNoTrips() {
     launchScreen()
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
   }
 
   @Test

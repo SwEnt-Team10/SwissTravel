@@ -229,7 +229,7 @@ class ComposableTests : InMemorySwissTravelTest() {
             TripListEvents(
                 onClickTripElement = { clickedTrip = it }, onLongPress = { longPressedTrip = it })
 
-        LazyColumn(modifier = Modifier.testTag(SortedTripListTestTags.SORTED_TRIP_LIST)) {
+        LazyColumn(modifier = Modifier.testTag(TripListTestTags.TRIP_LIST)) {
           sortedTripListItems(
               title = "My Trips",
               listState = listState,
@@ -247,7 +247,7 @@ class ComposableTests : InMemorySwissTravelTest() {
       longClick()
     }
     assertEquals(trip2, longPressedTrip)
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).performClick()
 
     composeTestRule
         .onNodeWithTag(
@@ -262,7 +262,7 @@ class ComposableTests : InMemorySwissTravelTest() {
     composeTestRule.setContent {
       val listState = TripListState(trips = emptyList(), emptyListString = "test")
       val listEvents = TripListEvents()
-      LazyColumn(modifier = Modifier.testTag(SortedTripListTestTags.SORTED_TRIP_LIST)) {
+      LazyColumn(modifier = Modifier.testTag(TripListTestTags.TRIP_LIST)) {
         sortedTripListItems(
             title = "test",
             listState = listState,
@@ -271,6 +271,6 @@ class ComposableTests : InMemorySwissTravelTest() {
       }
     }
 
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
   }
 }

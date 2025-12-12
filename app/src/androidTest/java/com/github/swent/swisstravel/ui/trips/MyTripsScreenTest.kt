@@ -12,7 +12,8 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
-import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
+import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
@@ -222,7 +223,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
     // Before adding, no upcoming trips
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertExists()
+    composeTestRule.onNodeWithTag(TripListTestTags.TRIP_LIST).assertExists()
 
     // Add a new upcoming trip inside a coroutine
     val newUpcomingTrip =
@@ -317,7 +318,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         "Trip B should appear before Trip A when sorted ASC by start date")
 
     // Change sort to START_DATE_DESC
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).performClick()
     composeTestRule.onNodeWithText(context.getString(R.string.start_date_desc)).performClick()
 
     composeTestRule.waitForIdle()
@@ -492,7 +493,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     composeTestRule.waitForIdle()
 
     // Open the sort dropdown and select "Favorites"
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).performClick()
     composeTestRule.onNodeWithText(context.getString(R.string.favorites_first)).performClick()
 
     composeTestRule.waitForIdle()

@@ -14,12 +14,9 @@ import androidx.compose.ui.res.dimensionResource
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.trips.TripSortType
 
-/** Object containing test tags for the [SortedTripList] composable. */
+/** Object containing test tags for the [sortedTripListItems]. */
 object SortedTripListTestTags {
   const val TITLE_BUTTON_ROW = "SortedTripListTitleButtonRow"
-  const val TRIP_LIST = TripListTestTags.TRIP_LIST
-  const val EMPTY_MESSAGE = TripListTestTags.EMPTY_MESSAGE
-  const val SORT_DROPDOWN_MENU = SortMenuTestTags.SORT_DROPDOWN_MENU
   const val TITLE = "SortedTripListTitle"
   const val SORTED_TRIP_LIST = "SortedTripList"
 
