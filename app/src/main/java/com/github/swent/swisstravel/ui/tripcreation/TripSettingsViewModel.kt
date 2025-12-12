@@ -305,12 +305,12 @@ open class TripSettingsViewModel(
                 name = finalName,
                 ownerId = user.uid,
                 locations = allLocations,
+                uriLocation = emptyMap(),
                 routeSegments = routeSegments,
                 activities = selectedActivities,
                 tripProfile = tripProfile,
                 isFavorite = false,
                 isCurrentTrip = false,
-                listUri = emptyList(),
                 collaboratorsId = emptyList(),
                 isRandom = _isRandomTrip.value)
 

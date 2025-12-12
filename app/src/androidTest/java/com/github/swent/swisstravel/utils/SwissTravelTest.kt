@@ -24,6 +24,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
@@ -150,8 +152,10 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
+
+  val dummyLocation = Location(Coordinate(0.0, 0.0), "Test Location")
 
   val trip2 =
       Trip(
@@ -168,7 +172,7 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
   val tripList = listOf(trip1, trip2)

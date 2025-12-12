@@ -357,7 +357,7 @@ class EditTripScreenViewModelTest {
         tripProfile = profile,
         isFavorite = false,
         isCurrentTrip = false,
-        listUri = emptyList(),
+        uriLocation = emptyMap(),
         collaboratorsId = emptyList(),
         isRandom = random)
   }
