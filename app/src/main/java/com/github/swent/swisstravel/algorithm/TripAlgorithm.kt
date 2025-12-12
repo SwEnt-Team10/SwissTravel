@@ -29,12 +29,18 @@ import kotlin.math.min
 import kotlin.math.roundToLong
 import kotlin.random.Random
 
+// Most of this file was done AI
+
 const val DISTANCE_PER_STOP_KM = 90.0
 const val RADIUS_NEW_ACTIVITY_M = 15000
 const val RADIUS_EXTENSION_M = 12500
 const val INVALID_DURATION = -1.0
 const val RESCHEDULE_PENALTY_PER_ACTIVITY_SEC = (0.25 * 3600) // 15 minutes
 const val EPSILON = 1e-6f
+// This is an arbitrary value to make the loop in addInBetweenActivities not run infinitely
+const val MAX_INBETWEEN_ACTIVITIES_SEGMENTS = 4
+const val MAX_INBETWEEN_ACTIVITES_BY_SEGMENT = 3
+const val RADIUS_CACHED_ACTIVITIES_KM = 20
 
 /**
  * Data class representing the progression weights for each step of the trip computation.
@@ -230,9 +236,11 @@ open class TripAlgorithm(
    *
    * @param tripSettings The settings for the trip.
    * @param tripProfile The profile of the trip.
+   * @param isRandomTrip Whether the trip is random or not.
+   * @param context The context of the app.
+   * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @param onProgress A callback function to report the progress of the computation (from 0.0 to
    *   1.0).
-   * @param isRandomTrip Whether the trip is random or not.
    * @return A list of [TripElement] representing the computed trip.
    */
   suspend fun computeTrip(
@@ -240,6 +248,7 @@ open class TripAlgorithm(
       tripProfile: TripProfile,
       isRandomTrip: Boolean = false,
       context: Context,
+      cachedActivities: MutableList<Activity> = mutableListOf(),
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
     val enhancedTripProfile =
@@ -257,7 +266,7 @@ open class TripAlgorithm(
       onProgress(0.0f)
       val selectedActivities =
           try {
-            activitySelector.addActivities { progress ->
+            activitySelector.addActivities(cachedActivities) { progress ->
               onProgress(progression.selectActivities * progress)
             }
           } catch (e: Exception) {
@@ -302,7 +311,7 @@ open class TripAlgorithm(
       // ---- STEP 2b: Insert in-between activities if preference enabled ----
       if (tripSettings.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
         optimizedRoute =
-            addInBetweenActivities(optimizedRoute = optimizedRoute, activityList) { progress ->
+            addInBetweenActivities(optimizedRoute = optimizedRoute, activities = activityList, cachedActivities = cachedActivities) { progress ->
               onProgress(
                   progression.selectActivities +
                       progression.optimizeRoute +
@@ -323,7 +332,7 @@ open class TripAlgorithm(
               enhancedTripProfile = enhancedTripProfile,
               originalOptimizedRoute = optimizedRoute,
               activityList = activityList,
-              intermediateActivities = intermediateActivities) { progress ->
+              intermediateActivities = intermediateActivities, cachedActivities = cachedActivities) { progress ->
                 onProgress(
                     progression.selectActivities +
                         progression.optimizeRoute +
@@ -332,7 +341,6 @@ open class TripAlgorithm(
               }
 
       check(schedule.isNotEmpty()) { "Rescheduled trip is empty" }
-
       // ---- STEP 4: Change schedule if needed ----
       val finalSchedule =
           adjustFinalSchedule(
@@ -341,7 +349,7 @@ open class TripAlgorithm(
               enhancedTripProfile = enhancedTripProfile,
               intermediateActivities = intermediateActivities,
               isRandom = isRandomTrip,
-              context = context) { progress ->
+              context = context, cachedActivities = cachedActivities) { progress ->
                 onProgress(
                     progression.selectActivities +
                         progression.optimizeRoute +
@@ -366,12 +374,15 @@ open class TripAlgorithm(
    * @param start Starting Location.
    * @param end Ending Location.
    * @param count Number of activities to generate.
+   * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @return List of new Activities between start and end.
    */
   suspend fun generateActivitiesBetween(
       start: Location,
       end: Location,
-      count: Int
+      count: Int,
+      cachedActivities: MutableList<Activity>,
+      allActivities: MutableList<Activity>
   ): List<Activity> {
     if (count <= 0) return emptyList()
 
@@ -392,10 +403,21 @@ open class TripAlgorithm(
           Coordinate(latitude = baseLat + randomOffsetLat, longitude = baseLon + randomOffsetLon)
 
       val activity =
-          activitySelector.getOneActivityNearWithPreferences(
-              coords = coord, radius = RADIUS_NEW_ACTIVITY_M)
+          activitySelector.getActivitiesNearWithPreferences(
+              coords = coord, radius = RADIUS_NEW_ACTIVITY_M, 1, allActivities.map { it.getName() }, cachedActivities = cachedActivities)
 
-      if (activity != null) newActivities.add(activity)
+      if (activity.isNotEmpty()) {
+          val act = activity.first()
+          newActivities.add(act)
+          // Get the element that corresponds to the activity in the cache and remove it if it exists
+          val sameActivityInCache = cachedActivities.firstOrNull {
+              it.location.sameLocation(act.location) && it.getName() == act.getName()
+          }
+
+          if (sameActivityInCache != null) {
+              cachedActivities.remove(sameActivityInCache)
+          }
+      }
     }
 
     return newActivities
@@ -407,6 +429,8 @@ open class TripAlgorithm(
    * @param optimizedRoute The optimized route containing main locations.
    * @param activities The mutable list of activities to which new activities will be added.
    * @param mode The transport mode for route optimization.
+   * @param distancePerStop The approximate distance for which we do a stop
+   * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @param onProgress A callback function to report progress (from 0.0 to 1.0).
    * @return A new OrderedRoute including the in-between activities.
    */
@@ -415,6 +439,7 @@ open class TripAlgorithm(
       activities: MutableList<Activity>,
       mode: TransportMode = TransportMode.CAR,
       distancePerStop: Double = DISTANCE_PER_STOP_KM,
+      cachedActivities: MutableList<Activity>,
       onProgress: (Float) -> Unit = {}
   ): OrderedRoute {
     var totalProgress = 0f
@@ -440,7 +465,7 @@ open class TripAlgorithm(
       if (numStops <= 0) return@forEachIndexed
 
       // Generate activities for this segment
-      val newActivities = generateActivitiesBetween(startSeg, endSeg, numStops)
+      val newActivities = generateActivitiesBetween(startSeg, endSeg, numStops, cachedActivities, activities)
       activities.addAll(newActivities)
 
       // Store in the map under its start segment
@@ -462,13 +487,16 @@ open class TripAlgorithm(
     // List of indexes where new activities were added to adjust segment durations later
     val addedIndexes = mutableListOf<Int>()
     // Add elements to the lists of our original OrderedRoute at the correct place
+      var index = 0
     for ((startSeg, activities) in intermediateActivitiesBySegment) {
+        index++
+        if (index >= MAX_INBETWEEN_ACTIVITIES_SEGMENTS) break
       // Get the start segment index in the optimized route
       val startIndex = newOrderedLocations.indexOfFirst { it.sameLocation(startSeg) }
       if (startIndex == -1) continue
 
       // Add the activities location after the start segment
-      for (i in 1..activities.size) {
+      for (i in 1..min(activities.size, MAX_INBETWEEN_ACTIVITES_BY_SEGMENT)) {
         val activity = activities[i - 1]
         // Because each time we add a new location, the next index shifts by 1
         val insertIndex = startIndex + i
@@ -583,6 +611,8 @@ open class TripAlgorithm(
    * @param activityList The mutable list of activities to schedule.
    * @param intermediateActivities The list of intermediate activities added between main locations.
    *   (should not remove them)
+   * @param cachedActivities A list of all the activities that were pulled but we didn't use.
+   * @param onProgress Progression of the function.
    * @return The final scheduled trip after rescheduling attempt.
    */
   open suspend fun attemptRescheduleIfNeeded(
@@ -590,6 +620,7 @@ open class TripAlgorithm(
       originalOptimizedRoute: OrderedRoute,
       activityList: MutableList<Activity>,
       intermediateActivities: List<Activity>,
+      cachedActivities: MutableList<Activity>,
       onProgress: (Float) -> Unit
   ): List<TripElement> {
     // Filter out intermediate activities from the activity list to avoid removing them
@@ -702,6 +733,8 @@ open class TripAlgorithm(
     activityList.removeAll { act ->
       !intermediateActivities.contains(act) && toRemove.any { rem -> activitiesMatch(act, rem) }
     }
+      // Put the valid activities that we had to remove due to the time to the cache in case we use them later
+      cachedActivities.addAll(toRemove)
 
     // 6) Build new OrderedRoute removing those locations and invalidating durations
     val (routeAfterRemoval, changedIndexes) =
@@ -750,6 +783,7 @@ open class TripAlgorithm(
    * @param enhancedTripProfile The enhanced trip profile containing the original trip profile. //
    * @param intermediateActivities The list of activities between distant locations.
    * @param isRandom Whether the trip is random.
+   * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @param onProgress A callback function to report progress (from 0.0 to 1.0).
    * @return The adjusted schedule.
    *
@@ -762,171 +796,30 @@ open class TripAlgorithm(
       intermediateActivities: List<Activity> = emptyList(),
       isRandom: Boolean = false,
       context: Context,
+      cachedActivities: MutableList<Activity>,
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
     onProgress(0.0f)
 
+      // TODO: Make sure that when the trip is random, we keep "visiting the grandTour spot" as an activity
     // Already ending on the correct day → nothing to change
     if (sameDate(originalSchedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) {
       return originalSchedule
     }
 
-    val newSchedule = originalSchedule.toMutableList()
-
-    // Extract last segment
-    val last = newSchedule.last()
-    val lastSegment =
-        last as? TripElement.TripSegment
-            ?: throw IllegalStateException("Last TripElement must be a TripSegment")
-
-    val startLoc = lastSegment.route.from
-    val endLoc = lastSegment.route.to
-
-    val intermediate =
-        originalOrderedRoute.orderedLocations.drop(1).dropLast(1) // remove start & end
-
-    // take one out of two
-    val sampled = intermediate.filterIndexed { index, _ -> index % 2 == 0 }
-
-    val listOfLocations = listOf(startLoc) + sampled + listOf(endLoc)
-
-    // This will hold the activities that we add during the extension
-    val addedActivities = mutableListOf<Activity>()
-    val oldActivities =
+    val allActivities =
         originalSchedule.filterIsInstance<TripElement.TripActivity>().map { it.activity }
-    val activityBlackList = oldActivities.map { it.getName() }.toMutableList()
 
-    var nearWhich = 0
-    var radius = RADIUS_NEW_ACTIVITY_M
-    var index = 0
-    val maxIndex =
-        computeIndex(
-            targetEndDate = enhancedTripProfile.tripProfile.endDate,
-            currentEndDate = originalSchedule.last().endDate)
-
-    // ---- Loop until the final processed schedule reaches correct end date ----
-    try {
-      var ordered = originalOrderedRoute.copy()
-      while (!sameDate(newSchedule.last().endDate, enhancedTripProfile.tripProfile.endDate) &&
-          index < maxIndex) {
-
-        val targetLoc = listOfLocations[nearWhich].coordinate
-
-        val newAct =
-            activitySelector.getOneActivityNearWithPreferences(targetLoc, radius, activityBlackList)
-
-        if (newAct != null) {
-          // Verify that the new activity is not already in the trip even though it should never
-          // happen
-          if (addedActivities.any { it.location.sameLocation(newAct.location) } ||
-              originalSchedule.any {
-                it is TripElement.TripActivity && it.activity.location.sameLocation(newAct.location)
-              }) {
-            index += 1
-            continue
-          }
-          addedActivities.add(newAct)
-          activityBlackList.add(newAct.getName())
-
-          // ---- Build a temporary OrderedRoute ----
-          val newLocation = addedActivities.last().location
-
-          // Append location to the orderedLocations list
-          val newOrderedLocations = ordered.orderedLocations + newLocation
-
-          // Keep existing segment durations for the old route
-          val existingDurations = ordered.segmentDuration.toMutableList()
-
-          // Add a single INVALID_DURATION for the new segment
-          existingDurations.add(INVALID_DURATION)
-
-          // Update total duration
-          val newTotalDuration = existingDurations.sum()
-
-          // Build updated OrderedRoute
-          ordered =
-              ordered.copy(
-                  orderedLocations = newOrderedLocations,
-                  segmentDuration = existingDurations,
-                  totalDuration = newTotalDuration)
-
-          val startIndex = ordered.orderedLocations.size - addedActivities.size
-          val indexes = (startIndex until ordered.orderedLocations.size).toList()
-
-          // ---- Recompute new ordered route ----
-          val recomputed =
-              routeOptimizer.recomputeOrderedRoute(
-                  orderedLocations = ordered,
-                  addedIndexes = indexes,
-                  mode = TransportMode.CAR,
-                  invalidDuration = INVALID_DURATION) {}
-
-          // ---- Reschedule using this new route ----
-          val reScheduled =
-              scheduleTrip(
-                  tripProfile = enhancedTripProfile.tripProfile,
-                  ordered = recomputed,
-                  activities = (oldActivities + addedActivities).toMutableList(),
-                  params = scheduleParams) {}
-
-          // Replace newSchedule so we can test endDate again
-          newSchedule.clear()
-          newSchedule.addAll(reScheduled)
-        }
-
-        // If we completed a full cycle without finishing => widen radius
-        val cycleSize = listOfLocations.size
-
-        nearWhich = (nearWhich + 1) % cycleSize
-        if (nearWhich == cycleSize - 1) {
-          index += 1
-          radius += RADIUS_EXTENSION_M / (index + 1)
-        }
-
-        nearWhich = (nearWhich + 1) % 3
-
-        onProgress(finalSchedulingProgression.selectNewActivities * index.toFloat() / maxIndex)
-      }
-    } catch (e: Exception) {
-      Log.e("TripAlgorithm", "Final schedule extension failed, using original schedule", e)
-      onProgress(1.0f)
-      return originalSchedule
-    }
     onProgress(finalSchedulingProgression.selectNewActivities)
-
-    val allActivities = oldActivities + addedActivities
-    val allLocations = allActivities.map { it.location }.toMutableList()
-
-    if (isRandom) {
-      allLocations.addAll(enhancedTripProfile.newPreferredLocations)
-    }
-    // Should not be too heavy because most of it should be cached already
-    val optimizedOrderedRoute =
-        routeOptimizer.optimize(
-            start = startLoc,
-            end = endLoc,
-            allLocations = allLocations,
-            activities = allActivities,
-            mode =
-                if (enhancedTripProfile.tripProfile.preferences.contains(
-                    Preference.PUBLIC_TRANSPORT)) {
-                  TransportMode.TRAIN
-                } else TransportMode.CAR,
-        ) {
-          onProgress(
-              finalSchedulingProgression.selectNewActivities +
-                  finalSchedulingProgression.optimize * it)
-        }
-    onProgress(finalSchedulingProgression.selectNewActivities + finalSchedulingProgression.optimize)
 
     // Final scheduling by adding even more activities if needed
     val finalSchedule =
         addMoreActivities(
-            optimizedOrderedRoute,
+            originalOrderedRoute,
             allActivities,
             enhancedTripProfile,
             intermediateActivities,
-            context) {
+            context, cachedActivities) {
               onProgress(
                   finalSchedulingProgression.selectNewActivities +
                       finalSchedulingProgression.optimize +
@@ -936,6 +829,66 @@ open class TripAlgorithm(
     onProgress(1.0f)
     return finalSchedule
   }
+
+    /**
+     * Done by AI
+     * Attempts to add an activity from the [cachedActivities] list to the [activityList].
+     * * Logic:
+     * 1. Invalidates and removes cached activities that are not near any preferred location.
+     * 2. Selects the valid candidate that is closest to one of the preferred location.
+     *
+     * @param activityList The mutable list of current activities in the trip.
+     * @param cachedActivities The mutable list of backup/cached activities.
+     * @param preferredLocations The list of user's preferred locations (to validate relevance).
+     * @return `true` if an activity was added, `false` otherwise.
+     */
+    private fun addCachedActivity(
+        activityList: MutableList<Activity>,
+        cachedActivities: MutableList<Activity>,
+        preferredLocations: List<Location>
+    ): Boolean {
+        if (cachedActivities.isEmpty()) return false
+
+        val iterator = cachedActivities.iterator()
+        val validCandidates = mutableListOf<Activity>()
+
+        // 1. Remove activities not near any preferred location
+        while (iterator.hasNext()) {
+            val activity = iterator.next()
+
+            val isNearPreferred = preferredLocations.any { pref ->
+                activity.location.coordinate.haversineDistanceTo(pref.coordinate) <= RADIUS_CACHED_ACTIVITIES_KM
+            }
+
+            if (!isNearPreferred) {
+                // Remove invalid activity from cache permanently because they should not be proposed as they are far from every preferredLocations
+                iterator.remove()
+            } else {
+                // Only consider if not already in the trip
+                val alreadyInTrip = activityList.any { it.location.sameLocation(activity.location) }
+                if (!alreadyInTrip) {
+                    validCandidates.add(activity)
+                }
+            }
+        }
+
+        if (validCandidates.isEmpty()) return false
+
+        // 2. Find the candidate closest to any preferred location point
+        val bestCandidate = validCandidates.minByOrNull { candidate ->
+            preferredLocations.minOfOrNull { loc ->
+                candidate.location.coordinate.haversineDistanceTo(loc.coordinate)
+            } ?: Double.MAX_VALUE
+        }
+
+        return if (bestCandidate != null) {
+            activityList.add(bestCandidate)
+            cachedActivities.remove(bestCandidate)
+            true
+        } else {
+            false
+        }
+    }
 
   /**
    * kdoc done with AI Iteratively adds activities to a trip until the trip reaches its target end
@@ -967,6 +920,7 @@ open class TripAlgorithm(
    * @param intermediateActivities Optional list of [Activity] that must remain in the schedule
    *   during rescheduling.
    * @param context Android [Context] used to access resources for creating new activities.
+   * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @param onProgress Lambda to receive progress updates as a [Float] between 0 and 1.
    * @return A [List] of [TripElement] representing the fully scheduled trip with all added
    *   activities.
@@ -977,118 +931,172 @@ open class TripAlgorithm(
       enhancedTripProfile: EnhancedTripProfile,
       intermediateActivities: List<Activity>,
       context: Context,
+      cachedActivities: MutableList<Activity>,
       onProgress: (Float) -> Unit = {},
   ): List<TripElement> {
-    val allActivities = activityList.toMutableList()
+      val allActivities = activityList.toMutableList()
 
-    // Schedule trip
-    var schedule =
-        attemptRescheduleIfNeeded(
-            enhancedTripProfile, originalOrderedRoute, allActivities, intermediateActivities) {
+      // Schedule trip
+      var schedule =
+          attemptRescheduleIfNeeded(
+              enhancedTripProfile, originalOrderedRoute, allActivities, intermediateActivities, cachedActivities) {
               onProgress(it * 0.25f)
-            }
-
-    // Use enhancedTripProfile.tripProfile for preference checks and date checks
-    val hasUrbanPreference = enhancedTripProfile.tripProfile.preferences.contains(Preference.URBAN)
-    val hasIntermediatePreference =
-        enhancedTripProfile.tripProfile.preferences.contains(Preference.INTERMEDIATE_STOPS)
-
-    var addCityWorks = true
-    var addGrandTourWorks = true
-    var stayAtCenterRetry = true
-    val visitedLocations = mutableListOf<Location>()
-    var numberOfCycle = 0
-    val limit = computeIndex(enhancedTripProfile.tripProfile.endDate, schedule.last().endDate) + 1
-    while ((addCityWorks || addGrandTourWorks) &&
-        numberOfCycle <= limit &&
-        !sameDate(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) {
-      val rand = Random.Default
-
-      // This part was done with AI
-      when {
-        // Both can be added
-        addCityWorks && addGrandTourWorks && hasUrbanPreference && hasIntermediatePreference -> {
-          if (rand.nextBoolean()) {
-            addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
-          } else {
-            val result =
-                addGrandTourActivities(
-                    enhancedTripProfile,
-                    allActivities,
-                    visitedLocations,
-                    stayAtCenterRetry,
-                    context)
-            addGrandTourWorks = result.added
-            stayAtCenterRetry = result.shouldRetryCenter
           }
-        }
 
-        // Only city
-        addCityWorks && hasUrbanPreference -> {
-          addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
-        }
-
-        // Only Grand Tour
-        addGrandTourWorks && hasIntermediatePreference -> {
-          val result =
-              addGrandTourActivities(
-                  enhancedTripProfile, allActivities, visitedLocations, stayAtCenterRetry, context)
-          addGrandTourWorks = result.added
-          // If we added a grandTourActivity, make addCityWorks true because the new
-          // grandTourLocation that we added
-          // to the enhancedTripProfile could be in a big city
-          addCityWorks = result.added || addCityWorks
-          stayAtCenterRetry = result.shouldRetryCenter
-        }
-
-        // Fallback: try both randomly
-        else -> {
-          if (rand.nextBoolean() && addCityWorks) {
-            addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
-          } else {
-            val result =
-                addGrandTourActivities(
-                    enhancedTripProfile,
-                    allActivities,
-                    visitedLocations,
-                    stayAtCenterRetry,
-                    context)
-            addGrandTourWorks = result.added
-            // If we added a grandTourActivity, make addCityWorks true because the new
-            // grandTourLocation that we added
-            // to the enhancedTripProfile could be in a big city
-            addCityWorks = result.added || addCityWorks
-            stayAtCenterRetry = result.shouldRetryCenter
+      var addedFromCache = true
+      while (addedFromCache && !sameDate(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) {
+          addedFromCache = false
+          val numberOfDays = dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+          val limit = min(7, numberOfDays)
+          for (i in 1..limit) {
+              val added = addCachedActivity(allActivities, cachedActivities, enhancedTripProfile.newPreferredLocations)
+              if (added) {
+                  addedFromCache = true
+              } else {
+                  // If we failed to add an activity, stop trying
+                  break
+              }
           }
-        }
+          if (addedFromCache) {
+              // Re-optimize route with the new cached activity included
+              val updatedNewActivities = allActivities.filter { act -> activityList.none { it.location.sameLocation(act.location)  } }
+              val optimizedRoute = routeOptimizer.optimize(
+                  enhancedTripProfile.tripProfile.arrivalLocation!!,
+                  enhancedTripProfile.tripProfile.departureLocation!!,
+                  (originalOrderedRoute.orderedLocations + updatedNewActivities.map { it.location }),
+                  allActivities,
+                  TransportMode.CAR,
+              ) {}
+
+              // Re-schedule
+              schedule = attemptRescheduleIfNeeded(
+                  enhancedTripProfile, optimizedRoute, allActivities, intermediateActivities, cachedActivities) {}
+
+              // Update progress (using a rough estimate logic similar to the loop below)
+              onProgress(
+                  (0.25f +
+                          (0.75f /
+                                  (1 +
+                                          dateDifference(
+                                              schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)))))
+          }
       }
 
-      val newActivities =
-          allActivities.filter { act -> activityList.none { it.location == act.location } }
-      val optimizedRoute =
-          routeOptimizer.optimize(
-              enhancedTripProfile.tripProfile.arrivalLocation!!,
-              enhancedTripProfile.tripProfile.departureLocation!!,
-              (originalOrderedRoute.orderedLocations + newActivities.map { it.location }),
-              allActivities,
-              TransportMode.CAR,
-          ) {}
+      // If we are on the same day, we finished
+      if (sameDate(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) return schedule
 
-      schedule =
-          attemptRescheduleIfNeeded(
-              enhancedTripProfile, optimizedRoute, allActivities, intermediateActivities) {}
+      // Else we need to add even more activities
+      // Use enhancedTripProfile.tripProfile for preference checks and date checks
+      val hasUrbanPreference = enhancedTripProfile.tripProfile.preferences.contains(Preference.URBAN)
 
-      onProgress(
-          (0.25f +
-              (0.75f /
-                  (1 +
-                      dateDifference(
-                          schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)))))
-      numberOfCycle++
-    }
+      var addCityWorks = true
+      var addGrandTourWorks = true
+      var stayAtCenterRetry = true
+      val visitedLocations = mutableListOf<Location>()
+      var numberOfCycle = 0
+      val missingDays = dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+      val limit = min(20,missingDays * 2) // arbitrary value to not have an infinite loop
 
-    onProgress(1.0f)
-    return schedule
+      while ((addCityWorks || addGrandTourWorks) &&
+          numberOfCycle < limit &&
+          !sameDate(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) {
+
+          numberOfCycle++
+
+          val rand = Random.Default
+
+          when {
+              // Only city
+              addCityWorks && hasUrbanPreference -> {
+                  addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+              }
+
+              // Any of the two since the user doesn't have any preferences
+              addGrandTourWorks && addCityWorks -> {
+                  if (rand.nextBoolean()) {
+                      addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+                  } else {
+                      val result =
+                          addGrandTourActivities(
+                              enhancedTripProfile,
+                              allActivities,
+                              visitedLocations,
+                              stayAtCenterRetry,
+                              context,
+                              cachedActivities)
+                      addGrandTourWorks = result.added
+                      // If we successfully added a new grand tour activity, try to add a city activity (it costs nothing to compute)
+                      if (result.added){
+                          addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+                      }
+                      stayAtCenterRetry = result.shouldRetryCenter
+                  }
+              }
+
+              // Fallback: try to add a city activity first since it doesn't cost anything
+              else -> {
+                  if (addCityWorks) {
+                      addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+                  } else {
+                      val result =
+                          addGrandTourActivities(
+                              enhancedTripProfile,
+                              allActivities,
+                              visitedLocations,
+                              stayAtCenterRetry,
+                              context,
+                              cachedActivities)
+                      addGrandTourWorks = result.added
+                      // If we successfully added a new grand tour activity, try to add a city activity (it costs nothing to compute)
+                      if (result.added){
+                          addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+                      }
+                      stayAtCenterRetry = result.shouldRetryCenter
+                  }
+              }
+          }
+
+          // Cost nothing to call and could add activities if when we fetched some for a new city that we added for example
+          // we got too much
+          addCachedActivity(allActivities, cachedActivities, enhancedTripProfile.newPreferredLocations)
+
+          val newActivities =
+              allActivities.filter { act -> activityList.none { it.location.sameLocation(act.location) } }
+          val optimizedRoute =
+              routeOptimizer.optimize(
+                  enhancedTripProfile.tripProfile.arrivalLocation!!,
+                  enhancedTripProfile.tripProfile.departureLocation!!,
+                  (originalOrderedRoute.orderedLocations + newActivities.map { it.location }),
+                  allActivities,
+                  TransportMode.CAR,
+              ) {}
+
+          // Maybe we added a location that is pretty far, so try to addInBetweenActivities if the preference intermediate stops was set
+          if (enhancedTripProfile.tripProfile.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
+              addInBetweenActivities(
+                  optimizedRoute = optimizedRoute,
+                  activities = allActivities,
+                  mode =
+                      if (enhancedTripProfile.tripProfile.preferences.contains(Preference.PUBLIC_TRANSPORT)) TransportMode.TRAIN
+                      else TransportMode.CAR,
+                  cachedActivities = cachedActivities
+              )
+          }
+
+          schedule =
+              attemptRescheduleIfNeeded(
+                  enhancedTripProfile, optimizedRoute, allActivities, intermediateActivities, cachedActivities) {}
+
+          onProgress(
+              (0.25f +
+                      (0.75f /
+                              (1 +
+                                      dateDifference(
+                                          schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)))))
+      }
+
+      onProgress(1.0f)
+      return schedule
   }
 
   /**
@@ -1173,30 +1181,7 @@ open class TripAlgorithm(
   }
 
   /**
-   * Done with AI Adds one or two "Grand Tour" activities to the trip based on the user's preferred
-   * locations and trip profile.
-   *
-   * This function selects Grand Tour stops according to two modes:
-   * 1. **stayAtCenter = true**:
-   * - Computes a dynamic reference point along the line between the first and last preferred
-   *   location.
-   * - Chooses preferred locations closest to this reference point as candidates for Grand Tour
-   *   stops.
-   * - Within a radius starting at 30km and increasing in steps of 30km up to 120km, finds a
-   *   matching Grand Tour city and adds activities nearby.
-   * 2. **stayAtCenter = false**:
-   * - Finds the Grand Tour city closest to either the start or end preferred location (whichever is
-   *   closer).
-   * - Skips cities already in the visited list.
-   * - Adds activities near the closest unvisited city.
-   *
-   * The function uses a **fallback radius** strategy to expand the search area if no activities are
-   * found initially.
-   *
-   * For each selected Grand Tour city, up to two activities are added via
-   * [activitySelector.getOneActivityNearWithPreferences], and the city is added to [visitedList] to
-   * prevent duplicates in future calls.
-   *
+   * Done with AI
    * @param enhancedTripProfile The enhanced trip profile, containing preferred locations and trip
    *   preferences.
    * @param activityList The mutable list of activities; newly created activities will be added
@@ -1207,6 +1192,7 @@ open class TripAlgorithm(
    * - `false`: closest city to either start or end of trip.
    *
    * @param context The Android context, used to load Grand Tour locations from resources.
+   * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @return `true` if at least one activity was successfully added, `false` otherwise.
    */
   private suspend fun addGrandTourActivities(
@@ -1214,115 +1200,119 @@ open class TripAlgorithm(
       activityList: MutableList<Activity>,
       visitedList: MutableList<Location>,
       stayAtCenter: Boolean,
-      context: Context
+      context: Context,
+      cachedActivities: MutableList<Activity>
   ): AddGrandTourResult {
-    val preferred = enhancedTripProfile.newPreferredLocations
-    if (preferred.isEmpty()) return AddGrandTourResult(false, stayAtCenter)
+      // 1. Load Grand Tour cities
+      val grandTour =
+          context.resources.getStringArray(R.array.grand_tour).map { line ->
+              val parts = line.split(";")
+              Location(
+                  coordinate = Coordinate(parts[1].toDouble(), parts[2].toDouble()),
+                  name = parts[0],
+                  imageUrl = "")
+          }
 
-    // Load Grand Tour cities from resources
-    val grandTour =
-        context.resources.getStringArray(R.array.grand_tour).map { line ->
-          val parts = line.split(";")
-          Location(
-              coordinate = Coordinate(parts[1].toDouble(), parts[2].toDouble()),
-              name = parts[0],
-              imageUrl = "")
-        }
+      val startCoord = enhancedTripProfile.tripProfile.arrivalLocation!!.coordinate
+      val endCoord = enhancedTripProfile.tripProfile.departureLocation!!.coordinate
 
-    val startCoord = enhancedTripProfile.tripProfile.arrivalLocation!!.coordinate
-    val endCoord = enhancedTripProfile.tripProfile.departureLocation!!.coordinate
-    val targetCities: List<Location> =
-        if (stayAtCenter) {
-          // ---- Dynamic center along start-end line ----
-          val rand = Random.Default
-          val fraction = 0.15 + rand.nextDouble() * 0.7
-          val dynamicLat =
-              startCoord.latitude + (endCoord.latitude - startCoord.latitude) * fraction
-          val dynamicLon =
-              startCoord.longitude + (endCoord.longitude - startCoord.longitude) * fraction
-          val dynamicCenter = Coordinate(dynamicLat, dynamicLon)
-          // Sort preferred locations by distance to dynamic center
-          preferred.sortedBy { it.coordinate.haversineDistanceTo(dynamicCenter) }
-        } else {
-          // ---- Closest to start or end ----
-          grandTour
-              .filter { city -> visitedList.none { it.name == city.name } }
-              .sortedBy { city ->
-                val distToStart = city.coordinate.haversineDistanceTo(startCoord)
-                val distToEnd = city.coordinate.haversineDistanceTo(endCoord)
-                minOf(distToStart, distToEnd)
+      // Detect circular trip
+      val isCircularTrip = startCoord.haversineDistanceTo(endCoord) < 30.0
+
+      // 2. Define strategy helper
+      suspend fun tryStrategy(useCenterStrategy: Boolean): Boolean {
+
+          val availableCities = grandTour.filter { gtCity ->
+              // A. Check if the raw GT point is already used
+              val isGtUsed = visitedList.any { it.sameLocation(gtCity) } ||
+                      enhancedTripProfile.newPreferredLocations.any { it.sameLocation(gtCity) }
+
+              if (isGtUsed) return@filter false
+
+              // B. Check if the associated Major City is already used
+              val associatedCityConfig = swissMajorCities.firstOrNull { majorCity ->
+                  gtCity.coordinate.haversineDistanceTo(majorCity.location.coordinate) <= majorCity.radius
               }
-        }
 
-    // ---- Try each candidate location ----
-    var radius = 30
-    while (radius <= 120) {
-      for (loc in targetCities) {
-        // Skip already visited
-        if (visitedList.any { it.name == loc.name }) continue
+              if (associatedCityConfig != null) {
+                  val majorCityLoc = associatedCityConfig.location
+                  val isCityUsed = visitedList.any { it.sameLocation(majorCityLoc) } ||
+                          enhancedTripProfile.newPreferredLocations.any { it.sameLocation(majorCityLoc) }
 
-        val matchingCity =
-            if (stayAtCenter) {
-              // Find grand tour city within radius
-              grandTour.firstOrNull { city ->
-                loc.coordinate.haversineDistanceTo(city.coordinate) <= radius
+                  if (isCityUsed) return@filter false
               }
-            } else {
-              // loc is already a Grand Tour city
-              loc
-            } ?: continue
 
-        // Fetch 1-2 activities near the
-        var added = false
-        for (i in 1..2) {
-          val newActivity =
-              activitySelector.getOneActivityNearWithPreferences(
-                  coords = matchingCity.coordinate,
+              true // Passes all checks
+          }
+
+          if (availableCities.isEmpty()) return false
+
+          // 3. Select Candidates
+          val candidatesToTry = if (isCircularTrip) {
+              // Pick the 2 closest valid cities and shuffle them for a bit of randomness.
+              availableCities
+                  .sortedBy { it.coordinate.haversineDistanceTo(startCoord) }
+                  .take(2)
+                  .shuffled()
+          } else {
+              val scoredCities = availableCities.map { city ->
+                  val distToStart = city.coordinate.haversineDistanceTo(startCoord)
+                  val distToEnd = city.coordinate.haversineDistanceTo(endCoord)
+
+                  val cost = if (useCenterStrategy) {
+                      distToStart + distToEnd // Intermediate
+                  } else {
+                      min(distToStart, distToEnd) // Hub
+                  }
+                  city to cost
+              }
+              scoredCities.sortedBy { it.second }.take(2).map { it.first }.shuffled()
+          }
+
+          if (candidatesToTry.isEmpty()){
+              return false
+          }
+
+          val gtCity = candidatesToTry.shuffled().first()
+          // 4. Try to add activities
+              // Resolve to Major City if applicable
+              val associatedCity = swissMajorCities.firstOrNull { majorCity ->
+                  gtCity.coordinate.haversineDistanceTo(majorCity.location.coordinate) <= majorCity.radius
+              }?.location
+
+              // This is the location we will actually add to the trip
+              val finalCandidate = associatedCity ?: gtCity
+
+              // Fetch activities near the FINAL candidate
+              val newActivities = activitySelector.getActivitiesNearWithPreferences(
+                  coords = finalCandidate.coordinate,
                   radius = RADIUS_NEW_ACTIVITY_M,
-                  activityBlackList = activityList.map { it.getName() })
-          if (newActivity != null) {
-            activityList.add(newActivity)
-            added = true
-          } else
-              break // No need to search for a second activity if we didn't find one to begin with
-        }
+                  limit = 3,
+                  activityBlackList = activityList.map { it.getName() },
+                  cachedActivities = cachedActivities
+              )
 
-        if (added) {
-          visitedList.add(matchingCity)
-          // Add the new city as a preferred location so that it is not directly removed by anything
-          // that comes after in the algorithm AND for addCityActivity to use it
-          enhancedTripProfile.newPreferredLocations.add(matchingCity)
-          return AddGrandTourResult(true, stayAtCenter)
-        }
+              if (newActivities.isNotEmpty()) {
+                  activityList.addAll(newActivities)
+                  visitedList.add(finalCandidate)
+                  // Add to preferred locations so the rest of the algorithm treats it as a hub
+                  enhancedTripProfile.newPreferredLocations.add(finalCandidate)
+                  return true
+              }
+
+          return false
       }
-      radius += 30
-    }
 
-    return AddGrandTourResult(false, stayAtCenter)
-  }
+      // 5. Execute Strategies
+      if (tryStrategy(stayAtCenter)) {
+          return AddGrandTourResult(true, !stayAtCenter) // Toggle strategy
+      }
 
-  /**
-   * Done with AI Function to compute an index for the while loop in [adjustFinalSchedule] based on
-   * the number of missing days
-   *
-   * @param targetEndDate The target end date for the trip.
-   * @param currentEndDate The current end date of the trip.
-   * @param zone The time zone to use for date comparison.
-   * @return The computed index.
-   */
-  private fun computeIndex(
-      targetEndDate: Timestamp,
-      currentEndDate: Timestamp,
-      zone: ZoneId = ZoneId.systemDefault()
-  ): Int {
-    val currentLocal = currentEndDate.toDate().toInstant().atZone(zone).toLocalDate()
-    val targetLocal = targetEndDate.toDate().toInstant().atZone(zone).toLocalDate()
+      if (tryStrategy(!stayAtCenter)) {
+          return AddGrandTourResult(true, stayAtCenter)
+      }
 
-    // Number of calendar days difference (0 if same day, 1 if target is next day, etc.)
-    val missingDays = ChronoUnit.DAYS.between(currentLocal, targetLocal).coerceAtLeast(0)
-
-    // min 2 iterations, cap at 7
-    return max(2, min(7, missingDays.toInt()))
+      return AddGrandTourResult(false, stayAtCenter)
   }
 
   /**

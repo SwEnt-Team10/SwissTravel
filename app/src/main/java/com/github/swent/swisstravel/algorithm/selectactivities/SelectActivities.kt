@@ -41,12 +41,14 @@ class SelectActivities(
    * Fetches and selects activities based on the trip settings.
    *
    * @param cachedActivities A mutable list to store activities that were fetched but not returned.
+   * @param activityBlackList A list with all the activities that are blackListed
    * @param onProgress A callback function to report the progress of the selection process (from 0.0
    *   to 1.0).
    * @return A list of [Activity] based on the user preferences and points of interest
    */
   suspend fun addActivities(
       cachedActivities: MutableList<Activity> = mutableListOf(),
+      activityBlackList: List<String> = emptyList(),
       onProgress: (Float) -> Unit
   ): List<Activity> {
     val allDestinations = buildDestinationList()
@@ -60,15 +62,7 @@ class SelectActivities(
     val days =
         ChronoUnit.DAYS.between(
             tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
-    // Estimate the total number of activities needed for the trip.
-    // If there are intermediate stops, we reduce the total number of activities by estimating that
-    // one activity will be done between two very distant locations.
-    val totalNbActivities =
-        if (userPreferences.contains(Preference.INTERMEDIATE_STOPS)) {
-          NB_ACTIVITIES_PER_DAY * days.toDouble() - tripSettings.destinations.size
-        } else {
-          (NB_ACTIVITIES_PER_DAY) * days.toDouble()
-        }
+    val totalNbActivities = (NB_ACTIVITIES_PER_DAY) * days.toDouble()
     // Calculate the total number of steps for progress reporting.
     val totalSteps = totalSteps(allDestinations.size, userPreferences.size)
 
@@ -85,7 +79,7 @@ class SelectActivities(
                     destination.coordinate,
                     NEAR,
                     numberOfActivityToFetchPerStep,
-                    cachedActivities = cachedActivities)
+                    activityBlackList, cachedActivities)
             allFetchedActivities.addAll(fetched)
             // Update progress after each API call.
             completedSteps++
@@ -102,8 +96,7 @@ class SelectActivities(
                 activityRepository.getActivitiesNear(
                     destination.coordinate,
                     NEAR,
-                    numberOfActivityToFetchPerStep,
-                    cachedActivities = cachedActivities)
+                    numberOfActivityToFetchPerStep, activityBlackList, cachedActivities)
             allFetchedActivities.addAll(fetched)
             // Update progress after each API call.
             completedSteps++
@@ -122,36 +115,38 @@ class SelectActivities(
   }
 
   /**
-   * Fetches one activity near the given location for testing purposes. If user preferences are set,
+   * Fetches multiple activities near the given location for testing purposes. If user preferences are set,
    * it tries to fetch an activity matching those preferences. Otherwise, it fetches any activity
    * near the location.
    *
    * @param coords The [Coordinate] around which to search for an activity.
    * @param radius The search radius in meters. Defaults to [NEAR].
+   * @param limit The number of activities to fetch
    * @param activityBlackList A list of activity names to exclude from the search.
    * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @return A single [Activity] found near the specified location or null.
    */
-  suspend fun getOneActivityNearWithPreferences(
+  suspend fun getActivitiesNearWithPreferences(
       coords: Coordinate,
       radius: Int = NEAR,
+      limit: Int,
       activityBlackList: List<String> = emptyList(),
       cachedActivities: MutableList<Activity> = mutableListOf()
-  ): Activity? {
+  ): List<Activity> {
     val userPreferences = tripSettings.preferences.toMutableList()
     removeUnsupportedPreferences(userPreferences)
     var fetched: List<Activity>?
     if (userPreferences.isNotEmpty()) {
       fetched =
           activityRepository.getActivitiesNearWithPreference(
-              userPreferences, coords, NEAR, 1, activityBlackList, cachedActivities = cachedActivities)
+              userPreferences, coords, NEAR, limit, activityBlackList, cachedActivities)
       delay(API_CALL_DELAY_MS) // Respect API rate limit.
     } else { // No preferences, fetch any activity near the location.
       fetched =
           activityRepository.getActivitiesNear(
-              coords, radius, 1, activityBlackList, cachedActivities = cachedActivities)
+              coords, radius, limit, activityBlackList, cachedActivities)
     }
-    return fetched.firstOrNull()
+    return fetched
   }
 
   /**

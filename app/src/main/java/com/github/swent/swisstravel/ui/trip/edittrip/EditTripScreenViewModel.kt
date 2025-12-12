@@ -10,6 +10,7 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
@@ -180,7 +181,8 @@ class EditTripScreenViewModel(
         var selectedActivities = originalTrip.activities
         var routeSegments = originalTrip.routeSegments
         var allLocations = originalTrip.locations
-        val newTripProfile =
+          val cachedActivities = originalTrip.cachedActivities.toMutableList()
+          val newTripProfile =
             originalTrip.tripProfile.copy(
                 adults = state.adults,
                 children = state.children,
@@ -191,6 +193,26 @@ class EditTripScreenViewModel(
         if (sanitizedPrefs !=
             PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences) ||
             rerolled) {
+            // helped by AI
+            val oldPrefs = originalTrip.tripProfile.preferences.toSet()
+            val newPrefs = sanitizedPrefs.toSet()
+
+            // Condition 1: Old preferences must be a subset of new preferences
+            // (meaning we only ADDED preferences, not removed any)
+            val isSubset = newPrefs.containsAll(oldPrefs)
+
+            // Condition 2: The preferences added must NOT be mandatory
+            val addedPrefs = newPrefs - oldPrefs
+            val mandatoryPrefs = setOf(Preference.WHEELCHAIR_ACCESSIBLE, Preference.PUBLIC_TRANSPORT)
+            val addedMandatory = addedPrefs.any { it in mandatoryPrefs }
+
+            // If conditions are NOT met, we must clear the cache.
+            // Otherwise, we keep `cachedActivities` as is (populated from originalTrip).
+            // This is because we use OR on optional preferences meaning that we can find the activities
+            // in the cache with a new optional activity
+            if (!isSubset || addedMandatory) {
+                cachedActivities.clear()
+            }
           // Create a temporary TripSettings object to pass to SelectActivities
           val tempTripSettings =
               TripSettings(
@@ -213,7 +235,8 @@ class EditTripScreenViewModel(
               algorithm.computeTrip(
                   tripSettings = tempTripSettings,
                   tripProfile = newTripProfile,
-                  context = context) { progress ->
+                  context = context,
+                  cachedActivities = cachedActivities) { progress ->
                     _uiState.update { it.copy(savingProgress = progress) }
                   }
 
@@ -237,7 +260,8 @@ class EditTripScreenViewModel(
                 tripProfile = newTripProfile,
                 activities = selectedActivities,
                 routeSegments = routeSegments,
-                locations = allLocations)
+                locations = allLocations,
+                cachedActivities = cachedActivities)
 
         tripRepository.editTrip(state.tripId, updatedTrip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

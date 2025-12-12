@@ -277,12 +277,14 @@ open class TripSettingsViewModel(
 
         // Run the algorithm
         val algorithm = algorithmFactory(context, tripSettings.value)
+          val cachedActivities = mutableListOf<Activity>()
         val schedule =
             algorithm.computeTrip(
                 tripSettings = tripSettings.value,
                 tripProfile = tripProfile,
                 isRandomTrip = isRandomTrip.value,
-                context = context) { progress ->
+                context = context,
+                cachedActivities = cachedActivities) { progress ->
                   _loadingProgress.value = progress
                 }
 
@@ -313,7 +315,8 @@ open class TripSettingsViewModel(
                 isCurrentTrip = false,
                 listUri = emptyList(),
                 collaboratorsId = emptyList(),
-                isRandom = _isRandomTrip.value)
+                isRandom = _isRandomTrip.value,
+                cachedActivities = cachedActivities)
 
         tripsRepository.addTrip(trip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)
