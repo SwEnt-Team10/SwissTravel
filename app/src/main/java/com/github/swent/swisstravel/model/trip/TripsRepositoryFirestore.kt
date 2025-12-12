@@ -130,19 +130,7 @@ class TripsRepositoryFirestore(
 
       val uriLocationRaw = document["uriLocation"] as? Map<*, *> ?: emptyMap<String, Any>()
 
-      val uriLocation =
-          uriLocationRaw.entries
-              .mapNotNull { (key, value) ->
-                val uriStr = key as? String
-                val locMap = value as? Map<*, *>
-                if (uriStr != null && locMap != null) {
-                  val location = mapToLocation(locMap)
-                  if (location != null) {
-                    Uri.parse(uriStr) to location
-                  } else null
-                } else null
-              }
-              .toMap()
+      val uriLocation = mapToUriLocation(uriLocationRaw)
 
       val routeSegments =
           (document["routeSegments"] as? List<*>)?.mapNotNull { routeSegmentMap ->
@@ -338,5 +326,28 @@ class TripsRepositoryFirestore(
         "collaboratorsId" to trip.collaboratorsId,
         "random" to trip.isRandom,
         "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() })
+  }
+  /**
+   * Converts a Firestore map into a Map<Uri, Location>.
+   *
+   * @param map The raw Firestore map where keys are Uri strings and values are Location maps.
+   * @return A Map<Uri, Location> containing the parsed data.
+   */
+  private fun mapToUriLocation(map: Map<*, *>): Map<Uri, Location> {
+    return map.entries
+        .mapNotNull { (key, value) ->
+          val uriStr = key as? String
+          val locMap = value as? Map<*, *>
+
+          // Ensure both the URI string and the Location map are valid
+          if (uriStr != null && locMap != null) {
+            val location = mapToLocation(locMap)
+            // If location parsing succeeds, parse the URI and return the pair
+            if (location != null) {
+              Uri.parse(uriStr) to location
+            } else null
+          } else null
+        }
+        .toMap()
   }
 }

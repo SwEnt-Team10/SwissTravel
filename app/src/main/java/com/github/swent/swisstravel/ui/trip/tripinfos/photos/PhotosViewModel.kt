@@ -14,6 +14,11 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+// Define the default location constant at the top level
+// Note: We use 'val' instead of 'const val' because Location is an object, not a primitive.
+private val DEFAULT_LOCATION =
+    Location(Coordinate(latitude = 0.0, longitude = 0.0), name = "No location")
+
 /** The messages that the toast can have. */
 object ToastMessages {
   const val PHOTOS_SAVED = "Photos saved"
@@ -48,8 +53,6 @@ class PhotosViewModel(
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(PhotosUIState())
   val uiState: StateFlow<PhotosUIState> = _uiState.asStateFlow()
-  private val defaultLocation =
-      Location(Coordinate(latitude = 0.0, longitude = 0.0), name = "No location")
 
   /**
    * Add photos to the trip and save the trip on the repo.
@@ -117,7 +120,7 @@ class PhotosViewModel(
   fun addUris(uris: List<Uri>, context: Context, tripId: String) {
     val newEntries =
         // AI helped for this part
-        uris.associateWith { uri -> context.getPhotoLocation(uri, "Photo") ?: defaultLocation }
+        uris.associateWith { uri -> context.getPhotoLocation(uri, "Photo") ?: DEFAULT_LOCATION }
     _uiState.value = _uiState.value.copy(uriLocation = _uiState.value.uriLocation + newEntries)
   }
 

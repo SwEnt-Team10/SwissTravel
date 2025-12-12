@@ -10,8 +10,6 @@ import androidx.compose.ui.test.performClick
 import androidx.core.net.toUri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
@@ -35,9 +33,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
     // Create a local repository
     return TripRepositoryLocal()
   }
-
-  // Fake location for testing
-  private val dummyLocation = Location(Coordinate(0.0, 0.0), "Test Location")
 
   @Test
   fun checkAllComponentsAreDisplayedWithNoImage() = runTest {
@@ -93,8 +88,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
     composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID).isDisplayed()
 
     // We go through the map
-    val uriCount = fakeTrip.uriLocation.size
-    for (i in 0 until uriCount) {
+    for (i in 0 until fakeTrip.uriLocation.size) {
       composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(i)).isDisplayed()
     }
   }

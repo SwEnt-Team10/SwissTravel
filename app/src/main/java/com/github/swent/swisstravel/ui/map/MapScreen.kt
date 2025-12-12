@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
@@ -49,7 +48,6 @@ import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
-import com.mapbox.maps.ViewAnnotationAnchor
 import com.mapbox.maps.ViewAnnotationOptions
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
@@ -96,6 +94,8 @@ private val edgeInsets = EdgeInsets(200.0, 200.0, 200.0, 200.0)
  * @param photoEntries List of pairs (Uri, Location) for photo pins
  * @param drawRoute Whether to draw a route from the first location to the last
  * @param viewModel The view model associated to the map screen
+ * @param onUserLocationUpdate A callback invoked whenever the user's current location changes. It
+ *   receives the new position as a [Point]
  */
 @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -314,15 +314,21 @@ fun PhotoPinAnnotation(uri: Uri, location: Location) {
   ViewAnnotation(options = options) {
     // "Polaroid" design
     Surface(
-        modifier = Modifier.size(60.dp).shadow(elevation = 6.dp, shape = RoundedCornerShape(4.dp)),
-        shape = RoundedCornerShape(4.dp),
+        modifier =
+            Modifier.size(dimensionResource(R.dimen.polaroid_size))
+                .shadow(
+                    elevation = dimensionResource(R.dimen.shadow_elevation),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.shadow_shape))),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.polaroid_shape)),
         color = Color.White,
-        border = BorderStroke(1.dp, Color.LightGray)) {
-          Box(modifier = Modifier.padding(3.dp)) {
+        border = BorderStroke(dimensionResource(R.dimen.polaroid_border), Color.LightGray)) {
+          Box(modifier = Modifier.padding(dimensionResource(R.dimen.box_polaroid_padding))) {
             AsyncImage(
                 model = uri,
                 contentDescription = location.name,
-                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(2.dp)),
+                modifier =
+                    Modifier.fillMaxSize()
+                        .clip(RoundedCornerShape(dimensionResource(R.dimen.image_clip))),
                 contentScale = ContentScale.Crop)
           }
         }

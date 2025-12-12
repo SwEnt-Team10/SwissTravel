@@ -8,6 +8,9 @@ import com.github.swent.swisstravel.model.trip.Location
 import java.io.File
 import java.io.FileOutputStream
 
+// Define the file name as a constant to avoid magic strings
+private const val TEMP_GPS_FILE_NAME = "temp_gps_check.jpg"
+
 // Code done by an AI
 /**
  * A function for Context that get the meta data from a photo's uri and converts it to a Location.
@@ -16,7 +19,7 @@ import java.io.FileOutputStream
  * @param name the name you want to assign to the location
  */
 fun Context.getPhotoLocation(uri: Uri, name: String): Location? {
-  val tempFile = File(cacheDir, "temp_gps_check.jpg")
+  val tempFile = File(cacheDir, TEMP_GPS_FILE_NAME)
 
   try {
     // Copy the file to the app's local cache.

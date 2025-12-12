@@ -87,6 +87,7 @@ fun AddPhotosScreen(
       launchPickerOverride ?: { type -> pickerLauncher.launch(arrayOf(type)) }
 
   val uiState by photosViewModel.uiState.collectAsState()
+  val stringPicker = stringResource(R.string.image_picker)
 
   // AI gave this part
   LaunchedEffect(uiState.toastMessage) {
@@ -135,7 +136,7 @@ fun AddPhotosScreen(
                   Button(
                       modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
                       // AI give the function onClick
-                      onClick = { launchPicker("image/*") }) {
+                      onClick = { launchPicker(stringPicker) }) {
                         Text(text = stringResource(R.string.add_photos_button))
                       }
                 }
