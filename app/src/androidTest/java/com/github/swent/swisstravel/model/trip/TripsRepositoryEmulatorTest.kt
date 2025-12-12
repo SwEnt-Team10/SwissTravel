@@ -51,7 +51,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     // Act
@@ -85,7 +85,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     val trip2 =
         Trip(
@@ -97,7 +97,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     repository.addTrip(trip1)
@@ -132,7 +132,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList()),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     repository.addTrip(trip)
@@ -165,7 +165,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     repository.addTrip(trip)
 
@@ -242,7 +242,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     repository.addTrip(trip)
@@ -284,7 +284,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     repository.addTrip(trip)
@@ -328,7 +328,7 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
             routeSegments = emptyList(),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     repository.addTrip(trip)

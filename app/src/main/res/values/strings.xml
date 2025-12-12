@@ -455,5 +455,6 @@
     <string name="back_add_photos">Back to daily view screen</string>
     <string name="edit_button_description">Edit Mode</string>
     <string name="back_edit_photos">Back to daily view screen</string>
+    <string name="image_picker">image/*</string>
 
 </resources>

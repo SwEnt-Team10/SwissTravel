@@ -1,9 +1,11 @@
 package com.github.swent.swisstravel.ui.trip.addphotos
 
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.core.net.toUri
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
@@ -17,7 +19,9 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class EditPhotosScreenTest : SwissTravelTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -39,7 +43,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
     val fakeModel = PhotosViewModel()
@@ -55,6 +59,8 @@ class EditPhotosScreenTest : SwissTravelTest() {
   fun checkAllComponentsAreDisplayedWithImagesNoSelection() = runTest {
 
     // Initialization of the fake repository and model
+    val uri1 = "Uri1".toUri()
+    val uri2 = "AmazingUri2".toUri()
     val fakeTrip =
         Trip(
             uid = "10",
@@ -65,7 +71,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
             isCurrentTrip = true,
-            listUri = listOf("Uri1".toUri(), "AmazingUri2".toUri()),
+            uriLocation = mapOf(uri1 to dummyLocation, uri2 to dummyLocation),
             collaboratorsId = emptyList())
 
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
@@ -76,7 +82,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
       EditPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)
     }
     composeTestRule.editPhotosScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(EditPhotosScreenTestTags.EDIT_VERTICAL_GRID)
+    composeTestRule.onNodeWithTag(EditPhotosScreenTestTags.EDIT_VERTICAL_GRID).isDisplayed()
   }
 
   // AI did the test

@@ -239,7 +239,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     runBlocking { fakeRepo.addTrip(newUpcomingTrip) }
@@ -274,7 +274,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val tripB =
@@ -291,7 +291,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
@@ -459,7 +459,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val nonFavoriteTrip =
@@ -477,7 +477,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
@@ -630,7 +630,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     // Case: exactly 3 or fewer (no overflow)
     val collaborators =
@@ -662,7 +662,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     // Case: 4 collaborators (3 shown + 1 overflow)
     val collaborators =

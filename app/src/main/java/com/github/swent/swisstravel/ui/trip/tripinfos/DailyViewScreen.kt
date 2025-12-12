@@ -151,6 +151,24 @@ fun DailyViewScreen(
   LaunchedEffect(uid) { tripInfoViewModel.loadTripInfo(uid) }
 
   val ui by tripInfoViewModel.uiState.collectAsState()
+  // done by AI
+  val validPhotoEntries =
+      remember(ui.uriLocation) {
+        ui.uriLocation
+            .filter { entry ->
+              entry.value.coordinate.latitude != 0.0 || entry.value.coordinate.longitude != 0.0
+            }
+            .toList()
+      }
+  // Done by AI
+  val actualMapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit =
+      { locations, drawRoute, onUserLocationUpdate ->
+        MapScreen(
+            locations = locations,
+            photoEntries = validPhotoEntries,
+            drawRoute = drawRoute,
+            onUserLocationUpdate = onUserLocationUpdate)
+      }
 
   LaunchedEffect(ui.days, isOnCurrentTripScreen) {
     if (isOnCurrentTripScreen) {
@@ -261,7 +279,7 @@ fun DailyViewScreen(
                     onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
                     isComputing = ui.isComputingSchedule,
                     hasSteps = dailySteps.isNotEmpty(),
-                    mapContent = mapContent)
+                    mapContent = actualMapContent)
               }
 
               // Daily Steps List
@@ -296,7 +314,7 @@ fun DailyViewScreen(
                 mapState = mapState,
                 onExit = { tripInfoViewModel.toggleFullscreen(false) },
                 onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
-                mapContent = mapContent)
+                mapContent = actualMapContent)
           }
 
           if (showShareDialog) {

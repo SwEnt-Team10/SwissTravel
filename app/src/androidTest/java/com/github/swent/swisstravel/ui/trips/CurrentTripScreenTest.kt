@@ -47,7 +47,7 @@ class CurrentTripScreenTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     composeTestRule.setContent {
@@ -84,7 +84,7 @@ class CurrentTripScreenTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     composeTestRule.setContent {

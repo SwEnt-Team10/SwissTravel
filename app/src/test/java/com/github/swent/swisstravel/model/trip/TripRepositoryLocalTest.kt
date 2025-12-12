@@ -72,7 +72,7 @@ class TripRepositoryLocalTest {
                           name = "fake place6",
                           imageUrl = "fakeImage6")),
           isCurrentTrip = true,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
   @Before

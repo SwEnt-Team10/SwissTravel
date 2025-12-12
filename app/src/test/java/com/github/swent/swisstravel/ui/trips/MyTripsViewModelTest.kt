@@ -71,7 +71,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     // Upcoming trip: start > now
@@ -89,7 +89,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(currentTrip, upcomingTrip)
@@ -119,7 +119,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(currentTrip)
@@ -149,7 +149,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(upcomingTrip)
@@ -213,7 +213,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     // Initially disabled
@@ -246,7 +246,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val trip2 =
@@ -259,7 +259,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     viewModel.toggleSelectionMode(true)
@@ -293,7 +293,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     viewModel.toggleSelectionMode(true)
@@ -317,7 +317,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val trip2 =
@@ -330,7 +330,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(trip1, trip2)
@@ -369,7 +369,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val upcomingTrip =
@@ -386,7 +386,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(currentTrip, upcomingTrip)
@@ -411,7 +411,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(trip1)
@@ -444,7 +444,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList()),
         Trip(
             "2",
@@ -459,7 +459,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList()),
         Trip(
             "3",
@@ -474,7 +474,7 @@ class MyTripsViewModelTest {
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList()))
   }
 
@@ -580,7 +580,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val user =
@@ -626,7 +626,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     // Simulate normal getAllTrips but fail when editing trip
@@ -657,7 +657,7 @@ class MyTripsViewModelTest {
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val user =
@@ -707,7 +707,7 @@ class MyTripsViewModelTest {
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = listOf(collaboratorId))
 
     val user =

@@ -45,7 +45,7 @@ class SelectPinnedTripsScreenTest {
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val trip2 =
       Trip(
@@ -62,7 +62,7 @@ class SelectPinnedTripsScreenTest {
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val trip3 =
       Trip(
@@ -79,7 +79,7 @@ class SelectPinnedTripsScreenTest {
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val trip4 =
       Trip(
@@ -96,7 +96,7 @@ class SelectPinnedTripsScreenTest {
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val fakeTripsRepo = TripRepositoryLocal()
 

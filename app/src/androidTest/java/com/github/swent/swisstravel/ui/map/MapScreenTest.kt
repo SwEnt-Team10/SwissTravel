@@ -22,6 +22,7 @@ class MapScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
 
+  // Grant location permissions for the tests
   @get:Rule
   val grantPermissionRule: GrantPermissionRule =
       GrantPermissionRule.grant(
@@ -49,6 +50,37 @@ class MapScreenTest {
       MapScreen(locations = listOf(Location(Coordinate(46.2, 6.7), "OnlyOne")), drawRoute = false)
     }
     composeRule.onNodeWithTag(MapScreenTestTags.MAP).assertIsDisplayed()
+  }
+
+  /** Check that photo pins are displayed on the map Note: AI did the test */
+  @Test
+  fun photoPinsAreDisplayed() {
+    // Setup
+    val photoUri = android.net.Uri.EMPTY
+    val pinName = "Test Photo Pin"
+    val photoLocation = Location(Coordinate(46.0, 6.6), pinName)
+
+    composeRule.setContent {
+      MapScreen(
+          // Important: Pass the location here so the camera centers on it
+          locations = listOf(photoLocation),
+          drawRoute = false,
+          photoEntries = listOf(photoUri to photoLocation))
+    }
+
+    // Fix for CI: Active waiting (Polling)
+    // Give Mapbox up to 10 seconds to render the pin
+    composeRule.waitUntil(timeoutMillis = 10_000) {
+      try {
+        // Check repeatedly if the node exists in the UI tree
+        composeRule.onAllNodes(hasContentDescription(pinName)).fetchSemanticsNodes().isNotEmpty()
+      } catch (e: Exception) {
+        false
+      }
+    }
+
+    // Final assertion to confirm it is displayed
+    composeRule.onNode(hasContentDescription(pinName)).assertIsDisplayed()
   }
 
   /** ViewModel flag toggles as expected */

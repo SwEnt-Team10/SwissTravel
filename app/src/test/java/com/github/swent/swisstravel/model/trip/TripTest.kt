@@ -94,7 +94,7 @@ class TripTest {
           activities = listActivities,
           tripProfile = tripProfile,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
   @Test

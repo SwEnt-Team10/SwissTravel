@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,6 +34,7 @@ data class TripInfoUIState(
     val name: String = "Trip Name",
     val ownerId: String = "",
     val locations: List<Location> = emptyList(),
+    val uriLocation: Map<Uri, Location> = emptyMap(),
     val routeSegments: List<RouteSegment> = emptyList(),
     val activities: List<Activity> = emptyList(),
     val tripProfile: TripProfile? = null,
@@ -119,6 +121,7 @@ class TripInfoViewModel(
                 name = trip.name,
                 ownerId = trip.ownerId,
                 locations = trip.locations,
+                uriLocation = trip.uriLocation,
                 routeSegments = trip.routeSegments,
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,

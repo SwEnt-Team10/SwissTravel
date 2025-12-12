@@ -69,7 +69,7 @@ class StatsCalculatorTest {
             activities = emptyList(),
             tripProfile = trip1Profile,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     // Trip 2: 1.5 hours long, 1 segment (BUS)
@@ -98,7 +98,7 @@ class StatsCalculatorTest {
             activities = emptyList(),
             tripProfile = trip2Profile,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val trips = listOf(trip1, trip2)
