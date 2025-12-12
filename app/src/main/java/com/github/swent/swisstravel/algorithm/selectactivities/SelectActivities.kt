@@ -79,7 +79,8 @@ class SelectActivities(
                     destination.coordinate,
                     NEAR,
                     numberOfActivityToFetchPerStep,
-                    activityBlackList, cachedActivities)
+                    activityBlackList,
+                    cachedActivities)
             allFetchedActivities.addAll(fetched)
             // Update progress after each API call.
             completedSteps++
@@ -96,7 +97,9 @@ class SelectActivities(
                 activityRepository.getActivitiesNear(
                     destination.coordinate,
                     NEAR,
-                    numberOfActivityToFetchPerStep, activityBlackList, cachedActivities)
+                    numberOfActivityToFetchPerStep,
+                    activityBlackList,
+                    cachedActivities)
             allFetchedActivities.addAll(fetched)
             // Update progress after each API call.
             completedSteps++
@@ -115,9 +118,9 @@ class SelectActivities(
   }
 
   /**
-   * Fetches multiple activities near the given location for testing purposes. If user preferences are set,
-   * it tries to fetch an activity matching those preferences. Otherwise, it fetches any activity
-   * near the location.
+   * Fetches multiple activities near the given location for testing purposes. If user preferences
+   * are set, it tries to fetch an activity matching those preferences. Otherwise, it fetches any
+   * activity near the location.
    *
    * @param coords The [Coordinate] around which to search for an activity.
    * @param radius The search radius in meters. Defaults to [NEAR].

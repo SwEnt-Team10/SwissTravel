@@ -269,7 +269,10 @@ class ActivityRepositoryMySwitzerland(
     val validResults = mutableListOf<Activity>()
 
     val url =
-        baseUrl.newBuilder().setQueryParameter("hitsPerPage", NUMBER_ACTIVITIES_TO_FETCH.toString()).build()
+        baseUrl
+            .newBuilder()
+            .setQueryParameter("hitsPerPage", NUMBER_ACTIVITIES_TO_FETCH.toString())
+            .build()
 
     val pageActivities = fetchActivitiesFromUrl(url)
 
@@ -278,28 +281,28 @@ class ActivityRepositoryMySwitzerland(
           it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
         }
 
-      val unValid = pageActivities.filter {
+    val unValid =
+        pageActivities.filter {
           !it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
-      }
+        }
 
-      // remove all the activities that were unvalid from the cache in case there were some in it
-      cachedActivities.removeAll(unValid)
+    // remove all the activities that were unvalid from the cache in case there were some in it
+    cachedActivities.removeAll(unValid)
 
     validResults.addAll(filtered)
     validResults.shuffle()
 
     val returnedActivities = validResults.take(limit)
-      val candidatesForCache = validResults.drop(limit)
-      for (candidate in candidatesForCache) {
-          // Check if this activity is already in the cache (matching location)
-          val isDuplicate = cachedActivities.any { cached ->
-              cached.location.sameLocation(candidate.location)
-          }
+    val candidatesForCache = validResults.drop(limit)
+    for (candidate in candidatesForCache) {
+      // Check if this activity is already in the cache (matching location)
+      val isDuplicate =
+          cachedActivities.any { cached -> cached.location.sameLocation(candidate.location) }
 
-          if (!isDuplicate) {
-              cachedActivities.add(candidate)
-          }
+      if (!isDuplicate) {
+        cachedActivities.add(candidate)
       }
+    }
     return returnedActivities
   }
 
