@@ -28,9 +28,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.SortMenu
+import com.github.swent.swisstravel.ui.composable.TripInteraction
 import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.composable.TripListEvents
-import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.trips.TripSortType
 import com.github.swent.swisstravel.ui.trips.TripsViewModel

@@ -40,11 +40,15 @@ class SelectActivities(
   /**
    * Fetches and selects activities based on the trip settings.
    *
+   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @param onProgress A callback function to report the progress of the selection process (from 0.0
    *   to 1.0).
    * @return A list of [Activity] based on the user preferences and points of interest
    */
-  suspend fun addActivities(onProgress: (Float) -> Unit): List<Activity> {
+  suspend fun addActivities(
+      cachedActivities: MutableList<Activity> = mutableListOf(),
+      onProgress: (Float) -> Unit
+  ): List<Activity> {
     val allDestinations = buildDestinationList()
     val userPreferences = tripSettings.preferences.toMutableList()
 
@@ -77,7 +81,11 @@ class SelectActivities(
           for (destination in allDestinations) {
             val fetched =
                 activityRepository.getActivitiesNearWithPreference(
-                    userPreferences, destination.coordinate, NEAR, numberOfActivityToFetchPerStep)
+                    userPreferences,
+                    destination.coordinate,
+                    NEAR,
+                    numberOfActivityToFetchPerStep,
+                    cachedActivities = cachedActivities)
             allFetchedActivities.addAll(fetched)
             // Update progress after each API call.
             completedSteps++
@@ -92,7 +100,10 @@ class SelectActivities(
           for (destination in allDestinations) {
             val fetched =
                 activityRepository.getActivitiesNear(
-                    destination.coordinate, NEAR, numberOfActivityToFetchPerStep)
+                    destination.coordinate,
+                    NEAR,
+                    numberOfActivityToFetchPerStep,
+                    cachedActivities = cachedActivities)
             allFetchedActivities.addAll(fetched)
             // Update progress after each API call.
             completedSteps++
@@ -117,17 +128,26 @@ class SelectActivities(
    *
    * @param coords The [Coordinate] around which to search for an activity.
    * @param radius The search radius in meters. Defaults to [NEAR].
+   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @return A single [Activity] found near the specified location or null.
    */
-  suspend fun getOneActivityNearWithPreferences(coords: Coordinate, radius: Int = NEAR): Activity? {
+  suspend fun getOneActivityNearWithPreferences(
+      coords: Coordinate,
+      radius: Int = NEAR,
+      cachedActivities: MutableList<Activity> = mutableListOf()
+  ): Activity? {
     val userPreferences = tripSettings.preferences.toMutableList()
     removeUnsupportedPreferences(userPreferences)
     var fetched: List<Activity>?
     if (userPreferences.isNotEmpty()) {
-      fetched = activityRepository.getActivitiesNearWithPreference(userPreferences, coords, NEAR, 1)
+      fetched =
+          activityRepository.getActivitiesNearWithPreference(
+              userPreferences, coords, NEAR, 1, cachedActivities = cachedActivities)
       delay(API_CALL_DELAY_MS) // Respect API rate limit.
     } else { // No preferences, fetch any activity near the location.
-      fetched = activityRepository.getActivitiesNear(coords, radius, 1)
+      fetched =
+          activityRepository.getActivitiesNear(
+              coords, radius, 1, cachedActivities = cachedActivities)
     }
     return fetched.firstOrNull()
   }

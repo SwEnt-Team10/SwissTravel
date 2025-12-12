@@ -63,6 +63,7 @@ abstract class TripsViewModel(
       val sortType: TripSortType = TripSortType.START_DATE_ASC,
       val isSelectionMode: Boolean = false,
       val selectedTrips: Set<Trip> = emptySet(),
+      val isLoading: Boolean = false,
       val collaboratorsByTripId: Map<String, List<CollaboratorUi>> = emptyMap(),
       val favoriteTripsUids: Set<String> = emptySet()
   )
