@@ -18,6 +18,8 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceCategories
+import com.github.swent.swisstravel.model.user.PreferenceCategories.category
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
 import java.time.ZoneId
@@ -164,8 +166,29 @@ open class TripAlgorithm(
         context: Context
     ): TripAlgorithm {
 
+      var settingsToUse = tripSettings
+      val currentPrefs = settingsToUse.preferences
+
+      // Check how many "Activity Type" and "Environment" preferences are selected
+      val activityTypeCount =
+          currentPrefs.count { it.category() == PreferenceCategories.Category.ACTIVITY_TYPE }
+      val environmentCount =
+          currentPrefs.count { it.category() == PreferenceCategories.Category.ENVIRONMENT }
+
+      // If no Activity Types are selected AND no Environment preferences are selected
+      if (activityTypeCount == 0 && environmentCount == 0) {
+        // Add ALL Activity Type preferences (Museums, Wellness, Hike, Foodie, Sports, Shopping)
+        // to ensure the algorithm fetches a wide variety of activities.
+        val newPreferences = currentPrefs.toMutableList()
+
+        // Add all activity types that are not already present (though count is 0, so just add all)
+        newPreferences.addAll(PreferenceCategories.activityTypePreferences)
+
+        settingsToUse = settingsToUse.copy(preferences = newPreferences)
+      }
+
       val activitySelector =
-          SelectActivities(tripSettings = tripSettings, activityRepository = activityRepository)
+          SelectActivities(tripSettings = settingsToUse, activityRepository = activityRepository)
 
       val cacheManager = DurationCacheLocal(context)
       val durationMatrix = DurationMatrixHybrid(context)
@@ -1035,6 +1058,8 @@ open class TripAlgorithm(
         numberOfCycle < limit &&
         !sameDate(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) {
 
+      // TODO: Change this so that it adds more preferences if needed maybe change the while loop
+      // condition because it probably fail boths addGrandTour and addCity
       numberOfCycle++
 
       val rand = Random.Default
@@ -1058,7 +1083,8 @@ open class TripAlgorithm(
                     stayAtCenterRetry,
                     context,
                     cachedActivities)
-            addGrandTourWorks = result.added
+            // If we were at the center, we can still retry without the center
+            addGrandTourWorks = result.added || stayAtCenterRetry
             // If we successfully added a new grand tour activity, try to add a city activity (it
             // costs nothing to compute)
             if (result.added) {
@@ -1081,7 +1107,7 @@ open class TripAlgorithm(
                     stayAtCenterRetry,
                     context,
                     cachedActivities)
-            addGrandTourWorks = result.added
+            addGrandTourWorks = result.added || stayAtCenterRetry
             // If we successfully added a new grand tour activity, try to add a city activity (it
             // costs nothing to compute)
             if (result.added) {
@@ -1263,7 +1289,7 @@ open class TripAlgorithm(
     val endCoord = enhancedTripProfile.tripProfile.departureLocation!!.coordinate
 
     // Detect circular trip
-    val isCircularTrip = startCoord.haversineDistanceTo(endCoord) < 30.0
+    val isCircularTrip = startCoord.haversineDistanceTo(endCoord) < 5.0 // Arbitrary estimate
 
     // 2. Define strategy helper
     suspend fun tryStrategy(useCenterStrategy: Boolean): Boolean {

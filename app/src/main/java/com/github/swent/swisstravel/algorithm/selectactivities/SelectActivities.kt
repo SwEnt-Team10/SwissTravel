@@ -7,6 +7,7 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
@@ -33,7 +34,7 @@ private const val NB_ACTIVITIES_PER_DAY = 3
  * @param activityRepository The repository to fetch activities from.
  */
 class SelectActivities(
-    private val tripSettings: TripSettings,
+    private var tripSettings: TripSettings, // Changed val to var to allow updates
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
@@ -58,24 +59,34 @@ class SelectActivities(
     // Avoids unnecessary API calls.
     removeUnsupportedPreferences(userPreferences)
 
+    // If the user didn't set any preference that are supported by the API -> add the basic ones to
+    // make sure we still fetch some activities
+    val finalPreferences =
+        if (userPreferences.isEmpty()) {
+          PreferenceCategories.activityTypePreferences
+        } else {
+          userPreferences
+        }
+
     // add 1 day since the last day is excluded
     val days =
         ChronoUnit.DAYS.between(
             tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
     val totalNbActivities = (NB_ACTIVITIES_PER_DAY) * days.toDouble()
     // Calculate the total number of steps for progress reporting.
-    val totalSteps = totalSteps(allDestinations.size, userPreferences.size)
+    val totalSteps =
+        allDestinations.size // we bundle all the activities together for each locations
 
     val numberOfActivityToFetchPerStep = ceil(totalNbActivities / totalSteps).toInt()
     var completedSteps = 0
 
     val filteredActivities =
-        if (userPreferences.isNotEmpty()) {
+        if (finalPreferences.isNotEmpty()) {
           val allFetchedActivities = mutableListOf<Activity>()
           for (destination in allDestinations) {
             val fetched =
                 activityRepository.getActivitiesNearWithPreference(
-                    userPreferences,
+                    finalPreferences,
                     destination.coordinate,
                     NEAR,
                     numberOfActivityToFetchPerStep,
@@ -168,22 +179,6 @@ class SelectActivities(
   }
 
   /**
-   * Calculates the total number of steps based on the number of destinations and preferences.
-   *
-   * @param nbDestinations The number of destinations.
-   * @param nbPreferences The number of user preferences.
-   */
-  private fun totalSteps(nbDestinations: Int, nbPreferences: Int): Int {
-    return if (nbPreferences > 0) {
-      // Each destination-preference pair counts as a step.
-      nbPreferences * nbDestinations
-    } else {
-      // If no preferences, each destination counts as one step.
-      nbDestinations
-    }
-  }
-
-  /**
    * Creates a comprehensive list of destinations for which to search activities. This includes
    * user-selected stops, as well as the trip's start and end points.
    *
@@ -194,5 +189,14 @@ class SelectActivities(
     tripSettings.arrivalDeparture.arrivalLocation?.let { allDestinations.add(it) }
     tripSettings.arrivalDeparture.departureLocation?.let { allDestinations.add(it) }
     return allDestinations.distinctBy { it.coordinate } // Ensure all locations are unique.
+  }
+
+  /**
+   * Updates the preferences used for selecting activities.
+   *
+   * @param newPreferences The new list of preferences to apply.
+   */
+  fun updatePreferences(newPreferences: List<Preference>) {
+    tripSettings = tripSettings.copy(preferences = newPreferences)
   }
 }

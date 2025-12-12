@@ -325,6 +325,7 @@ class TripsRepositoryFirestore(
         "currentTrip" to trip.isCurrentTrip,
         "collaboratorsId" to trip.collaboratorsId,
         "random" to trip.isRandom,
+        "cachedActivities" to trip.cachedActivities,
         "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() })
   }
   /**
