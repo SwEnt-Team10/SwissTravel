@@ -1,11 +1,15 @@
 package com.github.swent.swisstravel.ui.map
 
 import android.Manifest
+import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -13,21 +17,28 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.mapbox.geojson.Feature
@@ -37,10 +48,12 @@ import com.mapbox.maps.CameraOptions
 import com.mapbox.maps.EdgeInsets
 import com.mapbox.maps.MapView
 import com.mapbox.maps.Style
+import com.mapbox.maps.ViewAnnotationOptions
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.animation.viewport.rememberMapViewportState
+import com.mapbox.maps.extension.compose.annotation.ViewAnnotation
 import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.generated.circleLayer
 import com.mapbox.maps.extension.style.layers.getLayer
@@ -52,6 +65,7 @@ import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.maps.viewannotation.geometry
 import com.mapbox.navigation.base.options.NavigationOptions
 import com.mapbox.navigation.core.MapboxNavigationProvider
 import com.mapbox.navigation.ui.maps.route.line.MapboxRouteLineApiExtensions.clearRouteLine
@@ -76,9 +90,12 @@ private val edgeInsets = EdgeInsets(200.0, 200.0, 200.0, 200.0)
 /**
  * Shows a full map with the user's location puck, and supports pins and routes drawing
  *
- * @param locations The locations to draw the routes
+ * @param locations The locations to draw the routes (navigation)
+ * @param photoEntries List of pairs (Uri, Location) for photo pins
  * @param drawRoute Whether to draw a route from the first location to the last
  * @param viewModel The view model associated to the map screen
+ * @param onUserLocationUpdate A callback invoked whenever the user's current location changes. It
+ *   receives the new position as a [Point]
  */
 @Suppress("COMPOSE_APPLIER_CALL_MISMATCH")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,6 +103,7 @@ private val edgeInsets = EdgeInsets(200.0, 200.0, 200.0, 200.0)
 fun MapScreen(
     locations: List<Location>,
     drawRoute: Boolean,
+    photoEntries: List<Pair<Uri, Location>> = emptyList(),
     onUserLocationUpdate: (Point) -> Unit = {},
     viewModel: MapScreenViewModel = viewModel()
 ) {
@@ -100,6 +118,8 @@ fun MapScreen(
   val routeLineApi = remember { MapboxRouteLineApi(MapboxRouteLineApiOptions.Builder().build()) }
 
   LaunchedEffect(Unit) { viewModel.attachMapObjects(mapboxNavigation, routeLineApi) }
+
+  // Update route locations (Blue line)
   LaunchedEffect(locations) { viewModel.updateLocations(locationsAsPoints(locations)) }
 
   val ui by viewModel.uiState.collectAsState()
@@ -126,6 +146,7 @@ fun MapScreen(
           mapViewportState = mapViewportState,
           drawRoute = drawRoute,
           ui = ui,
+          photoEntries = photoEntries,
           onUserLocationUpdate = onUserLocationUpdate)
       MapOverlays(permissionGranted = ui.permissionGranted, mapViewportState = mapViewportState)
     }
@@ -135,18 +156,29 @@ fun MapScreen(
 /* --------------------------- Split-out content blocks --------------------------- */
 
 /**
- * The inner content of the map screen.
+ * The inner content of the map screen that handles the Mapbox map instance and its layers.
  *
- * @param mapViewportState The state of the map viewport
- * @param drawRoute Whether to draw a route from the first location to the last
- * @param ui The UI state of the map screen
- * @param onUserLocationUpdate A callback to update the user location
+ * This composable is responsible for: Rendering the MapboxMap. Initializing the map style and route
+ * layers. Managing side effects (MapEffect) for drawing routes, pins, and the user location puck.
+ * Handling camera transitions to fit content. Note: this documentation has been done by AI and the
+ * code partially too.
+ *
+ * @param mapViewportState The state object controlling the map's camera position and zoom.
+ * @param drawRoute If true, draws the navigation route between locations. If false, shows
+ *   individual pins.
+ * @param ui The current UI state containing the list of locations, permissions, and navigation
+ *   APIs.
+ * @param photoEntries A list of (Uri, Location) pairs to display as "Polaroid" style pins on the
+ *   map.
+ * @param onUserLocationUpdate Callback function triggered when the user's location changes
+ *   (requires permission).
  */
 @Composable
 private fun MapContent(
     mapViewportState: MapViewportState,
     drawRoute: Boolean,
     ui: NavigationMapUIState,
+    photoEntries: List<Pair<Uri, Location>>,
     onUserLocationUpdate: (Point) -> Unit = {}
 ) {
   val context = LocalContext.current
@@ -155,7 +187,7 @@ private fun MapContent(
     MapboxRouteLineView(opts)
   }
 
-  // Internal state: not exposed to parent
+  // Internal state
   var styleReady by remember { mutableStateOf(false) }
   var routeLayersInitialized by remember { mutableStateOf(false) }
 
@@ -167,64 +199,140 @@ private fun MapContent(
 
   MapboxMap(
       modifier = Modifier.fillMaxSize().testTag(MapScreenTestTags.MAP),
-      mapViewportState = mapViewportState) {
-        // Pass location to an external function
-        MapEffect(ui.permissionGranted) { mapView ->
-          if (!ui.permissionGranted) {
-            return@MapEffect
-          } else {
-            mapView.location.addOnIndicatorPositionChangedListener { point ->
-              onUserLocationUpdate(point)
-            }
-          }
-        }
+      mapViewportState = mapViewportState,
+  ) {
 
-        // Style/init
-        MapEffect(Unit) { mapView ->
-          mapView.mapboxMap.getStyle { style ->
-            initRouteLayersOnce(
-                style = style,
-                routeLineView = routeLineView,
-                alreadyInitialized = routeLayersInitialized,
-                setInitialized = { routeLayersInitialized = it })
-            ensurePinsSourceAndLayer(style)
-            styleReady = true
-          }
-        }
+    // Display Photo Pins
+    photoEntries.forEach { (uri, location) ->
+      key(uri) { PhotoPinAnnotation(uri = uri, location = location) }
+    }
 
-        // Clear route when switching to pins
-        MapEffect(styleReady to drawRoute) { mapView ->
-          if (!styleReady || drawRoute) return@MapEffect
-          val api = ui.routeLineApi ?: return@MapEffect
+    // Initialize Style and Layers
+    // Code done by AI
+    MapEffect(Unit) { mapView ->
+      // Force load the OUTDOORS style
+      mapView.mapboxMap.loadStyleUri(Style.OUTDOORS) { style ->
+        // Initialize layers once the style is loaded
+        initRouteLayersOnce(
+            style = style,
+            routeLineView = routeLineView,
+            alreadyInitialized = routeLayersInitialized,
+            setInitialized = { routeLayersInitialized = it })
+
+        ensurePinsSourceAndLayer(style)
+
+        // This flag triggers route display in other MapEffects
+        styleReady = true
+      }
+    }
+
+    // User Location Listener
+    // Code done by AI
+    MapEffect(ui.permissionGranted) { mapView ->
+      if (ui.permissionGranted) {
+        mapView.location.addOnIndicatorPositionChangedListener { point ->
+          onUserLocationUpdate(point)
+        }
+      }
+    }
+
+    // Route cleanup (if route mode is disabled)
+    // Code done by AI
+    MapEffect(styleReady to drawRoute) { mapView ->
+      if (styleReady && !drawRoute) {
+        val api = ui.routeLineApi
+        if (api != null) {
           val clearValue = api.clearRouteLine()
           mapView.mapboxMap.getStyle { style ->
             routeLineView.renderClearRouteLineValue(style, clearValue)
           }
         }
+      }
+    }
 
-        // Render route when needed
-        MapEffect(styleReady to drawRoute to renderKey) { mapView ->
-          if (!styleReady || !drawRoute) return@MapEffect
-          val api = ui.routeLineApi ?: return@MapEffect
+    // Draw the route (if styleReady is true)
+    // Code done by AI
+    MapEffect(styleReady to drawRoute to renderKey) { mapView ->
+      if (styleReady && drawRoute) {
+        val api = ui.routeLineApi
+        if (api != null) {
           mapView.mapboxMap.getStyle { style ->
             api.getRouteDrawData { drawData -> routeLineView.renderRouteDrawData(style, drawData) }
           }
         }
-
-        // Update pins source + visibility
-        MapEffect(styleReady to points to drawRoute) { mapView ->
-          if (!styleReady) return@MapEffect
-          mapView.mapboxMap.getStyle { style -> updatePins(style, points, drawRoute) }
-        }
-
-        // Camera fitting
-        MapEffect(points to drawRoute) {
-          fitCamera(mapViewportState, points, drawRoute, lastFitHash) { lastFitHash = it }
-        }
-
-        // Location puck
-        MapEffect(ui.permissionGranted) { mapView -> updatePuck(mapView, ui.permissionGranted) }
       }
+    }
+
+    // Update navigation pins (Start/End)
+    // Code done by AI
+    MapEffect(styleReady to points to drawRoute) { mapView ->
+      if (styleReady) {
+        mapView.mapboxMap.getStyle { style -> updatePins(style, points, drawRoute) }
+      }
+    }
+
+    // Center camera (Fit Camera)
+    // Code done by AI
+    MapEffect(points to drawRoute) {
+      fitCamera(mapViewportState, points, drawRoute, lastFitHash) { lastFitHash = it }
+    }
+
+    // Puck (User position)
+    // Code done by AI
+    MapEffect(ui.permissionGranted) { mapView -> updatePuck(mapView, ui.permissionGranted) }
+  }
+}
+
+/**
+ * A custom map annotation that displays a photo in a "Polaroid" style frame.
+ *
+ * This composable uses Mapbox's [ViewAnnotation] system to render a native Compose UI element
+ * attached to a specific geographical coordinate. Note: this code has been done by AI.
+ *
+ * @param uri The Android [Uri] of the image to display.
+ * @param location The [Location] object determining where to place the pin on the map. The
+ *   [Location.name] is used for the content description.
+ */
+@Composable
+fun PhotoPinAnnotation(uri: Uri, location: Location) {
+  val mapPoint = Point.fromLngLat(location.coordinate.longitude, location.coordinate.latitude)
+
+  // Create anchor configuration
+  val anchorConfig =
+      com.mapbox.maps.ViewAnnotationAnchorConfig.Builder()
+          .anchor(com.mapbox.maps.ViewAnnotationAnchor.BOTTOM) // Anchor at the bottom
+          .build()
+
+  // Build options passing the config list
+  val options =
+      ViewAnnotationOptions.Builder()
+          .geometry(mapPoint)
+          .allowOverlap(true)
+          .variableAnchors(listOf(anchorConfig)) // Set variable anchors
+          .build()
+
+  ViewAnnotation(options = options) {
+    // "Polaroid" design
+    Surface(
+        modifier =
+            Modifier.size(dimensionResource(R.dimen.polaroid_size))
+                .shadow(
+                    elevation = dimensionResource(R.dimen.shadow_elevation),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.shadow_shape))),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.polaroid_shape)),
+        color = Color.White,
+        border = BorderStroke(dimensionResource(R.dimen.polaroid_border), Color.LightGray)) {
+          Box(modifier = Modifier.padding(dimensionResource(R.dimen.box_polaroid_padding))) {
+            AsyncImage(
+                model = uri,
+                contentDescription = location.name,
+                modifier =
+                    Modifier.fillMaxSize()
+                        .clip(RoundedCornerShape(dimensionResource(R.dimen.image_clip))),
+                contentScale = ContentScale.Crop)
+          }
+        }
+  }
 }
 
 /**
@@ -277,7 +385,6 @@ private fun initRouteLayersOnce(
   routeLineView.initializeLayers(style)
   setInitialized(true)
 }
-
 /**
  * A function to create the necessary layers for the pins
  *
@@ -296,7 +403,6 @@ private fun ensurePinsSourceAndLayer(style: Style) {
         })
   }
 }
-
 /**
  * A function to update the state of the pins
  *
@@ -343,7 +449,6 @@ private suspend fun fitCamera(
     mapViewportState.setCameraOptions(cam)
   }
 }
-
 /**
  * A function to update the location puck
  *
@@ -359,7 +464,6 @@ private fun updatePuck(mapView: MapView, permissionGranted: Boolean) {
     }
   }
 }
-
 /** Convert a list of Location to a list of Mapbox Points */
 private fun locationsAsPoints(locations: List<Location>) =
     locations.map { Point.fromLngLat(it.coordinate.longitude, it.coordinate.latitude) }

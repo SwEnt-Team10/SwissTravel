@@ -84,7 +84,7 @@ androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
-
+compose-material3 = { group = "androidx.compose.material3", name = "material3", version.ref = "material3" }
 # UI tools
 androidx-ui = { module = "androidx.compose.ui:ui", version.ref = "ui" }
 androidx-ui-graphics = { module = "androidx.compose.ui:ui-graphics" }
@@ -98,7 +98,6 @@ mockito-android = { module = "org.mockito:mockito-android", version.ref = "mocki
 # UI Compose
 compose-bom = { group = "androidx.compose", name = "compose-bom", version.ref = "composeBom" }
 compose-design-material3 = {group = "androidx.compose.material", name = "material-icons-extended", version.ref ="design-material3"}
-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 compose-ui = { group = "androidx.compose.ui", name = "ui", version.ref ="ui" }
 compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graphics" }
 compose-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }

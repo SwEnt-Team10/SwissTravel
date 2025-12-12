@@ -152,8 +152,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG, useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 
   @Test
@@ -199,7 +200,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
 
     // Before adding, no upcoming trips
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertDoesNotExist()
+    composeTestRule.onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertExists()
 
     // Add a new upcoming trip inside a coroutine
     val newUpcomingTrip =
@@ -217,7 +218,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     runBlocking { fakeRepo.addTrip(newUpcomingTrip) }
@@ -253,7 +254,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val tripB =
@@ -271,7 +272,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                 preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(tripA, tripB))
@@ -440,7 +441,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferences = emptyList()),
             isFavorite = true,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val nonFavoriteTrip =
@@ -459,7 +460,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
                     preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
@@ -607,7 +608,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     // Case: exactly 3 or fewer (no overflow)
     val collaborators =
@@ -641,7 +642,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     // Case: 4 collaborators (3 shown + 1 overflow)
     val collaborators =

@@ -35,6 +35,7 @@ data class NavigationMapUIState(
     val routeLineDrawData: Expected<RouteLineError, RouteSetValue>? = null,
     val isRouteRendered: Boolean = false,
     val locationsList: List<Point>,
+    val photoPinsList: List<Point> = emptyList(), // done by AI
     val mapboxNavigation: MapboxNavigation?,
     val routeLineApi: MapboxRouteLineApi?,
     val permissionGranted: Boolean = false,

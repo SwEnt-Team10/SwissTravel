@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -33,6 +34,7 @@ data class TripInfoUIState(
     val name: String = "Trip Name",
     val ownerId: String = "",
     val locations: List<Location> = emptyList(),
+    val uriLocation: Map<Uri, Location> = emptyMap(),
     val routeSegments: List<RouteSegment> = emptyList(),
     val activities: List<Activity> = emptyList(),
     val tripProfile: TripProfile? = null,
@@ -52,6 +54,7 @@ data class TripInfoUIState(
     val drawFromCurrentPosition: Boolean = false,
     val currentGpsPoint: Point? = null,
     val currentUserIsOwner: Boolean = false,
+    val isLoading: Boolean = false,
     val availableFriends: List<User> = emptyList(),
     val collaborators: List<User> = emptyList()
 )
@@ -104,6 +107,7 @@ class TripInfoViewModel(
       return
     }
     viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true) }
       try {
         val current = _uiState.value
         val trip = tripsRepository.getTrip(uid)
@@ -115,6 +119,7 @@ class TripInfoViewModel(
                 name = trip.name,
                 ownerId = trip.ownerId,
                 locations = trip.locations,
+                uriLocation = trip.uriLocation,
                 routeSegments = trip.routeSegments,
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,
@@ -126,12 +131,14 @@ class TripInfoViewModel(
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
-                currentUserIsOwner = trip.isOwner(userRepository.getCurrentUser().uid))
+                currentUserIsOwner = trip.isOwner(userRepository.getCurrentUser().uid),
+                isLoading = false)
         computeSchedule()
         Log.d("Activities", trip.activities.toString())
       } catch (e: Exception) {
         Log.e("TripInfoViewModel", "Error loading trip info", e)
         setErrorMsg("Failed to load trip info: ${e.message}")
+        _uiState.update { it.copy(isLoading = false) }
       }
     }
   }

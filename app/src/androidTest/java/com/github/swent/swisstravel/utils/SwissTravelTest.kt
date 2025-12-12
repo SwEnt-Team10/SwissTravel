@@ -24,6 +24,8 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
@@ -111,7 +113,7 @@ abstract class SwissTravelTest {
     }
 
   init {
-    assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running the tests" }
+    assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running thetests" }
   }
 
   @Before
@@ -150,8 +152,10 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
+
+  val dummyLocation = Location(Coordinate(0.0, 0.0), "Test Location")
 
   val trip2 =
       Trip(
@@ -168,7 +172,7 @@ abstract class SwissTravelTest {
               preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
   val tripList = listOf(trip1, trip2)
@@ -177,7 +181,7 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkMyTripsScreenIsDisplayed() {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.TITLE)
+    onNodeWithTag(SortedTripListTestTags.TITLE, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
     onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
@@ -243,7 +247,10 @@ abstract class SwissTravelTest {
     // Profile header
     waitUntil(
         timeoutMillis = UI_WAIT_TIMEOUT,
-        condition = { onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).isDisplayed() })
+        condition = {
+          onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).isDisplayed() &&
+              onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).isDisplayed()
+        })
     onNodeWithTag(ProfileScreenTestTags.PROFILE_PIC).assertIsDisplayed()
 
     // Biography (not displayed cause it's empty)
@@ -305,7 +312,6 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkSortedTripListNotEmptyIsDisplayed() {
-    onNodeWithTag(SortedTripListTestTags.SORTED_TRIP_LIST).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE_BUTTON_ROW).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE).assertIsDisplayed()

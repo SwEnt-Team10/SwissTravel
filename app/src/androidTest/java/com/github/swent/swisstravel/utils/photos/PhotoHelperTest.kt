@@ -69,41 +69,51 @@ class PhotoHelperTest {
 
   @Test
   fun getPhotoLocationReturnsNullWhenSecurityExceptionOccurs() {
-    // Setup mocks
-    val mockContext = mockk<Context>()
+    // 1. Create a relaxed mock
+    val mockContext = mockk<Context>(relaxed = true)
     val mockContentResolver = mockk<ContentResolver>()
     val uri = Uri.parse("content://fake/uri")
 
+    // 2. EXPLICITLY MOCK cacheDir to avoid NullPointerException in File constructor
+    // We use the system's temporary directory as a dummy cache dir
+    val tempDir = File(System.getProperty("java.io.tmpdir"))
+    every { mockContext.cacheDir } returns tempDir
+
+    // 3. Setup the mocked ContentResolver
     every { mockContext.contentResolver } returns mockContentResolver
 
-    // Force a SecurityException (e.g., permission denied)
+    // 4. Force a SecurityException when opening the stream
     every { mockContentResolver.openInputStream(uri) } throws SecurityException("Permission denied")
 
     // Test execution
     val location = mockContext.getPhotoLocation(uri, "Test Security")
 
     // Verification
-    assertNull("Should handle SecurityException gracefully", location)
+    assertNull("Should handle SecurityException gracefully (catch block)", location)
   }
 
   @Test
   fun getPhotoLocationReturnsNullWhenIOExceptionOccurs() {
-    // Mock Context and ContentResolver
-    val mockContext = mockk<Context>()
+    // 1. Create a relaxed mock
+    val mockContext = mockk<Context>(relaxed = true)
     val mockContentResolver = mockk<ContentResolver>()
     val uri = Uri.parse("content://fake/uri")
 
-    // Configure the mock to return our mocked ContentResolver
+    // 2. EXPLICITLY MOCK cacheDir here as well
+    val tempDir = File(System.getProperty("java.io.tmpdir"))
+    every { mockContext.cacheDir } returns tempDir
+
+    // 3. Setup the mocked ContentResolver
     every { mockContext.contentResolver } returns mockContentResolver
 
-    // Force openInputStream to throw an IOException
+    // 4. Force an IOException when opening the stream
     every { mockContentResolver.openInputStream(uri) } throws IOException("Disk error simulation")
 
-    // Call the function on the mock
+    // Test execution
     val location = mockContext.getPhotoLocation(uri, "Test IO")
 
-    // Verify that it returns null gracefully
-    assertNull("Should handle IOException gracefully", location)
+    // Verification
+    assertNull("Should handle IOException gracefully (catch block)", location)
   }
 
   // --- Test Utilities ---

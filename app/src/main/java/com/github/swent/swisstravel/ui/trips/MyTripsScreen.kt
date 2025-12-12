@@ -4,13 +4,13 @@ import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
@@ -30,6 +30,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -41,7 +42,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
@@ -52,9 +52,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
-import com.github.swent.swisstravel.ui.composable.SortedTripList
+import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
+import com.github.swent.swisstravel.ui.composable.sortedTripListItems
 
 /**
  * Contains constants for test tags used within [MyTripsScreen].
@@ -112,7 +114,7 @@ fun MyTripsScreen(
   // Handle back press while in selection mode
   BackHandler(enabled = uiState.isSelectionMode) { myTripsViewModel.toggleSelectionMode(false) }
 
-  val lifecycleOwner = LocalLifecycleOwner.current
+  val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
 
   // This piece of code is to make sure that the trips recompose after creating a trip, had issues
   // before
@@ -170,27 +172,60 @@ fun MyTripsScreen(
         }
       },
       content = { padding ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(padding)
-                    .padding(
-                        start = dimensionResource(R.dimen.my_trip_padding_start_end),
-                        end = dimensionResource(R.dimen.my_trip_padding_start_end),
-                        bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
-              CurrentTripSection(
-                  myTripsViewModel = myTripsViewModel,
-                  onSelectTrip = onSelectTrip,
-                  onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
-                  onEditCurrentTrip = onEditCurrentTrip)
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { myTripsViewModel.refreshUIState() },
+            modifier = Modifier.padding(padding)) {
+              LazyColumn(
+                  modifier =
+                      Modifier.fillMaxSize()
+                          .testTag(TripListTestTags.TRIP_LIST)
+                          .testTag(SortedTripListTestTags.SORTED_TRIP_LIST)
+                          .padding(
+                              start = dimensionResource(R.dimen.my_trip_padding_start_end),
+                              end = dimensionResource(R.dimen.my_trip_padding_start_end),
+                              bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
+                    item {
+                      CurrentTripSection(
+                          myTripsViewModel = myTripsViewModel,
+                          onSelectTrip = onSelectTrip,
+                          onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
+                          onEditCurrentTrip = onEditCurrentTrip)
+                    }
 
-              UpcomingTripsSection(
-                  trips = uiState.tripsList,
-                  uiState = uiState,
-                  onSelectTrip = onSelectTrip,
-                  onToggleSelection = { myTripsViewModel.toggleTripSelection(it) },
-                  onEnterSelectionMode = { myTripsViewModel.toggleSelectionMode(true) },
-                  onSortSelected = { myTripsViewModel.updateSortType(it) })
+                    val listState =
+                        TripListState(
+                            trips = uiState.tripsList,
+                            isSelectionMode = uiState.isSelectionMode,
+                            isSelected = { trip -> trip in uiState.selectedTrips },
+                            collaboratorsLookup = { uid ->
+                              uiState.collaboratorsByTripId[uid] ?: emptyList()
+                            })
+                    val listEvent =
+                        TripListEvents(
+                            onClickTripElement = {
+                              it?.let { trip ->
+                                if (uiState.isSelectionMode)
+                                    myTripsViewModel.toggleTripSelection(trip)
+                                else onSelectTrip(trip.uid)
+                              }
+                            },
+                            onLongPress = {
+                              it?.let { trip ->
+                                myTripsViewModel.toggleSelectionMode(true)
+                                myTripsViewModel.toggleTripSelection(trip)
+                              }
+                            },
+                        )
+
+                    sortedTripListItems(
+                        title = "Upcoming Trips",
+                        listState = listState,
+                        listEvents = listEvent,
+                        onClickDropDownMenu = { myTripsViewModel.updateSortType(it) },
+                        selectedSortType = uiState.sortType,
+                    )
+                  }
             }
       })
 }
@@ -332,7 +367,8 @@ private fun CurrentTripSection(
           onToggleSelection(it)
         },
         isSelected = it in selectedTrips,
-        isSelectionMode = isSelectionMode)
+        isSelectionMode = isSelectionMode,
+        collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
   }
       ?: Text(
           text = stringResource(R.string.no_current_trip),
@@ -371,58 +407,4 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
               }
         }
       }
-}
-
-/**
- * Displays the "Upcoming Trips" section.
- * - Shows a list of future trips.
- * - Allows sorting and trip selection.
- * - Handles empty-state UI.
- *
- * @param trips List of upcoming trips.
- * @param uiState Current trips UI state.
- * @param onSelectTrip Invoked when a trip is clicked.
- * @param onToggleSelection Toggles selection state of a trip.
- * @param onEnterSelectionMode Activates selection mode.
- * @param onSortSelected Updates trip sort order.
- */
-@Composable
-private fun UpcomingTripsSection(
-    trips: List<Trip>,
-    uiState: TripsViewModel.TripsUIState,
-    onSelectTrip: (String) -> Unit,
-    onToggleSelection: (Trip) -> Unit,
-    onEnterSelectionMode: () -> Unit,
-    onSortSelected: (TripSortType) -> Unit,
-) {
-  val listState =
-      TripListState(
-          trips = trips,
-          emptyListString = stringResource(R.string.no_upcoming_trips),
-          isSelectionMode = uiState.isSelectionMode,
-          isSelected = { trip -> trip in uiState.selectedTrips },
-          collaboratorsLookup = { uid -> uiState.collaboratorsByTripId[uid] ?: emptyList() },
-      )
-  val listEvent =
-      TripListEvents(
-          onClickTripElement = {
-            it?.let { trip ->
-              if (uiState.isSelectionMode) onToggleSelection(trip) else onSelectTrip(trip.uid)
-            }
-          },
-          onLongPress = {
-            it?.let { trip ->
-              onEnterSelectionMode()
-              onToggleSelection(trip)
-            }
-          },
-      )
-
-  SortedTripList(
-      title = stringResource(R.string.upcoming_trips),
-      listState = listState,
-      listEvents = listEvent,
-      onClickDropDownMenu = { type -> onSortSelected(type) },
-      selectedSortType = uiState.sortType,
-  )
 }

@@ -45,7 +45,7 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     assertTrue(trip.isUpcoming())
@@ -74,7 +74,7 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = true,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     assertTrue(trip.isCurrent())
@@ -103,7 +103,7 @@ class TripHelpersTest {
             tripProfile = tripProfile,
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     assertTrue(trip.isPast())
@@ -129,7 +129,7 @@ class TripHelpersTest {
                     preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = listOf("collab-1", "collab-2"))
 
     assertTrue(trip.isOwner("owner-123"))
@@ -155,7 +155,7 @@ class TripHelpersTest {
                     preferences = emptyList()),
             isFavorite = false,
             isCurrentTrip = false,
-            listUri = emptyList(),
+            uriLocation = emptyMap(),
             collaboratorsId = listOf("collab-1", "collab-2"))
 
     assertTrue(trip.canEdit("owner-123")) // owner can edit

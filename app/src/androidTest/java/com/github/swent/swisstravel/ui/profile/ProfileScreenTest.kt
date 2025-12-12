@@ -80,7 +80,7 @@ class ProfileScreenTest : SwissTravelTest() {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val tripTwo =
       Trip(
@@ -98,7 +98,7 @@ class ProfileScreenTest : SwissTravelTest() {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
   private val fakeTripRepo = TripRepositoryLocal()
