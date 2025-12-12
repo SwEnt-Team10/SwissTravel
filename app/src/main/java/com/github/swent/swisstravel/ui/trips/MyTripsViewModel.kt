@@ -43,8 +43,8 @@ class MyTripsViewModel(
   override suspend fun getAllTrips() {
     _uiState.value = _uiState.value.copy(isLoading = true)
     try {
-        val currentUser = userRepository.getCurrentUser()
-        val favoriteTrips = currentUser.favoriteTripsUids.toSet()
+      val currentUser = userRepository.getCurrentUser()
+      val favoriteTrips = currentUser.favoriteTripsUids.toSet()
       val trips = tripsRepository.getAllTrips()
       val currentTrip = trips.find { it.isCurrent() }
       val upcomingTrips = trips.filter { it.isUpcoming() }

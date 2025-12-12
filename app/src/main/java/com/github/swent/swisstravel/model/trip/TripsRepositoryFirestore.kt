@@ -318,7 +318,6 @@ class TripsRepositoryFirestore(
         "routeSegments" to trip.routeSegments,
         "activities" to trip.activities,
         "tripProfile" to trip.tripProfile,
-        "favorite" to trip.isFavorite,
         "currentTrip" to trip.isCurrentTrip,
         "collaboratorsId" to trip.collaboratorsId,
         "random" to trip.isRandom,
