@@ -59,7 +59,7 @@ class SelectActivitiesTest {
         listOf(activityGeneva) andThen
         listOf(activityZurich)
 
-    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities { progressUpdates.add(it) }
@@ -91,7 +91,7 @@ class SelectActivitiesTest {
             listOf(activityGeneva) andThen
             listOf(activityZurich)
 
-        val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+        val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
         // When
         val result = selectActivities.addActivities { progressUpdates.add(it) }
@@ -118,7 +118,7 @@ class SelectActivitiesTest {
           match { it.containsAll(mandatory) }, any(), any(), any())
     } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
 
-    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities { progressUpdates.add(it) }
@@ -136,7 +136,7 @@ class SelectActivitiesTest {
     tripSettings =
         tripSettings.copy(
             destinations = emptyList(), arrivalDeparture = TripArrivalDeparture(null, null))
-    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities {}
@@ -152,7 +152,7 @@ class SelectActivitiesTest {
     coEvery { mockActivityRepository.getActivitiesNear(any(), any(), any()) } returns
         listOf(activityLausanne)
 
-    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
     // When
     selectActivities.addActivities { progressUpdates.add(it) }
@@ -178,7 +178,7 @@ class SelectActivitiesTest {
     coEvery { mockActivityRepository.getActivitiesNear(zurich.coordinate, any(), any()) } returns
         listOf(activityZurich)
 
-    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities {}
@@ -196,7 +196,7 @@ class SelectActivitiesTest {
         // Given user preferences
         tripSettings = tripSettings.copy(preferences = mandatory + optional)
 
-        val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+        val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
         // Mock: must call getActivitiesNearWithPreference with mandatory + optional
         coEvery {
@@ -233,7 +233,7 @@ class SelectActivitiesTest {
         // Given user preferences
         tripSettings = tripSettings.copy(preferences = mandatory)
 
-        val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+        val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
         // Mock: must call getActivitiesNearWithPreference with mandatory + optional
         coEvery {
@@ -264,7 +264,7 @@ class SelectActivitiesTest {
     // Given no preferences
     tripSettings = tripSettings.copy(preferences = emptyList())
 
-    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, activityRepository = mockActivityRepository)
 
     // Mock: should call getActivitiesNear()
     coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), 1) } returns
