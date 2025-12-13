@@ -14,7 +14,6 @@ import com.github.swent.swisstravel.ui.tripcreation.TripCreationTests
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import kotlin.test.Test
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule

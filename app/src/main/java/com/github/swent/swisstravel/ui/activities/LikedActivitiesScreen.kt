@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.activities
 
-import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -49,7 +48,12 @@ object LikedActivitiesScreenTestTags {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModelContract, onUnlike: () -> Unit = {}, onSchedule: () -> Unit = {}) {
+fun LikedActivitiesScreen(
+    onBack: () -> Unit = {},
+    tripInfoVM: TripInfoViewModelContract,
+    onUnlike: () -> Unit = {},
+    onSchedule: () -> Unit = {}
+) {
   val state by tripInfoVM.uiState.collectAsState()
   val likedActivities = state.likedActivities
 
@@ -126,8 +130,9 @@ fun LikedActivityItem(activity: Activity, tripInfoVM: TripInfoViewModelContract)
                 else tripInfoVM.deselectLikedActivity(activity)
               },
               modifier =
-                  Modifier
-                      .testTag(LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY + "_${activity.getName()}")
+                  Modifier.testTag(
+                          LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY +
+                              "_${activity.getName()}")
                       .align(Alignment.CenterVertically))
         }
       }

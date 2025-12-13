@@ -1,7 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfo
 
 import android.content.Context
-import android.util.Log
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TripElement
@@ -128,24 +127,39 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
   }
 
   override fun unlikeSelectedActivities() {
-      _ui.update { state -> state.copy(likedActivities = state.likedActivities - state.selectedLikedActivities, selectedLikedActivities = emptyList()) }
+    _ui.update { state ->
+      state.copy(
+          likedActivities = state.likedActivities - state.selectedLikedActivities,
+          selectedLikedActivities = emptyList())
+    }
   }
 
   override fun selectLikedActivity(activity: Activity) {
-    _ui.update { state -> state.copy(selectedLikedActivities = state.selectedLikedActivities + activity)}
+    _ui.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities + activity)
+    }
   }
 
   override fun deselectLikedActivity(activity: Activity) {
-      _ui.update { state -> state.copy(selectedLikedActivities = state.selectedLikedActivities - activity)}
+    _ui.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities - activity)
+    }
   }
 
-    override fun scheduleSelectedActivities(context: Context) {
-        _ui.update { state -> state }   // does nothing for the moment since scheduling logic is not done yet
-    }
+  override fun scheduleSelectedActivities(context: Context) {
+    _ui.update { state ->
+      state
+    } // does nothing for the moment since scheduling logic is not done yet
+  }
 
-    fun setActivitiesQueue(activitiesQueue: ArrayDeque<Activity>) {
-        _ui.update { state -> state.copy(activitiesQueue = activitiesQueue, currentActivity = activitiesQueue.first(), backActivity = activitiesQueue.getOrNull(1)) }
+  fun setActivitiesQueue(activitiesQueue: ArrayDeque<Activity>) {
+    _ui.update { state ->
+      state.copy(
+          activitiesQueue = activitiesQueue,
+          currentActivity = activitiesQueue.first(),
+          backActivity = activitiesQueue.getOrNull(1))
     }
+  }
 
   override fun swipeActivity(liked: Boolean) {
     if (_ui.value.activitiesQueue.isEmpty()) return

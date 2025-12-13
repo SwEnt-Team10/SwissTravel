@@ -1,15 +1,12 @@
 package com.github.swent.swisstravel.ui.activities
 
 import android.Manifest
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
-import com.github.swent.swisstravel.MainActivity
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.ui.composable.fakeActivity
 import com.github.swent.swisstravel.ui.trip.tripinfo.FakeTripInfoViewModel
@@ -39,12 +36,14 @@ class LikedActivitiesScreenTest : SwissTravelTest() {
 
   @Before
   fun setup() {
-    val context = InstrumentationRegistry
-      .getInstrumentation()
-      .targetContext
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
     vm.setActivities(listOf(fakeActivity))
-    composeTestRule.setContent { LikedActivitiesScreen(tripInfoVM = vm, onUnlike = {vm.unlikeSelectedActivities()}, onSchedule = {vm.scheduleSelectedActivities(
-context    )}) }
+    composeTestRule.setContent {
+      LikedActivitiesScreen(
+          tripInfoVM = vm,
+          onUnlike = { vm.unlikeSelectedActivities() },
+          onSchedule = { vm.scheduleSelectedActivities(context) })
+    }
   }
 
   @Test
@@ -67,7 +66,8 @@ context    )}) }
         .onNodeWithTag(LikedActivitiesScreenTestTags.LIKED_ACTIVITIES_LIST)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY + "_${fakeActivity.getName()}")
+        .onNodeWithTag(
+            LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY + "_${fakeActivity.getName()}")
         .assertIsDisplayed()
   }
 
@@ -106,7 +106,8 @@ context    )}) }
     // Since the scheduling functionality is not implemented yet, we just check that no changes
     // happened to the liked or selected activities
     composeTestRule.mainClock.advanceTimeBy(100)
-    // even after the implementation of the scheduling logic, it should not remove the liked activities
+    // even after the implementation of the scheduling logic, it should not remove the liked
+    // activities
     assertTrue(vm.uiState.value.likedActivities.isNotEmpty())
   }
 
@@ -121,7 +122,8 @@ context    )}) }
     // select activity
     assertTrue(vm.uiState.value.selectedLikedActivities.isEmpty())
     composeTestRule
-        .onNodeWithTag(LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY + "_${fakeActivity.getName()}")
+        .onNodeWithTag(
+            LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY + "_${fakeActivity.getName()}")
         .assertIsDisplayed()
         .performClick()
     composeTestRule.mainClock.advanceTimeBy(1000)
