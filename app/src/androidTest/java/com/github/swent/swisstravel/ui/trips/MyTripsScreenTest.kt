@@ -115,11 +115,16 @@ class FakeUserRepository : UserRepository {
   ) {}
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
-    // No-op
+    val user = users[uid] ?: return
+    if (user.favoriteTripsUids.contains(tripUid)) return
+    val newFavs = user.favoriteTripsUids + tripUid
+    users[uid] = user.copy(favoriteTripsUids = newFavs)
   }
 
   override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
-    // No-op
+    val user = users[uid] ?: return
+    val newFavs = user.favoriteTripsUids - tripUid
+    users[uid] = user.copy(favoriteTripsUids = newFavs)
   }
 }
 

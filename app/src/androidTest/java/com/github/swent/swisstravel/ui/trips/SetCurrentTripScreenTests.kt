@@ -68,7 +68,7 @@ class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
     val uiState = viewModel.uiState.value
 
     assertEquals(trip2.uid, uiState.currentTrip?.uid, "Trip 2 should now be current.")
-    assertTrue(uiState.currentTrip?.isCurrentTrip == true, "Current trip flag should be true.")
+    assertEquals(uiState.currentTrip?.isCurrentTrip, true, "Current trip flag should be true.")
     assertTrue(
         uiState.tripsList.none { it.isCurrentTrip }, "No other trip should be marked current.")
   }
