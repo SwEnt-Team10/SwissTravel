@@ -431,33 +431,6 @@ class TripInfoViewModel(
   }
 
   /**
-   * Updates :
-   * - the trip info UI state's queue (because the ui state is used to display the activities in the
-   *   SwipeActivitiesScreen, and fetch new activities)
-   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
-   *   comes back later, the values are the same)
-   *
-   * Also, it refreshes the current activity and back activity
-   *
-   * @param newQueue The queue of activities that will be set.
-   */
-  override fun updateQueue(newQueue: ArrayDeque<Activity>) {
-    _uiState.update { state ->
-      state.copy(
-          activitiesQueue = newQueue,
-          currentActivity = newQueue.firstOrNull(),
-          backActivity = newQueue.getOrNull(1))
-    }
-    // update the trip locally
-    Log.d("TRIP_INFO_VM", "queue local before : ${trip.value!!.activitiesQueue.map {it.getName()}}")
-    trip.update { trip -> trip!!.copy(activitiesQueue = newQueue) }
-    Log.d("TRIP_INFO_VM", "queue local after : ${trip.value!!.activitiesQueue.map {it.getName()}}")
-
-    // update trip in database
-    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
-  }
-
-  /**
    * Updates the set of all activities that have been fetched for swiping in :
    * - the UI state (because it is used to keep track of all fetched activities in the
    *   SwipeActivitiesScreen)
@@ -528,9 +501,6 @@ class TripInfoViewModel(
     if (newQueue.isNotEmpty()) {
       newQueue.removeFirst()
     }
-
-    // will also refresh the current activity and back activity
-    updateQueue(newQueue)
 
     // fetches new activity to put on the back of the queue, and adds it to all fetched
     viewModelScope.launch { fetchSwipeActivity() }

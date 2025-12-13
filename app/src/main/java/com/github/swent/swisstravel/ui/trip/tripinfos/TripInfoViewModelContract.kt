@@ -75,13 +75,6 @@ interface TripInfoViewModelContract {
   fun unlikeSelectedActivities()
 
   /**
-   * Updates the activities queue in the UI state and in the Trip.
-   *
-   * @param newQueue The queue of activities that will be set.
-   */
-  fun updateQueue(newQueue: ArrayDeque<Activity>)
-
-  /**
    * Updates the set of all activities that have been fetched for swiping in the UI state and in the
    * Trip.
    *
