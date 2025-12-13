@@ -26,7 +26,6 @@ import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 import kotlin.collections.zipWithNext
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToLong
 import kotlin.random.Random
@@ -129,24 +128,33 @@ data class EnhancedTripProfile(
 /**
  * kdoc done with AI verified by the designer
  *
- * The `TripAlgorithm` is the central engine for generating, optimizing, and scheduling personalized travel itineraries.
- * It orchestrates the complex process of selecting activities, ordering destinations, and fitting them into a valid time schedule.
+ * The `TripAlgorithm` is the central engine for generating, optimizing, and scheduling personalized
+ * travel itineraries. It orchestrates the complex process of selecting activities, ordering
+ * destinations, and fitting them into a valid time schedule.
  *
  * ## Core Responsibilities
- * 1. **Activity Selection:** Fetches relevant activities based on user preferences (e.g., Museums, Hiking) and travel context (Solo, Family).
- * 2. **Route Optimization:** Solves a variant of the Traveling Salesperson Problem (TSP) to order locations efficiently, minimizing travel time.
- * 3. **Intermediate Stops:** Dynamically injects stops (e.g., scenic breaks) between long travel segments if requested.
- * 4. **Scheduling & Rescheduling:** Assigns precise start/end times to activities. If the schedule overflows (too many activities for the available days),
- * it intelligently prunes less critical activities and re-optimizes the route.
- * 5. **Gap Filling:** If the generated trip is too short, it iteratively fetches new activities (from major cities or scenic spots) to fill the remaining days.
+ * 1. **Activity Selection:** Fetches relevant activities based on user preferences (e.g., Museums,
+ *    Hiking) and travel context (Solo, Family).
+ * 2. **Route Optimization:** Solves a variant of the Traveling Salesperson Problem (TSP) to order
+ *    locations efficiently, minimizing travel time.
+ * 3. **Intermediate Stops:** Dynamically injects stops (e.g., scenic breaks) between long travel
+ *    segments if requested.
+ * 4. **Scheduling & Rescheduling:** Assigns precise start/end times to activities. If the schedule
+ *    overflows (too many activities for the available days), it intelligently prunes less critical
+ *    activities and re-optimizes the route.
+ * 5. **Gap Filling:** If the generated trip is too short, it iteratively fetches new activities
+ *    (from major cities or scenic spots) to fill the remaining days.
  *
  * ## Algorithm Phases & Progression
- * The computation is divided into distinct phases, each contributing to the total progress report (0.0 to 1.0):
+ * The computation is divided into distinct phases, each contributing to the total progress report
+ * (0.0 to 1.0):
  *
  * ### 1. Initialization & Preference Injection
  * - Before starting, the algorithm inspects the `TripSettings`.
- * - **Companion Logic:** Automatically adds preferences like `CHILDREN_FRIENDLY` (if children are present), `INDIVIDUAL` (solo traveler), or `GROUP`.
- * - **Default Fallback:** If no specific activity types are selected, it injects a default set to ensure a diverse trip.
+ * - **Companion Logic:** Automatically adds preferences like `CHILDREN_FRIENDLY` (if children are
+ *   present), `INDIVIDUAL` (solo traveler), or `GROUP`.
+ * - **Default Fallback:** If no specific activity types are selected, it injects a default set to
+ *   ensure a diverse trip.
  *
  * ### 2. Activity Selection (`SelectActivities`)
  * - **Weight:** `progression.selectActivities`
@@ -161,7 +169,8 @@ data class EnhancedTripProfile(
  *
  * ### 4. Intermediate Stops (`addInBetweenActivities`)
  * - **Weight:** `progression.fetchInBetweenActivities`
- * - If `INTERMEDIATE_STOPS` is enabled, breaks long travel segments (> 90km) by injecting new stops.
+ * - If `INTERMEDIATE_STOPS` is enabled, breaks long travel segments (> 90km) by injecting new
+ *   stops.
  * - Fetches activities at calculated midpoints and re-inserts them into the route.
  *
  * ### 5. Initial Scheduling (`scheduleTrip`)
@@ -169,7 +178,8 @@ data class EnhancedTripProfile(
  * - Attempts to build a valid timeline.
  * - **Rescheduling Logic:** If activities don't fit (too much activities):
  * 1. Calculates the "time deficit" (how much overtime the trip is).
- * 2. Randomly removes activities to meet the deficit, prioritizing keeping "clusters" (multiple activities in one spot).
+ * 2. Randomly removes activities to meet the deficit, prioritizing keeping "clusters" (multiple
+ *    activities in one spot).
  * 3. Re-optimizes the route with the reduced set of locations.
  *
  * ### 6. Final Gap Filling (`addMoreActivities`)
@@ -179,8 +189,11 @@ data class EnhancedTripProfile(
  * - **Cache Reuse:** Tries to use previously fetched but unused activities (`cachedActivities`).
  * - **City Visits:** Adds full-day or half-day visits to major Swiss cities (`swissMajorCities`).
  * - **Grand Tour:** Adds scenic stops along the Grand Tour of Switzerland route.
- * - **Dynamic Preference Expansion:** If stuck, adds new categories (e.g., `ENVIRONMENT` types) to widen the search.
- * - **Batching:** Can add multiple small activities at once if they fit within a time window (`MAX_BATCH_ADDED_TIME_HOURS`).
+ * - **Dynamic Preference Expansion:** If stuck, adds new categories (e.g., `ENVIRONMENT` types) to
+ *   widen the search.
+ * - **Batching:** Can add multiple small activities at once if they fit within a time window
+ *   (`MAX_BATCH_ADDED_TIME_HOURS`).
+ *
  * @property activitySelector The component responsible for selecting activities based on user
  *   preferences.
  * @property routeOptimizer The component responsible for optimizing the route between locations.
@@ -220,34 +233,34 @@ open class TripAlgorithm(
         context: Context
     ): TripAlgorithm {
       var settingsToUse = tripSettings
-        val currentPrefs = settingsToUse.preferences.toMutableList()
+      val currentPrefs = settingsToUse.preferences.toMutableList()
 
-        // Apply Travel Companion Logic based on user's input
-        val adults = settingsToUse.travelers.adults
-        val children = settingsToUse.travelers.children
+      // Apply Travel Companion Logic based on user's input
+      val adults = settingsToUse.travelers.adults
+      val children = settingsToUse.travelers.children
 
-        // 1. One or more children => Add CHILDREN_FRIENDLY
-        if (children >= 1) {
-            if (!currentPrefs.contains(Preference.CHILDREN_FRIENDLY)) {
-                currentPrefs.add(Preference.CHILDREN_FRIENDLY)
-            }
-        } else {
-            // No children cases:
-            // 2. Only one adult => Add INDIVIDUAL
-            if (adults == 1) {
-                if (!currentPrefs.contains(Preference.INDIVIDUAL)) {
-                    currentPrefs.add(Preference.INDIVIDUAL)
-                }
-            }
-            // 3. A lot of adults (>= 3) => Add GROUP
-            // We use >= 3 to treat 2 adults as a neutral case (could be couple or friends),
-            // whereas 3+ is definitely a group.
-            else if (adults >= 3) {
-                if (!currentPrefs.contains(Preference.GROUP)) {
-                    currentPrefs.add(Preference.GROUP)
-                }
-            }
+      // 1. One or more children => Add CHILDREN_FRIENDLY
+      if (children >= 1) {
+        if (!currentPrefs.contains(Preference.CHILDREN_FRIENDLY)) {
+          currentPrefs.add(Preference.CHILDREN_FRIENDLY)
         }
+      } else {
+        // No children cases:
+        // 2. Only one adult => Add INDIVIDUAL
+        if (adults == 1) {
+          if (!currentPrefs.contains(Preference.INDIVIDUAL)) {
+            currentPrefs.add(Preference.INDIVIDUAL)
+          }
+        }
+        // 3. A lot of adults (>= 3) => Add GROUP
+        // We use >= 3 to treat 2 adults as a neutral case (could be couple or friends),
+        // whereas 3+ is definitely a group.
+        else if (adults >= 3) {
+          if (!currentPrefs.contains(Preference.GROUP)) {
+            currentPrefs.add(Preference.GROUP)
+          }
+        }
+      }
 
       // Check how many "Activity Type" and "Environment" preferences are selected
       val activityTypeCount =
@@ -256,17 +269,17 @@ open class TripAlgorithm(
           currentPrefs.count { it.category() == PreferenceCategories.Category.ENVIRONMENT }
 
       // If no environment => any is good
-        // If no activity type => any is good
+      // If no activity type => any is good
       if (activityTypeCount == 0 && environmentCount == 0) {
-          currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
-          currentPrefs.addAll(PreferenceCategories.environmentPreferences)
-      } else if (activityTypeCount == 0){
-          currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
+        currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
+        currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+      } else if (activityTypeCount == 0) {
+        currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
       } else if (environmentCount == 0) {
-          currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+        currentPrefs.addAll(PreferenceCategories.environmentPreferences)
       }
 
-        settingsToUse = settingsToUse.copy(preferences = currentPrefs)
+      settingsToUse = settingsToUse.copy(preferences = currentPrefs)
 
       val activitySelector =
           SelectActivities(tripSettings = settingsToUse, activityRepository = activityRepository)
@@ -291,50 +304,49 @@ open class TripAlgorithm(
    */
   private data class CityConfig(val location: Location, val radius: Int, val maxDays: Double)
 
-    /**
-     * This list was generated by AI
-     * A list of pairs representing Swiss major cities and their corresponding coordinates.
-     *
-     * Each pair contains a [Location] object representing the city and a radius in km from the
-     * center.
-     */
-    private val swissMajorCities: List<CityConfig> =
-        listOf(
-            CityConfig(Location(Coordinate(47.3769, 8.5417), "Zürich"), 15, 2.0), // Zürich
-            CityConfig(Location(Coordinate(46.2044, 6.1432), "Genève"), 12, 2.0), // Geneva
-            CityConfig(Location(Coordinate(47.5596, 7.5886), "Basel"), 10, 2.0), // Basel
-            CityConfig(Location(Coordinate(46.5197, 6.6323), "Lausanne"), 8, 1.0), // Lausanne
-            CityConfig(Location(Coordinate(46.9480, 7.4474), "Bern"), 10, 2.0), // Bern
-            CityConfig(Location(Coordinate(47.4988, 8.7241), "Winterthur"), 6, 1.0), // Winterthur
-            CityConfig(Location(Coordinate(47.0502, 8.3093), "Luzern"), 7, 2.0), // Lucerne
-            CityConfig(Location(Coordinate(47.4239, 9.3744), "St. Gallen"), 6, 1.0), // St. Gallen
-            CityConfig(Location(Coordinate(46.0048, 8.9511), "Lugano"), 7, 2.0), // Lugano
-            CityConfig(Location(Coordinate(47.1379, 7.2464), "Biel/Bienne"), 5, 0.5), // Biel/Bienne
-            CityConfig(Location(Coordinate(46.7578, 7.6206), "Thun"), 5, 0.5), // Thun
-            CityConfig(Location(Coordinate(46.1959, 9.0220), "Bellinzona"), 5, 0.5), // Bellinzona
-            CityConfig(Location(Coordinate(46.8133, 7.4189), "Köniz"), 5, 0.5), // Köniz (near Bern)
-            CityConfig(Location(Coordinate(46.8065, 7.1513), "Fribourg"), 5, 1.0), // Fribourg
-            CityConfig(Location(Coordinate(47.6970, 8.6383), "Schaffhausen"), 4, 0.5), // Schaffhausen
-            CityConfig(Location(Coordinate(46.8490, 9.5300), "Chur"), 5, 1.0), // Chur
-            CityConfig(
-                Location(Coordinate(47.3490, 8.7186), "Uster"), 4, 0.5), // Uster (ZH agglomeration)
-            CityConfig(Location(Coordinate(46.2335, 7.3573), "Sion"), 5, 0.5), // Sion
-            CityConfig(Location(Coordinate(46.4300, 6.9100), "Vevey"), 3, 0.5), // Vevey
-            CityConfig(Location(Coordinate(46.4310, 6.9110), "Montreux"), 4, 0.5), // Montreux
-            CityConfig(Location(Coordinate(46.1697, 8.7971), "Locarno"), 5, 0.5), // Locarno
-            CityConfig(
-                Location(Coordinate(47.0980, 6.8319), "La Chaux-de-Fonds"),
-                4,
-                0.5), // La Chaux-de-Fonds
-            CityConfig(Location(Coordinate(46.5828, 7.0827), "Gruyères"), 3, 0.5),
-            CityConfig(Location(Coordinate(47.6596, 8.8789), "Stein am Rhein"), 3, 0.5),
-            CityConfig(Location(Coordinate(46.9189, 7.1189), "Murten"), 3, 0.5),
-            CityConfig(Location(Coordinate(46.6861, 7.6694), "Spiez"), 4, 0.5),
-            CityConfig(Location(Coordinate(46.6833, 7.8500), "Interlaken"), 4, 0.5),
-            CityConfig(Location(Coordinate(46.5944, 7.9014), "Lauterbrunnen"), 3, 0.5),
-            CityConfig(Location(Coordinate(47.3308, 9.4005), "Appenzell"), 3, 0.5),
-            CityConfig(Location(Coordinate(45.9328, 8.9328), "Morcote"), 3, 0.5)
-        )
+  /**
+   * This list was generated by AI A list of pairs representing Swiss major cities and their
+   * corresponding coordinates.
+   *
+   * Each pair contains a [Location] object representing the city and a radius in km from the
+   * center.
+   */
+  private val swissMajorCities: List<CityConfig> =
+      listOf(
+          CityConfig(Location(Coordinate(47.3769, 8.5417), "Zürich"), 15, 2.0), // Zürich
+          CityConfig(Location(Coordinate(46.2044, 6.1432), "Genève"), 12, 2.0), // Geneva
+          CityConfig(Location(Coordinate(47.5596, 7.5886), "Basel"), 10, 2.0), // Basel
+          CityConfig(Location(Coordinate(46.5197, 6.6323), "Lausanne"), 8, 1.0), // Lausanne
+          CityConfig(Location(Coordinate(46.9480, 7.4474), "Bern"), 10, 2.0), // Bern
+          CityConfig(Location(Coordinate(47.4988, 8.7241), "Winterthur"), 6, 1.0), // Winterthur
+          CityConfig(Location(Coordinate(47.0502, 8.3093), "Luzern"), 7, 2.0), // Lucerne
+          CityConfig(Location(Coordinate(47.4239, 9.3744), "St. Gallen"), 6, 1.0), // St. Gallen
+          CityConfig(Location(Coordinate(46.0048, 8.9511), "Lugano"), 7, 2.0), // Lugano
+          CityConfig(Location(Coordinate(47.1379, 7.2464), "Biel/Bienne"), 5, 0.5), // Biel/Bienne
+          CityConfig(Location(Coordinate(46.7578, 7.6206), "Thun"), 5, 0.5), // Thun
+          CityConfig(Location(Coordinate(46.1959, 9.0220), "Bellinzona"), 5, 0.5), // Bellinzona
+          CityConfig(Location(Coordinate(46.8133, 7.4189), "Köniz"), 5, 0.5), // Köniz (near Bern)
+          CityConfig(Location(Coordinate(46.8065, 7.1513), "Fribourg"), 5, 1.0), // Fribourg
+          CityConfig(Location(Coordinate(47.6970, 8.6383), "Schaffhausen"), 4, 0.5), // Schaffhausen
+          CityConfig(Location(Coordinate(46.8490, 9.5300), "Chur"), 5, 1.0), // Chur
+          CityConfig(
+              Location(Coordinate(47.3490, 8.7186), "Uster"), 4, 0.5), // Uster (ZH agglomeration)
+          CityConfig(Location(Coordinate(46.2335, 7.3573), "Sion"), 5, 0.5), // Sion
+          CityConfig(Location(Coordinate(46.4300, 6.9100), "Vevey"), 3, 0.5), // Vevey
+          CityConfig(Location(Coordinate(46.4310, 6.9110), "Montreux"), 4, 0.5), // Montreux
+          CityConfig(Location(Coordinate(46.1697, 8.7971), "Locarno"), 5, 0.5), // Locarno
+          CityConfig(
+              Location(Coordinate(47.0980, 6.8319), "La Chaux-de-Fonds"),
+              4,
+              0.5), // La Chaux-de-Fonds
+          CityConfig(Location(Coordinate(46.5828, 7.0827), "Gruyères"), 3, 0.5),
+          CityConfig(Location(Coordinate(47.6596, 8.8789), "Stein am Rhein"), 3, 0.5),
+          CityConfig(Location(Coordinate(46.9189, 7.1189), "Murten"), 3, 0.5),
+          CityConfig(Location(Coordinate(46.6861, 7.6694), "Spiez"), 4, 0.5),
+          CityConfig(Location(Coordinate(46.6833, 7.8500), "Interlaken"), 4, 0.5),
+          CityConfig(Location(Coordinate(46.5944, 7.9014), "Lauterbrunnen"), 3, 0.5),
+          CityConfig(Location(Coordinate(47.3308, 9.4005), "Appenzell"), 3, 0.5),
+          CityConfig(Location(Coordinate(45.9328, 8.9328), "Morcote"), 3, 0.5))
 
   /**
    * A data class used to store the result of [addGrandTourActivities]
@@ -427,10 +439,11 @@ open class TripAlgorithm(
             addInBetweenActivities(
                 optimizedRoute = optimizedRoute,
                 activities = activityList,
-                mode = if (enhancedTripProfile.tripProfile.preferences.contains(
+                mode =
+                    if (enhancedTripProfile.tripProfile.preferences.contains(
                         Preference.PUBLIC_TRANSPORT))
-                    TransportMode.TRAIN
-                else TransportMode.CAR,
+                        TransportMode.TRAIN
+                    else TransportMode.CAR,
                 cachedActivities = cachedActivities) { progress ->
                   onProgress(
                       progression.selectActivities +
@@ -873,11 +886,14 @@ open class TripAlgorithm(
     val finalOptimizedRoute =
         try {
           routeOptimizer.recomputeOrderedRoute(
-              routeAfterRemoval, changedIndexes,
-              mode = if (enhancedTripProfile.tripProfile.preferences.contains(
+              routeAfterRemoval,
+              changedIndexes,
+              mode =
+                  if (enhancedTripProfile.tripProfile.preferences.contains(
                       Preference.PUBLIC_TRANSPORT))
-                  TransportMode.TRAIN
-              else TransportMode.CAR, INVALID_DURATION) {
+                      TransportMode.TRAIN
+                  else TransportMode.CAR,
+              INVALID_DURATION) {
                 onProgress(
                     rescheduleProgression.schedule +
                         rescheduleProgression.analyzeAndRemove +
@@ -965,91 +981,91 @@ open class TripAlgorithm(
     return finalSchedule
   }
 
-    /**
-     * Done by AI Attempts to add an activity from the [cachedActivities] list to the [activityList].
-     * * Logic:
-     * 1. Invalidates and removes cached activities that are not near any preferred location.
-     * 2. Selects the valid candidates based on the strategy (oneDay or normal).
-     * 3. Adds multiple activities if they fit within the time limit.
-     *
-     * @param activityList The mutable list of current activities in the trip.
-     * @param cachedActivities The mutable list of backup/cached activities.
-     * @param preferredLocations The list of user's preferred locations (to validate relevance).
-     * @param oneDay Whether we are on the last day (prioritize small activities).
-     * @return `true` if at least one activity was added, `false` otherwise.
-     */
-    private fun addCachedActivity(
-        activityList: MutableList<Activity>,
-        cachedActivities: MutableList<Activity>,
-        preferredLocations: List<Location>,
-        oneDay: Boolean
-    ): Boolean {
-        if (cachedActivities.isEmpty()) return false
+  /**
+   * Done by AI Attempts to add an activity from the [cachedActivities] list to the [activityList].
+   * * Logic:
+   * 1. Invalidates and removes cached activities that are not near any preferred location.
+   * 2. Selects the valid candidates based on the strategy (oneDay or normal).
+   * 3. Adds multiple activities if they fit within the time limit.
+   *
+   * @param activityList The mutable list of current activities in the trip.
+   * @param cachedActivities The mutable list of backup/cached activities.
+   * @param preferredLocations The list of user's preferred locations (to validate relevance).
+   * @param oneDay Whether we are on the last day (prioritize small activities).
+   * @return `true` if at least one activity was added, `false` otherwise.
+   */
+  private fun addCachedActivity(
+      activityList: MutableList<Activity>,
+      cachedActivities: MutableList<Activity>,
+      preferredLocations: List<Location>,
+      oneDay: Boolean
+  ): Boolean {
+    if (cachedActivities.isEmpty()) return false
 
-        val iterator = cachedActivities.iterator()
-        val validCandidates = mutableListOf<Activity>()
+    val iterator = cachedActivities.iterator()
+    val validCandidates = mutableListOf<Activity>()
 
-        // 1. Remove activities not near any preferred location
-        while (iterator.hasNext()) {
-            val activity = iterator.next()
+    // 1. Remove activities not near any preferred location
+    while (iterator.hasNext()) {
+      val activity = iterator.next()
 
-            val isNearPreferred =
-                preferredLocations.any { pref ->
-                    activity.location.coordinate.haversineDistanceTo(pref.coordinate) <=
-                            RADIUS_CACHED_ACTIVITIES_KM
-                }
+      val isNearPreferred =
+          preferredLocations.any { pref ->
+            activity.location.coordinate.haversineDistanceTo(pref.coordinate) <=
+                RADIUS_CACHED_ACTIVITIES_KM
+          }
 
-            if (!isNearPreferred) {
-                // Remove invalid activity from cache permanently
-                iterator.remove()
-            } else {
-                // Only consider if not already in the trip
-                val alreadyInTrip = activityList.any { it.location.sameLocation(activity.location) }
-                if (!alreadyInTrip) {
-                    validCandidates.add(activity)
-                }
-            }
+      if (!isNearPreferred) {
+        // Remove invalid activity from cache permanently
+        iterator.remove()
+      } else {
+        // Only consider if not already in the trip
+        val alreadyInTrip = activityList.any { it.location.sameLocation(activity.location) }
+        if (!alreadyInTrip) {
+          validCandidates.add(activity)
         }
-
-        if (validCandidates.isEmpty()) return false
-
-        // 2. Sort candidates based on the strategy
-        val sortedCandidates =
-            if (oneDay) {
-                // If it's the last day, prioritize the smallest activities to fill gaps
-                validCandidates.sortedBy { it.estimatedTime }
-            } else {
-                // Otherwise, prioritize the ones closest to preferred locations
-                validCandidates.sortedBy { candidate ->
-                    preferredLocations.minOfOrNull { loc ->
-                        candidate.location.coordinate.haversineDistanceTo(loc.coordinate)
-                    } ?: Double.MAX_VALUE
-                }
-            }
-
-        // 3. Batch add activities up to the limit
-        var currentBatchTime = 0.0
-        val toAdd = mutableListOf<Activity>()
-
-        for (candidate in sortedCandidates) {
-            val durationHours = candidate.estimatedTime / 3600.0
-            // Calculate cost including penalty
-            val cost = durationHours + (BATCH_ADD_PENALTY_MINUTES / 60.0)
-
-            if (currentBatchTime + cost <= MAX_BATCH_ADDED_TIME_HOURS) {
-                toAdd.add(candidate)
-                currentBatchTime += cost
-            }
-        }
-
-        if (toAdd.isNotEmpty()) {
-            activityList.addAll(toAdd)
-            cachedActivities.removeAll(toAdd)
-            return true
-        }
-
-        return false
+      }
     }
+
+    if (validCandidates.isEmpty()) return false
+
+    // 2. Sort candidates based on the strategy
+    val sortedCandidates =
+        if (oneDay) {
+          // If it's the last day, prioritize the smallest activities to fill gaps
+          validCandidates.sortedBy { it.estimatedTime }
+        } else {
+          // Otherwise, prioritize the ones closest to preferred locations
+          validCandidates.sortedBy { candidate ->
+            preferredLocations.minOfOrNull { loc ->
+              candidate.location.coordinate.haversineDistanceTo(loc.coordinate)
+            } ?: Double.MAX_VALUE
+          }
+        }
+
+    // 3. Batch add activities up to the limit
+    var currentBatchTime = 0.0
+    val toAdd = mutableListOf<Activity>()
+
+    for (candidate in sortedCandidates) {
+      val durationHours = candidate.estimatedTime / 3600.0
+      // Calculate cost including penalty
+      val cost = durationHours + (BATCH_ADD_PENALTY_MINUTES / 60.0)
+
+      if (currentBatchTime + cost <= MAX_BATCH_ADDED_TIME_HOURS) {
+        toAdd.add(candidate)
+        currentBatchTime += cost
+      }
+    }
+
+    if (toAdd.isNotEmpty()) {
+      activityList.addAll(toAdd)
+      cachedActivities.removeAll(toAdd)
+      return true
+    }
+
+    return false
+  }
 
   /**
    * kdoc done with AI Iteratively adds activities to a trip until the trip reaches its target end
@@ -1114,7 +1130,7 @@ open class TripAlgorithm(
       addedFromCache = false
       val numberOfDays =
           dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
-        val oneDay = numberOfDays <= 1
+      val oneDay = numberOfDays <= 1
       val limit = min(7, numberOfDays)
       for (i in 1..limit) {
         val added =
@@ -1140,7 +1156,7 @@ open class TripAlgorithm(
                 (originalOrderedRoute.orderedLocations + updatedNewActivities.map { it.location }),
                 allActivities,
                 if (enhancedTripProfile.tripProfile.preferences.contains(
-                        Preference.PUBLIC_TRANSPORT))
+                    Preference.PUBLIC_TRANSPORT))
                     TransportMode.TRAIN
                 else TransportMode.CAR,
             ) {}
@@ -1174,76 +1190,79 @@ open class TripAlgorithm(
     var addCityWorks = true
     var addGrandTourWorks = true
     var stayAtCenterRetry = true
-      var addPreferences = true
+    var addPreferences = true
     val visitedLocations = mutableListOf<Location>()
     var numberOfCycle = 0
     val missingDays =
         dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
     val limit = min(14, missingDays * 2) // arbitrary value to not have an infinite loop
-      // List of all the locations we already fetched activities in the addPreferences loop
+    // List of all the locations we already fetched activities in the addPreferences loop
     val preferencesAddedVisited = mutableListOf<Location>()
     while ((addCityWorks || addGrandTourWorks || addPreferences) &&
         numberOfCycle < limit &&
         !sameDate(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) {
       numberOfCycle++
-        // If we could not use addCity or addGrandTour or if we already used a third of the cycles, add more preferences and try to fetch new activities with this (This can be then countered by the swipe activities if the activities are not pleasing the user)
-        if (addPreferences &&  ((!addCityWorks && !addGrandTourWorks) || numberOfCycle >= limit / 3)){
-            val missingDays = dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
-            val activityToAdd =
-                    PreferenceCategories.activityTypePreferences + PreferenceCategories.environmentPreferences
-            activitySelector.updatePreferences(
-                enhancedTripProfile.tripProfile.preferences.union(activityToAdd).toList())
+      // If we could not use addCity or addGrandTour or if we already used a third of the cycles,
+      // add more preferences and try to fetch new activities with this (This can be then countered
+      // by the swipe activities if the activities are not pleasing the user)
+      if (addPreferences && ((!addCityWorks && !addGrandTourWorks) || numberOfCycle >= limit / 3)) {
+        val missingDays =
+            dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+        val activityToAdd =
+            PreferenceCategories.activityTypePreferences +
+                PreferenceCategories.environmentPreferences
+        activitySelector.updatePreferences(
+            enhancedTripProfile.tripProfile.preferences.union(activityToAdd).toList())
 
-            // Select a location to fetch from
-            // Candidates are locations in preferredLocations that haven't been processed yet
-            val candidates =
-                enhancedTripProfile.newPreferredLocations.filter { loc ->
-                    preferencesAddedVisited.none { it.sameLocation(loc) }
-                }
-
-            if (candidates.isNotEmpty()) {
-                // Identify which candidates are "Major Cities"
-                val majorCityCandidates =
-                    candidates.mapNotNull { candidate ->
-                        val config =
-                            swissMajorCities.firstOrNull { cityConfig ->
-                                candidate.coordinate.haversineDistanceTo(cityConfig.location.coordinate) <=
-                                        cityConfig.radius
-                            }
-                        if (config != null) candidate to config.maxDays else null
-                    }
-
-                // First try to see if it is a big city because most activities are in cities
-                // If not just take one randomly
-                val selectedLocation =
-                    if (majorCityCandidates.isNotEmpty()) {
-                        // Prioritize by maxDays descending
-                        majorCityCandidates.maxByOrNull { it.second }!!.first
-                    } else {
-                        // Random fallback
-                        candidates.random()
-                    }
-
-                preferencesAddedVisited.add(selectedLocation)
-
-                // Add an arbitrary upper bound limit to make sure we don't fetch too much
-                val fetchLimit = min(10, missingDays.toInt())
-
-                val newActs =
-                    activitySelector.getActivitiesNearWithPreferences(
-                        coords = selectedLocation.coordinate,
-                        limit = fetchLimit,
-                        activityBlackList = allActivities.map { it.getName() },
-                        cachedActivities = cachedActivities
-                    )
-
-                if (newActs.isNotEmpty()) {
-                    allActivities.addAll(newActs)
-                }
-            } else {
-                addPreferences = false
+        // Select a location to fetch from
+        // Candidates are locations in preferredLocations that haven't been processed yet
+        val candidates =
+            enhancedTripProfile.newPreferredLocations.filter { loc ->
+              preferencesAddedVisited.none { it.sameLocation(loc) }
             }
+
+        if (candidates.isNotEmpty()) {
+          // Identify which candidates are "Major Cities"
+          val majorCityCandidates =
+              candidates.mapNotNull { candidate ->
+                val config =
+                    swissMajorCities.firstOrNull { cityConfig ->
+                      candidate.coordinate.haversineDistanceTo(cityConfig.location.coordinate) <=
+                          cityConfig.radius
+                    }
+                if (config != null) candidate to config.maxDays else null
+              }
+
+          // First try to see if it is a big city because most activities are in cities
+          // If not just take one randomly
+          val selectedLocation =
+              if (majorCityCandidates.isNotEmpty()) {
+                // Prioritize by maxDays descending
+                majorCityCandidates.maxByOrNull { it.second }!!.first
+              } else {
+                // Random fallback
+                candidates.random()
+              }
+
+          preferencesAddedVisited.add(selectedLocation)
+
+          // Add an arbitrary upper bound limit to make sure we don't fetch too much
+          val fetchLimit = min(10, missingDays.toInt())
+
+          val newActs =
+              activitySelector.getActivitiesNearWithPreferences(
+                  coords = selectedLocation.coordinate,
+                  limit = fetchLimit,
+                  activityBlackList = allActivities.map { it.getName() },
+                  cachedActivities = cachedActivities)
+
+          if (newActs.isNotEmpty()) {
+            allActivities.addAll(newActs)
+          }
+        } else {
+          addPreferences = false
         }
+      }
 
       val rand = Random.Default
 
@@ -1295,7 +1314,7 @@ open class TripAlgorithm(
             // costs nothing to compute)
             if (result.added) {
               addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
-                addPreferences = true
+              addPreferences = true
             }
             stayAtCenterRetry = result.shouldRetryCenter
           }
@@ -1304,14 +1323,11 @@ open class TripAlgorithm(
 
       // Cost nothing to call and could add activities if when we fetched some for a new city that
       // we added for example we got too much
-        val currentDiff = dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
-        val oneDay = currentDiff <= 1
-        addCachedActivity(
-            allActivities,
-            cachedActivities,
-            enhancedTripProfile.newPreferredLocations,
-            oneDay
-        )
+      val currentDiff =
+          dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+      val oneDay = currentDiff <= 1
+      addCachedActivity(
+          allActivities, cachedActivities, enhancedTripProfile.newPreferredLocations, oneDay)
       val newActivities =
           allActivities.filter { act ->
             activityList.none { it.location.sameLocation(act.location) }
@@ -1322,25 +1338,26 @@ open class TripAlgorithm(
               enhancedTripProfile.tripProfile.departureLocation!!,
               (originalOrderedRoute.orderedLocations + newActivities.map { it.location }),
               allActivities,
-              mode = if (enhancedTripProfile.tripProfile.preferences.contains(
+              mode =
+                  if (enhancedTripProfile.tripProfile.preferences.contains(
                       Preference.PUBLIC_TRANSPORT))
-                  TransportMode.TRAIN
-              else TransportMode.CAR
-          ) {}
+                      TransportMode.TRAIN
+                  else TransportMode.CAR) {}
 
       // Maybe we added a location that is pretty far, so try to addInBetweenActivities if the
       // preference intermediate stops was set
-//      if (enhancedTripProfile.tripProfile.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
-//        addInBetweenActivities(
-//            optimizedRoute = optimizedRoute,
-//            activities = allActivities,
-//            mode =
-//                if (enhancedTripProfile.tripProfile.preferences.contains(
-//                    Preference.PUBLIC_TRANSPORT))
-//                    TransportMode.TRAIN
-//                else TransportMode.CAR,
-//            cachedActivities = cachedActivities)
-//      }
+      //      if
+      // (enhancedTripProfile.tripProfile.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
+      //        addInBetweenActivities(
+      //            optimizedRoute = optimizedRoute,
+      //            activities = allActivities,
+      //            mode =
+      //                if (enhancedTripProfile.tripProfile.preferences.contains(
+      //                    Preference.PUBLIC_TRANSPORT))
+      //                    TransportMode.TRAIN
+      //                else TransportMode.CAR,
+      //            cachedActivities = cachedActivities)
+      //      }
 
       schedule =
           attemptRescheduleIfNeeded(
@@ -1410,19 +1427,19 @@ open class TripAlgorithm(
 
         val activityName = context.getString(R.string.city_visit_name, cityLoc.name)
 
-          val visitDurationHours = if (maxDays >= 1.0) 8 else 4
-          val estimatedTimeSeconds = visitDurationHours * 3600
+        val visitDurationHours = if (maxDays >= 1.0) 8 else 4
+        val estimatedTimeSeconds = visitDurationHours * 3600
 
-          // Create new activity
-          val newActivity =
-              Activity(
-                  location = cityLoc.copy(name = activityName),
-                  estimatedTime = estimatedTimeSeconds,
-                  startDate = Timestamp.now(), // placeholder
-                  endDate = Timestamp.now(), // placeholder
-                  description = context.getString(R.string.city_activity_description),
-                  imageUrls = emptyList(),
-              )
+        // Create new activity
+        val newActivity =
+            Activity(
+                location = cityLoc.copy(name = activityName),
+                estimatedTime = estimatedTimeSeconds,
+                startDate = Timestamp.now(), // placeholder
+                endDate = Timestamp.now(), // placeholder
+                description = context.getString(R.string.city_activity_description),
+                imageUrls = emptyList(),
+            )
 
         val existingCount = activityList.count { it.location.sameLocation(newActivity.location) }
 
