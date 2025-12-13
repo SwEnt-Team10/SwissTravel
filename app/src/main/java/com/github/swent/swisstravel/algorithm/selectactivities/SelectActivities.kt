@@ -216,6 +216,7 @@ class SelectActivities(
   ): List<Activity> {
     val activitiesFetched = mutableListOf<Activity>()
     for (loc in locations) {
+      if (activitiesFetched.size > fetchLimit) break
       val fetched =
           if (prefs.isNotEmpty()) {
             activityRepository.getActivitiesNearWithPreference(
@@ -223,10 +224,11 @@ class SelectActivities(
           } else {
             activityRepository.getActivitiesNear(loc.coordinate, NEAR, fetchLimit)
           }
+      fetched.distinct()
       activitiesFetched.addAll(fetched)
       delay(API_CALL_DELAY_MS) // Respect API rate limit.
     }
-    return activitiesFetched
+    return activitiesFetched.distinct()
   }
 
   /**
