@@ -39,13 +39,13 @@ class SwipeActivitiesScreenTest : SwissTravelTest() {
   fun setup() {
     // fakeActivity() creates a single activity with default values (the function is defined in
     // ActivityInfosTest.kt)
-    vm.setActivities(listOf(fakeActivity()))
+    vm.setActivitiesQueue(activitiesQueue = ArrayDeque(listOf(fakeActivity())))
     composeTestRule.setContent { SwipeActivitiesScreen(tripInfoVM = vm) }
   }
 
   @Test
   fun swipeActivitiesScreenComponentsAreDisplayed() {
-    assertFalse(vm.uiState.value.activities.isEmpty())
+    assertTrue(vm.uiState.value.activitiesQueue.isNotEmpty())
     composeTestRule.checkSwipeActivityScreenIsDisplayed()
   }
 
@@ -78,7 +78,7 @@ class SwipeActivitiesScreenTest : SwissTravelTest() {
   @Test
   fun backButtonIsDisplayedWhenNoActivitiesProposed() {
     assertTrue(vm.uiState.value.likedActivities.isEmpty())
-    assertTrue(vm.uiState.value.activities.size == 1)
+    assertTrue(vm.uiState.value.activitiesQueue.size == 1)
 
     // back button should not be displayed since there is still an activity proposed
     composeTestRule.onNodeWithTag(SwipeActivitiesScreenTestTags.BACK_BUTTON).assertIsNotDisplayed()
