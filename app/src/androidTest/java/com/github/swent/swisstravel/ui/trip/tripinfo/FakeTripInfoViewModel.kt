@@ -126,29 +126,36 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
 
   override fun unlikeSelectedActivities() {
     val current = _ui.value
-    val newLiked = current.likedActivities.toMutableList().apply { removeAll(current.selectedLikedActivities) }
+    val newLiked =
+        current.likedActivities.toMutableList().apply { removeAll(current.selectedLikedActivities) }
     _ui.value = current.copy(likedActivities = newLiked)
   }
 
-    override fun selectLikedActivity(activity: Activity) {
-        val current = _ui.value
-        _ui.value.copy(selectedLikedActivities = current.selectedLikedActivities + activity)
-    }
+  override fun selectLikedActivity(activity: Activity) {
+    val current = _ui.value
+    _ui.value.copy(selectedLikedActivities = current.selectedLikedActivities + activity)
+  }
 
-    override fun deselectLikedActivity(activity: Activity) {
-        val current = _ui.value
-        _ui.value.copy(selectedLikedActivities = current.selectedLikedActivities - activity)
-    }
+  override fun deselectLikedActivity(activity: Activity) {
+    val current = _ui.value
+    _ui.value.copy(selectedLikedActivities = current.selectedLikedActivities - activity)
+  }
 
-    override fun swipeActivity(liked: Boolean) {
-        if (_ui.value.activitiesQueue.isEmpty()) return
-        val current = _ui.value
-        val activity = current.activitiesQueue.first()
-        val newQueue = current.activitiesQueue
-        newQueue.removeFirst()
-        val newLikedActivities = if (liked) current.likedActivities + activity else current.likedActivities
-        _ui.value = current.copy(activitiesQueue = newQueue, likedActivities = newLikedActivities, currentActivity = newQueue.first(), backActivity = newQueue.getOrNull(1))
-    }
+  override fun swipeActivity(liked: Boolean) {
+    if (_ui.value.activitiesQueue.isEmpty()) return
+    val current = _ui.value
+    val activity = current.activitiesQueue.first()
+    val newQueue = current.activitiesQueue
+    newQueue.removeFirst()
+    val newLikedActivities =
+        if (liked) current.likedActivities + activity else current.likedActivities
+    _ui.value =
+        current.copy(
+            activitiesQueue = newQueue,
+            likedActivities = newLikedActivities,
+            currentActivity = newQueue.first(),
+            backActivity = newQueue.getOrNull(1))
+  }
 
   override fun mapToTripSettings(): TripSettings {
     val profile: TripProfile? = uiState.value.tripProfile
