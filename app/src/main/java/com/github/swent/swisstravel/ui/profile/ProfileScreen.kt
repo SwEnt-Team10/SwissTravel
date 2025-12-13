@@ -38,7 +38,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -189,6 +192,8 @@ fun ProfileScreen(
                     onEditPinnedTrips = onEditPinnedTrips,
                     onEditPinnedPictures = onEditPinnedPictures,
                     modifier = Modifier.padding(it))
+
+                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
               }
             }
       }
@@ -280,9 +285,27 @@ fun ProfileScreenContent(
         item {
           ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
           BiographyDisplay(biography = uiState.biography)
+
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
+
+          HorizontalDivider(
+              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
+
+          ProfileStats(stats = uiState.stats, friendsCount = uiState.friendsCount)
+
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
+
+          HorizontalDivider(
+              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
           AchievementsDisplay(
               uiState.achievements,
@@ -291,7 +314,13 @@ fun ProfileScreenContent(
               isOwnProfile = uiState.isOwnProfile,
               profileName = uiState.name)
 
-          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
+
+          HorizontalDivider(
+              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
           PinnedTrips(isOwnProfile = uiState.isOwnProfile, onEditPinnedTrips = onEditPinnedTrips)
         }
@@ -308,7 +337,13 @@ fun ProfileScreenContent(
         tripListItems(listState = tripListState, listEvents = tripListEvents)
 
         item {
-          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
+
+          HorizontalDivider(
+              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
           PinnedPictures(
               pinnedBitmaps = uiState.pinnedBitmaps,
@@ -316,6 +351,9 @@ fun ProfileScreenContent(
               onEditPinnedPictures = onEditPinnedPictures,
               isLoadingImages = uiState.isLoadingImages)
         }
+          item{
+              Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+          }
       }
 }
 
@@ -327,24 +365,26 @@ fun ProfileScreenContent(
  */
 @Composable
 fun ProfileHeader(photoUrl: String, name: String) {
-  Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-    AsyncImage(
-        model = photoUrl.ifBlank { R.drawable.default_profile_pic },
-        contentDescription = stringResource(R.string.profile_pic_desc),
-        modifier =
-            Modifier.size(dimensionResource(R.dimen.profile_logo_size))
-                .clip(CircleShape)
-                .testTag(ProfileScreenTestTags.PROFILE_PIC))
+  Column(
+      modifier = Modifier.fillMaxWidth().padding(vertical = dimensionResource(R.dimen.small_spacer)),
+      horizontalAlignment = Alignment.CenterHorizontally) {
+        AsyncImage(
+            model = photoUrl.ifBlank { R.drawable.default_profile_pic },
+            contentDescription = stringResource(R.string.profile_pic_desc),
+            modifier =
+                Modifier.size(dimensionResource(R.dimen.profile_logo_size))
+                    .clip(CircleShape)
+                    .testTag(ProfileScreenTestTags.PROFILE_PIC))
 
-    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.smaller_spacer)))
+        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.smaller_spacer)))
 
-    Text(
-        text = name,
-        style = MaterialTheme.typography.headlineLarge,
-        maxLines = NAME_MAX_LINES,
-        overflow = TextOverflow.Ellipsis,
-        modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
-  }
+        Text(
+            text = name,
+            style = MaterialTheme.typography.headlineLarge,
+            maxLines = NAME_MAX_LINES,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.testTag(ProfileScreenTestTags.DISPLAY_NAME))
+      }
 }
 
 /**
@@ -355,16 +395,50 @@ fun ProfileHeader(photoUrl: String, name: String) {
 @Composable
 fun BiographyDisplay(biography: String) {
   if (!biography.isBlank()) {
-    Row(
+    Column(
         modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.BIOGRAPHY),
-        verticalAlignment = Alignment.CenterVertically) {
+        horizontalAlignment = Alignment.CenterHorizontally) {
           Text(
               text = biography,
-              style = MaterialTheme.typography.bodyMedium,
+              style = MaterialTheme.typography.bodyLarge,
               maxLines = BIOGRAPHY_MAX_LINES,
-              overflow = TextOverflow.Ellipsis)
+              overflow = TextOverflow.Ellipsis,
+              color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
+  }
+}
+
+/**
+ * The stats section of the profile screen.
+ *
+ * @param stats The user's stats.
+ * @param friendsCount The number of friends.
+ */
+@Composable
+fun ProfileStats(stats: UserStats, friendsCount: Int) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+      horizontalArrangement = Arrangement.SpaceEvenly,
+      verticalAlignment = Alignment.CenterVertically) {
+        ProfileStatItem(count = friendsCount, label = stringResource(R.string.stats_friends))
+        ProfileStatItem(count = stats.totalTrips, label = stringResource(R.string.stats_trips))
+        ProfileStatItem(count = stats.uniqueLocations, label = stringResource(R.string.stats_locations))
+      }
+}
+
+@Composable
+fun ProfileStatItem(count: Int, label: String) {
+  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Text(
+        text = count.toString(),
+        style = MaterialTheme.typography.headlineMedium,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onBackground)
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant)
   }
 }
 
@@ -388,24 +462,30 @@ fun AchievementsDisplay(
   if (achievements.isEmpty()) return
 
   var selected by remember { mutableStateOf<Achievement?>(null) }
-  Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-    Text(
-        text = stringResource(R.string.achievements),
-        style = MaterialTheme.typography.headlineLarge,
-    )
+  Column {
+      Row(
+          modifier = Modifier.fillMaxWidth(),
+          verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.achievements),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+      }
+
+      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+      LazyRow(
+          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.ACHIEVEMENTS),
+          horizontalArrangement = Arrangement.SpaceEvenly,
+          verticalAlignment = Alignment.CenterVertically,
+      ) {
+        items(achievements) { achievement ->
+          AchievementMedal(achievement, onClick = { selected = achievement })
+        }
+      }
   }
 
-  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
-
-  LazyRow(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.ACHIEVEMENTS),
-      horizontalArrangement = Arrangement.SpaceEvenly,
-      verticalAlignment = Alignment.CenterVertically,
-  ) {
-    items(achievements) { achievement ->
-      AchievementMedal(achievement, onClick = { selected = achievement })
-    }
-  }
   selected?.let { ach ->
     AchievementDetailDialog(
         achievement = ach,
@@ -700,8 +780,8 @@ private fun PinnedTrips(
       horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
             text = stringResource(R.string.pinned_trips),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface)
 
         if (isOwnProfile) {
           IconButton(
@@ -729,24 +809,27 @@ private fun PinnedPictures(
     onEditPinnedPictures: () -> Unit,
     isLoadingImages: Boolean
 ) {
-  Row(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
-      horizontalArrangement = Arrangement.SpaceBetween) {
-        Text(
-            text = stringResource(R.string.pinned_pictures),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+  Column {
+      Row(
+          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
+          horizontalArrangement = Arrangement.SpaceBetween,
+          verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.pinned_pictures),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onBackground)
 
-        if (isOwnProfile) {
-          IconButton(
-              onClick = onEditPinnedPictures,
-              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
-                Icon(
-                    imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.edit_pinned_pictures))
-              }
-        }
-      }
+            if (isOwnProfile) {
+              IconButton(
+                  onClick = onEditPinnedPictures,
+                  modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = stringResource(R.string.edit_pinned_pictures))
+                  }
+            }
+          }
+
   if (pinnedBitmaps.isEmpty()) {
     val text =
         if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
@@ -774,6 +857,7 @@ private fun PinnedPictures(
             }
           }
     }
+  }
   }
 }
 
