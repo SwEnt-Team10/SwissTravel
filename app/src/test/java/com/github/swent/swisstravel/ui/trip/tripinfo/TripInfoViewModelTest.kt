@@ -50,7 +50,7 @@ class TripInfoViewModelTest {
                   preferences = emptyList()),
           isFavorite = false,
           isCurrentTrip = false,
-          listUri = emptyList(),
+          uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
   private val fakeUser =
@@ -64,7 +64,7 @@ class TripInfoViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
-          pinnedImagesUris = emptyList())
+          pinnedPicturesUids = emptyList())
 
   @Before
   fun setup() {

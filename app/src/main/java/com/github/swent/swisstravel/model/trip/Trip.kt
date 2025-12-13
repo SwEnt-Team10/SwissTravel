@@ -29,9 +29,11 @@ sealed class TripElement(open val startDate: Timestamp, open val endDate: Timest
  * @property tripProfile The profile of the trip.
  * @property isFavorite Whether the trip is a favorite or not.
  * @property isCurrentTrip Whether the trip is the current trip or not.
- * @property listUri The list of URIs of the pictures of the trip.
+ * @property uriLocation A map that contains uri's photos mapped with the locations
  * @property collaboratorsId The list of unique identifiers of the collaborators of the trip.
  * @property isRandom Whether the trip is random or not.
+ * @property cachedActivities The list of activities that were fetched but not selected for the
+ *   trip.
  * @property likedActivities The list of liked activities in the trip.
  * @property activitiesQueue The queue of activities to be swiped for the trip.
  * @property allFetchedForSwipe The list of all activities that have been fetched for swiping.
@@ -46,9 +48,10 @@ data class Trip(
     val tripProfile: TripProfile,
     val isFavorite: Boolean,
     val isCurrentTrip: Boolean,
-    val listUri: List<Uri>,
     val collaboratorsId: List<String>,
     val isRandom: Boolean = false,
+    val uriLocation: Map<Uri, Location>,
+    val cachedActivities: List<Activity> = emptyList(),
     // fields for swipe and like activities
     val likedActivities: List<Activity> = emptyList(),
     val activitiesQueue: ArrayDeque<Activity> = ArrayDeque(),

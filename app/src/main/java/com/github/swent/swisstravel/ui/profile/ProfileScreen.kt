@@ -1,7 +1,8 @@
 package com.github.swent.swisstravel.ui.profile
 
-import android.net.Uri
+import android.graphics.Bitmap
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +38,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,7 +50,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -55,12 +58,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.TransportMode
-import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Achievement
 import com.github.swent.swisstravel.model.user.AchievementCategory
 import com.github.swent.swisstravel.model.user.AchievementId
@@ -68,9 +69,8 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
-import com.github.swent.swisstravel.ui.composable.TripList
-import com.github.swent.swisstravel.ui.composable.TripListEvents
-import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.TripInteraction
+import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.utils.NetworkUtils
@@ -85,9 +85,10 @@ object ProfileScreenTestTags {
   const val ACHIEVEMENTS = "achievements"
   const val PINNED_TRIPS_TITLE = "pinnedTripsTitle"
   const val PINNED_TRIPS_EDIT_BUTTON = "pinnedTripsEditButton"
-  const val PINNED_IMAGES_TITLE = "pinnedImagesTitle"
-  const val PINNED_IMAGES_LIST = "pinnedImagesList"
-  const val PINNED_IMAGES_EDIT_BUTTON = "pinnedImagesEditButton"
+  const val PINNED_PICTURES_TITLE = "pinnedPicturesTitle"
+  const val PINNED_PICTURES_LIST = "pinnedPicturesList"
+  const val EMPTY_PINNED_PICTURES = "emptyPinnedPictures"
+  const val PINNED_PICTURES_EDIT_BUTTON = "pinnedPicturesEditButton"
   const val CONFIRM_UNFRIEND_BUTTON = "confirmUnfriendButton"
   const val CANCEL_UNFRIEND_BUTTON = "cancelUnfriendButton"
   const val LOADING_INDICATOR = "loadingIndicator"
@@ -102,6 +103,11 @@ private const val NAME_MAX_LINES = 1
 /** The maximum number of lines for the biography. */
 private const val BIOGRAPHY_MAX_LINES = 3
 
+private const val NO_USER_PINNED_TRIPS =
+    "You don't have any pinned trips. Press the edit button to pin some!"
+
+private const val NO_PINNED_TRIPS = "No pinned trips here!"
+
 /**
  * A screen that shows the user's profile information.
  *
@@ -110,7 +116,7 @@ private const val BIOGRAPHY_MAX_LINES = 3
  * @param onSettings The callback to navigate to the settings screen.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -120,17 +126,14 @@ fun ProfileScreen(
     onSettings: () -> Unit = {},
     onSelectTrip: (String) -> Unit = {},
     onEditPinnedTrips: () -> Unit = {},
-    onEditPinnedImages: () -> Unit = {},
+    onEditPinnedPictures: () -> Unit = {},
     friendsViewModel: FriendsViewModel = viewModel(),
 ) {
   val context = LocalContext.current
   val uiState by profileViewModel.uiState.collectAsState()
 
   val isOnline = NetworkUtils.isOnline(LocalContext.current)
-  LaunchedEffect(isOnline) { profileViewModel.refreshStats(isOnline) }
-  if (isOnline) {
-    profileViewModel.refreshStats(isOnline)
-  }
+  LaunchedEffect(isOnline) { profileViewModel.refresh(isOnline) }
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
@@ -160,33 +163,33 @@ fun ProfileScreen(
             onBack = onBack,
             onSettings = onSettings,
             onUnfriend = { showUnfriendConfirmation = true })
-      }) { pd ->
-        if (uiState.isLoading) {
-          Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center) {
-                  CircularProgressIndicator(
-                      modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
-                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+      }) {
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading, onRefresh = { profileViewModel.refresh(isOnline) }) {
+              if (uiState.isLoading && (uiState.stats.totalTrips == -1 || !isOnline)) {
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                  Column(
+                      horizontalAlignment = Alignment.CenterHorizontally,
+                      verticalArrangement = Arrangement.Center) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.testTag(ProfileScreenTestTags.LOADING_INDICATOR))
 
-                  if (!isOnline) {
-                    Text(
-                        text = stringResource(R.string.loading_from_cache),
-                        modifier = Modifier.align(Alignment.CenterHorizontally))
-                  }
+                        if (!isOnline) {
+                          Text(
+                              text = stringResource(R.string.loading_from_cache),
+                              modifier = Modifier.align(Alignment.CenterHorizontally))
+                        }
+                      }
                 }
-          }
-        } else {
-          ProfileScreenContent(
-              uiState = uiState,
-              onSelectTrip = onSelectTrip,
-              onEditPinnedTrips = onEditPinnedTrips,
-              onEditPinnedImages = {
-                Toast.makeText(context, "I don't work yet :<", Toast.LENGTH_SHORT).show()
-              }, // todo onEditPinnedImages,
-              modifier = Modifier.padding(pd))
-        }
+              } else {
+                ProfileScreenContent(
+                    uiState = uiState,
+                    onSelectTrip = onSelectTrip,
+                    onEditPinnedTrips = onEditPinnedTrips,
+                    onEditPinnedPictures = onEditPinnedPictures,
+                    modifier = Modifier.padding(it))
+              }
+            }
       }
 }
 
@@ -200,7 +203,7 @@ fun ProfileScreen(
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ProfileScreenTopBar(
+fun ProfileScreenTopBar(
     uiState: ProfileUIState,
     onBack: () -> Unit,
     onSettings: () -> Unit,
@@ -223,26 +226,24 @@ private fun ProfileScreenTopBar(
         }
       },
       actions = {
-        if (!uiState.isLoading) {
-          if (uiState.isOwnProfile) {
-            IconButton(
-                onClick = onSettings,
-                modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.Settings,
-                      contentDescription = stringResource(R.string.settings),
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-          } else {
-            IconButton(
-                onClick = onUnfriend,
-                modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.PersonRemove,
-                      contentDescription = stringResource(R.string.unfriend),
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-          }
+        if (uiState.isOwnProfile) {
+          IconButton(
+              onClick = onSettings,
+              modifier = Modifier.testTag(ProfileScreenTestTags.SETTINGS_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = stringResource(R.string.settings),
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
+        } else {
+          IconButton(
+              onClick = onUnfriend,
+              modifier = Modifier.testTag(ProfileScreenTestTags.UNFRIEND_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.PersonRemove,
+                    contentDescription = stringResource(R.string.unfriend),
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
         }
       },
       modifier = Modifier.testTag(NavigationTestTags.TOP_BAR))
@@ -254,18 +255,18 @@ private fun ProfileScreenTopBar(
  * @param uiState The state of the screen.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  * @param modifier The modifier to apply to the content.
  */
 @Composable
-private fun ProfileScreenContent(
+fun ProfileScreenContent(
     uiState: ProfileUIState,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
-    onEditPinnedImages: () -> Unit = {},
+    onEditPinnedPictures: () -> Unit = {},
     modifier: Modifier
 ) {
-  Column(
+  LazyColumn(
       modifier =
           modifier
               .fillMaxSize()
@@ -275,33 +276,42 @@ private fun ProfileScreenContent(
                   end = dimensionResource(R.dimen.profile_padding_start_end),
                   bottom = dimensionResource(R.dimen.profile_padding_top_bottom)),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
+        item {
+          ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
-        BiographyDisplay(biography = uiState.biography)
+          BiographyDisplay(biography = uiState.biography)
 
-        AchievementsDisplay(
-            uiState.achievements,
-            uiState.stats,
-            uiState.friendsCount,
-            isOwnProfile = uiState.isOwnProfile,
-            profileName = uiState.name)
+          AchievementsDisplay(
+              uiState.achievements,
+              uiState.stats,
+              uiState.friendsCount,
+              isOwnProfile = uiState.isOwnProfile,
+              profileName = uiState.name)
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-        PinnedTrips(
-            pinnedTrips = uiState.pinnedTrips,
-            isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedTrips = onEditPinnedTrips,
-            onSelectTrip = onSelectTrip)
+          PinnedTrips(isOwnProfile = uiState.isOwnProfile, onEditPinnedTrips = onEditPinnedTrips)
+        }
 
-        Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+        tripListItems(
+            trips = uiState.pinnedTrips,
+            interaction =
+                TripInteraction(
+                    onClick = { trip -> trip?.let { onSelectTrip(it.uid) } },
+                ),
+            emptyListString = if (uiState.isOwnProfile) NO_USER_PINNED_TRIPS else NO_PINNED_TRIPS)
 
-        PinnedImages(
-            pinnedImages = uiState.pinnedImages,
-            isOwnProfile = uiState.isOwnProfile,
-            onEditPinnedImages = onEditPinnedImages)
+        item {
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+          PinnedPictures(
+              pinnedBitmaps = uiState.pinnedBitmaps,
+              isOwnProfile = uiState.isOwnProfile,
+              onEditPinnedPictures = onEditPinnedPictures,
+              isLoadingImages = uiState.isLoadingImages)
+        }
       }
 }
 
@@ -312,7 +322,7 @@ private fun ProfileScreenContent(
  * @param name The name of the user.
  */
 @Composable
-private fun ProfileHeader(photoUrl: String, name: String) {
+fun ProfileHeader(photoUrl: String, name: String) {
   Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
     AsyncImage(
         model = photoUrl.ifBlank { R.drawable.default_profile_pic },
@@ -339,7 +349,7 @@ private fun ProfileHeader(photoUrl: String, name: String) {
  * @param biography The biography of the user.
  */
 @Composable
-private fun BiographyDisplay(biography: String) {
+fun BiographyDisplay(biography: String) {
   if (!biography.isBlank()) {
     Row(
         modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.BIOGRAPHY),
@@ -562,7 +572,7 @@ private fun AchievementMainText(
  * @param profileName The name of the user.
  */
 @Composable
-private fun StatAchievementText(
+fun StatAchievementText(
     currentValue: Int,
     unitLabel: String,
     isOwnProfile: Boolean,
@@ -671,19 +681,15 @@ private fun AchievementTierRow(
 }
 
 /**
- * The pinned trips section of the profile screen.
+ * The pinned trips section header of the profile screen.
  *
- * @param pinnedTrips The list of pinned trips.
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
- * @param onSelectTrip The callback to select a trip.
  */
 @Composable
 private fun PinnedTrips(
-    pinnedTrips: List<Trip>,
     isOwnProfile: Boolean,
     onEditPinnedTrips: () -> Unit,
-    onSelectTrip: (String) -> Unit,
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE),
@@ -703,67 +709,68 @@ private fun PinnedTrips(
               }
         }
       }
-
-  val listState =
-      TripListState(
-          trips = pinnedTrips,
-          emptyListString =
-              if (isOwnProfile) stringResource(R.string.edit_no_pinned_trips)
-              else stringResource(R.string.no_pinned_trips))
-
-  val listEvents =
-      TripListEvents(onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } })
-
-  TripList(
-      listState = listState,
-      listEvents = listEvents,
-  )
 }
 
 /**
- * The pinned images section of the profile screen.
+ * The pinned pictures section of the profile screen.
  *
- * @param pinnedImages The list of pinned images.
+ * @param pinnedBitmaps The list of pinned pictures as bitmaps.
  * @param isOwnProfile Whether the user is their own profile.
- * @param onEditPinnedImages The callback to navigate to the edit pinned images screen.
+ * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
  */
 @Composable
-private fun PinnedImages(
-    pinnedImages: List<Uri>,
+private fun PinnedPictures(
+    pinnedBitmaps: List<Bitmap>,
     isOwnProfile: Boolean,
-    onEditPinnedImages: () -> Unit,
+    onEditPinnedPictures: () -> Unit,
+    isLoadingImages: Boolean
 ) {
   Row(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES_TITLE),
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
       horizontalArrangement = Arrangement.SpaceBetween) {
         Text(
-            text = stringResource(R.string.pinned_images),
+            text = stringResource(R.string.pinned_pictures),
             style = MaterialTheme.typography.headlineLarge,
             color = MaterialTheme.colorScheme.onBackground)
 
         if (isOwnProfile) {
           IconButton(
-              onClick = onEditPinnedImages,
-              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_IMAGES_EDIT_BUTTON)) {
+              onClick = onEditPinnedPictures,
+              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.edit_pinned_images))
+                    contentDescription = stringResource(R.string.edit_pinned_pictures))
               }
         }
       }
-  // TODO unfinished
-  LazyRow(
-      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_IMAGES_LIST),
-      horizontalArrangement = Arrangement.spacedBy(12.dp),
-      contentPadding = PaddingValues(horizontal = 4.dp)) {
-        items(pinnedImages) { uri ->
-          AsyncImage(
-              model = uri,
-              contentDescription = null,
-              modifier = Modifier.height(120.dp).clip(RoundedCornerShape(16.dp)),
-              contentScale = ContentScale.Crop)
-        }
-      }
+  if (pinnedBitmaps.isEmpty()) {
+    val text =
+        if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
+        else stringResource(R.string.no_pinned_pictures)
+    Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
+  } else {
+    if (isLoadingImages) {
+      CircularProgressIndicator()
+    } else {
+      LazyRow(
+          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
+          horizontalArrangement =
+              Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
+          contentPadding =
+              PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
+            items(pinnedBitmaps) { bitmap ->
+              Image(
+                  bitmap = bitmap.asImageBitmap(),
+                  contentDescription = null,
+                  modifier =
+                      Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
+                          .clip(
+                              RoundedCornerShape(
+                                  dimensionResource(R.dimen.pinned_pictures_corner))))
+            }
+          }
+    }
+  }
 }
 
 /**

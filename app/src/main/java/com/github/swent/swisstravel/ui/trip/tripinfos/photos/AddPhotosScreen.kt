@@ -3,7 +3,6 @@ package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -68,26 +67,27 @@ fun AddPhotosScreen(
     onEdit: () -> Unit = {},
     photosViewModel: PhotosViewModel = viewModel(),
     tripId: String,
-    launchPickerOverride: ((PickVisualMediaRequest) -> Unit)? = null
+    launchPickerOverride: ((String) -> Unit)? = null
 ) {
   val context = LocalContext.current
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   // AI helped for the picker
   val pickerLauncher =
-      rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
+      rememberLauncherForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
         if (uris.isNotEmpty()) {
           uris.forEach { uri ->
             context.contentResolver.takePersistableUriPermission(
                 uri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
           }
-          photosViewModel.addUris(uris)
+          photosViewModel.addUris(uris, context, tripId)
           photosViewModel.savePhotos(tripId)
         }
       }
-  val launchPicker: (PickVisualMediaRequest) -> Unit =
-      launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
+  val launchPicker: (String) -> Unit =
+      launchPickerOverride ?: { type -> pickerLauncher.launch(arrayOf(type)) }
 
   val uiState by photosViewModel.uiState.collectAsState()
+  val stringPicker = stringResource(R.string.image_picker)
 
   // AI gave this part
   LaunchedEffect(uiState.toastMessage) {
@@ -135,11 +135,8 @@ fun AddPhotosScreen(
                   // Add photos to the UI state button
                   Button(
                       modifier = Modifier.testTag(AddPhotosScreenTestTags.ADD_PHOTOS_BUTTON),
-                      onClick = {
-                        launchPicker(
-                            PickVisualMediaRequest(
-                                ActivityResultContracts.PickVisualMedia.ImageOnly))
-                      }) {
+                      // AI give the function onClick
+                      onClick = { launchPicker(stringPicker) }) {
                         Text(text = stringResource(R.string.add_photos_button))
                       }
                 }
@@ -149,7 +146,8 @@ fun AddPhotosScreen(
                 columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
                 modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
                   // AI helped for the itemsIndexed
-                  itemsIndexed(uiState.listUri) { index, uri ->
+                  val displayList = uiState.uriLocation.keys.toList()
+                  itemsIndexed(displayList) { index, uri ->
                     AsyncImage(
                         modifier =
                             Modifier.testTag(AddPhotosScreenTestTags.getTestTagForUri(index)),

@@ -1,7 +1,5 @@
 package com.github.swent.swisstravel.model.user
 
-import android.net.Uri
-
 interface UserRepository {
   /**
    * Retrieves the current user from Firebase Authentication. If the user is not signed in, a guest
@@ -74,7 +72,7 @@ interface UserRepository {
    * @param profilePicUrl Optional new profile picture URL.
    * @param preferences Optional list of updated preferences.
    * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
-   * @param pinnedImagesUris Optional updated list of pinned image URIs.
+   * @param pinnedPicturesUids Optional updated list of pinned picture UIDs.
    */
   suspend fun updateUser(
       uid: String,
@@ -83,6 +81,6 @@ interface UserRepository {
       profilePicUrl: String? = null,
       preferences: List<Preference>? = null,
       pinnedTripsUids: List<String>? = null,
-      pinnedImagesUris: List<Uri>? = null
+      pinnedPicturesUids: List<String>? = null
   )
 }

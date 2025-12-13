@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -97,6 +98,66 @@ fun SortedTripList(
           SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
         }
 
-    TripList(listState = listState, listEvents = listEvents)
+    TripList(
+        trips = listState.trips,
+        interaction =
+            TripInteraction(
+                onClick = listEvents.onClickTripElement,
+                onLongPress = listEvents.onLongPress,
+                isSelected = listState.isSelected,
+                isSelectionMode = listState.isSelectionMode),
+        noIconTripElement = listState.noIconTripElement,
+        emptyListString = listState.emptyListString,
+        collaboratorsLookup = listState.collaboratorsLookup)
   }
+}
+
+/**
+ * An extension function for [LazyListScope] that adds a sorted list of trips with a header. This
+ * was made with the help of AI.
+ *
+ * @param title The title to display above the trip list.
+ * @param listState The state object for the underlying trip list.
+ * @param listEvents The event handler for the underlying trip list.
+ * @param onClickDropDownMenu Callback when a sorting option is selected from the dropdown menu.
+ * @param selectedSortType The currently selected sorting option.
+ */
+fun LazyListScope.sortedTripListItems(
+    title: String = "",
+    listState: TripListState,
+    listEvents: TripListEvents,
+    onClickDropDownMenu: (TripSortType) -> Unit = {},
+    selectedSortType: TripSortType,
+) {
+  item {
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(
+                    top = dimensionResource(R.dimen.sorted_trip_list_top_padding),
+                    bottom = dimensionResource(R.dimen.sorted_trip_list_bottom_padding))
+                .testTag(SortedTripListTestTags.TITLE_BUTTON_ROW),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = title,
+              style = MaterialTheme.typography.headlineLarge,
+              color = MaterialTheme.colorScheme.onBackground,
+              modifier = Modifier.testTag(SortedTripListTestTags.TITLE))
+
+          SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
+        }
+  }
+
+  tripListItems(
+      trips = listState.trips,
+      interaction =
+          TripInteraction(
+              onClick = listEvents.onClickTripElement,
+              onLongPress = listEvents.onLongPress,
+              isSelected = listState.isSelected,
+              isSelectionMode = listState.isSelectionMode),
+      noIconTripElement = listState.noIconTripElement,
+      emptyListString = listState.emptyListString,
+      collaboratorsLookup = listState.collaboratorsLookup)
 }

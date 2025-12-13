@@ -11,6 +11,13 @@
 
     <!-- Map Screen -->
     <dimen name="map_overlay_padding">16dp</dimen>
+    <dimen name="polaroid_size">60dp</dimen>
+    <dimen name="shadow_elevation">6dp</dimen>
+    <dimen name="shadow_shape">4dp</dimen>
+    <dimen name="polaroid_shape">4dp</dimen>
+    <dimen name="polaroid_border">1dp</dimen>
+    <dimen name="box_polaroid_padding">3dp</dimen>
+    <dimen name="image_clip">2dp</dimen>
 
     <!--Date selector -->
     <dimen name="date_button_height">56dp</dimen>
@@ -26,6 +33,10 @@
     <dimen name="profile_logo_size">100dp</dimen>
     <dimen name="profile_padding_start_end">16dp</dimen>
     <dimen name="profile_padding_top_bottom">4dp</dimen>
+    <dimen name="pinned_pictures_padding">4dp</dimen>
+    <dimen name="pinned_pictures_spacing">12dp</dimen>
+    <dimen name="pinned_pictures_height">120dp</dimen>
+    <dimen name="pinned_pictures_corner">16dp</dimen>
 
     <!-- Profile Achievements -->
     <dimen name="profile_achievement_min_width">72dp</dimen>
