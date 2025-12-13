@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -55,12 +56,12 @@ object SwipeActivitiesScreenTestTags {
 @Composable
 fun SwipeActivitiesScreen(
     onTripInfo: () -> Unit = {},
-    tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
+    tripInfoVM: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
-  val viewModel = remember { SwipeActivitiesViewModel(tripInfoViewModel) }
+  val state by tripInfoVM.uiState.collectAsState()
   Scaffold(
       topBar = {
-        if (viewModel.uiState.collectAsState().value.currentActivity == null) {
+        if (state.currentActivity == null) {
           IconButton(
               onClick = onTripInfo,
               modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.BACK_BUTTON)) {
@@ -75,7 +76,7 @@ fun SwipeActivitiesScreen(
             modifier =
                 Modifier.padding(pd)
                     .testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) {
-              SwipeActivitiesStack(viewModel, onTripInfo)
+              SwipeActivitiesStack(tripInfoVM, onTripInfo)
             }
       }
 }
@@ -85,12 +86,14 @@ fun SwipeActivitiesScreen(
  * optimization reasons (having a card composable for each activity is not useful and would cost
  * more)
  *
+ * Done with the help of Gemini 3 Pro
+ *
  * @param viewModel The ViewModel to use.
  * @param onTripInfo Callback to be called when navigating back to trip info.
  */
 @Composable
-fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> Unit) {
-  val state = viewModel.uiState.collectAsState().value
+fun SwipeActivitiesStack(tripInfoVM: TripInfoViewModelContract, onTripInfo: () -> Unit) {
+  val state = tripInfoVM.uiState.collectAsState().value
   val current = state.currentActivity
   val next = state.backActivity
 
@@ -106,13 +109,13 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
         key(activity.getName()) {
           SwipeableCard(
               activity = activity,
-              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onSwiped = { liked -> tripInfoVM.swipeActivity(liked) },
               onTripInfo)
         }
       }
     }
 
-    // Front card (current)
+    // Current card displayed on the screen
     current.let { activity ->
       if (activity == null) {
         Text(
@@ -122,7 +125,7 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
         key(activity.getName()) {
           SwipeableCard(
               activity = activity,
-              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onSwiped = { liked -> tripInfoVM.swipeActivity(liked) },
               onTripInfo = onTripInfo)
         }
       }

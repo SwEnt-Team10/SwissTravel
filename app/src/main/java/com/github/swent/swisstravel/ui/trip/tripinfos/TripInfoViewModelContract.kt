@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.ui.trip.tripinfos
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.StateFlow
 
@@ -64,11 +65,41 @@ interface TripInfoViewModelContract {
   fun updateUserLocation(point: Point)
 
   /**
-   * Likes the given activity, adding it to the list of liked activities.
+   * Likes the given activities, adding them to the list of liked activities.
    *
-   * @param activity The activity to like.
+   * @param activities The activities to like.
    */
-  fun likeActivity(activity: Activity)
+  fun likeActivities(activities: List<Activity>)
+
+  /** Unlikes the selected activities, removing them from the list of liked activities. */
+  fun unlikeSelectedActivities()
+
+  /**
+   * If you liked the activity, it will add the activity to the liked activities list of the trip.
+   *
+   * Otherwise, it is considered as a dislike
+   *
+   * @param liked a boolean indicating whether you liked the activity or not
+   */
+  fun swipeActivity(liked: Boolean)
+
+  /**
+   * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  fun selectLikedActivity(activity: Activity)
+
+  /**
+   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule
+   * the activity or unlike it)
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  fun deselectLikedActivity(activity: Activity)
+
+  /** Helper to map the tripInfoUIState to a TripSettings. */
+  fun mapToTripSettings(): TripSettings
 
   /**
    * Adds a user as a collaborator to the current trip.

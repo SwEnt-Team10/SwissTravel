@@ -514,7 +514,10 @@ private fun NavGraphBuilder.tripInfoNavGraph(
         return@composable
       }
 
-      val vm = navigationActions.tripInfoViewModel(navController)
+      // conserve the ViewModel tied to the TripInfo navigation graph
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      val vm = viewModel<TripInfoViewModel>(parentEntry)
 
       DailyViewScreen(
           uid = uid,
@@ -526,7 +529,9 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   onActivityClick = { tripActivity ->
                     vm.selectActivity(tripActivity.activity)
                     navigationActions.navigateToActivityInfo(uid)
-                  }),
+                  },
+                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
+                  onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
           onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
 
@@ -557,7 +562,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       SwipeActivitiesScreen(
           onTripInfo = { navController.popBackStack() },
-          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry),
+          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry),
       )
     }
 
@@ -566,7 +571,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
-          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry))
+          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry))
     }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))

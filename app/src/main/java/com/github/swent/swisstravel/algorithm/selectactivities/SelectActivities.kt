@@ -7,6 +7,8 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
@@ -30,10 +32,13 @@ private const val NB_ACTIVITIES_PER_DAY = 3
  * preferences.
  *
  * @param tripSettings The settings for the trip, including destinations and preferences.
+ * @param tripInfoVM The information of the trip (This parameter is used to fetch activities if you
+ *   don't have access to the tripSettings anymore, e.g. when the trip is already created)
  * @param activityRepository The repository to fetch activities from.
  */
 class SelectActivities(
-    private val tripSettings: TripSettings,
+    private val tripSettings: TripSettings = TripSettings(),
+    private val tripInfoVM: TripInfoViewModelContract = TripInfoViewModel(),
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
@@ -165,6 +170,133 @@ class SelectActivities(
     preferences.remove(Preference.NIGHT_OWL)
     preferences.remove(Preference.INTERMEDIATE_STOPS)
     preferences.remove(Preference.PUBLIC_TRANSPORT)
+  }
+
+  /**
+   * Fetches a list of activities from mySwitzerland API, with these properties :
+   * - the list has twice as many activities as the ones automatically scheduled for the trip
+   * - first, it fills the list with activities that correspond to the preferences
+   * - then, if there is not enough activities, propose some that don't necessarily correspond to
+   *   the preferences (until there is twice as many as the scheduled ones)
+   * - every activity in this list should NOT be in the scheduled activities and NOT in the liked
+   *   activities
+   * - the locations from which these activities are fetched is the entire list of locations of the
+   *   trip (from the user's input)
+   *
+   * Done with the help of ChatGPT
+   *
+   * @param toExclude The set of activities to exclude from the fetched results.
+   */
+  suspend fun fetchSwipeActivities(toExclude: Set<Activity>): List<Activity> {
+    val state = tripInfoVM.uiState.value
+    val allDestinations = state.locations
+    val prefs = state.tripProfile?.preferences?.toMutableList() ?: mutableListOf()
+    val fetchedActivities = mutableListOf<Activity>()
+
+    // Removes preferences that are not supported by mySwitzerland.
+    // Avoids unnecessary API calls.
+    removeUnsupportedPreferences(prefs)
+
+    // limit of proposed activities
+    val nbProposedActivities = 5
+
+    // fetch activities with preferences
+    val preferred =
+        fetchFromLocations(locations = allDestinations, fetchLimit = nbProposedActivities, prefs)
+            .filter { swipeActivityIsValid(it, toExclude) }
+    fetchedActivities.addAll(preferred.shuffled())
+
+    // if not enough activities, fetch activities without preferences
+    if (fetchedActivities.size < nbProposedActivities) {
+      val notPreferred =
+          fetchFromLocations(locations = allDestinations, fetchLimit = nbProposedActivities)
+              .filter { swipeActivityIsValid(it, toExclude) }
+      fetchedActivities.addAll(notPreferred.shuffled())
+    }
+    fetchedActivities.distinct().take(nbProposedActivities)
+
+    Log.d("SA_VM", "fetchedActivities = $fetchedActivities")
+    Log.d("SA_VM", "nbFetched = ${fetchedActivities.size}")
+
+    return fetchedActivities
+  }
+
+  /**
+   * Fetches activities from MySwitzerland API at the given locations, with the given preferences
+   *
+   * @param locations The locations were to find activities
+   * @param fetchLimit The maximum number of activities to return
+   * @param prefs The preferences to filter activities (empty by default, so that it fetches without
+   *   preferences)
+   */
+  suspend fun fetchFromLocations(
+      locations: List<Location>,
+      fetchLimit: Int,
+      prefs: List<Preference> = emptyList()
+  ): List<Activity> {
+    val activitiesFetched = mutableListOf<Activity>()
+    for (loc in locations) {
+      if (activitiesFetched.size > fetchLimit) break
+      val fetched =
+          if (prefs.isNotEmpty()) {
+            activityRepository.getActivitiesNearWithPreference(
+                prefs, loc.coordinate, NEAR, fetchLimit)
+          } else {
+            activityRepository.getActivitiesNear(loc.coordinate, NEAR, fetchLimit)
+          }
+      fetched.distinct()
+      activitiesFetched.addAll(fetched)
+      delay(API_CALL_DELAY_MS) // Respect API rate limit.
+    }
+    return activitiesFetched.distinct()
+  }
+
+  /**
+   * The activity is valid if it is not already fetched.
+   *
+   * Usually, the activity should not be :
+   * - already scheduled
+   * - already fetched during the swipes
+   *
+   * @param activity The activity to check
+   * @param alreadyFetched The set of locations that should not contain the activity
+   * @return true iff the activity is not in the set
+   */
+  fun swipeActivityIsValid(activity: Activity, alreadyFetched: Set<Activity>): Boolean {
+    return activity !in alreadyFetched
+  }
+
+  /**
+   * Fetches one single activity to make the swipe more fluid. It cannot be :
+   * - an already scheduled activity
+   * - an already fetched activity
+   *
+   * @param toExclude The set of activities to exclude from the fetched results.
+   * @param attempt The current attempt number to fetch a unique activity (maximum attempts is 10).
+   */
+  suspend fun fetchUniqueSwipe(toExclude: Set<Activity>, attempt: Int = 1): Activity? {
+    if (attempt > 10) {
+      Log.d("Select Activities", "Could not fetch a unique swipe activity after $attempt attempts")
+      return null
+    }
+    val state = tripInfoVM.uiState.value
+    val allDestinations = state.locations
+    val prefs = state.tripProfile?.preferences?.toMutableList() ?: mutableListOf()
+
+    // Removes preferences that are not supported by mySwitzerland.
+    // Avoids unnecessary API calls.
+    removeUnsupportedPreferences(prefs)
+
+    // if prefs is empty, it will fetch without preferences
+    val activity =
+        fetchFromLocations(locations = listOf(allDestinations.random()), fetchLimit = 1, prefs)
+
+    val filtered = activity.filter { act -> swipeActivityIsValid(act, toExclude) }
+
+    Log.d("SA_VM", "filtered = $filtered")
+
+    return if (filtered.isEmpty()) fetchUniqueSwipe(toExclude = toExclude, attempt + 1)
+    else filtered.first()
   }
 
   /**
