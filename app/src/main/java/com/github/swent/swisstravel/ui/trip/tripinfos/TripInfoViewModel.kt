@@ -447,9 +447,7 @@ class TripInfoViewModel(
     Log.d("TRIP_INFO_VM", "queue local after : ${trip.value!!.activitiesQueue.map {it.getName()}}")
 
     // update trip in database
-    viewModelScope.launch {
-      tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!)
-    }
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
   }
 
   /**
@@ -466,12 +464,12 @@ class TripInfoViewModel(
     _uiState.update { state ->
       state.copy(allFetchedForSwipe = (state.allFetchedForSwipe + newFetched).distinct())
     }
-      // update the trip locally
+    // update the trip locally
     trip.update { trip ->
       trip!!.copy(allFetchedForSwipe = (trip.allFetchedForSwipe + newFetched).distinct())
     }
 
-      // update trip in database
+    // update trip in database
     viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
   }
 
@@ -499,13 +497,11 @@ class TripInfoViewModel(
           backActivity = newQueue.getOrNull(1))
     }
 
-      // update the trip locally
+    // update the trip locally
     trip.update { it!!.copy(activitiesQueue = newQueue, allFetchedForSwipe = fullFetched) }
 
     // update trip in database
-    viewModelScope.launch {
-        tripsRepository.editTrip(trip.value!!.uid, trip.value!!)
-    }
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, trip.value!!) }
   }
 
   /**
