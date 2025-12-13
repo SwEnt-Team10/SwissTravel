@@ -1,7 +1,9 @@
 package com.github.swent.swisstravel.ui.trips
 
 import com.github.swent.swisstravel.model.trip.*
+import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserStats
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -20,15 +22,34 @@ class PastTripsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
 
-  private lateinit var repository: TripsRepository
+  private lateinit var tripsRepository: TripsRepository
   private lateinit var viewModel: PastTripsViewModel
   private lateinit var userRepository: UserRepository
+  private lateinit var dummyUser: User
 
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    repository = mockk()
+    tripsRepository = mockk()
     userRepository = mockk()
+
+    // Create a dummy user for mocking
+    dummyUser =
+        User(
+            uid = "testUser",
+            name = "Test User",
+            biography = "",
+            email = "test@example.com",
+            profilePicUrl = "",
+            preferences = emptyList(),
+            friends = emptyList(),
+            stats = UserStats(),
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
+
+    // Mock getCurrentUser for all tests that initialize the VM (which calls getAllTrips)
+    coEvery { userRepository.getCurrentUser() } returns dummyUser
     coEvery { userRepository.getUserByUid(any()) } returns null
   }
 
@@ -39,7 +60,8 @@ class PastTripsViewModelTest {
 
   // Helper to instantiate VM with mocks
   private fun createViewModel() {
-    viewModel = PastTripsViewModel(userRepository = userRepository, tripsRepository = repository)
+    viewModel =
+        PastTripsViewModel(userRepository = userRepository, tripsRepository = tripsRepository)
   }
 
   @Test
@@ -59,7 +81,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 3600, 0), // 1h ago
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = true,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -78,12 +99,11 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 7200, 0), // 2h ago
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
-    coEvery { repository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
+    coEvery { tripsRepository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
@@ -93,7 +113,7 @@ class PastTripsViewModelTest {
 
   @Test
   fun uiStateShowsEmptyWhenNoTrips() = runTest {
-    coEvery { repository.getAllTrips() } returns emptyList()
+    coEvery { tripsRepository.getAllTrips() } returns emptyList()
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -105,7 +125,7 @@ class PastTripsViewModelTest {
 
   @Test
   fun uiStateShowsErrorMessageOnException() = runTest {
-    coEvery { repository.getAllTrips() } throws Exception("Fake network error")
+    coEvery { tripsRepository.getAllTrips() } throws Exception("Fake network error")
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -116,7 +136,7 @@ class PastTripsViewModelTest {
 
   @Test
   fun clearErrorMsgClearsTheError() = runTest {
-    coEvery { repository.getAllTrips() } throws Exception("Fake network error")
+    coEvery { tripsRepository.getAllTrips() } throws Exception("Fake network error")
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -129,7 +149,7 @@ class PastTripsViewModelTest {
 
   @Test
   fun toggleSelectionModeEnablesAndDisablesSelectionCorrectly() = runTest {
-    coEvery { repository.getAllTrips() } returns emptyList()
+    coEvery { tripsRepository.getAllTrips() } returns emptyList()
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
@@ -142,7 +162,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -163,7 +182,7 @@ class PastTripsViewModelTest {
 
   @Test
   fun toggleTripSelectionAddsAndRemovesTripsFromSelection() = runTest {
-    coEvery { repository.getAllTrips() } returns emptyList()
+    coEvery { tripsRepository.getAllTrips() } returns emptyList()
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
@@ -176,7 +195,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -190,7 +208,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -212,7 +229,7 @@ class PastTripsViewModelTest {
 
   @Test
   fun toggleTripSelectionDisablesSelectionModeWhenLastTripUnselected() = runTest {
-    coEvery { repository.getAllTrips() } returns emptyList()
+    coEvery { tripsRepository.getAllTrips() } returns emptyList()
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
@@ -225,7 +242,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -250,7 +266,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -264,13 +279,12 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
-    coEvery { repository.getAllTrips() } returns listOf(trip1, trip2)
-    coEvery { repository.deleteTrip(any()) } returns Unit
+    coEvery { tripsRepository.getAllTrips() } returns listOf(trip1, trip2)
+    coEvery { tripsRepository.deleteTrip(any()) } returns Unit
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -304,7 +318,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 1000, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -322,12 +335,11 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 2000, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
-    coEvery { repository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
+    coEvery { tripsRepository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
 
@@ -348,13 +360,12 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
-    coEvery { repository.getAllTrips() } returns listOf(trip1)
-    coEvery { repository.deleteTrip(any()) } throws Exception("DB failure")
+    coEvery { tripsRepository.getAllTrips() } returns listOf(trip1)
+    coEvery { tripsRepository.deleteTrip(any()) } throws Exception("DB failure")
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -383,7 +394,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 1000, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList()),
@@ -399,7 +409,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 2000, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList()),
@@ -415,7 +424,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 1500, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList()))
@@ -424,7 +432,7 @@ class PastTripsViewModelTest {
   @Test
   fun sortSTART_DATE_ASC() = runTest {
     val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
+    coEvery { tripsRepository.getAllTrips() } returns trips
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -439,7 +447,7 @@ class PastTripsViewModelTest {
   @Test
   fun sortSTART_DATE_DESC() = runTest {
     val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
+    coEvery { tripsRepository.getAllTrips() } returns trips
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -454,7 +462,7 @@ class PastTripsViewModelTest {
   @Test
   fun sortEND_DATE_ASC() = runTest {
     val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
+    coEvery { tripsRepository.getAllTrips() } returns trips
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -469,7 +477,7 @@ class PastTripsViewModelTest {
   @Test
   fun sortEND_DATE_DESC() = runTest {
     val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
+    coEvery { tripsRepository.getAllTrips() } returns trips
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -484,7 +492,7 @@ class PastTripsViewModelTest {
   @Test
   fun sortNAME_ASC() = runTest {
     val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
+    coEvery { tripsRepository.getAllTrips() } returns trips
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -499,7 +507,7 @@ class PastTripsViewModelTest {
   @Test
   fun sortNAME_DESC() = runTest {
     val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
+    coEvery { tripsRepository.getAllTrips() } returns trips
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -522,13 +530,15 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
-            emptyList(),
-            uriLocation = emptyMap())
+            collaboratorsId = emptyList(),
+            uriLocation = emptyMap(),
+            isRandom = false)
 
-    coEvery { repository.getAllTrips() } returns listOf(trip)
-    coEvery { repository.editTrip(any(), any()) } returns Unit
+    coEvery { tripsRepository.getAllTrips() } returns listOf(trip)
+    // Removed old editTrip mock
+    coEvery { userRepository.addFavoriteTrip(any(), any()) } returns Unit
+    coEvery { userRepository.removeFavoriteTrip(any(), any()) } returns Unit
 
     createViewModel()
     testDispatcher.scheduler.advanceUntilIdle()
@@ -538,7 +548,8 @@ class PastTripsViewModelTest {
     viewModel.toggleFavoriteForSelectedTrips()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { repository.editTrip(trip.uid, trip.copy(isFavorite = true)) }
+    // Verify interaction with userRepository instead of tripsRepository
+    coVerify { userRepository.addFavoriteTrip(dummyUser.uid, trip.uid) }
   }
 
   @Test
@@ -552,14 +563,18 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
-    coEvery { repository.editTrip(any(), any()) } throws Exception("Firestore edit failed")
+    coEvery { tripsRepository.getAllTrips() } returns listOf(trip)
+
+    // Simulate failure on userRepository
+    coEvery { userRepository.addFavoriteTrip(any(), any()) } throws
+        Exception("Firestore edit failed")
 
     createViewModel()
+    viewModel.toggleSelectionMode(true) // Needs to be in selection mode
     viewModel.toggleTripSelection(trip)
     testDispatcher.scheduler.advanceUntilIdle()
 

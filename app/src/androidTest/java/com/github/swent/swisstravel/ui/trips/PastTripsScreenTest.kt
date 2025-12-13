@@ -6,8 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
-import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
-import com.github.swent.swisstravel.ui.profile.FakeUserRepository
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
@@ -96,7 +95,7 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun emptyStateMessage_showsWhenNoTrips() {
     launchScreen()
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(TripListTestTags.EMPTY_MESSAGE).assertIsDisplayed()
   }
 
   @Test
@@ -156,11 +155,9 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun favoriteSelectedTrips_togglesFavoriteStatus() {
-    val fakeRepo =
-        FakePastTripsRepository(
-            mutableListOf(pastTrip1.copy(isFavorite = false), pastTrip2.copy(isFavorite = false)))
-    val viewModel =
-        PastTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
+    val fakeRepo = FakePastTripsRepository(mutableListOf(pastTrip1, pastTrip2))
+    val fakeUserRepo = FakeUserRepository()
+    val viewModel = PastTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeRepo)
 
     composeTestRule.setContent {
       SwissTravelTheme { PastTripsScreen(pastTripsViewModel = viewModel) }
@@ -178,7 +175,10 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     composeTestRule.waitForIdle()
     assertTrue(viewModel.uiState.value.selectedTrips.isEmpty())
-    val updatedTrips = runBlocking { fakeRepo.getAllTrips() }
-    assertTrue(updatedTrips.all { it.isFavorite })
+
+    // Verify via User object
+    val currentUser = runBlocking { fakeUserRepo.getCurrentUser() }
+    assertTrue(currentUser.favoriteTripsUids.contains(pastTrip1.uid))
+    assertTrue(currentUser.favoriteTripsUids.contains(pastTrip2.uid))
   }
 }

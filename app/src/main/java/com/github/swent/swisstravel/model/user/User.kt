@@ -27,6 +27,7 @@ data class User(
     val stats: UserStats = UserStats(),
     val pinnedTripsUids: List<String>,
     val pinnedPicturesUids: List<String>,
+    val favoriteTripsUids: List<String>,
 )
 
 /**

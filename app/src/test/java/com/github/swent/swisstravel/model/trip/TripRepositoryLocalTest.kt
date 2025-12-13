@@ -71,7 +71,6 @@ class TripRepositoryLocalTest {
                           coordinate = Coordinate(latitude = 0.3, longitude = 0.8),
                           name = "fake place6",
                           imageUrl = "fakeImage6")),
-          isFavorite = true,
           isCurrentTrip = true,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())

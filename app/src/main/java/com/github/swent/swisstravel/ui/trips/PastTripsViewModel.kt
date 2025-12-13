@@ -33,13 +33,19 @@ class PastTripsViewModel(
 
   override suspend fun getAllTrips() {
     try {
+      val currentUser = userRepository.getCurrentUser()
+      val favoriteTrips = currentUser.favoriteTripsUids.toSet()
+
       val trips = tripsRepository.getAllTrips()
       val pastTrips = trips.filter { it.isPast() }
-      val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType)
+      val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType, favoriteTrips)
       val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
       _uiState.value =
-          _uiState.value.copy(tripsList = sortedTrips, collaboratorsByTripId = collaboratorsByTrip)
+          _uiState.value.copy(
+              tripsList = sortedTrips,
+              collaboratorsByTripId = collaboratorsByTrip,
+              favoriteTripsUids = favoriteTrips)
     } catch (e: Exception) {
       Log.e("PastTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")

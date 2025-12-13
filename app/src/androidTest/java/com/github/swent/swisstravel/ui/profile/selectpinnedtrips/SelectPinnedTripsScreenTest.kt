@@ -44,7 +44,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -62,7 +61,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -80,7 +78,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -98,7 +95,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -126,7 +122,8 @@ class SelectPinnedTripsScreenTest {
                 friends = emptyList(),
                 stats = UserStats(),
                 pinnedTripsUids = listOf("trip1"),
-                pinnedPicturesUids = emptyList())
+                pinnedPicturesUids = emptyList(),
+                favoriteTripsUids = emptyList())
 
         override suspend fun getCurrentUser() = user
 
@@ -155,6 +152,14 @@ class SelectPinnedTripsScreenTest {
               user.copy(
                   pinnedTripsUids = pinnedTripsUids ?: user.pinnedTripsUids,
               )
+        }
+
+        override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+          // No-op
+        }
+
+        override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+          // No-op
         }
 
         override suspend fun updateUserStats(uid: String, stats: UserStats) {}

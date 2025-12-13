@@ -47,44 +47,57 @@ object TripElementTestTags {
 }
 
 /**
- * A composable representing a single trip item in the "My Trips" list.
- *
- * Displays the trip name with an icon and supports both normal and selection modes:
- * - Normal mode: Shows an arrow icon and supports click navigation.
- * - Selection mode: Replaces the arrow with a checkbox and allows multi-selection.
- * - No Icon mode: Shows a check icon instead of an arrow.
+ * Represents the state of a trip element in the "My Trips" list.
  *
  * @param trip The [Trip] displayed in this element.
- * @param onClick Called when the element is tapped.
- * @param onLongPress Called when the element is long-pressed (e.g., to enter selection mode).
  * @param isSelected Whether the trip is currently selected.
  * @param isSelectionMode Whether the UI is currently in selection mode.
  * @param noIcon If true, no icon is displayed when isSelected is false. Otherwise, shows a check
  *   icon.
  * @param collaborators The list of collaborators to display as overlapping avatars.
+ * @param isFavorite Whether the trip is a favorite.
+ */
+data class TripElementState(
+    val trip: Trip,
+    val isSelected: Boolean = false,
+    val isSelectionMode: Boolean = false,
+    val noIcon: Boolean = false,
+    val collaborators: List<TripsViewModel.CollaboratorUi> = emptyList(),
+    val isFavorite: Boolean = false
+)
+
+/**
+ * A composable representing a single trip item in a Trip list. Displays the trip name with an icon
+ * and supports multiple modes:
+ * - Normal mode: Shows an arrow icon and supports click navigation.
+ * - Selection mode: Replaces the arrow with a checkbox and allows multi-selection.
+ * - No Icon mode: Shows a check icon instead of an arrow.
+ *
+ * @param tripElementState The state of the trip element.
+ * @param onClick Called when the element is tapped.
+ * @param onLongPress Called when the element is long-pressed (e.g., to enter selection mode).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TripElement(
-    trip: Trip,
+    tripElementState: TripElementState,
     onClick: () -> Unit,
     onLongPress: () -> Unit = {},
-    isSelected: Boolean = false,
-    isSelectionMode: Boolean = false,
-    noIcon: Boolean = false,
-    collaborators: List<TripsViewModel.CollaboratorUi> = emptyList()
 ) {
   Card(
       modifier =
-          Modifier.testTag(TripElementTestTags.getTestTagForTrip(trip))
+          Modifier.testTag(TripElementTestTags.getTestTagForTrip(tripElementState.trip))
               .combinedClickable(onClick = onClick, onLongClick = onLongPress)
               .fillMaxWidth()
               .height(dimensionResource(R.dimen.trip_element_height))
               .border(
                   width =
-                      if (isSelected) dimensionResource(R.dimen.trip_element_border)
+                      if (tripElementState.isSelected)
+                          dimensionResource(R.dimen.trip_element_border)
                       else dimensionResource(R.dimen.empty),
-                  color = if (isSelected) MaterialTheme.colorScheme.primary else Color.Transparent,
+                  color =
+                      if (tripElementState.isSelected) MaterialTheme.colorScheme.primary
+                      else Color.Transparent,
                   shape = RoundedCornerShape(dimensionResource(R.dimen.trip_element_radius))),
       colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.onPrimary),
       shape = MaterialTheme.shapes.large) {
@@ -93,10 +106,10 @@ fun TripElement(
                 Modifier.fillMaxSize()
                     .padding(horizontal = dimensionResource(R.dimen.trip_element_padding)),
             verticalAlignment = Alignment.CenterVertically) {
-              TripNameSection(trip = trip, modifier = Modifier.weight(1f))
+              TripNameSection(trip = tripElementState.trip, modifier = Modifier.weight(1f))
 
-              if (collaborators.isNotEmpty()) {
-                CollaboratorsPreview(collaborators)
+              if (tripElementState.collaborators.isNotEmpty()) {
+                CollaboratorsPreview(tripElementState.collaborators)
                 Spacer(
                     modifier =
                         Modifier.width(
@@ -106,10 +119,11 @@ fun TripElement(
               Spacer(modifier = Modifier.width(dimensionResource(R.dimen.trip_element_width)))
 
               TripStatusSection(
-                  trip = trip,
-                  isSelected = isSelected,
-                  isSelectionMode = isSelectionMode,
-                  noIcon = noIcon)
+                  trip = tripElementState.trip,
+                  isSelected = tripElementState.isSelected,
+                  isSelectionMode = tripElementState.isSelectionMode,
+                  noIcon = tripElementState.noIcon,
+                  isFavorite = tripElementState.isFavorite)
             }
       }
 }
@@ -209,16 +223,18 @@ private fun TripCircle(tripName: String) {
  * @param isSelectionMode Whether the UI is currently in selection mode.
  * @param noIcon If true, no icon is displayed when isSelected is false. Otherwise, shows a check
  *   icon.
+ * @param isFavorite Whether the trip is a favorite.
  */
 @Composable
 private fun TripStatusSection(
     trip: Trip,
     isSelected: Boolean,
     isSelectionMode: Boolean,
-    noIcon: Boolean
+    noIcon: Boolean,
+    isFavorite: Boolean
 ) {
   Row(verticalAlignment = Alignment.CenterVertically) {
-    if (trip.isFavorite) {
+    if (isFavorite) {
       Icon(
           Icons.Default.Star,
           contentDescription = stringResource(R.string.favorite_icon),
