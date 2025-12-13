@@ -75,14 +75,6 @@ interface TripInfoViewModelContract {
   fun unlikeSelectedActivities()
 
   /**
-   * Updates the set of all activities that have been fetched for swiping in the UI state and in the
-   * Trip.
-   *
-   * @param newFetched The list of all activities that have been fetched for swiping.
-   */
-  fun updateAllFetchedForSwipe(newFetched: List<Activity>)
-
-  /**
    * If you liked the activity, it will add the activity to the liked activities list of the trip.
    *
    * Otherwise, it is considered as a dislike

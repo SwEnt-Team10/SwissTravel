@@ -431,29 +431,6 @@ class TripInfoViewModel(
   }
 
   /**
-   * Updates the set of all activities that have been fetched for swiping in :
-   * - the UI state (because it is used to keep track of all fetched activities in the
-   *   SwipeActivitiesScreen)
-   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
-   *   comes back later, the values are the same)
-   *
-   * @param newFetched The list of activities that are newly fetched for swiping (they are added to
-   *   the existing set)
-   */
-  override fun updateAllFetchedForSwipe(newFetched: List<Activity>) {
-    _uiState.update { state ->
-      state.copy(allFetchedForSwipe = (state.allFetchedForSwipe + newFetched).distinct())
-    }
-    // update the trip locally
-    trip.update { trip ->
-      trip!!.copy(allFetchedForSwipe = (trip.allFetchedForSwipe + newFetched).distinct())
-    }
-
-    // update trip in database
-    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
-  }
-
-  /**
    * Updates the queue of activities and the set of all activities that have been fetched for
    * swiping in :
    * - the UI state (because it is used to keep track of all fetched activities in the
