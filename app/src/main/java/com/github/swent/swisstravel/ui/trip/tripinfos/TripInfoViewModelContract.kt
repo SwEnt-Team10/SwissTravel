@@ -106,7 +106,8 @@ interface TripInfoViewModelContract {
   fun selectLikedActivity(activity: Activity)
 
   /**
-   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule the activity or unlike it)
+   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule
+   * the activity or unlike it)
    *
    * @param activity The activity to add to the list of selected liked activities
    */

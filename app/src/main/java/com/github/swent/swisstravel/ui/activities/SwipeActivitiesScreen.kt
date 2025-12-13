@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -57,9 +58,10 @@ fun SwipeActivitiesScreen(
     onTripInfo: () -> Unit = {},
     tripInfoVM: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
+  val state by tripInfoVM.uiState.collectAsState()
   Scaffold(
       topBar = {
-        if (tripInfoVM.uiState.collectAsState().value.currentActivity == null) {
+        if (state.currentActivity == null) {
           IconButton(
               onClick = onTripInfo,
               modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.BACK_BUTTON)) {
@@ -83,6 +85,8 @@ fun SwipeActivitiesScreen(
  * Stack of cards containing the activities to swipe. This stack contains only 2 cards for
  * optimization reasons (having a card composable for each activity is not useful and would cost
  * more)
+ *
+ * Done with the help of Gemini 3 Pro
  *
  * @param viewModel The ViewModel to use.
  * @param onTripInfo Callback to be called when navigating back to trip info.
