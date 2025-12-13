@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.content.Context
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.User
@@ -73,6 +74,15 @@ interface TripInfoViewModelContract {
 
   /** Unlikes the selected activities, removing them from the list of liked activities. */
   fun unlikeSelectedActivities()
+
+  /**
+   * Schedules the selected liked activities.
+   *
+   * If there is no room for selected activities to be scheduled, it will respond with a toast
+   *
+   * @param context The context of the application to use for scheduling.
+   */
+  fun scheduleSelectedActivities(context: Context)
 
   /**
    * If you liked the activity, it will add the activity to the liked activities list of the trip.

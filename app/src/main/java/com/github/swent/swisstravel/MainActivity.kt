@@ -562,16 +562,32 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       SwipeActivitiesScreen(
           onTripInfo = { navController.popBackStack() },
-          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry),
+          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry)
       )
     }
 
     composable(Screen.LikedActivities.route) { navBackStackEntry ->
       val parentEntry =
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+        val vm = viewModel<TripInfoViewModel>(parentEntry)
+        val errorText = stringResource(R.string.no_activities_selected)
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
-          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry))
+          tripInfoVM = vm,
+          onSchedule = {
+              if (vm.uiState.value.selectedLikedActivities.isEmpty()) {
+                  Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
+              } else {
+                  Toast.makeText(context, "Not Implemented Yet", Toast.LENGTH_SHORT).show()
+                  // TODO : use likedActivitiesVM.scheduleSelectedActivities(context)
+              }
+          },
+          onUnlike = {
+              if (vm.uiState.value.selectedLikedActivities.isEmpty()) {
+                  Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
+              } else vm.unlikeSelectedActivities()
+          }
+          )
     }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))

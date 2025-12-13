@@ -30,7 +30,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -50,12 +49,9 @@ object LikedActivitiesScreenTestTags {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModelContract) {
+fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModelContract, onUnlike: () -> Unit = {}, onSchedule: () -> Unit = {}) {
   val state by tripInfoVM.uiState.collectAsState()
   val likedActivities = state.likedActivities
-  val selectedActivities = state.selectedLikedActivities
-  val context = LocalContext.current
-  val errorText = stringResource(R.string.no_activities_selected)
 
   Scaffold(
       topBar = {
@@ -77,19 +73,8 @@ fun LikedActivitiesScreen(onBack: () -> Unit = {}, tripInfoVM: TripInfoViewModel
       },
       bottomBar = {
         LikedActivitiesBottomBar(
-            onSchedule = {
-              if (selectedActivities.isEmpty()) {
-                Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
-              } else {
-                Toast.makeText(context, "Not Implemented Yet", Toast.LENGTH_SHORT).show()
-                // TODO : use likedActivitiesVM.scheduleSelectedActivities(context)
-              }
-            },
-            onUnlike = {
-              if (selectedActivities.isEmpty()) {
-                Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
-              } else tripInfoVM.unlikeSelectedActivities()
-            },
+            onSchedule = onSchedule,
+            onUnlike = onUnlike,
         )
       }) { pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
@@ -141,7 +126,8 @@ fun LikedActivityItem(activity: Activity, tripInfoVM: TripInfoViewModelContract)
                 else tripInfoVM.deselectLikedActivity(activity)
               },
               modifier =
-                  Modifier.testTag(LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY)
+                  Modifier
+                      .testTag(LikedActivitiesScreenTestTags.SELECT_LIKED_ACTIVITY + "_${activity.getName()}")
                       .align(Alignment.CenterVertically))
         }
       }

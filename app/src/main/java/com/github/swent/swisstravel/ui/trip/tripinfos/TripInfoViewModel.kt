@@ -593,7 +593,7 @@ class TripInfoViewModel(
    *
    * If there is no room for selected activities to be scheduled, it will respond with a toast
    */
-  fun scheduleSelectedActivities(context: Context) {
+  override fun scheduleSelectedActivities(context: Context) {
     val tripAlgo =
         TripAlgorithm.init(
             tripSettings = this.mapToTripSettings(),
