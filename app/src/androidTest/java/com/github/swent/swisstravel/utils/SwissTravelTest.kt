@@ -35,6 +35,7 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
+import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.ErrorScreenTestTags
@@ -421,7 +422,7 @@ abstract class SwissTravelTest {
   // Done with AI
   fun ComposeTestRule.checkTripInfoScreenIsDisplayedWithTrip(
       trip: Trip,
-      context: Context = ApplicationProvider.getApplicationContext<Context>()
+      context: Context = ApplicationProvider.getApplicationContext()
   ) {
     // --- Top App Bar ---
     onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed().assertTextEquals(trip.name)
@@ -707,6 +708,37 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.exitEditPhotos() {
     onNodeWithTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON).performClick()
   }
-  // TODO : Create helper/companions functions here
 
+  fun ComposeTestRule.loginWithGoogle() {
+    onNodeWithTag(LandingScreenTestTags.SIGN_IN_BUTTON).assertExists().performClick()
+    waitForIdle()
+    onNodeWithTag(SignInScreenTestTags.GOOGLE_LOGIN_BUTTON).assertExists().performClick()
+
+    // Wait for main app to load
+    waitUntil(E2E_WAIT_TIMEOUT) {
+      onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+  }
+
+  fun ComposeTestRule.logout() {
+    // Check if settings button exists (Profile Screen), if so click it
+    if (onAllNodesWithTag(ProfileScreenTestTags.SETTINGS_BUTTON)
+        .fetchSemanticsNodes()
+        .isNotEmpty()) {
+      onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).performClick()
+    }
+
+    // Wait for logout button
+    waitForTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON)
+    onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performClick()
+
+    // Wait for Landing Screen
+    waitForTag(LandingScreenTestTags.SIGN_IN_BUTTON)
+  }
+
+  fun ComposeTestRule.waitForTag(tag: String, timeout: Long = E2E_WAIT_TIMEOUT) {
+    waitUntil(timeout) { onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
+  }
 }
