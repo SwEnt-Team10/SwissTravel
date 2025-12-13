@@ -95,6 +95,7 @@ class TripInfoViewModel(
   private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
 
   init {
+    Log.d("TRIP_INFO_VM", "Initialized a tripInfoVM")
     // Debounce favorite changes to avoid spamming database
     viewModelScope.launch {
       _favoriteToggleFlow
@@ -126,10 +127,24 @@ class TripInfoViewModel(
    */
   override fun loadTripInfo(uid: String?) {
     if (uid.isNullOrBlank()) {
-      Log.e("TripInfoViewModel", "Trip ID is null or blank")
+      Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
+    // load the info only if the uid is different from the current one (meaning that the user
+    // navigated to another trip screen)
+    //
+    // if uid does not equal the state's uid, it means the state has already a valid uid, meaning
+    // the viewModel's state was
+    // already loaded (note that uids are unique)
+    //
+    // this condition is needed so that when the user navigates to swipe screen or liked activities
+    // screen, and comes back to daily view screen, it does not re-load the trip's info
+    if (uid == _uiState.value.uid) {
+      Log.d("TRIP_INFO_VM", "loadTripInfo called with same uid = $uid, skipping reload")
+      return
+    }
+
     viewModelScope.launch {
       try {
         val current = _uiState.value
@@ -148,7 +163,7 @@ class TripInfoViewModel(
                 tripProfile = trip.tripProfile,
                 isFavorite = trip.isFavorite,
                 likedActivities = trip.likedActivities,
-                activitiesQueue = trip.activitiesQueue,
+                activitiesQueue = ArrayDeque(trip.activitiesQueue),
                 allFetchedForSwipe = trip.allFetchedForSwipe,
                 currentActivity = trip.activitiesQueue.firstOrNull(),
                 backActivity = trip.activitiesQueue.getOrNull(1),
@@ -160,9 +175,21 @@ class TripInfoViewModel(
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
                 currentUserIsOwner = trip.isOwner(userRepository.getCurrentUser().uid))
         computeSchedule()
-        Log.d("Activities", trip.activities.toString())
+
+        // fetch the activities queue if empty, only after loading the trip info, otherwise, it
+        // might fetch with a state that has not loaded yet (so with empty locations to input to the
+        // fetching)
+        Log.d("TRIP_INFO_VM", "Trip from database queue size ${trip.activitiesQueue.size}")
+        Log.d("TRIP_INFO_VM", "State from VM queue size ${_uiState.value.activitiesQueue.size}")
+        if (trip.activitiesQueue.isEmpty()) {
+          Log.d("TRIP_INFO_VM", "Fetching first activities for trip $uid")
+          fetchFirstActivities()
+        }
+
+        Log.d("TRIP_INFO_VM", "activities queue from trip = ${trip.activitiesQueue}")
+        Log.d("Activities", trip.activities.map { it.getName() }.toString())
       } catch (e: Exception) {
-        Log.e("TripInfoViewModel", "Error loading trip info", e)
+        Log.e("TRIP_INFO_VM", "Error loading trip info", e)
         setErrorMsg("Failed to load trip info: ${e.message}")
       }
     }
@@ -367,13 +394,11 @@ class TripInfoViewModel(
     _uiState.update { state ->
       state.copy(likedActivities = (state.likedActivities + activities).distinct())
     }
-    // also update the trip on the repository
-    viewModelScope.launch {
-      val trip = tripsRepository.getTrip(_uiState.value.uid)
-      tripsRepository.editTrip(
-          trip.uid,
-          updatedTrip = trip.copy(likedActivities = (trip.likedActivities + activities).distinct()))
+    // also update the trip in this class and on the repository
+    trip.update { trip ->
+      trip!!.copy(likedActivities = (trip.likedActivities + activities).distinct())
     }
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
   }
 
   /**
@@ -388,16 +413,14 @@ class TripInfoViewModel(
     _uiState.update { state ->
       state.copy(
           likedActivities = (state.likedActivities - selected).distinct(),
+          // clear selected activities after unliking them
           selectedLikedActivities = emptyList())
     }
-    // also update the trip on the repository
-    viewModelScope.launch {
-      tripsRepository.editTrip(
-          trip.value!!.uid,
-          updatedTrip =
-              trip.value!!.copy(
-                  likedActivities = (trip.value!!.likedActivities - selected).distinct()))
+    // also update the trip in this class and on the repository
+    trip.update { trip ->
+      trip!!.copy(likedActivities = (trip.likedActivities - selected).distinct())
     }
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
   }
 
   /**
@@ -418,10 +441,14 @@ class TripInfoViewModel(
           currentActivity = newQueue.firstOrNull(),
           backActivity = newQueue.getOrNull(1))
     }
-    // also update the trip on the repository
+    // update the trip locally
+    Log.d("TRIP_INFO_VM", "queue local before : ${trip.value!!.activitiesQueue.map {it.getName()}}")
+    trip.update { trip -> trip!!.copy(activitiesQueue = newQueue) }
+    Log.d("TRIP_INFO_VM", "queue local after : ${trip.value!!.activitiesQueue.map {it.getName()}}")
+
+    // update trip in database
     viewModelScope.launch {
-      tripsRepository.editTrip(
-          trip.value!!.uid, updatedTrip = trip.value!!.copy(activitiesQueue = newQueue))
+      tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!)
     }
   }
 
@@ -439,13 +466,45 @@ class TripInfoViewModel(
     _uiState.update { state ->
       state.copy(allFetchedForSwipe = (state.allFetchedForSwipe + newFetched).distinct())
     }
-    // also update the trip on the repository
+      // update the trip locally
+    trip.update { trip ->
+      trip!!.copy(allFetchedForSwipe = (trip.allFetchedForSwipe + newFetched).distinct())
+    }
+
+      // update trip in database
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
+  }
+
+  /**
+   * Updates the queue of activities and the set of all activities that have been fetched for
+   * swiping in :
+   * - the UI state (because it is used to keep track of all fetched activities in the
+   *   SwipeActivitiesScreen)
+   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
+   *   comes back later, the values are the same)
+   *
+   * Also, it refreshes the current activity and back activity
+   *
+   * @param newQueue The queue of activities that will be set.
+   * @param newFetched The list of activities that are newly fetched for swiping (they are added to
+   *   the existing set)
+   */
+  fun updateQueueAndAllFetched(newQueue: ArrayDeque<Activity>, newFetched: List<Activity>) {
+    val fullFetched = (_uiState.value.allFetchedForSwipe + newFetched).distinct()
+    _uiState.update {
+      it.copy(
+          activitiesQueue = newQueue,
+          allFetchedForSwipe = fullFetched,
+          currentActivity = newQueue.firstOrNull(),
+          backActivity = newQueue.getOrNull(1))
+    }
+
+      // update the trip locally
+    trip.update { it!!.copy(activitiesQueue = newQueue, allFetchedForSwipe = fullFetched) }
+
+    // update trip in database
     viewModelScope.launch {
-      tripsRepository.editTrip(
-          trip.value!!.uid,
-          updatedTrip =
-              trip.value!!.copy(
-                  allFetchedForSwipe = (trip.value!!.allFetchedForSwipe + newFetched).distinct()))
+        tripsRepository.editTrip(trip.value!!.uid, trip.value!!)
     }
   }
 
@@ -495,9 +554,8 @@ class TripInfoViewModel(
     val newQueue = _uiState.value.activitiesQueue
     newQueue.addLast(newActivity)
 
-    // update queue and all fetched
-    updateQueue(newQueue)
-    updateAllFetchedForSwipe(listOf(newActivity))
+    // update both the queue and all fetched activities
+    updateQueueAndAllFetched(newQueue, listOf(newActivity))
   }
 
   /**
@@ -514,9 +572,9 @@ class TripInfoViewModel(
                   toExclude = (state.allFetchedForSwipe + state.activities).toSet()))
 
       Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
+
       // update the tripInfo and the Trip on the repo
-      updateQueue(initialActivities)
-      updateAllFetchedForSwipe(initialActivities)
+      updateQueueAndAllFetched(newQueue = initialActivities, newFetched = initialActivities)
 
       Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
     }
@@ -569,7 +627,8 @@ class TripInfoViewModel(
   }
 
   /**
-   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule the activity or unlike it)
+   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule
+   * the activity or unlike it)
    *
    * @param activity The activity to add to the list of selected liked activities
    */

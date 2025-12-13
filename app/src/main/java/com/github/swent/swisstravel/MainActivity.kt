@@ -485,7 +485,10 @@ private fun NavGraphBuilder.tripInfoNavGraph(
         return@composable
       }
 
-      val vm = navigationActions.tripInfoViewModel(navController)
+        // conserve the ViewModel tied to the TripInfo navigation graph
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      val vm = viewModel<TripInfoViewModel>(parentEntry)
 
       DailyViewScreen(
           uid = uid,
@@ -500,9 +503,6 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   },
                   onSwipeActivities = {
                     navigationActions.navigateTo(Screen.SwipeActivities)
-                    if (vm.uiState.value.activitiesQueue.isEmpty()) {
-                      vm.fetchFirstActivities()
-                    }
                   },
                   onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
           onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
