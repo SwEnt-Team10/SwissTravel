@@ -109,6 +109,7 @@ class TripInfoViewModelTest {
     // Arrange
     coEvery { tripsRepository.getTrip(dummyTrip.uid) } returns dummyTrip
     coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip(dummyTrip.uid, any()) } just Runs
 
     // Act
     viewModel.loadTripInfo(dummyTrip.uid)
@@ -275,6 +276,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(tripWithCollaborator.uid) } returns tripWithCollaborator
     coEvery { userRepository.getUserByUid("friend1") } returns friend1
     coEvery { userRepository.getUserByUid("friend2") } returns collaboratorUser
+    coEvery { tripsRepository.editTrip(tripWithCollaborator.uid, any()) } just Runs
 
     // Initialize VM with the trip
     viewModel.loadTripInfo(tripWithCollaborator.uid)
@@ -304,6 +306,7 @@ class TripInfoViewModelTest {
 
     coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
     coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip(tripId, any()) } just Runs
 
     // Mock the specific share method
     coEvery { tripsRepository.shareTripWithUsers(tripId, any()) } just Runs
@@ -331,6 +334,7 @@ class TripInfoViewModelTest {
 
     coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
     coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip(tripId, any()) } just Runs
 
     // Mock the specific remove method
     coEvery { tripsRepository.removeCollaborator(tripId, any()) } just Runs
