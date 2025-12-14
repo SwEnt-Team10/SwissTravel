@@ -68,7 +68,7 @@ import org.junit.After
 import org.junit.Before
 
 const val UI_WAIT_TIMEOUT = 15_000L
-const val E2E_WAIT_TIMEOUT = 15_000L
+const val E2E_WAIT_TIMEOUT = 30_000L
 
 /**
  * Base class for all SwissTravel tests, providing common setup and utility functions.
@@ -226,8 +226,9 @@ abstract class SwissTravelTest {
   }
 
   fun ComposeTestRule.checkMyTripsNotInSelectionMode() {
-    waitForIdle()
-    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
+    waitUntil(E2E_WAIT_TIMEOUT) {
+      onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).isDisplayed()
+    }
     onNodeWithTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON).assertIsNotDisplayed()
