@@ -85,7 +85,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
       AddPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)
     }
     composeTestRule.addPhotosScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID).isDisplayed()
+    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTO_GRID).isDisplayed()
 
     // We go through the map
     for (i in 0 until fakeTrip.uriLocation.size) {
@@ -130,7 +130,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
 
     // Verify that the images has been added
     composeTestRule
-        .onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID)
+        .onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTO_GRID)
         .onChildren()
         .assertCountEquals(2)
   }

@@ -84,7 +84,7 @@ class EditPhotosScreenTest : SwissTravelTest() {
       EditPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)
     }
     composeTestRule.editPhotosScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(EditPhotosScreenTestTags.EDIT_VERTICAL_GRID).isDisplayed()
+    composeTestRule.onNodeWithTag(EditPhotosScreenTestTags.EDIT_PHOTO_GRID).isDisplayed()
   }
 
   // AI did the test
