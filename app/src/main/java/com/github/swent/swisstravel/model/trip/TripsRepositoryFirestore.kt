@@ -344,7 +344,12 @@ class TripsRepositoryFirestore(
         "currentTrip" to trip.isCurrentTrip,
         "collaboratorsId" to trip.collaboratorsId,
         "random" to trip.isRandom,
-        "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() })
+        "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() },
+        "likedActivities" to trip.likedActivities,
+        "activitiesQueue" to ArrayDeque(trip.activitiesQueue.toList()),
+        "allFetchedForSwipe" to trip.allFetchedForSwipe,
+        "cachedActivities" to trip.cachedActivities
+        )
   }
   /**
    * Converts a Firestore map into a Map<Uri, Location>.
