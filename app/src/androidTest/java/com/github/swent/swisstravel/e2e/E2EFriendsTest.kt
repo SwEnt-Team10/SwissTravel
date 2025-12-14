@@ -188,16 +188,15 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_LIST).performTouchInput {
       swipeDown()
     }
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithText(bobName).assertIsDisplayed()
+
+    val bobTag =
+        FriendElementTestTags.getTestTagForFriend(
+            runBlocking { userRepo.getUserByNameOrEmail(bobName).first() })
+    composeTestRule.waitForTag(bobTag)
 
     // --- STEP 9: Alice clicks on Bob in the friends list. ---
     // Click on Bob in the friend list
-    composeTestRule
-        .onNodeWithTag(
-            FriendElementTestTags.getTestTagForFriend(
-                runBlocking { userRepo.getUserByNameOrEmail(bobName).first() }))
-        .performClick()
+    composeTestRule.onNodeWithTag(bobTag).performClick()
 
     // Verify we are on the profile screen
     composeTestRule.waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
