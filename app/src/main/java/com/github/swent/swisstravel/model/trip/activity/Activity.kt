@@ -47,8 +47,8 @@ data class Activity(
 
     // Normal validity logic
     if (estimatedTime <= 0) return false
-      // If an activity lasts more than 9 hours treat it as invalid
-      if (estimatedTime > (9 * 60 * 60)) return false
+    // If an activity lasts more than 9 hours treat it as invalid
+    if (estimatedTime > (9 * 60 * 60)) return false
 
     return true
   }
