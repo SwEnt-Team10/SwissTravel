@@ -4,6 +4,7 @@ import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
@@ -37,7 +38,8 @@ class UserRepositoryFirebase(
                 friends = emptyList(),
                 stats = UserStats(),
                 pinnedTripsUids = emptyList(),
-                pinnedPicturesUids = emptyList())
+                pinnedPicturesUids = emptyList(),
+                favoriteTripsUids = emptyList())
 
     val uid = firebaseUser.uid
     return try {
@@ -371,6 +373,35 @@ class UserRepositoryFirebase(
   }
 
   /**
+   * Adds a trip to the user's favorite list.
+   *
+   * @param uid The UID of the user.
+   * @param tripUid The UID of the trip to add.
+   */
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+    if (uid == "guest") return
+    db.collection("users")
+        .document(uid)
+        // Help from AI here.
+        .update("favoriteTripsUids", FieldValue.arrayUnion(tripUid))
+        .await()
+  }
+
+  /**
+   * Removes a trip from the user's favorite list.
+   *
+   * @param uid The UID of the user.
+   * @param tripUid The UID of the trip to remove.
+   */
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+    if (uid == "guest") return
+    db.collection("users")
+        .document(uid)
+        .update("favoriteTripsUids", FieldValue.arrayRemove(tripUid))
+        .await()
+  }
+
+  /**
    * Helper function to create a User object from a DocumentSnapshot.
    *
    * @param doc The DocumentSnapshot to create the User from.
@@ -385,6 +416,8 @@ class UserRepositoryFirebase(
         (doc["pinnedTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val pinnedPicturesUids =
         (doc["pinnedPicturesUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val favoriteTripsUids =
+        (doc["favoriteTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
 
     return User(
         uid = uid,
@@ -396,7 +429,8 @@ class UserRepositoryFirebase(
         friends = friends,
         stats = stats,
         pinnedTripsUids = pinnedTripsUids,
-        pinnedPicturesUids = pinnedPicturesUids)
+        pinnedPicturesUids = pinnedPicturesUids,
+        favoriteTripsUids = favoriteTripsUids)
   }
 
   /**
@@ -418,7 +452,8 @@ class UserRepositoryFirebase(
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = emptyList())
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser

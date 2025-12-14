@@ -48,7 +48,6 @@ class PhotosViewModelTest {
           routeSegments = emptyList(),
           activities = emptyList(),
           tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
-          isFavorite = true,
           isCurrentTrip = true,
           collaboratorsId = emptyList(),
           uriLocation = fakeUriLocation)

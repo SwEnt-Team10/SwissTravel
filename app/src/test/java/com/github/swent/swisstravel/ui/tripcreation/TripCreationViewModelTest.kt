@@ -355,7 +355,8 @@ class TripCreationViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
-          pinnedPicturesUids = emptyList())
+          pinnedPicturesUids = emptyList(),
+          favoriteTripsUids = emptyList())
     }
 
     override suspend fun getUserByUid(uid: String): User? {
@@ -396,6 +397,14 @@ class TripCreationViewModelTest {
         pinnedPicturesUids: List<String>?
     ) {
       // no-op for testing
+    }
+
+    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
+    }
+
+    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
     }
   }
 }
