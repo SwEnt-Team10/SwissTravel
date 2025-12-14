@@ -69,7 +69,8 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
-import com.github.swent.swisstravel.ui.composable.TripInteraction
+import com.github.swent.swisstravel.ui.composable.TripListEvents
+import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.friends.FriendsViewModel
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -295,13 +296,16 @@ fun ProfileScreenContent(
           PinnedTrips(isOwnProfile = uiState.isOwnProfile, onEditPinnedTrips = onEditPinnedTrips)
         }
 
-        tripListItems(
-            trips = uiState.pinnedTrips,
-            interaction =
-                TripInteraction(
-                    onClick = { trip -> trip?.let { onSelectTrip(it.uid) } },
-                ),
-            emptyListString = if (uiState.isOwnProfile) NO_USER_PINNED_TRIPS else NO_PINNED_TRIPS)
+        val tripListState =
+            TripListState(
+                trips = uiState.pinnedTrips,
+                emptyListString =
+                    if (uiState.isOwnProfile) NO_USER_PINNED_TRIPS else NO_PINNED_TRIPS)
+
+        val tripListEvents =
+            TripListEvents(onClickTripElement = { trip -> trip?.let { onSelectTrip(it.uid) } })
+
+        tripListItems(listState = tripListState, listEvents = tripListEvents)
 
         item {
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))

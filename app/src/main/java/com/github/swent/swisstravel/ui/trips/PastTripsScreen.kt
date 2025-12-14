@@ -3,14 +3,15 @@ package com.github.swent.swisstravel.ui.trips
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -40,8 +41,10 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
-import com.github.swent.swisstravel.ui.composable.TripInteraction
-import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.composable.TripListEvents
+import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
+import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 
 /**
@@ -87,6 +90,7 @@ fun PastTripsScreen(
   val context = LocalContext.current
   val uiState by pastTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
+  val emptyListString = stringResource(R.string.no_past_trips)
 
   // Handle back press while in selection mode
   BackHandler(enabled = uiState.isSelectionMode) { pastTripsViewModel.toggleSelectionMode(false) }
@@ -129,36 +133,46 @@ fun PastTripsScreen(
             onSelectAll = { pastTripsViewModel.selectAllTrips() })
       },
       content = { padding ->
-        Column(
+        LazyColumn(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(padding)
                     .padding(
                         start = dimensionResource(R.dimen.past_trips_padding_start_end),
                         end = dimensionResource(R.dimen.past_trips_padding_start_end),
-                        bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))) {
-              TripList(
-                  trips = uiState.tripsList,
-                  interaction =
-                      TripInteraction(
-                          onClick = {
-                            it?.let { trip ->
-                              if (uiState.isSelectionMode) {
-                                pastTripsViewModel.toggleTripSelection(it)
-                              } else {
-                                onSelectTrip(trip.uid)
-                              }
-                            }
-                          },
-                          onLongPress = {
-                            it?.let { _ ->
-                              pastTripsViewModel.toggleSelectionMode(true)
-                              pastTripsViewModel.toggleTripSelection(it)
-                            }
-                          },
-                          isSelected = { trip -> trip in uiState.selectedTrips },
-                          isSelectionMode = uiState.isSelectionMode),
-                  emptyListString = stringResource(R.string.no_past_trips))
+                        bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))
+                    .testTag(TripListTestTags.TRIP_LIST)) {
+              val listState =
+                  TripListState(
+                      trips = uiState.tripsList,
+                      isSelected = { trip -> trip in uiState.selectedTrips },
+                      isSelectionMode = uiState.isSelectionMode,
+                      emptyListString = emptyListString,
+                      collaboratorsLookup = { uid ->
+                        uiState.collaboratorsByTripId[uid] ?: emptyList()
+                      },
+                      favoriteTripsUids = uiState.favoriteTripsUids)
+
+              // Construct Events
+              val listEvents =
+                  TripListEvents(
+                      onClickTripElement = {
+                        it?.let { trip ->
+                          if (uiState.isSelectionMode) {
+                            pastTripsViewModel.toggleTripSelection(it)
+                          } else {
+                            onSelectTrip(trip.uid)
+                          }
+                        }
+                      },
+                      onLongPress = {
+                        it?.let { _ ->
+                          pastTripsViewModel.toggleSelectionMode(true)
+                          pastTripsViewModel.toggleTripSelection(it)
+                        }
+                      })
+
+              tripListItems(listState = listState, listEvents = listEvents)
             }
       })
 }
@@ -189,6 +203,9 @@ private fun PastTripsTopAppBar(
     onDeleteSelected: () -> Unit,
     onSelectAll: () -> Unit,
 ) {
+  val allSelectedFavorites =
+      uiState.selectedTrips.isNotEmpty() &&
+          uiState.selectedTrips.all { it.uid in uiState.favoriteTripsUids }
   TopAppBar(
       title = {
         val title =
@@ -226,7 +243,8 @@ private fun PastTripsTopAppBar(
               onClick = onFavoriteSelected,
               modifier = Modifier.testTag(PastTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)) {
                 Icon(
-                    Icons.Default.StarOutline,
+                    imageVector =
+                        if (allSelectedFavorites) Icons.Default.Star else Icons.Default.StarOutline,
                     contentDescription = stringResource(R.string.favorite_selected))
               }
           IconButton(

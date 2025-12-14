@@ -34,8 +34,9 @@ class AddFriendScreenTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     var searchResults: List<User> = emptyList()
 
@@ -75,6 +76,14 @@ class AddFriendScreenTest {
     ) {
       // no op in test
     }
+
+    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
+    }
+
+    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
+    }
   }
 
   @Test
@@ -92,8 +101,9 @@ class AddFriendScreenTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     fakeRepo.searchResults = listOf(targetUser)
 

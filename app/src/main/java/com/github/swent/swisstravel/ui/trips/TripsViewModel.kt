@@ -53,6 +53,9 @@ abstract class TripsViewModel(
    * @property sortType The current sorting preference for upcoming trips.
    * @property isSelectionMode Whether the user is currently selecting multiple trips.
    * @property selectedTrips The set of trips currently selected in selection mode.
+   * @property isLoading Whether the UI is currently loading data.
+   * @property collaboratorsByTripId A map of trips to their associated collaborators.
+   * @property favoriteTripsUids The set of favorite trip UIDs.
    */
   data class TripsUIState(
       val currentTrip: Trip? = null,
@@ -63,6 +66,7 @@ abstract class TripsViewModel(
       val selectedTrips: Set<Trip> = emptySet(),
       val isLoading: Boolean = false,
       val collaboratorsByTripId: Map<String, List<CollaboratorUi>> = emptyMap(),
+      val favoriteTripsUids: Set<String> = emptySet()
   )
 
   /**
@@ -170,14 +174,21 @@ abstract class TripsViewModel(
     val selected = _uiState.value.selectedTrips
     viewModelScope.launch {
       try {
-        selected.forEach { trip ->
-          val updatedTrip = trip.copy(isFavorite = !trip.isFavorite)
-          tripsRepository.editTrip(trip.uid, updatedTrip)
+        val currentUser = userRepository.getCurrentUser()
+        val userFavorites = currentUser.favoriteTripsUids.toSet()
+        // All currently selected trips already favorites?
+        val allSelectedAreFavorite = selected.all { it.uid in userFavorites }
+        if (allSelectedAreFavorite) {
+          // All selected are favorite -> Unfavorite all of them
+          selected.forEach { trip -> userRepository.removeFavoriteTrip(currentUser.uid, trip.uid) }
+        } else {
+          // None or Some are favorite -> Favorite all of them
+          selected.forEach { trip -> userRepository.addFavoriteTrip(currentUser.uid, trip.uid) }
         }
         toggleSelectionMode(false)
         refreshUIState()
       } catch (e: Exception) {
-        Log.e("MyTripsViewModel", "Error toggling favorites", e)
+        Log.e("TripsViewModel", "Error toggling favorites", e)
         setErrorMsg("Failed to update favorites.")
       }
     }
@@ -203,7 +214,7 @@ abstract class TripsViewModel(
    * @param sortType The sorting order to apply.
    * @return The sorted list of trips.
    */
-  fun sortTrips(trips: List<Trip>, sortType: TripSortType): List<Trip> {
+  fun sortTrips(trips: List<Trip>, sortType: TripSortType, favoriteTrips: Set<String>): List<Trip> {
     return when (sortType) {
       TripSortType.START_DATE_ASC -> trips.sortedBy { it.tripProfile.startDate }
       TripSortType.START_DATE_DESC -> trips.sortedByDescending { it.tripProfile.startDate }
@@ -211,7 +222,7 @@ abstract class TripsViewModel(
       TripSortType.END_DATE_DESC -> trips.sortedByDescending { it.tripProfile.endDate }
       TripSortType.NAME_ASC -> trips.sortedBy { it.name.lowercase() }
       TripSortType.NAME_DESC -> trips.sortedByDescending { it.name.lowercase() }
-      TripSortType.FAVORITES_FIRST -> trips.sortedByDescending { it.isFavorite }
+      TripSortType.FAVORITES_FIRST -> trips.sortedByDescending { it.uid in favoriteTrips }
     }
   }
 
@@ -222,8 +233,9 @@ abstract class TripsViewModel(
    */
   fun updateSortType(sortType: TripSortType) {
     val trips = _uiState.value.tripsList
+    val favorites = _uiState.value.favoriteTripsUids
     _uiState.value =
-        _uiState.value.copy(sortType = sortType, tripsList = sortTrips(trips, sortType))
+        _uiState.value.copy(sortType = sortType, tripsList = sortTrips(trips, sortType, favorites))
   }
 }
 
