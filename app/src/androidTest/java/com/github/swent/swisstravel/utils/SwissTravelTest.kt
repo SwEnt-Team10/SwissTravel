@@ -738,11 +738,9 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.logout() {
     // Check if settings button exists (Profile Screen), if so click it
-    if (onAllNodesWithTag(ProfileScreenTestTags.SETTINGS_BUTTON)
-        .fetchSemanticsNodes()
-        .isNotEmpty()) {
-      onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).performClick()
-    }
+    waitForTag(ProfileScreenTestTags.SETTINGS_BUTTON)
+    onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertExists()
+    onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).performClick()
 
     // Wait for logout button
     waitForTag(ProfileSettingsScreenTestTags.EMAIL)
