@@ -7,8 +7,9 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
-import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.utils.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.google.firebase.Timestamp
 import kotlin.test.assertTrue
@@ -16,39 +17,6 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 
-/** Fake repository for past trips tests */
-class FakePastTripsRepository(private val trips: MutableList<Trip> = mutableListOf()) :
-    TripsRepository {
-  override suspend fun getAllTrips(): List<Trip> = trips
-
-  override suspend fun getTrip(tripId: String): Trip =
-      trips.find { it.uid == tripId } ?: throw Exception("Trip not found: $tripId")
-
-  override suspend fun addTrip(trip: Trip) {
-    trips.add(trip)
-  }
-
-  override suspend fun deleteTrip(tripId: String) {
-    trips.removeIf { it.uid == tripId }
-  }
-
-  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
-    trips.removeIf { it.uid == tripId }
-    trips.add(updatedTrip)
-  }
-
-  override fun getNewUid(): String = "fake-uid-${trips.size + 1}"
-
-  override suspend fun removeCollaborator(tripId: String, userId: String) {
-    // no-op
-  }
-
-  override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
-    // no-op
-  }
-}
-
-/** Tests for the past trips screen. */
 class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
@@ -74,7 +42,7 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val viewModel =
         PastTripsViewModel(
             userRepository = FakeUserRepository(),
-            tripsRepository = FakePastTripsRepository(trips.toMutableList()))
+            tripsRepository = FakeTripsRepository(trips.toMutableList()))
     composeTestRule.setContent {
       SwissTravelTheme { PastTripsScreen(pastTripsViewModel = viewModel) }
     }
@@ -157,7 +125,7 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun favoriteSelectedTrips_togglesFavoriteStatus() {
     val fakeRepo =
-        FakePastTripsRepository(
+        FakeTripsRepository(
             mutableListOf(pastTrip1.copy(isFavorite = false), pastTrip2.copy(isFavorite = false)))
     val viewModel =
         PastTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
