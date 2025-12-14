@@ -298,20 +298,19 @@ class UserRepositoryFirebase(
     val fromExisting = fromIdx.takeIf { it >= 0 }?.let { fromFriends[it] }
     val toExisting = toIdx.takeIf { it >= 0 }?.let { toFriends[it] }
 
-    // If there is already a "mutual pending" relationship, upgrade to ACCEPTED
-    val isMutualPending =
+    val isAcceptingRequest =
         (fromExisting?.status == FriendStatus.PENDING_INCOMING &&
-            toExisting?.status == FriendStatus.PENDING_OUTGOING) ||
-            (fromExisting?.status == FriendStatus.PENDING_OUTGOING &&
-                toExisting?.status == FriendStatus.PENDING_INCOMING)
-    if (isMutualPending) {
+            toExisting?.status == FriendStatus.PENDING_OUTGOING)
+
+    if (isAcceptingRequest) {
       fromFriends[fromIdx] = fromFriends[fromIdx].copy(status = FriendStatus.ACCEPTED)
-
       toFriends[toIdx] = toFriends[toIdx].copy(status = FriendStatus.ACCEPTED)
-
       return fromFriends to toFriends
     }
 
+    // If it's not a mutual acceptance, just ensure the standard pending states are set.
+    // Sender -> PENDING_OUTGOING
+    // Receiver -> PENDING_INCOMING
     ensurePendingEntry(
         friends = fromFriends, targetUid = toUid, newStatus = FriendStatus.PENDING_OUTGOING)
     ensurePendingEntry(
