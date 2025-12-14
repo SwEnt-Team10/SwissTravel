@@ -378,6 +378,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
     /* 14) */
     // Unfavorite trip
+    composeTestRule.waitForTag(DailyViewScreenTestTags.FAVORITE_BUTTON)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).performClick()
     Thread.sleep(1500)
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }

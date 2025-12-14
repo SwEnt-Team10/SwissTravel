@@ -744,7 +744,9 @@ abstract class SwissTravelTest {
     }
 
     // Wait for logout button
-    waitForTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON)
+    waitForTag(ProfileSettingsScreenTestTags.EMAIL)
+    onNodeWithTag(ProfileSettingsScreenTestTags.CONTENT)
+        .performScrollToNode(hasTestTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON))
     onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performClick()
 
     // Wait for Landing Screen
