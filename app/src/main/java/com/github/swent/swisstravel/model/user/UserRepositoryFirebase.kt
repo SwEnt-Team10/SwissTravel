@@ -7,6 +7,9 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
 
 class UserRepositoryFirebase(
@@ -43,16 +46,16 @@ class UserRepositoryFirebase(
     return try {
       val doc = db.collection("users").document(uid)[Source.SERVER].await()
       if (doc.exists()) createUserFromDoc(doc, uid) else createAndStoreNewUser(firebaseUser, uid)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       try {
         val cachedDoc = db.collection("users").document(uid)[Source.CACHE].await()
         if (cachedDoc.exists()) {
           createUserFromDoc(cachedDoc, uid)
         } else {
-          createAndStoreNewUser(firebaseUser, uid)
+          throw IllegalStateException("User data not found in cache and server unreachable.")
         }
       } catch (_: Exception) {
-        createAndStoreNewUser(firebaseUser, uid)
+        throw IllegalStateException("User data not found in cache and server unreachable.")
       }
     }
   }
@@ -91,29 +94,42 @@ class UserRepositoryFirebase(
    * @param query The search query to match against user names and emails.
    * @return A list of User objects that match the query.
    */
-  override suspend fun getUserByNameOrEmail(query: String): List<User> {
-    if (query.isBlank()) return emptyList()
+  override suspend fun getUserByNameOrEmail(query: String): List<User> = coroutineScope {
+    if (query.isBlank()) return@coroutineScope emptyList()
 
     val q = query.trim()
+    val qLower = q.lowercase()
+    val qCapitalized = qLower.replaceFirstChar { it.uppercase() }
 
-    return try {
+    try {
       val usersRef = db.collection("users")
 
-      // 1. Query by name
-      val nameQuery = usersRef.orderBy("name").startAt(q).endAt(q + "\uf8ff").get().await()
+      // 1. Query by Name (Lowercase)
+      val nameLowerDeferred = async {
+        usersRef.orderBy("name").startAt(qLower).endAt(qLower + "\uf8ff").get().await()
+      }
 
-      // 2. Query by email
-      val emailQuery = usersRef.orderBy("email").startAt(q).endAt(q + "\uf8ff").get().await()
+      // 2. Query by Name (Capitalized)
+      val nameCapDeferred = async {
+        usersRef.orderBy("name").startAt(qCapitalized).endAt(qCapitalized + "\uf8ff").get().await()
+      }
 
-      // Merge two lists into a set to eliminate duplicates
-      val docs = (nameQuery.documents + emailQuery.documents).distinctBy { it.id }
+      // 3. Query by Email (Original input)
+      val emailDeferred = async {
+        usersRef.orderBy("email").startAt(q).endAt(q + "\uf8ff").get().await()
+      }
 
-      docs.mapNotNull { doc -> createUserFromDoc(doc, doc.id) }
-    } catch (e: Exception) {
+      // Wait for all 3 to finish
+      val snapshots = awaitAll(nameLowerDeferred, nameCapDeferred, emailDeferred)
+
+      // Merge results and remove duplicates (by ID)
+      val uniqueDocs = snapshots.flatMap { it.documents }.distinctBy { it.id }
+
+      uniqueDocs.mapNotNull { doc -> createUserFromDoc(doc, doc.id) }
+    } catch (_: Exception) {
       emptyList()
     }
   }
-
   /**
    * Function to update the user's preferences in Firestore.
    *
