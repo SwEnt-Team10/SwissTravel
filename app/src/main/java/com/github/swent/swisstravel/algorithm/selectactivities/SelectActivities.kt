@@ -11,22 +11,27 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
+import kotlin.math.max
 import kotlinx.coroutines.delay
 
+// This file has been done with the help of AI
 /**
  * Time in milliseconds to wait between consecutive API calls to avoid exceeding rate limits. The
  * MySwitzerland API allows a maximum of 1 request per second (with bursts up to 10/s).
  */
 private const val API_CALL_DELAY_MS = 1000L
 
-/** Distance to consider as near a point. */
+/** Distance to consider as near a point (default radius). */
 private const val NEAR = 15000
 
 /** Number of activities done in one day */
 private const val NB_ACTIVITIES_PER_DAY = 3
 
-/** Radius in km to group locations together to avoid redundant API calls */
+/** Radius in km to group locations together in the first pass */
 private const val GROUPING_RADIUS_KM = 5.0
+
+/** Radius in km to merge clusters in the second pass */
+private const val MERGE_CLUSTERS_RADIUS_KM = 10.0
 
 /**
  * Selects activities for a trip based on user-defined settings and preferences. This class fetches
@@ -37,12 +42,31 @@ private const val GROUPING_RADIUS_KM = 5.0
  * @param activityRepository The repository to fetch activities from.
  */
 class SelectActivities(
-    private var tripSettings: TripSettings, // Changed val to var to allow updates
+    private var tripSettings: TripSettings,
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
     /**
-     * Fetches and selects activities based on the trip settings.
+     * Helper class to define a search zone.
+     * @param location The center of the search zone.
+     * @param radius The radius in meters to search around the location.
+     */
+    private data class SearchZone(val location: Location, val radius: Int)
+
+    /**
+     * Internal helper class to manage clusters during processing.
+     */
+    private data class Cluster(val points: MutableList<Location>) {
+        val center: Coordinate
+            get() {
+                if (points.isEmpty()) return Coordinate(0.0, 0.0)
+                val avgLat = points.map { it.coordinate.latitude }.average()
+                val avgLon = points.map { it.coordinate.longitude }.average()
+                return Coordinate(avgLat, avgLon)
+            }
+    }
+
+    /** Fetches and selects activities based on the trip settings.
      *
      * @param cachedActivities A mutable list to store activities that were fetched but not returned.
      * @param activityBlackList A list with all the activities that are blackListed
@@ -55,8 +79,8 @@ class SelectActivities(
         activityBlackList: List<String> = emptyList(),
         onProgress: (Float) -> Unit
     ): List<Activity> {
-        // Group destinations to avoid fetching activities for the same area multiple times
-        val allDestinations = groupNearbyLocations(buildDestinationList())
+        // Group destinations into search zones with dynamic radii
+        val searchZones = groupNearbyLocations(buildDestinationList())
         val userPreferences = tripSettings.preferences.toMutableList()
 
         // Removes preferences that are not supported by mySwitzerland.
@@ -75,60 +99,56 @@ class SelectActivities(
         // add 1 day since the last day is excluded
         val days =
             ChronoUnit.DAYS.between(
-                tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
+                tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1)
+            )
         val totalNbActivities = (NB_ACTIVITIES_PER_DAY) * days.toDouble()
-        // Calculate the total number of steps for progress reporting.
-        val totalSteps =
-            allDestinations.size // we bundle all the activities together for each locations
+        val totalSteps = searchZones.size
 
-        val numberOfActivityToFetchPerStep = ceil(totalNbActivities / totalSteps).toInt()
+        // Avoid division by zero if no zones (though unlikely with a valid trip)
+        val numberOfActivityToFetchPerStep =
+            if (totalSteps > 0) ceil(totalNbActivities / totalSteps).toInt() else 0
         var completedSteps = 0
 
-        val filteredActivities =
-            if (finalPreferences.isNotEmpty()) {
-                val allFetchedActivities = mutableListOf<Activity>()
-                for (destination in allDestinations) {
-                    val fetched =
-                        activityRepository.getActivitiesNearWithPreference(
-                            finalPreferences,
-                            destination.coordinate,
-                            NEAR,
-                            numberOfActivityToFetchPerStep,
-                            activityBlackList,
-                            cachedActivities)
-                    allFetchedActivities.addAll(fetched)
-                    // Update progress after each API call.
-                    completedSteps++
-                    onProgress(completedSteps.toFloat() / totalSteps)
-                    delay(API_CALL_DELAY_MS) // Respect API rate limit.
-                }
-                // Remove duplicate activities that may have been fetched for different preferences.
-                allFetchedActivities.distinctBy { it.location }
-            } else {
-                // If no preferences are set, fetch general activities near each destination.
-                val allFetchedActivities = mutableListOf<Activity>()
-                for (destination in allDestinations) {
-                    val fetched =
-                        activityRepository.getActivitiesNear(
-                            destination.coordinate,
-                            NEAR,
-                            numberOfActivityToFetchPerStep,
-                            activityBlackList,
-                            cachedActivities)
-                    allFetchedActivities.addAll(fetched)
-                    // Update progress after each API call.
-                    completedSteps++
-                    onProgress(completedSteps.toFloat() / totalSteps)
-                    delay(API_CALL_DELAY_MS) // Respect API rate limit.
-                }
-                allFetchedActivities.distinctBy { it.location }
-            }
+        val allFetchedActivities = mutableListOf<Activity>()
 
-        Log.d("SelectActivities", "Found ${filteredActivities.size} activities: $filteredActivities")
+        if (finalPreferences.isNotEmpty()) {
+            for (zone in searchZones) {
+                val fetched =
+                    activityRepository.getActivitiesNearWithPreference(
+                        finalPreferences,
+                        zone.location.coordinate,
+                        zone.radius, // Use dynamic radius
+                        numberOfActivityToFetchPerStep,
+                        activityBlackList,
+                        cachedActivities
+                    )
+                allFetchedActivities.addAll(fetched)
+                completedSteps++
+                onProgress(completedSteps.toFloat() / max(1, totalSteps))
+                delay(API_CALL_DELAY_MS)
+            }
+        } else {
+            for (zone in searchZones) {
+                val fetched =
+                    activityRepository.getActivitiesNear(
+                        zone.location.coordinate,
+                        zone.radius, // Use dynamic radius
+                        numberOfActivityToFetchPerStep,
+                        activityBlackList,
+                        cachedActivities
+                    )
+                allFetchedActivities.addAll(fetched)
+                completedSteps++
+                onProgress(completedSteps.toFloat() / max(1, totalSteps))
+                delay(API_CALL_DELAY_MS)
+            }
+        }
+
+        val filteredActivities = allFetchedActivities.distinctBy { it.location }
+        Log.d("SelectActivities", "Found ${filteredActivities.size} activities")
 
         // Signal that the operation is complete.
         onProgress(1f)
-
         return filteredActivities
     }
 
@@ -157,9 +177,9 @@ class SelectActivities(
         if (userPreferences.isNotEmpty()) {
             fetched =
                 activityRepository.getActivitiesNearWithPreference(
-                    userPreferences, coords, NEAR, limit, activityBlackList, cachedActivities)
-            delay(API_CALL_DELAY_MS) // Respect API rate limit.
-        } else { // No preferences, fetch any activity near the location.
+                    userPreferences, coords, radius, limit, activityBlackList, cachedActivities)
+            delay(API_CALL_DELAY_MS)
+        } else {
             fetched =
                 activityRepository.getActivitiesNear(
                     coords, radius, limit, activityBlackList, cachedActivities)
@@ -192,70 +212,109 @@ class SelectActivities(
         val allDestinations = tripSettings.destinations.toMutableList()
         tripSettings.arrivalDeparture.arrivalLocation?.let { allDestinations.add(it) }
         tripSettings.arrivalDeparture.departureLocation?.let { allDestinations.add(it) }
-        return allDestinations.distinctBy { it.coordinate } // Ensure all locations are unique.
+        return allDestinations.distinctBy { it.coordinate }
     }
 
     /**
-     * Groups locations based on density using a greedy clustering strategy.
+     * Done using AI
      *
-     * Logic:
-     * 1. Iterate through all unvisited locations.
-     * 2. For each location, treat it as a seed and count how many *other* unvisited locations are within [GROUPING_RADIUS_KM].
-     * 3. Select the "biggest" cluster (the one with the most locations).
-     * 4. Calculate the Center of Mass (average Latitude/Longitude) of this cluster.
-     * 5. Add this Center of Mass as a representative fetch location.
-     * 6. Remove all locations in this cluster from the unvisited list so they are not picked up by smaller clusters.
-     * 7. Repeat until no locations remain.
+     * Groups locations using a two-pass clustering strategy:
+     * 1. Greedy Clustering: Group points within 5km of a dense center.
+     * 2. Agglomerative Merging: Merge clusters if their centers are within 10km.
+     * 3. Dynamic Radius: Adjust fetch radius to cover merged areas.
      *
      * @param locations The list of locations to group.
-     * @return A list of representative locations (centers of mass).
+     * @return A list of SearchZone objects containing the center and radius.
      */
-    private fun groupNearbyLocations(locations: List<Location>): List<Location> {
+    private fun groupNearbyLocations(locations: List<Location>): List<SearchZone> {
+        if (locations.isEmpty()) return emptyList()
+
+        // --- Pass 1: Initial Greedy Clustering (5km) ---
         val unvisited = locations.toMutableList()
-        val groupedLocations = mutableListOf<Location>()
+        val clusters = mutableListOf<Cluster>()
 
         while (unvisited.isNotEmpty()) {
-            var bestCluster: List<Location> = emptyList()
+            var bestClusterPoints: List<Location> = emptyList()
             var bestSeed: Location? = null
 
-            // Iterate over all remaining locations to find which one forms the largest cluster
+            // Find the location that has the most neighbors within GROUPING_RADIUS_KM
             for (seed in unvisited) {
-                val cluster =
+                val neighbors =
                     unvisited.filter {
                         it.coordinate.haversineDistanceTo(seed.coordinate) <= GROUPING_RADIUS_KM
                     }
 
-                // Greedy selection: prioritize the cluster that covers the most points
-                if (cluster.size > bestCluster.size) {
-                    bestCluster = cluster
+                if (neighbors.size > bestClusterPoints.size) {
+                    bestClusterPoints = neighbors
                     bestSeed = seed
                 }
             }
 
-            // If we found a cluster (which we always should if unvisited is not empty)
-            if (bestCluster.isNotEmpty() && bestSeed != null) {
-                // Calculate Center of Mass
-                val avgLat = bestCluster.map { it.coordinate.latitude }.average()
-                val avgLon = bestCluster.map { it.coordinate.longitude }.average()
-
-                // Create the representative location using the center of mass coordinates
-                // We use the seed's name for identification, but the coordinates are the average.
-                val centerLocation =
-                    Location(
-                        coordinate = Coordinate(avgLat, avgLon),
-                        name = bestSeed.name,
-                        imageUrl = bestSeed.imageUrl)
-
-                groupedLocations.add(centerLocation)
-
-                // Remove the clustered locations so they aren't processed again
-                unvisited.removeAll(bestCluster)
+            if (bestClusterPoints.isNotEmpty() && bestSeed != null) {
+                clusters.add(Cluster(bestClusterPoints.toMutableList()))
+                unvisited.removeAll(bestClusterPoints)
             } else {
-                break
+                // Fallback (should theoretically not be reached if unvisited is not empty)
+                val orphan = unvisited.removeAt(0)
+                clusters.add(Cluster(mutableListOf(orphan)))
             }
         }
 
-        return groupedLocations
+        // --- Pass 2: Merge Overlapping Clusters ---
+        var merged = true
+        while (merged) {
+            merged = false
+            // Find closest pair of clusters
+            var bestPair: Pair<Cluster, Cluster>? = null
+            var minDist = Double.MAX_VALUE
+
+            for (i in clusters.indices) {
+                for (j in i + 1 until clusters.size) {
+                    val c1 = clusters[i]
+                    val c2 = clusters[j]
+                    val dist = c1.center.haversineDistanceTo(c2.center)
+                    if (dist <= MERGE_CLUSTERS_RADIUS_KM && dist < minDist) {
+                        minDist = dist
+                        bestPair = c1 to c2
+                    }
+                }
+            }
+
+            // Merge if valid pair found
+            if (bestPair != null) {
+                val (c1, c2) = bestPair
+                clusters.remove(c1)
+                clusters.remove(c2)
+
+                // Combine points into a new cluster
+                val newPoints = (c1.points + c2.points).toMutableList()
+                clusters.add(Cluster(newPoints))
+
+                merged = true // Continue checking for more merges
+            }
+        }
+
+        // --- Pass 3: Convert to SearchZones with Dynamic Radius ---
+        return clusters.map { cluster ->
+            val center = cluster.center
+
+            // Calculate radius: Distance to the furthest point + 15km buffer
+            // Ensure it is at least the default NEAR radius (15km)
+            val maxDistKm = cluster.points.maxOfOrNull {
+                it.coordinate.haversineDistanceTo(center)
+            } ?: 0.0
+
+            val computedRadius = ((maxDistKm * 1000) + NEAR).toInt()
+            val finalRadius = max(NEAR, computedRadius)
+
+            // Use the name of the first point or a generic name
+            val representativeName = cluster.points.firstOrNull()?.name ?: "Area"
+
+            SearchZone(
+                Location(center, representativeName, cluster.points.firstOrNull()?.imageUrl),
+                finalRadius
+            )
+        }
     }
 
     /**
