@@ -25,6 +25,9 @@ private const val NEAR = 15000
 /** Number of activities done in one day */
 private const val NB_ACTIVITIES_PER_DAY = 3
 
+/** Radius in km to group locations together to avoid redundant API calls */
+private const val GROUPING_RADIUS_KM = 5.0
+
 /**
  * Selects activities for a trip based on user-defined settings and preferences. This class fetches
  * activities from a repository for specified destinations and filters them according to the user's
@@ -38,165 +41,229 @@ class SelectActivities(
     private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
-  /**
-   * Fetches and selects activities based on the trip settings.
-   *
-   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
-   * @param activityBlackList A list with all the activities that are blackListed
-   * @param onProgress A callback function to report the progress of the selection process (from 0.0
-   *   to 1.0).
-   * @return A list of [Activity] based on the user preferences and points of interest
-   */
-  suspend fun addActivities(
-      cachedActivities: MutableList<Activity> = mutableListOf(),
-      activityBlackList: List<String> = emptyList(),
-      onProgress: (Float) -> Unit
-  ): List<Activity> {
-    val allDestinations = buildDestinationList()
-    val userPreferences = tripSettings.preferences.toMutableList()
+    /**
+     * Fetches and selects activities based on the trip settings.
+     *
+     * @param cachedActivities A mutable list to store activities that were fetched but not returned.
+     * @param activityBlackList A list with all the activities that are blackListed
+     * @param onProgress A callback function to report the progress of the selection process (from 0.0
+     * to 1.0).
+     * @return A list of [Activity] based on the user preferences and points of interest
+     */
+    suspend fun addActivities(
+        cachedActivities: MutableList<Activity> = mutableListOf(),
+        activityBlackList: List<String> = emptyList(),
+        onProgress: (Float) -> Unit
+    ): List<Activity> {
+        // Group destinations to avoid fetching activities for the same area multiple times
+        val allDestinations = groupNearbyLocations(buildDestinationList())
+        val userPreferences = tripSettings.preferences.toMutableList()
 
-    // Removes preferences that are not supported by mySwitzerland.
-    // Avoids unnecessary API calls.
-    removeUnsupportedPreferences(userPreferences)
+        // Removes preferences that are not supported by mySwitzerland.
+        // Avoids unnecessary API calls.
+        removeUnsupportedPreferences(userPreferences)
 
-    // If the user didn't set any preference that are supported by the API -> add the basic ones to
-    // make sure we still fetch some activities
-    val finalPreferences =
-        if (userPreferences.isEmpty()) {
-          PreferenceCategories.activityTypePreferences
-        } else {
-          userPreferences
-        }
+        // If the user didn't set any preference that are supported by the API -> add the basic ones to
+        // make sure we still fetch some activities
+        val finalPreferences =
+            if (userPreferences.isEmpty()) {
+                PreferenceCategories.activityTypePreferences
+            } else {
+                userPreferences
+            }
 
-    // add 1 day since the last day is excluded
-    val days =
-        ChronoUnit.DAYS.between(
-            tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
-    val totalNbActivities = (NB_ACTIVITIES_PER_DAY) * days.toDouble()
-    // Calculate the total number of steps for progress reporting.
-    val totalSteps =
-        allDestinations.size // we bundle all the activities together for each locations
+        // add 1 day since the last day is excluded
+        val days =
+            ChronoUnit.DAYS.between(
+                tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
+        val totalNbActivities = (NB_ACTIVITIES_PER_DAY) * days.toDouble()
+        // Calculate the total number of steps for progress reporting.
+        val totalSteps =
+            allDestinations.size // we bundle all the activities together for each locations
 
-    val numberOfActivityToFetchPerStep = ceil(totalNbActivities / totalSteps).toInt()
-    var completedSteps = 0
+        val numberOfActivityToFetchPerStep = ceil(totalNbActivities / totalSteps).toInt()
+        var completedSteps = 0
 
-    val filteredActivities =
-        if (finalPreferences.isNotEmpty()) {
-          val allFetchedActivities = mutableListOf<Activity>()
-          for (destination in allDestinations) {
-            val fetched =
-                activityRepository.getActivitiesNearWithPreference(
-                    finalPreferences,
-                    destination.coordinate,
-                    NEAR,
-                    numberOfActivityToFetchPerStep,
-                    activityBlackList,
-                    cachedActivities)
-            allFetchedActivities.addAll(fetched)
-            // Update progress after each API call.
-            completedSteps++
-            onProgress(completedSteps.toFloat() / totalSteps)
-            delay(API_CALL_DELAY_MS) // Respect API rate limit.
-          }
-          // Remove duplicate activities that may have been fetched for different preferences.
-          allFetchedActivities.distinctBy { it.location }
-        } else {
-          // If no preferences are set, fetch general activities near each destination.
-          val allFetchedActivities = mutableListOf<Activity>()
-          for (destination in allDestinations) {
-            val fetched =
-                activityRepository.getActivitiesNear(
-                    destination.coordinate,
-                    NEAR,
-                    numberOfActivityToFetchPerStep,
-                    activityBlackList,
-                    cachedActivities)
-            allFetchedActivities.addAll(fetched)
-            // Update progress after each API call.
-            completedSteps++
-            onProgress(completedSteps.toFloat() / totalSteps)
-            delay(API_CALL_DELAY_MS) // Respect API rate limit.
-          }
-          allFetchedActivities.distinctBy { it.location }
-        }
+        val filteredActivities =
+            if (finalPreferences.isNotEmpty()) {
+                val allFetchedActivities = mutableListOf<Activity>()
+                for (destination in allDestinations) {
+                    val fetched =
+                        activityRepository.getActivitiesNearWithPreference(
+                            finalPreferences,
+                            destination.coordinate,
+                            NEAR,
+                            numberOfActivityToFetchPerStep,
+                            activityBlackList,
+                            cachedActivities)
+                    allFetchedActivities.addAll(fetched)
+                    // Update progress after each API call.
+                    completedSteps++
+                    onProgress(completedSteps.toFloat() / totalSteps)
+                    delay(API_CALL_DELAY_MS) // Respect API rate limit.
+                }
+                // Remove duplicate activities that may have been fetched for different preferences.
+                allFetchedActivities.distinctBy { it.location }
+            } else {
+                // If no preferences are set, fetch general activities near each destination.
+                val allFetchedActivities = mutableListOf<Activity>()
+                for (destination in allDestinations) {
+                    val fetched =
+                        activityRepository.getActivitiesNear(
+                            destination.coordinate,
+                            NEAR,
+                            numberOfActivityToFetchPerStep,
+                            activityBlackList,
+                            cachedActivities)
+                    allFetchedActivities.addAll(fetched)
+                    // Update progress after each API call.
+                    completedSteps++
+                    onProgress(completedSteps.toFloat() / totalSteps)
+                    delay(API_CALL_DELAY_MS) // Respect API rate limit.
+                }
+                allFetchedActivities.distinctBy { it.location }
+            }
 
-    Log.d("SelectActivities", "Found ${filteredActivities.size} activities: $filteredActivities")
+        Log.d("SelectActivities", "Found ${filteredActivities.size} activities: $filteredActivities")
 
-    // Signal that the operation is complete.
-    onProgress(1f)
+        // Signal that the operation is complete.
+        onProgress(1f)
 
-    return filteredActivities
-  }
-
-  /**
-   * Fetches multiple activities near the given location for testing purposes. If user preferences
-   * are set, it tries to fetch an activity matching those preferences. Otherwise, it fetches any
-   * activity near the location.
-   *
-   * @param coords The [Coordinate] around which to search for an activity.
-   * @param radius The search radius in meters. Defaults to [NEAR].
-   * @param limit The number of activities to fetch
-   * @param activityBlackList A list of activity names to exclude from the search.
-   * @param cachedActivities A mutable list to store activities that were fetched but not returned.
-   * @return A single [Activity] found near the specified location or null.
-   */
-  suspend fun getActivitiesNearWithPreferences(
-      coords: Coordinate,
-      radius: Int = NEAR,
-      limit: Int,
-      activityBlackList: List<String> = emptyList(),
-      cachedActivities: MutableList<Activity> = mutableListOf()
-  ): List<Activity> {
-    val userPreferences = tripSettings.preferences.toMutableList()
-    removeUnsupportedPreferences(userPreferences)
-    var fetched: List<Activity>?
-    if (userPreferences.isNotEmpty()) {
-      fetched =
-          activityRepository.getActivitiesNearWithPreference(
-              userPreferences, coords, NEAR, limit, activityBlackList, cachedActivities)
-      delay(API_CALL_DELAY_MS) // Respect API rate limit.
-    } else { // No preferences, fetch any activity near the location.
-      fetched =
-          activityRepository.getActivitiesNear(
-              coords, radius, limit, activityBlackList, cachedActivities)
+        return filteredActivities
     }
-    return fetched
-  }
 
-  /**
-   * Removes preferences that are not supported by the activity repository to avoid unnecessary API
-   * calls.
-   *
-   * @param preferences The mutable list of preferences to filter.
-   */
-  private fun removeUnsupportedPreferences(preferences: MutableList<Preference>) {
-    preferences.remove(Preference.QUICK)
-    preferences.remove(Preference.SLOW_PACE)
-    preferences.remove(Preference.EARLY_BIRD)
-    preferences.remove(Preference.NIGHT_OWL)
-    preferences.remove(Preference.INTERMEDIATE_STOPS)
-    preferences.remove(Preference.PUBLIC_TRANSPORT)
-  }
+    /**
+     * Fetches multiple activities near the given location for testing purposes. If user preferences
+     * are set, it tries to fetch an activity matching those preferences. Otherwise, it fetches any
+     * activity near the location.
+     *
+     * @param coords The [Coordinate] around which to search for an activity.
+     * @param radius The search radius in meters. Defaults to [NEAR].
+     * @param limit The number of activities to fetch
+     * @param activityBlackList A list of activity names to exclude from the search.
+     * @param cachedActivities A mutable list to store activities that were fetched but not returned.
+     * @return A single [Activity] found near the specified location or null.
+     */
+    suspend fun getActivitiesNearWithPreferences(
+        coords: Coordinate,
+        radius: Int = NEAR,
+        limit: Int,
+        activityBlackList: List<String> = emptyList(),
+        cachedActivities: MutableList<Activity> = mutableListOf()
+    ): List<Activity> {
+        val userPreferences = tripSettings.preferences.toMutableList()
+        removeUnsupportedPreferences(userPreferences)
+        var fetched: List<Activity>?
+        if (userPreferences.isNotEmpty()) {
+            fetched =
+                activityRepository.getActivitiesNearWithPreference(
+                    userPreferences, coords, NEAR, limit, activityBlackList, cachedActivities)
+            delay(API_CALL_DELAY_MS) // Respect API rate limit.
+        } else { // No preferences, fetch any activity near the location.
+            fetched =
+                activityRepository.getActivitiesNear(
+                    coords, radius, limit, activityBlackList, cachedActivities)
+        }
+        return fetched
+    }
 
-  /**
-   * Creates a comprehensive list of destinations for which to search activities. This includes
-   * user-selected stops, as well as the trip's start and end points.
-   *
-   * @return A list of [Location] objects.
-   */
-  private fun buildDestinationList(): List<Location> {
-    val allDestinations = tripSettings.destinations.toMutableList()
-    tripSettings.arrivalDeparture.arrivalLocation?.let { allDestinations.add(it) }
-    tripSettings.arrivalDeparture.departureLocation?.let { allDestinations.add(it) }
-    return allDestinations.distinctBy { it.coordinate } // Ensure all locations are unique.
-  }
+    /**
+     * Removes preferences that are not supported by the activity repository to avoid unnecessary API
+     * calls.
+     *
+     * @param preferences The mutable list of preferences to filter.
+     */
+    private fun removeUnsupportedPreferences(preferences: MutableList<Preference>) {
+        preferences.remove(Preference.QUICK)
+        preferences.remove(Preference.SLOW_PACE)
+        preferences.remove(Preference.EARLY_BIRD)
+        preferences.remove(Preference.NIGHT_OWL)
+        preferences.remove(Preference.INTERMEDIATE_STOPS)
+        preferences.remove(Preference.PUBLIC_TRANSPORT)
+    }
 
-  /**
-   * Updates the preferences used for selecting activities.
-   *
-   * @param newPreferences The new list of preferences to apply.
-   */
-  fun updatePreferences(newPreferences: List<Preference>) {
-    tripSettings = tripSettings.copy(preferences = newPreferences)
-  }
+    /**
+     * Creates a comprehensive list of destinations for which to search activities. This includes
+     * user-selected stops, as well as the trip's start and end points.
+     *
+     * @return A list of [Location] objects.
+     */
+    private fun buildDestinationList(): List<Location> {
+        val allDestinations = tripSettings.destinations.toMutableList()
+        tripSettings.arrivalDeparture.arrivalLocation?.let { allDestinations.add(it) }
+        tripSettings.arrivalDeparture.departureLocation?.let { allDestinations.add(it) }
+        return allDestinations.distinctBy { it.coordinate } // Ensure all locations are unique.
+    }
+
+    /**
+     * Groups locations based on density using a greedy clustering strategy.
+     *
+     * Logic:
+     * 1. Iterate through all unvisited locations.
+     * 2. For each location, treat it as a seed and count how many *other* unvisited locations are within [GROUPING_RADIUS_KM].
+     * 3. Select the "biggest" cluster (the one with the most locations).
+     * 4. Calculate the Center of Mass (average Latitude/Longitude) of this cluster.
+     * 5. Add this Center of Mass as a representative fetch location.
+     * 6. Remove all locations in this cluster from the unvisited list so they are not picked up by smaller clusters.
+     * 7. Repeat until no locations remain.
+     *
+     * @param locations The list of locations to group.
+     * @return A list of representative locations (centers of mass).
+     */
+    private fun groupNearbyLocations(locations: List<Location>): List<Location> {
+        val unvisited = locations.toMutableList()
+        val groupedLocations = mutableListOf<Location>()
+
+        while (unvisited.isNotEmpty()) {
+            var bestCluster: List<Location> = emptyList()
+            var bestSeed: Location? = null
+
+            // Iterate over all remaining locations to find which one forms the largest cluster
+            for (seed in unvisited) {
+                val cluster =
+                    unvisited.filter {
+                        it.coordinate.haversineDistanceTo(seed.coordinate) <= GROUPING_RADIUS_KM
+                    }
+
+                // Greedy selection: prioritize the cluster that covers the most points
+                if (cluster.size > bestCluster.size) {
+                    bestCluster = cluster
+                    bestSeed = seed
+                }
+            }
+
+            // If we found a cluster (which we always should if unvisited is not empty)
+            if (bestCluster.isNotEmpty() && bestSeed != null) {
+                // Calculate Center of Mass
+                val avgLat = bestCluster.map { it.coordinate.latitude }.average()
+                val avgLon = bestCluster.map { it.coordinate.longitude }.average()
+
+                // Create the representative location using the center of mass coordinates
+                // We use the seed's name for identification, but the coordinates are the average.
+                val centerLocation =
+                    Location(
+                        coordinate = Coordinate(avgLat, avgLon),
+                        name = bestSeed.name,
+                        imageUrl = bestSeed.imageUrl)
+
+                groupedLocations.add(centerLocation)
+
+                // Remove the clustered locations so they aren't processed again
+                unvisited.removeAll(bestCluster)
+            } else {
+                break
+            }
+        }
+
+        return groupedLocations
+    }
+
+    /**
+     * Updates the preferences used for selecting activities.
+     *
+     * @param newPreferences The new list of preferences to apply.
+     */
+    fun updatePreferences(newPreferences: List<Preference>) {
+        tripSettings = tripSettings.copy(preferences = newPreferences)
+    }
 }
