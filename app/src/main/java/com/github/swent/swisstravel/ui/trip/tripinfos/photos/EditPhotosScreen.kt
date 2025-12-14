@@ -103,9 +103,8 @@ fun EditPhotosScreen(
   Scaffold(
       modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD),
       topBar = { EditTopBar(onCancel = { onCancel() }) },
-      bottomBar = {
-        EditBottomBar(onRemove = { photosViewModel.removePhotos(tripId) }, uiState = uiState)
-      }) { pd ->
+      bottomBar = { EditBottomBar(onRemove = { showDeleteDialog = true }, uiState = uiState) }) { pd
+        ->
 
         // Replaced LazyVerticalGrid with Shared PhotoGrid
         PhotoGrid(
