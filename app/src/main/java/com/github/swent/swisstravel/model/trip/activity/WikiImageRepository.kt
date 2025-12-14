@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip.activity
 
+import android.util.Log
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -110,6 +111,7 @@ class WikiImageRepository(private val api: WikiImageApi) {
    *
    * @param lat Latitude
    * @param lon Longitude
+   * @param maxImages Maximum number of images to return
    * @return List of URLs of the images
    */
   suspend fun getImagesByLocation(lat: Double, lon: Double, maxImages: Int = 3): List<String> {
@@ -119,7 +121,7 @@ class WikiImageRepository(private val api: WikiImageApi) {
 
       pages.mapNotNull { it.thumbnail?.source }
     } catch (e: Exception) {
-      e.printStackTrace()
+      Log.e("WikiImageRepository", "Error getting images by location", e)
       emptyList()
     }
   }
