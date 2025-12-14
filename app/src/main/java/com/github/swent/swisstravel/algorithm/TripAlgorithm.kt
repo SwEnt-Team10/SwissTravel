@@ -203,6 +203,7 @@ data class EnhancedTripProfile(
 open class TripAlgorithm(
     private val activitySelector: SelectActivities,
     private val routeOptimizer: ProgressiveRouteOptimizer,
+    private val context: Context,
     private val scheduleParams: ScheduleParams = ScheduleParams(),
     private val progression: Progression =
         Progression(
@@ -291,7 +292,7 @@ open class TripAlgorithm(
           ProgressiveRouteOptimizer(
               cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
 
-      return TripAlgorithm(activitySelector, optimizer)
+      return TripAlgorithm(activitySelector, optimizer, context)
     }
   }
 
@@ -362,7 +363,6 @@ open class TripAlgorithm(
    * @param tripSettings The settings for the trip.
    * @param tripProfile The profile of the trip.
    * @param isRandomTrip Whether the trip is random or not.
-   * @param context The context of the app.
    * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @param onProgress A callback function to report the progress of the computation (from 0.0 to
    *   1.0).
@@ -372,7 +372,6 @@ open class TripAlgorithm(
       tripSettings: TripSettings,
       tripProfile: TripProfile,
       isRandomTrip: Boolean = false,
-      context: Context,
       cachedActivities: MutableList<Activity> = mutableListOf(),
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
@@ -483,7 +482,6 @@ open class TripAlgorithm(
               enhancedTripProfile = enhancedTripProfile,
               intermediateActivities = intermediateActivities,
               isRandom = isRandomTrip,
-              context = context,
               cachedActivities = cachedActivities) { progress ->
                 onProgress(
                     progression.selectActivities +
@@ -944,7 +942,6 @@ open class TripAlgorithm(
       enhancedTripProfile: EnhancedTripProfile,
       intermediateActivities: List<Activity> = emptyList(),
       isRandom: Boolean = false,
-      context: Context,
       cachedActivities: MutableList<Activity>,
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
@@ -969,7 +966,6 @@ open class TripAlgorithm(
             allActivities,
             enhancedTripProfile,
             intermediateActivities,
-            context,
             cachedActivities) {
               onProgress(
                   finalSchedulingProgression.selectNewActivities +
@@ -1096,7 +1092,6 @@ open class TripAlgorithm(
    * @param enhancedTripProfile The enhanced trip profile.
    * @param intermediateActivities Optional list of [Activity] that must remain in the schedule
    *   during rescheduling.
-   * @param context Android [Context] used to access resources for creating new activities.
    * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @param onProgress Lambda to receive progress updates as a [Float] between 0 and 1.
    * @return A [List] of [TripElement] representing the fully scheduled trip with all added
@@ -1107,7 +1102,6 @@ open class TripAlgorithm(
       activityList: List<Activity>,
       enhancedTripProfile: EnhancedTripProfile,
       intermediateActivities: List<Activity>,
-      context: Context,
       cachedActivities: MutableList<Activity>,
       onProgress: (Float) -> Unit = {},
   ): List<TripElement> {
@@ -1269,13 +1263,13 @@ open class TripAlgorithm(
       when {
         // Only city
         addCityWorks && hasUrbanPreference -> {
-          addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+          addCityWorks = addCityActivity(enhancedTripProfile, allActivities)
         }
 
         // Any of the two since the user doesn't have any preferences
         addGrandTourWorks && addCityWorks -> {
           if (rand.nextBoolean()) {
-            addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+            addCityWorks = addCityActivity(enhancedTripProfile, allActivities)
           } else {
             val result =
                 addGrandTourActivities(
@@ -1283,14 +1277,13 @@ open class TripAlgorithm(
                     allActivities,
                     visitedLocations,
                     stayAtCenterRetry,
-                    context,
                     cachedActivities)
             // If we were at the center, we can still retry without the center
             addGrandTourWorks = result.added || stayAtCenterRetry
             // If we successfully added a new grand tour activity, try to add a city activity (it
             // costs nothing to compute)
             if (result.added) {
-              addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+              addCityWorks = addCityActivity(enhancedTripProfile, allActivities)
             }
             stayAtCenterRetry = result.shouldRetryCenter
           }
@@ -1299,7 +1292,7 @@ open class TripAlgorithm(
         // Fallback: try to add a city activity first since it doesn't cost anything
         else -> {
           if (addCityWorks) {
-            addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+            addCityWorks = addCityActivity(enhancedTripProfile, allActivities)
           } else {
             val result =
                 addGrandTourActivities(
@@ -1307,13 +1300,12 @@ open class TripAlgorithm(
                     allActivities,
                     visitedLocations,
                     stayAtCenterRetry,
-                    context,
                     cachedActivities)
             addGrandTourWorks = result.added || stayAtCenterRetry
             // If we successfully added a new grand tour activity, try to add a city activity (it
             // costs nothing to compute)
             if (result.added) {
-              addCityWorks = addCityActivity(enhancedTripProfile, allActivities, context)
+              addCityWorks = addCityActivity(enhancedTripProfile, allActivities)
               addPreferences = true
             }
             stayAtCenterRetry = result.shouldRetryCenter
@@ -1343,21 +1335,6 @@ open class TripAlgorithm(
                       Preference.PUBLIC_TRANSPORT))
                       TransportMode.TRAIN
                   else TransportMode.CAR) {}
-
-      // Maybe we added a location that is pretty far, so try to addInBetweenActivities if the
-      // preference intermediate stops was set
-      //      if
-      // (enhancedTripProfile.tripProfile.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
-      //        addInBetweenActivities(
-      //            optimizedRoute = optimizedRoute,
-      //            activities = allActivities,
-      //            mode =
-      //                if (enhancedTripProfile.tripProfile.preferences.contains(
-      //                    Preference.PUBLIC_TRANSPORT))
-      //                    TransportMode.TRAIN
-      //                else TransportMode.CAR,
-      //            cachedActivities = cachedActivities)
-      //      }
 
       schedule =
           attemptRescheduleIfNeeded(
@@ -1401,14 +1378,12 @@ open class TripAlgorithm(
    *
    * @param enhancedTripProfile The enhanced trip profile containing preferred locations.
    * @param activityList The mutable list of activities where the new city activity may be added.
-   * @param context The Android context used to fetch string resources.
    * @return `true` if a city activity was added (either directly or via fallback), `false`
    *   otherwise.
    */
   private fun addCityActivity(
       enhancedTripProfile: EnhancedTripProfile,
       activityList: MutableList<Activity>,
-      context: Context
   ): Boolean {
     // Shuffle user preferred locations for randomness
     val shuffled = enhancedTripProfile.newPreferredLocations.shuffled()
@@ -1475,7 +1450,6 @@ open class TripAlgorithm(
    * - `true`: dynamic reference along start-to-end line.
    * - `false`: closest city to either start or end of trip.
    *
-   * @param context The Android context, used to load Grand Tour locations from resources.
    * @param cachedActivities A list of all the activities that were pulled but we didn't use
    * @return `true` if at least one activity was successfully added, `false` otherwise.
    */
@@ -1484,7 +1458,6 @@ open class TripAlgorithm(
       activityList: MutableList<Activity>,
       visitedList: MutableList<Location>,
       stayAtCenter: Boolean,
-      context: Context,
       cachedActivities: MutableList<Activity>
   ): AddGrandTourResult {
     // 1. Load Grand Tour cities

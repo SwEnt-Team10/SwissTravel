@@ -235,7 +235,6 @@ class EditTripScreenViewModel(
               algorithm.computeTrip(
                   tripSettings = tempTripSettings,
                   tripProfile = newTripProfile,
-                  context = context,
                   cachedActivities = cachedActivities) { progress ->
                     _uiState.update { it.copy(savingProgress = progress) }
                   }

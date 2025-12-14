@@ -283,7 +283,6 @@ open class TripSettingsViewModel(
                 tripSettings = tripSettings.value,
                 tripProfile = tripProfile,
                 isRandomTrip = isRandomTrip.value,
-                context = context,
                 cachedActivities = cachedActivities) { progress ->
                   _loadingProgress.value = progress
                 }
