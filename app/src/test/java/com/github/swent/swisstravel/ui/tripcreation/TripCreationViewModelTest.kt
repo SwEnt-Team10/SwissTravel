@@ -12,9 +12,12 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -45,6 +48,12 @@ class TripCreationViewModelTest {
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
+
+    mockkStatic(FirebaseAuth::class)
+    mockkStatic(FirebaseFirestore::class)
+    every { FirebaseAuth.getInstance() } returns mockk(relaxed = true)
+    every { FirebaseFirestore.getInstance() } returns mockk(relaxed = true)
+
     fakeRepo = FakeTripsRepository()
     fakeUserRepo = FakeUserRepository()
     fakeActivityRepo = FakeActivityRepository()
