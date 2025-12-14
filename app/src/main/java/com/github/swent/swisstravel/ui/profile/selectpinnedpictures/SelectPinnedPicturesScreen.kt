@@ -15,9 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.PhotoGrid
 
 object SelectPinnedPicturesScreenTestTags {
@@ -51,9 +53,11 @@ fun SelectPinnedPicturesScreen(
 ) {
   val context = LocalContext.current
   val uiState by selectPinnedPicturesViewModel.uiState.collectAsState()
+  val selectedImageCount = uiState.selectedIndices.size
 
   // Local state to toggle between "View/Add" mode and "Edit/Remove" mode
   var isEditMode by remember { mutableStateOf(false) }
+  var showDeleteDialog by remember { mutableStateOf(false) }
 
   // AI helped for the picker
   val pickerLauncher =
@@ -75,6 +79,19 @@ fun SelectPinnedPicturesScreen(
           Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
           selectPinnedPicturesViewModel.clearErrorMsg()
         }
+  }
+
+  if (showDeleteDialog) {
+    DeleteDialog(
+        onConfirm = {
+          selectPinnedPicturesViewModel.removeSelectedImages()
+          isEditMode = false
+          showDeleteDialog = false
+        },
+        onCancel = { showDeleteDialog = false },
+        title =
+            pluralStringResource(
+                R.plurals.confirm_delete_title_images, selectedImageCount, selectedImageCount))
   }
 
   Scaffold(
@@ -134,10 +151,7 @@ fun SelectPinnedPicturesScreen(
                 // Delete button
                 Button(
                     modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.REMOVE_BUTTON),
-                    onClick = {
-                      selectPinnedPicturesViewModel.removeSelectedImages()
-                      isEditMode = false
-                    },
+                    onClick = { showDeleteDialog = true },
                     enabled = uiState.selectedIndices.isNotEmpty()) {
                       Text(text = stringResource(R.string.remove_button))
                     }

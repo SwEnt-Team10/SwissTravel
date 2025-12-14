@@ -19,12 +19,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.ErrorScreen
 import com.github.swent.swisstravel.ui.composable.PhotoGrid
 
@@ -57,6 +62,10 @@ fun EditPhotosScreen(
   // Start by loading the photos from the repository
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   val uiState by photosViewModel.uiState.collectAsState()
+  val selectedImageCount = uiState.uriSelected.size
+
+  // State for the confirmation dialog
+  var showDeleteDialog by remember { mutableStateOf(false) }
 
   // AI gives this part
   LaunchedEffect(uiState.toastMessage) {
@@ -64,6 +73,18 @@ fun EditPhotosScreen(
       Toast.makeText(context, uiState.toastMessage, Toast.LENGTH_SHORT).show()
       photosViewModel.clearToastMessage()
     }
+  }
+
+  if (showDeleteDialog) {
+    DeleteDialog(
+        onConfirm = {
+          photosViewModel.removePhotos(tripId)
+          showDeleteDialog = false
+        },
+        onCancel = { showDeleteDialog = false },
+        title =
+            pluralStringResource(
+                R.plurals.confirm_delete_title_images, selectedImageCount, selectedImageCount))
   }
 
   // AI gave the structure with the when
