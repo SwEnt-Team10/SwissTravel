@@ -11,7 +11,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import com.github.swent.swisstravel.R
 
-object DeleteTripDialogTestTags {
+object DeleteDialogTestTags {
   const val CONFIRM_DELETE_BUTTON = "confirmDelete"
   const val CANCEL_DELETE_BUTTON = "cancelDelete"
 }
@@ -38,7 +38,7 @@ fun DeleteDialog(
       confirmButton = {
         TextButton(
             onClick = onConfirm,
-            modifier = Modifier.testTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)) {
+            modifier = Modifier.testTag(DeleteDialogTestTags.CONFIRM_DELETE_BUTTON)) {
               Text(stringResource(R.string.delete))
             }
       },
@@ -48,7 +48,7 @@ fun DeleteDialog(
             colors =
                 ButtonDefaults.textButtonColors(
                     contentColor = MaterialTheme.colorScheme.onBackground),
-            modifier = Modifier.testTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON)) {
+            modifier = Modifier.testTag(DeleteDialogTestTags.CANCEL_DELETE_BUTTON)) {
               Text(stringResource(R.string.cancel))
             }
       },
