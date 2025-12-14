@@ -50,8 +50,9 @@ private class FakeUserRepository : UserRepository {
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
-          emptyList(),
-          emptyList())
+          pinnedTripsUids = emptyList(),
+          pinnedPicturesUids = emptyList(),
+          favoriteTripsUids = emptyList())
 
   val usersByUid: MutableMap<String, User> = mutableMapOf()
 
@@ -122,6 +123,14 @@ private class FakeUserRepository : UserRepository {
   ) {
     // no-op in test
   }
+
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+    // no-op in test
+  }
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+    // no-op in test
+  }
 }
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -147,8 +156,9 @@ class FriendsViewModelTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     val friendPending =
         User(
@@ -160,8 +170,9 @@ class FriendsViewModelTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     fakeRepo.usersByUid[friendAccepted.uid] = friendAccepted
     fakeRepo.usersByUid[friendPending.uid] = friendPending
@@ -290,8 +301,9 @@ class FriendsViewModelTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     fakeRepo.usersByUid[otherUser.uid] = otherUser
     fakeRepo.searchResults = listOf(fakeRepo.currentUser, otherUser)
@@ -322,8 +334,9 @@ class FriendsViewModelTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
     fakeRepo.usersByUid[target.uid] = target
 
     // Act
@@ -367,8 +380,9 @@ class FriendsViewModelTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
     fakeRepo.usersByUid[pendingUid] = pendingUser
 
     viewModel.refreshFriends()

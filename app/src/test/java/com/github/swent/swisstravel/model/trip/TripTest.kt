@@ -93,7 +93,6 @@ class TripTest {
           routeSegments = listRouteSegments,
           activities = listActivities,
           tripProfile = tripProfile,
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())

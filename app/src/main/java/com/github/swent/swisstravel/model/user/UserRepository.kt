@@ -83,4 +83,20 @@ interface UserRepository {
       pinnedTripsUids: List<String>? = null,
       pinnedPicturesUids: List<String>? = null
   )
+
+  /**
+   * Adds a trip to the user's favorite list.
+   *
+   * @param uid The UID of the user.
+   * @param tripUid The UID of the trip to add.
+   */
+  suspend fun addFavoriteTrip(uid: String, tripUid: String)
+
+  /**
+   * Removes a trip from the user's favorite list.
+   *
+   * @param uid The UID of the user.
+   * @param tripUid The UID of the trip to remove.
+   */
+  suspend fun removeFavoriteTrip(uid: String, tripUid: String)
 }

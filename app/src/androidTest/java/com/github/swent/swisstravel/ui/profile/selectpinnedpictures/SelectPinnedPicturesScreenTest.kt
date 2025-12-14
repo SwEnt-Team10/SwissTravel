@@ -92,7 +92,8 @@ class SelectPinnedPicturesScreenTest {
             preferences = emptyList(),
             friends = emptyList(),
             pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = listOf(imgUid1, imgUid2))
+            pinnedPicturesUids = listOf(imgUid1, imgUid2),
+            favoriteTripsUids = emptyList())
     FirebaseEmulator.firestore.collection("users").document(testUid).set(user).await()
   }
 

@@ -34,7 +34,8 @@ class FakeUserRepository : UserRepository {
         friends = emptyList(),
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
-        pinnedPicturesUids = emptyList())
+        pinnedPicturesUids = emptyList(),
+        favoriteTripsUids = emptyList())
   }
 
   override suspend fun getUserByUid(uid: String): User? {
@@ -75,6 +76,14 @@ class FakeUserRepository : UserRepository {
     // no-op in tests
   }
 
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
   override suspend fun updateUserStats(uid: String, stats: UserStats) {
     // no-op in tests
   }
@@ -93,7 +102,8 @@ val emptyUserRepo =
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = emptyList())
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
       }
 
       override suspend fun getUserByUid(uid: String): User? {
@@ -134,6 +144,14 @@ val emptyUserRepo =
           pinnedPicturesUids: List<String>?
       ) {
         /** no-op for tests* */
+      }
+
+      override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+        // No-op
+      }
+
+      override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+        // No-op
       }
     }
 
