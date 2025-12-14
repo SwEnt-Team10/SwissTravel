@@ -12,8 +12,6 @@ import androidx.compose.ui.test.swipeDown
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
@@ -28,7 +26,6 @@ import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -105,10 +102,21 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
       // 1. Get Bob's User object
       val bobUser = userRepo.getUserByNameOrEmail(bobEmail).first()
 
-      // 2. Create a dummy trip owned by Bob
-      val trip = createDummyTrip(ownerId = bobUser.uid, tripName = "bobTripName")
+      val loc = Location(coordinate = Coordinate(0.0, 0.0), name = "Test Location", imageUrl = null)
+      // 2. Create dummy trip owned by Bob
+      val trip =
+          createTestTrip(
+              uid = "trip_${System.currentTimeMillis()}",
+              name = "bobTripName",
+              ownerId = bobUser.uid,
+              locations = listOf(loc),
+              departureLocation = loc,
+              arrivalLocation = loc,
+              preferredLocations = listOf(loc),
+              preferences = listOf(Preference.SCENIC_VIEWS),
+              adults = 1,
+              children = 0)
       tripsRepo.addTrip(trip)
-
       // 3. Pin the trip to Bob's profile
       userRepo.updateUser(uid = bobUser.uid, pinnedTripsUids = listOf(trip.uid))
     }
@@ -204,37 +212,5 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
-  }
-
-  /** Creates a valid dummy trip object for testing. */
-  private fun createDummyTrip(ownerId: String, tripName: String): Trip {
-    val loc = Location(coordinate = Coordinate(0.0, 0.0), name = "Test Location", imageUrl = null)
-
-    val now = Timestamp.now()
-
-    val profile =
-        TripProfile(
-            adults = 1,
-            children = 0,
-            departureLocation = loc,
-            arrivalLocation = loc,
-            startDate = now,
-            endDate = now,
-            preferredLocations = listOf(loc),
-            preferences = listOf(Preference.SCENIC_VIEWS))
-
-    return Trip(
-        uid = "trip_${System.currentTimeMillis()}",
-        name = tripName,
-        ownerId = ownerId,
-        locations = listOf(loc),
-        routeSegments = emptyList(),
-        activities = emptyList(),
-        tripProfile = profile,
-        isFavorite = false,
-        isCurrentTrip = false,
-        uriLocation = emptyMap(),
-        collaboratorsId = emptyList(),
-        isRandom = false)
   }
 }

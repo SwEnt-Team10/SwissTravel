@@ -7,6 +7,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.utils.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue

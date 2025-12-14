@@ -20,8 +20,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
@@ -278,7 +276,39 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
           .fetchSemanticsNodes()
           .isNotEmpty()
     }
-    var tripE2E = createSampleTrip()
+
+    // Recreate the trip object locally just for data verification to match the "createSampleTrip"
+    // logic
+    val startTimestamp = Timestamp.now()
+    val endTimestamp = Timestamp(startTimestamp.seconds + 24 * 60 * 60, 0)
+    val arrivalLocation =
+        Location(
+            Coordinate(46.5191, 6.5668),
+            "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne",
+            null)
+    val departureLocation =
+        Location(
+            Coordinate(46.2095, 6.1432), "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève", null)
+    val zermattLocation =
+        Location(Coordinate(46.0207, 7.7491), "Zermatt", "https://example.com/zermatt1.jpg")
+    val locations = listOf(departureLocation, zermattLocation, arrivalLocation)
+
+    var tripE2E =
+        createTestTrip(
+            uid = "testuid",
+            name = "trip-E2E-1",
+            ownerId = currentUser.uid,
+            locations = locations,
+            adults = 2,
+            children = 2,
+            departureLocation = departureLocation,
+            arrivalLocation = arrivalLocation,
+            startDate = startTimestamp,
+            endDate = endTimestamp,
+            preferredLocations = locations,
+            preferences =
+                listOf(Preference.GROUP, Preference.WHEELCHAIR_ACCESSIBLE, Preference.EARLY_BIRD))
+
     composeTestRule.checkTripSummaryScreenIsDisplayed(
         expectedAdults = tripE2E.tripProfile.adults,
         expectedChildren = tripE2E.tripProfile.children,
@@ -287,6 +317,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
         expectedPreferences = tripE2E.tripProfile.preferences,
         startDate = tripE2E.tripProfile.startDate,
         endDate = tripE2E.tripProfile.endDate)
+
     // Write the name
     composeTestRule
         .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
@@ -313,7 +344,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
               .isNotEmpty()
         }
     composeTestRule.checkMyTripsScreenIsDisplayed()
-    val trips = runBlocking { repository.getAllTrips() } // Make sure that edit updated the UI too
+    val trips = runBlocking { repository.getAllTrips() }
     assertEquals(1, trips.size)
     val trip = trips.elementAt(0)
     tripE2E = trip
@@ -444,62 +475,5 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
   @After
   override fun tearDown() {
     super.tearDown()
-  }
-
-  /**
-   * Method that returns a hardcoded trip that should correspond to the one created in the test
-   * (Helped by AI)
-   */
-  private fun createSampleTrip(): Trip {
-    val startTimestamp = Timestamp.now() // today
-    val endTimestamp = Timestamp(startTimestamp.seconds + 24 * 60 * 60, 0) // tomorrow
-
-    // Locations
-    val arrivalLocation =
-        Location(
-            coordinate = Coordinate(46.5191, 6.5668),
-            name =
-                "École Polytechnique Fédérale de Lausanne (EPFL), Route Cantonale, 1015 Lausanne",
-            imageUrl = null)
-
-    val departureLocation =
-        Location(
-            coordinate = Coordinate(46.2095, 6.1432),
-            name = "Café de Paris, Rue du Mont-Blanc 26, 1201 Genève",
-            imageUrl = null)
-
-    val zermattLocation =
-        Location(
-            coordinate = Coordinate(46.0207, 7.7491),
-            name = "Zermatt",
-            imageUrl = "https://example.com/zermatt1.jpg")
-
-    val locations = listOf(departureLocation, zermattLocation, arrivalLocation)
-
-    // Trip profile
-    val tripProfile =
-        TripProfile(
-            adults = 2,
-            children = 2,
-            departureLocation = departureLocation,
-            arrivalLocation = arrivalLocation,
-            startDate = startTimestamp,
-            endDate = endTimestamp,
-            preferredLocations = locations,
-            preferences =
-                listOf(Preference.GROUP, Preference.WHEELCHAIR_ACCESSIBLE, Preference.EARLY_BIRD))
-    // Create the trip
-    return Trip(
-        uid = "testuid",
-        name = "trip-E2E-1",
-        ownerId = currentUser.uid,
-        locations = locations,
-        routeSegments = emptyList(), // empty for now
-        activities = emptyList(), // no activities yet
-        tripProfile = tripProfile,
-        isFavorite = false,
-        isCurrentTrip = false,
-        collaboratorsId = emptyList(),
-        uriLocation = emptyMap())
   }
 }

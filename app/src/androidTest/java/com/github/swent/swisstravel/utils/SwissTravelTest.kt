@@ -2,34 +2,21 @@ package com.github.swent.swisstravel.utils
 
 import android.content.Context
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.isDisplayed
+import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onAllNodesWithText
-import androidx.compose.ui.test.onFirst
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performScrollToNode
-import androidx.compose.ui.test.performTextClearance
-import androidx.compose.ui.test.performTextInput
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.github.swent.swisstravel.HttpClientProvider
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
+import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.displayStringRes
@@ -114,7 +101,7 @@ abstract class SwissTravelTest {
     }
 
   init {
-    assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running thetests" }
+    assert(FirebaseEmulator.isRunning) { "FirebaseEmulator must be running when running the tests" }
   }
 
   @Before
@@ -138,43 +125,69 @@ abstract class SwissTravelTest {
   /** Two examples trips for testing purposes */
   private val now = Timestamp.now()
 
+  // Helper to create trips with default values, reducing code duplication
+  fun createTestTrip(
+      uid: String = "1",
+      name: String = "Test Trip",
+      ownerId: String = "ownerX",
+      locations: List<Location> = emptyList(),
+      routeSegments: List<RouteSegment> = emptyList(),
+      activities: List<Activity> = emptyList(),
+      startDate: Timestamp = now,
+      endDate: Timestamp = now,
+      preferredLocations: List<Location> = emptyList(),
+      preferences: List<Preference> = emptyList(),
+      adults: Int = 1,
+      children: Int = 0,
+      departureLocation: Location? = null,
+      arrivalLocation: Location? = null,
+      isFavorite: Boolean = false,
+      isCurrentTrip: Boolean = false,
+      uriLocation: Map<android.net.Uri, Location> = emptyMap(),
+      collaboratorsId: List<String> = emptyList(),
+      isRandom: Boolean = false
+  ): Trip {
+    val profile =
+        TripProfile(
+            startDate = startDate,
+            endDate = endDate,
+            preferredLocations = preferredLocations,
+            preferences = preferences,
+            adults = adults,
+            children = children,
+            departureLocation = departureLocation,
+            arrivalLocation = arrivalLocation)
+    return Trip(
+        uid = uid,
+        name = name,
+        ownerId = ownerId,
+        locations = locations,
+        routeSegments = routeSegments,
+        activities = activities,
+        tripProfile = profile,
+        isFavorite = isFavorite,
+        isCurrentTrip = isCurrentTrip,
+        uriLocation = uriLocation,
+        collaboratorsId = collaboratorsId,
+        isRandom = isRandom)
+  }
+
+  // Standard test trips created using the helper
   val trip1 =
-      Trip(
-          "1",
-          "Current Trip",
-          "ownerX",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(
-              startDate = Timestamp(now.seconds - 3600, 0),
-              endDate = Timestamp(now.seconds + 3600, 0),
-              preferredLocations = emptyList(),
-              preferences = emptyList()),
-          isFavorite = false,
-          isCurrentTrip = false,
-          uriLocation = emptyMap(),
-          collaboratorsId = emptyList())
+      createTestTrip(
+          uid = "1",
+          name = "Current Trip",
+          startDate = Timestamp(now.seconds - 3600, 0),
+          endDate = Timestamp(now.seconds + 3600, 0))
 
   val dummyLocation = Location(Coordinate(0.0, 0.0), "Test Location")
 
   val trip2 =
-      Trip(
-          "2",
-          "Upcoming Trip",
-          "ownerX",
-          emptyList(),
-          emptyList(),
-          emptyList(),
-          TripProfile(
-              startDate = Timestamp(now.seconds + 7200, 0),
-              endDate = Timestamp(now.seconds + 10800, 0),
-              preferredLocations = emptyList(),
-              preferences = emptyList()),
-          isFavorite = false,
-          isCurrentTrip = false,
-          uriLocation = emptyMap(),
-          collaboratorsId = emptyList())
+      createTestTrip(
+          uid = "2",
+          name = "Upcoming Trip",
+          startDate = Timestamp(now.seconds + 7200, 0),
+          endDate = Timestamp(now.seconds + 10800, 0))
 
   val tripList = listOf(trip1, trip2)
 
