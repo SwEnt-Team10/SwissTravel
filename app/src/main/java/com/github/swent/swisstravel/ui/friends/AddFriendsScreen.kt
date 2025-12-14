@@ -133,12 +133,17 @@ private fun AddFriendResultsSection(
                     Modifier.testTag(AddFriendsScreenTestTags.addFriendResultItemTag(user.uid))) {
                   FriendElement(
                       userToDisplay = user,
-                      onClick = {
-                        onClickUser(user)
-                        Toast.makeText(
-                                context, "Friend request sent to ${user.name}", Toast.LENGTH_SHORT)
-                            .show()
-                      })
+                      state = FriendElementState(isAddMode = true),
+                      actions =
+                          FriendElementActions(
+                              onClick = {
+                                onClickUser(user)
+                                Toast.makeText(
+                                        context,
+                                        "Friend request sent to ${user.name}",
+                                        Toast.LENGTH_SHORT)
+                                    .show()
+                              }))
                 }
           }
         }
