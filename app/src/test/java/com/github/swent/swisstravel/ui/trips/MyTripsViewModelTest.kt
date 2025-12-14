@@ -19,9 +19,10 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class MyTripsViewModelTest {
 
-  @get:Rule val mainDispatcherRule = MainDispatcherRule()
-
   private val testDispatcher = StandardTestDispatcher()
+
+  @get:Rule val mainDispatcherRule = MainDispatcherRule(testDispatcher)
+
   private lateinit var repository: TripsRepository
   private lateinit var userRepository: UserRepository
   private lateinit var viewModel: MyTripsViewModel
@@ -271,104 +272,6 @@ class MyTripsViewModelTest {
     assert(viewModel.uiState.value.errorMsg?.contains("Failed to delete trips") == true)
   }
 
-  private fun createTrips(): List<Trip> {
-    val now = Timestamp.now()
-    return listOf(
-        createTestTrip("1", "Alpha", startDate = Timestamp(now.seconds + 1000, 0)),
-        createTestTrip("2", "Beta", startDate = Timestamp(now.seconds + 2000, 0)),
-        createTestTrip("3", "Gamma", startDate = Timestamp(now.seconds + 1500, 0)))
-  }
-
-  @Test
-  fun `sort START_DATE_ASC`() = runTest {
-    val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
-
-    viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    viewModel.updateSortType(TripSortType.START_DATE_ASC)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    val sorted = viewModel.uiState.value.tripsList
-    assertEquals(listOf(trips[0], trips[2], trips[1]), sorted)
-  }
-
-  @Test
-  fun `sort START_DATE_DESC`() = runTest {
-    val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
-
-    viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    viewModel.updateSortType(TripSortType.START_DATE_DESC)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    val sorted = viewModel.uiState.value.tripsList
-    assertEquals(listOf(trips[1], trips[2], trips[0]), sorted)
-  }
-
-  @Test
-  fun `sort END_DATE_ASC`() = runTest {
-    val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
-
-    viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    viewModel.updateSortType(TripSortType.END_DATE_ASC)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    val sorted = viewModel.uiState.value.tripsList
-    assertEquals(listOf(trips[0], trips[2], trips[1]), sorted)
-  }
-
-  @Test
-  fun `sort END_DATE_DESC`() = runTest {
-    val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
-
-    viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    viewModel.updateSortType(TripSortType.END_DATE_DESC)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    val sorted = viewModel.uiState.value.tripsList
-    assertEquals(listOf(trips[1], trips[2], trips[0]), sorted)
-  }
-
-  @Test
-  fun `sort NAME_ASC`() = runTest {
-    val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
-
-    viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    viewModel.updateSortType(TripSortType.NAME_ASC)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    val sorted = viewModel.uiState.value.tripsList
-    assertEquals(listOf(trips[0], trips[1], trips[2]), sorted) // Alpha, Beta, Gamma
-  }
-
-  @Test
-  fun `sort NAME_DESC`() = runTest {
-    val trips = createTrips()
-    coEvery { repository.getAllTrips() } returns trips
-
-    viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    viewModel.updateSortType(TripSortType.NAME_DESC)
-    testDispatcher.scheduler.advanceUntilIdle()
-
-    val sorted = viewModel.uiState.value.tripsList
-    assertEquals(listOf(trips[2], trips[1], trips[0]), sorted) // Gamma, Beta, Alpha
-  }
-
   @Test
   fun `toggleFavoriteForSelectedTrips toggles favorites correctly`() = runTest {
     val trip = createTestTrip(uid = "1", isFavorite = false)
@@ -456,4 +359,119 @@ class MyTripsViewModelTest {
     assertEquals("John Doe", collaborators?.get(0)?.displayName)
     assertEquals("http://example.com/pic.jpg", collaborators?.get(0)?.avatarUrl)
   }
+
+  // --- SORTING TESTS ---
+  // Helper for sort tests
+  private fun createSortTrips(): List<Trip> {
+    val now = Timestamp.now()
+    return listOf(
+        createTestTrip(
+            "1",
+            "Alpha",
+            startDate = Timestamp(now.seconds + 1000, 0),
+            endDate = Timestamp(now.seconds + 2000, 0)),
+        createTestTrip(
+            "2",
+            "Beta",
+            startDate = Timestamp(now.seconds + 2000, 0),
+            endDate = Timestamp(now.seconds + 3000, 0)),
+        createTestTrip(
+            "3",
+            "Gamma",
+            startDate = Timestamp(now.seconds + 1500, 0),
+            endDate = Timestamp(now.seconds + 2500, 0)))
+  }
+
+  @Test
+  fun `sort START_DATE_ASC`() =
+      runTest(testDispatcher) {
+        val trips = createSortTrips()
+        coEvery { repository.getAllTrips() } returns trips
+        viewModel = MyTripsViewModel(userRepository, repository)
+        advanceUntilIdle()
+
+        viewModel.updateSortType(TripSortType.START_DATE_ASC)
+        advanceUntilIdle() // This now works because testDispatcher is shared
+
+        val sorted = viewModel.uiState.value.tripsList
+        assertEquals(listOf(trips[0], trips[2], trips[1]), sorted)
+      }
+
+  @Test
+  fun `sort START_DATE_DESC`() =
+      runTest(testDispatcher) {
+        val trips = createSortTrips()
+        coEvery { repository.getAllTrips() } returns trips
+        viewModel = MyTripsViewModel(userRepository, repository)
+        advanceUntilIdle()
+
+        viewModel.updateSortType(TripSortType.START_DATE_DESC)
+        advanceUntilIdle()
+
+        val sorted = viewModel.uiState.value.tripsList
+        assertEquals(listOf(trips[1], trips[2], trips[0]), sorted)
+      }
+
+  @Test
+  fun `sort END_DATE_ASC`() =
+      runTest(testDispatcher) {
+        val trips = createSortTrips()
+        coEvery { repository.getAllTrips() } returns trips
+
+        viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.updateSortType(TripSortType.END_DATE_ASC)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val sorted = viewModel.uiState.value.tripsList
+        assertEquals(listOf(trips[0], trips[2], trips[1]), sorted)
+      }
+
+  @Test
+  fun `sort END_DATE_DESC`() =
+      runTest(testDispatcher) {
+        val trips = createSortTrips()
+        coEvery { repository.getAllTrips() } returns trips
+
+        viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.updateSortType(TripSortType.END_DATE_DESC)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val sorted = viewModel.uiState.value.tripsList
+        assertEquals(listOf(trips[1], trips[2], trips[0]), sorted)
+      }
+
+  @Test
+  fun `sort NAME_ASC`() =
+      runTest(testDispatcher) {
+        val trips = createSortTrips()
+        coEvery { repository.getAllTrips() } returns trips
+        viewModel = MyTripsViewModel(userRepository, repository)
+        advanceUntilIdle()
+
+        viewModel.updateSortType(TripSortType.NAME_ASC)
+        advanceUntilIdle()
+
+        val sorted = viewModel.uiState.value.tripsList
+        assertEquals(listOf(trips[0], trips[1], trips[2]), sorted) // Alpha, Beta, Gamma
+      }
+
+  @Test
+  fun `sort NAME_DESC`() =
+      runTest(testDispatcher) {
+        val trips = createSortTrips()
+        coEvery { repository.getAllTrips() } returns trips
+
+        viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = repository)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        viewModel.updateSortType(TripSortType.NAME_DESC)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        val sorted = viewModel.uiState.value.tripsList
+        assertEquals(listOf(trips[2], trips[1], trips[0]), sorted) // Gamma, Beta, Alpha
+      }
 }
