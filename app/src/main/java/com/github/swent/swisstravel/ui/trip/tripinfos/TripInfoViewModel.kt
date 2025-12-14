@@ -171,18 +171,18 @@ class TripInfoViewModel(
    * persistence fails. *Debounce features were made with the help of AI.*
    */
   private suspend fun persistFavoriteChange(newFavorite: Boolean) {
-    val current = _uiState.value
+    val currentUiState = _uiState.value
     try {
-      val trip = tripsRepository.getTrip(current.uid)
+      val trip = tripsRepository.getTrip(currentUiState.uid)
       val currentUser = userRepository.getCurrentUser()
 
       // Avoid redundant write if already correct
       if (currentUser.favoriteTripsUids.contains(trip.uid) == newFavorite) return
 
       if (newFavorite) {
-        userRepository.addFavoriteTrip(currentUser.uid, current.uid)
+        userRepository.addFavoriteTrip(currentUser.uid, currentUiState.uid)
       } else {
-        userRepository.removeFavoriteTrip(currentUser.uid, current.uid)
+        userRepository.removeFavoriteTrip(currentUser.uid, currentUiState.uid)
       }
 
       Log.d("TripInfoViewModel", "Favorite state updated: $newFavorite")
@@ -190,7 +190,7 @@ class TripInfoViewModel(
       Log.e("TripInfoViewModel", "Failed to persist favorite", e)
       setErrorMsg("Failed to update favorite: ${e.message}")
       // Rollback to last known correct state
-      _uiState.value = current.copy(isFavorite = !newFavorite)
+      _uiState.value = currentUiState.copy(isFavorite = !newFavorite)
     }
   }
 
