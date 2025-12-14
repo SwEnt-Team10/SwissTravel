@@ -7,6 +7,8 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 
+// Made with the help of AI.
+
 /**
  * A reusable Fake TripsRepository for UI tests. Allows seeding with a list of trips and supports
  * basic CRUD operations in memory.

@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip
 
+import com.github.swent.swisstravel.createTestTrip
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.google.firebase.Timestamp
 import org.junit.Assert.assertEquals
@@ -77,26 +78,15 @@ class TripTest {
           TripElement.TripActivity(listActivities[2]) // Lucerne activity
           )
 
-  private val tripProfile =
-      TripProfile(
-          startDate = Timestamp(1734000000, 0),
-          endDate = Timestamp(1734032400, 0),
-          preferredLocations = emptyList(),
-          preferences = emptyList())
-
   private val trip =
-      Trip(
+      createTestTrip(
           uid = "testUid",
           name = "testName",
           ownerId = "testOwner",
-          locations = emptyList(),
           routeSegments = listRouteSegments,
           activities = listActivities,
-          tripProfile = tripProfile,
-          isFavorite = false,
-          isCurrentTrip = false,
-          uriLocation = emptyMap(),
-          collaboratorsId = emptyList())
+          startDate = Timestamp(1734000000, 0),
+          endDate = Timestamp(1734032400, 0))
 
   @Test
   fun testGetAllTripElementsOrdered() {
