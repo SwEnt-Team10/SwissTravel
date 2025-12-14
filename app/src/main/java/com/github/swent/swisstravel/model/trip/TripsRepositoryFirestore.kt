@@ -348,8 +348,7 @@ class TripsRepositoryFirestore(
         "likedActivities" to trip.likedActivities,
         "activitiesQueue" to ArrayDeque(trip.activitiesQueue.toList()),
         "allFetchedForSwipe" to trip.allFetchedForSwipe,
-        "cachedActivities" to trip.cachedActivities
-        )
+        "cachedActivities" to trip.cachedActivities)
   }
   /**
    * Converts a Firestore map into a Map<Uri, Location>.
