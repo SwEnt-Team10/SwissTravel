@@ -32,18 +32,18 @@ import kotlin.random.Random
 
 // Most of this file was done AI
 
-const val DISTANCE_PER_STOP_KM = 90.0
-const val RADIUS_NEW_ACTIVITY_M = 15000
-const val RADIUS_EXTENSION_M = 12500
-const val INVALID_DURATION = -1.0
-const val RESCHEDULE_PENALTY_PER_ACTIVITY_SEC = (0.25 * 3600) // 15 minutes
-const val EPSILON = 1e-6f
-// This is an arbitrary value to make the loop in addInBetweenActivities not run infinitely
-const val MAX_INBETWEEN_ACTIVITIES_SEGMENTS = 4
-const val MAX_INBETWEEN_ACTIVITES_BY_SEGMENT = 3
-const val RADIUS_CACHED_ACTIVITIES_KM = 20
-const val MAX_BATCH_ADDED_TIME_HOURS = 6.0
-const val BATCH_ADD_PENALTY_MINUTES = 30
+//const val DISTANCE_PER_STOP_KM = 90.0
+//const val RADIUS_NEW_ACTIVITY_M = 15000
+//const val RADIUS_EXTENSION_M = 12500
+//const val INVALID_DURATION = -1.0
+//const val RESCHEDULE_PENALTY_PER_ACTIVITY_SEC = (0.25 * 3600) // 15 minutes
+//const val EPSILON = 1e-6f
+//// This is an arbitrary value to make the loop in addInBetweenActivities not run infinitely
+//const val MAX_INBETWEEN_ACTIVITIES_SEGMENTS = 4
+//const val MAX_INBETWEEN_ACTIVITES_BY_SEGMENT = 3
+//const val RADIUS_CACHED_ACTIVITIES_KM = 20
+//const val MAX_BATCH_ADDED_TIME_HOURS = 6.0
+//const val BATCH_ADD_PENALTY_MINUTES = 30
 
 /**
  * Data class representing the progression weights for each step of the trip computation.
