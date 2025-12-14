@@ -209,6 +209,99 @@ class WikiImageRepositoryTest {
     assertTrue(urls.isEmpty())
   }
 
+  // ---------- getImagesByLocation tests ----- Made using AI//
+
+  @Test
+  fun `getImagesByLocation calls API with correct geo parameters`() = runBlocking {
+    val fakeApi = FakeWikiImageApi()
+    val repo = WikiImageRepository(fakeApi)
+
+    // Call the new method
+    repo.getImagesByLocation(46.5, 6.6, maxImages = 5)
+
+    val params = fakeApi.lastSearchImageParams
+    assertNotNull(params)
+    assertEquals("query", params?.get("action"))
+    assertEquals("geosearch", params?.get("generator")) // Key assertion
+    assertEquals("46.5|6.6", params?.get("ggscoord")) // Key assertion
+    assertEquals("5", params?.get("ggslimit"))
+    assertEquals("thumbnail", params?.get("piprop"))
+  }
+
+  @Test
+  fun `getImagesByLocation returns list of valid image URLs`() = runBlocking {
+    val fakeApi = FakeWikiImageApi()
+    fakeApi.nextSearchImagesResponse =
+        WikiResponse(
+            query =
+                WikiQuery(
+                    pages =
+                        listOf(
+                            WikiPage(
+                                pageid = 101L,
+                                title = "Morges Castle",
+                                thumbnail =
+                                    WikiThumbnail(
+                                        source = "https://example.com/morges.jpg",
+                                        width = 800,
+                                        height = 600)),
+                            WikiPage(
+                                pageid = 102L,
+                                title = "Lake Geneva",
+                                thumbnail =
+                                    WikiThumbnail(
+                                        source = "https://example.com/lake.jpg",
+                                        width = 800,
+                                        height = 600)))))
+
+    val repo = WikiImageRepository(fakeApi)
+
+    val urls = repo.getImagesByLocation(46.5, 6.6)
+
+    assertEquals(2, urls.size)
+    assertTrue(urls.contains("https://example.com/morges.jpg"))
+    assertTrue(urls.contains("https://example.com/lake.jpg"))
+  }
+
+  @Test
+  fun `getImagesByLocation filters out results without thumbnails`() = runBlocking {
+    val fakeApi = FakeWikiImageApi()
+    fakeApi.nextSearchImagesResponse =
+        WikiResponse(
+            query =
+                WikiQuery(
+                    pages =
+                        listOf(
+                            WikiPage(
+                                pageid = 101L,
+                                title = "Morges Castle",
+                                thumbnail =
+                                    WikiThumbnail(
+                                        source = "https://example.com/valid.jpg",
+                                        width = 800,
+                                        height = 600)),
+                            WikiPage(
+                                pageid = 103L,
+                                title = "Random Page",
+                                thumbnail = null) // Should be ignored
+                            )))
+
+    val repo = WikiImageRepository(fakeApi)
+
+    val urls = repo.getImagesByLocation(46.5, 6.6)
+
+    assertEquals(1, urls.size)
+    assertEquals("https://example.com/valid.jpg", urls[0])
+  }
+
+  @Test
+  fun `getImagesByLocation returns empty list on exception`() = runBlocking {
+    val fakeApi = FakeWikiImageApi().apply { throwOnSearchImages = true }
+    val repo = WikiImageRepository(fakeApi)
+
+    val urls = repo.getImagesByLocation(46.5, 6.6)
+    assertTrue(urls.isEmpty())
+  }
   // ---------- Data class + Moshi parsing tests ----------
 
   @Test

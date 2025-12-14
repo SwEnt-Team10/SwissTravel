@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.trip.activity
 
+import android.util.Log
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import okhttp3.OkHttpClient
@@ -46,6 +47,28 @@ class WikiImageRepository(private val api: WikiImageApi) {
           "origin" to "*")
 
   /**
+   * Search parameters for finding pages near a specific coordinate.
+   *
+   * @param lat Latitude
+   * @param lon Longitude
+   * @param limit Maximum number of results
+   * @param radius Search radius in meters
+   */
+  private fun geoSearchParams(lat: Double, lon: Double, limit: Int, radius: Int = 5000) =
+      mapOf(
+          "action" to "query",
+          "generator" to "geosearch",
+          "ggscoord" to "$lat|$lon",
+          "ggsradius" to radius.toString(),
+          "ggslimit" to limit.toString(),
+          "prop" to "pageimages",
+          "piprop" to "thumbnail",
+          "pithumbsize" to "800",
+          "format" to "json",
+          "formatversion" to "2",
+          "origin" to "*")
+
+  /**
    * Function to get the image for a given name.
    *
    * @param name Name
@@ -82,6 +105,26 @@ class WikiImageRepository(private val api: WikiImageApi) {
     }
   }
 
+  /**
+   * Function to get images for a specific geographical location. This is much more accurate for
+   * activities like "A route for..." which are located in a specific town.
+   *
+   * @param lat Latitude
+   * @param lon Longitude
+   * @param maxImages Maximum number of images to return
+   * @return List of URLs of the images
+   */
+  suspend fun getImagesByLocation(lat: Double, lon: Double, maxImages: Int = 3): List<String> {
+    return try {
+      val resp = api.searchImages(geoSearchParams(lat, lon, maxImages))
+      val pages = resp.query?.pages ?: emptyList()
+
+      pages.mapNotNull { it.thumbnail?.source }
+    } catch (e: Exception) {
+      Log.e("WikiImageRepository", "Error getting images by location", e)
+      emptyList()
+    }
+  }
   /** Retrofit interface for the WikiImageApi. */
   companion object {
     fun default(): WikiImageRepository {
