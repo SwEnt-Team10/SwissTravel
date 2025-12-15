@@ -4,15 +4,19 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.github.swent.swisstravel.model.user.Friend
+import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -38,31 +42,36 @@ class AddFriendScreenTest {
             emptyList())
 
     var searchResults: List<User> = emptyList()
+    // The pool of all users available to "search" or "get by uid"
+    val allUsers = mutableMapOf<String, User>()
+
+    // Explicit search results override for testing convenience
+    var explicitSearchResults: List<User>? = null
 
     val sendFriendRequestCalls = mutableListOf<Pair<String, String>>()
 
     override suspend fun getCurrentUser(): User = currentUser
 
     override suspend fun getUserByUid(uid: String): User? =
-        (searchResults + currentUser).find { it.uid == uid }
+        if (uid == currentUser.uid) currentUser else allUsers[uid]
 
-    override suspend fun getUserByNameOrEmail(query: String): List<User> = searchResults
-
-    override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
-
-    override suspend fun updateUserStats(uid: String, stats: UserStats) {}
+    override suspend fun getUserByNameOrEmail(query: String): List<User> {
+      return explicitSearchResults
+          ?: allUsers.values.filter { it.name.contains(query, ignoreCase = true) }
+    }
 
     override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
       sendFriendRequestCalls += fromUid to toUid
     }
 
-    override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-      // not used here
-    }
+    // Unused methods
+    override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
 
-    override suspend fun removeFriend(uid: String, friendUid: String) {
-      // not used here
-    }
+    override suspend fun updateUserStats(uid: String, stats: UserStats) {}
+
+    override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
+
+    override suspend fun removeFriend(uid: String, friendUid: String) {}
 
     override suspend fun updateUser(
         uid: String,
@@ -72,10 +81,21 @@ class AddFriendScreenTest {
         preferences: List<Preference>?,
         pinnedTripsUids: List<String>?,
         pinnedPicturesUids: List<String>?
-    ) {
-      // no op in test
-    }
+    ) {}
   }
+
+  private fun createUser(uid: String, name: String) =
+      User(
+          uid = uid,
+          name = name,
+          biography = "",
+          email = "$name@test.com",
+          profilePicUrl = "",
+          preferences = emptyList(),
+          friends = emptyList(),
+          stats = UserStats(),
+          emptyList(),
+          emptyList())
 
   @Test
   fun typingSearch_showsResults_andClickSendsFriendRequestAndCallsBack() {
@@ -131,5 +151,95 @@ class AddFriendScreenTest {
 
     // Verify onBack was called after clicking
     assertEquals(true, backCalled)
+  }
+
+  @Test
+  fun clickingNewUser_sendsFriendRequest() {
+    val fakeRepo = FakeUserRepository()
+    val targetUser = createUser("newTarget", "Alice Target")
+    fakeRepo.allUsers[targetUser.uid] = targetUser
+
+    val viewModel = FriendsViewModel(fakeRepo)
+
+    composeRule.setContent { SwissTravelTheme { AddFriendScreen(friendsViewModel = viewModel) } }
+
+    // Search for Alice
+    composeRule
+        .onNodeWithTag(AddFriendsScreenTestTags.ADD_FRIEND_SEARCH_FIELD)
+        .performTextInput("Alice")
+
+    // Click Alice
+    composeRule.waitUntil(timeoutMillis = 1000) {
+      fakeRepo.sendFriendRequestCalls.isEmpty() // Just wait a bit for compose to settle if needed
+      true
+    }
+
+    composeRule.onNodeWithText("Alice Target").performClick()
+
+    // Assert request sent
+    assertEquals(1, fakeRepo.sendFriendRequestCalls.size)
+    assertEquals("newTarget", fakeRepo.sendFriendRequestCalls[0].second)
+  }
+
+  @Test
+  fun clickingAlreadyFriend_showsToastAndDoesNotSendRequest() {
+    val fakeRepo = FakeUserRepository()
+    val friendUser = createUser("friend1", "Best Friend")
+
+    // 1. Setup Repo: "friend1" is already ACCEPTED in currentUser's friend list
+    fakeRepo.allUsers[friendUser.uid] = friendUser
+    fakeRepo.currentUser =
+        fakeRepo.currentUser.copy(
+            friends = listOf(Friend(uid = friendUser.uid, status = FriendStatus.ACCEPTED)))
+
+    val viewModel = FriendsViewModel(fakeRepo)
+    // Force refresh to ensure ViewModel knows about the friend status
+    viewModel.refreshFriends()
+
+    // Wait for VM to update state (simple way in UI test)
+    composeRule.waitForIdle()
+
+    composeRule.setContent { SwissTravelTheme { AddFriendScreen(friendsViewModel = viewModel) } }
+
+    // 2. Search for the friend
+    composeRule
+        .onNodeWithTag(AddFriendsScreenTestTags.ADD_FRIEND_SEARCH_FIELD)
+        .performTextInput("Best")
+
+    // 3. Click the friend
+    composeRule.onNodeWithText("Best Friend").assertIsDisplayed().performClick()
+
+    // 4. Assert NO request was sent (because we are already friends)
+    assertTrue(
+        fakeRepo.sendFriendRequestCalls.isEmpty(), "Should not send request to existing friend")
+  }
+
+  @Test
+  fun clickingPendingRequest_showsToastAndDoesNotSendRequest() {
+    val fakeRepo = FakeUserRepository()
+    val pendingUser = createUser("pending1", "Pending Guy")
+
+    // 1. Setup Repo: "pending1" is PENDING_OUTGOING in currentUser's friend list
+    fakeRepo.allUsers[pendingUser.uid] = pendingUser
+    fakeRepo.currentUser =
+        fakeRepo.currentUser.copy(
+            friends = listOf(Friend(uid = pendingUser.uid, status = FriendStatus.PENDING_OUTGOING)))
+
+    val viewModel = FriendsViewModel(fakeRepo)
+    viewModel.refreshFriends()
+    composeRule.waitForIdle()
+
+    composeRule.setContent { SwissTravelTheme { AddFriendScreen(friendsViewModel = viewModel) } }
+
+    // 2. Search for the pending user
+    composeRule
+        .onNodeWithTag(AddFriendsScreenTestTags.ADD_FRIEND_SEARCH_FIELD)
+        .performTextInput("Pending")
+
+    // 3. Click the pending user
+    composeRule.onNodeWithText("Pending Guy").assertIsDisplayed().performClick()
+
+    // 4. Assert NO request was sent (because request is already pending)
+    assertTrue(fakeRepo.sendFriendRequestCalls.isEmpty(), "Should not resend pending request")
   }
 }
