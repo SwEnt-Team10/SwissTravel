@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.WikiImageRepository
@@ -127,7 +128,8 @@ fun ActivityInfos(
                   },
                   label = { Text(stringResource(R.string.estimated_time, durationText)) })
 
-              ActivityImagesSection(activityName = activity.getName(), wikiRepo = wikiRepo)
+              ActivityImagesSection(
+                  activityCoordinates = activity.location.coordinate, wikiRepo = wikiRepo)
 
               Spacer(Modifier.height(dimensionResource(R.dimen.activity_info_images_padding)))
 
@@ -163,13 +165,13 @@ fun ActivityInfos(
 /**
  * Activity images section
  *
- * @param activityName The activity name
+ * @param activityCoordinates The coordinates of the activity
  * @param wikiRepo The wiki image repository
  * @param modifier Modifier to apply
  */
 @Composable
 private fun ActivityImagesSection(
-    activityName: String,
+    activityCoordinates: Coordinate,
     wikiRepo: WikiImageRepository,
     modifier: Modifier = Modifier
 ) {
@@ -178,11 +180,11 @@ private fun ActivityImagesSection(
   var activityUrls by remember { mutableStateOf<List<String>>(emptyList()) }
   var isLoading by remember { mutableStateOf(false) }
 
-  LaunchedEffect(activityName) {
+  LaunchedEffect(activityCoordinates) {
     isLoading = true
     activityUrls =
         try {
-          wikiRepo.getImagesByName(activityName)
+          wikiRepo.getImagesByLocation(activityCoordinates.latitude, activityCoordinates.longitude)
         } catch (_: Exception) {
           emptyList()
         } finally {
