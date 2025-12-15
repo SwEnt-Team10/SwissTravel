@@ -90,6 +90,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(dummyTrip.uid) } returns dummyTrip
     // We expect addFavoriteTrip to be called
     coEvery { userRepository.addFavoriteTrip(fakeUser.uid, dummyTrip.uid) } just Runs
+    coEvery { tripsRepository.editTrip(any(), any()) } returns Unit
 
     // Load trip
     viewModel.loadTripInfo(dummyTrip.uid)
@@ -115,6 +116,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(dummyTrip.uid) } returns dummyTrip
     // We expect removeFavoriteTrip to be called
     coEvery { userRepository.removeFavoriteTrip(fakeUser.uid, dummyTrip.uid) } just Runs
+    coEvery { tripsRepository.editTrip(any(), any()) } returns Unit
 
     // Load trip
     viewModel.loadTripInfo(dummyTrip.uid)
