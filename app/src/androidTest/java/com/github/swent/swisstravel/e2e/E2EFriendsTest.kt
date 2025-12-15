@@ -197,9 +197,11 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).assertExists()
 
     // Verify Pinned Trips Title is visible
+    composeTestRule.waitForTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE)
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsDisplayed()
 
     // --- STEP 10: Alice sees Bob's pinned trip. ---
+    composeTestRule.waitForText("bobTripName")
     composeTestRule.onNodeWithText("bobTripName").assertIsDisplayed().performClick()
 
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)

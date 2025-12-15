@@ -788,4 +788,8 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.waitForTag(tag: String, timeout: Long = E2E_WAIT_TIMEOUT) {
     waitUntil(timeout) { onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
   }
+
+  fun ComposeTestRule.waitForText(text: String, timeout: Long = E2E_WAIT_TIMEOUT) {
+    waitUntil(timeout) { onAllNodesWithText(text).fetchSemanticsNodes().isNotEmpty() }
+  }
 }

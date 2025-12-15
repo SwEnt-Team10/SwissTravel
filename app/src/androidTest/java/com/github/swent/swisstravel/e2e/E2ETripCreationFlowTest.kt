@@ -472,6 +472,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Check that the Trip is actually deleted (backend and frontend)
     val emptyTrips = runBlocking { repository.getAllTrips() }
     assertEquals(0, emptyTrips.size)
+    composeTestRule.waitForIdle()
     composeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips()
   }
 
