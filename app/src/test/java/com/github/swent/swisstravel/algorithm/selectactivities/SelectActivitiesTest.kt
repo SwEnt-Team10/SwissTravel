@@ -130,7 +130,8 @@ class SelectActivitiesTest {
     val progressUpdates = mutableListOf<Float>()
 
     coEvery {
-      mockActivityRepository.getActivitiesNearWithPreference(any(), any(), any(), any(), any(), any())
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), any(), any(), any(), any(), any())
     } returns listOf(activityLausanne)
 
     val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
@@ -146,13 +147,16 @@ class SelectActivitiesTest {
     tripSettings = tripSettings.copy(preferences = emptyList())
 
     coEvery {
-      mockActivityRepository.getActivitiesNearWithPreference(any(), geneva.coordinate, any(), any(), any(), any())
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), geneva.coordinate, any(), any(), any(), any())
     } returns listOf(activityGeneva)
     coEvery {
-      mockActivityRepository.getActivitiesNearWithPreference(any(), lausanne.coordinate, any(), any(), any(), any())
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), lausanne.coordinate, any(), any(), any(), any())
     } returns listOf(activityLausanne)
     coEvery {
-      mockActivityRepository.getActivitiesNearWithPreference(any(), zurich.coordinate, any(), any(), any(), any())
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), zurich.coordinate, any(), any(), any(), any())
     } returns listOf(activityZurich)
 
     val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
@@ -182,15 +186,14 @@ class SelectActivitiesTest {
         } returns listOf(activityLausanne)
 
         // When
-        val result = selectActivities.getActivitiesNearWithPreferences(lausanne.coordinate, limit = 1)
+        val result =
+            selectActivities.getActivitiesNearWithPreferences(lausanne.coordinate, limit = 1)
 
         // Then
         assertTrue(activityLausanne.location.sameLocation(result.first().location))
 
         // Ensure getActivitiesNear() was NOT called
-        coVerify(exactly = 0) {
-          mockActivityRepository.getActivitiesNear(any(), any(), any())
-        }
+        coVerify(exactly = 0) { mockActivityRepository.getActivitiesNear(any(), any(), any()) }
 
         // Ensure preference-based call WAS made
         coVerify(exactly = 1) {
@@ -216,15 +219,14 @@ class SelectActivitiesTest {
         } returns listOf(activityLausanne)
 
         // When
-        val result = selectActivities.getActivitiesNearWithPreferences(lausanne.coordinate, limit = 1)
+        val result =
+            selectActivities.getActivitiesNearWithPreferences(lausanne.coordinate, limit = 1)
 
         // Then
         assertTrue(activityLausanne.location.sameLocation(result.first().location))
 
         // Ensure getActivitiesNear() was NOT called
-        coVerify(exactly = 0) {
-          mockActivityRepository.getActivitiesNear(any(), any(), any())
-        }
+        coVerify(exactly = 0) { mockActivityRepository.getActivitiesNear(any(), any(), any()) }
 
         // Ensure preference-based call WAS made
         coVerify(exactly = 1) {
@@ -262,9 +264,8 @@ class SelectActivitiesTest {
   }
 
   @Test
-  fun `getActivitiesNearWithPreferences fuses locations depending on their distance`() = runBlocking {
-
-  }
+  fun `getActivitiesNearWithPreferences fuses locations depending on their distance`() =
+      runBlocking {}
 
   @Test
   fun `addActivities injects default preferences when none are provided`() = runBlocking {
@@ -274,12 +275,8 @@ class SelectActivitiesTest {
 
     coEvery {
       mockActivityRepository.getActivitiesNearWithPreference(
-        match { it.containsAll(defaultPrefs) },
-        any(), any(), any(), any(), any())
-    } returns
-            listOf(activityLausanne) andThen
-            listOf(activityGeneva) andThen
-            listOf(activityZurich)
+          match { it.containsAll(defaultPrefs) }, any(), any(), any(), any(), any())
+    } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
 
     val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
@@ -291,7 +288,7 @@ class SelectActivitiesTest {
 
     coVerify(atLeast = 1) {
       mockActivityRepository.getActivitiesNearWithPreference(
-        any(), any(), any(), any(), any(), any())
+          any(), any(), any(), any(), any(), any())
     }
   }
 }

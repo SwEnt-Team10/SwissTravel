@@ -350,7 +350,7 @@ open class TripAlgorithm(
           if (endLocation.haversineDistanceTo(startLocation) >= 1 ||
               selectedActivities
                   .isNotEmpty()) { // If they are at least 1 km apart or there are activities we can
-                                   // use optimize otherwise we build a fake one that is valid
+            // use optimize otherwise we build a fake one that is valid
             try {
               routeOptimizer.optimize(
                   start = startLocation,
@@ -410,25 +410,22 @@ open class TripAlgorithm(
                         computeProgression.scheduleTrip * progress)
               }
 
-          if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) >
-              0) {
-            completeSchedule(schedule, enhancedTripProfile, activities)
-          } else if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) <
-              0) {
-              scheduleRemove(
-                  enhancedTripProfile = enhancedTripProfile,
-                  originalOptimizedRoute = optimizedRoute,
-                  activities = activities
-              ) { progress ->
-                  onProgress(
-                      computeProgression.selectActivities +
-                              computeProgression.optimizeRoute +
-                              computeProgression.fetchInBetweenActivities +
-                              computeProgression.scheduleTrip +
-                              computeProgression.finalScheduling * progress
-                  )
-              }
-          }
+      if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) > 0) {
+        completeSchedule(schedule, enhancedTripProfile, activities)
+      } else if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) <
+          0) {
+        scheduleRemove(
+            enhancedTripProfile = enhancedTripProfile,
+            originalOptimizedRoute = optimizedRoute,
+            activities = activities) { progress ->
+              onProgress(
+                  computeProgression.selectActivities +
+                      computeProgression.optimizeRoute +
+                      computeProgression.fetchInBetweenActivities +
+                      computeProgression.scheduleTrip +
+                      computeProgression.finalScheduling * progress)
+            }
+      }
 
       val finalRoute =
           try {
@@ -932,15 +929,18 @@ open class TripAlgorithm(
                 .toInt())
     var schedule = originalSchedule
     while (added && index < maxIndex) {
-        val daysDiff = dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
-        val totalTimeNeededHours = if (daysDiff > 0) {
+      val daysDiff =
+          dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+      val totalTimeNeededHours =
+          if (daysDiff > 0) {
             (daysDiff * ACTIVITY_TIME_PER_DAY_HOURS).toDouble()
-        } else {
+          } else {
             // If same day, calculate remaining active hours (e.g. gap between now and 8pm)
             // But we need to be careful not to add if we are already late.
-            val hours = hoursDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+            val hours =
+                hoursDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
             if (hours > 0) hours.toDouble() else 0.0
-        }
+          }
       if (totalTimeNeededHours > 0) {
         added = addCachedActivity(enhancedTripProfile, activities, totalTimeNeededHours)
       }

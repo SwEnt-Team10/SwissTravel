@@ -386,7 +386,7 @@ class ActivityRepositoryMockTest {
     every { mockCall.execute() } returns mockResponse
     every { mockResponse.isSuccessful } returns true
     every { mockResponse.body } returns
-            "{\"data\":[]}".toResponseBody("application/json".toMediaType())
+        "{\"data\":[]}".toResponseBody("application/json".toMediaType())
     every { mockResponse.close() } just Runs
 
     val limit = 5
@@ -411,19 +411,21 @@ class ActivityRepositoryMockTest {
     assertTrue(urlString.contains("facet.filter="), "Should contain facet.filter param")
 
     // Check for the specific facet value. Note: HttpUrl might encode the colon ':'
-    // "reachabilitylocation:closetopublictransport" -> "reachabilitylocation%3Aclosetopublictransport"
+    // "reachabilitylocation:closetopublictransport" ->
+    // "reachabilitylocation%3Aclosetopublictransport"
     // So we check for the decoded value or partial match
     assertTrue(
-      urlString.contains("reachabilitylocation") && urlString.contains("closetopublictransport"),
-      "Should filter by public transport"
-    )
+        urlString.contains("reachabilitylocation") && urlString.contains("closetopublictransport"),
+        "Should filter by public transport")
 
     // 3. Check Geo Distance
     // HttpUrl encodes commas. "46.5,7.5,500" -> "46.5%2C7.5%2C500"
     assertTrue(
-      urlString.contains("geo.dist") && urlString.contains("46.5") && urlString.contains("7.5") && urlString.contains("500"),
-      "Should contain geo search"
-    )
+        urlString.contains("geo.dist") &&
+            urlString.contains("46.5") &&
+            urlString.contains("7.5") &&
+            urlString.contains("500"),
+        "Should contain geo search")
   }
 
   // ---------------------------------------------------------------------------
