@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.text.style.TextAlign
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.trips.TripElement
@@ -85,6 +86,7 @@ fun LazyListScope.tripListItems(listState: TripListState, listEvents: TripListEv
     item {
       Text(
           text = listState.emptyListString,
+          textAlign = TextAlign.Center,
           modifier = Modifier.testTag(TripListTestTags.EMPTY_MESSAGE))
     }
   }

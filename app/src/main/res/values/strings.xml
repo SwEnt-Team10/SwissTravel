@@ -186,6 +186,9 @@
     <string name="profile_info">Profile Information</string>
     <string name="biography">Biography</string>
     <string name="back_to_profile">Back to Profile Screen</string>
+    <string name="stats_friends">Friend</string>
+    <string name="stats_trips">Trip</string>
+    <string name="stats_locations">Location</string>
     <string name="personal_info">Personal Information</string>
     <string name="name">Name</string>
     <string name="email">Email</string>
