@@ -39,21 +39,16 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
 
     // Build trip
     val tripId = repository.getNewUid()
-    val now = Timestamp.now()
-    val location = Location(Coordinate(0.0, 0.0), "")
+    val loc = Location(Coordinate(46.52, 6.57), "EPFL")
     val trip =
-        Trip(
+        createTestTrip(
             uid = tripId,
             name = "Instrumented Test Trip",
             ownerId = uid,
-            locations = listOf(Location(Coordinate(46.52, 6.57), "EPFL")),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
-
+            locations = listOf(loc),
+            isFavorite = true,
+            arrivalLocation = loc,
+            departureLocation = loc)
     // Act
     repository.addTrip(trip)
     val fetched = repository.getTrip(tripId)
@@ -74,31 +69,24 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     val now = Timestamp.now()
-    val location = Location(Coordinate(0.0, 0.0), "")
+    val locA = Location(Coordinate(0.0, 0.0), "A")
     val trip1 =
-        Trip(
+        createTestTrip(
             uid = repository.getNewUid(),
             name = "Trip One",
             ownerId = uid,
-            locations = listOf(Location(Coordinate(0.0, 0.0), "A")),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+            locations = listOf(locA),
+            arrivalLocation = locA,
+            departureLocation = locA)
+    val locB = Location(Coordinate(1.0, 1.0), "B")
     val trip2 =
-        Trip(
+        createTestTrip(
             uid = repository.getNewUid(),
             name = "Trip Two",
             ownerId = uid,
-            locations = listOf(Location(Coordinate(1.0, 1.0), "B")),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+            locations = listOf(locB),
+            arrivalLocation = locB,
+            departureLocation = locB)
 
     repository.addTrip(trip1)
     repository.addTrip(trip2)
@@ -121,23 +109,15 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signInWithCredential(credential).await()
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
-    val now = Timestamp.now()
     val trip =
-        Trip(
+        createTestTrip(
             uid = repository.getNewUid(),
             name = "To Delete",
             ownerId = uid,
-            locations = listOf(Location(Coordinate(2.0, 2.0), "C")),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList()),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
-
-    repository.addTrip(trip)
+            locations = listOf(Location(Coordinate(2.0, 2.0), "C")))
 
     // Act
+    repository.addTrip(trip)
     repository.deleteTrip(trip.uid)
 
     // Assert
@@ -153,20 +133,14 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signInWithCredential(credential).await()
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
-    val now = Timestamp.now()
-    val location = Location(Coordinate(0.0, 0.0), "Loc")
+    val loc = Location(Coordinate(0.0, 0.0), "Loc")
     val trip =
-        Trip(
+        createTestTrip(
             uid = repository.getNewUid(),
             name = "Original Name",
             ownerId = uid,
-            locations = emptyList(),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+            arrivalLocation = loc,
+            departureLocation = loc)
     repository.addTrip(trip)
 
     // Act
@@ -230,20 +204,15 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     // Sign back in as owner to create the trip and share it
     FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
 
-    val now = Timestamp.now()
-    val location = Location(Coordinate(0.0, 0.0), "Loc")
+    val loc = Location(Coordinate(0.0, 0.0), "Loc")
     val trip =
-        Trip(
+        createTestTrip(
             uid = repository.getNewUid(),
             name = "Shared Trip",
             ownerId = ownerUid,
-            locations = listOf(location),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+            locations = listOf(loc),
+            arrivalLocation = loc,
+            departureLocation = loc)
 
     repository.addTrip(trip)
 
@@ -271,21 +240,15 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
 
     // Back to owner to create and share trip
     FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
-
-    val now = Timestamp.now()
-    val location = Location(Coordinate(0.0, 0.0), "Loc")
+    val loc = Location(Coordinate(0.0, 0.0), "Loc")
     val trip =
-        Trip(
+        createTestTrip(
             uid = repository.getNewUid(),
             name = "Owner Shared Trip",
             ownerId = ownerUid,
-            locations = listOf(location),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+            locations = listOf(loc),
+            arrivalLocation = loc,
+            departureLocation = loc)
 
     repository.addTrip(trip)
     repository.shareTripWithUsers(trip.uid, listOf(collabUid))
@@ -316,20 +279,15 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     // Back to owner
     FirebaseEmulator.auth.signInWithCredential(ownerCredential).await()
 
-    val now = Timestamp.now()
-    val location = Location(Coordinate(0.0, 0.0), "Loc")
+    val loc = Location(Coordinate(0.0, 0.0), "Loc")
     val trip =
-        Trip(
+        createTestTrip(
             uid = repository.getNewUid(),
             name = "Trip With Collab",
             ownerId = ownerUid,
-            locations = listOf(location),
-            activities = emptyList(),
-            tripProfile = TripProfile(now, now, emptyList(), emptyList(), 1, 0, location, location),
-            routeSegments = emptyList(),
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+            locations = listOf(loc),
+            arrivalLocation = loc,
+            departureLocation = loc)
 
     repository.addTrip(trip)
     repository.shareTripWithUsers(trip.uid, listOf(collabUid))

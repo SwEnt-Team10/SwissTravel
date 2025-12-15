@@ -1,74 +1,49 @@
 package com.github.swent.swisstravel.ui.trip.tripinfo
 
+import com.github.swent.swisstravel.MainDispatcherRule
+import com.github.swent.swisstravel.createTestTrip
+import com.github.swent.swisstravel.createTestUser
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
-import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.TripElement
-import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.FriendStatus
-import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.google.firebase.Timestamp
 import com.mapbox.geojson.Point
 import io.mockk.*
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 @ExperimentalCoroutinesApi
 class TripInfoViewModelTest {
-  private val testDispatcher = StandardTestDispatcher()
+  @get:Rule val mainDispatcherRule = MainDispatcherRule()
+
   private lateinit var tripsRepository: TripsRepository
   private lateinit var userRepository: UserRepository
   private lateinit var viewModel: TripInfoViewModel
   val now = Timestamp(1600000000, 0)
 
   private val dummyTrip =
-      Trip(
+      createTestTrip(
           uid = "trip1",
           name = "TripName",
           ownerId = "owner1",
-          locations = emptyList(),
-          routeSegments = emptyList(),
-          activities = emptyList(),
-          tripProfile =
-              TripProfile(
-                  startDate = Timestamp(now.seconds - 3600, 0),
-                  endDate = Timestamp(now.seconds + 3600, 0),
-                  preferredLocations = emptyList(),
-                  preferences = emptyList()),
-          isCurrentTrip = false,
-          uriLocation = emptyMap(),
-          collaboratorsId = emptyList())
+          startDate = Timestamp(now.seconds - 3600, 0),
+          endDate = Timestamp(now.seconds + 3600, 0))
 
-  private val fakeUser =
-      User(
-          uid = "123",
-          name = "Test User",
-          biography = "Bio",
-          email = "test@example.com",
-          profilePicUrl = "http://example.com/pic.jpg",
-          preferences = emptyList(),
-          friends = emptyList(),
-          stats = UserStats(),
-          pinnedTripsUids = emptyList(),
-          pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+  private val fakeUser = createTestUser(uid = "123", name = "Test User")
 
   @Before
   fun setup() {
-    Dispatchers.setMain(testDispatcher)
     mockkStatic(android.util.Log::class)
     every { android.util.Log.d(any(), any()) } returns 0
     every { android.util.Log.e(any(), any(), any()) } returns 0
@@ -76,11 +51,6 @@ class TripInfoViewModelTest {
     tripsRepository = mockk()
     userRepository = mockk()
     viewModel = TripInfoViewModel(tripsRepository, userRepository)
-  }
-
-  @After
-  fun tearDown() {
-    Dispatchers.resetMain()
   }
 
   @Test
@@ -93,14 +63,15 @@ class TripInfoViewModelTest {
 
     // Load trip
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
+    assertFalse(viewModel.uiState.value.isFavorite)
 
     // Initial state check
     assertFalse("Trip should not be favorite initially", viewModel.uiState.value.isFavorite)
 
     // Act: Toggle
     viewModel.toggleFavorite()
-    testDispatcher.scheduler.advanceUntilIdle() // Advance for debounce/flow collection
+    advanceUntilIdle() // Advance for debounce/flow collection
 
     // Assert
     assertTrue("UI state should update to favorite", viewModel.uiState.value.isFavorite)
@@ -118,14 +89,14 @@ class TripInfoViewModelTest {
 
     // Load trip
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Initial state check
     assertTrue("Trip should be favorite initially", viewModel.uiState.value.isFavorite)
 
     // Act: Toggle
     viewModel.toggleFavorite()
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Assert
     assertFalse("UI state should update to not favorite", viewModel.uiState.value.isFavorite)
@@ -142,7 +113,7 @@ class TripInfoViewModelTest {
 
     // Act
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Assert
     val state = viewModel.uiState.value
@@ -155,14 +126,11 @@ class TripInfoViewModelTest {
   fun `loadTripInfo handles null UID gracefully`() = runTest {
     // Act
     viewModel.loadTripInfo(null)
-    testDispatcher.scheduler.advanceUntilIdle()
-
+    advanceUntilIdle()
     // Assert
     // Should not crash, and state should remain default or show error depending on impl.
     // Assuming default empty state:
     assertEquals("Trip Name", viewModel.uiState.value.name)
-    // OR if your VM sets an error:
-    // assertNotNull(viewModel.uiState.value.errorMsg)
   }
 
   @Test
@@ -173,7 +141,7 @@ class TripInfoViewModelTest {
 
     // Act
     viewModel.loadTripInfo("someID")
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Assert
     assertEquals("Failed to load trip info: $errorMsg", viewModel.uiState.value.errorMsg)
@@ -198,7 +166,7 @@ class TripInfoViewModelTest {
     // Arrange - Force an error state
     coEvery { tripsRepository.getTrip(any()) } throws Exception("Error")
     viewModel.loadTripInfo("id")
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
     // Assert
     assertEquals("Failed to load trip info: Error", viewModel.uiState.value.errorMsg)
   }
@@ -207,25 +175,25 @@ class TripInfoViewModelTest {
   fun `setCurrentDayIndex updates state`() = runTest {
     val segment1 =
         RouteSegment(
-            Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
-            Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+            Location(Coordinate(0.0, 0.0), "A"),
+            Location(Coordinate(1.0, 1.0), "B"),
             10,
-            com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+            TransportMode.WALKING,
             now,
             now)
     val segment2 =
         RouteSegment(
-            Location(com.github.swent.swisstravel.model.trip.Coordinate(2.0, 2.0), "C"),
-            Location(com.github.swent.swisstravel.model.trip.Coordinate(3.0, 3.0), "D"),
+            Location(Coordinate(2.0, 2.0), "C"),
+            Location(Coordinate(3.0, 3.0), "D"),
             10,
-            com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+            TransportMode.WALKING,
             Timestamp(now.seconds + 86400, 0), // Next day
             Timestamp(now.seconds + 86400, 0))
     val tripWithSegments = dummyTrip.copy(routeSegments = listOf(segment1, segment2))
     coEvery { tripsRepository.getTrip(tripWithSegments.uid) } returns tripWithSegments
 
     viewModel.loadTripInfo(tripWithSegments.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Act
     viewModel.setCurrentDayIndex(0)
@@ -239,10 +207,10 @@ class TripInfoViewModelTest {
     val step =
         TripElement.TripSegment(
             RouteSegment(
-                Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
-                Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+                Location(Coordinate(0.0, 0.0), "A"),
+                Location(Coordinate(1.0, 1.0), "B"),
                 10,
-                com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+                TransportMode.WALKING,
                 now,
                 now))
     viewModel.setSelectedStep(step)
@@ -271,7 +239,7 @@ class TripInfoViewModelTest {
         Activity(
             startDate = now,
             endDate = now,
-            location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
+            location = Location(Coordinate(0.0, 0.0), "A"),
             description = "Desc",
             imageUrls = emptyList(),
             estimatedTime = 60)
@@ -283,10 +251,8 @@ class TripInfoViewModelTest {
   fun `loadCollaboratorData updates availableFriends and collaborators`() = runTest {
     // Arrange
     val ownerId = fakeUser.uid
-    val friend1 = fakeUser.copy(uid = "friend1", name = "Friend One")
-    val friend2 = fakeUser.copy(uid = "friend2", name = "Friend Two") // Already a collaborator
-    val collaboratorUser = friend2
-
+    val friend1 = createTestUser(uid = "friend1", name = "Friend One")
+    val friend2 = createTestUser(uid = "friend2", name = "Friend Two")
     val tripWithCollaborator =
         dummyTrip.copy(ownerId = ownerId, collaboratorsId = listOf("friend2"))
 
@@ -303,25 +269,23 @@ class TripInfoViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns userWithFriends
     coEvery { tripsRepository.getTrip(tripWithCollaborator.uid) } returns tripWithCollaborator
     coEvery { userRepository.getUserByUid("friend1") } returns friend1
-    coEvery { userRepository.getUserByUid("friend2") } returns collaboratorUser
+    coEvery { userRepository.getUserByUid("friend2") } returns friend2
 
     // Initialize VM with the trip
     viewModel.loadTripInfo(tripWithCollaborator.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Act
     viewModel.loadCollaboratorData()
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Assert
-    val state = viewModel.uiState.value
     // collaborators should contain friend2
-    assertEquals(1, state.collaborators.size)
-    assertEquals("friend2", state.collaborators[0].uid)
-
+    assertEquals(1, viewModel.uiState.value.collaborators.size)
+    assertEquals("friend2", viewModel.uiState.value.collaborators[0].uid)
     // availableFriends should contain friend1 but NOT friend2 (already collaborator)
-    assertEquals(1, state.availableFriends.size)
-    assertEquals("friend1", state.availableFriends[0].uid)
+    assertEquals(1, viewModel.uiState.value.availableFriends.size)
+    assertEquals("friend1", viewModel.uiState.value.availableFriends[0].uid)
   }
 
   @Test
@@ -329,7 +293,7 @@ class TripInfoViewModelTest {
     // Arrange
     val tripId = "trip1"
     val initialTrip = dummyTrip.copy(uid = tripId, collaboratorsId = emptyList())
-    val newCollaborator = fakeUser.copy(uid = "newCollab")
+    val newCollaborator = createTestUser(uid = "newCollab")
 
     coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
     coEvery { userRepository.getCurrentUser() } returns fakeUser
@@ -341,11 +305,11 @@ class TripInfoViewModelTest {
     coEvery { userRepository.getUserByUid("newCollab") } returns newCollaborator
 
     viewModel.loadTripInfo(tripId)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Act
     viewModel.addCollaborator(newCollaborator)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Assert
     coVerify { tripsRepository.shareTripWithUsers(tripId, listOf(newCollaborator.uid)) }
@@ -355,7 +319,7 @@ class TripInfoViewModelTest {
   fun `removeCollaborator calls removeCollaborator and reloads data`() = runTest {
     // Arrange
     val tripId = "trip1"
-    val collaboratorToRemove = fakeUser.copy(uid = "collab1")
+    val collaboratorToRemove = createTestUser(uid = "collab1")
     val initialTrip = dummyTrip.copy(uid = tripId, collaboratorsId = listOf("collab1", "collab2"))
 
     coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
@@ -368,11 +332,11 @@ class TripInfoViewModelTest {
     coEvery { userRepository.getUserByUid("collab2") } returns fakeUser.copy(uid = "collab2")
 
     viewModel.loadTripInfo(tripId)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Act
     viewModel.removeCollaborator(collaboratorToRemove)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // Assert
     coVerify { tripsRepository.removeCollaborator(tripId, collaboratorToRemove.uid) }

@@ -19,7 +19,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTag
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.FIRST_DESTINATIONS_TITLE
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.NEXT_BUTTON
 import com.github.swent.swisstravel.ui.tripcreation.TripFirstDestinationsTestTags.RETURN_BUTTON
-import com.github.swent.swisstravel.ui.trips.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeTripsRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
