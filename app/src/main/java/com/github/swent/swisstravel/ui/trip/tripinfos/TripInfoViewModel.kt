@@ -167,7 +167,7 @@ class TripInfoViewModel(
                 routeSegments = trip.routeSegments,
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,
-                isFavorite = trip.isFavorite,
+                isFavorite = isFavorite,
                 likedActivities = trip.likedActivities,
                 activitiesQueue = trip.activitiesQueue,
                 allFetchedForSwipe = trip.allFetchedForSwipe,
