@@ -1,11 +1,8 @@
-package com.github.swent.swisstravel.e2e
+// package com.github.swent.swisstravel.e2e
 
-import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
-import org.junit.runner.RunWith
-
-@RunWith(AndroidJUnit4::class)
-class E2ETripFlowTest : FirestoreSwissTravelTest() {
+//
+// @RunWith(AndroidJUnit4::class)
+// class E2ETripFlowTest : FirestoreSwissTravelTest() {
 
   //  @get:Rule val composeTestRule = createComposeRule()
   //
@@ -194,4 +191,4 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
   //    composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
   //    composeTestRule.waitForIdle()
   //  }
-}
+// }

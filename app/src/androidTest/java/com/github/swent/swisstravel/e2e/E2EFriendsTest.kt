@@ -1,6 +1,6 @@
-package com.github.swent.swisstravel.e2e
+// package com.github.swent.swisstravel.e2e
 
-import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+// import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 
 /**
  * Done with the help of AI.
@@ -17,7 +17,7 @@ import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
  * 9) Alice clicks on Bob in the friends list.
  * 10) Alice sees Bob's pinned trip.
  */
-class E2EFriendsTest : FirestoreSwissTravelTest() {
+// class E2EFriendsTest : FirestoreSwissTravelTest() {
 
   //  @get:Rule val composeTestRule = createComposeRule()
   //
@@ -182,4 +182,4 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
   //    composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
   //    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
   //  }
-}
+// }

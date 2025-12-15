@@ -1,7 +1,7 @@
-package com.github.swent.swisstravel.e2e
+// package com.github.swent.swisstravel.e2e
 
-import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
-import org.junit.After
+// import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+// import org.junit.After
 
 /**
  * End-to-end trip creation flow:
@@ -36,7 +36,7 @@ import org.junit.After
  *
  * Made with the help of AI
  */
-class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
+// class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
   //  @get:Rule val composeTestRule = createComposeRule()
   //
@@ -435,8 +435,8 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
   //    composeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips()
   //  }
 
-  @After
-  override fun tearDown() {
-    super.tearDown()
-  }
-}
+//  @After
+//  override fun tearDown() {
+//    super.tearDown()
+//  }
+// }
