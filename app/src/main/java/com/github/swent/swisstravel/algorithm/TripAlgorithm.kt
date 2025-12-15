@@ -49,8 +49,9 @@ const val RADIUS_CITIES_TO_ASSOCIATE_KM = 15
 const val MAX_INDEX_CACHED_ACTIVITIES = 10
 
 /**
- * Some part of this file were made with AI but most of it was done by hands All the kdoc was done
- * by AI
+ * Some part of this file were made with AI but most of it was done by hands
+ *
+ * All the kdoc was done by AI
  *
  * Core algorithm class for generating and optimizing a travel trip.
  *
@@ -206,7 +207,7 @@ open class TripAlgorithm(
 
   /**
    * ********************************************************
-   * Progression data class
+   * Progression data classes
    * *********************************************************
    */
 
@@ -236,6 +237,21 @@ open class TripAlgorithm(
               fetchInBetweenActivities +
               finalScheduling
       require(abs(sum - 1.0f) < EPSILON) { "Progression values must sum to 1.0, but got $sum" }
+    }
+  }
+
+  /**
+   * Represents the relative weights within the [ComputeTripProgression.finalScheduling] phase.
+   *
+   * @param loopFilling The portion of the final phase allocated to the loop that adds/completes
+   *   activities.
+   * @param finalOptimization The portion of the final phase allocated to the very last
+   *   optimization/scheduling pass.
+   */
+  data class FinalSchedulingProgression(val loopFilling: Float, val finalOptimization: Float) {
+    init {
+      val sum = loopFilling + finalOptimization
+      require(abs(sum - 1.0f) < EPSILON) { "Final scheduling progression values must sum to 1.0" }
     }
   }
 
@@ -288,17 +304,6 @@ open class TripAlgorithm(
           CityConfig(Location(Coordinate(46.5944, 7.9014), "Lauterbrunnen"), 3, 0.5),
           CityConfig(Location(Coordinate(47.3308, 9.4005), "Appenzell"), 3, 0.5),
           CityConfig(Location(Coordinate(45.9328, 8.9328), "Morcote"), 3, 0.5))
-
-  /** The list of all the grand tour locations in the array.grand_tour */
-  private val grandTourList =
-      context.resources.getStringArray(R.array.grand_tour).map { line ->
-        val parts = line.split(";")
-        Location(
-            coordinate = Coordinate(parts[1].toDouble(), parts[2].toDouble()),
-            name = parts[0],
-            imageUrl = "")
-      }
-
   private val allBasicPreferences =
       PreferenceCategories.environmentPreferences + PreferenceCategories.activityTypePreferences
 
@@ -314,6 +319,13 @@ open class TripAlgorithm(
           fetchInBetweenActivities = 0.05f,
           scheduleTrip = 0.05f,
           finalScheduling = 0.60f)
+
+  // Defines how the 0.60f of 'finalScheduling' is split internally
+  private val finalSchedulingWeights: FinalSchedulingProgression =
+      FinalSchedulingProgression(
+          loopFilling = 0.8f, // 80% of the 60% is for the iterative adding of activities
+          finalOptimization = 0.2f // 20% of the 60% is for the last optimize pass
+          )
 
   /**
    * ********************************************************
@@ -443,39 +455,48 @@ open class TripAlgorithm(
                 }
       }
 
-      onProgress(
+      var currentProgressBase =
           computeProgression.selectActivities +
               computeProgression.optimizeRoute +
-              computeProgression.fetchInBetweenActivities)
+              computeProgression.fetchInBetweenActivities
+
+      onProgress(currentProgressBase)
 
       var schedule =
           scheduleRemove(
               enhancedTripProfile = enhancedTripProfile,
               originalOptimizedRoute = optimizedRoute,
-              activities = activities) { progress ->
-                onProgress(
-                    computeProgression.selectActivities +
-                        computeProgression.optimizeRoute +
-                        computeProgression.fetchInBetweenActivities +
-                        computeProgression.scheduleTrip * progress)
-              }
+              activities = activities)
+
+      currentProgressBase += computeProgression.scheduleTrip
+
+      // Calculate the progress budget for the loop filling phase
+      val loopFillingBudget =
+          computeProgression.finalScheduling * finalSchedulingWeights.loopFilling
+      val finalOptBudget =
+          computeProgression.finalScheduling * finalSchedulingWeights.finalOptimization
 
       if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) > 0) {
-        completeSchedule(schedule, enhancedTripProfile, activities)
+        // UNDER-SCHEDULED: We have time left, let's fill it
+        completeSchedule(
+            schedule,
+            enhancedTripProfile,
+            activities,
+            progressStart = currentProgressBase,
+            progressEnd = currentProgressBase + loopFillingBudget,
+            onProgress = onProgress)
       } else if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) <
           0) {
+        // OVER-SCHEDULED: We are late, let's remove some activities
+        // In this case, scheduleRemove takes the place of completeSchedule for progress reporting
         scheduleRemove(
             enhancedTripProfile = enhancedTripProfile,
             originalOptimizedRoute = optimizedRoute,
-            activities = activities) { progress ->
-              onProgress(
-                  computeProgression.selectActivities +
-                      computeProgression.optimizeRoute +
-                      computeProgression.fetchInBetweenActivities +
-                      computeProgression.scheduleTrip +
-                      computeProgression.finalScheduling * progress)
-            }
+            activities = activities)
       }
+
+      currentProgressBase += loopFillingBudget
+      onProgress(currentProgressBase)
 
       val finalRoute =
           try {
@@ -487,7 +508,9 @@ open class TripAlgorithm(
                 if (enhancedTripProfile.tripProfile.preferences.contains(
                     Preference.PUBLIC_TRANSPORT))
                     TransportMode.TRAIN
-                else TransportMode.CAR) {}
+                else TransportMode.CAR) { progress ->
+                  onProgress(currentProgressBase + finalOptBudget * progress)
+                }
           } catch (e: Exception) {
             optimizedRoute // Fallback
           }
@@ -496,7 +519,7 @@ open class TripAlgorithm(
           scheduleRemove(
               enhancedTripProfile = enhancedTripProfile,
               originalOptimizedRoute = finalRoute,
-              activities = activities) {}
+              activities = activities)
 
       onProgress(1.0f)
       return schedule
@@ -701,15 +724,12 @@ open class TripAlgorithm(
    * @param originalOptimizedRoute The current best optimized route.
    * @param activities The [Activities] state object containing all planned, intermediate, and
    *   cached activities.
-   * @param onProgress A callback function to report progress during this phase (though unused in
-   *   the current implementation, it's kept for contract).
    * @return The resulting list of [TripElement] representing the scheduled trip.
    */
   open suspend fun scheduleRemove(
       enhancedTripProfile: EnhancedTripProfile,
       originalOptimizedRoute: OrderedRoute,
-      activities: Activities,
-      onProgress: (Float) -> Unit
+      activities: Activities
   ): List<TripElement> {
     // Filter out intermediate activities from the activity list to avoid removing them
     val normalActivities =
@@ -944,12 +964,18 @@ open class TripAlgorithm(
    * @param originalSchedule The schedule generated by the last `scheduleRemove` call.
    * @param enhancedTripProfile The enhanced trip profile.
    * @param activities The mutable [Activities] state object.
+   * @param progressStart The absolute progress value where this phase starts.
+   * @param progressEnd The absolute progress value where this phase ends.
+   * @param onProgress Callback to update progress within [progressStart, progressEnd].
    * @return The final list of [TripElement] representing the completed schedule.
    */
   private suspend fun completeSchedule(
       originalSchedule: List<TripElement>,
       enhancedTripProfile: EnhancedTripProfile,
-      activities: Activities
+      activities: Activities,
+      progressStart: Float = 0f,
+      progressEnd: Float = 0f,
+      onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
     var index = 0
     val maxIndex =
@@ -960,8 +986,20 @@ open class TripAlgorithm(
     var finalSchedule = originalSchedule
     val endDate = enhancedTripProfile.tripProfile.endDate
 
+    // Calculate progress step per iteration
+    val progressRange = progressEnd - progressStart
+    // Use MAX_INDEX as denominator because that's the upper bound of loops
+    val progressStep = if (maxIndex > 0) progressRange / maxIndex else 0f
+
     while (index < maxIndex) {
-      finalSchedule = tryAddingCachedActivities(enhancedTripProfile, activities, finalSchedule)
+      val iterationStart = progressStart + (index * progressStep)
+      val iterationEnd = iterationStart + progressStep
+
+      finalSchedule =
+          tryAddingCachedActivities(
+              enhancedTripProfile,
+              activities,
+              finalSchedule)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
@@ -969,25 +1007,38 @@ open class TripAlgorithm(
 
       if (index == 2) {
         finalSchedule =
-            tryFetchingActivitiesForExistingCities(enhancedTripProfile, activities, finalSchedule)
+            tryFetchingActivitiesForExistingCities(
+                enhancedTripProfile,
+                activities,
+                finalSchedule)
         if (sameDate(endDate, finalSchedule.last().endDate)) {
           break
         }
       }
 
-      finalSchedule = tryAddingCityActivities(enhancedTripProfile, activities, finalSchedule)
+      finalSchedule =
+          tryAddingCityActivities(
+              enhancedTripProfile,
+              activities,
+              finalSchedule)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
       }
 
-      finalSchedule = tryAddingCity(enhancedTripProfile, activities, finalSchedule)
+      finalSchedule =
+          tryAddingCity(
+              enhancedTripProfile,
+              activities,
+              finalSchedule)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
       }
 
       index++
+      // Report completed step
+      onProgress(iterationEnd)
     }
 
     return finalSchedule
@@ -1103,7 +1154,7 @@ open class TripAlgorithm(
   private suspend fun tryAddingCity(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
-      originalSchedule: List<TripElement>
+      originalSchedule: List<TripElement>,
   ): List<TripElement> {
     var schedule = originalSchedule
 
@@ -1129,7 +1180,7 @@ open class TripAlgorithm(
   private suspend fun tryFetchingActivitiesForExistingCities(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
-      originalSchedule: List<TripElement>
+      originalSchedule: List<TripElement>,
   ): List<TripElement> {
     var addedAny = false
     val currentActivityNames = activities.allActivities.map { it.getName() }
@@ -1770,9 +1821,10 @@ open class TripAlgorithm(
             enhancedTripProfile.tripProfile.departureLocation!!,
             activities.allActivities.map { it.location },
             activities.allActivities,
-            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
+            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {
+            }
 
-    val schedule = scheduleRemove(enhancedTripProfile, orderedRoute, activities) {}
+    val schedule = scheduleRemove(enhancedTripProfile, orderedRoute, activities)
     return schedule
   }
 
@@ -1789,7 +1841,7 @@ open class TripAlgorithm(
    */
   private suspend fun optimizeOnly(
       enhancedTripProfile: EnhancedTripProfile,
-      activities: Activities
+      activities: Activities,
   ): List<TripElement> {
     val publicTransportMode =
         enhancedTripProfile.tripProfile.preferences.contains(Preference.PUBLIC_TRANSPORT)
@@ -1800,7 +1852,8 @@ open class TripAlgorithm(
             enhancedTripProfile.tripProfile.departureLocation!!,
             activities.allActivities.map { it.location },
             activities.allActivities,
-            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
+            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {
+            }
 
     return scheduleTrip(
         enhancedTripProfile.tripProfile, orderedRoute, activities.allActivities, scheduleParams) {}
