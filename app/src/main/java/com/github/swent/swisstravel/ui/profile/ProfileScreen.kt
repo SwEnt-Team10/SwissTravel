@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -60,6 +61,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -285,7 +287,6 @@ fun ProfileScreenContent(
         item {
           ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
           BiographyDisplay(biography = uiState.biography)
 
@@ -395,7 +396,9 @@ fun ProfileHeader(photoUrl: String, name: String) {
 @Composable
 fun BiographyDisplay(biography: String) {
   if (!biography.isBlank()) {
-    Column(
+      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+
+      Column(
         modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.BIOGRAPHY),
         horizontalAlignment = Alignment.CenterHorizontally) {
           Text(
@@ -403,9 +406,9 @@ fun BiographyDisplay(biography: String) {
               style = MaterialTheme.typography.bodyLarge,
               maxLines = BIOGRAPHY_MAX_LINES,
               overflow = TextOverflow.Ellipsis,
-              color = MaterialTheme.colorScheme.onSurfaceVariant)
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              textAlign = TextAlign.Center)
         }
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
   }
 }
 
@@ -432,11 +435,11 @@ fun ProfileStatItem(count: Int, label: String) {
   Column(horizontalAlignment = Alignment.CenterHorizontally) {
     Text(
         text = count.toString(),
-        style = MaterialTheme.typography.headlineMedium,
+        style = MaterialTheme.typography.headlineSmall,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.onBackground)
     Text(
-        text = label,
+        text = if (count > 1) label + "s" else label,
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant)
   }
