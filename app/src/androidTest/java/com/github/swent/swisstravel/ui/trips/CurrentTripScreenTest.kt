@@ -4,12 +4,13 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreen
 import com.github.swent.swisstravel.ui.currenttrip.CurrentTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.DailyViewScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
+import com.github.swent.swisstravel.utils.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeUserRepository
+import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.junit.Rule
@@ -23,9 +24,11 @@ import org.junit.Test
  * and that the create trip buttons are displayed.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class CurrentTripScreenTest {
+class CurrentTripScreenTest : SwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
+
+  override fun createInitializedRepository() = FakeTripsRepository()
 
   /**
    * Tests that the current trip is displayed on the current trip tab (when there is a current
@@ -34,22 +37,13 @@ class CurrentTripScreenTest {
   @Test
   fun currentTripIsDisplayedWhenItExists() {
     val currentTrip =
-        Trip(
-            "2",
-            "currentTrip",
-            "ownerX",
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            TripProfile(
-                startDate = Timestamp(Timestamp.now().seconds + 7200, 0),
-                endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
-                preferredLocations = emptyList(),
-                preferences = emptyList()),
-            isFavorite = false,
-            isCurrentTrip = true,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+        createTestTrip(
+            uid = "2",
+            name = "currentTrip",
+            ownerId = "ownerX",
+            startDate = Timestamp(Timestamp.now().seconds + 7200, 0),
+            endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
+            isCurrentTrip = true)
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
@@ -72,22 +66,13 @@ class CurrentTripScreenTest {
   @Test
   fun currentTripIsNotDisplayedWhenItDoesNotExist() {
     val notCurrentTrip =
-        Trip(
-            "1",
-            "currentTrip",
-            "ownerX",
-            emptyList(),
-            emptyList(),
-            emptyList(),
-            TripProfile(
-                startDate = Timestamp(Timestamp.now().seconds + 7200, 0),
-                endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
-                preferredLocations = emptyList(),
-                preferences = emptyList()),
-            isFavorite = false,
-            isCurrentTrip = false,
-            uriLocation = emptyMap(),
-            collaboratorsId = emptyList())
+        createTestTrip(
+            uid = "1",
+            name = "currentTrip",
+            ownerId = "ownerX",
+            startDate = Timestamp(Timestamp.now().seconds + 7200, 0),
+            endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
+            isCurrentTrip = false)
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(notCurrentTrip))

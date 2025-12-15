@@ -17,7 +17,6 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
 
@@ -34,7 +33,8 @@ class FakeUserRepository : UserRepository {
         friends = emptyList(),
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
-        pinnedPicturesUids = emptyList())
+        pinnedPicturesUids = emptyList(),
+        favoriteTripsUids = emptyList())
   }
 
   override suspend fun getUserByUid(uid: String): User? {
@@ -75,6 +75,14 @@ class FakeUserRepository : UserRepository {
     // no-op in tests
   }
 
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
   override suspend fun updateUserStats(uid: String, stats: UserStats) {
     // no-op in tests
   }
@@ -93,7 +101,8 @@ val emptyUserRepo =
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = emptyList())
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
       }
 
       override suspend fun getUserByUid(uid: String): User? {
@@ -135,6 +144,14 @@ val emptyUserRepo =
       ) {
         /** no-op for tests* */
       }
+
+      override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+        // No-op
+      }
+
+      override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+        // No-op
+      }
     }
 
 class ProfileSettingsScreenTest {
@@ -145,9 +162,7 @@ class ProfileSettingsScreenTest {
 
   private fun setContentHelper(fakeUserRepository: UserRepository = fakeUserRepo) {
     composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepository, fakeTripRepo))
-      }
+      ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepository, fakeTripRepo))
     }
   }
 
@@ -238,10 +253,8 @@ class ProfileSettingsScreenTest {
   @Test
   fun infoSection_and_InfoItem_renderTextProperly() {
     composeTestRule.setContent {
-      SwissTravelTheme {
-        InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
-          InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
-        }
+      InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
+        InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
       }
     }
     composeTestRule.onNodeWithText("Section Title").assertIsDisplayed()

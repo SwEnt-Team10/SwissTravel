@@ -5,7 +5,6 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import com.github.swent.swisstravel.ui.authentication.GoogleButtonType
 import com.github.swent.swisstravel.ui.authentication.GoogleSignInButton
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
 import org.mockito.Mockito
@@ -22,9 +21,7 @@ class GoogleSignInButtonTest {
 
     // When
     composeTestRule.setContent {
-      SwissTravelTheme {
-        GoogleSignInButton(type = GoogleButtonType.SIGN_IN, onSignInClick = onSignInClick)
-      }
+      GoogleSignInButton(type = GoogleButtonType.SIGN_IN, onSignInClick = onSignInClick)
     }
 
     // Then

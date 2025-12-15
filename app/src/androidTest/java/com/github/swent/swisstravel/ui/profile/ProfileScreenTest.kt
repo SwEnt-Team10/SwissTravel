@@ -14,7 +14,6 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import com.google.firebase.Timestamp
@@ -49,6 +48,14 @@ private class TestUserRepository(private val user: User) : UserRepository {
       pinnedPicturesUids: List<String>?
   ) {}
 
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+    // No-op
+  }
+
   override suspend fun updateUserStats(uid: String, stats: UserStats) {}
 }
 
@@ -78,7 +85,6 @@ class ProfileScreenTest : SwissTravelTest() {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -96,7 +102,6 @@ class ProfileScreenTest : SwissTravelTest() {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -135,7 +140,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -143,9 +149,7 @@ class ProfileScreenTest : SwissTravelTest() {
               tripsRepository = fakeTripRepo,
               requestedUid = "getolover1")
 
-      composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
-      }
+      composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       // Profile header
       composeTestRule.onNodeWithText("Satoru Gojo").assertIsDisplayed()
@@ -188,20 +192,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
-
-      val otherUser =
-          User(
-              uid = "gojolover999",
-              name = "Suguru Geto",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -209,9 +201,7 @@ class ProfileScreenTest : SwissTravelTest() {
               tripsRepository = fakeTripRepo,
               requestedUid = "gojolover999")
 
-      composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
-      }
+      composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       composeTestRule
           .onNodeWithTag(ProfileScreenTestTags.UNFRIEND_BUTTON)
@@ -242,20 +232,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
-
-      val otherUser =
-          User(
-              uid = "gojolover999",
-              name = "Suguru Geto",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -263,9 +241,7 @@ class ProfileScreenTest : SwissTravelTest() {
               tripsRepository = fakeTripRepo,
               requestedUid = "gojolover999")
 
-      composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
-      }
+      composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       // Open unfriend dialog
       composeTestRule
@@ -303,20 +279,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
-
-      val otherUser =
-          User(
-              uid = "friend123",
-              name = "Friend User",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -324,9 +288,7 @@ class ProfileScreenTest : SwissTravelTest() {
               tripsRepository = fakeTripRepo,
               requestedUid = "friend123")
 
-      composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
-      }
+      composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       // Open unfriend dialog
       composeTestRule
@@ -364,20 +326,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
-
-      val otherUser =
-          User(
-              uid = "friend123",
-              name = "Friend User",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -385,9 +335,7 @@ class ProfileScreenTest : SwissTravelTest() {
               tripsRepository = fakeTripRepo,
               requestedUid = "friend123")
 
-      composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
-      }
+      composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       // Edit buttons for pinned trips/images should not exist
       composeTestRule
@@ -419,7 +367,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -458,7 +407,8 @@ class ProfileScreenTest : SwissTravelTest() {
               friends = emptyList(),
               stats = sampleStats,
               pinnedTripsUids = listOf("trip1", "trip2"), // trips to display
-              pinnedPicturesUids = emptyList())
+              pinnedPicturesUids = emptyList(),
+              favoriteTripsUids = emptyList())
 
       val viewModel =
           ProfileViewModel(
@@ -466,9 +416,7 @@ class ProfileScreenTest : SwissTravelTest() {
               tripsRepository = fakeTripRepo,
               requestedUid = "currentUser")
 
-      composeTestRule.setContent {
-        SwissTravelTheme { ProfileScreen(profileViewModel = viewModel) }
-      }
+      composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       // Ensure the section title exists
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE).assertIsDisplayed()

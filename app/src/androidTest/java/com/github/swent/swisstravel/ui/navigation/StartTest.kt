@@ -10,7 +10,6 @@ import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags.SIGN_IN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGLE_LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
@@ -41,16 +40,9 @@ class StartTest : FirestoreSwissTravelTest() {
 
     val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
 
-    composeTestRule.setContent {
-      SwissTravelTheme { SwissTravelApp(credentialManager = fakeCredentialManager) }
-    }
+    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
     composeTestRule.onNodeWithTag(SIGN_IN_BUTTON).assertIsDisplayed().performClick()
     composeTestRule.onNodeWithTag(GOOGLE_LOGIN_BUTTON).assertIsDisplayed().performClick()
-    // Commented out because of CI issues
-    //    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-    //      composeTestRule.onNodeWithTag(LOGIN_BUTTON).isNotDisplayed()
-    //    }
-    //    composeTestRule.onNodeWithTag(ProfileScreenTestTags.DISPLAY_NAME).isDisplayed()
   }
 
   @Test
@@ -59,7 +51,7 @@ class StartTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.auth.signInAnonymously()
 
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) { FirebaseEmulator.auth.currentUser != null }
-    composeTestRule.setContent { SwissTravelTheme { SwissTravelApp() } }
+    composeTestRule.setContent { SwissTravelApp() }
 
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsNotDisplayed()
   }

@@ -17,12 +17,14 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.StarOutline
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -80,6 +82,7 @@ object MyTripsScreenTestTags {
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
 
+private const val NO_UPCOMPING_TRIPS = "You don't have any upcoming trips. Time to create one !"
 /**
  * Displays the "My Trips" screen, which shows the user's current and upcoming trips.
  *
@@ -110,6 +113,7 @@ fun MyTripsScreen(
   val context = LocalContext.current
   val uiState by myTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
+  val upcomingTripsTitle = stringResource(R.string.upcoming_trips)
 
   // Handle back press while in selection mode
   BackHandler(enabled = uiState.isSelectionMode) { myTripsViewModel.toggleSelectionMode(false) }
@@ -167,7 +171,7 @@ fun MyTripsScreen(
               containerColor = MaterialTheme.colorScheme.primary,
               contentColor = MaterialTheme.colorScheme.onPrimary,
               modifier = Modifier.testTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)) {
-                Icon(Icons.Default.Add, contentDescription = "Add")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add))
               }
         }
       },
@@ -186,6 +190,7 @@ fun MyTripsScreen(
                               end = dimensionResource(R.dimen.my_trip_padding_start_end),
                               bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
                     item {
+                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
                       CurrentTripSection(
                           myTripsViewModel = myTripsViewModel,
                           onSelectTrip = onSelectTrip,
@@ -197,6 +202,7 @@ fun MyTripsScreen(
                         TripListState(
                             trips = uiState.tripsList,
                             isSelectionMode = uiState.isSelectionMode,
+                            emptyListString = NO_UPCOMPING_TRIPS,
                             isSelected = { trip -> trip in uiState.selectedTrips },
                             collaboratorsLookup = { uid ->
                               uiState.collaboratorsByTripId[uid] ?: emptyList()
@@ -217,9 +223,11 @@ fun MyTripsScreen(
                               }
                             },
                         )
-
+                    item {
+                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.large_spacer)))
+                    }
                     sortedTripListItems(
-                        title = "Upcoming Trips",
+                        title = upcomingTripsTitle,
                         listState = listState,
                         listEvents = listEvent,
                         onClickDropDownMenu = { myTripsViewModel.updateSortType(it) },
@@ -254,6 +262,9 @@ private fun MyTripsTopAppBar(
     onSelectAll: () -> Unit,
     onPastTrips: () -> Unit,
 ) {
+  val allSelectedFavorites =
+      uiState.selectedTrips.isNotEmpty() &&
+          uiState.selectedTrips.all { it.uid in uiState.favoriteTripsUids }
   TopAppBar(
       title = {
         val title =
@@ -283,7 +294,8 @@ private fun MyTripsTopAppBar(
               onClick = onFavoriteSelected,
               modifier = Modifier.testTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)) {
                 Icon(
-                    Icons.Default.StarOutline,
+                    imageVector =
+                        if (allSelectedFavorites) Icons.Default.Star else Icons.Default.StarOutline,
                     contentDescription = stringResource(R.string.favorite_selected))
               }
           IconButton(
@@ -354,21 +366,29 @@ private fun CurrentTripSection(
   val editButtonShown = uiState.currentTrip != null || uiState.tripsList.isNotEmpty()
 
   CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
+  HorizontalDivider(
+      modifier =
+          Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+      color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
   currentTrip?.let {
+    val tripElementState =
+        TripElementState(
+            trip = it,
+            isSelected = it in selectedTrips,
+            isSelectionMode = isSelectionMode,
+            isFavorite = it.uid in uiState.favoriteTripsUids,
+            collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
     TripElement(
-        trip = it,
+        tripElementState = tripElementState,
         onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
         onLongPress = {
           // Enter selection mode
           myTripsViewModel.toggleSelectionMode(true)
           onToggleSelection(it)
-        },
-        isSelected = it in selectedTrips,
-        isSelectionMode = isSelectionMode,
-        collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
+        })
   }
       ?: Text(
           text = stringResource(R.string.no_current_trip),
@@ -403,7 +423,9 @@ private fun CurrentTripTitle(editButtonShown: Boolean = false, onEditCurrentTrip
           IconButton(
               onClick = onEditCurrentTrip,
               modifier = Modifier.testTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)) {
-                Icon(imageVector = Icons.Outlined.Edit, contentDescription = "Edit current trip")
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.select_current_trip))
               }
         }
       }

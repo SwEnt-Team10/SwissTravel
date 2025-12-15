@@ -419,15 +419,15 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     // Arrange: create three real users via auth + repository
     val (uidAlex, credAlex) =
         createGoogleUserAndSignIn(
-            name = "Alex Müller", email = "alex@example.com", createDocViaRepo = true)
+            name = "Alex Müller", email = "alex.muller@example.com", createDocViaRepo = true)
 
     val (uidAlice, credAlice) =
         createGoogleUserAndSignIn(
-            name = "Alice Meyer", email = "alice@example.com", createDocViaRepo = true)
+            name = "Alice Meyer", email = "alice.meyer@example.com", createDocViaRepo = true)
 
     val (uidBob, credBob) =
         createGoogleUserAndSignIn(
-            name = "Bob Dupont", email = "bob@example.com", createDocViaRepo = true)
+            name = "Bob Dupont", email = "bob.dupont@example.com", createDocViaRepo = true)
 
     // Sign back in as Alex (any authenticated user is fine for reads)
     FirebaseEmulator.auth.signInWithCredential(credAlex).await()
@@ -439,7 +439,7 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     assertFalse(byName.any { it.uid == uidBob })
 
     // Act + Assert: search by email
-    val byEmail = repositoryUser.getUserByNameOrEmail("alice@example.com")
+    val byEmail = repositoryUser.getUserByNameOrEmail("alice.meyer@example.com")
     assertEquals(1, byEmail.size)
     assertEquals(uidAlice, byEmail.first().uid)
   }

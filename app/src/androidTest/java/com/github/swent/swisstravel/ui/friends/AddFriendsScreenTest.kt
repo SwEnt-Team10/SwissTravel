@@ -14,7 +14,6 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Rule
@@ -38,8 +37,9 @@ class AddFriendScreenTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     var searchResults: List<User> = emptyList()
     // The pool of all users available to "search" or "get by uid"
@@ -81,7 +81,17 @@ class AddFriendScreenTest {
         preferences: List<Preference>?,
         pinnedTripsUids: List<String>?,
         pinnedPicturesUids: List<String>?
-    ) {}
+    ) {
+      // no op in test
+    }
+
+    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
+    }
+
+    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
+    }
   }
 
   private fun createUser(uid: String, name: String) =
@@ -95,25 +105,15 @@ class AddFriendScreenTest {
           friends = emptyList(),
           stats = UserStats(),
           emptyList(),
-          emptyList())
+          emptyList(),
+          favoriteTripsUids = emptyList())
 
   @Test
   fun typingSearch_showsResults_andClickSendsFriendRequestAndCallsBack() {
     val fakeRepo = FakeUserRepository()
 
     // User we expect to appear in search results
-    val targetUser =
-        User(
-            uid = "friend123",
-            name = "Alice Friend",
-            biography = "",
-            email = "alice@example.com",
-            profilePicUrl = "",
-            preferences = emptyList(),
-            friends = emptyList(),
-            stats = UserStats(),
-            emptyList(),
-            emptyList())
+    val targetUser = createUser("friend123", "Alice Friend")
 
     fakeRepo.searchResults = listOf(targetUser)
 
@@ -122,12 +122,10 @@ class AddFriendScreenTest {
     var backCalled = false
 
     composeRule.setContent {
-      SwissTravelTheme {
-        AddFriendScreen(
-            friendsViewModel = friendsViewModel,
-            onBack = { backCalled = true },
-        )
-      }
+      AddFriendScreen(
+          friendsViewModel = friendsViewModel,
+          onBack = { backCalled = true },
+      )
     }
 
     // Type into the search field
@@ -161,7 +159,7 @@ class AddFriendScreenTest {
 
     val viewModel = FriendsViewModel(fakeRepo)
 
-    composeRule.setContent { SwissTravelTheme { AddFriendScreen(friendsViewModel = viewModel) } }
+    composeRule.setContent { AddFriendScreen(friendsViewModel = viewModel) }
 
     // Search for Alice
     composeRule
@@ -199,7 +197,7 @@ class AddFriendScreenTest {
     // Wait for VM to update state (simple way in UI test)
     composeRule.waitForIdle()
 
-    composeRule.setContent { SwissTravelTheme { AddFriendScreen(friendsViewModel = viewModel) } }
+    composeRule.setContent { AddFriendScreen(friendsViewModel = viewModel) }
 
     // 2. Search for the friend
     composeRule
@@ -229,7 +227,7 @@ class AddFriendScreenTest {
     viewModel.refreshFriends()
     composeRule.waitForIdle()
 
-    composeRule.setContent { SwissTravelTheme { AddFriendScreen(friendsViewModel = viewModel) } }
+    composeRule.setContent { AddFriendScreen(friendsViewModel = viewModel) }
 
     // 2. Search for the pending user
     composeRule

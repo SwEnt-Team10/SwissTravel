@@ -1,10 +1,12 @@
 package com.github.swent.swisstravel.ui.trips
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -26,8 +28,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.composable.SortMenu
-import com.github.swent.swisstravel.ui.composable.TripInteraction
-import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.composable.TripListEvents
+import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
+import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.Screen
 
@@ -63,6 +67,7 @@ fun SetCurrentTripScreen(
   }
 
   val context = LocalContext.current
+  val emptyListString = stringResource(R.string.no_upcoming_trips)
 
   // Refresh trips when entering the screen
   LaunchedEffect(Unit) { viewModel.refreshUIState() }
@@ -78,28 +83,31 @@ fun SetCurrentTripScreen(
       modifier =
           Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.small_padding))) {
           pd ->
-        Box(modifier = Modifier.padding(pd).fillMaxSize()) {
-          TripList(
-              trips = trips,
-              interaction =
-                  TripInteraction(
-                      onClick = { trip ->
-                        viewModel.changeCurrentTrip(trip!!)
-                        navigationActions?.navigateTo(Screen.MyTrips)
-                        Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT)
-                            .show()
-                      },
-                      onLongPress = { trip ->
-                        viewModel.changeCurrentTrip(trip!!)
-                        navigationActions?.navigateTo(Screen.MyTrips)
-                        Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT)
-                            .show()
-                      },
+        LazyColumn(
+            modifier = Modifier.padding(pd).fillMaxSize().testTag(TripListTestTags.TRIP_LIST)) {
+              val listState =
+                  TripListState(
+                      trips = trips,
                       isSelected = isSelected,
-                      isSelectionMode = false),
-              noIconTripElement = true,
-              emptyListString = stringResource(R.string.no_upcoming_trips))
-        }
+                      isSelectionMode = false,
+                      noIconTripElement = true,
+                      emptyListString = emptyListString,
+                      favoriteTripsUids = uiState.favoriteTripsUids,
+                  )
+
+              val onClickAction: (Trip?) -> Unit = { trip ->
+                trip?.let {
+                  viewModel.changeCurrentTrip(it)
+                  navigationActions?.navigateTo(Screen.MyTrips)
+                  Toast.makeText(context, R.string.current_trip_saved, Toast.LENGTH_SHORT).show()
+                }
+              }
+
+              val listEvents =
+                  TripListEvents(onClickTripElement = onClickAction, onLongPress = onClickAction)
+              item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer))) }
+              tripListItems(listState = listState, listEvents = listEvents)
+            }
       }
 }
 
@@ -133,7 +141,7 @@ fun TopBarSetCurrentTrip(
             modifier = Modifier.testTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON)) {
               Icon(
                   imageVector = Icons.Filled.Close,
-                  contentDescription = "Close",
+                  contentDescription = stringResource(R.string.close),
                   tint = MaterialTheme.colorScheme.onBackground)
             }
       },

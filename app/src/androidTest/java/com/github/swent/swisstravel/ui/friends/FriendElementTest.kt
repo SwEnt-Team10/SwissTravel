@@ -9,7 +9,6 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -30,20 +29,19 @@ class FriendElementTest {
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
-          emptyList(),
-          emptyList())
+          pinnedTripsUids = emptyList(),
+          pinnedPicturesUids = emptyList(),
+          favoriteTripsUids = emptyList())
 
   @Test
   fun friendElement_showsArrowWhenNotPendingOrNotShouldAccept() {
     val user = sampleUser()
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendElement(
-            userToDisplay = user,
-            actions = FriendElementActions(onClick = {}),
-            state = FriendElementState(isPendingRequest = false, shouldAccept = false))
-      }
+      FriendElement(
+          userToDisplay = user,
+          actions = FriendElementActions(onClick = {}),
+          state = FriendElementState(isPendingRequest = false, shouldAccept = false))
     }
 
     // Arrow is visible
@@ -64,16 +62,14 @@ class FriendElementTest {
     var declineCalled = false
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendElement(
-            userToDisplay = user,
-            actions =
-                FriendElementActions(
-                    onClick = {},
-                    onAccept = { acceptCalled = true },
-                    onDecline = { declineCalled = true }),
-            state = FriendElementState(isPendingRequest = true, shouldAccept = true))
-      }
+      FriendElement(
+          userToDisplay = user,
+          actions =
+              FriendElementActions(
+                  onClick = {},
+                  onAccept = { acceptCalled = true },
+                  onDecline = { declineCalled = true }),
+          state = FriendElementState(isPendingRequest = true, shouldAccept = true))
     }
 
     // Arrow should not be visible
@@ -98,12 +94,10 @@ class FriendElementTest {
     var clicked = false
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendElement(
-            userToDisplay = user,
-            actions = FriendElementActions(onClick = { clicked = true }),
-            state = FriendElementState(isPendingRequest = false, shouldAccept = false))
-      }
+      FriendElement(
+          userToDisplay = user,
+          actions = FriendElementActions(onClick = { clicked = true }),
+          state = FriendElementState(isPendingRequest = false, shouldAccept = false))
     }
 
     // Card has correct test tag
@@ -123,13 +117,11 @@ class FriendElementTest {
     val user = sampleUser()
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendElement(
-            userToDisplay = user,
-            actions = FriendElementActions(onClick = {}),
-            // UPDATED: Testing new isAddMode flag
-            state = FriendElementState(isAddMode = true))
-      }
+      FriendElement(
+          userToDisplay = user,
+          actions = FriendElementActions(onClick = {}),
+          // UPDATED: Testing new isAddMode flag
+          state = FriendElementState(isAddMode = true))
     }
 
     // Add icon is visible

@@ -9,7 +9,7 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
-import com.github.swent.swisstravel.ui.trips.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeTripsRepository
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
