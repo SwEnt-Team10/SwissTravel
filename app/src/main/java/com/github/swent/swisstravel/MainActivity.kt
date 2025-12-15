@@ -465,6 +465,7 @@ private fun NavGraphBuilder.myTripsNavGraph(
     }
     composable(Screen.SetCurrentTrip.route) {
       SetCurrentTripScreen(
+          viewModel = myTripsViewModel,
           title = context.getString(R.string.set_current_trip),
           isSelected = { trip -> trip.isCurrentTrip },
           onClose = { navigationActions.goBack() },

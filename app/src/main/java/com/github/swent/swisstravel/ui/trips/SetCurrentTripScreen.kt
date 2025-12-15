@@ -1,8 +1,10 @@
 package com.github.swent.swisstravel.ui.trips
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -103,7 +105,7 @@ fun SetCurrentTripScreen(
 
               val listEvents =
                   TripListEvents(onClickTripElement = onClickAction, onLongPress = onClickAction)
-
+              item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer))) }
               tripListItems(listState = listState, listEvents = listEvents)
             }
       }
