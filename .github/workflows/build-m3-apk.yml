@@ -58,12 +58,6 @@ jobs:
           else
             echo "::warning::MAP_BOX_SECRET secret is not set. developer-config-mapbox.xml will not be created."
           fi
-          
-          if [ -n "$OPEN_TRANSPORT_DATA_TOKEN" ]; then
-            echo "OPEN_TRANSPORT_DATA_TOKEN=$OPEN_TRANSPORT_DATA_TOKEN" >> ./local.properties
-          else
-            echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set."
-          fi
 
       # Build the release APK
       - name: Build Release APK
