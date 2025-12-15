@@ -58,10 +58,10 @@ jobs:
             echo "::warning::MAP_BOX_SECRET secret is not set. developper-config.xml will not be created."
           fi
           
-          if [ -n "OPEN_TRANSPORT_DATA_SECRET" ]; then
-            echo "OPEN_TRANSPORT_DATA_SECRET" | base64 --decode > ./app/src/main/res/values/developer-config.xml
+          if [ -n "OPEN_TRANSPORT_DATA_TOKEN" ]; then
+            echo "OPEN_TRANSPORT_DATA_TOKEN" | base64 --decode > ./app/src/main/res/values/developer-config.xml
           else
-            echo "::warning::OPEN_TRANSPORT_DATA_SECRET secret is not set. developper-config.xml will not be created."
+            echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set. developper-config.xml will not be created."
           fi
 
       # Build the release APK
