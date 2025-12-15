@@ -473,7 +473,7 @@ class TripInfoViewModel(
    *
    * @param liked a boolean indicating whether you liked the activity or not
    */
-  override fun swipeActivity(liked: Boolean) {
+  override fun swipeActivity(liked: Boolean, enableNewFetch: Boolean) {
     val current = _uiState.value.currentActivity ?: return
     val newQueue = _uiState.value.activitiesQueue.toMutableList()
 
@@ -484,8 +484,10 @@ class TripInfoViewModel(
       newQueue.removeAt(0)
     }
 
+    updateQueueAndAllFetched(newQueue, emptyList())
+
     // fetches new activity to put on the back of the queue, and adds it to all fetched
-    viewModelScope.launch { fetchSwipeActivity() }
+    if (enableNewFetch) viewModelScope.launch { fetchSwipeActivity() }
   }
 
   /**

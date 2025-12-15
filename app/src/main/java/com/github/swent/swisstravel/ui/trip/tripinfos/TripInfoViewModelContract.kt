@@ -90,8 +90,9 @@ interface TripInfoViewModelContract {
    * Otherwise, it is considered as a dislike
    *
    * @param liked a boolean indicating whether you liked the activity or not
+   * @param enableNewFetch whether to fetch a new activity after the swipe or not
    */
-  fun swipeActivity(liked: Boolean)
+  fun swipeActivity(liked: Boolean, enableNewFetch: Boolean = true)
 
   /**
    * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it

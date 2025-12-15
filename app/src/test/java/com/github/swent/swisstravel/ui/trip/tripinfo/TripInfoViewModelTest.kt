@@ -12,6 +12,7 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
 import com.mapbox.geojson.Point
 import io.mockk.*
@@ -25,6 +26,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.time.ZoneId
 
 @ExperimentalCoroutinesApi
 class TripInfoViewModelTest {
@@ -383,4 +385,100 @@ class TripInfoViewModelTest {
     // Assert
     coVerify { tripsRepository.removeCollaborator(tripId, collaboratorToRemove.uid) }
   }
+
+  @Test
+  fun swipeActivityWorks() = runTest {
+    val activity1 =
+        Activity(
+            startDate = now,
+            endDate = now,
+            location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
+            description = "Desc1",
+            imageUrls = emptyList(),
+            estimatedTime = 60)
+    val activity2 =
+        Activity(
+            startDate = now,
+            endDate = now,
+            location = Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+            description = "Desc2",
+            imageUrls = emptyList(),
+            estimatedTime = 45)
+    val tripWithActivities =
+        dummyTrip.copy(uid = "tripWithActivities", activitiesQueue = listOf(activity1, activity2))
+
+    coEvery { tripsRepository.getTrip(tripWithActivities.uid) } returns tripWithActivities
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip(any(), any()) } just Runs
+
+    // load trip
+    viewModel.loadTripInfo(tripWithActivities.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // like the first activity
+    viewModel.swipeActivity(liked = true, enableNewFetch = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // first activity should be in likedActivities
+    assertEquals(1, viewModel.uiState.value.likedActivities.size)
+    assertEquals(activity1, viewModel.uiState.value.likedActivities[0])
+
+    // activitiesQueue should have one less activity
+    assertEquals(1, viewModel.uiState.value.activitiesQueue.size)
+    assertEquals(activity2, viewModel.uiState.value.activitiesQueue[0])
+
+    // dislike the next activity
+    viewModel.swipeActivity(liked = false, enableNewFetch = false)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // likedActivities should remain the same
+    assertEquals(1, viewModel.uiState.value.likedActivities.size)
+    // activitiesQueue should be empty now (no fetching of new activity since we didn't mock that)
+    assertTrue(viewModel.uiState.value.activitiesQueue.isEmpty())
+  }
+
+    @Test
+    fun `mapToTripSettings returns correct TripSettings`() = runTest {
+        val tripProfile =
+            TripProfile(
+                startDate = now,
+                endDate = Timestamp(now.seconds + 7200, 0),
+                preferredLocations = emptyList(),
+                preferences = emptyList())
+        val trip = dummyTrip.copy(tripProfile = tripProfile)
+        coEvery { tripsRepository.getTrip(trip.uid) } returns trip
+        coEvery { userRepository.getCurrentUser() } returns fakeUser
+        coEvery { tripsRepository.editTrip(any(), any()) } just Runs
+
+        // Load trip
+        viewModel.loadTripInfo(trip.uid)
+        testDispatcher.scheduler.advanceUntilIdle()
+
+        // create trip settings
+        val tripSettings: TripSettings = viewModel.mapToTripSettings()
+
+        // trip name
+        assertEquals(trip.name, tripSettings.name)
+        // start / end date
+        assertEquals(
+            trip.tripProfile.startDate
+                .toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+            tripSettings.date.startDate)
+        assertEquals(
+            trip.tripProfile.endDate
+                .toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+            tripSettings.date.endDate)
+        // preferences
+        assertEquals(trip.tripProfile.preferences, tripSettings.preferences)
+        // arrival/departure locations
+        assertEquals(trip.tripProfile.arrivalLocation, tripSettings.arrivalDeparture.arrivalLocation)
+        assertEquals(trip.tripProfile.departureLocation, tripSettings.arrivalDeparture.departureLocation)
+        // destinations
+        assertEquals(trip.tripProfile.preferredLocations, tripSettings.destinations)
+        // travelers
+        assertEquals(trip.tripProfile.adults, tripSettings.travelers.adults)
+        assertEquals(trip.tripProfile.children, tripSettings.travelers.children)
+        // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+        assertNull(tripSettings.invalidNameMsg)
+    }
 }
