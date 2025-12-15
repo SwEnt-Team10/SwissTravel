@@ -410,24 +410,24 @@ open class TripAlgorithm(
                         computeProgression.scheduleTrip * progress)
               }
 
-      schedule =
           if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) >
               0) {
             completeSchedule(schedule, enhancedTripProfile, activities)
-          } else if (sameDate(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)) {
-            schedule
-          } else {
-            scheduleRemove(
-                enhancedTripProfile = enhancedTripProfile,
-                originalOptimizedRoute = optimizedRoute,
-                activities = activities) { progress ->
+          } else if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) <
+              0) {
+              scheduleRemove(
+                  enhancedTripProfile = enhancedTripProfile,
+                  originalOptimizedRoute = optimizedRoute,
+                  activities = activities
+              ) { progress ->
                   onProgress(
                       computeProgression.selectActivities +
-                          computeProgression.optimizeRoute +
-                          computeProgression.fetchInBetweenActivities +
-                          computeProgression.scheduleTrip +
-                          computeProgression.finalScheduling * progress)
-                }
+                              computeProgression.optimizeRoute +
+                              computeProgression.fetchInBetweenActivities +
+                              computeProgression.scheduleTrip +
+                              computeProgression.finalScheduling * progress
+                  )
+              }
           }
 
       val finalRoute =

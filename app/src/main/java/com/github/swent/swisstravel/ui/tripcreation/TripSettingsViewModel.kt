@@ -260,6 +260,18 @@ open class TripSettingsViewModel(
           return@launch
         }
 
+          if (settings.arrivalDeparture.arrivalLocation == null) {
+              _validationEventChannel.send(
+                  ValidationEvent.SaveError("Arrival location must not be null"))
+              return@launch
+          }
+
+          if (settings.arrivalDeparture.departureLocation == null) {
+              _validationEventChannel.send(
+                  ValidationEvent.SaveError("Departure location must not be null"))
+              return@launch
+          }
+
         val startTs = Timestamp(start.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
         val endTs = Timestamp(end.atStartOfDay(ZoneId.systemDefault()).toEpochSecond(), 0)
         val finalName = settings.name.ifBlank { "Trip from ${settings.date.startDate}" }
