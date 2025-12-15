@@ -436,6 +436,15 @@ fun ProfileStats(stats: UserStats, friendsCount: Int) {
       }
 }
 
+/**
+ * Composable that displays a single statistic item for a user profile, consisting of a count and a
+ * descriptive label.
+ *
+ * The label is automatically pluralized by appending an "s" if the count is greater than 1.
+ *
+ * @param count The numerical value of the statistic to display.
+ * @param label The base label describing the statistic (e.g., "Trip", "Follower").
+ */
 @Composable
 fun ProfileStatItem(count: Int, label: String) {
   Column(horizontalAlignment = Alignment.CenterHorizontally) {
