@@ -53,6 +53,7 @@ abstract class TripsViewModel(
    * @property sortType The current sorting preference for upcoming trips.
    * @property isSelectionMode Whether the user is currently selecting multiple trips.
    * @property selectedTrips The set of trips currently selected in selection mode.
+   * @property isLoading Whether the UI is currently loading data.
    * @property collaboratorsByTripId A map of trips to their associated collaborators.
    * @property favoriteTripsUids The set of favorite trip UIDs.
    */
