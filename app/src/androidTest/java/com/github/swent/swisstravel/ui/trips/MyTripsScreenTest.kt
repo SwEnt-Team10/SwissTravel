@@ -328,7 +328,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val fakeUserRepo = FakeUserRepository()
     fakeUserRepo.addUser(createTestUser(uid = "ownerX", name = "Owner X"))
     // Explicitly add the trip to favorites in the user repo
-    runBlocking { fakeUserRepo.addFavoriteTrip("ownerX", favoriteTrip.uid) }
+    runBlocking { fakeUserRepo.addFavoriteTrip("current", favoriteTrip.uid) }
 
     val viewModel = MyTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeRepo)
 

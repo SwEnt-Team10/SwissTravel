@@ -50,23 +50,28 @@ open class FakeTripsRepository(private val trips: MutableList<Trip> = mutableLis
 class FakeUserRepository : UserRepository {
   private val users = mutableMapOf<String, User>()
 
+  init {
+    val currentUser =
+        User(
+            "current",
+            "Current User",
+            "",
+            "email",
+            "",
+            emptyList(),
+            emptyList(),
+            UserStats(),
+            emptyList(),
+            emptyList(),
+            emptyList())
+    users[currentUser.uid] = currentUser
+  }
+
   fun addUser(user: User) {
     users[user.uid] = user
   }
 
-  override suspend fun getCurrentUser(): User =
-      User(
-          "current",
-          "Current User",
-          "",
-          "email",
-          "",
-          emptyList(),
-          emptyList(),
-          UserStats(),
-          emptyList(),
-          emptyList(),
-          emptyList())
+  override suspend fun getCurrentUser(): User = users["current"]!!
 
   override suspend fun getUserByUid(uid: String): User? = users[uid]
 
@@ -96,5 +101,7 @@ class FakeUserRepository : UserRepository {
     users[uid] = users[uid]!!.copy(favoriteTripsUids = users[uid]!!.favoriteTripsUids + tripUid)
   }
 
-  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {}
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+    users[uid] = users[uid]!!.copy(favoriteTripsUids = users[uid]!!.favoriteTripsUids - tripUid)
+  }
 }
