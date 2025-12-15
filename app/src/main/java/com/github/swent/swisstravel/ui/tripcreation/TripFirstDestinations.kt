@@ -63,10 +63,10 @@ import java.util.UUID
 
 /** Object containing test tags for the [FirstDestinationScreen] composable. */
 object TripFirstDestinationsTestTags {
-    const val FIRST_DESTINATIONS_TITLE = "first_destinations_title"
-    const val ADD_FIRST_DESTINATION = "add_first_destination"
-    const val NEXT_BUTTON = "next_button"
-    const val RETURN_BUTTON = "return_button"
+  const val FIRST_DESTINATIONS_TITLE = "first_destinations_title"
+  const val ADD_FIRST_DESTINATION = "add_first_destination"
+  const val NEXT_BUTTON = "next_button"
+  const val RETURN_BUTTON = "return_button"
 }
 
 private const val MAX_DESTINATIONS = 9
@@ -87,119 +87,119 @@ private data class DestinationWrapper(
  * @param onNext Callback invoked when the user proceeds to the next step.
  * @param onPrevious Callback invoked when the user goes back to the previous step.
  * @param destinationViewModelFactory Factory function to create ViewModels for destination input
- * fields.
+ *   fields.
  */
 @Composable
 fun FirstDestinationScreen(
     viewModel: TripSettingsViewModel = viewModel(),
     onNext: () -> Unit = {},
     onPrevious: () -> Unit = {},
-    destinationViewModelFactory:
-    @Composable (String) -> AddressTextFieldViewModelContract = { key ->
-        viewModel<DestinationTextFieldViewModel>(
-            key = "destination_$key",
-            factory = DestinationTextFieldViewModelFactory(MySwitzerlandLocationRepository()))
-    }
+    destinationViewModelFactory: @Composable (String) -> AddressTextFieldViewModelContract =
+        { key ->
+          viewModel<DestinationTextFieldViewModel>(
+              key = "destination_$key",
+              factory = DestinationTextFieldViewModelFactory(MySwitzerlandLocationRepository()))
+        }
 ) {
-    // Use DestinationWrapper to track unique IDs for each field
-    val destinations = remember { mutableStateListOf<DestinationWrapper>() }
-    val suggestions by viewModel.suggestions.collectAsState()
-    val selectedSuggestions by viewModel.selectedSuggestions.collectAsState()
-    val context = LocalContext.current
-    var isExpanded by remember { mutableStateOf(false) }
+  // Use DestinationWrapper to track unique IDs for each field
+  val destinations = remember { mutableStateListOf<DestinationWrapper>() }
+  val suggestions by viewModel.suggestions.collectAsState()
+  val selectedSuggestions by viewModel.selectedSuggestions.collectAsState()
+  val context = LocalContext.current
+  var isExpanded by remember { mutableStateOf(false) }
 
-    LaunchedEffect(Unit) { viewModel.generateSuggestions(context) }
+  LaunchedEffect(Unit) { viewModel.generateSuggestions(context) }
 
-    Scaffold(
-        topBar = {
-            TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON))
-        }) { paddingValues ->
+  Scaffold(
+      topBar = {
+        TopBar(onClick = { onPrevious() }, modifier = Modifier.testTag(RETURN_BUTTON))
+      }) { paddingValues ->
         Surface(
             modifier = Modifier.fillMaxSize().padding(paddingValues),
             color = MaterialTheme.colorScheme.background) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.mid_padding)),
-                horizontalAlignment = Alignment.CenterHorizontally) {
-                item { FirstDestinationsTitle() }
+              LazyColumn(
+                  modifier = Modifier.fillMaxSize().padding(dimensionResource(R.dimen.mid_padding)),
+                  horizontalAlignment = Alignment.CenterHorizontally) {
+                    item { FirstDestinationsTitle() }
 
-                item {
-                    AddDestinationButton(
-                        destinations = destinations,
-                        onAddDestination = {
+                    item {
+                      AddDestinationButton(
+                          destinations = destinations,
+                          onAddDestination = {
                             destinations.add(
                                 DestinationWrapper(
                                     location =
                                         Location(coordinate = Coordinate(0.0, 0.0), name = "")))
-                        },
-                        getSuggestionToggledSelectedSize = {
+                          },
+                          getSuggestionToggledSelectedSize = {
                             viewModel.getSuggestionToggledSelectedSize()
-                        })
-                }
+                          })
+                    }
 
-                // Key using the unique ID so removal doesn't mess up ViewModel association
-                itemsIndexed(destinations, key = { _, item -> item.id }) { index, wrapper ->
-                    val destinationVm = destinationViewModelFactory(wrapper.id)
-                    DestinationItem(
-                        index = index,
-                        destinationVm = destinationVm,
-                        onLocationSelected = { selectedLocation ->
+                    // Key using the unique ID so removal doesn't mess up ViewModel association
+                    itemsIndexed(destinations, key = { _, item -> item.id }) { index, wrapper ->
+                      val destinationVm = destinationViewModelFactory(wrapper.id)
+                      DestinationItem(
+                          index = index,
+                          destinationVm = destinationVm,
+                          onLocationSelected = { selectedLocation ->
                             val idx = destinations.indexOfFirst { it.id == wrapper.id }
                             if (idx != -1) {
-                                destinations[idx] = wrapper.copy(location = selectedLocation)
+                              destinations[idx] = wrapper.copy(location = selectedLocation)
                             }
-                        },
-                        onRemove = {
+                          },
+                          onRemove = {
                             val idx = destinations.indexOfFirst { it.id == wrapper.id }
                             if (idx != -1) {
-                                destinations.removeAt(idx)
+                              destinations.removeAt(idx)
                             }
-                        })
-                }
+                          })
+                    }
 
-                item {
-                    SuggestionsHeader(
-                        isExpanded = isExpanded, onToggleExpand = { isExpanded = !isExpanded })
-                }
+                    item {
+                      SuggestionsHeader(
+                          isExpanded = isExpanded, onToggleExpand = { isExpanded = !isExpanded })
+                    }
 
-                if (isExpanded) {
-                    SuggestionList(
-                        selectedSuggestions = selectedSuggestions,
-                        suggestions = suggestions,
-                        onSuggestionSelected = { location ->
+                    if (isExpanded) {
+                      SuggestionList(
+                          selectedSuggestions = selectedSuggestions,
+                          suggestions = suggestions,
+                          onSuggestionSelected = { location ->
                             viewModel.toggleSuggestion(location)
-                        },
-                        onSuggestionDeselected = { location ->
+                          },
+                          onSuggestionDeselected = { location ->
                             viewModel.toggleSuggestion(location)
-                        },
-                        getSuggestionToggledSelectedSize = {
+                          },
+                          getSuggestionToggledSelectedSize = {
                             viewModel.getSuggestionToggledSelectedSize()
-                        },
-                        manualCount = destinations.size)
-                }
+                          },
+                          manualCount = destinations.size)
+                    }
 
-                item {
-                    NextButton(
-                        onNext = {
+                    item {
+                      NextButton(
+                          onNext = {
                             val manualList =
                                 destinations.map { it.location }.filter { it.name.isNotEmpty() }
                             val mergedList = manualList + selectedSuggestions
                             viewModel.setDestinations(mergedList)
                             onNext()
-                        })
-                }
+                          })
+                    }
+                  }
             }
-        }
-    }
+      }
 }
 
 @Composable
 fun FirstDestinationsTitle() {
-    Text(
-        modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
-        text = stringResource(R.string.first_destinations_title),
-        textAlign = TextAlign.Center,
-        style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+  Text(
+      modifier = Modifier.testTag(FIRST_DESTINATIONS_TITLE),
+      text = stringResource(R.string.first_destinations_title),
+      textAlign = TextAlign.Center,
+      style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 }
 
 @Composable
@@ -208,24 +208,24 @@ private fun AddDestinationButton(
     onAddDestination: () -> Unit,
     getSuggestionToggledSelectedSize: () -> Int
 ) {
-    Button(
-        modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
-        onClick = onAddDestination,
-        enabled =
-            (destinations.isEmpty() || destinations.last().location.name.isNotEmpty()) &&
-                    destinations.size + getSuggestionToggledSelectedSize() < MAX_DESTINATIONS,
-    ) {
-        Text(
-            if (destinations.size + getSuggestionToggledSelectedSize() < MAX_DESTINATIONS) {
-                stringResource(R.string.add_first_destination)
-            } else stringResource(R.string.destination_limited))
-    }
+  Button(
+      modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
+      onClick = onAddDestination,
+      enabled =
+          (destinations.isEmpty() || destinations.last().location.name.isNotEmpty()) &&
+              destinations.size + getSuggestionToggledSelectedSize() < MAX_DESTINATIONS,
+  ) {
+    Text(
+        if (destinations.size + getSuggestionToggledSelectedSize() < MAX_DESTINATIONS) {
+          stringResource(R.string.add_first_destination)
+        } else stringResource(R.string.destination_limited))
+  }
 
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
-    HorizontalDivider()
+  HorizontalDivider()
 
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 }
 
 @Composable
@@ -235,68 +235,73 @@ fun DestinationItem(
     onLocationSelected: (Location) -> Unit,
     onRemove: () -> Unit
 ) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        Box(modifier = Modifier.weight(1f)) {
-            LocationAutocompleteTextField(
-                modifier = Modifier.fillMaxWidth(),
-                onLocationSelected = onLocationSelected,
-                addressTextFieldViewModel = destinationVm,
-                clearOnSelect = false,
-                name = "Destination ${index + 1}",
-                showImages = true)
-        }
-
-        IconButton(
-            onClick = onRemove,
-            modifier =
-                Modifier.testTag("remove_destination_$index")
-                    .offset(y = dimensionResource(R.dimen.trip_destination_cross_offset)) // Offset to correct visual alignment with text field input
-        ) {
-            Icon(imageVector = Icons.Default.Close, contentDescription = "Remove Destination")
-        }
+  Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+    Box(modifier = Modifier.weight(1f)) {
+      LocationAutocompleteTextField(
+          modifier = Modifier.fillMaxWidth(),
+          onLocationSelected = onLocationSelected,
+          addressTextFieldViewModel = destinationVm,
+          clearOnSelect = false,
+          name = "Destination ${index + 1}",
+          showImages = true)
     }
 
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+    IconButton(
+        onClick = onRemove,
+        modifier =
+            Modifier.testTag("remove_destination_$index")
+                .offset(
+                    y =
+                        dimensionResource(
+                            R.dimen
+                                .trip_destination_cross_offset)) // Offset to correct visual
+                                                                 // alignment with text field input
+        ) {
+          Icon(imageVector = Icons.Default.Close, contentDescription = "Remove Destination")
+        }
+  }
+
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 }
 
 @Composable
 fun SuggestionsHeader(isExpanded: Boolean, onToggleExpand: () -> Unit) {
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable { onToggleExpand() }
-                .padding(vertical = dimensionResource(R.dimen.small_padding)),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .clickable { onToggleExpand() }
+              .padding(vertical = dimensionResource(R.dimen.small_padding)),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
         Text(text = "See Our Suggestions For You", style = MaterialTheme.typography.titleMedium)
         Icon(
             imageVector =
                 if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
             contentDescription = if (isExpanded) "Collapse" else "Expand")
-    }
+      }
 }
 
 @Composable
 fun NextButton(onNext: () -> Unit) {
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
 
-    HorizontalDivider()
+  HorizontalDivider()
 
-    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
 
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-        Button(
-            modifier = Modifier.testTag(NEXT_BUTTON),
-            onClick = onNext,
-            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
-            Text(
-                stringResource(R.string.next),
-                color = MaterialTheme.colorScheme.onPrimary,
-                style = MaterialTheme.typography.titleMedium)
+  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+    Button(
+        modifier = Modifier.testTag(NEXT_BUTTON),
+        onClick = onNext,
+        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)) {
+          Text(
+              stringResource(R.string.next),
+              color = MaterialTheme.colorScheme.onPrimary,
+              style = MaterialTheme.typography.titleMedium)
         }
-    }
+  }
 }
 
 /** Extension function for LazyListScope to display a list of suggested destinations. */
@@ -308,74 +313,72 @@ fun LazyListScope.SuggestionList(
     getSuggestionToggledSelectedSize: () -> Int,
     manualCount: Int,
 ) {
-    itemsIndexed(suggestions) { _, location ->
-        val isSelected =
-            selectedSuggestions.any {
-                it.name == location.name && it.coordinate == location.coordinate
-            }
+  itemsIndexed(suggestions) { _, location ->
+    val isSelected =
+        selectedSuggestions.any { it.name == location.name && it.coordinate == location.coordinate }
 
-        // Obtain the Context to show the Toast
-        val context = LocalContext.current
+    // Obtain the Context to show the Toast
+    val context = LocalContext.current
 
-        Row(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .clickable {
-                        // Logic for clicking the entire Row
-                        if (isSelected) {
-                            onSuggestionDeselected(location)
-                        } else {
-                            // Check limit before selecting
-                            val currentCount = manualCount + getSuggestionToggledSelectedSize()
-                            if (currentCount < MAX_DESTINATIONS) {
-                                onSuggestionSelected(location)
-                            } else {
-                                Toast.makeText(
-                                    context,
-                                    context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
-                                    Toast.LENGTH_SHORT)
-                                    .show()
-                            }
-                        }
-                    }
-                    .padding(dimensionResource(R.dimen.small_padding))
-                    .testTag("suggestion_row_${location.name}"),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = location.name,
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.weight(1f))
-            Checkbox(
-                modifier = Modifier.testTag("suggestion_checkbox_${location.name}"),
-                checked = isSelected,
-                onCheckedChange = { checked ->
-                    // 'checked' is the NEW state.
-                    // true = user wants to check it. false = user wants to uncheck it.
-                    if (checked) {
-                        val currentCount = manualCount + getSuggestionToggledSelectedSize()
-
-                        if (currentCount < MAX_DESTINATIONS) {
-                            onSuggestionSelected(location)
-                        } else {
-                            Toast.makeText(
-                                context,
-                                context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
-                                Toast.LENGTH_SHORT)
-                                .show()
-                        }
+    Row(
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable {
+                  // Logic for clicking the entire Row
+                  if (isSelected) {
+                    onSuggestionDeselected(location)
+                  } else {
+                    // Check limit before selecting
+                    val currentCount = manualCount + getSuggestionToggledSelectedSize()
+                    if (currentCount < MAX_DESTINATIONS) {
+                      onSuggestionSelected(location)
                     } else {
-                        // User is unchecking (removing), always allow
-                        onSuggestionDeselected(location)
+                      Toast.makeText(
+                              context,
+                              context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
+                              Toast.LENGTH_SHORT)
+                          .show()
                     }
-                })
+                  }
+                }
+                .padding(dimensionResource(R.dimen.small_padding))
+                .testTag("suggestion_row_${location.name}"),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = location.name,
+              style = MaterialTheme.typography.bodyLarge,
+              modifier = Modifier.weight(1f))
+          Checkbox(
+              modifier = Modifier.testTag("suggestion_checkbox_${location.name}"),
+              checked = isSelected,
+              onCheckedChange = { checked ->
+                // 'checked' is the NEW state.
+                // true = user wants to check it. false = user wants to uncheck it.
+                if (checked) {
+                  val currentCount = manualCount + getSuggestionToggledSelectedSize()
+
+                  if (currentCount < MAX_DESTINATIONS) {
+                    onSuggestionSelected(location)
+                  } else {
+                    Toast.makeText(
+                            context,
+                            context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
+                            Toast.LENGTH_SHORT)
+                        .show()
+                  }
+                } else {
+                  // User is unchecking (removing), always allow
+                  onSuggestionDeselected(location)
+                }
+              })
         }
-        HorizontalDivider()
-    }
+    HorizontalDivider()
+  }
 }
 
 @Preview
 @Composable
 fun FirstDestinationScreenPreview() {
-    FirstDestinationScreen()
+  FirstDestinationScreen()
 }
