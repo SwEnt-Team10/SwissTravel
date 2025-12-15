@@ -9,6 +9,8 @@ import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.user.Preference
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -42,6 +44,12 @@ class TripCreationViewModelTest {
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
+
+    mockkStatic(FirebaseAuth::class)
+    mockkStatic(FirebaseFirestore::class)
+    every { FirebaseAuth.getInstance() } returns mockk(relaxed = true)
+    every { FirebaseFirestore.getInstance() } returns mockk(relaxed = true)
+
     fakeRepo = FakeTripsRepository()
     fakeUserRepo = FakeUserRepository()
     fakeActivityRepo = FakeActivityRepository()

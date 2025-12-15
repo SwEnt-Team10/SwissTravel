@@ -292,6 +292,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(tripWithCollaborator.uid) } returns tripWithCollaborator
     coEvery { userRepository.getUserByUid("friend1") } returns friend1
     coEvery { userRepository.getUserByUid("friend2") } returns friend2
+    coEvery { tripsRepository.editTrip(tripWithCollaborator.uid, any()) } just Runs
 
     // Initialize VM with the trip
     viewModel.loadTripInfo(tripWithCollaborator.uid)
@@ -319,6 +320,7 @@ class TripInfoViewModelTest {
 
     coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
     coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip(tripId, any()) } just Runs
 
     // Mock the specific share method
     coEvery { tripsRepository.shareTripWithUsers(tripId, any()) } just Runs
@@ -346,6 +348,7 @@ class TripInfoViewModelTest {
 
     coEvery { tripsRepository.getTrip(tripId) } returns initialTrip
     coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip(tripId, any()) } just Runs
 
     // Mock the specific remove method
     coEvery { tripsRepository.removeCollaborator(tripId, any()) } just Runs
@@ -375,11 +378,11 @@ class TripInfoViewModelTest {
 
     // load trip
     viewModel.loadTripInfo(tripWithActivities.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // like the first activity
     viewModel.swipeActivity(liked = true, enableNewFetch = false)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // first activity should be in likedActivities
     assertEquals(1, viewModel.uiState.value.likedActivities.size)
@@ -391,7 +394,7 @@ class TripInfoViewModelTest {
 
     // dislike the next activity
     viewModel.swipeActivity(liked = false, enableNewFetch = false)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // likedActivities should remain the same
     assertEquals(1, viewModel.uiState.value.likedActivities.size)
@@ -414,7 +417,7 @@ class TripInfoViewModelTest {
 
     // Load trip
     viewModel.loadTripInfo(trip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // create trip settings
     val tripSettings: TripSettings = viewModel.mapToTripSettings()
@@ -455,7 +458,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
 
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     viewModel.likeActivities(listOf(activity1, activity2))
 
@@ -472,7 +475,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
 
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // like two activities
     viewModel.likeActivities(listOf(activity1, activity2))
@@ -499,7 +502,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
 
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // like two activities
     viewModel.likeActivities(listOf(activity1, activity2))
