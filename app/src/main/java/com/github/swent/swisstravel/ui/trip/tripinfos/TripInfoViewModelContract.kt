@@ -15,8 +15,9 @@ interface TripInfoViewModelContract {
    * Loads trip information for the given UID.
    *
    * @param uid The unique identifier of the trip to load.
+   * @param forceReload If true, forces a fetch even if the UID matches the current state.
    */
-  fun loadTripInfo(uid: String?)
+  fun loadTripInfo(uid: String?, forceReload: Boolean = false)
   /** Toggles the favorite status of the trip. */
   fun toggleFavorite()
   /** Clears any error message in the UI state. */

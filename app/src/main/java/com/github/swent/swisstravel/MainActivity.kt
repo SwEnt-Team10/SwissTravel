@@ -519,6 +519,12 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       val vm = viewModel<TripInfoViewModel>(parentEntry)
 
+      val refresh = navBackStackEntry.savedStateHandle.get<Boolean>("refresh_trip")
+      if (refresh == true) {
+        navBackStackEntry.savedStateHandle["refresh_trip"] = false // Reset flag
+        vm.loadTripInfo(uid, forceReload = true)
+      }
+
       DailyViewScreen(
           uid = uid,
           tripInfoViewModel = vm,
@@ -553,7 +559,10 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           EditTripScreen(
               tripId = tripId,
               onBack = { navController.popBackStack() },
-              onSaved = { navController.popBackStack() },
+              onSaved = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("refresh_trip", true)
+                navController.popBackStack()
+              },
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
 

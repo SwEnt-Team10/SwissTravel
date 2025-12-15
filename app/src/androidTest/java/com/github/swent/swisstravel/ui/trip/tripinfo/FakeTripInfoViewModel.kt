@@ -36,7 +36,7 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
 
   override val uiState: StateFlow<TripInfoUIState> = _ui
 
-  override fun loadTripInfo(uid: String?) {
+  override fun loadTripInfo(uid: String?, forceReload: Boolean) {
     _ui.value = _ui.value.copy(uid = uid ?: "")
   }
 

@@ -126,23 +126,17 @@ class TripInfoViewModel(
    * Loads the trip information for the given trip ID
    *
    * @param uid the unique identifier of the trip
+   * @param forceReload whether to force a reload from the repository
    */
-  override fun loadTripInfo(uid: String?) {
+  override fun loadTripInfo(uid: String?, forceReload: Boolean) {
     if (uid.isNullOrBlank()) {
       Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
-    // load the info only if the uid is different from the current one (meaning that the user
-    // navigated to another trip screen)
-    //
-    // if uid does not equal the state's uid, it means the state has already a valid uid, meaning
-    // the viewModel's state was
-    // already loaded (note that uids are unique)
-    //
-    // this condition is needed so that when the user navigates to swipe screen or liked activities
-    // screen, and comes back to daily view screen, it does not re-load the trip's info
-    if (uid == _uiState.value.uid) {
+
+    // load the info only if the uid is different from the current one OR if forceReload is true
+    if (!forceReload && uid == _uiState.value.uid) {
       Log.d("TRIP_INFO_VM", "loadTripInfo called with same uid = $uid, skipping reload")
       return
     }
