@@ -277,7 +277,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
           .fetchSemanticsNodes()
           .isNotEmpty()
     }
-
+    // *********************************************************************************************
     // Recreate the trip object locally just for data verification to match the "createSampleTrip"
     // logic
     val startTimestamp = Timestamp.now()
@@ -309,6 +309,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
             preferredLocations = locations,
             preferences =
                 listOf(Preference.GROUP, Preference.WHEELCHAIR_ACCESSIBLE, Preference.EARLY_BIRD))
+    // *********************************************************************************************
 
     composeTestRule.checkTripSummaryScreenIsDisplayed(
         expectedAdults = tripE2E.tripProfile.adults,
