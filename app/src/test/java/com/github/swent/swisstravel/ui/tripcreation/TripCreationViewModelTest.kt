@@ -14,6 +14,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
