@@ -11,7 +11,6 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -112,12 +111,10 @@ class AddFriendScreenTest {
     var backCalled = false
 
     composeRule.setContent {
-      SwissTravelTheme {
-        AddFriendScreen(
-            friendsViewModel = friendsViewModel,
-            onBack = { backCalled = true },
-        )
-      }
+      AddFriendScreen(
+          friendsViewModel = friendsViewModel,
+          onBack = { backCalled = true },
+      )
     }
 
     // Type into the search field
