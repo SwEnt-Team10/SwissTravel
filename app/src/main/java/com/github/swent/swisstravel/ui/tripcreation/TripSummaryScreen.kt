@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,7 +28,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -131,7 +129,6 @@ fun TripSummaryScreen(
                             Arrangement.spacedBy(
                                 dimensionResource(R.dimen.trip_summary_card_content_spacing))) {
                           DateSummary(state.date.startDate, state.date.endDate)
-                          Divider(color = MaterialTheme.colorScheme.surfaceVariant)
                           TravelerSummary(state)
                         }
                   }
@@ -147,7 +144,6 @@ fun TripSummaryScreen(
                           ArrivalDepartureSummary(
                               arrival = state.arrivalDeparture.arrivalLocation?.name ?: "",
                               departure = state.arrivalDeparture.departureLocation?.name ?: "")
-                          Divider(color = MaterialTheme.colorScheme.surfaceVariant)
                           DestinationSummary(state.destinations)
                         }
                   }
@@ -456,15 +452,6 @@ private fun CreateTripButton(enabled: Boolean, onClick: () -> Unit) {
 }
 
 /* ---------------------------- HELPERS ---------------------------- */
-
-/**
- * Composable to add padding to a summary.
- *
- * @return The padding modifier.
- */
-@SuppressLint("ModifierFactoryExtensionFunction")
-@Composable
-private fun summaryPadding(): Modifier = Modifier // No longer needed in new layout, returning empty
 
 /**
  * Composable to display the title of a summary.
