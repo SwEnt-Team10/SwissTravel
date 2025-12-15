@@ -126,6 +126,17 @@
     <dimen name="trip_summary_padding">16dp</dimen>
     <dimen name="trip_summary_horizontal_arrangement">6dp</dimen>
     <dimen name="trip_summary_vertical_arrangement">10dp</dimen>
+    <dimen name="trip_summary_card_content_spacing">12dp</dimen>
+    <dimen name="trip_summary_card_elevation">2dp</dimen>
+    <dimen name="trip_summary_card_shape">12dp</dimen>
+    <dimen name="trip_summary_icon_title_spacing">8dp</dimen>
+    <dimen name="trip_summary_header_spacing">12dp</dimen>
+    <dimen name="trip_summary_input_radius">12dp</dimen>
+    <dimen name="trip_summary_traveler_indent">32dp</dimen>
+    <dimen name="trip_summary_traveler_top_padding">4dp</dimen>
+    <dimen name="trip_summary_group_spacing">8dp</dimen>
+    <dimen name="trip_summary_destination_spacing">4dp</dimen>
+    <dimen name="trip_summary_button_height">50dp</dimen>
 
     <!-- Trip Travelers -->
     <dimen name="trip_travelers_padding_horizontal">24dp</dimen>
