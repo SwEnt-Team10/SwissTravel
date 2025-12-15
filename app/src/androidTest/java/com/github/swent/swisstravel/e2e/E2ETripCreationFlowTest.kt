@@ -23,7 +23,7 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
-import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
+import com.github.swent.swisstravel.ui.composable.DeleteDialogTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
@@ -460,13 +460,11 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     // Delete Trip
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).performClick()
     // AlertDialog should appear
-    composeTestRule
-        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
-        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CONFIRM_DELETE_BUTTON).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
     // Confirm deletion
-    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CONFIRM_DELETE_BUTTON).performClick()
     composeTestRule.checkMyTripsNotInSelectionMode()
 
     /* 27) */
