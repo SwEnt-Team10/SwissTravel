@@ -52,21 +52,53 @@ class TripInfoViewModelTest {
   }
 
   @Test
-  fun `toggleFavorite updates UI state and calls repository`() = runTest {
+  fun `toggleFavorite updates UI state and calls UserRepository to add favorite`() = runTest {
+    // Arrange: User does NOT have the trip in favorites initially
     coEvery { userRepository.getCurrentUser() } returns fakeUser
-
     coEvery { tripsRepository.getTrip(dummyTrip.uid) } returns dummyTrip
-    coEvery { tripsRepository.editTrip(dummyTrip.uid, any()) } just Runs
+    // We expect addFavoriteTrip to be called
+    coEvery { userRepository.addFavoriteTrip(fakeUser.uid, dummyTrip.uid) } just Runs
 
+    // Load trip
     viewModel.loadTripInfo(dummyTrip.uid)
     advanceUntilIdle()
     assertFalse(viewModel.uiState.value.isFavorite)
 
+    // Initial state check
+    assertFalse("Trip should not be favorite initially", viewModel.uiState.value.isFavorite)
+
+    // Act: Toggle
+    viewModel.toggleFavorite()
+    advanceUntilIdle() // Advance for debounce/flow collection
+
+    // Assert
+    assertTrue("UI state should update to favorite", viewModel.uiState.value.isFavorite)
+    coVerify { userRepository.addFavoriteTrip(fakeUser.uid, dummyTrip.uid) }
+  }
+
+  @Test
+  fun `toggleFavorite calls UserRepository to remove favorite if already favorite`() = runTest {
+    // Arrange: User ALREADY has the trip in favorites
+    val userWithFavorite = fakeUser.copy(favoriteTripsUids = listOf(dummyTrip.uid))
+    coEvery { userRepository.getCurrentUser() } returns userWithFavorite
+    coEvery { tripsRepository.getTrip(dummyTrip.uid) } returns dummyTrip
+    // We expect removeFavoriteTrip to be called
+    coEvery { userRepository.removeFavoriteTrip(fakeUser.uid, dummyTrip.uid) } just Runs
+
+    // Load trip
+    viewModel.loadTripInfo(dummyTrip.uid)
+    advanceUntilIdle()
+
+    // Initial state check
+    assertTrue("Trip should be favorite initially", viewModel.uiState.value.isFavorite)
+
+    // Act: Toggle
     viewModel.toggleFavorite()
     advanceUntilIdle()
 
-    assertTrue(viewModel.uiState.value.isFavorite)
-    coVerify { tripsRepository.editTrip(dummyTrip.uid, match { it.isFavorite }) }
+    // Assert
+    assertFalse("UI state should update to not favorite", viewModel.uiState.value.isFavorite)
+    coVerify { userRepository.removeFavoriteTrip(fakeUser.uid, dummyTrip.uid) }
   }
 
   // --- New Tests ---
@@ -139,7 +171,6 @@ class TripInfoViewModelTest {
 
   @Test
   fun `setCurrentDayIndex updates state`() = runTest {
-    // Arrange: Load a trip with segments to populate days
     val segment1 =
         RouteSegment(
             Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),

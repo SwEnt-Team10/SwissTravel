@@ -421,6 +421,7 @@ class DailyViewScreenTest {
             emptyList(),
             UserStats(),
             emptyList(),
+            emptyList(),
             emptyList())
 
     val vm =
@@ -476,7 +477,8 @@ class DailyViewScreenTest {
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = emptyList())
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     // 2. Init VM with this collaborator
     val vm =

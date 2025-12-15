@@ -1,9 +1,9 @@
 package com.github.swent.swisstravel.ui.profile.selectpinnedtrips
 
 import android.widget.Toast
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
@@ -28,18 +28,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.SortMenu
-import com.github.swent.swisstravel.ui.composable.TripInteraction
-import com.github.swent.swisstravel.ui.composable.TripList
+import com.github.swent.swisstravel.ui.composable.TripListEvents
+import com.github.swent.swisstravel.ui.composable.TripListState
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
+import com.github.swent.swisstravel.ui.composable.tripListItems
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.trips.TripSortType
 import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
-/**
- * Contains constants for test tags used within [SelectPinnedTripsScreen].
- *
- * These tags enable UI tests to locate and assert specific UI elements, such as buttons, dialogs,
- * and lists.
- */
+/** Contains constants for test tags used within [SelectPinnedTripsScreen]. */
 object SelectPinnedTripsScreenTestTags {
   const val TOP_APP_BAR = "topAppBar"
   const val SAVE_SELECTED_TRIPS_FAB = "saveSelectedTripsFab"
@@ -68,6 +65,7 @@ fun SelectPinnedTripsScreen(
 ) {
   val context = LocalContext.current
   val uiState by selectPinnedTripsViewModel.uiState.collectAsState()
+  val emptyListString = stringResource(R.string.no_trips)
 
   // Refresh trips when entering the screen
   LaunchedEffect(Unit) { selectPinnedTripsViewModel.refreshUIState() }
@@ -111,24 +109,30 @@ fun SelectPinnedTripsScreen(
             }
       },
       content = { padding ->
-        Column(
+        LazyColumn(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(padding)
                     .padding(
                         start = dimensionResource(R.dimen.past_trips_padding_start_end),
                         end = dimensionResource(R.dimen.past_trips_padding_start_end),
-                        bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))) {
-              TripList(
-                  trips = uiState.tripsList,
-                  interaction =
-                      TripInteraction(
-                          onClick = {
-                            it?.let { selectPinnedTripsViewModel.toggleTripSelection(it) }
-                          },
-                          isSelected = { trip -> trip in uiState.selectedTrips },
-                          isSelectionMode = uiState.isSelectionMode),
-                  emptyListString = stringResource(R.string.no_trips))
+                        bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))
+                    .testTag(TripListTestTags.TRIP_LIST)) {
+              val listState =
+                  TripListState(
+                      trips = uiState.tripsList,
+                      isSelected = { trip -> trip in uiState.selectedTrips },
+                      isSelectionMode = uiState.isSelectionMode,
+                      emptyListString = emptyListString,
+                      favoriteTripsUids = uiState.favoriteTripsUids)
+
+              val listEvents =
+                  TripListEvents(
+                      onClickTripElement = {
+                        it?.let { selectPinnedTripsViewModel.toggleTripSelection(it) }
+                      })
+
+              tripListItems(listState = listState, listEvents = listEvents)
             }
       })
 }

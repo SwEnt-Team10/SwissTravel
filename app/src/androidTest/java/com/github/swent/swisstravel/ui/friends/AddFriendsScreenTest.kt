@@ -11,7 +11,6 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -34,8 +33,9 @@ class AddFriendScreenTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     var searchResults: List<User> = emptyList()
 
@@ -75,6 +75,14 @@ class AddFriendScreenTest {
     ) {
       // no op in test
     }
+
+    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
+    }
+
+    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+      // No-op
+    }
   }
 
   @Test
@@ -92,8 +100,9 @@ class AddFriendScreenTest {
             preferences = emptyList(),
             friends = emptyList(),
             stats = UserStats(),
-            emptyList(),
-            emptyList())
+            pinnedTripsUids = emptyList(),
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     fakeRepo.searchResults = listOf(targetUser)
 
@@ -102,12 +111,10 @@ class AddFriendScreenTest {
     var backCalled = false
 
     composeRule.setContent {
-      SwissTravelTheme {
-        AddFriendScreen(
-            friendsViewModel = friendsViewModel,
-            onBack = { backCalled = true },
-        )
-      }
+      AddFriendScreen(
+          friendsViewModel = friendsViewModel,
+          onBack = { backCalled = true },
+      )
     }
 
     // Type into the search field

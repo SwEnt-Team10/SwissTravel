@@ -6,7 +6,6 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import kotlinx.coroutines.CompletableDeferred
@@ -47,10 +46,8 @@ class EditTripScreenTest : SwissTravelTest() {
     val vm = EditTripScreenViewModel(repo)
 
     composeRule.setContent {
-      SwissTravelTheme {
-        EditTripScreen(
-            tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = {}, onDelete = {})
-      }
+      EditTripScreen(
+          tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = {}, onDelete = {})
     }
 
     // Loading visible
@@ -75,14 +72,12 @@ class EditTripScreenTest : SwissTravelTest() {
     val vm = EditTripScreenViewModel(repo)
     var saved = false
     composeRule.setContent {
-      SwissTravelTheme {
-        EditTripScreen(
-            tripId = tripId,
-            editTripViewModel = vm,
-            onBack = {},
-            onSaved = { saved = true },
-            onDelete = {})
-      }
+      EditTripScreen(
+          tripId = tripId,
+          editTripViewModel = vm,
+          onBack = {},
+          onSaved = { saved = true },
+          onDelete = {})
     }
 
     // Wait for content
@@ -101,14 +96,12 @@ class EditTripScreenTest : SwissTravelTest() {
 
     var navigated = 0
     composeRule.setContent {
-      SwissTravelTheme {
-        EditTripScreen(
-            tripId = tripId,
-            editTripViewModel = vm,
-            onBack = {},
-            onSaved = { navigated++ },
-            onDelete = { navigated++ })
-      }
+      EditTripScreen(
+          tripId = tripId,
+          editTripViewModel = vm,
+          onBack = {},
+          onSaved = { navigated++ },
+          onDelete = { navigated++ })
     }
 
     // Ensure content visible
@@ -153,14 +146,12 @@ class EditTripScreenTest : SwissTravelTest() {
 
     var backCalls = 0
     composeRule.setContent {
-      SwissTravelTheme {
-        EditTripScreen(
-            tripId = tripId,
-            editTripViewModel = vm,
-            onBack = { backCalls++ },
-            onSaved = {},
-            onDelete = {})
-      }
+      EditTripScreen(
+          tripId = tripId,
+          editTripViewModel = vm,
+          onBack = { backCalls++ },
+          onSaved = {},
+          onDelete = {})
     }
 
     // Ensure content visible so app bar is there
@@ -178,10 +169,8 @@ class EditTripScreenTest : SwissTravelTest() {
     val vm = EditTripScreenViewModel(repo)
 
     composeRule.setContent {
-      SwissTravelTheme {
-        EditTripScreen(
-            tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = {}, onDelete = {})
-      }
+      EditTripScreen(
+          tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = {}, onDelete = {})
     }
 
     // Spinner shown, confirm disabled
@@ -203,10 +192,8 @@ class EditTripScreenTest : SwissTravelTest() {
     val vm = EditTripScreenViewModel(repo)
 
     composeRule.setContent {
-      SwissTravelTheme {
-        EditTripScreen(
-            tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = {}, onDelete = {})
-      }
+      EditTripScreen(
+          tripId = tripId, editTripViewModel = vm, onBack = {}, onSaved = {}, onDelete = {})
     }
 
     // Wait for content
@@ -246,14 +233,12 @@ class EditTripScreenTest : SwissTravelTest() {
     val randomRepo = FakeRepo(randomTrip)
     val randomVm = EditTripScreenViewModel(randomRepo)
     composeRule.setContent {
-      SwissTravelTheme {
-        EditTripScreen(
-            tripId = randomTrip.uid,
-            editTripViewModel = randomVm,
-            onBack = {},
-            onSaved = {},
-            onDelete = {})
-      }
+      EditTripScreen(
+          tripId = randomTrip.uid,
+          editTripViewModel = randomVm,
+          onBack = {},
+          onSaved = {},
+          onDelete = {})
     }
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(EditTripScreenTestTags.REROLL).assertExists()

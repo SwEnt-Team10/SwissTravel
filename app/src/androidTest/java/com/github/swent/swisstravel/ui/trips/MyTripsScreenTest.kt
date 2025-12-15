@@ -10,8 +10,8 @@ import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
-import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
+import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
@@ -40,7 +40,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     // IMPORTANT: Pass BOTH repositories to avoid default Firebase init
     val viewModel = MyTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeTripRepo)
 
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
     return viewModel
   }
 
@@ -50,8 +50,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val viewModel =
         MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
 
+    // Check current trip
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(currentTrip))
@@ -70,7 +71,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         MyTripsViewModel(
             userRepository = FakeUserRepository(), tripsRepository = FakeTripsRepository())
 
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
 
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG, useUnmergedTree = true)
@@ -85,9 +86,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             userRepository = FakeUserRepository(), tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
-      SwissTravelTheme {
-        MyTripsScreen(myTripsViewModel = viewModel, onPastTrips = { clicked = true })
-      }
+      MyTripsScreen(myTripsViewModel = viewModel, onPastTrips = { clicked = true })
     }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).performClick()
@@ -102,9 +101,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             userRepository = FakeUserRepository(), tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
-      SwissTravelTheme {
-        MyTripsScreen(myTripsViewModel = viewModel, onCreateTrip = { createClicked = true })
-      }
+      MyTripsScreen(myTripsViewModel = viewModel, onCreateTrip = { createClicked = true })
     }
 
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON).performClick()
@@ -117,10 +114,10 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val viewModel =
         MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
 
     // Before adding, no upcoming trips
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertExists()
+    composeTestRule.onNodeWithTag(TripListTestTags.TRIP_LIST).assertExists()
 
     // Add a new upcoming trip inside a coroutine
     val newUpcomingTrip =
@@ -165,7 +162,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val viewModel =
         MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
 
     composeTestRule.waitForIdle()
 
@@ -184,7 +181,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         "Trip B should appear before Trip A when sorted ASC by start date")
 
     // Change sort to START_DATE_DESC
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).performClick()
     composeTestRule.onNodeWithText(context.getString(R.string.start_date_desc)).performClick()
 
     composeTestRule.waitForIdle()
@@ -277,7 +274,13 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     // Click delete
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON).performClick()
+
+    // Confirm deletion
+    composeTestRule
+        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
+        .performClick() // This triggers deleteSelectedTrips()
+
+    // Verify selection cleared
     assertTrue(viewModel.uiState.value.selectedTrips.isEmpty())
     assertTrue(!viewModel.uiState.value.isSelectionMode)
   }
@@ -302,32 +305,39 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun sortingByFavorites_placesFavoritesFirst() {
+    val now = Timestamp.now()
+
+    // Create trips
     val favoriteTrip =
         createTestTrip(
             uid = "fav",
             name = "Favorite Trip",
+            ownerId = "ownerX",
             startDate = Timestamp(now.seconds + 3600, 0),
-            endDate = Timestamp(now.seconds + 7200, 0),
-            isFavorite = true)
+            endDate = Timestamp(now.seconds + 7200, 0))
 
     val nonFavoriteTrip =
         createTestTrip(
             uid = "nonfav",
-            name = "Non-Favorite Trip",
+            name = "Non-favorite Trip",
+            ownerId = "ownerX",
             startDate = Timestamp(now.seconds + 3600, 0),
-            endDate = Timestamp(now.seconds + 7200, 0),
-            isFavorite = false)
+            endDate = Timestamp(now.seconds + 7200, 0))
 
     val fakeRepo = FakeTripsRepository(mutableListOf(nonFavoriteTrip, favoriteTrip))
-    val viewModel =
-        MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
+    val fakeUserRepo = FakeUserRepository()
+    fakeUserRepo.addUser(createTestUser(uid = "ownerX", name = "Owner X"))
+    // Explicitly add the trip to favorites in the user repo
+    runBlocking { fakeUserRepo.addFavoriteTrip("ownerX", favoriteTrip.uid) }
 
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    val viewModel = MyTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeRepo)
+
+    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
 
     composeTestRule.waitForIdle()
 
     // Open the sort dropdown and select "Favorites"
-    composeTestRule.onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).performClick()
+    composeTestRule.onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).performClick()
     composeTestRule.onNodeWithText(context.getString(R.string.favorites_first)).performClick()
 
     composeTestRule.waitForIdle()
@@ -362,13 +372,13 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
   @Test
   fun favoriteSelectedTrips_togglesFavoriteStatus() {
-    val fakeRepo =
-        FakeTripsRepository(
-            mutableListOf(trip1.copy(isFavorite = false), trip2.copy(isFavorite = false)))
-    val viewModel =
-        MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
+    // We rely on standard trips (which are not in user favorites by default)
+    val fakeRepo = FakeTripsRepository(mutableListOf(trip1, trip2))
+    val fakeUserRepo = FakeUserRepository()
 
-    composeTestRule.setContent { SwissTravelTheme { MyTripsScreen(myTripsViewModel = viewModel) } }
+    val viewModel = MyTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeRepo)
+
+    composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
 
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(trip1))
@@ -385,8 +395,10 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     assert(!viewModel.uiState.value.isSelectionMode)
 
-    val updatedTrips = runBlocking { fakeRepo.getAllTrips() }
-    assertTrue(updatedTrips.all { it.isFavorite }, "All selected trips should now be favorites")
+    // Verify via User repository
+    val updatedUser = runBlocking { fakeUserRepo.getCurrentUser() }
+    assertTrue(updatedUser.favoriteTripsUids.contains(trip1.uid), "Trip 1 should be favorite")
+    assertTrue(updatedUser.favoriteTripsUids.contains(trip2.uid), "Trip 2 should be favorite")
   }
 
   @Test
@@ -395,12 +407,10 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     val viewModel = MyTripsViewModel(tripsRepository = FakeTripsRepository())
 
     composeTestRule.setContent {
-      SwissTravelTheme {
-        MyTripsScreen(
-            myTripsViewModel = viewModel,
-            onPastTrips = { pastTripsClicked = true } // callback to test
-            )
-      }
+      MyTripsScreen(
+          myTripsViewModel = viewModel,
+          onPastTrips = { pastTripsClicked = true } // callback to test
+          )
     }
 
     // Perform click on the Past Trips button
@@ -425,7 +435,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             friends = emptyList(),
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = emptyList())
+            pinnedPicturesUids = emptyList(),
+            favoriteTripsUids = emptyList())
 
     // 2. Create a trip linked to this collaborator
     val sharedTrip =
@@ -458,11 +469,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             TripsViewModel.CollaboratorUi("1", "User1", ""),
             TripsViewModel.CollaboratorUi("2", "User2", ""))
 
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        TripElement(trip = dummyTrip, onClick = {}, collaborators = collaborators)
-      }
-    }
+    val tripElementState = TripElementState(trip = dummyTrip, collaborators = collaborators)
+    composeTestRule.setContent { TripElement(tripElementState = tripElementState, onClick = {}) }
 
     // Verify avatars are shown
     composeTestRule.onNodeWithContentDescription("User1").assertIsDisplayed()
@@ -481,11 +489,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             TripsViewModel.CollaboratorUi("3", "User3", ""),
             TripsViewModel.CollaboratorUi("4", "User4", ""))
 
-    composeTestRule.setContent {
-      SwissTravelTheme {
-        TripElement(trip = dummyTrip, onClick = {}, collaborators = collaborators)
-      }
-    }
+    val tripElementState = TripElementState(trip = dummyTrip, collaborators = collaborators)
+    composeTestRule.setContent { TripElement(tripElementState = tripElementState, onClick = {}) }
 
     // Verify overflow text "+1" is displayed
     composeTestRule.onNodeWithText("+1").assertIsDisplayed()

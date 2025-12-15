@@ -43,7 +43,6 @@ class TripHelpersTest {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = tripProfile,
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -72,7 +71,6 @@ class TripHelpersTest {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = tripProfile,
-            isFavorite = false,
             isCurrentTrip = true,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -101,7 +99,6 @@ class TripHelpersTest {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = tripProfile,
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -127,7 +124,6 @@ class TripHelpersTest {
                     endDate = tsFromInstant(Instant.now()),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = listOf("collab-1", "collab-2"))
@@ -153,7 +149,6 @@ class TripHelpersTest {
                     endDate = tsFromInstant(Instant.now()),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = listOf("collab-1", "collab-2"))

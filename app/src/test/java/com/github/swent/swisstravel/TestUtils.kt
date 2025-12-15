@@ -60,7 +60,6 @@ fun createTestTrip(
       routeSegments = routeSegments,
       activities = activities,
       tripProfile = profile,
-      isFavorite = isFavorite,
       isCurrentTrip = isCurrentTrip,
       uriLocation = uriLocation,
       collaboratorsId = collaboratorsId,
@@ -78,7 +77,8 @@ fun createTestUser(
     friends: List<Friend> = emptyList(),
     stats: UserStats = UserStats(),
     pinnedTripsUids: List<String> = emptyList(),
-    pinnedPicturesUids: List<String> = emptyList()
+    pinnedPicturesUids: List<String> = emptyList(),
+    favoriteTripsUids: List<String> = emptyList()
 ): User {
   return User(
       uid = uid,
@@ -90,7 +90,8 @@ fun createTestUser(
       friends = friends,
       stats = stats,
       pinnedTripsUids = pinnedTripsUids,
-      pinnedPicturesUids = pinnedPicturesUids)
+      pinnedPicturesUids = pinnedPicturesUids,
+      favoriteTripsUids = favoriteTripsUids)
 }
 
 /**

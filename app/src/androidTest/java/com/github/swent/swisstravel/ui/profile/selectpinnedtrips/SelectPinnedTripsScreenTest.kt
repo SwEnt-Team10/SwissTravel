@@ -14,7 +14,6 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.google.firebase.Timestamp
 import junit.framework.TestCase.assertEquals
@@ -44,7 +43,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -62,7 +60,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -80,7 +77,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -98,7 +94,6 @@ class SelectPinnedTripsScreenTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -126,7 +121,8 @@ class SelectPinnedTripsScreenTest {
                 friends = emptyList(),
                 stats = UserStats(),
                 pinnedTripsUids = listOf("trip1"),
-                pinnedPicturesUids = emptyList())
+                pinnedPicturesUids = emptyList(),
+                favoriteTripsUids = emptyList())
 
         override suspend fun getCurrentUser() = user
 
@@ -157,6 +153,14 @@ class SelectPinnedTripsScreenTest {
               )
         }
 
+        override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+          // No-op
+        }
+
+        override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+          // No-op
+        }
+
         override suspend fun updateUserStats(uid: String, stats: UserStats) {}
       }
 
@@ -165,7 +169,7 @@ class SelectPinnedTripsScreenTest {
       tripRepo: TripsRepository = fakeTripsRepo
   ) {
     composeTestRule.setContent {
-      SwissTravelTheme { SelectPinnedTripsScreen(SelectPinnedTripsViewModel(tripRepo, userRepo)) }
+      SelectPinnedTripsScreen(SelectPinnedTripsViewModel(tripRepo, userRepo))
     }
   }
 

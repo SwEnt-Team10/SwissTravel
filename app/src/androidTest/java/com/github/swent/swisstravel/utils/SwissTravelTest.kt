@@ -17,8 +17,11 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.user.Friend
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
@@ -68,7 +71,7 @@ import org.junit.After
 import org.junit.Before
 
 const val UI_WAIT_TIMEOUT = 15_000L
-const val E2E_WAIT_TIMEOUT = 30_000L
+const val E2E_WAIT_TIMEOUT = 20_000L
 
 /**
  * Base class for all SwissTravel tests, providing common setup and utility functions.
@@ -126,6 +129,33 @@ abstract class SwissTravelTest {
   private val now = Timestamp.now()
 
   // Helper to create trips with default values, reducing code duplication
+  fun createTestUser(
+      uid: String = "current",
+      name: String = "Current User",
+      bio: String = "",
+      mail: String = "mail",
+      pPicture: String = "",
+      prefs: List<Preference> = emptyList(),
+      friends: List<Friend> = emptyList(),
+      stats: UserStats = UserStats(),
+      pinnedTripsUids: List<String> = emptyList(),
+      pinnedPicturesUids: List<String> = emptyList(),
+      favTripsUids: List<String> = emptyList()
+  ): User {
+    return User(
+        uid = uid,
+        name = name,
+        biography = bio,
+        email = mail,
+        profilePicUrl = pPicture,
+        preferences = prefs,
+        friends = friends,
+        stats = stats,
+        pinnedTripsUids = pinnedTripsUids,
+        pinnedPicturesUids = pinnedPicturesUids,
+        favoriteTripsUids = favTripsUids)
+  }
+
   fun createTestTrip(
       uid: String = "1",
       name: String = "Test Trip",
@@ -165,7 +195,6 @@ abstract class SwissTravelTest {
         routeSegments = routeSegments,
         activities = activities,
         tripProfile = profile,
-        isFavorite = isFavorite,
         isCurrentTrip = isCurrentTrip,
         uriLocation = uriLocation,
         collaboratorsId = collaboratorsId,
@@ -198,7 +227,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(SortedTripListTestTags.TITLE, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
@@ -210,7 +239,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(SortedTripListTestTags.TITLE)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
@@ -238,7 +267,7 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkMyTripsScreenIsNotDisplayed() {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertDoesNotExist()
     onNodeWithTag(SortedTripListTestTags.TITLE).assertDoesNotExist()
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertDoesNotExist()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertDoesNotExist()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).assertDoesNotExist()
   }
 
@@ -328,9 +357,9 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkSortedTripListNotEmptyIsDisplayed() {
     onNodeWithTag(SortedTripListTestTags.TITLE_BUTTON_ROW).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertIsDisplayed()
+    onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkSetCurrentTripIsDisplayed() {

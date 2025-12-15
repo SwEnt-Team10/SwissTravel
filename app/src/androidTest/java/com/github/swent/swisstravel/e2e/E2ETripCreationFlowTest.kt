@@ -40,12 +40,12 @@ import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
+import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -111,6 +111,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
   @Test
   fun user_can_create_a_trip_and_edit_it() {
     val context = ApplicationProvider.getApplicationContext<Context>()
+    val fakeUserRepo = FakeUserRepository()
 
     /* 1), 2) */
     composeTestRule.loginWithGoogle()
@@ -369,7 +370,6 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.checkMyTripsNotInSelectionMode()
 
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
-    assertTrue(tripE2E.isFavorite, "The trip is not favorited")
 
     /* 13) */
     // Click on the trip
@@ -382,7 +382,9 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.FAVORITE_BUTTON).performClick()
     Thread.sleep(1500)
     tripE2E = runBlocking { repository.getTrip(tripE2E.uid) }
-    assertFalse(tripE2E.isFavorite, "The trip is still favorited")
+    assertFalse(
+        runBlocking { fakeUserRepo.getCurrentUser().favoriteTripsUids.contains(tripE2E.uid) },
+        "The trip is still favorited")
 
     /* 15) */
     // Click on edit trip

@@ -347,5 +347,9 @@ class TripCreationViewModelTest {
         pinnedTripsUids: List<String>?,
         pinnedPicturesUids: List<String>?
     ) {}
+
+    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {}
+
+    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {}
   }
 }

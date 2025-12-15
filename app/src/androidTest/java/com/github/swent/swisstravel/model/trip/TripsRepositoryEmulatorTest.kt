@@ -144,13 +144,12 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
     repository.addTrip(trip)
 
     // Act
-    val updatedTrip = trip.copy(name = "Updated Name", isFavorite = true)
+    val updatedTrip = trip.copy(name = "Updated Name")
     repository.editTrip(trip.uid, updatedTrip)
 
     // Assert
     val fetched = repository.getTrip(trip.uid)
     assertEquals("Updated Name", fetched.name)
-    assertTrue(fetched.isFavorite)
   }
 
   @Test

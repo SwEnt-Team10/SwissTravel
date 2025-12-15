@@ -44,15 +44,17 @@ class SelectPinnedTripsViewModel(
         val user = userRepository.getCurrentUser()
         currentUser = user
         val trips = tripsRepository.getAllTrips()
+        val favoriteTrips = user.favoriteTripsUids.toSet()
         val selected =
             user.pinnedTripsUids.mapNotNull { uid -> trips.find { it.uid == uid } }.toSet()
-        val sortedTrips = sortTrips(trips, _uiState.value.sortType)
+        val sortedTrips = sortTrips(trips, _uiState.value.sortType, favoriteTrips)
         val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
         _uiState.value =
             _uiState.value.copy(
                 tripsList = sortedTrips,
                 selectedTrips = selected,
-                collaboratorsByTripId = collaboratorsByTrip)
+                collaboratorsByTripId = collaboratorsByTrip,
+                favoriteTripsUids = favoriteTrips)
       } catch (e: Exception) {
         setErrorMsg("Failed to load pinned trips: ${e.message}")
         Log.e("SelectPinnedTripsViewModel", "Error initializing", e)
@@ -64,9 +66,13 @@ class SelectPinnedTripsViewModel(
   override suspend fun getAllTrips() {
     try {
       val trips = tripsRepository.getAllTrips()
-      val sortedTrips = sortTrips(trips, _uiState.value.sortType)
+      val favoriteTrips = userRepository.getCurrentUser().favoriteTripsUids.toSet()
+      val sortedTrips = sortTrips(trips, _uiState.value.sortType, favoriteTrips)
       _uiState.value =
-          _uiState.value.copy(tripsList = sortedTrips, selectedTrips = _uiState.value.selectedTrips)
+          _uiState.value.copy(
+              tripsList = sortedTrips,
+              selectedTrips = _uiState.value.selectedTrips,
+              favoriteTripsUids = favoriteTrips)
     } catch (e: Exception) {
       Log.e("SelectPinnedTripsViewModel", "Error fetching trips", e)
       setErrorMsg("Failed to load trips.")

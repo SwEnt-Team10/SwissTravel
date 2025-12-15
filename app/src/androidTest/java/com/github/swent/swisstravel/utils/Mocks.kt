@@ -65,6 +65,7 @@ class FakeUserRepository : UserRepository {
           emptyList(),
           UserStats(),
           emptyList(),
+          emptyList(),
           emptyList())
 
   override suspend fun getUserByUid(uid: String): User? = users[uid]
@@ -90,4 +91,10 @@ class FakeUserRepository : UserRepository {
       pinnedTripsUids: List<String>?,
       pinnedPicturesUids: List<String>?
   ) {}
+
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+    users[uid] = users[uid]!!.copy(favoriteTripsUids = users[uid]!!.favoriteTripsUids + tripUid)
+  }
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {}
 }

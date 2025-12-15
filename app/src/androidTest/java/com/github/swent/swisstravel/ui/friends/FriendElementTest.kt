@@ -9,7 +9,6 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -30,18 +29,17 @@ class FriendElementTest {
           preferences = emptyList(),
           friends = emptyList(),
           stats = UserStats(),
-          emptyList(),
-          emptyList())
+          pinnedTripsUids = emptyList(),
+          pinnedPicturesUids = emptyList(),
+          favoriteTripsUids = emptyList())
 
   @Test
   fun friendElement_showsArrowWhenNotPendingOrNotShouldAccept() {
     val user = sampleUser()
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendElement(
-            userToDisplay = user, onClick = {}, isPendingRequest = false, shouldAccept = false)
-      }
+      FriendElement(
+          userToDisplay = user, onClick = {}, isPendingRequest = false, shouldAccept = false)
     }
 
     // Arrow is visible
@@ -62,15 +60,13 @@ class FriendElementTest {
     var declineCalled = false
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendElement(
-            userToDisplay = user,
-            onClick = {},
-            isPendingRequest = true,
-            shouldAccept = true,
-            onAccept = { acceptCalled = true },
-            onDecline = { declineCalled = true })
-      }
+      FriendElement(
+          userToDisplay = user,
+          onClick = {},
+          isPendingRequest = true,
+          shouldAccept = true,
+          onAccept = { acceptCalled = true },
+          onDecline = { declineCalled = true })
     }
 
     // Arrow should not be visible
@@ -95,13 +91,11 @@ class FriendElementTest {
     var clicked = false
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendElement(
-            userToDisplay = user,
-            onClick = { clicked = true },
-            isPendingRequest = false,
-            shouldAccept = false)
-      }
+      FriendElement(
+          userToDisplay = user,
+          onClick = { clicked = true },
+          isPendingRequest = false,
+          shouldAccept = false)
     }
 
     // Card has correct test tag
