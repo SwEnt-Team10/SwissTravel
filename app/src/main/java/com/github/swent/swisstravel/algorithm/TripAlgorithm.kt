@@ -995,11 +995,7 @@ open class TripAlgorithm(
       val iterationStart = progressStart + (index * progressStep)
       val iterationEnd = iterationStart + progressStep
 
-      finalSchedule =
-          tryAddingCachedActivities(
-              enhancedTripProfile,
-              activities,
-              finalSchedule)
+      finalSchedule = tryAddingCachedActivities(enhancedTripProfile, activities, finalSchedule)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
@@ -1007,30 +1003,19 @@ open class TripAlgorithm(
 
       if (index == 2) {
         finalSchedule =
-            tryFetchingActivitiesForExistingCities(
-                enhancedTripProfile,
-                activities,
-                finalSchedule)
+            tryFetchingActivitiesForExistingCities(enhancedTripProfile, activities, finalSchedule)
         if (sameDate(endDate, finalSchedule.last().endDate)) {
           break
         }
       }
 
-      finalSchedule =
-          tryAddingCityActivities(
-              enhancedTripProfile,
-              activities,
-              finalSchedule)
+      finalSchedule = tryAddingCityActivities(enhancedTripProfile, activities, finalSchedule)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
       }
 
-      finalSchedule =
-          tryAddingCity(
-              enhancedTripProfile,
-              activities,
-              finalSchedule)
+      finalSchedule = tryAddingCity(enhancedTripProfile, activities, finalSchedule)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
@@ -1821,8 +1806,7 @@ open class TripAlgorithm(
             enhancedTripProfile.tripProfile.departureLocation!!,
             activities.allActivities.map { it.location },
             activities.allActivities,
-            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {
-            }
+            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
 
     val schedule = scheduleRemove(enhancedTripProfile, orderedRoute, activities)
     return schedule
@@ -1852,8 +1836,7 @@ open class TripAlgorithm(
             enhancedTripProfile.tripProfile.departureLocation!!,
             activities.allActivities.map { it.location },
             activities.allActivities,
-            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {
-            }
+            if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
 
     return scheduleTrip(
         enhancedTripProfile.tripProfile, orderedRoute, activities.allActivities, scheduleParams) {}
