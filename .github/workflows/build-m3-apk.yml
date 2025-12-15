@@ -54,15 +54,15 @@ jobs:
           fi
           
           if [ -n "$MAP_BOX_SECRET" ]; then
-            echo "$MAP_BOX_SECRET" | base64 --decode > ./app/src/main/res/values/developer-config.xml
+            echo "$MAP_BOX_SECRET" | base64 --decode > ./app/src/main/res/values/developer-config-mapbox.xml
           else
-            echo "::warning::MAP_BOX_SECRET secret is not set. developper-config-mapbox.xml will not be created."
+            echo "::warning::MAP_BOX_SECRET secret is not set. developer-config-mapbox.xml will not be created."
           fi
           
           if [ -n "$OPEN_TRANSPORT_DATA_TOKEN" ]; then
             echo "$OPEN_TRANSPORT_DATA_TOKEN" | base64 --decode > ./app/src/main/res/values/developer-config.xml
           else
-            echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set. developper-config.xml will not be created."
+            echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set. developer-config.xml will not be created."
           fi
 
       # Build the release APK
