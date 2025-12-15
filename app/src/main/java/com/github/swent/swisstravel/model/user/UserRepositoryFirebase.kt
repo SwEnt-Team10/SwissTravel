@@ -7,6 +7,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
+import com.google.firebase.firestore.persistentCacheSettings
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -18,7 +19,10 @@ class UserRepositoryFirebase(
 ) : UserRepository {
 
   init {
-    db.firestoreSettings = FirebaseFirestoreSettings.Builder().setPersistenceEnabled(true).build()
+    db.firestoreSettings =
+        FirebaseFirestoreSettings.Builder()
+            .setLocalCacheSettings(persistentCacheSettings {})
+            .build()
   }
 
   /**
@@ -74,7 +78,7 @@ class UserRepositoryFirebase(
       } else {
         null
       }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       try {
         val doc = db.collection("users").document(uid)[Source.CACHE].await()
         if (doc.exists()) {
@@ -100,23 +104,24 @@ class UserRepositoryFirebase(
     val q = query.trim()
     val qLower = q.lowercase()
     val qCapitalized = qLower.replaceFirstChar { it.uppercase() }
+    val separator = "\uf8ff"
 
     try {
       val usersRef = db.collection("users")
 
       // 1. Query by Name (Lowercase)
       val nameLowerDeferred = async {
-        usersRef.orderBy("name").startAt(qLower).endAt(qLower + "\uf8ff").get().await()
+        usersRef.orderBy("name").startAt(qLower).endAt(qLower + separator).get().await()
       }
 
       // 2. Query by Name (Capitalized)
       val nameCapDeferred = async {
-        usersRef.orderBy("name").startAt(qCapitalized).endAt(qCapitalized + "\uf8ff").get().await()
+        usersRef.orderBy("name").startAt(qCapitalized).endAt(qCapitalized + separator).get().await()
       }
 
       // 3. Query by Email (Original input)
       val emailDeferred = async {
-        usersRef.orderBy("email").startAt(q).endAt(q + "\uf8ff").get().await()
+        usersRef.orderBy("email").startAt(q).endAt(q + separator).get().await()
       }
 
       // Wait for all 3 to finish
@@ -498,11 +503,6 @@ class UserRepositoryFirebase(
    */
   private fun parseStats(doc: DocumentSnapshot): UserStats {
     val statsMap = doc["stats"] as? Map<*, *> ?: return UserStats()
-
-    fun <T : Number> num(key: String, default: Double = 0.0): Double {
-      val value = statsMap[key] as? Number ?: return default
-      return value.toDouble()
-    }
 
     val totalTrips = (statsMap["totalTrips"] as? Number)?.toInt() ?: 0
     val totalTravelMinutes = (statsMap["totalTravelMinutes"] as? Number)?.toInt() ?: 0
