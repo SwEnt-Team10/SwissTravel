@@ -56,6 +56,9 @@
     <!-- Arrival Departure Screen -->
     <dimen name="arrival_departure_padding">24dp</dimen>
 
+    <!-- First Destinations Screen -->
+    <dimen name="trip_destination_cross_offset">-2dp</dimen>
+
     <!-- Trip Preferences -->
     <dimen name="trip_preference_spacing">24dp</dimen>
 

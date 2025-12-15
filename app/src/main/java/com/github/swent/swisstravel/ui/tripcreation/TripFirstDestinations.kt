@@ -3,11 +3,13 @@ package com.github.swent.swisstravel.ui.tripcreation
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -43,6 +45,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.map.MySwitzerlandLocationRepository
@@ -235,18 +238,23 @@ fun DestinationItem(
     onRemove: () -> Unit
 ) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
-        LocationAutocompleteTextField(
-            modifier = Modifier.weight(1f),
-            onLocationSelected = onLocationSelected,
-            addressTextFieldViewModel = destinationVm,
-            clearOnSelect = false,
-            name = "Destination ${index + 1}",
-            showImages = true)
+        Box(modifier = Modifier.weight(1f)) {
+            LocationAutocompleteTextField(
+                modifier = Modifier.fillMaxWidth(),
+                onLocationSelected = onLocationSelected,
+                addressTextFieldViewModel = destinationVm,
+                clearOnSelect = false,
+                name = "Destination ${index + 1}",
+                showImages = true)
+        }
 
-        IconButton(onClick = onRemove, modifier = Modifier.testTag("remove_destination_$index")) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = "Remove Destination")
+        IconButton(
+            onClick = onRemove,
+            modifier =
+                Modifier.testTag("remove_destination_$index")
+                    .offset(y = dimensionResource(R.dimen.trip_destination_cross_offset)) // Offset to correct visual alignment with text field input
+        ) {
+            Icon(imageVector = Icons.Default.Close, contentDescription = "Remove Destination")
         }
     }
 
@@ -267,8 +275,7 @@ fun SuggestionsHeader(isExpanded: Boolean, onToggleExpand: () -> Unit) {
         Text(text = "See Our Suggestions For You", style = MaterialTheme.typography.titleMedium)
         Icon(
             imageVector =
-                if (isExpanded) androidx.compose.material.icons.Icons.Filled.KeyboardArrowUp
-                else androidx.compose.material.icons.Icons.Filled.KeyboardArrowDown,
+                if (isExpanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
             contentDescription = if (isExpanded) "Collapse" else "Expand")
     }
 }
