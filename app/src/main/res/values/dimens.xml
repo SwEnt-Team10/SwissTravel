@@ -121,8 +121,6 @@
     <dimen name="current_trip_button_height">50dp</dimen>
 
     <!-- Trip Summary -->
-    <dimen name="trip_summary_padding_horizontal">16dp</dimen>
-    <dimen name="trip_summary_padding_vertical">8dp</dimen>
     <dimen name="trip_summary_padding">16dp</dimen>
     <dimen name="trip_summary_horizontal_arrangement">6dp</dimen>
     <dimen name="trip_summary_vertical_arrangement">10dp</dimen>
