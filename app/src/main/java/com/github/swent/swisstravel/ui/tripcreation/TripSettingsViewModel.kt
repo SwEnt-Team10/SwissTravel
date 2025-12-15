@@ -439,4 +439,8 @@ open class TripSettingsViewModel(
       }
     }
   }
+
+    fun getSuggestionToggledSelectedSize(): Int {
+        return selectedSuggestions.value.size
+    }
 }

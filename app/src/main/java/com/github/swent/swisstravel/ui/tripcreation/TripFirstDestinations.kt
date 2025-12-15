@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -44,6 +45,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.map.MySwitzerlandLocationRepository
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.tripSettingsViewModel
 import com.github.swent.swisstravel.ui.geocoding.AddressTextFieldViewModelContract
 import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.DestinationTextFieldViewModelFactory
@@ -62,7 +64,7 @@ object TripFirstDestinationsTestTags {
   const val RETURN_BUTTON = "return_button"
 }
 
-private const val MAX_DESTINATIONS = 24
+private const val MAX_DESTINATIONS = 9
 
 /**
  * Screen for entering the first destinations of a trip. Note that parts of this class was generated
@@ -110,6 +112,9 @@ fun FirstDestinationScreen(
                           destinations = destinations,
                           onAddDestination = {
                             destinations.add(Location(coordinate = Coordinate(0.0, 0.0), name = ""))
+                          },
+                          getSuggestionToggledSelectedSize = {
+                              viewModel.getSuggestionToggledSelectedSize()
                           })
                     }
 
@@ -137,6 +142,9 @@ fun FirstDestinationScreen(
                           },
                           onSuggestionDeselected = { location ->
                             viewModel.toggleSuggestion(location)
+                          },
+                          getSuggestionToggledSelectedSize = {
+                              viewModel.getSuggestionToggledSelectedSize()
                           })
                     }
 
@@ -165,16 +173,16 @@ fun FirstDestinationsTitle() {
 }
 
 @Composable
-fun AddDestinationButton(destinations: List<Location>, onAddDestination: () -> Unit) {
+fun AddDestinationButton(destinations: List<Location>, onAddDestination: () -> Unit, getSuggestionToggledSelectedSize: () -> Int) {
   Button(
       modifier = Modifier.testTag(ADD_FIRST_DESTINATION),
       onClick = onAddDestination,
       enabled =
           (destinations.isEmpty() || destinations.last().name.isNotEmpty()) &&
-              destinations.size < MAX_DESTINATIONS,
+              destinations.size + getSuggestionToggledSelectedSize() < MAX_DESTINATIONS,
   ) {
     Text(
-        if (destinations.size < MAX_DESTINATIONS) {
+        if (destinations.size + getSuggestionToggledSelectedSize() < MAX_DESTINATIONS) {
           stringResource(R.string.add_first_destination)
         } else stringResource(R.string.destination_limited))
   }
@@ -248,42 +256,79 @@ fun LazyListScope.SuggestionList(
     destinations: List<Location>,
     suggestions: List<Location>,
     onSuggestionSelected: (Location) -> Unit,
-    onSuggestionDeselected: (Location) -> Unit
+    onSuggestionDeselected: (Location) -> Unit,
+    getSuggestionToggledSelectedSize: () -> Int,
 ) {
-  itemsIndexed(suggestions) { _, location ->
-    val isSelected =
-        destinations.any { it.name == location.name && it.coordinate == location.coordinate }
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
+    itemsIndexed(suggestions) { _, location ->
+        val isSelected =
+            destinations.any { it.name == location.name && it.coordinate == location.coordinate }
+
+        // Obtain the Context to show the Toast
+        val context = LocalContext.current
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
                 .clickable {
-                  if (isSelected) {
-                    onSuggestionDeselected(location)
-                  } else {
-                    onSuggestionSelected(location)
-                  }
+                    // Logic for clicking the entire Row
+                    if (isSelected) {
+                        onSuggestionDeselected(location)
+                    } else {
+                        // Check limit before selecting
+                        val currentCount = destinations.size + getSuggestionToggledSelectedSize()
+                        if (currentCount < MAX_DESTINATIONS) {
+                            onSuggestionSelected(location)
+                        } else {
+                            Toast
+                                .makeText(
+                                    context,
+                                    context.getString(
+                                        R.string.max_destinations_toast,
+                                        MAX_DESTINATIONS
+                                    ),
+                                    Toast.LENGTH_SHORT
+                                )
+                                .show()
+                        }
+                    }
                 }
                 .padding(dimensionResource(R.dimen.small_padding))
                 .testTag("suggestion_row_${location.name}"),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
-          Text(
-              text = location.name,
-              style = MaterialTheme.typography.bodyLarge,
-              modifier = Modifier.weight(1f))
-          Checkbox(
-              modifier = Modifier.testTag("suggestion_checkbox_${location.name}"),
-              checked = isSelected,
-              onCheckedChange = { checked ->
-                if (checked) {
-                  onSuggestionSelected(location)
-                } else {
-                  onSuggestionDeselected(location)
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = location.name,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.weight(1f)
+            )
+            Checkbox(
+                modifier = Modifier.testTag("suggestion_checkbox_${location.name}"),
+                checked = isSelected,
+                onCheckedChange = { checked ->
+                    // 'checked' is the NEW state.
+                    // true = user wants to check it. false = user wants to uncheck it.
+                    if (checked) {
+                        val currentCount = destinations.size + getSuggestionToggledSelectedSize()
+
+                        if (currentCount < MAX_DESTINATIONS) {
+                            onSuggestionSelected(location)
+                        } else {
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    } else {
+                        // User is unchecking (removing), always allow
+                        onSuggestionDeselected(location)
+                    }
                 }
-              })
+            )
         }
-    HorizontalDivider()
-  }
+        HorizontalDivider()
+    }
 }
 
 @Preview
