@@ -60,9 +60,10 @@ jobs:
           fi
           
           if [ -n "$OPEN_TRANSPORT_DATA_TOKEN" ]; then
-            echo "$OPEN_TRANSPORT_DATA_TOKEN" | base64 --decode > ./app/src/main/res/values/developer-config.xml
+            DECODED_TOKEN=$(echo "$OPEN_TRANSPORT_DATA_TOKEN" | base64 --decode)
+            echo "OPEN_TRANSPORT_DATA_TOKEN=$DECODED_TOKEN" >> ./local.properties
           else
-            echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set. developer-config.xml will not be created."
+            echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set."
           fi
 
       # Build the release APK
