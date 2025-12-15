@@ -507,7 +507,7 @@ class TripInfoViewModel(
 
     // add it to the new queue
     val newQueue = _uiState.value.activitiesQueue.toMutableList()
-      // add the new activity to the end of the queue
+    // add the new activity to the end of the queue
     newQueue.add(newActivity)
 
     // update both the queue and all fetched activities
@@ -523,8 +523,10 @@ class TripInfoViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       val initialActivities =
-              activitiesFetcher.fetchSwipeActivities(
-                  toExclude = (state.allFetchedForSwipe + state.activities).toSet()).toList()
+          activitiesFetcher
+              .fetchSwipeActivities(
+                  toExclude = (state.allFetchedForSwipe + state.activities).toSet())
+              .toList()
 
       Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
 
