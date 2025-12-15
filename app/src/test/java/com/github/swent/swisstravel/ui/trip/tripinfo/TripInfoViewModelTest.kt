@@ -18,7 +18,6 @@ import com.google.firebase.Timestamp
 import com.mapbox.geojson.Point
 import io.mockk.*
 import java.time.ZoneId
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import org.junit.Assert.*
