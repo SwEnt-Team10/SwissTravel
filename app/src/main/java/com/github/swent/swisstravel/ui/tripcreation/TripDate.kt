@@ -141,6 +141,14 @@ fun TripDateScreen(
                           onClick = { endDatePicker.show() })
                     }
 
+                // --- Disclaimer ---
+                Text(
+                    text = stringResource(R.string.trip_dates_disclaimer),
+                    textAlign = TextAlign.Center,
+                    style =
+                        MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onBackground))
+
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
                 // --- Done button ---
