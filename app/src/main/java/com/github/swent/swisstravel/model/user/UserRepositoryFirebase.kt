@@ -8,7 +8,6 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
-import com.google.firebase.firestore.persistentCacheSettings
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -20,10 +19,7 @@ class UserRepositoryFirebase(
 ) : UserRepository {
 
   init {
-    db.firestoreSettings =
-        FirebaseFirestoreSettings.Builder()
-            .setLocalCacheSettings(persistentCacheSettings {})
-            .build()
+    db.firestoreSettings = FirebaseFirestoreSettings.Builder().setPersistenceEnabled(true).build()
   }
 
   /**
