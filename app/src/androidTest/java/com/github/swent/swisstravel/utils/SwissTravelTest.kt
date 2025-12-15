@@ -752,17 +752,21 @@ abstract class SwissTravelTest {
     onNodeWithTag(EditPhotosScreenTestTags.EDIT_CANCEL_BUTTON).performClick()
   }
 
-  fun ComposeTestRule.loginWithGoogle() {
+  fun ComposeTestRule.waitForMainUi(isE2E: Boolean = false) {
+    waitUntil(if (isE2E) E2E_WAIT_TIMEOUT else UI_WAIT_TIMEOUT) {
+      onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+  }
+
+  fun ComposeTestRule.loginWithGoogle(isE2E: Boolean = false) {
     onNodeWithTag(LandingScreenTestTags.SIGN_IN_BUTTON).assertExists().performClick()
     waitForIdle()
     onNodeWithTag(SignInScreenTestTags.GOOGLE_LOGIN_BUTTON).assertExists().performClick()
 
     // Wait for main app to load
-    waitUntil(E2E_WAIT_TIMEOUT) {
-      onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-          .fetchSemanticsNodes()
-          .isNotEmpty()
-    }
+    waitForMainUi(isE2E)
   }
 
   fun ComposeTestRule.logout() {

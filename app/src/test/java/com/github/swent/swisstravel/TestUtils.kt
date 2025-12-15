@@ -5,10 +5,12 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Friend
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
@@ -108,4 +110,66 @@ class MainDispatcherRule(val testDispatcher: TestDispatcher = StandardTestDispat
   override fun finished(description: Description?) {
     Dispatchers.resetMain()
   }
+}
+
+/** A fake repository that records added trips and can be made to throw on addTrip. */
+class FakeTripsRepository : TripsRepository {
+  var addedTrip: Trip? = null
+  var shouldThrow: Boolean = false
+
+  // match the interface: non-suspending
+  override fun getNewUid(): String = "fake-uid"
+
+  override suspend fun addTrip(trip: Trip) {
+    if (shouldThrow) throw Exception("boom")
+    addedTrip = trip
+  }
+
+  // minimal stubs required by the interface
+  override suspend fun getAllTrips(): List<Trip> = emptyList()
+
+  override suspend fun getTrip(tripId: String): Trip = throw NotImplementedError()
+
+  override suspend fun deleteTrip(tripId: String) {}
+
+  override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {}
+
+  override suspend fun removeCollaborator(tripId: String, userId: String) {}
+
+  override suspend fun editTrip(tripId: String, updatedTrip: Trip) {}
+}
+
+class FakeUserRepository : UserRepository {
+  override suspend fun getCurrentUser(): User {
+    return createTestUser(
+        uid = "test-user", name = "Test User", preferences = listOf(Preference.FOODIE))
+  }
+
+  override suspend fun getUserByUid(uid: String): User? = null
+
+  override suspend fun getUserByNameOrEmail(query: String): List<User> = emptyList()
+
+  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
+
+  override suspend fun updateUserStats(uid: String, stats: UserStats) {}
+
+  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {}
+
+  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
+
+  override suspend fun removeFriend(uid: String, friendUid: String) {}
+
+  override suspend fun updateUser(
+      uid: String,
+      name: String?,
+      biography: String?,
+      profilePicUrl: String?,
+      preferences: List<Preference>?,
+      pinnedTripsUids: List<String>?,
+      pinnedPicturesUids: List<String>?
+  ) {}
+
+  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {}
+
+  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {}
 }

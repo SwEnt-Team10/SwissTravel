@@ -11,8 +11,10 @@ import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.mockk
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
@@ -50,6 +52,11 @@ class MyTripsViewModelTest {
             favoriteTripsUids = emptyList())
     coEvery { userRepository.getCurrentUser() } returns dummyUser
     coEvery { userRepository.getUserByUid(any()) } returns null
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
   }
 
   @Test

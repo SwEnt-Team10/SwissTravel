@@ -2,17 +2,13 @@ package com.github.swent.swisstravel.ui.tripcreation
 
 import android.content.Context
 import android.content.res.Resources
+import com.github.swent.swisstravel.FakeTripsRepository
+import com.github.swent.swisstravel.FakeUserRepository
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
-import com.github.swent.swisstravel.createTestUser
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.model.user.UserStats
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -289,67 +285,5 @@ class TripCreationViewModelTest {
     assertEquals(viewModel.tripSettings.value.invalidNameMsg, R.string.name_empty)
     viewModel.updateName("Test Trip")
     assertNull(viewModel.tripSettings.value.invalidNameMsg)
-  }
-
-  /** A fake repository that records added trips and can be made to throw on addTrip. */
-  private class FakeTripsRepository : TripsRepository {
-    var addedTrip: Trip? = null
-    var shouldThrow: Boolean = false
-
-    // match the interface: non-suspending
-    override fun getNewUid(): String = "fake-uid"
-
-    override suspend fun addTrip(trip: Trip) {
-      if (shouldThrow) throw Exception("boom")
-      addedTrip = trip
-    }
-
-    // minimal stubs required by the interface
-    override suspend fun getAllTrips(): List<Trip> = emptyList()
-
-    override suspend fun getTrip(tripId: String): Trip = throw NotImplementedError()
-
-    override suspend fun deleteTrip(tripId: String) {}
-
-    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {}
-
-    override suspend fun removeCollaborator(tripId: String, userId: String) {}
-
-    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {}
-  }
-
-  private class FakeUserRepository : UserRepository {
-    override suspend fun getCurrentUser(): User {
-      return createTestUser(
-          uid = "test-user", name = "Test User", preferences = listOf(Preference.FOODIE))
-    }
-
-    override suspend fun getUserByUid(uid: String): User? = null
-
-    override suspend fun getUserByNameOrEmail(query: String): List<User> = emptyList()
-
-    override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
-
-    override suspend fun updateUserStats(uid: String, stats: UserStats) {}
-
-    override suspend fun sendFriendRequest(fromUid: String, toUid: String) {}
-
-    override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
-
-    override suspend fun removeFriend(uid: String, friendUid: String) {}
-
-    override suspend fun updateUser(
-        uid: String,
-        name: String?,
-        biography: String?,
-        profilePicUrl: String?,
-        preferences: List<Preference>?,
-        pinnedTripsUids: List<String>?,
-        pinnedPicturesUids: List<String>?
-    ) {}
-
-    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {}
-
-    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {}
   }
 }

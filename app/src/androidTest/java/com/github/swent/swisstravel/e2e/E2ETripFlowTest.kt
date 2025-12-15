@@ -74,7 +74,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.setContent { SwissTravelApp(credentialManager = creds) }
 
     // 1) Log in as first account
-    composeTestRule.loginWithGoogle()
+    composeTestRule.loginWithGoogle(true)
     composeTestRule.waitForMainUi()
 
     // 2) Go to current trip
@@ -136,7 +136,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.logout()
 
     // 9) Log in with another account
-    composeTestRule.loginWithGoogle()
+    composeTestRule.loginWithGoogle(true)
     composeTestRule.waitForMainUi()
 
     // 10) Verify no other trip is displayed
@@ -166,14 +166,6 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
     // 13) Log out
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
-  }
-
-  private fun androidx.compose.ui.test.junit4.ComposeTestRule.waitForMainUi() {
-    this.waitUntil(E2E_WAIT_TIMEOUT) {
-      this.onAllNodesWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-          .fetchSemanticsNodes()
-          .isNotEmpty()
-    }
   }
 
   private fun createTrip(selectNonToday: Boolean) {

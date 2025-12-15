@@ -3,8 +3,10 @@ package com.github.swent.swisstravel.ui.trip.tripinfo
 import com.github.swent.swisstravel.MainDispatcherRule
 import com.github.swent.swisstravel.createTestTrip
 import com.github.swent.swisstravel.createTestUser
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
+import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
@@ -173,13 +175,21 @@ class TripInfoViewModelTest {
   fun `setCurrentDayIndex updates state`() = runTest {
     val segment1 =
         RouteSegment(
-            Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
-            Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+            Location(Coordinate(0.0, 0.0), "A"),
+            Location(Coordinate(1.0, 1.0), "B"),
             10,
-            com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+            TransportMode.WALKING,
             now,
             now)
-    val tripWithSegments = dummyTrip.copy(routeSegments = listOf(segment1))
+    val segment2 =
+        RouteSegment(
+            Location(Coordinate(2.0, 2.0), "C"),
+            Location(Coordinate(3.0, 3.0), "D"),
+            10,
+            TransportMode.WALKING,
+            Timestamp(now.seconds + 86400, 0), // Next day
+            Timestamp(now.seconds + 86400, 0))
+    val tripWithSegments = dummyTrip.copy(routeSegments = listOf(segment1, segment2))
     coEvery { tripsRepository.getTrip(tripWithSegments.uid) } returns tripWithSegments
 
     viewModel.loadTripInfo(tripWithSegments.uid)
@@ -197,10 +207,10 @@ class TripInfoViewModelTest {
     val step =
         TripElement.TripSegment(
             RouteSegment(
-                Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
-                Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+                Location(Coordinate(0.0, 0.0), "A"),
+                Location(Coordinate(1.0, 1.0), "B"),
                 10,
-                com.github.swent.swisstravel.model.trip.TransportMode.WALKING,
+                TransportMode.WALKING,
                 now,
                 now))
     viewModel.setSelectedStep(step)
@@ -229,7 +239,7 @@ class TripInfoViewModelTest {
         Activity(
             startDate = now,
             endDate = now,
-            location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
+            location = Location(Coordinate(0.0, 0.0), "A"),
             description = "Desc",
             imageUrls = emptyList(),
             estimatedTime = 60)

@@ -114,7 +114,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     val fakeUserRepo = FakeUserRepository()
 
     /* 1), 2) */
-    composeTestRule.loginWithGoogle()
+    composeTestRule.loginWithGoogle(true)
 
     /* 3) */
     // Verify bottom navigation visible
@@ -428,7 +428,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
     /* 22) */
     // Sign In
-    composeTestRule.loginWithGoogle()
+    composeTestRule.loginWithGoogle(true)
 
     /* 23) */
     // Check that we arrive on "Current Trip" Screen

@@ -10,8 +10,6 @@ import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipeDown
 import com.github.swent.swisstravel.SwissTravelApp
-import com.github.swent.swisstravel.model.trip.Coordinate
-import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
@@ -82,7 +80,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
   @Test
   fun user_can_send_and_accept_friend_request_and_view_pinned_trips() {
     // --- STEP 1: Alice logs in (account creation). ---
-    composeTestRule.loginWithGoogle()
+    composeTestRule.loginWithGoogle(true)
 
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
@@ -91,7 +89,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     composeTestRule.logout()
 
     // --- STEP 3: Bob logs in. ---
-    composeTestRule.loginWithGoogle()
+    composeTestRule.loginWithGoogle(true)
 
     // --- STEP 4: Add Bob's dummy trip and pins it to his profile. ---
     // We do this while Bob is logged in so we have permission
@@ -102,17 +100,16 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
       // 1. Get Bob's User object
       val bobUser = userRepo.getUserByNameOrEmail(bobEmail).first()
 
-      val loc = Location(coordinate = Coordinate(0.0, 0.0), name = "Test Location", imageUrl = null)
       // 2. Create dummy trip owned by Bob
       val trip =
           createTestTrip(
               uid = "trip_${System.currentTimeMillis()}",
               name = "bobTripName",
               ownerId = bobUser.uid,
-              locations = listOf(loc),
-              departureLocation = loc,
-              arrivalLocation = loc,
-              preferredLocations = listOf(loc),
+              locations = listOf(dummyLocation),
+              departureLocation = dummyLocation,
+              arrivalLocation = dummyLocation,
+              preferredLocations = listOf(dummyLocation),
               preferences = listOf(Preference.SCENIC_VIEWS),
               adults = 1,
               children = 0)
@@ -155,7 +152,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     composeTestRule.logout()
 
     // --- STEP 7: Alice logs in again. ---
-    composeTestRule.loginWithGoogle()
+    composeTestRule.loginWithGoogle(true)
 
     // --- STEP 8: Alice accepts the friend request. ---
     composeTestRule
@@ -179,12 +176,8 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(FriendElementTestTags.ACCEPT_BUTTON).performClick()
     composeTestRule.waitForIdle()
 
-    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
-      composeTestRule
-          .onAllNodesWithTag(FriendsScreenTestTags.FRIENDS_LIST)
-          .fetchSemanticsNodes()
-          .isNotEmpty()
-    }
+    composeTestRule.waitForTag(FriendsScreenTestTags.FRIENDS_LIST)
+
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_LIST).performTouchInput {
       swipeDown()
     }

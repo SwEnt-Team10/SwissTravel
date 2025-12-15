@@ -84,7 +84,7 @@ object FakeHttpClient {
               }
             }
 
-            // MySwitzerland attractions (Activity Search - Attractions) Made ba AI
+            // MySwitzerland attractions (Activity Search - Attractions) Made by AI
             "myswitzerland.io/v1/attractions" in url.lowercase() -> {
               val geoDist = request.url.queryParameter("geo.dist") ?: ""
               // Simple matching based on coordinates found in the E2E test
