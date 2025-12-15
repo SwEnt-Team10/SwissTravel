@@ -24,6 +24,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -188,6 +189,7 @@ fun MyTripsScreen(
                               end = dimensionResource(R.dimen.my_trip_padding_start_end),
                               bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
                     item {
+                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
                       CurrentTripSection(
                           myTripsViewModel = myTripsViewModel,
                           onSelectTrip = onSelectTrip,
@@ -199,6 +201,8 @@ fun MyTripsScreen(
                         TripListState(
                             trips = uiState.tripsList,
                             isSelectionMode = uiState.isSelectionMode,
+                            emptyListString =
+                                "You don't have any upcoming trips. Time to create one !",
                             isSelected = { trip -> trip in uiState.selectedTrips },
                             collaboratorsLookup = { uid ->
                               uiState.collaboratorsByTripId[uid] ?: emptyList()
@@ -219,7 +223,9 @@ fun MyTripsScreen(
                               }
                             },
                         )
-
+                    item {
+                      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.large_spacer)))
+                    }
                     sortedTripListItems(
                         title = upcomingTripsTitle,
                         listState = listState,
@@ -360,8 +366,12 @@ private fun CurrentTripSection(
   val editButtonShown = uiState.currentTrip != null || uiState.tripsList.isNotEmpty()
 
   CurrentTripTitle(editButtonShown = editButtonShown, onEditCurrentTrip = onEditCurrentTrip)
+  HorizontalDivider(
+      modifier =
+          Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+      color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
-  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
+  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
   currentTrip?.let {
     val tripElementState =

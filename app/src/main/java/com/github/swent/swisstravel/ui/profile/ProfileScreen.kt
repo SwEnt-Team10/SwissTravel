@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -32,6 +31,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -39,10 +39,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -195,7 +192,7 @@ fun ProfileScreen(
                     onEditPinnedPictures = onEditPinnedPictures,
                     modifier = Modifier.padding(it))
 
-                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
               }
             }
       }
@@ -287,13 +284,14 @@ fun ProfileScreenContent(
         item {
           ProfileHeader(photoUrl = uiState.profilePicUrl, name = uiState.name)
 
-
           BiographyDisplay(biography = uiState.biography)
 
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
           HorizontalDivider(
-              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              modifier =
+                  Modifier.padding(
+                      horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
               color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
@@ -303,7 +301,9 @@ fun ProfileScreenContent(
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
           HorizontalDivider(
-              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              modifier =
+                  Modifier.padding(
+                      horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
               color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
@@ -318,7 +318,9 @@ fun ProfileScreenContent(
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
           HorizontalDivider(
-              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              modifier =
+                  Modifier.padding(
+                      horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
               color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
@@ -341,7 +343,9 @@ fun ProfileScreenContent(
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
           HorizontalDivider(
-              modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+              modifier =
+                  Modifier.padding(
+                      horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
               color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
@@ -352,9 +356,7 @@ fun ProfileScreenContent(
               onEditPinnedPictures = onEditPinnedPictures,
               isLoadingImages = uiState.isLoadingImages)
         }
-          item{
-              Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
-          }
+        item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer))) }
       }
 }
 
@@ -367,7 +369,8 @@ fun ProfileScreenContent(
 @Composable
 fun ProfileHeader(photoUrl: String, name: String) {
   Column(
-      modifier = Modifier.fillMaxWidth().padding(vertical = dimensionResource(R.dimen.small_spacer)),
+      modifier =
+          Modifier.fillMaxWidth().padding(vertical = dimensionResource(R.dimen.small_spacer)),
       horizontalAlignment = Alignment.CenterHorizontally) {
         AsyncImage(
             model = photoUrl.ifBlank { R.drawable.default_profile_pic },
@@ -396,9 +399,9 @@ fun ProfileHeader(photoUrl: String, name: String) {
 @Composable
 fun BiographyDisplay(biography: String) {
   if (!biography.isBlank()) {
-      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-      Column(
+    Column(
         modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.BIOGRAPHY),
         horizontalAlignment = Alignment.CenterHorizontally) {
           Text(
@@ -421,12 +424,15 @@ fun BiographyDisplay(biography: String) {
 @Composable
 fun ProfileStats(stats: UserStats, friendsCount: Int) {
   Row(
-      modifier = Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
       horizontalArrangement = Arrangement.SpaceEvenly,
       verticalAlignment = Alignment.CenterVertically) {
         ProfileStatItem(count = friendsCount, label = stringResource(R.string.stats_friends))
         ProfileStatItem(count = stats.totalTrips, label = stringResource(R.string.stats_trips))
-        ProfileStatItem(count = stats.uniqueLocations, label = stringResource(R.string.stats_locations))
+        ProfileStatItem(
+            count = stats.uniqueLocations, label = stringResource(R.string.stats_locations))
       }
 }
 
@@ -466,27 +472,24 @@ fun AchievementsDisplay(
 
   var selected by remember { mutableStateOf<Achievement?>(null) }
   Column {
-      Row(
-          modifier = Modifier.fillMaxWidth(),
-          verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.achievements),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-      }
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+      Text(
+          text = stringResource(R.string.achievements),
+          style = MaterialTheme.typography.headlineSmall,
+          color = MaterialTheme.colorScheme.onBackground)
+    }
 
-      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
 
-      LazyRow(
-          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.ACHIEVEMENTS),
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          verticalAlignment = Alignment.CenterVertically,
-      ) {
-        items(achievements) { achievement ->
-          AchievementMedal(achievement, onClick = { selected = achievement })
-        }
+    LazyRow(
+        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.ACHIEVEMENTS),
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+      items(achievements) { achievement ->
+        AchievementMedal(achievement, onClick = { selected = achievement })
       }
+    }
   }
 
   selected?.let { ach ->
@@ -813,54 +816,54 @@ private fun PinnedPictures(
     isLoadingImages: Boolean
 ) {
   Column {
-      Row(
-          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
-          horizontalArrangement = Arrangement.SpaceBetween,
-          verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.pinned_pictures),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground)
+    Row(
+        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = stringResource(R.string.pinned_pictures),
+              style = MaterialTheme.typography.headlineSmall,
+              color = MaterialTheme.colorScheme.onBackground)
 
-            if (isOwnProfile) {
-              IconButton(
-                  onClick = onEditPinnedPictures,
-                  modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = stringResource(R.string.edit_pinned_pictures))
-                  }
-            }
+          if (isOwnProfile) {
+            IconButton(
+                onClick = onEditPinnedPictures,
+                modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
+                  Icon(
+                      imageVector = Icons.Outlined.Edit,
+                      contentDescription = stringResource(R.string.edit_pinned_pictures))
+                }
           }
+        }
 
-  if (pinnedBitmaps.isEmpty()) {
-    val text =
-        if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
-        else stringResource(R.string.no_pinned_pictures)
-    Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
-  } else {
-    if (isLoadingImages) {
-      CircularProgressIndicator()
+    if (pinnedBitmaps.isEmpty()) {
+      val text =
+          if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
+          else stringResource(R.string.no_pinned_pictures)
+      Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
     } else {
-      LazyRow(
-          modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
-          horizontalArrangement =
-              Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
-          contentPadding =
-              PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
-            items(pinnedBitmaps) { bitmap ->
-              Image(
-                  bitmap = bitmap.asImageBitmap(),
-                  contentDescription = null,
-                  modifier =
-                      Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
-                          .clip(
-                              RoundedCornerShape(
-                                  dimensionResource(R.dimen.pinned_pictures_corner))))
+      if (isLoadingImages) {
+        CircularProgressIndicator()
+      } else {
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
+            horizontalArrangement =
+                Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
+            contentPadding =
+                PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
+              items(pinnedBitmaps) { bitmap ->
+                Image(
+                    bitmap = bitmap.asImageBitmap(),
+                    contentDescription = null,
+                    modifier =
+                        Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
+                            .clip(
+                                RoundedCornerShape(
+                                    dimensionResource(R.dimen.pinned_pictures_corner))))
+              }
             }
-          }
+      }
     }
-  }
   }
 }
 
