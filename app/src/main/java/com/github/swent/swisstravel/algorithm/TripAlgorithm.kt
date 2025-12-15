@@ -435,8 +435,7 @@ open class TripAlgorithm(
             routeOptimizer.optimize(
                 enhancedTripProfile.tripProfile.arrivalLocation!!,
                 enhancedTripProfile.tripProfile.departureLocation!!,
-                enhancedTripProfile.newPreferredLocations +
-                    activities.allActivities.map { it.location },
+                activities.allActivities.map { it.location },
                 activities.allActivities,
                 if (enhancedTripProfile.tripProfile.preferences.contains(
                     Preference.PUBLIC_TRANSPORT))
@@ -919,7 +918,7 @@ open class TripAlgorithm(
     return finalSchedule
   }
 
-  private suspend fun tryAddingCachedActivities(
+  open suspend fun tryAddingCachedActivities(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
       originalSchedule: List<TripElement>,
@@ -929,15 +928,21 @@ open class TripAlgorithm(
     val maxIndex =
         min(
             MAX_INDEX_CACHED_ACTIVITIES,
-            dateDifference(enhancedTripProfile.tripProfile.endDate, originalSchedule.last().endDate)
+            dateDifference(originalSchedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
                 .toInt())
     var schedule = originalSchedule
     while (added && index < maxIndex) {
-      val totalTimeNeededHours =
-          dateDifference(enhancedTripProfile.tripProfile.endDate, schedule.last().endDate) *
-              ACTIVITY_TIME_PER_DAY_HOURS
+        val daysDiff = dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+        val totalTimeNeededHours = if (daysDiff > 0) {
+            (daysDiff * ACTIVITY_TIME_PER_DAY_HOURS).toDouble()
+        } else {
+            // If same day, calculate remaining active hours (e.g. gap between now and 8pm)
+            // But we need to be careful not to add if we are already late.
+            val hours = hoursDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+            if (hours > 0) hours.toDouble() else 0.0
+        }
       if (totalTimeNeededHours > 0) {
-        added = addCachedActivity(enhancedTripProfile, activities, totalTimeNeededHours.toDouble())
+        added = addCachedActivity(enhancedTripProfile, activities, totalTimeNeededHours)
       }
       schedule = optimizeAndSchedule(enhancedTripProfile, activities)
       index++
@@ -1069,7 +1074,7 @@ open class TripAlgorithm(
    * @param cachedActivities The mutable list of backup/cached activities.
    * @return `true` if at least one activity was added, `false` otherwise.
    */
-  private fun addCachedActivity(
+  open fun addCachedActivity(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
       totalTimeNeededHours: Double,
@@ -1546,8 +1551,7 @@ open class TripAlgorithm(
         routeOptimizer.optimize(
             enhancedTripProfile.tripProfile.arrivalLocation!!,
             enhancedTripProfile.tripProfile.departureLocation!!,
-            enhancedTripProfile.newPreferredLocations +
-                activities.allActivities.map { it.location },
+            activities.allActivities.map { it.location },
             activities.allActivities,
             if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
 
@@ -1566,8 +1570,7 @@ open class TripAlgorithm(
         routeOptimizer.optimize(
             enhancedTripProfile.tripProfile.arrivalLocation!!,
             enhancedTripProfile.tripProfile.departureLocation!!,
-            enhancedTripProfile.newPreferredLocations +
-                activities.allActivities.map { it.location },
+            activities.allActivities.map { it.location },
             activities.allActivities,
             if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
 

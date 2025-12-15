@@ -125,20 +125,6 @@ class SelectActivities(
         onProgress(completedSteps.toFloat() / max(1, totalSteps))
         delay(API_CALL_DELAY_MS)
       }
-    } else {
-      for (zone in searchZones) {
-        val fetched =
-            activityRepository.getActivitiesNear(
-                zone.location.coordinate,
-                zone.radius, // Use dynamic radius
-                numberOfActivityToFetchPerStep,
-                activityBlackList,
-                cachedActivities)
-        allFetchedActivities.addAll(fetched)
-        completedSteps++
-        onProgress(completedSteps.toFloat() / max(1, totalSteps))
-        delay(API_CALL_DELAY_MS)
-      }
     }
 
     val filteredActivities = allFetchedActivities.distinctBy { it.location }

@@ -262,6 +262,11 @@ class SelectActivitiesTest {
   }
 
   @Test
+  fun `getActivitiesNearWithPreferences fuses locations depending on their distance`() = runBlocking {
+
+  }
+
+  @Test
   fun `addActivities injects default preferences when none are provided`() = runBlocking {
     val expectedActivities = listOf(activityLausanne, activityGeneva, activityZurich)
     val progressUpdates = mutableListOf<Float>()
