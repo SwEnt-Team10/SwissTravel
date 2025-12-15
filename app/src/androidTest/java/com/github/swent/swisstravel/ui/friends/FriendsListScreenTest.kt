@@ -10,7 +10,6 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
@@ -63,10 +62,8 @@ class FriendsListScreenTest {
     val bob = fakeUser("2", "Bob")
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendsListScreen(
-            friendsViewModel = fakeViewModel(friends = listOf(alice, bob), pending = emptyList()))
-      }
+      FriendsListScreen(
+          friendsViewModel = fakeViewModel(friends = listOf(alice, bob), pending = emptyList()))
     }
 
     composeRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_LIST).assertIsDisplayed()
@@ -84,9 +81,7 @@ class FriendsListScreenTest {
     val viewModel = FriendsViewModel(userRepository = repo)
 
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendsListScreen(friendsViewModel = viewModel, onSelectFriend = {}, onAddFriend = {})
-      }
+      FriendsListScreen(friendsViewModel = viewModel, onSelectFriend = {}, onAddFriend = {})
     }
 
     // Section is visible
@@ -104,10 +99,8 @@ class FriendsListScreenTest {
   @Test
   fun floatingButton_isVisible() {
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendsListScreen(
-            friendsViewModel = fakeViewModel(friends = emptyList(), pending = emptyList()))
-      }
+      FriendsListScreen(
+          friendsViewModel = fakeViewModel(friends = emptyList(), pending = emptyList()))
     }
 
     composeRule.onNodeWithTag(FriendsScreenTestTags.ADD_FRIEND_BUTTON).assertIsDisplayed()
@@ -116,10 +109,8 @@ class FriendsListScreenTest {
   @Test
   fun searchButton_opensSearchBar() {
     composeRule.setContent {
-      SwissTravelTheme {
-        FriendsListScreen(
-            friendsViewModel = fakeViewModel(friends = emptyList(), pending = emptyList()))
-      }
+      FriendsListScreen(
+          friendsViewModel = fakeViewModel(friends = emptyList(), pending = emptyList()))
     }
 
     // Open search

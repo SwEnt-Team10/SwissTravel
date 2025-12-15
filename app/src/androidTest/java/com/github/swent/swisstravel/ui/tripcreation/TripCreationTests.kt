@@ -17,7 +17,6 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories.category
 import com.github.swent.swisstravel.model.user.PreferenceCategories.getPreferences
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import java.time.LocalDate
 import kotlin.test.assertEquals
@@ -134,7 +133,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
     val viewModel = TripSettingsViewModel(fakeRepo, fakeUserRepo)
     val fakeStartDate = LocalDate.of(2024, 7, 20)
     val fakeEndDate = LocalDate.of(2024, 7, 25)
-    composeTestRule.setContent { SwissTravelTheme { TripPreferencesScreen(viewModel) } }
+    composeTestRule.setContent { TripPreferencesScreen(viewModel) }
     viewModel.updateDates(fakeStartDate, fakeEndDate) // Need a date to save a trip
     assert(viewModel.tripSettings.value.preferences.contains(Preference.MUSEUMS))
     composeTestRule
@@ -172,7 +171,7 @@ class TripCreationTests : InMemorySwissTravelTest() {
 
   @Test
   fun tripTravelersScreenTest() {
-    composeTestRule.setContent { SwissTravelTheme { TripTravelersScreen(onNext = {}) } }
+    composeTestRule.setContent { TripTravelersScreen(onNext = {}) }
     composeTestRule.onNodeWithTag(TripTravelersTestTags.TRIP_TRAVELERS_SCREEN).assertExists()
     composeTestRule.checkTopBarIsDisplayed()
     composeTestRule.onNodeWithTag(TripTravelersTestTags.RANDOM_SWITCH).assertIsDisplayed()

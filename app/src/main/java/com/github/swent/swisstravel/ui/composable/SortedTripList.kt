@@ -2,9 +2,12 @@ package com.github.swent.swisstravel.ui.composable
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -61,6 +64,14 @@ fun LazyListScope.sortedTripListItems(
 
           SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
         }
+  }
+  item {
+    HorizontalDivider(
+        modifier =
+            Modifier.padding(horizontal = dimensionResource(R.dimen.profile_padding_start_end)),
+        color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
   }
   tripListItems(listState = listState, listEvents = listEvents)
 }

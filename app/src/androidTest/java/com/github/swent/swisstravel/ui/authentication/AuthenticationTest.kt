@@ -14,7 +14,6 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.GOOGL
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.LOGIN_BUTTON
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.NAME
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags.PASSWORD_FIELD
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
@@ -43,7 +42,7 @@ class AuthenticationTest : FirestoreSwissTravelTest() {
 
   @Test
   fun testSignInScreenDisplaysCorrectly() {
-    composeTestRule.setContent { SwissTravelTheme { SignInScreen() } }
+    composeTestRule.setContent { SignInScreen() }
 
     composeTestRule.onNodeWithTag(APP_LOGO).assertIsDisplayed()
     composeTestRule.onNodeWithTag(LOGIN_BUTTON).assertIsDisplayed()
