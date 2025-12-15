@@ -139,6 +139,7 @@ class FakeTripsRepository : TripsRepository {
   override suspend fun editTrip(tripId: String, updatedTrip: Trip) {}
 }
 
+/** A fake repository used for basic user interactions */
 class FakeUserRepository : UserRepository {
   override suspend fun getCurrentUser(): User {
     return createTestUser(
