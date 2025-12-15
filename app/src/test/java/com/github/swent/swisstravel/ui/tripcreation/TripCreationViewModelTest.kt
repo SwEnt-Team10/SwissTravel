@@ -2,12 +2,12 @@ package com.github.swent.swisstravel.ui.tripcreation
 
 import android.content.Context
 import android.content.res.Resources
+import com.github.swent.swisstravel.FakeTripsRepository
+import com.github.swent.swisstravel.FakeUserRepository
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
@@ -102,10 +102,9 @@ class TripCreationViewModelTest {
     coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
 
     // Setup initial state
-    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4)) // 4-day trip
-    viewModel.setRandomTrip(true) // Simulate being in random mode
-    viewModel.updateArrivalLocation(
-        Location(Coordinate(46.315833, 6.193056), "Coppet", "")) // Arrival location in Coppet
+    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4))
+    viewModel.setRandomTrip(true)
+    viewModel.updateArrivalLocation(Location(Coordinate(46.315833, 6.193056), "Coppet", ""))
 
     // Use a seed for predictable "randomness"
     viewModel.randomTrip(mockContext, seed = 123)
@@ -144,10 +143,7 @@ class TripCreationViewModelTest {
 
     // Act
     viewModel.onNextFromDateScreen()
-
-    // Assert
-    val event = viewModel.validationEvents.first()
-    assertEquals(ValidationEvent.EndDateIsBeforeStartDateError, event)
+    assertEquals(ValidationEvent.EndDateIsBeforeStartDateError, viewModel.validationEvents.first())
   }
 
   @Test
@@ -159,10 +155,7 @@ class TripCreationViewModelTest {
 
     // Act
     viewModel.onNextFromDateScreen()
-
-    // Assert
-    val event = viewModel.validationEvents.first()
-    assertEquals(ValidationEvent.Proceed, event)
+    assertEquals(ValidationEvent.Proceed, viewModel.validationEvents.first())
   }
 
   @Test
@@ -188,9 +181,7 @@ class TripCreationViewModelTest {
             Preference.SPORTS)
 
     viewModel.updatePreferences(preferences)
-
-    val newPreferences = viewModel.tripSettings.value.preferences
-    assertEquals(preferences, newPreferences)
+    assertEquals(preferences, viewModel.tripSettings.value.preferences)
   }
 
   @Test
@@ -256,9 +247,7 @@ class TripCreationViewModelTest {
 
     viewModel.saveTrip(fakeContext)
 
-    val event = viewModel.validationEvents.first()
-    assertEquals(ValidationEvent.SaveSuccess, event)
-
+    assertEquals(ValidationEvent.SaveSuccess, viewModel.validationEvents.first())
     val added = fakeRepo.addedTrip
     assertNotNull(added)
     assertEquals(2, added.tripProfile.adults)
@@ -298,122 +287,15 @@ class TripCreationViewModelTest {
 
     // Assert
     val event = viewModel.validationEvents.first()
-    when (event) {
-      is ValidationEvent.SaveError -> {
-        assertTrue(event.message.contains("boom"))
-      }
-      else -> throw AssertionError("Expected SaveError but got $event")
-    }
+    assertTrue(event is ValidationEvent.SaveError)
+    assertTrue((event).message.contains("boom"))
   }
 
   @Test
   fun updateNameWithDifferentString() = runTest {
-    val emptyString = ""
-    viewModel.updateName(emptyString)
+    viewModel.updateName("")
     assertEquals(viewModel.tripSettings.value.invalidNameMsg, R.string.name_empty)
-    val fakeName = "Test Trip"
-    viewModel.updateName(fakeName)
+    viewModel.updateName("Test Trip")
     assertNull(viewModel.tripSettings.value.invalidNameMsg)
-  }
-
-  /** A fake repository that records added trips and can be made to throw on addTrip. */
-  private class FakeTripsRepository : TripsRepository {
-    var addedTrip: Trip? = null
-    var shouldThrow: Boolean = false
-
-    // match the interface: non-suspending
-    override fun getNewUid(): String = "fake-uid"
-
-    override suspend fun addTrip(trip: Trip) {
-      if (shouldThrow) throw Exception("boom")
-      addedTrip = trip
-    }
-
-    // minimal stubs required by the interface
-    override suspend fun getAllTrips(): List<Trip> = emptyList()
-
-    override suspend fun getTrip(tripId: String): Trip =
-        throw NotImplementedError("getTrip not needed for these tests")
-
-    override suspend fun deleteTrip(tripId: String) {
-      /* no-op for tests */
-    }
-
-    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
-      /* no-op */
-    }
-
-    override suspend fun removeCollaborator(tripId: String, userId: String) {
-      /* no-op */
-    }
-
-    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
-      /* no-op for tests */
-    }
-  }
-
-  private class FakeUserRepository : UserRepository {
-    override suspend fun getCurrentUser(): User {
-      return User(
-          uid = "test-user",
-          name = "Test User",
-          biography = "Test bio",
-          email = "test@example.com",
-          profilePicUrl = "",
-          preferences = listOf(Preference.FOODIE),
-          friends = emptyList(),
-          stats = UserStats(),
-          pinnedTripsUids = emptyList(),
-          pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
-    }
-
-    override suspend fun getUserByUid(uid: String): User? {
-      // no-op in tests
-      return null
-    }
-
-    override suspend fun getUserByNameOrEmail(query: String): List<User> {
-      // no-op in tests
-      return emptyList()
-    }
-
-    override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
-
-    override suspend fun updateUserStats(uid: String, stats: UserStats) {
-      // no-op for testing
-    }
-
-    override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-      // no-op for testing
-    }
-
-    override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-      // no-op for testing
-    }
-
-    override suspend fun removeFriend(uid: String, friendUid: String) {
-      // no-op for testing
-    }
-
-    override suspend fun updateUser(
-        uid: String,
-        name: String?,
-        biography: String?,
-        profilePicUrl: String?,
-        preferences: List<Preference>?,
-        pinnedTripsUids: List<String>?,
-        pinnedPicturesUids: List<String>?
-    ) {
-      // no-op for testing
-    }
-
-    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
-      // No-op
-    }
-
-    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
-      // No-op
-    }
   }
 }

@@ -13,7 +13,7 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.ui.geocoding.FakeAddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.profile.FakeUserRepository
-import com.github.swent.swisstravel.ui.trips.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeTripsRepository
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue

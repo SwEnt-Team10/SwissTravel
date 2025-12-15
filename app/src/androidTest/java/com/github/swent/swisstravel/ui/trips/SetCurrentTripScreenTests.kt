@@ -6,7 +6,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
+import com.github.swent.swisstravel.utils.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -33,21 +34,17 @@ class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
         MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
     composeTestRule.setContent {
-      SwissTravelTheme {
-        SetCurrentTripScreen(
-            viewModel = viewModel,
-            onClose = { flags.screenClosed = true },
-            isSelected = { it.isCurrentTrip })
-      }
+      SetCurrentTripScreen(
+          viewModel = viewModel,
+          onClose = { flags.screenClosed = true },
+          isSelected = { it.isCurrentTrip })
     }
     return viewModel
   }
 
   @Test
   fun screenDisplaysCorrectly() {
-    composeTestRule.setContent {
-      SwissTravelTheme { SetCurrentTripScreen(title = "Set Current Trip") }
-    }
+    composeTestRule.setContent { SetCurrentTripScreen(title = "Set Current Trip") }
     composeTestRule.checkSetCurrentTripIsDisplayed()
   }
 

@@ -11,7 +11,6 @@ import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import com.github.swent.swisstravel.utils.UI_WAIT_TIMEOUT
@@ -29,7 +28,7 @@ class NavigationTest : InMemorySwissTravelTest() {
     super.setUp()
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.auth.signInAnonymously()
-    composeTestRule.setContent { SwissTravelTheme { SwissTravelApp() } }
+    composeTestRule.setContent { SwissTravelApp() }
   }
 
   @Test
