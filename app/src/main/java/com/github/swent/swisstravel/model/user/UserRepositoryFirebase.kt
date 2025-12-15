@@ -54,10 +54,10 @@ class UserRepositoryFirebase(
         if (cachedDoc.exists()) {
           createUserFromDoc(cachedDoc, uid)
         } else {
-          throw IllegalStateException("User data not found in cache and server unreachable.")
+          error("User data not found in cache and server unreachable.")
         }
       } catch (_: Exception) {
-        throw IllegalStateException("User data not found in cache and server unreachable.")
+        error("User data not found in cache and server unreachable.")
       }
     }
   }
