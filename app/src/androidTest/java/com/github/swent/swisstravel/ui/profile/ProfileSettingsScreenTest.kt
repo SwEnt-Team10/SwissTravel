@@ -5,175 +5,120 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
+import androidx.test.platform.app.InstrumentationRegistry
+import com.github.swent.swisstravel.model.image.ImageRepositoryFirebase
+import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
+import com.github.swent.swisstravel.utils.FirebaseEmulator
+import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+import com.github.swent.swisstravel.utils.UI_WAIT_TIMEOUT
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/** Fake UserRepository to avoid Firebase. */
-class FakeUserRepository : UserRepository {
-  override suspend fun getCurrentUser(): User {
-    return User(
-        uid = "fakeUid123",
-        name = "Test User",
-        biography = "Fake Bio",
-        email = "test@example.com",
-        profilePicUrl = "",
-        preferences = listOf(Preference.MUSEUMS, Preference.QUICK),
-        friends = emptyList(),
-        stats = UserStats(),
-        pinnedTripsUids = emptyList(),
-        pinnedPicturesUids = emptyList(),
-        favoriteTripsUids = emptyList())
-  }
-
-  override suspend fun getUserByUid(uid: String): User? {
-    // no op in tests
-    return null
-  }
-
-  override suspend fun getUserByNameOrEmail(query: String): List<User> {
-    // no op in tests
-    return emptyList()
-  }
-
-  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {
-    // no-op in tests
-  }
-
-  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-    // no-op in tests
-  }
-
-  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-    // no-op in tests
-  }
-
-  override suspend fun removeFriend(uid: String, friendUid: String) {
-    // no-op in tests
-  }
-
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
-  ) {
-    // no-op in tests
-  }
-
-  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
-    // No-op
-  }
-
-  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
-    // No-op
-  }
-
-  override suspend fun updateUserStats(uid: String, stats: UserStats) {
-    // no-op in tests
-  }
-}
-
-val emptyUserRepo =
-    object : UserRepository {
-      override suspend fun getCurrentUser(): User {
-        return User(
-            uid = "0",
-            name = "",
-            biography = "",
-            email = "",
-            profilePicUrl = "",
-            preferences = emptyList(),
-            friends = emptyList(),
-            stats = UserStats(),
-            pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
-      }
-
-      override suspend fun getUserByUid(uid: String): User? {
-        // no op for tests
-        return null
-      }
-
-      override suspend fun getUserByNameOrEmail(query: String): List<User> {
-        // no op for tests
-        return emptyList()
-      }
-
-      override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
-
-      override suspend fun updateUserStats(uid: String, stats: UserStats) {
-        /** no-op for tests* */
-      }
-
-      override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-        /** no-op for tests* */
-      }
-
-      override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-        /** no-op for tests* */
-      }
-
-      override suspend fun removeFriend(uid: String, friendUid: String) {
-        /** no-op for tests* */
-      }
-
-      override suspend fun updateUser(
-          uid: String,
-          name: String?,
-          biography: String?,
-          profilePicUrl: String?,
-          preferences: List<Preference>?,
-          pinnedTripsUids: List<String>?,
-          pinnedPicturesUids: List<String>?
-      ) {
-        /** no-op for tests* */
-      }
-
-      override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
-        // No-op
-      }
-
-      override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
-        // No-op
-      }
-    }
-
-class ProfileSettingsScreenTest {
+/** Tests for the Profile Settings Screen. Made with the help of AI. */
+class ProfileSettingsScreenTest : FirestoreSwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
-  private val fakeUserRepo = FakeUserRepository()
-  private val fakeTripRepo = TripRepositoryLocal()
 
-  private fun setContentHelper(fakeUserRepository: UserRepository = fakeUserRepo) {
-    composeTestRule.setContent {
-      ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepository, fakeTripRepo))
+  private lateinit var userRepo: UserRepositoryFirebase
+  private lateinit var tripsRepo: TripsRepositoryFirestore
+  private lateinit var imageRepo: ImageRepositoryFirebase
+
+  private val testUser =
+      User(
+          uid = "",
+          name = "Test User",
+          biography = "Fake Bio",
+          email = "test@example.com",
+          profilePicUrl = "",
+          preferences = listOf(Preference.MUSEUMS, Preference.QUICK),
+          friends = emptyList(),
+          stats = UserStats(),
+          pinnedTripsUids = emptyList(),
+          pinnedPicturesUids = emptyList(),
+          favoriteTripsUids = emptyList())
+
+  @Before
+  override fun setUp() {
+    super.setUp()
+
+    userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
+    tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
+    imageRepo = ImageRepositoryFirebase(FirebaseEmulator.firestore, FirebaseEmulator.auth)
+
+    runBlocking {
+      FirebaseEmulator.auth.signOut()
+
+      // CHANGED: Use Anonymous Sign In
+      FirebaseEmulator.auth.signInAnonymously().await()
+
+      // Write the User document to Firestore Emulator using the new anonymous UID
+      val uid = FirebaseEmulator.auth.currentUser!!.uid
+      val userWithUid = testUser.copy(uid = uid)
+      FirebaseEmulator.firestore.collection("users").document(uid).set(userWithUid).await()
     }
+  }
+
+  private fun setContentHelper(): ProfileSettingsViewModel {
+    val vm = ProfileSettingsViewModel(userRepo, tripsRepo, imageRepo)
+    composeTestRule.setContent { ProfileSettingsScreen(vm) }
+    waitForLoading()
+    return vm
+  }
+
+  private fun setupEmptyUser() {
+    runBlocking {
+      val uid = FirebaseEmulator.auth.currentUser!!.uid
+      val emptyUser =
+          testUser.copy(uid = uid, name = "", biography = "", email = "", preferences = emptyList())
+      FirebaseEmulator.firestore.collection("users").document(uid).set(emptyUser).await()
+    }
+  }
+
+  private fun waitForLoading() {
+    composeTestRule.waitUntil(timeoutMillis = 5000) {
+      composeTestRule
+          .onAllNodesWithTag(ProfileSettingsScreenTestTags.CONTENT)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+  }
+
+  private fun createTestImageUri(): android.net.Uri {
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+    val file = java.io.File(context.cacheDir, "test_profile_image.jpg")
+    java.io.FileOutputStream(file).use { out ->
+      android.graphics.Bitmap.createBitmap(1, 1, android.graphics.Bitmap.Config.ARGB_8888)
+          .compress(android.graphics.Bitmap.CompressFormat.JPEG, 50, out)
+    }
+    return android.net.Uri.fromFile(file)
   }
 
   @Test
   fun allKeyUIElementsAreDisplayed_collapsedByDefault() {
     setContentHelper()
     // Static bits
-    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.EDIT_PROFILE_PIC)
+        .assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_INFO).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PERSONAL_INFO).assertIsDisplayed()
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.EMAIL).assertIsDisplayed()
+
     val fields = listOf("NAME", "BIOGRAPHY")
     fields.forEach { prefix ->
       composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.label(prefix)).assertIsDisplayed()
@@ -209,6 +154,7 @@ class ProfileSettingsScreenTest {
         .onNodeWithTag(
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
+
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performScrollTo()
     // Now a known preference chip should appear
     composeTestRule
@@ -221,6 +167,7 @@ class ProfileSettingsScreenTest {
         .onNodeWithTag(
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
+
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
         .assertDoesNotExist()
@@ -235,7 +182,9 @@ class ProfileSettingsScreenTest {
         .onNodeWithTag(
             useUnmergedTree = true, testTag = ProfileSettingsScreenTestTags.PREFERENCES_TOGGLE)
         .performClick()
+
     composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON).performScrollTo()
+
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
         .assertIsDisplayed()
@@ -244,6 +193,7 @@ class ProfileSettingsScreenTest {
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
         .performClick()
+
     composeTestRule
         .onNodeWithTag(PreferenceSelectorTestTags.getTestTagButton(Preference.QUICK))
         .performClick()
@@ -264,7 +214,8 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun profileDisplaysFallbackValuesWhenEmpty() {
-    setContentHelper(emptyUserRepo)
+    setupEmptyUser()
+    setContentHelper()
 
     // InfoItem displays "-" when value is blank
     composeTestRule
@@ -321,6 +272,14 @@ class ProfileSettingsScreenTest {
         .onNodeWithTag(ProfileSettingsScreenTestTags.confirmButton("NAME"))
         .performClick()
 
+    // Wait until the TextField is gone
+    composeTestRule.waitUntil(timeoutMillis = UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(ProfileSettingsScreenTestTags.textField("NAME"))
+          .fetchSemanticsNodes()
+          .isEmpty()
+    }
+
     // TextField is gone and the updated text is shown
     composeTestRule
         .onNodeWithTag(ProfileSettingsScreenTestTags.textField("NAME"))
@@ -358,7 +317,8 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun emptyBiography_showsPressEditToAdd() {
-    setContentHelper(emptyUserRepo)
+    setupEmptyUser()
+    setContentHelper()
 
     // Empty bio shows fallback placeholder
     composeTestRule
@@ -368,7 +328,8 @@ class ProfileSettingsScreenTest {
 
   @Test
   fun emptyField_editMode_showsTextField() {
-    setContentHelper(emptyUserRepo)
+    setupEmptyUser()
+    setContentHelper()
 
     // Press edit
     composeTestRule
@@ -379,5 +340,85 @@ class ProfileSettingsScreenTest {
     composeTestRule
         .onNodeWithTag(ProfileSettingsScreenTestTags.textField("BIOGRAPHY"))
         .assertIsDisplayed()
+  }
+
+  @Test
+  fun editProfilePic_showsPreviewDialog() {
+    val vm = setContentHelper()
+    val uri = createTestImageUri()
+
+    // 1. Verify edit button exists
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.EDIT_PROFILE_PIC)
+        .assertIsDisplayed()
+
+    // 2. Simulate selection
+    composeTestRule.runOnUiThread { vm.onProfilePicSelected(uri) }
+
+    // 3. Verify Dialog Elements using your new tags
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_TEXT)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_IMAGE)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CONFIRM)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CANCEL)
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun confirmProfilePic_updatesUserProfile() {
+    val vm = setContentHelper()
+    val uri = createTestImageUri()
+
+    // 1. Simulate selection
+    composeTestRule.runOnUiThread { vm.onProfilePicSelected(uri) }
+
+    // 2. Click Confirm
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CONFIRM).performClick()
+
+    // 3. Wait for uploading to finish (Wait until loading is false AND URI is null)
+    composeTestRule.waitUntil(timeoutMillis = UI_WAIT_TIMEOUT) {
+      !vm.uiState.value.isLoading && vm.uiState.value.pendingProfilePicUri == null
+    }
+
+    // 4. Verify Dialog is gone
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CONFIRM)
+        .assertDoesNotExist()
+
+    // 5. Verify User was updated in Firestore
+    val updatedUser = runBlocking { userRepo.getCurrentUser() }
+    assert(updatedUser.profilePicUrl.isNotBlank()) { "Profile picture URL should not be blank" }
+
+    // Optional: Verify image exists in ImageRepository
+    val savedImage = runBlocking { imageRepo.getImage(updatedUser.profilePicUrl) }
+    assert(savedImage.uid == updatedUser.profilePicUrl)
+    assert(savedImage.ownerId == updatedUser.uid)
+  }
+
+  @Test
+  fun cancelProfilePic_dismissesDialog() {
+    val vm = setContentHelper()
+    val uri = createTestImageUri()
+
+    // 1. Simulate selection
+    composeTestRule.runOnUiThread { vm.onProfilePicSelected(uri) }
+
+    // 2. Click Cancel
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CANCEL).performClick()
+
+    // 3. Verify Dialog is gone
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CANCEL)
+        .assertDoesNotExist()
+
+    // 4. Verify URL has not changed
+    val currentUser = runBlocking { userRepo.getCurrentUser() }
+    assert(currentUser.profilePicUrl == "")
   }
 }

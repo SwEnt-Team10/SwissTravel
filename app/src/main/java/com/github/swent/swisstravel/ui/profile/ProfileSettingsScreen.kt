@@ -26,7 +26,6 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.Edit
@@ -78,7 +77,7 @@ import com.github.swent.swisstravel.utils.NetworkUtils
 /** Test tags for the profile settings screen. */
 object ProfileSettingsScreenTestTags {
   const val CONTENT = "content"
-  const val PROFILE_PIC = "profilePic"
+  const val EDIT_PROFILE_PIC = "editProfilePic"
   const val PROFILE_INFO = "profileInfo"
   const val PERSONAL_INFO = "personalInfo"
   const val EMAIL = "email"
@@ -86,7 +85,10 @@ object ProfileSettingsScreenTestTags {
   const val PREFERENCES = "preferences"
   const val PREFERENCES_TOGGLE = "preferencesToggle"
   const val LOGOUT_BUTTON = "logoutButton"
-  const val EDIT_PROFILE_PIC_BUTTON = "editProfilePicButton"
+  const val PREVIEW_PFP_TEXT = "previewPfpText"
+  const val PREVIEW_PFP_CONFIRM = "previewPfpConfirm"
+  const val PREVIEW_PFP_CANCEL = "previewPfpCancel"
+  const val PREVIEW_PFP_IMAGE = "previewPfpImage"
 
   /**
    * A test tag for text.
@@ -178,7 +180,11 @@ fun ProfileSettingsScreen(
   if (uiState.pendingProfilePicUri != null) {
     AlertDialog(
         onDismissRequest = { profileSettingsViewModel.cancelProfilePicChange() },
-        title = { Text(stringResource(R.string.preview_profile_pic_title)) },
+        title = {
+          Text(
+              text = stringResource(R.string.preview_profile_pic_title),
+              modifier = Modifier.testTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_TEXT))
+        },
         text = {
           Column(
               horizontalAlignment = Alignment.CenterHorizontally,
@@ -189,18 +195,23 @@ fun ProfileSettingsScreen(
                     contentScale = ContentScale.Crop,
                     modifier =
                         Modifier.size(dimensionResource(R.dimen.profile_logo_size))
-                            .clip(CircleShape))
+                            .clip(CircleShape)
+                            .testTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_IMAGE))
               }
         },
         confirmButton = {
-          TextButton(onClick = { profileSettingsViewModel.confirmProfilePicChange(context) }) {
-            Text(stringResource(R.string.preview_profile_pic_confirm))
-          }
+          TextButton(
+              onClick = { profileSettingsViewModel.confirmProfilePicChange(context) },
+              modifier = Modifier.testTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CONFIRM)) {
+                Text(stringResource(R.string.preview_profile_pic_confirm))
+              }
         },
         dismissButton = {
-          TextButton(onClick = { profileSettingsViewModel.cancelProfilePicChange() }) {
-            Text(stringResource(R.string.cancel))
-          }
+          TextButton(
+              onClick = { profileSettingsViewModel.cancelProfilePicChange() },
+              modifier = Modifier.testTag(ProfileSettingsScreenTestTags.PREVIEW_PFP_CANCEL)) {
+                Text(stringResource(R.string.cancel))
+              }
         })
   }
 
@@ -311,7 +322,7 @@ private fun ProfileSettingsHeader(profilePicUrl: String, onEditClick: () -> Unit
           Modifier.size(dimensionResource(R.dimen.profile_logo_size))
               .clip(CircleShape)
               .clickable(onClick = onEditClick)
-              .testTag(ProfileSettingsScreenTestTags.EDIT_PROFILE_PIC_BUTTON)) {
+              .testTag(ProfileSettingsScreenTestTags.EDIT_PROFILE_PIC)) {
         ProfileImage(urlOrUid = profilePicUrl, modifier = Modifier.fillMaxSize())
 
         Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)))

@@ -636,7 +636,7 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkProfileSettingsScreenIsDisplayed() {
     // Static bits
-    onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+    onNodeWithTag(ProfileSettingsScreenTestTags.EDIT_PROFILE_PIC).assertIsDisplayed()
     onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_INFO).assertIsDisplayed()
     onNodeWithTag(ProfileSettingsScreenTestTags.PERSONAL_INFO).assertIsDisplayed()
     onNodeWithTag(ProfileSettingsScreenTestTags.EMAIL).assertIsDisplayed()
