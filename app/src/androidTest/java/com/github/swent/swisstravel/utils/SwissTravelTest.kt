@@ -151,7 +151,6 @@ abstract class SwissTravelTest {
               endDate = Timestamp(now.seconds + 3600, 0),
               preferredLocations = emptyList(),
               preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -171,7 +170,6 @@ abstract class SwissTravelTest {
               endDate = Timestamp(now.seconds + 10800, 0),
               preferredLocations = emptyList(),
               preferences = emptyList()),
-          isFavorite = false,
           isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
@@ -185,7 +183,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(SortedTripListTestTags.TITLE, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
@@ -197,7 +195,7 @@ abstract class SwissTravelTest {
     onNodeWithTag(SortedTripListTestTags.TITLE)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
@@ -224,7 +222,7 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkMyTripsScreenIsNotDisplayed() {
     onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertDoesNotExist()
     onNodeWithTag(SortedTripListTestTags.TITLE).assertDoesNotExist()
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertDoesNotExist()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertDoesNotExist()
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE).assertDoesNotExist()
   }
 
@@ -314,9 +312,9 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkSortedTripListNotEmptyIsDisplayed() {
     onNodeWithTag(SortedTripListTestTags.TITLE_BUTTON_ROW).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
     onNodeWithTag(SortedTripListTestTags.TITLE).assertIsDisplayed()
-    onNodeWithTag(SortedTripListTestTags.TRIP_LIST).assertIsDisplayed()
+    onNodeWithTag(TripListTestTags.TRIP_LIST).assertIsDisplayed()
   }
 
   fun ComposeTestRule.checkSetCurrentTripIsDisplayed() {

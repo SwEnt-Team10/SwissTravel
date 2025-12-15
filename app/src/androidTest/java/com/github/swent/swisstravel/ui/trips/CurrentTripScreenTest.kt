@@ -46,7 +46,6 @@ class CurrentTripScreenTest {
                 endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = true,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
@@ -84,7 +83,6 @@ class CurrentTripScreenTest {
                 endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isFavorite = false,
             isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())

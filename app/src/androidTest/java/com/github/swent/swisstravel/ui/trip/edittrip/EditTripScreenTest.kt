@@ -285,7 +285,6 @@ class EditTripScreenTest {
         routeSegments = emptyList(),
         activities = emptyList(),
         tripProfile = profile,
-        isFavorite = false,
         isCurrentTrip = false,
         uriLocation = emptyMap(),
         collaboratorsId = emptyList(),

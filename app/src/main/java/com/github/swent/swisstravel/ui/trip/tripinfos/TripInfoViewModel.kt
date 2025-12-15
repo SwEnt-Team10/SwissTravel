@@ -154,6 +154,8 @@ class TripInfoViewModel(
         trip.update { trip -> tripsRepository.getTrip(uid) }
         val trip = trip.value!!
         val isSameTrip = current.uid == trip.uid
+        val currentUser = userRepository.getCurrentUser()
+        val isFavorite = currentUser.favoriteTripsUids.contains(trip.uid)
 
         _uiState.value =
             TripInfoUIState(
@@ -177,7 +179,7 @@ class TripInfoViewModel(
                 drawFromCurrentPosition =
                     if (isSameTrip) current.drawFromCurrentPosition else false,
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
-                currentUserIsOwner = trip.isOwner(userRepository.getCurrentUser().uid),
+                currentUserIsOwner = trip.isOwner(currentUser.uid),
                 isLoading = false)
         computeSchedule()
 
@@ -227,22 +229,26 @@ class TripInfoViewModel(
    * persistence fails. *Debounce features were made with the help of AI.*
    */
   private suspend fun persistFavoriteChange(newFavorite: Boolean) {
-    val current = _uiState.value
+    val currentUiState = _uiState.value
     try {
-      val trip = tripsRepository.getTrip(current.uid)
+      val trip = tripsRepository.getTrip(currentUiState.uid)
+      val currentUser = userRepository.getCurrentUser()
 
       // Avoid redundant write if already correct
-      if (trip.isFavorite == newFavorite) return
+      if (currentUser.favoriteTripsUids.contains(trip.uid) == newFavorite) return
 
-      val updatedTrip = trip.copy(isFavorite = newFavorite)
-      tripsRepository.editTrip(current.uid, updatedTrip)
+      if (newFavorite) {
+        userRepository.addFavoriteTrip(currentUser.uid, currentUiState.uid)
+      } else {
+        userRepository.removeFavoriteTrip(currentUser.uid, currentUiState.uid)
+      }
 
       Log.d("TripInfoViewModel", "Favorite state updated: $newFavorite")
     } catch (e: Exception) {
       Log.e("TripInfoViewModel", "Failed to persist favorite", e)
       setErrorMsg("Failed to update favorite: ${e.message}")
       // Rollback to last known correct state
-      _uiState.value = current.copy(isFavorite = !newFavorite)
+      _uiState.value = currentUiState.copy(isFavorite = !newFavorite)
     }
   }
 
