@@ -60,8 +60,7 @@ jobs:
           fi
           
           if [ -n "$OPEN_TRANSPORT_DATA_TOKEN" ]; then
-            DECODED_TOKEN=$(echo "$OPEN_TRANSPORT_DATA_TOKEN" | base64 --decode)
-            echo "OPEN_TRANSPORT_DATA_TOKEN=$DECODED_TOKEN" >> ./local.properties
+            echo "OPEN_TRANSPORT_DATA_TOKEN=$OPEN_TRANSPORT_DATA_TOKEN" >> ./local.properties
           else
             echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set."
           fi
