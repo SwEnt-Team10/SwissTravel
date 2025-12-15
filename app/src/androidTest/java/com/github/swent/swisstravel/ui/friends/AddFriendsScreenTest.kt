@@ -115,7 +115,7 @@ class AddFriendScreenTest {
     // User we expect to appear in search results
     val targetUser = createUser("friend123", "Alice Friend")
 
-    fakeRepo.searchResults = listOf(targetUser)
+    fakeRepo.explicitSearchResults = listOf(targetUser)
 
     val friendsViewModel = FriendsViewModel(fakeRepo)
 
