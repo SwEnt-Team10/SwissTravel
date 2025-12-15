@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.FriendStatus
@@ -18,7 +19,6 @@ import com.google.firebase.Timestamp
 import com.mapbox.geojson.Point
 import io.mockk.*
 import java.time.ZoneId
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import org.junit.Assert.*
@@ -379,11 +379,11 @@ class TripInfoViewModelTest {
 
     // load trip
     viewModel.loadTripInfo(tripWithActivities.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // like the first activity
     viewModel.swipeActivity(liked = true, enableNewFetch = false)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // first activity should be in likedActivities
     assertEquals(1, viewModel.uiState.value.likedActivities.size)
@@ -395,7 +395,7 @@ class TripInfoViewModelTest {
 
     // dislike the next activity
     viewModel.swipeActivity(liked = false, enableNewFetch = false)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // likedActivities should remain the same
     assertEquals(1, viewModel.uiState.value.likedActivities.size)
@@ -418,7 +418,7 @@ class TripInfoViewModelTest {
 
     // Load trip
     viewModel.loadTripInfo(trip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // create trip settings
     val tripSettings: TripSettings = viewModel.mapToTripSettings()
@@ -459,7 +459,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
 
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     viewModel.likeActivities(listOf(activity1, activity2))
 
@@ -476,7 +476,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
 
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // like two activities
     viewModel.likeActivities(listOf(activity1, activity2))
@@ -503,7 +503,7 @@ class TripInfoViewModelTest {
     coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
 
     viewModel.loadTripInfo(dummyTrip.uid)
-    testDispatcher.scheduler.advanceUntilIdle()
+    advanceUntilIdle()
 
     // like two activities
     viewModel.likeActivities(listOf(activity1, activity2))

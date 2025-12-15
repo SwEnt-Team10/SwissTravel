@@ -9,9 +9,6 @@ import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.model.user.UserStats
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.coEvery
