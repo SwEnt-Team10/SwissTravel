@@ -129,6 +129,10 @@ fun TripSummaryScreen(
                             Arrangement.spacedBy(
                                 dimensionResource(R.dimen.trip_summary_card_content_spacing))) {
                           DateSummary(state.date.startDate, state.date.endDate)
+                          Spacer(
+                              modifier =
+                                  Modifier.height(
+                                      dimensionResource(R.dimen.trip_summary_group_spacing)))
                           TravelerSummary(state)
                         }
                   }
@@ -144,7 +148,11 @@ fun TripSummaryScreen(
                           ArrivalDepartureSummary(
                               arrival = state.arrivalDeparture.arrivalLocation?.name ?: "",
                               departure = state.arrivalDeparture.departureLocation?.name ?: "")
-                          DestinationSummary(state.destinations)
+                          Spacer(
+                              modifier =
+                                  Modifier.height(
+                                      dimensionResource(R.dimen.trip_summary_group_spacing)))
+                          DestinationSummary(state.arrivalDeparture, state.destinations)
                         }
                   }
                 }
@@ -386,7 +394,10 @@ private fun ArrivalDepartureSummary(arrival: String, departure: String) {
  * @param destinations The list of destinations to display.
  */
 @Composable
-private fun DestinationSummary(destinations: List<Location>) {
+private fun DestinationSummary(
+    arrivalDeparture: TripArrivalDeparture,
+    destinations: List<Location>
+) {
   Column {
     SummaryTitle(text = stringResource(R.string.places), testTag = TripSummaryTestTags.PLACES_LABEL)
 
@@ -405,6 +416,10 @@ private fun DestinationSummary(destinations: List<Location>) {
               Arrangement.spacedBy(dimensionResource(R.dimen.trip_summary_destination_spacing))) {
             destinations
                 .filter { it.name.isNotBlank() }
+                .filter { location ->
+                  location != arrivalDeparture.arrivalLocation &&
+                      location != arrivalDeparture.departureLocation
+                }
                 .forEachIndexed { index, loc ->
                   Row(verticalAlignment = Alignment.CenterVertically) {
                     // Small bullet point or icon could go here
