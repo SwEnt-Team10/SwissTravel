@@ -20,7 +20,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.github.swent.swisstravel.ui.trips.TripSortType
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
@@ -222,21 +221,19 @@ class ComposableTests : InMemorySwissTravelTest() {
     var sortClicked = false
 
     composeTestRule.setContent {
-      SwissTravelTheme {
-        val listState =
-            TripListState(trips = tripList, isSelectionMode = false, isSelected = { false })
-        val listEvents =
-            TripListEvents(
-                onClickTripElement = { clickedTrip = it }, onLongPress = { longPressedTrip = it })
+      val listState =
+          TripListState(trips = tripList, isSelectionMode = false, isSelected = { false })
+      val listEvents =
+          TripListEvents(
+              onClickTripElement = { clickedTrip = it }, onLongPress = { longPressedTrip = it })
 
-        LazyColumn(modifier = Modifier.testTag(TripListTestTags.TRIP_LIST)) {
-          sortedTripListItems(
-              title = "My Trips",
-              listState = listState,
-              listEvents = listEvents,
-              onClickDropDownMenu = { sortClicked = true },
-              selectedSortType = TripSortType.END_DATE_ASC)
-        }
+      LazyColumn(modifier = Modifier.testTag(TripListTestTags.TRIP_LIST)) {
+        sortedTripListItems(
+            title = "My Trips",
+            listState = listState,
+            listEvents = listEvents,
+            onClickDropDownMenu = { sortClicked = true },
+            selectedSortType = TripSortType.END_DATE_ASC)
       }
     }
 

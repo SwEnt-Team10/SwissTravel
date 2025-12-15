@@ -17,7 +17,6 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import org.junit.Rule
 import org.junit.Test
 
@@ -163,9 +162,7 @@ class ProfileSettingsScreenTest {
 
   private fun setContentHelper(fakeUserRepository: UserRepository = fakeUserRepo) {
     composeTestRule.setContent {
-      SwissTravelTheme {
-        ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepository, fakeTripRepo))
-      }
+      ProfileSettingsScreen(ProfileSettingsViewModel(fakeUserRepository, fakeTripRepo))
     }
   }
 
@@ -256,10 +253,8 @@ class ProfileSettingsScreenTest {
   @Test
   fun infoSection_and_InfoItem_renderTextProperly() {
     composeTestRule.setContent {
-      SwissTravelTheme {
-        InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
-          InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
-        }
+      InfoSection(title = "Section Title", modifier = Modifier.testTag("section")) {
+        InfoItem(label = "Label", value = "Value", modifier = Modifier.testTag("value"))
       }
     }
     composeTestRule.onNodeWithText("Section Title").assertIsDisplayed()

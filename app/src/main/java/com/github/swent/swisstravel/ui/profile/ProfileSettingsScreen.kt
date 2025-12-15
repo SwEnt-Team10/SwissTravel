@@ -67,6 +67,7 @@ import com.github.swent.swisstravel.utils.NetworkUtils
 
 /** Test tags for the profile settings screen. */
 object ProfileSettingsScreenTestTags {
+  const val CONTENT = "content"
   const val PROFILE_PIC = "profilePic"
   const val PROFILE_INFO = "profileInfo"
   const val PERSONAL_INFO = "personalInfo"
@@ -210,7 +211,8 @@ private fun ProfileSettingsContent(
           modifier
               .fillMaxSize()
               .padding(dimensionResource(R.dimen.mid_padding))
-              .verticalScroll(scrollState),
+              .verticalScroll(scrollState)
+              .testTag(ProfileSettingsScreenTestTags.CONTENT),
       horizontalAlignment = Alignment.CenterHorizontally) {
         ProfileSettingsHeader(photoUrl = uiState.profilePicUrl)
 

@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import org.junit.Rule
 import org.junit.Test
@@ -19,7 +20,7 @@ class SuggestionListTest : SwissTravelTest() {
 
   override fun createInitializedRepository():
       com.github.swent.swisstravel.model.trip.TripsRepository {
-    return com.github.swent.swisstravel.ui.trips.FakeTripsRepository()
+    return FakeTripsRepository()
   }
 
   @Test

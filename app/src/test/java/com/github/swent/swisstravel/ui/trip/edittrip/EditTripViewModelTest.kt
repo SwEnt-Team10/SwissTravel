@@ -2,20 +2,18 @@ package com.github.swent.swisstravel.ui.trip.edittrip
 
 import android.content.Context
 import android.content.res.Resources
+import com.github.swent.swisstravel.MainDispatcherRule
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.algorithm.random.RandomTripGenerator
+import com.github.swent.swisstravel.createTestTrip
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
-import com.google.firebase.Timestamp
 import io.mockk.*
-import kotlin.collections.emptyList
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
 import org.junit.After
@@ -23,13 +21,10 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TestWatcher
-import org.junit.runner.Description
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditTripScreenViewModelTest {
 
-  // --- Dispatcher rule so viewModelScope uses a test dispatcher ---
   @get:Rule val mainDispatcherRule = MainDispatcherRule()
 
   private lateinit var repo: TripsRepository
@@ -37,26 +32,26 @@ class EditTripScreenViewModelTest {
 
   private val sampleTripId = "trip-123"
   private val sampleTrip =
-      makeTrip(
+      createTestTrip(
           uid = sampleTripId,
           name = "Swiss Alps",
           adults = 2,
           children = 1,
-          prefs = listOf(Preference.FOODIE, Preference.SPORTS),
+          preferences = listOf(Preference.FOODIE, Preference.SPORTS),
           arrivalLocation = Location(Coordinate(0.0, 0.0), "Lausanne"),
           departureLocation = Location(Coordinate(1.1, 1.1), "Geneva"),
-          random = false)
+          isRandom = false)
 
   private val randomTrip =
-      makeTrip(
+      createTestTrip(
           uid = "random-456",
           name = "Random Trip",
           adults = 1,
           children = 0,
-          prefs = listOf(Preference.PUBLIC_TRANSPORT),
+          preferences = listOf(Preference.PUBLIC_TRANSPORT),
           arrivalLocation = Location(Coordinate(0.0, 0.0), "Zurich"),
           departureLocation = Location(Coordinate(1.1, 1.1), "Bern"),
-          random = true)
+          isRandom = true)
 
   @Before
   fun setUp() {
@@ -106,9 +101,7 @@ class EditTripScreenViewModelTest {
 
     vm.loadTrip(randomTrip.uid)
     advanceUntilIdle()
-
-    val s = vm.state.value
-    assertTrue(s.isRandom)
+    assertTrue(vm.state.value.isRandom)
   }
 
   @Test
@@ -194,9 +187,8 @@ class EditTripScreenViewModelTest {
     vm.setAdults(5)
     vm.setChildren(3)
 
-    val s = vm.state.value
-    assertEquals(5, s.adults)
-    assertEquals(3, s.children)
+    assertEquals(5, vm.state.value.adults)
+    assertEquals(3, vm.state.value.children)
   }
 
   @Test
@@ -206,9 +198,7 @@ class EditTripScreenViewModelTest {
     advanceUntilIdle()
 
     vm.editTripName("New Trip")
-
-    val s = vm.state.value
-    assertEquals("New Trip", s.tripName)
+    assertEquals("New Trip", vm.state.value.tripName)
   }
 
   // -------------------------
@@ -322,55 +312,5 @@ class EditTripScreenViewModelTest {
     // Clear it
     vm.clearErrorMsg()
     assertNull(vm.state.value.errorMsg)
-  }
-
-  // ------------ helpers ------------
-
-  private fun makeTrip(
-      uid: String,
-      name: String,
-      adults: Int,
-      children: Int,
-      prefs: List<Preference>,
-      arrivalLocation: Location,
-      departureLocation: Location,
-      random: Boolean
-  ): Trip {
-    val now = Timestamp.now()
-    val profile =
-        TripProfile(
-            startDate = now,
-            endDate = now,
-            preferredLocations = emptyList(),
-            preferences = prefs,
-            adults = adults,
-            children = children,
-            arrivalLocation = arrivalLocation,
-            departureLocation = departureLocation)
-    return Trip(
-        uid = uid,
-        name = name,
-        ownerId = "owner-1",
-        locations = emptyList(),
-        routeSegments = emptyList(),
-        activities = emptyList(),
-        tripProfile = profile,
-        isCurrentTrip = false,
-        uriLocation = emptyMap(),
-        collaboratorsId = emptyList(),
-        isRandom = random)
-  }
-}
-
-/** JUnit4 rule that sets the Main dispatcher to a TestDispatcher. */
-@OptIn(ExperimentalCoroutinesApi::class)
-class MainDispatcherRule(private val testDispatcher: TestDispatcher = StandardTestDispatcher()) :
-    TestWatcher() {
-  override fun starting(description: Description?) {
-    Dispatchers.setMain(testDispatcher)
-  }
-
-  override fun finished(description: Description?) {
-    Dispatchers.resetMain()
   }
 }

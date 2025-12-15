@@ -14,7 +14,6 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
-import com.github.swent.swisstravel.ui.theme.SwissTravelTheme
 import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.google.firebase.Timestamp
 import junit.framework.TestCase.assertEquals
@@ -170,7 +169,7 @@ class SelectPinnedTripsScreenTest {
       tripRepo: TripsRepository = fakeTripsRepo
   ) {
     composeTestRule.setContent {
-      SwissTravelTheme { SelectPinnedTripsScreen(SelectPinnedTripsViewModel(tripRepo, userRepo)) }
+      SelectPinnedTripsScreen(SelectPinnedTripsViewModel(tripRepo, userRepo))
     }
   }
 
