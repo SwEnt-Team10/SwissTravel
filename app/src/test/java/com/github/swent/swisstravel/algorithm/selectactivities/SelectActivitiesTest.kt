@@ -2,19 +2,25 @@ package com.github.swent.swisstravel.algorithm.selectactivities
 
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoUIState
+import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripDate
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import java.time.LocalDate
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -39,6 +45,25 @@ class SelectActivitiesTest {
       Activity(Timestamp.now(), Timestamp.now(), geneva, "Activity in Geneva", emptyList(), 3600)
   private val activityZurich =
       Activity(Timestamp.now(), Timestamp.now(), zurich, "Activity in Zurich", emptyList(), 3600)
+
+  val now = Timestamp(1600000000, 0)
+
+  private val activity1 =
+      Activity(
+          startDate = now,
+          endDate = now,
+          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
+          description = "Desc1",
+          imageUrls = emptyList(),
+          estimatedTime = 60)
+  private val activity2 =
+      Activity(
+          startDate = now,
+          endDate = now,
+          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+          description = "Desc2",
+          imageUrls = emptyList(),
+          estimatedTime = 45)
 
   @Before
   fun setUp() {
@@ -319,5 +344,77 @@ class SelectActivitiesTest {
     io.mockk.coVerify(exactly = 1) {
       mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), 1)
     }
+  }
+
+  @Test
+  fun `fetchUniqueSwipe returns activity`() = runTest {
+
+    // mock TripInfoUIState
+    val fakeState = TripInfoUIState(locations = listOf(lausanne))
+    val uiStateFlow = MutableStateFlow(fakeState)
+    val mockTripInfoVM = mockk<TripInfoViewModel>()
+    every { mockTripInfoVM.uiState } returns uiStateFlow
+
+    // initiate and mock activity selector
+    val selectActivities =
+        SelectActivities(
+            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+    coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), any()) } returns
+        listOf(activityLausanne, activity1, activity2)
+
+    val result = selectActivities.fetchUniqueSwipe(emptySet())
+
+    assertEquals(activityLausanne, result)
+  }
+
+  @Test
+  fun `fetchUniqueSwipe skips already seen activities`() = runTest {
+
+    // mock TripInfoUIState
+    val fakeState = TripInfoUIState(locations = listOf(lausanne))
+    val uiStateFlow = MutableStateFlow(fakeState)
+    val mockTripInfoVM = mockk<TripInfoViewModel>()
+    every { mockTripInfoVM.uiState } returns uiStateFlow
+
+    // initiate and mock activity selector
+    val selectActivities =
+        SelectActivities(
+            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+    coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), any()) } returns
+        listOf(activity1, activity2, activityLausanne)
+
+    val result = selectActivities.fetchUniqueSwipe(setOf(activity1, activity2))
+
+    assertEquals(activityLausanne, result)
+  }
+
+  @Test
+  fun `fetchFromLocations with prefs calls getActivitiesNearWithPreference`() = runTest {
+
+    // mock TripInfoUIState with preferences
+    val fakeState =
+        TripInfoUIState(
+            locations = listOf(lausanne),
+            tripProfile =
+                TripProfile(
+                    startDate = now, endDate = now, preferences = listOf(Preference.MUSEUMS)))
+    val uiStateFlow = MutableStateFlow(fakeState)
+    val mockTripInfoVM = mockk<TripInfoViewModel>()
+    every { mockTripInfoVM.uiState } returns uiStateFlow
+
+    // initiate and mock activity selector
+    val selectActivities =
+        SelectActivities(
+            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(any(), any(), any(), any())
+    } returns listOf(activity1)
+
+    val result =
+        selectActivities.fetchFromLocations(
+            locations = listOf(lausanne), fetchLimit = 1, prefs = listOf(Preference.MUSEUMS))
+
+    assertEquals(1, result.size)
+    assertEquals(activity1, result[0])
   }
 }

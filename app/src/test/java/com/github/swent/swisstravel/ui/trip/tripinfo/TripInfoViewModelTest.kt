@@ -16,6 +16,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
 import com.mapbox.geojson.Point
 import io.mockk.*
+import java.time.ZoneId
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.*
@@ -26,7 +27,6 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
-import java.time.ZoneId
 
 @ExperimentalCoroutinesApi
 class TripInfoViewModelTest {
@@ -67,6 +67,23 @@ class TripInfoViewModelTest {
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
           favoriteTripsUids = emptyList())
+
+  private val activity1 =
+      Activity(
+          startDate = now,
+          endDate = now,
+          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
+          description = "Desc1",
+          imageUrls = emptyList(),
+          estimatedTime = 60)
+  private val activity2 =
+      Activity(
+          startDate = now,
+          endDate = now,
+          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+          description = "Desc2",
+          imageUrls = emptyList(),
+          estimatedTime = 45)
 
   @Before
   fun setup() {
@@ -388,22 +405,6 @@ class TripInfoViewModelTest {
 
   @Test
   fun swipeActivityWorks() = runTest {
-    val activity1 =
-        Activity(
-            startDate = now,
-            endDate = now,
-            location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
-            description = "Desc1",
-            imageUrls = emptyList(),
-            estimatedTime = 60)
-    val activity2 =
-        Activity(
-            startDate = now,
-            endDate = now,
-            location = Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
-            description = "Desc2",
-            imageUrls = emptyList(),
-            estimatedTime = 45)
     val tripWithActivities =
         dummyTrip.copy(uid = "tripWithActivities", activitiesQueue = listOf(activity1, activity2))
 
@@ -437,48 +438,123 @@ class TripInfoViewModelTest {
     assertTrue(viewModel.uiState.value.activitiesQueue.isEmpty())
   }
 
-    @Test
-    fun `mapToTripSettings returns correct TripSettings`() = runTest {
-        val tripProfile =
-            TripProfile(
-                startDate = now,
-                endDate = Timestamp(now.seconds + 7200, 0),
-                preferredLocations = emptyList(),
-                preferences = emptyList())
-        val trip = dummyTrip.copy(tripProfile = tripProfile)
-        coEvery { tripsRepository.getTrip(trip.uid) } returns trip
-        coEvery { userRepository.getCurrentUser() } returns fakeUser
-        coEvery { tripsRepository.editTrip(any(), any()) } just Runs
+  @Test
+  fun `mapToTripSettings returns correct TripSettings`() = runTest {
+    val tripProfile =
+        TripProfile(
+            startDate = now,
+            endDate = Timestamp(now.seconds + 7200, 0),
+            preferredLocations = emptyList(),
+            preferences = emptyList())
+    val trip = dummyTrip.copy(tripProfile = tripProfile)
+    coEvery { tripsRepository.getTrip(trip.uid) } returns trip
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip(any(), any()) } just Runs
 
-        // Load trip
-        viewModel.loadTripInfo(trip.uid)
-        testDispatcher.scheduler.advanceUntilIdle()
+    // Load trip
+    viewModel.loadTripInfo(trip.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
 
-        // create trip settings
-        val tripSettings: TripSettings = viewModel.mapToTripSettings()
+    // create trip settings
+    val tripSettings: TripSettings = viewModel.mapToTripSettings()
 
-        // trip name
-        assertEquals(trip.name, tripSettings.name)
-        // start / end date
-        assertEquals(
-            trip.tripProfile.startDate
-                .toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-            tripSettings.date.startDate)
-        assertEquals(
-            trip.tripProfile.endDate
-                .toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
-            tripSettings.date.endDate)
-        // preferences
-        assertEquals(trip.tripProfile.preferences, tripSettings.preferences)
-        // arrival/departure locations
-        assertEquals(trip.tripProfile.arrivalLocation, tripSettings.arrivalDeparture.arrivalLocation)
-        assertEquals(trip.tripProfile.departureLocation, tripSettings.arrivalDeparture.departureLocation)
-        // destinations
-        assertEquals(trip.tripProfile.preferredLocations, tripSettings.destinations)
-        // travelers
-        assertEquals(trip.tripProfile.adults, tripSettings.travelers.adults)
-        assertEquals(trip.tripProfile.children, tripSettings.travelers.children)
-        // InvalidNameMsg should stay null since the tripInfo should already have a valid name
-        assertNull(tripSettings.invalidNameMsg)
-    }
+    // trip name
+    assertEquals(trip.name, tripSettings.name)
+    // start / end date
+    assertEquals(
+        trip.tripProfile.startDate
+            .toDate()
+            .toInstant()
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate(),
+        tripSettings.date.startDate)
+    assertEquals(
+        trip.tripProfile.endDate.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate(),
+        tripSettings.date.endDate)
+    // preferences
+    assertEquals(trip.tripProfile.preferences, tripSettings.preferences)
+    // arrival/departure locations
+    assertEquals(trip.tripProfile.arrivalLocation, tripSettings.arrivalDeparture.arrivalLocation)
+    assertEquals(
+        trip.tripProfile.departureLocation, tripSettings.arrivalDeparture.departureLocation)
+    // destinations
+    assertEquals(trip.tripProfile.preferredLocations, tripSettings.destinations)
+    // travelers
+    assertEquals(trip.tripProfile.adults, tripSettings.travelers.adults)
+    assertEquals(trip.tripProfile.children, tripSettings.travelers.children)
+    // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+    assertNull(tripSettings.invalidNameMsg)
+  }
+
+  @Test
+  fun `likeActivities adds activities to likedActivities`() = runTest {
+
+    // mock trip edition on database
+    coEvery { tripsRepository.editTrip(any(), any()) } just Runs
+    coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
+
+    viewModel.loadTripInfo(dummyTrip.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.likeActivities(listOf(activity1, activity2))
+
+    assertEquals(2, viewModel.uiState.value.likedActivities.size)
+    assertEquals(activity1, viewModel.uiState.value.likedActivities[0])
+    assertEquals(activity2, viewModel.uiState.value.likedActivities[1])
+  }
+
+  @Test
+  fun `unlikeSelectedActivities removes selected likedActivities`() = runTest {
+
+    // mock trip on database
+    coEvery { tripsRepository.editTrip(any(), any()) } just Runs
+    coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
+
+    viewModel.loadTripInfo(dummyTrip.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // like two activities
+    viewModel.likeActivities(listOf(activity1, activity2))
+
+    // select activity1
+    viewModel.selectLikedActivity(activity1)
+
+    // unlike all selected activities
+    viewModel.unlikeSelectedActivities()
+
+    // only activity2 should remain
+    assertEquals(1, viewModel.uiState.value.likedActivities.size)
+    assertEquals(activity2, viewModel.uiState.value.likedActivities[0])
+
+    // selectedLikedActivities should be cleared
+    assertEquals(0, viewModel.uiState.value.selectedLikedActivities.size)
+  }
+
+  @Test
+  fun `selectAndDeselectLikedActivity updates selectedLikedActivities`() = runTest {
+
+    // mock trip on database
+    coEvery { tripsRepository.editTrip(any(), any()) } just Runs
+    coEvery { tripsRepository.getTrip(any()) } returns dummyTrip
+
+    viewModel.loadTripInfo(dummyTrip.uid)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // like two activities
+    viewModel.likeActivities(listOf(activity1, activity2))
+
+    // select activity1
+    viewModel.selectLikedActivity(activity1)
+    assertEquals(1, viewModel.uiState.value.selectedLikedActivities.size)
+    assertEquals(activity1, viewModel.uiState.value.selectedLikedActivities[0])
+
+    // select activity2
+    viewModel.selectLikedActivity(activity2)
+    assertEquals(2, viewModel.uiState.value.selectedLikedActivities.size)
+
+    // deselect activity1
+    viewModel.deselectLikedActivity(activity1)
+    assertEquals(1, viewModel.uiState.value.selectedLikedActivities.size)
+    assertEquals(activity2, viewModel.uiState.value.selectedLikedActivities[0])
+  }
 }
