@@ -161,7 +161,7 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     }
   }
 
-  override fun swipeActivity(liked: Boolean) {
+  override fun swipeActivity(liked: Boolean, enableNewFetch: Boolean) {
     if (_ui.value.activitiesQueue.isEmpty()) return
     val current = _ui.value
     val activity = current.activitiesQueue.first()
