@@ -232,16 +232,16 @@ abstract class SwissTravelTest {
 
   // Can be used to check if there is no trip displayed as well
   fun ComposeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips() {
-    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
+    waitForTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)
     onNodeWithTag(SortedTripListTestTags.TITLE)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    waitForTag(SortMenuTestTags.SORT_DROPDOWN_MENU)
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
-    onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON).assertIsNotDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).assertIsDisplayed()
+    waitForNoTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)
+    waitForTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG)
   }
 
   fun ComposeTestRule.checkMyTripsInSelectionMode() {
@@ -799,6 +799,10 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.waitForTag(tag: String, timeout: Long = E2E_WAIT_TIMEOUT) {
     waitUntil(timeout) { onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
+  }
+
+  fun ComposeTestRule.waitForNoTag(tag: String, timeout: Long = E2E_WAIT_TIMEOUT) {
+    waitUntil(timeout) { onAllNodesWithTag(tag).fetchSemanticsNodes().isEmpty() }
   }
 
   fun ComposeTestRule.waitForText(text: String, timeout: Long = E2E_WAIT_TIMEOUT) {
