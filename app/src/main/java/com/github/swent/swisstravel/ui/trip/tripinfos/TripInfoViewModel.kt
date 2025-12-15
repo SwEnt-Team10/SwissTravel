@@ -27,7 +27,6 @@ import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.mapbox.geojson.Point
 import java.time.LocalDate
 import java.time.ZoneId
-import kotlin.collections.ArrayDeque
 import kotlin.collections.plus
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -55,7 +54,7 @@ data class TripInfoUIState(
     val selectedActivity: Activity? = null,
     // fields for swipe and like
     val likedActivities: List<Activity> = emptyList(),
-    val activitiesQueue: ArrayDeque<Activity> = ArrayDeque(),
+    val activitiesQueue: List<Activity> = emptyList(),
     val allFetchedForSwipe: List<Activity> = emptyList(),
     val currentActivity: Activity? = null,
     val backActivity: Activity? = null,
@@ -168,7 +167,7 @@ class TripInfoViewModel(
                 tripProfile = trip.tripProfile,
                 isFavorite = trip.isFavorite,
                 likedActivities = trip.likedActivities,
-                activitiesQueue = ArrayDeque(trip.activitiesQueue),
+                activitiesQueue = trip.activitiesQueue,
                 allFetchedForSwipe = trip.allFetchedForSwipe,
                 currentActivity = trip.activitiesQueue.firstOrNull(),
                 backActivity = trip.activitiesQueue.getOrNull(1),
@@ -444,7 +443,7 @@ class TripInfoViewModel(
    * @param newFetched The list of activities that are newly fetched for swiping (they are added to
    *   the existing set)
    */
-  fun updateQueueAndAllFetched(newQueue: ArrayDeque<Activity>, newFetched: List<Activity>) {
+  fun updateQueueAndAllFetched(newQueue: List<Activity>, newFetched: List<Activity>) {
     val fullFetched = (_uiState.value.allFetchedForSwipe + newFetched).distinct()
     _uiState.update {
       it.copy(
@@ -470,13 +469,13 @@ class TripInfoViewModel(
    */
   override fun swipeActivity(liked: Boolean) {
     val current = _uiState.value.currentActivity ?: return
-    val newQueue = ArrayDeque(_uiState.value.activitiesQueue)
+    val newQueue = _uiState.value.activitiesQueue.toMutableList()
 
     if (liked) likeActivities(listOf(current))
 
     // remove the first activity from the queue
     if (newQueue.isNotEmpty()) {
-      newQueue.removeFirst()
+      newQueue.removeAt(0)
     }
 
     // fetches new activity to put on the back of the queue, and adds it to all fetched
@@ -501,8 +500,9 @@ class TripInfoViewModel(
     }
 
     // add it to the new queue
-    val newQueue = _uiState.value.activitiesQueue
-    newQueue.addLast(newActivity)
+    val newQueue = _uiState.value.activitiesQueue.toMutableList()
+      // add the new activity to the end of the queue
+    newQueue.add(newActivity)
 
     // update both the queue and all fetched activities
     updateQueueAndAllFetched(newQueue, listOf(newActivity))
@@ -517,9 +517,8 @@ class TripInfoViewModel(
     viewModelScope.launch {
       val state = _uiState.value
       val initialActivities =
-          ArrayDeque(
               activitiesFetcher.fetchSwipeActivities(
-                  toExclude = (state.allFetchedForSwipe + state.activities).toSet()))
+                  toExclude = (state.allFetchedForSwipe + state.activities).toSet()).toList()
 
       Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
 

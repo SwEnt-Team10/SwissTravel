@@ -152,7 +152,7 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     } // does nothing for the moment since scheduling logic is not done yet
   }
 
-  fun setActivitiesQueue(activitiesQueue: ArrayDeque<Activity>) {
+  fun setActivitiesQueue(activitiesQueue: List<Activity>) {
     _ui.update { state ->
       state.copy(
           activitiesQueue = activitiesQueue,
@@ -165,8 +165,8 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     if (_ui.value.activitiesQueue.isEmpty()) return
     val current = _ui.value
     val activity = current.activitiesQueue.first()
-    val newQueue = current.activitiesQueue
-    newQueue.removeFirst()
+    val newQueue = current.activitiesQueue.toMutableList()
+    newQueue.removeAt(0)
     val newLikedActivities =
         if (liked) current.likedActivities + activity else current.likedActivities
     _ui.value =

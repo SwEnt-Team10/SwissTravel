@@ -38,7 +38,7 @@ class SwipeActivitiesScreenTest : SwissTravelTest() {
   fun setup() {
     // fakeActivity() creates a single activity with default values (the function is defined in
     // ActivityInfosTest.kt)
-    vm.setActivitiesQueue(activitiesQueue = ArrayDeque(listOf(fakeActivity())))
+    vm.setActivitiesQueue(activitiesQueue = listOf(fakeActivity()))
     composeTestRule.setContent { SwipeActivitiesScreen(tripInfoVM = vm) }
   }
 

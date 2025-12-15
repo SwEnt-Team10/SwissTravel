@@ -54,7 +54,7 @@ data class Trip(
     val cachedActivities: List<Activity> = emptyList(),
     // fields for swipe and like activities
     val likedActivities: List<Activity> = emptyList(),
-    val activitiesQueue: ArrayDeque<Activity> = ArrayDeque(),
+    val activitiesQueue: List<Activity> = emptyList(),
     val allFetchedForSwipe: List<Activity> = emptyList()
 ) {
   /**

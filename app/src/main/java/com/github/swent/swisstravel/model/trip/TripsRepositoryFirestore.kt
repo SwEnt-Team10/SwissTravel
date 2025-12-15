@@ -164,10 +164,9 @@ class TripsRepositoryFirestore(
           } ?: emptyList()
 
       val activitiesQueue =
-          ArrayDeque(
-              (document["activitiesQueue"] as? List<*>)?.mapNotNull { activityMap ->
-                (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
-              } ?: ArrayDeque())
+          (document["activitiesQueue"] as? List<*>)?.mapNotNull { activityMap ->
+            (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
+          } ?: emptyList()
 
       val allFetchedForSwipe =
           (document["allFetchedForSwipe"] as? List<*>)?.mapNotNull { activityMap ->
@@ -332,6 +331,7 @@ class TripsRepositoryFirestore(
    * @param trip the trip you want to convert
    */
   private fun tripToDocument(trip: Trip): Map<String, Any?> {
+    Log.d("TripsRepositoryFirestore", "Converting trip to document: $trip")
     return mapOf(
         "uid" to trip.uid,
         "name" to trip.name,
@@ -346,7 +346,7 @@ class TripsRepositoryFirestore(
         "random" to trip.isRandom,
         "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() },
         "likedActivities" to trip.likedActivities,
-        "activitiesQueue" to ArrayDeque(trip.activitiesQueue.toList()),
+        "activitiesQueue" to trip.activitiesQueue,
         "allFetchedForSwipe" to trip.allFetchedForSwipe,
         "cachedActivities" to trip.cachedActivities)
   }
