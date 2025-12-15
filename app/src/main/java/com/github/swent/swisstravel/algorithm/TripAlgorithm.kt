@@ -511,7 +511,7 @@ open class TripAlgorithm(
                 else TransportMode.CAR) { progress ->
                   onProgress(currentProgressBase + finalOptBudget * progress)
                 }
-          } catch (e: Exception) {
+          } catch (_: Exception) {
             optimizedRoute // Fallback
           }
 

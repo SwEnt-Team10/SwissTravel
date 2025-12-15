@@ -111,15 +111,23 @@ class TripAlgorithmTest {
             )
     every { scheduleTrip(any(), any(), any(), any(), any()) } returns schedule
 
+    // Capture progress
+    val progressValues = mutableListOf<Float>()
+
     // Act
-    val result = algorithm.computeTrip(settings, profile)
+    val result = algorithm.computeTrip(settings, profile, onProgress = { progressValues.add(it) })
 
     // Assert
     assertEquals(schedule, result)
+
     // Should NOT have called getActivitiesNearWithPreferences (Expansion logic)
     coVerify(exactly = 0) {
       selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
     }
+
+    // Verify that progress reached 100%
+    // TripAlgorithm.kt explicitly calls onProgress(1.0f) before returning
+    assertEquals(1.0f, progressValues.last())
   }
 
   @Test
@@ -463,7 +471,7 @@ class TripAlgorithmTest {
         route
 
     // Act
-    val result = algorithm.scheduleRemove(enhancedProfile, route, activities) {}
+    val result = algorithm.scheduleRemove(enhancedProfile, route, activities)
 
     // Assert
     coVerify(atLeast = 1) {
