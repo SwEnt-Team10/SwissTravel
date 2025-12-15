@@ -1,32 +1,27 @@
 package com.github.swent.swisstravel.e2e
 
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
-import java.time.LocalDate
-import org.junit.Before
-import org.junit.Rule
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class E2ETripFlowTest : FirestoreSwissTravelTest() {
 
-  @get:Rule val composeTestRule = createComposeRule()
-
-  private lateinit var todayLabel: String
-  private lateinit var otherDayLabel: String
-
-  @Before
-  override fun setUp() {
-    super.setUp()
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.auth.signOut()
-    val today = LocalDate.now()
-    todayLabel = "Trip from $today"
-    val other = today.plusDays(5)
-    otherDayLabel = "Trip from $other"
-  }
+  //  @get:Rule val composeTestRule = createComposeRule()
+  //
+  //  private lateinit var todayLabel: String
+  //  private lateinit var otherDayLabel: String
+  //
+  //  @Before
+  //  override fun setUp() {
+  //    super.setUp()
+  //    FirebaseEmulator.clearAuthEmulator()
+  //    FirebaseEmulator.auth.signOut()
+  //    val today = LocalDate.now()
+  //    todayLabel = "Trip from $today"
+  //    val other = today.plusDays(5)
+  //    otherDayLabel = "Trip from $other"
+  //  }
 
   //  @Test
   //  fun full_multi_account_trip_and_prefs_flow() {

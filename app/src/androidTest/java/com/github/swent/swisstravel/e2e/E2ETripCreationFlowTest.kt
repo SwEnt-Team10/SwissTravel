@@ -1,15 +1,7 @@
 package com.github.swent.swisstravel.e2e
 
-import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.test.rule.GrantPermissionRule
-import com.github.swent.swisstravel.SwissTravelApp
-import com.github.swent.swisstravel.utils.FakeCredentialManager
-import com.github.swent.swisstravel.utils.FakeJwtGenerator
-import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import org.junit.After
-import org.junit.Before
-import org.junit.Rule
 
 /**
  * End-to-end trip creation flow:
@@ -46,26 +38,26 @@ import org.junit.Rule
  */
 class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
-  @get:Rule val composeTestRule = createComposeRule()
-
-  @get:Rule
-  val permissionRule: GrantPermissionRule =
-      GrantPermissionRule.grant(
-          android.Manifest.permission.ACCESS_FINE_LOCATION,
-          android.Manifest.permission.ACCESS_COARSE_LOCATION)
-
-  @Before
-  override fun setUp() {
-    super.setUp()
-    FirebaseEmulator.auth.signOut()
-    FirebaseEmulator.clearAuthEmulator()
-    val fakeGoogleIdToken =
-        FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
-    val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
-
-    // Start app logged out
-    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
-  }
+  //  @get:Rule val composeTestRule = createComposeRule()
+  //
+  //  @get:Rule
+  //  val permissionRule: GrantPermissionRule =
+  //      GrantPermissionRule.grant(
+  //          android.Manifest.permission.ACCESS_FINE_LOCATION,
+  //          android.Manifest.permission.ACCESS_COARSE_LOCATION)
+  //
+  //  @Before
+  //  override fun setUp() {
+  //    super.setUp()
+  //    FirebaseEmulator.auth.signOut()
+  //    FirebaseEmulator.clearAuthEmulator()
+  //    val fakeGoogleIdToken =
+  //        FakeJwtGenerator.createFakeGoogleIdToken(name = "Test User", email = "test@example.com")
+  //    val fakeCredentialManager = FakeCredentialManager.fake(fakeGoogleIdToken)
+  //
+  //    // Start app logged out
+  //    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
+  //  }
 
   //  @Test
   //  fun user_can_create_a_trip_and_edit_it() {

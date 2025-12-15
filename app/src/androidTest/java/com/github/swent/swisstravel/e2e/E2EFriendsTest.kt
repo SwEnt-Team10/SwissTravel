@@ -1,14 +1,6 @@
 package com.github.swent.swisstravel.e2e
 
-import androidx.compose.ui.test.junit4.createComposeRule
-import com.github.swent.swisstravel.SwissTravelApp
-import com.github.swent.swisstravel.utils.FakeCredentialManager
-import com.github.swent.swisstravel.utils.FakeJwtGenerator
-import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
 
 /**
  * Done with the help of AI.
@@ -27,35 +19,36 @@ import org.junit.Rule
  */
 class E2EFriendsTest : FirestoreSwissTravelTest() {
 
-  @get:Rule val composeTestRule = createComposeRule()
-
-  private val aliceName = "Alice Tester"
-  private val aliceEmail = "alice.tester@example.com"
-
-  private val bobName = "Bob Builder"
-  private val bobEmail = "bob.builder@example.com"
-
-  @Before
-  override fun setUp() {
-    super.setUp()
-    FirebaseEmulator.auth.signOut()
-    FirebaseEmulator.clearAuthEmulator()
-
-    val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email = aliceEmail)
-    val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
-
-    // Sequence: Alice (init), Bob (setup), Alice (accept & view)
-    val fakeCredentialManager = FakeCredentialManager.sequence(aliceToken, bobToken, aliceToken)
-
-    // Start app
-    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
-  }
-
-  @After
-  override fun tearDown() {
-    super.tearDown()
-    FirebaseEmulator.clearFirestoreEmulator()
-  }
+  //  @get:Rule val composeTestRule = createComposeRule()
+  //
+  //  private val aliceName = "Alice Tester"
+  //  private val aliceEmail = "alice.tester@example.com"
+  //
+  //  private val bobName = "Bob Builder"
+  //  private val bobEmail = "bob.builder@example.com"
+  //
+  //  @Before
+  //  override fun setUp() {
+  //    super.setUp()
+  //    FirebaseEmulator.auth.signOut()
+  //    FirebaseEmulator.clearAuthEmulator()
+  //
+  //    val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email =
+  // aliceEmail)
+  //    val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
+  //
+  //    // Sequence: Alice (init), Bob (setup), Alice (accept & view)
+  //    val fakeCredentialManager = FakeCredentialManager.sequence(aliceToken, bobToken, aliceToken)
+  //
+  //    // Start app
+  //    composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
+  //  }
+  //
+  //  @After
+  //  override fun tearDown() {
+  //    super.tearDown()
+  //    FirebaseEmulator.clearFirestoreEmulator()
+  //  }
 
   //  @Test
   //  fun user_can_send_and_accept_friend_request_and_view_pinned_trips() {
