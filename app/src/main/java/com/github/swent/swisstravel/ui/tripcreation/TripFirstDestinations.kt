@@ -253,9 +253,8 @@ fun DestinationItem(
                 .offset(
                     y =
                         dimensionResource(
-                            R.dimen
-                                .trip_destination_cross_offset)) // Offset to correct visual
-                                                                 // alignment with text field input
+                            R.dimen.trip_destination_cross_offset)) // Offset to correct visual
+        // alignment with text field input
         ) {
           Icon(imageVector = Icons.Default.Close, contentDescription = "Remove Destination")
         }
