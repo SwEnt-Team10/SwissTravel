@@ -56,7 +56,7 @@ jobs:
           if [ -n "$MAP_BOX_SECRET" ]; then
             echo "$MAP_BOX_SECRET" | base64 --decode > ./app/src/main/res/values/developer-config.xml
           else
-            echo "::warning::MAP_BOX_SECRET secret is not set. developper-config.xml will not be created."
+            echo "::warning::MAP_BOX_SECRET secret is not set. developper-config-mapbox.xml will not be created."
           fi
           
           if [ -n "$OPEN_TRANSPORT_DATA_TOKEN" ]; then
