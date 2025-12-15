@@ -1,7 +1,11 @@
 package com.github.swent.swisstravel.ui.profile
 
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,9 +26,11 @@ import androidx.compose.material.icons.automirrored.filled.Login
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,6 +40,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBar
@@ -47,6 +54,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -60,6 +69,7 @@ import com.github.swent.swisstravel.model.authentication.AuthRepository
 import com.github.swent.swisstravel.model.authentication.AuthRepositoryFirebase
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.PreferenceSelector
+import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.navigation.NavigationActions
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.navigation.Screen
@@ -76,6 +86,7 @@ object ProfileSettingsScreenTestTags {
   const val PREFERENCES = "preferences"
   const val PREFERENCES_TOGGLE = "preferencesToggle"
   const val LOGOUT_BUTTON = "logoutButton"
+  const val EDIT_PROFILE_PIC_BUTTON = "editProfilePicButton"
 
   /**
    * A test tag for text.
@@ -144,6 +155,13 @@ fun ProfileSettingsScreen(
   val context = LocalContext.current
   val uiState = profileSettingsViewModel.uiState.collectAsState().value
 
+  // Image Picker
+  val photoPickerLauncher =
+      rememberLauncherForActivityResult(
+          contract = ActivityResultContracts.PickVisualMedia(),
+          onResult = { uri -> if (uri != null) profileSettingsViewModel.onProfilePicSelected(uri) })
+
+  // Error Handling
   LaunchedEffect(uiState.errorMsg) {
     uiState.errorMsg
         ?.takeIf { it.isNotBlank() }
@@ -155,6 +173,36 @@ fun ProfileSettingsScreen(
 
   val isOnline = NetworkUtils.isOnline(context)
   LaunchedEffect(isOnline) { profileSettingsViewModel.refreshStats(isOnline) }
+
+  // Preview Dialog for new Profile Picture
+  if (uiState.pendingProfilePicUri != null) {
+    AlertDialog(
+        onDismissRequest = { profileSettingsViewModel.cancelProfilePicChange() },
+        title = { Text(stringResource(R.string.preview_profile_pic_title)) },
+        text = {
+          Column(
+              horizontalAlignment = Alignment.CenterHorizontally,
+              modifier = Modifier.fillMaxWidth()) {
+                AsyncImage(
+                    model = uiState.pendingProfilePicUri,
+                    contentDescription = stringResource(R.string.preview_profile_pic_title),
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier.size(dimensionResource(R.dimen.profile_logo_size))
+                            .clip(CircleShape))
+              }
+        },
+        confirmButton = {
+          TextButton(onClick = { profileSettingsViewModel.confirmProfilePicChange(context) }) {
+            Text(stringResource(R.string.preview_profile_pic_confirm))
+          }
+        },
+        dismissButton = {
+          TextButton(onClick = { profileSettingsViewModel.cancelProfilePicChange() }) {
+            Text(stringResource(R.string.cancel))
+          }
+        })
+  }
 
   Scaffold(
       topBar = {
@@ -181,6 +229,10 @@ fun ProfileSettingsScreen(
               uiState = uiState,
               profileSettingsViewModel = profileSettingsViewModel,
               modifier = Modifier.padding(pd),
+              onEditProfilePic = {
+                photoPickerLauncher.launch(
+                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+              },
               navigationActions = navigationActions)
         }
       }
@@ -200,6 +252,7 @@ private fun ProfileSettingsContent(
     uiState: ProfileSettingsUIState,
     profileSettingsViewModel: ProfileSettingsViewModel,
     modifier: Modifier,
+    onEditProfilePic: () -> Unit,
     authRepository: AuthRepository = AuthRepositoryFirebase(),
     navigationActions: NavigationActions? = null
 ) {
@@ -214,7 +267,7 @@ private fun ProfileSettingsContent(
               .verticalScroll(scrollState)
               .testTag(ProfileSettingsScreenTestTags.CONTENT),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        ProfileSettingsHeader(photoUrl = uiState.profilePicUrl)
+        ProfileSettingsHeader(profilePicUrl = uiState.profilePicUrl, onEditClick = onEditProfilePic)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
@@ -247,17 +300,28 @@ private fun ProfileSettingsContent(
 /**
  * The profile header section of the profile settings screen.
  *
- * @param photoUrl The URL of the profile picture.
+ * @param profilePicUrl The URL or UID of the user's profile picture.
+ * @param onEditClick The callback for when the user clicks the edit button.
  */
 @Composable
-private fun ProfileSettingsHeader(photoUrl: String) {
-  AsyncImage(
-      model = photoUrl.ifBlank { R.drawable.default_profile_pic },
-      contentDescription = stringResource(R.string.profile_pic_desc),
+private fun ProfileSettingsHeader(profilePicUrl: String, onEditClick: () -> Unit) {
+  Box(
+      contentAlignment = Alignment.Center,
       modifier =
           Modifier.size(dimensionResource(R.dimen.profile_logo_size))
               .clip(CircleShape)
-              .testTag(ProfileSettingsScreenTestTags.PROFILE_PIC))
+              .clickable(onClick = onEditClick)
+              .testTag(ProfileSettingsScreenTestTags.EDIT_PROFILE_PIC_BUTTON)) {
+        ProfileImage(urlOrUid = profilePicUrl, modifier = Modifier.fillMaxSize())
+
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f)))
+
+        Icon(
+            imageVector = Icons.Outlined.Edit,
+            contentDescription = stringResource(R.string.edit_profile_pic),
+            tint = MaterialTheme.colorScheme.onPrimary,
+            modifier = Modifier.size(dimensionResource(R.dimen.profile_edit_button)))
+      }
 }
 
 /**
