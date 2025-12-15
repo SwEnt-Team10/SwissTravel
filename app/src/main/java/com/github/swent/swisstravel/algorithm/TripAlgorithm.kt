@@ -39,8 +39,6 @@ const val EPSILON = 1e-6f
 const val MAX_INBETWEEN_ACTIVITIES_SEGMENTS = 3
 const val MAX_INBETWEEN_ACTIVITES_BY_SEGMENT = 2
 const val RADIUS_CACHED_ACTIVITIES_KM = 25
-const val MAX_BATCH_ADDED_TIME_HOURS = 6.0
-const val BATCH_ADD_PENALTY_MINUTES = 15
 const val GRAND_TOUR_ACTIVITY_DURATION_SEC = 0.5 * 3600 // 30 min
 const val ADDED_DISTANCE_CITY_KM = 20
 const val NUMBER_OF_ACTIVITY_NEW_CITY = 3
@@ -50,6 +48,21 @@ const val MAX_INDEX_FETCH_ACTIVITIES = 4
 const val RADIUS_CITIES_TO_ASSOCIATE_KM = 15
 const val MAX_INDEX_CACHED_ACTIVITIES = 10
 
+/**
+ * Some part of this file were made with AI but most of it was done by hands All the kdoc was done
+ * by AI
+ *
+ * Core algorithm class for generating and optimizing a travel trip.
+ *
+ * It handles activity selection, route optimization (TSP), adding intermediate stops, and
+ * scheduling activities to fit the user's timeline.
+ *
+ * @property activitySelector The component responsible for finding and selecting activities.
+ * @property routeOptimizer The component responsible for ordering locations to minimize travel
+ *   time.
+ * @property context The Android context, used primarily for resource access (e.g., city names).
+ * @property scheduleParams Parameters configuring the trip scheduling logic.
+ */
 open class TripAlgorithm(
     private val activitySelector: SelectActivities,
     private val routeOptimizer: ProgressiveRouteOptimizer,
@@ -64,9 +77,15 @@ open class TripAlgorithm(
    */
   companion object {
     /**
-     * Initializes the TripAlgorithm with the necessary components.
+     * Initializes the TripAlgorithm with the necessary components, applying initial preference
+     * logic.
      *
-     * @param tripSettings The settings for the trip.
+     * This method adjusts the user's preferences based on the number of travelers (adults/children)
+     * and ensures at least one Activity Type and one Environment preference is selected (by adding
+     * all if none are selected).
+     *
+     * @param tripSettings The settings for the trip (locations, dates, travelers, initial
+     *   preferences).
      * @param activityRepository The repository to fetch activities from.
      * @param context The Android context.
      * @return An instance of TripAlgorithm.
@@ -146,9 +165,9 @@ open class TripAlgorithm(
    */
 
   /**
-   * Configuration for a major city.
+   * Configuration for a major city, used for adding city-based activities.
    *
-   * @param location The location of the city.
+   * @param location The geographical location of the city center.
    * @param radius The radius in km to consider an activity as being in/near the city.
    * @param maxDays The maximum number of days/cityActivities to schedule for this city.
    */
@@ -156,17 +175,28 @@ open class TripAlgorithm(
 
   /**
    * This data class is used to store a tripProfile and a copy of its preferredLocations while also
-   * being able to add new locations without modifying the tripProfile meaning This is useful when
-   * we are adding new cities in the trip
+   * being able to add new locations without modifying the tripProfile. This is useful when we are
+   * adding new cities in the trip during the algorithm's execution.
    *
    * @param tripProfile The original tripProfile.
-   * @param newPreferredLocations A mutable list of new preferred locations.
+   * @param newPreferredLocations A mutable list of new preferred locations, including any
+   *   dynamically added locations.
    */
   data class EnhancedTripProfile(
       val tripProfile: TripProfile,
       val newPreferredLocations: MutableList<Location>
   )
 
+  /**
+   * Holds the different categories of activities being managed by the algorithm.
+   *
+   * @param intermediateActivities Activities inserted between main stops.
+   * @param grandTourActivities Activities specifically related to the "Grand Tour" list (for random
+   *   trips).
+   * @param allActivities A cumulative list of all activities in the current trip plan.
+   * @param cachedActivities Activities that were initially selected but later removed (e.g., for
+   *   time constraints) and can be re-added.
+   */
   data class Activities(
       val intermediateActivities: MutableList<Activity>,
       val grandTourActivities: MutableList<Activity>,
@@ -180,7 +210,17 @@ open class TripAlgorithm(
    * *********************************************************
    */
 
-  // TODO
+  /**
+   * Represents the progression weight distribution for the main `computeTrip` steps.
+   *
+   * The sum of all properties must be 1.0f.
+   *
+   * @param selectActivities Weight allocated for the initial activity selection phase.
+   * @param optimizeRoute Weight allocated for the initial route optimization (TSP) phase.
+   * @param fetchInBetweenActivities Weight allocated for fetching and inserting intermediate stops.
+   * @param scheduleTrip Weight allocated for the initial trip scheduling pass.
+   * @param finalScheduling Weight allocated for the final scheduling and completion phase.
+   */
   data class ComputeTripProgression(
       val selectActivities: Float,
       val optimizeRoute: Float,
@@ -281,17 +321,27 @@ open class TripAlgorithm(
    * *********************************************************
    */
 
-  // TODO organize the steps:
   /**
-   * 1. Fetch activities near each locations of the trip
-   * 2. If the start and end are the same (or very close) and there were no activities, build an
-   *    ordered route with nothing and some duration like 1 minute
-   * 3. Else optimize the route
-   * 4. Pass the OrderedRoute to the scheduler
-   * 5. If the schedule is good, finish
-   * 6. Else if the schedule has too much in it try to remove the activities closest to the overtime
-   *    and do it until we have a trip that finishes on the same date
-   * 7. Else (If the schedule is not filled) add more activities
+   * Computes the optimized travel plan (route and schedule) based on user settings and profile.
+   *
+   * The process involves:
+   * 1. Selecting activities based on preferences.
+   * 2. Optimizing the route (Traveling Salesperson Problem solver).
+   * 3. Inserting intermediate stops if enabled.
+   * 4. Scheduling activities and removing any 'ghost' or over-time activities.
+   * 5. Completing the schedule by adding more activities if time allows.
+   * 6. Performing a final route optimization and scheduling.
+   *
+   * @param tripSettings The high-level settings provided by the user (dates, locations, travelers).
+   * @param tripProfile The detailed profile of the trip, including initial locations.
+   * @param isRandomTrip Flag indicating if the trip is a random generation (affects Grand Tour
+   *   activity creation).
+   * @param cachedActivities A list of activities previously removed or fetched, available for
+   *   adding back to fill the time.
+   * @param onProgress A callback function to report the computation progress (from 0.0 to 1.0).
+   * @return A list of [TripElement] representing the final scheduled trip.
+   * @throws IllegalArgumentException if the arrival or departure location is null.
+   * @throws IllegalStateException if route optimization or activity selection fails.
    */
   suspend fun computeTrip(
       tripSettings: TripSettings,
@@ -456,10 +506,6 @@ open class TripAlgorithm(
     }
   }
 
-  // TODO: Don't forget to manage the randomTrip
-  // TODO: Don't forget to add the preferences from the tripSetting to the enhancedTripProfile so
-  // that if you change the preference at the start it will be stored in the tripProfile
-
   /**
    * ********************************************************
    * Adding in between activities
@@ -468,13 +514,18 @@ open class TripAlgorithm(
 
   /**
    * Adds intermediate activities between main locations in the optimized route based on distance.
+   * 1. Calculates the number of stops needed per segment based on `distancePerStop`.
+   * 2. Generates new activities at interpolated coordinates for the stops.
+   * 3. Inserts the new activities' locations into the route's location list.
+   * 4. Recomputes the segment durations using the route optimizer for the new, longer route.
    *
-   * @param optimizedRoute The optimized route containing main locations.
-   * @param activities The mutable list of activities to which new activities will be added.
-   * @param mode The transport mode for route optimization.
-   * @param distancePerStop The approximate distance for which we do a stop
+   * @param optimizedRoute The initial optimized route containing main locations.
+   * @param mode The transport mode for route optimization (CAR or TRAIN).
+   * @param distancePerStop The approximate distance in KM for which to insert a stop.
+   * @param activities The [Activities] data class to which new intermediate activities will be
+   *   added.
    * @param onProgress A callback function to report progress (from 0.0 to 1.0).
-   * @return A new OrderedRoute including the in-between activities.
+   * @return A new [OrderedRoute] including the in-between activities.
    */
   suspend fun addInBetweenActivities(
       optimizedRoute: OrderedRoute,
@@ -570,10 +621,14 @@ open class TripAlgorithm(
   /**
    * Generates a list of "in-between" activities along the segment from start to end.
    *
-   * @param start Starting Location.
-   * @param end Ending Location.
+   * It calculates interpolated coordinates between the start and end point, applies a small random
+   * offset, and fetches the best matching activity for that point based on user preferences.
+   *
+   * @param start Starting [Location].
+   * @param end Ending [Location].
    * @param count Number of activities to generate.
-   * @return List of new Activities between start and end.
+   * @param activities The [Activities] data class to check against for existing/cached activities.
+   * @return List of new [Activity] objects found between start and end.
    */
   suspend fun generateActivitiesBetween(
       start: Location,
@@ -629,6 +684,26 @@ open class TripAlgorithm(
    * ********************************************************
    * Schedule and remove activities
    * *********************************************************
+   */
+  /**
+   * Schedules the trip and handles over-scheduling (overtime) by intelligently removing activities.
+   *
+   * The process is:
+   * 1. Run an initial schedule.
+   * 2. Remove "ghost" activities (those skipped by the scheduler due to being
+   *    unreachable/impossible) and re-optimize the route.
+   * 3. If the timeline still overruns (runs too late), remove activities based on the time deficit,
+   *    prioritizing non-protected and larger activities.
+   * 4. Re-optimize the route and run a final schedule.
+   *
+   * @param enhancedTripProfile The enhanced trip profile containing the latest preferences and
+   *   preferred locations.
+   * @param originalOptimizedRoute The current best optimized route.
+   * @param activities The [Activities] state object containing all planned, intermediate, and
+   *   cached activities.
+   * @param onProgress A callback function to report progress during this phase (though unused in
+   *   the current implementation, it's kept for contract).
+   * @return The resulting list of [TripElement] representing the scheduled trip.
    */
   open suspend fun scheduleRemove(
       enhancedTripProfile: EnhancedTripProfile,
@@ -851,22 +926,25 @@ open class TripAlgorithm(
    * *********************************************************
    */
 
-  // TODO:
   /**
-   * 1. Add cachedActivities while it is not empty
-   * 2. If the end date is correct end
-   * 3. Else try adding other activities
-   * 4. Begin by trying to add city activities depending on the time left (Add a function that
-   *    calculate the time in hours between two dates)
-   * 5. If adding all the city activities were not enough
-   * 6. If the end date is not correct and we are at our first iteration, go to each preferred
-   *    locations and associate them with a major city if it is in a 15km radius
-   * 7. If there are some cities associated, fetch activities in the city with all the preferences
-   * 8. If it was not enough we expand to a new city
-   * 9. If we don't find at least 3 activities with the preferences of the user activates all the
-   *    activities for the next pull
-   * 10. If it is still not enough loop from the beginning again NOTE: the loop will be done 6 times
-   *     at most as we will add major swiss cities each round it should be enough
+   * Completes the trip schedule by adding more activities to utilize remaining time, up to the
+   * user's end date.
+   *
+   * The process iteratively tries:
+   * 1. Adding activities from the cache (`tryAddingCachedActivities`).
+   * 2. Adding activities associated with existing major cities
+   *    (`tryFetchingActivitiesForExistingCities`) (Only at index 2).
+   * 3. Adding general "city visit" activities for existing preferred locations
+   *    (`tryAddingCityActivities`).
+   * 4. Adding a brand new major Swiss city and its associated activities (`tryAddingCity`).
+   *
+   * The loop runs until the schedule end date matches the desired end date or a maximum number of
+   * iterations is reached.
+   *
+   * @param originalSchedule The schedule generated by the last `scheduleRemove` call.
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @return The final list of [TripElement] representing the completed schedule.
    */
   private suspend fun completeSchedule(
       originalSchedule: List<TripElement>,
@@ -915,6 +993,19 @@ open class TripAlgorithm(
     return finalSchedule
   }
 
+  /**
+   * Iteratively attempts to add activities from the `cachedActivities` list to fill time.
+   *
+   * It uses a variation of the knapsack algorithm to select the best combination of cached
+   * activities to fit the time remaining until the trip's end date, prioritizing activities near
+   * existing preferred locations.
+   *
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @param originalSchedule The current trip schedule.
+   * @return The updated list of [TripElement] after optimizing and scheduling with any added cached
+   *   activities.
+   */
   open suspend fun tryAddingCachedActivities(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
@@ -950,6 +1041,15 @@ open class TripAlgorithm(
     return schedule
   }
 
+  /**
+   * Attempts to add generic "city visit" activities associated with existing preferred locations
+   * that map to major Swiss cities.
+   *
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @param originalSchedule The current trip schedule.
+   * @return The updated list of [TripElement] after attempting to add and reschedule.
+   */
   private suspend fun tryAddingCityActivities(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
@@ -991,6 +1091,15 @@ open class TripAlgorithm(
     return schedule
   }
 
+  /**
+   * Attempts to add a completely new major Swiss city (that is not already near a preferred
+   * location) along with a batch of associated activities to the trip.
+   *
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @param originalSchedule The current trip schedule.
+   * @return The updated list of [TripElement] after attempting to add the new city and reschedule.
+   */
   private suspend fun tryAddingCity(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
@@ -1007,6 +1116,16 @@ open class TripAlgorithm(
     return schedule
   }
 
+  /**
+   * Fetches real activities for cities that were determined to be associated with one of the user's
+   * preferred locations, overriding user preferences temporarily if necessary to find activities.
+   * This step is only run once during the `completeSchedule` process (at index 2).
+   *
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @param originalSchedule The current trip schedule.
+   * @return The updated list of [TripElement] after fetching and rescheduling.
+   */
   private suspend fun tryFetchingActivitiesForExistingCities(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
@@ -1060,18 +1179,16 @@ open class TripAlgorithm(
    * Types of activities to add
    * ****
    */
-  // TODO:
-  /**
-   * 1. Add cached activities
-   * 2. Add city activity
-   * 3. Add a new city to the trip as well as some activities for it
-   */
 
   /**
-   * Done by AI
+   * Selects a set of activities from the `cachedActivities` list to add back to the trip using a
+   * dynamic programming (knapsack-like) approach to fit within the `totalTimeNeededHours`. Only
+   * activities near existing preferred locations are considered.
    *
-   * @param activityList The mutable list of current activities in the trip.
-   * @param cachedActivities The mutable list of backup/cached activities.
+   * @param enhancedTripProfile The enhanced trip profile to check preferred locations.
+   * @param activities The mutable [Activities] state object containing the cache and all
+   *   activities.
+   * @param totalTimeNeededHours The maximum time (in hours) available to fill with activities.
    * @return `true` if at least one activity was added, `false` otherwise.
    */
   open fun addCachedActivity(
@@ -1163,7 +1280,17 @@ open class TripAlgorithm(
     return false
   }
 
-  /** @param activityTime time in seconds */
+  /**
+   * Adds a generic "city visit" activity to a preferred location that is near a major Swiss city.
+   *
+   * The function ensures that the number of "city visit" activities for a given city location does
+   * not exceed the city's configured `maxDays`.
+   *
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @param activityTime The desired estimated time for the activity (in seconds).
+   * @return `true` if a new city activity was added, `false` otherwise.
+   */
   private fun addCityActivity(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
@@ -1218,6 +1345,22 @@ open class TripAlgorithm(
     return false
   }
 
+  /**
+   * Finds a suitable new city to add to the trip and fetches real activities for it.
+   *
+   * It prioritizes cities that are:
+   * 1. Not already near a preferred location.
+   * 2. Closer to the existing itinerary.
+   * 3. Larger (higher `maxDays`) within a certain distance threshold.
+   *
+   * If initial fetching fails to find enough activities with user preferences, it attempts to
+   * search with all basic preferences.
+   *
+   * @param enhancedTripProfile The enhanced trip profile, where the new city location will be added
+   *   to `newPreferredLocations`.
+   * @param activities The mutable [Activities] state object, where new activities will be added.
+   * @return `true` if the new city and its activities were successfully added, `false` otherwise.
+   */
   private suspend fun addCity(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
@@ -1266,12 +1409,31 @@ open class TripAlgorithm(
    * ****
    */
 
-  /** Extension function to generate a random double in a closed range */
+  /**
+   * Extension function to generate a random double in a closed range [start, endInclusive].
+   *
+   * @param rng The [Random] number generator instance to use (defaults to [Random.Default]).
+   * @return A random [Double] value within the specified range.
+   */
   private fun ClosedFloatingPointRange<Double>.random(rng: Random = Random.Default): Double {
     // Guarantee closed range by adding the minimal epsilon
     return rng.nextDouble(start, endInclusive + Double.MIN_VALUE)
   }
 
+  /**
+   * Filters the `cachedActivities` list in place (`iterator.remove()`) and populates
+   * `validCandidates` with activities that are:
+   * 1. Near one of the current preferred locations (within `RADIUS_CACHED_ACTIVITIES_KM`).
+   * 2. Not already present in `allActivities`.
+   * 3. Have a positive duration that fits within `limitMinutes`.
+   *
+   * Activities that are too far from preferred locations are permanently removed from the cache.
+   *
+   * @param enhancedTripProfile The enhanced trip profile to check against preferred locations.
+   * @param validCandidates A mutable list to be populated with activities that can be added.
+   * @param activities The mutable [Activities] state object to read from and modify the cache.
+   * @param limitMinutes The maximum duration an activity can have to be considered (in minutes).
+   */
   private fun getValidCandidatesCachedActivities(
       enhancedTripProfile: EnhancedTripProfile,
       validCandidates: MutableList<Activity>,
@@ -1304,6 +1466,19 @@ open class TripAlgorithm(
     }
   }
 
+  /**
+   * Finds the best new [CityConfig] to add to the trip.
+   *
+   * The selection logic prioritizes cities that:
+   * 1. Are not already covered by existing preferred locations.
+   * 2. Are closest to the existing preferred locations.
+   * 3. Among the competitive candidates (closest city + buffer distance), prioritizes larger cities
+   *    (higher `maxDays`).
+   *
+   * @param enhancedTripProfile The enhanced trip profile containing the current preferred
+   *   locations.
+   * @return The best [CityConfig] candidate to add.
+   */
   private fun findValidCity(enhancedTripProfile: EnhancedTripProfile): CityConfig {
     // 1. Filter out cities that are already visited/near preferred locations
     val candidates =
@@ -1365,6 +1540,13 @@ open class TripAlgorithm(
    * Activities creation
    * ****
    */
+  /**
+   * Creates a generic "city visit" [Activity] for a given location and estimated time.
+   *
+   * @param location The geographical location of the city.
+   * @param estimatedTimeSeconds The estimated duration of the visit in seconds.
+   * @return A new [Activity] representing a city visit.
+   */
   private fun cityActivity(location: Location, estimatedTimeSeconds: Long): Activity {
     val name = context.getString(R.string.city_visit_name, location.name)
     return Activity(
@@ -1377,6 +1559,14 @@ open class TripAlgorithm(
     )
   }
 
+  /**
+   * Creates a specific "Grand Tour" [Activity] for a given location.
+   *
+   * This is used for generating simple activities when `isRandomTrip` is true.
+   *
+   * @param location The geographical location for the Grand Tour stop.
+   * @return A new [Activity] representing a Grand Tour stop.
+   */
   private fun grandTourActivity(
       location: Location,
   ): Activity {
@@ -1397,7 +1587,12 @@ open class TripAlgorithm(
    * ****
    */
 
-  /** Extract scheduled activities from a produced schedule. */
+  /**
+   * Extracts all scheduled activities from a list of [TripElement]s.
+   *
+   * @param schedule The list of [TripElement]s (route segments and activities).
+   * @return A list of [Activity] objects that were successfully scheduled.
+   */
   private fun extractActivitiesFromSchedule(schedule: List<TripElement>): List<Activity> {
     return schedule.mapNotNull {
       when (it) {
@@ -1408,8 +1603,13 @@ open class TripAlgorithm(
   }
 
   /**
-   * Very conservative activity equality/matching: match by location identity and estimatedTime.
-   * Replace with id-comparison if Activity has an identifier field.
+   * Checks if two activities match based on their estimated time and location identity.
+   *
+   * Note: This is a conservative check, ideal if the Activity class lacks a unique ID.
+   *
+   * @param a The first [Activity].
+   * @param b The second [Activity].
+   * @return True if both activities have the same estimated time and location coordinates/name.
    */
   private fun activitiesMatch(a: Activity, b: Activity): Boolean {
     return a.estimatedTime == b.estimatedTime && a.location.sameLocation(b.location)
@@ -1422,11 +1622,11 @@ open class TripAlgorithm(
    */
 
   /**
-   * Done with AI Checks if two Timestamps represent the same date.
+   * Checks if two [Timestamp]s represent the same date, regardless of the time of day.
    *
    * @param date1 The first Timestamp to compare.
    * @param date2 The second Timestamp to compare.
-   * @param zone The time zone to use for date comparison.
+   * @param zone The time zone to use for date conversion (defaults to system default).
    * @return True if the Timestamps represent the same date, false otherwise.
    */
   private fun sameDate(
@@ -1441,12 +1641,12 @@ open class TripAlgorithm(
   }
 
   /**
-   * Done with AI Computes the difference between two timestamps in the specified [ChronoUnit].
+   * Computes the difference between two timestamps in the specified [ChronoUnit].
    *
-   * @param date1 The first timestamp.
-   * @param date2 The second timestamp.
-   * @param zone The time zone to consider for date conversion (default system zone).
-   * @param unit The unit in which to return the difference (default DAYS).
+   * @param date1 The starting timestamp.
+   * @param date2 The ending timestamp.
+   * @param zone The time zone to consider for date conversion (defaults to system default).
+   * @param unit The unit in which to return the difference (defaults to DAYS).
    * @return The difference between date1 and date2 in the given [unit]. Positive if date2 is after
    *   date1.
    */
@@ -1463,11 +1663,11 @@ open class TripAlgorithm(
   }
 
   /**
-   * Computes the difference in hours between two timestamps.
+   * Computes the difference in hours between two timestamps, preserving time information.
    *
-   * @param date1 The first timestamp.
-   * @param date2 The second timestamp.
-   * @param zone The time zone to consider (default system zone).
+   * @param date1 The starting timestamp.
+   * @param date2 The ending timestamp.
+   * @param zone The time zone to consider (defaults to system default).
    * @return The difference in hours between date1 and date2. Positive if date2 is after date1.
    */
   private fun hoursDifference(
@@ -1489,11 +1689,18 @@ open class TripAlgorithm(
    */
 
   /**
-   * Build a new OrderedRoute by removing given activity locations and marking affected segments
-   * durations as INVALID_DURATION so that the route optimizer will recompute them.
+   * Builds a new [OrderedRoute] by removing specified activity locations and invalidating the
+   * adjacent segment durations.
    *
-   * Returns Pair(newOrderedRoute, changedIndexes) where changedIndexes are the indices that were
-   * marked invalid/need recomputation.
+   * The invalidated segments are marked with [INVALID_DURATION] so the route optimizer can
+   * recompute them based on the new route path.
+   *
+   * @param optimizedRoute The original [OrderedRoute].
+   * @param toRemoveLocations A set of [Location]s corresponding to the activities to remove.
+   * @return A [Pair] containing:
+   * - The `newOrderedRoute` without the removed locations and with invalid durations.
+   * - A list of `changedIndexes` (indices in the new `segmentDuration` list that need
+   *   recomputation).
    */
   private fun buildRouteAfterRemovals(
       optimizedRoute: OrderedRoute,
@@ -1541,6 +1748,16 @@ open class TripAlgorithm(
    * Schedule
    * ****
    */
+  /**
+   * Re-optimizes the full route with all current activities and then runs the `scheduleRemove`
+   * function.
+   *
+   * This utility function encapsulates the "optimize then schedule" flow.
+   *
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @return The resulting list of [TripElement] after optimization and scheduling/pruning.
+   */
   private suspend fun optimizeAndSchedule(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities
@@ -1559,6 +1776,17 @@ open class TripAlgorithm(
     return schedule
   }
 
+  /**
+   * Re-optimizes the full route with all current activities and then runs a standard, single
+   * scheduling pass (`scheduleTrip`).
+   *
+   * This is used when adding activities to fill time, where the intent is just to schedule the new,
+   * longer list of activities without the complex removal logic of `scheduleRemove`.
+   *
+   * @param enhancedTripProfile The enhanced trip profile.
+   * @param activities The mutable [Activities] state object.
+   * @return The resulting list of [TripElement] after optimization and scheduling.
+   */
   private suspend fun optimizeOnly(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities
