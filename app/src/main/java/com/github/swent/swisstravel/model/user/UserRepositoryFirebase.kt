@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.user
 
+import android.util.Log
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -54,9 +55,11 @@ class UserRepositoryFirebase(
         if (cachedDoc.exists()) {
           createUserFromDoc(cachedDoc, uid)
         } else {
+          Log.e("UserRepositoryFirebase", "User data not found in cache and server unreachable.")
           error("User data not found in cache and server unreachable.")
         }
       } catch (_: Exception) {
+        Log.e("UserRepositoryFirebase", "User data not found in cache and server unreachable.")
         error("User data not found in cache and server unreachable.")
       }
     }
