@@ -59,6 +59,8 @@ fun TripDateScreen(
         ValidationEvent.EndDateIsBeforeStartDateError -> {
           Toast.makeText(context, R.string.end_date_error, Toast.LENGTH_SHORT).show()
         }
+        ValidationEvent.EndDateIsBeforeToday ->
+            Toast.makeText(context, R.string.end_date_past, Toast.LENGTH_SHORT).show()
         else -> {
           /* Ignore other events */
         }

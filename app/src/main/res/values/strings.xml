@@ -51,6 +51,7 @@
     <string name="start_date">Start date</string>
     <string name="end_date">End date</string>
     <string name="end_date_error">End date must be on or after start date.</string>
+    <string name="end_date_past">End date after today.</string>
     <string name="trip_dates_disclaimer">Disclaimer: A trip of more than 2 weeks can take a lot of time to compute and we cannot guarantee that it will end on the correct date</string>
 
     <!-- Arrival and Departure -->
