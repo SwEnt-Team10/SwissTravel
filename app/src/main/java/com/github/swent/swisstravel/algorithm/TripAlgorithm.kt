@@ -47,6 +47,8 @@ const val ACTIVITY_TIME_PER_DAY_HOURS = 8
 const val MAX_INDEX_FETCH_ACTIVITIES = 4
 const val RADIUS_CITIES_TO_ASSOCIATE_KM = 15
 const val MAX_INDEX_CACHED_ACTIVITIES = 10
+const val SECOND_IN_HOUR = 3600
+const val MINUTES_IN_HOUR = 60
 
 /**
  * Some part of this file were made with AI but most of it was done by hands
@@ -366,100 +368,33 @@ open class TripAlgorithm(
         EnhancedTripProfile(
             tripProfile.copy(preferences = tripSettings.preferences),
             tripProfile.preferredLocations.toMutableList())
-    val intermediateActivities = mutableListOf<Activity>()
+
+    // Prepare initial activities lists
     val grandTourActivities =
         if (isRandomTrip) {
-          enhancedTripProfile.tripProfile.preferredLocations.drop(1).map { grandTourActivity(it) }
-        } else {
-          mutableListOf()
-        }
-    val allActivities = grandTourActivities.toMutableList()
+          enhancedTripProfile.tripProfile.preferredLocations
+              .drop(1)
+              .map { grandTourActivity(it) }
+              .toMutableList()
+        } else mutableListOf()
+
     val activities =
         Activities(
-            intermediateActivities,
-            grandTourActivities.toMutableList(),
-            allActivities,
-            cachedActivities)
+            intermediateActivities = mutableListOf(),
+            grandTourActivities = grandTourActivities,
+            allActivities = grandTourActivities.toMutableList(),
+            cachedActivities = cachedActivities)
 
     try {
-      val startLocation =
-          tripSettings.arrivalDeparture.arrivalLocation
-              ?: throw IllegalArgumentException("Arrival location must not be null")
-      val endLocation =
-          tripSettings.arrivalDeparture.departureLocation
-              ?: throw IllegalArgumentException("Departure location must not be null")
+      // PHASE 1: Geography & Route (Selection + TSP + Intermediate Stops)
+      val optimizedRoute =
+          computeInitialRoute(tripSettings, enhancedTripProfile, activities, onProgress)
 
-      onProgress(0.0f)
-      val selectedActivities =
-          try {
-            activitySelector.addActivities(activities.cachedActivities) { progress ->
-              onProgress(computeProgression.selectActivities * progress)
-            }
-          } catch (e: Exception) {
-            throw IllegalStateException("Failed to select activities: ${e.message}", e)
-          }
-      onProgress(computeProgression.selectActivities)
-
-      val fullDestinationList = buildList {
-        add(startLocation)
-        addAll(selectedActivities.map { it.location })
-        add(endLocation)
-      }
-      activities.allActivities.addAll(selectedActivities)
-
-      Log.d("TripAlgorithm", "Full destination list: $fullDestinationList")
-      var optimizedRoute =
-          if (endLocation.haversineDistanceTo(startLocation) >= 1 ||
-              selectedActivities
-                  .isNotEmpty()) { // If they are at least 1 km apart or there are activities we can
-            // use optimize otherwise we build a fake one that is valid
-            try {
-              routeOptimizer.optimize(
-                  start = startLocation,
-                  end = endLocation,
-                  allLocations = fullDestinationList,
-                  activities = selectedActivities,
-                  mode =
-                      if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
-                        TransportMode.TRAIN
-                      } else TransportMode.CAR) { progress ->
-                    onProgress(
-                        computeProgression.selectActivities +
-                            computeProgression.optimizeRoute * progress)
-                  }
-            } catch (e: Exception) {
-              throw IllegalStateException("Route optimization failed: ${e.message}", e)
-            }
-          } else {
-            OrderedRoute(fullDestinationList, 1.0, listOf(1.0))
-          }
-
-      onProgress(computeProgression.selectActivities + computeProgression.optimizeRoute)
-      check(optimizedRoute.totalDuration > 0) { "Optimized route duration is zero or negative" }
-
-      // ---- STEP 2b: Insert in-between activities if preference enabled ----
-      if (tripSettings.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
-        optimizedRoute =
-            addInBetweenActivities(
-                optimizedRoute = optimizedRoute,
-                activities = activities,
-                mode =
-                    if (enhancedTripProfile.tripProfile.preferences.contains(
-                        Preference.PUBLIC_TRANSPORT))
-                        TransportMode.TRAIN
-                    else TransportMode.CAR) { progress ->
-                  onProgress(
-                      computeProgression.selectActivities +
-                          computeProgression.optimizeRoute +
-                          computeProgression.fetchInBetweenActivities * progress)
-                }
-      }
-
+      // PHASE 2: Scheduling (Time management & filling gaps)
       var currentProgressBase =
           computeProgression.selectActivities +
               computeProgression.optimizeRoute +
               computeProgression.fetchInBetweenActivities
-
       onProgress(currentProgressBase)
 
       var schedule =
@@ -488,7 +423,6 @@ open class TripAlgorithm(
       } else if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) <
           0) {
         // OVER-SCHEDULED: We are late, let's remove some activities
-        // In this case, scheduleRemove takes the place of completeSchedule for progress reporting
         scheduleRemove(
             enhancedTripProfile = enhancedTripProfile,
             originalOptimizedRoute = optimizedRoute,
@@ -498,6 +432,7 @@ open class TripAlgorithm(
       currentProgressBase += loopFillingBudget
       onProgress(currentProgressBase)
 
+      // PHASE 3: Final Optimization
       val finalRoute =
           try {
             routeOptimizer.optimize(
@@ -527,6 +462,108 @@ open class TripAlgorithm(
       Log.e("TripAlgorithm", "Trip computation failed", e)
       throw e
     }
+  }
+
+  /**
+   * Handles the initial "geography" phase of the trip computation.
+   *
+   * This function performs three main steps:
+   * 1. Validates start and end locations.
+   * 2. Selects initial activities based on user preferences and adds them to [activities].
+   * 3. Computes the optimal route (TSP) connecting start, end, and selected activities.
+   * 4. Optionally inserts intermediate stops between long segments if
+   *    [Preference.INTERMEDIATE_STOPS] is set.
+   *
+   * @param tripSettings The user settings containing arrival/departure locations and preferences.
+   * @param enhancedTripProfile The enhanced profile used to determine transport modes.
+   * @param activities The mutable activities state; selected activities and intermediate stops are
+   *   added here.
+   * @param onProgress A callback to report progress updates (covering selection, optimization, and
+   *   intermediate fetching).
+   * @return The initial [OrderedRoute] containing the sequence of locations and segment durations.
+   * @throws IllegalArgumentException If arrival or departure locations are null.
+   * @throws IllegalStateException If activity selection or route optimization fails.
+   */
+  private suspend fun computeInitialRoute(
+      tripSettings: TripSettings,
+      enhancedTripProfile: EnhancedTripProfile,
+      activities: Activities,
+      onProgress: (Float) -> Unit
+  ): OrderedRoute {
+    val startLocation =
+        tripSettings.arrivalDeparture.arrivalLocation
+            ?: throw IllegalArgumentException("Arrival location must not be null")
+    val endLocation =
+        tripSettings.arrivalDeparture.departureLocation
+            ?: throw IllegalArgumentException("Departure location must not be null")
+
+    onProgress(0.0f)
+
+    // 1. Select Activities
+    val selectedActivities =
+        try {
+          activitySelector.addActivities(activities.cachedActivities) { progress ->
+            onProgress(computeProgression.selectActivities * progress)
+          }
+        } catch (e: Exception) {
+          throw IllegalStateException("Failed to select activities: ${e.message}", e)
+        }
+    onProgress(computeProgression.selectActivities)
+
+    val fullDestinationList = buildList {
+      add(startLocation)
+      addAll(selectedActivities.map { it.location })
+      add(endLocation)
+    }
+    activities.allActivities.addAll(selectedActivities)
+
+    // 2. Optimize Route
+    var optimizedRoute =
+        if (endLocation.haversineDistanceTo(startLocation) >= 1 ||
+            selectedActivities.isNotEmpty()) {
+          try {
+            routeOptimizer.optimize(
+                start = startLocation,
+                end = endLocation,
+                allLocations = fullDestinationList,
+                activities = selectedActivities,
+                mode =
+                    if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
+                      TransportMode.TRAIN
+                    } else TransportMode.CAR) { progress ->
+                  onProgress(
+                      computeProgression.selectActivities +
+                          computeProgression.optimizeRoute * progress)
+                }
+          } catch (e: Exception) {
+            throw IllegalStateException("Route optimization failed: ${e.message}", e)
+          }
+        } else {
+          OrderedRoute(fullDestinationList, 1.0, listOf(1.0))
+        }
+
+    onProgress(computeProgression.selectActivities + computeProgression.optimizeRoute)
+    check(optimizedRoute.totalDuration > 0) { "Optimized route duration is zero or negative" }
+
+    // 3. Insert Intermediate Stops
+    if (tripSettings.preferences.contains(Preference.INTERMEDIATE_STOPS)) {
+      optimizedRoute =
+          addInBetweenActivities(
+              optimizedRoute = optimizedRoute,
+              activities = activities,
+              mode =
+                  if (enhancedTripProfile.tripProfile.preferences.contains(
+                      Preference.PUBLIC_TRANSPORT))
+                      TransportMode.TRAIN
+                  else TransportMode.CAR) { progress ->
+                onProgress(
+                    computeProgression.selectActivities +
+                        computeProgression.optimizeRoute +
+                        computeProgression.fetchInBetweenActivities * progress)
+              }
+    }
+
+    return optimizedRoute
   }
 
   /**
@@ -708,6 +745,7 @@ open class TripAlgorithm(
    * Schedule and remove activities
    * *********************************************************
    */
+
   /**
    * Schedules the trip and handles over-scheduling (overtime) by intelligently removing activities.
    *
@@ -803,92 +841,26 @@ open class TripAlgorithm(
     }
 
     // 3) OVERTIME PHASE
-    // If we are here, the schedule is clean, but runs too late.
-    // Now we calculate deficit based on TIME OVERRUN, not missing activities.
-
     // Calculate how many seconds we are overtime
     val missingSumSec = missingActivities.sumOf { it.estimatedTime.toDouble().roundToLong() }
     val penaltySec = missingActivities.size * RESCHEDULE_PENALTY_PER_ACTIVITY_SEC.toLong()
     val deficitSeconds = missingSumSec + penaltySec
 
-    // 4) Randomly remove activities
-    val rand = Random.Default
-
-    // Only look at activities that are ACTUALLY in the schedule
+    // 4) Identify Candidates
     val candidateList =
         normalActivities
             .filter { act -> scheduledActs.any { activitiesMatch(it, act) } }
             .toMutableList()
 
-    candidateList.shuffle(rand)
-
-    data class Cluster(val center: Location, val acts: MutableList<Activity>)
-
-    // Build map: preferredLocation -> closest activities
-    val clusters =
-        enhancedTripProfile.newPreferredLocations.map { prefLoc ->
-          Cluster(center = prefLoc, acts = mutableListOf())
-        }
-
-    // Assign each candidate activity to the nearest preferred location
-    for (act in candidateList) {
-      val loc = act.location
-      val nearestCluster =
-          clusters.minByOrNull { cluster ->
-            loc.coordinate.haversineDistanceTo(cluster.center.coordinate)
-          }!!
-      nearestCluster.acts.add(act)
-    }
-
-    // Identify clusters that have only ONE activity → “protected”
-    val protectedActivities =
-        clusters
-            .filter { it.acts.size <= 1 } // clusters with <= 1 activity
-            .flatMap { it.acts }
-            .toMutableSet()
-
-    // Also protect intermediate activities
-    if (activities.intermediateActivities.isNotEmpty()) {
-      protectedActivities.addAll(activities.intermediateActivities)
-    }
-
-    val toRemove = mutableListOf<Activity>()
-    var remainingDeficit = deficitSeconds
-    val pool = candidateList.toMutableList()
-
-    while (remainingDeficit > 0 && pool.isNotEmpty()) {
-
-      // Respect protected clusters unless impossible
-      val allowedPool =
-          pool
-              .filter { it !in protectedActivities }
-              .ifEmpty { pool } // fallback to full pool if needed
-
-      // 1) overshoots
-      val overshoots = allowedPool.filter { it.estimatedTime.toLong() >= remainingDeficit }
-      val bestOvershoot = overshoots.minByOrNull { it.estimatedTime.toLong() - remainingDeficit }
-
-      // 2) undershoot fallback
-      val bestUndershoot =
-          allowedPool
-              .filter { it.estimatedTime.toLong() < remainingDeficit }
-              .maxByOrNull { it.estimatedTime.toLong() }
-
-      val chosen = bestOvershoot ?: bestUndershoot ?: break
-
-      toRemove.add(chosen)
-      remainingDeficit -= chosen.estimatedTime.toLong()
-      if (chosen in pool) {
-        pool.remove(chosen)
-      }
-      // If a protected activity had to be removed (fallback case), unprotect the cluster
-      if (chosen in protectedActivities) {
-        protectedActivities.remove(chosen)
-      }
-    }
+    // --- LOGIC EXTRACTED HERE ---
+    val toRemove =
+        selectActivitiesToRemove(
+            candidateList = candidateList,
+            preferredLocations = enhancedTripProfile.newPreferredLocations,
+            intermediateActivities = activities.intermediateActivities,
+            deficitSeconds = deficitSeconds)
 
     if (toRemove.isEmpty()) {
-      // Could not find candidates to remove, return original result
       return firstSchedule
     }
 
@@ -898,15 +870,13 @@ open class TripAlgorithm(
     activities.intermediateActivities.removeAll { act ->
       toRemove.any { rem -> activitiesMatch(act, rem) }
     }
-    // Put the valid activities that we had to remove due to the time to the cache in case we use
-    // them later
     activities.cachedActivities.addAll(toRemove)
 
-    // 6) Build new OrderedRoute removing those locations and invalidating durations
+    // 6) Build new OrderedRoute removing those locations
     val (routeAfterRemoval, changedIndexes) =
         buildRouteAfterRemovals(originalOptimizedRoute, removedLocations)
 
-    // 7) Recompute route durations for invalid segments
+    // 7) Recompute route durations
     val finalOptimizedRoute =
         try {
           routeOptimizer.recomputeOrderedRoute(
@@ -919,12 +889,11 @@ open class TripAlgorithm(
                   else TransportMode.CAR,
               INVALID_DURATION) {}
         } catch (e: Exception) {
-          // Recompute failed — fall back to firstSchedule
           Log.w("TripAlgorithm", "Recompute after removals failed: ${e.message}")
           return firstSchedule
         }
 
-    // 8) Re-run scheduleTrip with recomputed route and the pruned activity list
+    // 8) Re-run scheduleTrip
     val finalSchedule =
         try {
           scheduleTrip(
@@ -938,6 +907,90 @@ open class TripAlgorithm(
         }
 
     return finalSchedule
+  }
+
+  /**
+   * Selects a subset of activities to remove to satisfy a time deficit.
+   *
+   * It uses a clustering strategy to identify which preferred location an activity belongs to,
+   * protects locations with only one activity (to avoid empty stops), and then greedily removes
+   * activities that match the required time deficit.
+   *
+   * @param candidateList The list of activities eligible for removal.
+   * @param preferredLocations The user's preferred locations (used as cluster centers).
+   * @param intermediateActivities Activities that should be protected from removal.
+   * @param deficitSeconds The amount of time (in seconds) that needs to be freed up.
+   * @return The list of activities selected for removal.
+   */
+  private fun selectActivitiesToRemove(
+      candidateList: MutableList<Activity>,
+      preferredLocations: List<Location>,
+      intermediateActivities: List<Activity>,
+      deficitSeconds: Long
+  ): List<Activity> {
+    // Shuffle for randomness in selection
+    candidateList.shuffle(Random.Default)
+
+    // Helper class for clustering
+    data class Cluster(val center: Location, val acts: MutableList<Activity>)
+
+    // Build map: preferredLocation -> closest activities
+    val clusters =
+        preferredLocations.map { prefLoc -> Cluster(center = prefLoc, acts = mutableListOf()) }
+
+    // Assign each candidate activity to the nearest preferred location
+    for (act in candidateList) {
+      val loc = act.location
+      val nearestCluster =
+          clusters.minByOrNull { cluster ->
+            loc.coordinate.haversineDistanceTo(cluster.center.coordinate)
+          }!!
+      nearestCluster.acts.add(act)
+    }
+
+    // Identify clusters that have only ONE activity → “protected”
+    val protectedActivities =
+        clusters.filter { it.acts.size <= 1 }.flatMap { it.acts }.toMutableSet()
+
+    // Also protect intermediate activities
+    if (intermediateActivities.isNotEmpty()) {
+      protectedActivities.addAll(intermediateActivities)
+    }
+
+    val toRemove = mutableListOf<Activity>()
+    var remainingDeficit = deficitSeconds
+    val pool = candidateList.toMutableList()
+
+    while (remainingDeficit > 0 && pool.isNotEmpty()) {
+
+      // Respect protected clusters unless impossible (fallback to full pool)
+      val allowedPool = pool.filter { it !in protectedActivities }.ifEmpty { pool }
+
+      // 1) Find exact overshoots (activities larger than the remaining deficit)
+      val overshoots = allowedPool.filter { it.estimatedTime.toLong() >= remainingDeficit }
+      val bestOvershoot = overshoots.minByOrNull { it.estimatedTime.toLong() - remainingDeficit }
+
+      // 2) Find undershoots (largest activity smaller than deficit)
+      val bestUndershoot =
+          allowedPool
+              .filter { it.estimatedTime.toLong() < remainingDeficit }
+              .maxByOrNull { it.estimatedTime.toLong() }
+
+      val chosen = bestOvershoot ?: bestUndershoot ?: break
+
+      toRemove.add(chosen)
+      remainingDeficit -= chosen.estimatedTime.toLong()
+
+      if (chosen in pool) {
+        pool.remove(chosen)
+      }
+      // If a protected activity had to be removed (fallback case), remove protection status
+      if (chosen in protectedActivities) {
+        protectedActivities.remove(chosen)
+      }
+    }
+
+    return toRemove
   }
 
   /**
@@ -1112,7 +1165,7 @@ open class TripAlgorithm(
                 3,
                 hoursDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) -
                     2)
-          }) * 3600
+          }) * SECOND_IN_HOUR
 
       if (totalTimeNeededHours > 0) {
         added = addCityActivity(enhancedTripProfile, activities, totalTimeNeededHours)
@@ -1235,7 +1288,7 @@ open class TripAlgorithm(
     if (activities.cachedActivities.isEmpty()) return false
 
     // 100 hours * 60 = 6000 minutes. This is a very safe size for an IntArray.
-    val limitMinutes = (min(100.0, totalTimeNeededHours) * 60).toInt()
+    val limitMinutes = (min(100.0, totalTimeNeededHours) * MINUTES_IN_HOUR).toInt()
 
     // If the time needed is negligible (e.g. < 1 minute), don't add anything.
     if (limitMinutes <= 0) return false
@@ -1247,65 +1300,8 @@ open class TripAlgorithm(
 
     if (validCandidates.isEmpty()) return false
 
-    val activitiesCandidates = validCandidates.toList()
-    val n = activitiesCandidates.size
-    val w = limitMinutes
-
-    // DP table: indices represent MINUTES.
-    val dp = IntArray(w + 1) { -1 }
-    dp[0] = 0
-    val parent = IntArray(w + 1) { -1 }
-
-    // 3. Fill the DP table
-    for (i in 0 until n) {
-      val activity = activitiesCandidates[i]
-      // Note: Integer division implies floor. 15min 30s -> 15min.
-      val weight = activity.estimatedTime / 60
-
-      // Skip activities effectively 0 minutes to prevent infinite loops (though filtered above)
-      if (weight <= 0) continue
-
-      for (j in w downTo weight) {
-        if (dp[j - weight] != -1) {
-          // Since value == weight (we just want to fill time),
-          // the new "value" is simply the time achieved.
-          val newTime = dp[j - weight] + weight
-
-          if (newTime > dp[j]) {
-            dp[j] = newTime
-            parent[j] = i
-          }
-        }
-      }
-    }
-
-    // 4. Reconstruction
-    var bestTimeIndex = -1
-
-    // Iterate backwards to find the largest time bucket that was reachable
-    for (j in w downTo 0) {
-      if (dp[j] != -1) {
-        bestTimeIndex = j
-        break
-      }
-    }
-
-    val toAdd = mutableListOf<Activity>()
-
-    if (bestTimeIndex != -1) {
-      var currentWeight = bestTimeIndex
-      while (currentWeight > 0) {
-        val activityIndex = parent[currentWeight]
-        if (activityIndex == -1) break
-
-        val activity = activitiesCandidates[activityIndex]
-        toAdd.add(activity)
-
-        // Fix 4: Must use the exact same weight calculation as the DP loop
-        val weight = activity.estimatedTime / 60
-        currentWeight -= weight
-      }
-    }
+    // Solve the knapsack problem to find the best fit
+    val toAdd = solveTimeKnapsack(validCandidates, limitMinutes)
 
     if (toAdd.isNotEmpty()) {
       activities.allActivities.addAll(toAdd)
@@ -1314,6 +1310,74 @@ open class TripAlgorithm(
     }
 
     return false
+  }
+
+  /**
+   * Solves a variation of the Knapsack problem to select a subset of activities that maximize the
+   * total duration without exceeding the [limitMinutes].
+   *
+   * @param candidates The list of available activities to choose from.
+   * @param limitMinutes The maximum total time allowed in minutes.
+   * @return A list of [Activity] objects that fits best within the time limit.
+   */
+  private fun solveTimeKnapsack(candidates: List<Activity>, limitMinutes: Int): List<Activity> {
+    val n = candidates.size
+    val w = limitMinutes
+
+    // DP table: dp[j] stores the maximum minutes filled for a capacity of j
+    // parent[j] stores the index of the last activity added to reach capacity j
+    val dp = IntArray(w + 1) { -1 }
+    val parent = IntArray(w + 1) { -1 }
+
+    dp[0] = 0
+
+    // 1. Fill the DP table
+    for (i in 0 until n) {
+      val activity = candidates[i]
+      val weight = activity.estimatedTime / MINUTES_IN_HOUR
+
+      // Skip activities effectively 0 minutes to prevent infinite loops
+      if (weight <= 0) continue
+
+      for (j in w downTo weight) {
+        if (dp[j - weight] != -1) {
+          val newTime = dp[j - weight] + weight
+
+          // Since value == weight (we just want to fill time), we maximize the time used
+          if (newTime > dp[j]) {
+            dp[j] = newTime
+            parent[j] = i
+          }
+        }
+      }
+    }
+
+    // 2. Find the best reachable total time
+    var bestTimeIndex = -1
+    for (j in w downTo 0) {
+      if (dp[j] != -1) {
+        bestTimeIndex = j
+        break
+      }
+    }
+
+    // 3. Reconstruct the solution
+    val selectedActivities = mutableListOf<Activity>()
+    if (bestTimeIndex != -1) {
+      var currentWeight = bestTimeIndex
+      while (currentWeight > 0) {
+        val activityIndex = parent[currentWeight]
+        if (activityIndex == -1) break
+
+        val activity = candidates[activityIndex]
+        selectedActivities.add(activity)
+
+        val weight = activity.estimatedTime / MINUTES_IN_HOUR
+        currentWeight -= weight
+      }
+    }
+
+    return selectedActivities
   }
 
   /**
@@ -1351,9 +1415,9 @@ open class TripAlgorithm(
         // ratio of days (if the ratio is 0.5 then we have activities at most 4 hours)
         val trueActivityTime =
             if (maxDays < 1) {
-              min((8 * maxDays * 3600).toLong(), activityTime)
+              min((8 * maxDays * SECOND_IN_HOUR).toLong(), activityTime)
             } else {
-              min(8 * 3600, activityTime)
+              min((8 * SECOND_IN_HOUR).toLong(), activityTime)
             }
         // Create new activity
         val newActivity = cityActivity(cityLoc, trueActivityTime)
@@ -1492,9 +1556,8 @@ open class TripAlgorithm(
         val alreadyInTrip =
             activities.allActivities.any { it.location.sameLocation(activity.location) }
 
-        // Fix 2: Ensure activity has a positive duration and fits within the total time limit
         // We convert estimatedTime (seconds) to minutes for comparison.
-        val durationMinutes = activity.estimatedTime / 60
+        val durationMinutes = activity.estimatedTime / MINUTES_IN_HOUR
         if (!alreadyInTrip && durationMinutes > 0 && durationMinutes <= limitMinutes) {
           validCandidates.add(activity)
         }

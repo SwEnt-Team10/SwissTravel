@@ -91,10 +91,10 @@ class SelectActivitiesTest {
     val expectedActivities = listOf(activityLausanne, activityGeneva, activityZurich)
     val progressUpdates = mutableListOf<Float>()
 
-    coEvery { mockActivityRepository.getActivitiesNear(any(), any(), any()) } returns
-        listOf(activityLausanne) andThen
-        listOf(activityGeneva) andThen
-        listOf(activityZurich)
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), any(), any(), any(), any(), any())
+    } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
 
     val selectActivities =
         SelectActivities(
@@ -356,10 +356,6 @@ class SelectActivitiesTest {
   }
 
   @Test
-  fun `getActivitiesNearWithPreferences fuses locations depending on their distance`() =
-      runBlocking {}
-
-  @Test
   fun `addActivities injects default preferences when none are provided`() = runBlocking {
     val expectedActivities = listOf(activityLausanne, activityGeneva, activityZurich)
     val progressUpdates = mutableListOf<Float>()
@@ -370,7 +366,7 @@ class SelectActivitiesTest {
           match { it.containsAll(defaultPrefs) }, any(), any(), any(), any(), any())
     } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
 
-    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, mockTripInfoVM, mockActivityRepository)
 
     val result = selectActivities.addActivities { progressUpdates.add(it) }
 

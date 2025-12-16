@@ -2,16 +2,13 @@ package com.github.swent.swisstravel.ui.tripcreation
 
 import android.content.Context
 import android.content.res.Resources
+import com.github.swent.swisstravel.FakeTripsRepository
+import com.github.swent.swisstravel.FakeUserRepository
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserRepository
-import com.github.swent.swisstravel.model.user.UserStats
 import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
@@ -265,104 +262,104 @@ class TripCreationViewModelTest {
     assertNull(viewModel.tripSettings.value.invalidNameMsg)
   }
 
-  /** A fake repository that records added trips and can be made to throw on addTrip. */
-  private class FakeTripsRepository : TripsRepository {
-    var addedTrip: Trip? = null
-    var shouldThrow: Boolean = false
+  //  /** A fake repository that records added trips and can be made to throw on addTrip. */
+  //  private class FakeTripsRepository : TripsRepository {
+  //    var addedTrip: Trip? = null
+  //    var shouldThrow: Boolean = false
+  //
+  //    // match the interface: non-suspending
+  //    override fun getNewUid(): String = "fake-uid"
+  //
+  //    override suspend fun addTrip(trip: Trip) {
+  //      if (shouldThrow) throw Exception("boom")
+  //      addedTrip = trip
+  //    }
+  //
+  //    // minimal stubs required by the interface
+  //    override suspend fun getAllTrips(): List<Trip> = emptyList()
+  //
+  //    override suspend fun getTrip(tripId: String): Trip =
+  //        throw NotImplementedError("getTrip not needed for these tests")
+  //
+  //    override suspend fun deleteTrip(tripId: String) {
+  //      /* no-op for tests */
+  //    }
+  //
+  //    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
+  //      /* no-op */
+  //    }
+  //
+  //    override suspend fun removeCollaborator(tripId: String, userId: String) {
+  //      /* no-op */
+  //    }
+  //
+  //    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
+  //      /* no-op for tests */
+  //    }
+  //  }
 
-    // match the interface: non-suspending
-    override fun getNewUid(): String = "fake-uid"
-
-    override suspend fun addTrip(trip: Trip) {
-      if (shouldThrow) throw Exception("boom")
-      addedTrip = trip
-    }
-
-    // minimal stubs required by the interface
-    override suspend fun getAllTrips(): List<Trip> = emptyList()
-
-    override suspend fun getTrip(tripId: String): Trip =
-        throw NotImplementedError("getTrip not needed for these tests")
-
-    override suspend fun deleteTrip(tripId: String) {
-      /* no-op for tests */
-    }
-
-    override suspend fun shareTripWithUsers(tripId: String, userIds: List<String>) {
-      /* no-op */
-    }
-
-    override suspend fun removeCollaborator(tripId: String, userId: String) {
-      /* no-op */
-    }
-
-    override suspend fun editTrip(tripId: String, updatedTrip: Trip) {
-      /* no-op for tests */
-    }
-  }
-
-  private class FakeUserRepository : UserRepository {
-    override suspend fun getCurrentUser(): User {
-      return User(
-          uid = "test-user",
-          name = "Test User",
-          biography = "Test bio",
-          email = "test@example.com",
-          profilePicUrl = "",
-          preferences = listOf(Preference.FOODIE),
-          friends = emptyList(),
-          stats = UserStats(),
-          pinnedTripsUids = emptyList(),
-          pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
-    }
-
-    override suspend fun getUserByUid(uid: String): User? {
-      // no-op in tests
-      return null
-    }
-
-    override suspend fun getUserByNameOrEmail(query: String): List<User> {
-      // no-op in tests
-      return emptyList()
-    }
-
-    override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
-
-    override suspend fun updateUserStats(uid: String, stats: UserStats) {
-      // no-op for testing
-    }
-
-    override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-      // no-op for testing
-    }
-
-    override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
-      // no-op for testing
-    }
-
-    override suspend fun removeFriend(uid: String, friendUid: String) {
-      // no-op for testing
-    }
-
-    override suspend fun updateUser(
-        uid: String,
-        name: String?,
-        biography: String?,
-        profilePicUrl: String?,
-        preferences: List<Preference>?,
-        pinnedTripsUids: List<String>?,
-        pinnedPicturesUids: List<String>?
-    ) {
-      // no-op for testing
-    }
-
-    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
-      // No-op
-    }
-
-    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
-      // No-op
-    }
-  }
+  //  private class FakeUserRepository : UserRepository {
+  //    override suspend fun getCurrentUser(): User {
+  //      return User(
+  //          uid = "test-user",
+  //          name = "Test User",
+  //          biography = "Test bio",
+  //          email = "test@example.com",
+  //          profilePicUrl = "",
+  //          preferences = listOf(Preference.FOODIE),
+  //          friends = emptyList(),
+  //          stats = UserStats(),
+  //          pinnedTripsUids = emptyList(),
+  //          pinnedPicturesUids = emptyList(),
+  //          favoriteTripsUids = emptyList())
+  //    }
+  //
+  //    override suspend fun getUserByUid(uid: String): User? {
+  //      // no-op in tests
+  //      return null
+  //    }
+  //
+  //    override suspend fun getUserByNameOrEmail(query: String): List<User> {
+  //      // no-op in tests
+  //      return emptyList()
+  //    }
+  //
+  //    override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
+  //
+  //    override suspend fun updateUserStats(uid: String, stats: UserStats) {
+  //      // no-op for testing
+  //    }
+  //
+  //    override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
+  //      // no-op for testing
+  //    }
+  //
+  //    override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {
+  //      // no-op for testing
+  //    }
+  //
+  //    override suspend fun removeFriend(uid: String, friendUid: String) {
+  //      // no-op for testing
+  //    }
+  //
+  //    override suspend fun updateUser(
+  //        uid: String,
+  //        name: String?,
+  //        biography: String?,
+  //        profilePicUrl: String?,
+  //        preferences: List<Preference>?,
+  //        pinnedTripsUids: List<String>?,
+  //        pinnedPicturesUids: List<String>?
+  //    ) {
+  //      // no-op for testing
+  //    }
+  //
+  //    override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
+  //      // No-op
+  //    }
+  //
+  //    override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
+  //      // No-op
+  //    }
+  //  }
 }

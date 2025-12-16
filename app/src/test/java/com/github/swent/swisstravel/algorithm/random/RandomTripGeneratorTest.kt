@@ -48,10 +48,13 @@ class RandomTripGeneratorTest {
 
   @Test
   fun `generator provides distinct start and end when no arrival is set`() {
+    // Given a trip setting with no arrival or departure
     val settings = TripSettings()
 
+    // When we generate destinations
     val (start, end, _) = RandomTripGenerator.generateRandomDestinations(context, settings)
 
+    // Then start and end locations should be different
     assertNotNull(start)
     assertNotNull(end)
     assertNotEquals("Start and end locations should be different", start.name, end.name)

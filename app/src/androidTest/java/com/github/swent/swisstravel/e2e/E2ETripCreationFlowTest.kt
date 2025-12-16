@@ -348,13 +348,8 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
 
     /* 10) */
     // Back to my trips
-    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
-      composeTestRule
-          .onAllNodesWithTag(
-              MyTripsScreenTestTags.CREATE_TRIP_BUTTON) // random element on my trips screen
-          .fetchSemanticsNodes()
-          .isNotEmpty()
-    }
+    composeTestRule.waitForTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
+
     composeTestRule.checkMyTripsScreenIsDisplayed()
     val trips = runBlocking { repository.getAllTrips() }
     assertEquals(1, trips.size)

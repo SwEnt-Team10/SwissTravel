@@ -3,6 +3,8 @@ package com.github.swent.swisstravel.model.trip.activity
 import com.github.swent.swisstravel.model.trip.Location
 import com.google.firebase.Timestamp
 
+const val SECONDS_IN_HOUR = 3600
+
 /**
  * Represents an activity.
  *
@@ -48,7 +50,7 @@ data class Activity(
     // Normal validity logic
     if (estimatedTime <= 0) return false
     // If an activity lasts more than 9 hours treat it as invalid
-    if (estimatedTime > (9 * 60 * 60)) return false
+    if (estimatedTime > (9 * SECONDS_IN_HOUR)) return false
 
     return true
   }
