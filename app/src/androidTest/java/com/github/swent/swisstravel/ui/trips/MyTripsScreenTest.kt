@@ -453,7 +453,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(sharedTrip))
         .assertIsDisplayed()
 
-    // 5. Verify the collaborator's name (content description) is displayed
+    // 5. Verify the correct content description is present
     composeTestRule
         .onNodeWithContentDescription("Profile picture", useUnmergedTree = true)
         .assertIsDisplayed()
