@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -55,9 +56,10 @@ fun ProfileImage(
   Box(
       modifier = modifier.background(MaterialTheme.colorScheme.surface),
       contentAlignment = Alignment.Center) {
+        val childModifier = Modifier.fillMaxSize()
         if (urlOrUid.isNullOrBlank()) {
           // Case 1: No Image -> Default Placeholder
-          PlaceholderProfileImage(modifier)
+          PlaceholderProfileImage(childModifier)
         } else if (isUrl) {
           // Case 2: Web URL -> Use Coil
           AsyncImage(
@@ -66,7 +68,7 @@ fun ProfileImage(
               placeholder = painterResource(R.drawable.default_profile_pic),
               error = painterResource(R.drawable.default_profile_pic),
               contentScale = ContentScale.Crop,
-              modifier = modifier)
+              modifier = childModifier)
         } else {
           // Case 3: Firestore UID -> Fetch Manually
           var bitmap by remember(urlOrUid) { mutableStateOf<Bitmap?>(null) }
@@ -86,10 +88,10 @@ fun ProfileImage(
                 bitmap = bitmap!!.asImageBitmap(),
                 contentDescription = stringResource(R.string.profile_pic_desc),
                 contentScale = ContentScale.Crop,
-                modifier = modifier)
+                modifier = childModifier)
           } else {
             // Show placeholder while loading or on error
-            PlaceholderProfileImage(modifier)
+            PlaceholderProfileImage(childModifier)
           }
         }
       }
