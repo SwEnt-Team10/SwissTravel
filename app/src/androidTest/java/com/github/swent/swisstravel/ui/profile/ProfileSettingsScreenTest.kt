@@ -421,4 +421,78 @@ class ProfileSettingsScreenTest : FirestoreSwissTravelTest() {
     val currentUser = runBlocking { userRepo.getCurrentUser() }
     assert(currentUser.profilePicUrl == "")
   }
+
+  @Test
+  fun editingBiography_andSaving_updatesTextDisplayed() {
+    setContentHelper()
+
+    // 1. Enter edit mode for Biography
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.editButton("BIOGRAPHY"))
+        .performClick()
+
+    // 2. Clear and Enter new text
+    val newBio = "I love traveling in Switzerland!"
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("BIOGRAPHY"))
+        .performTextClearance()
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("BIOGRAPHY"))
+        .performTextInput(newBio)
+
+    // 3. Save
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.confirmButton("BIOGRAPHY"))
+        .performClick()
+
+    // 4. Wait for the TextField to disappear (indicating edit mode ended)
+    composeTestRule.waitUntil(timeoutMillis = UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(ProfileSettingsScreenTestTags.textField("BIOGRAPHY"))
+          .fetchSemanticsNodes()
+          .isEmpty()
+    }
+
+    // 5. Verify the new text is displayed
+    composeTestRule.onNodeWithText(newBio).assertIsDisplayed()
+  }
+
+  @Test
+  fun backButton_invokesCallback() {
+    var backPressed = false
+    val vm = ProfileSettingsViewModel(userRepo, tripsRepo, imageRepo)
+
+    // Set content with a custom onBack callback
+    composeTestRule.setContent {
+      ProfileSettingsScreen(profileSettingsViewModel = vm, onBack = { backPressed = true })
+    }
+    waitForLoading()
+
+    // Click the back button in the top bar
+    composeTestRule
+        .onNodeWithTag(com.github.swent.swisstravel.ui.navigation.NavigationTestTags.TOP_BAR_BUTTON)
+        .performClick()
+
+    // Verify callback was invoked
+    assert(backPressed) { "Back button callback should have been invoked" }
+  }
+
+  @Test
+  fun logout_signsUserOut() {
+    setContentHelper()
+
+    // Pre-check: User should be signed in from setUp()
+    assert(FirebaseEmulator.auth.currentUser != null) { "User should be signed in initially" }
+
+    // Scroll to and click Logout
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.LOGOUT_BUTTON)
+        .performScrollTo()
+        .performClick()
+
+    // Verify user is now signed out in the emulator
+    assert(FirebaseEmulator.auth.currentUser == null) {
+      "User should be signed out after clicking logout"
+    }
+  }
 }

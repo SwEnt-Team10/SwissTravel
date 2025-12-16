@@ -123,4 +123,42 @@ class ProfileImageTest : FirestoreSwissTravelTest() {
         .onNodeWithContentDescription(getProfilePicContentDescription())
         .assertIsDisplayed()
   }
+
+  @Test
+  fun profileImage_usesCoil_whenUrlIsHttps() {
+    composeTestRule.setContent {
+      // Test the HTTPS branch specifically
+      ProfileImage(
+          urlOrUid = "https://secure.example.com/image.png", imageRepository = imageRepository)
+    }
+
+    composeTestRule
+        .onNodeWithContentDescription(getProfilePicContentDescription())
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun profileImage_showsPlaceholder_whenBase64IsInvalid() {
+    val testUid = "corrupt_image_uid"
+
+    runBlocking {
+      val currentUserUid = FirebaseEmulator.auth.currentUser?.uid ?: ""
+      // Seed a document with a valid structure but invalid Base64 string
+      // This forces base64ToBitmap to throw/return null, exercising the catch block
+      val image =
+          Image(uid = testUid, ownerId = currentUserUid, base64 = "this is not valid base64 data")
+      FirebaseEmulator.firestore.collection("images").document(testUid).set(image).await()
+    }
+
+    composeTestRule.setContent {
+      ProfileImage(urlOrUid = testUid, imageRepository = imageRepository)
+    }
+
+    composeTestRule.waitForIdle()
+
+    // Should gracefully fall back to placeholder without crashing
+    composeTestRule
+        .onNodeWithContentDescription(getProfilePicContentDescription())
+        .assertIsDisplayed()
+  }
 }

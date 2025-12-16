@@ -411,4 +411,20 @@ class ProfileSettingsViewModelTest {
 
     unmockkObject(ImageHelper)
   }
+
+  @Test
+  fun confirmProfilePicChange_doesNothing_whenNoUriSelected() = runTest {
+    // Ensure state is clean
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
+
+    // Call confirm without calling onProfilePicSelected first
+    viewModel.confirmProfilePicChange(mockk())
+
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Verify loading never started
+    Assert.assertFalse(viewModel.uiState.value.isLoading)
+    // Verify repository was never called
+    coVerify(exactly = 0) { imageRepository.addImage(any()) }
+  }
 }
