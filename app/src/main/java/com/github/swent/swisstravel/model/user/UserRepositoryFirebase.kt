@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.model.user
 
+import android.util.Log
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -8,7 +9,11 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreSettings
 import com.google.firebase.firestore.Source
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 
 class UserRepositoryFirebase(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -25,38 +30,66 @@ class UserRepositoryFirebase(
    * the user's information is not found in Firestore, a new user is created.
    */
   override suspend fun getCurrentUser(): User {
-    val firebaseUser =
-        auth.currentUser
-            ?: // If not signed in, return a guest user
-            return User(
-                uid = "guest",
-                name = "Guest",
-                biography = "",
-                email = "Not signed in",
-                profilePicUrl = "",
-                preferences = emptyList(),
-                friends = emptyList(),
-                stats = UserStats(),
-                pinnedTripsUids = emptyList(),
-                pinnedPicturesUids = emptyList(),
-                favoriteTripsUids = emptyList())
-
+    val firebaseUser = auth.currentUser ?: return createGuestUser()
     val uid = firebaseUser.uid
+
     return try {
-      val doc = db.collection("users").document(uid)[Source.SERVER].await()
-      if (doc.exists()) createUserFromDoc(doc, uid) else createAndStoreNewUser(firebaseUser, uid)
-    } catch (e: Exception) {
+      withTimeout(3000L) {
+        val doc = db.collection("users").document(uid)[Source.SERVER].await()
+        if (doc.exists()) {
+          createUserFromDoc(doc, uid)
+        } else {
+          createAndStoreNewUser(firebaseUser, uid)
+        }
+      }
+    } catch (_: Exception) {
+      // If timeout hits (TimeoutCancellationException) or network fails
       try {
+        // Fallback to CACHE immediately
         val cachedDoc = db.collection("users").document(uid)[Source.CACHE].await()
         if (cachedDoc.exists()) {
           createUserFromDoc(cachedDoc, uid)
         } else {
-          createAndStoreNewUser(firebaseUser, uid)
+          Log.w("UserRepository", "Offline: No cache found.")
+          createOfflineFallback(firebaseUser, uid)
         }
-      } catch (_: Exception) {
-        createAndStoreNewUser(firebaseUser, uid)
+      } catch (e: Exception) {
+        // Double fail (No Server, No Cache) -> Return Offline Placeholder
+        createOfflineFallback(firebaseUser, uid)
       }
     }
+  }
+
+  // Helper for the guest user to keep the main function clean
+  private fun createGuestUser(): User {
+    return User(
+        uid = "guest",
+        name = "Guest",
+        biography = "",
+        email = "Not signed in",
+        profilePicUrl = "",
+        preferences = emptyList(),
+        friends = emptyList(),
+        stats = UserStats(),
+        pinnedTripsUids = emptyList(),
+        pinnedPicturesUids = emptyList(),
+        favoriteTripsUids = emptyList())
+  }
+
+  // Helper to create a safe fallback user so the app doesn't crash
+  private fun createOfflineFallback(firebaseUser: FirebaseUser, uid: String): User {
+    return User(
+        uid = uid,
+        name = firebaseUser.displayName ?: "Offline User",
+        biography = "Offline mode - data unavailable",
+        email = firebaseUser.email ?: "",
+        profilePicUrl = firebaseUser.photoUrl?.toString() ?: "",
+        preferences = emptyList(),
+        friends = emptyList(),
+        stats = UserStats(),
+        pinnedTripsUids = emptyList(),
+        pinnedPicturesUids = emptyList(),
+        favoriteTripsUids = emptyList())
   }
 
   /**
@@ -73,7 +106,7 @@ class UserRepositoryFirebase(
       } else {
         null
       }
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       try {
         val doc = db.collection("users").document(uid)[Source.CACHE].await()
         if (doc.exists()) {
@@ -93,29 +126,43 @@ class UserRepositoryFirebase(
    * @param query The search query to match against user names and emails.
    * @return A list of User objects that match the query.
    */
-  override suspend fun getUserByNameOrEmail(query: String): List<User> {
-    if (query.isBlank()) return emptyList()
+  override suspend fun getUserByNameOrEmail(query: String): List<User> = coroutineScope {
+    if (query.isBlank()) return@coroutineScope emptyList()
 
     val q = query.trim()
+    val qLower = q.lowercase()
+    val qCapitalized = qLower.replaceFirstChar { it.uppercase() }
+    val separator = "\uf8ff"
 
-    return try {
+    try {
       val usersRef = db.collection("users")
 
-      // 1. Query by name
-      val nameQuery = usersRef.orderBy("name").startAt(q).endAt(q + "\uf8ff").get().await()
+      // 1. Query by Name (Lowercase)
+      val nameLowerDeferred = async {
+        usersRef.orderBy("name").startAt(qLower).endAt(qLower + separator).get().await()
+      }
 
-      // 2. Query by email
-      val emailQuery = usersRef.orderBy("email").startAt(q).endAt(q + "\uf8ff").get().await()
+      // 2. Query by Name (Capitalized)
+      val nameCapDeferred = async {
+        usersRef.orderBy("name").startAt(qCapitalized).endAt(qCapitalized + separator).get().await()
+      }
 
-      // Merge two lists into a set to eliminate duplicates
-      val docs = (nameQuery.documents + emailQuery.documents).distinctBy { it.id }
+      // 3. Query by Email (Original input)
+      val emailDeferred = async {
+        usersRef.orderBy("email").startAt(q).endAt(q + separator).get().await()
+      }
 
-      docs.mapNotNull { doc -> createUserFromDoc(doc, doc.id) }
-    } catch (e: Exception) {
+      // Wait for all 3 to finish
+      val snapshots = awaitAll(nameLowerDeferred, nameCapDeferred, emailDeferred)
+
+      // Merge results and remove duplicates (by ID)
+      val uniqueDocs = snapshots.flatMap { it.documents }.distinctBy { it.id }
+
+      uniqueDocs.mapNotNull { doc -> createUserFromDoc(doc, doc.id) }
+    } catch (_: Exception) {
       emptyList()
     }
   }
-
   /**
    * Function to update the user's preferences in Firestore.
    *
@@ -284,20 +331,19 @@ class UserRepositoryFirebase(
     val fromExisting = fromIdx.takeIf { it >= 0 }?.let { fromFriends[it] }
     val toExisting = toIdx.takeIf { it >= 0 }?.let { toFriends[it] }
 
-    // If there is already a "mutual pending" relationship, upgrade to ACCEPTED
-    val isMutualPending =
+    val isAcceptingRequest =
         (fromExisting?.status == FriendStatus.PENDING_INCOMING &&
-            toExisting?.status == FriendStatus.PENDING_OUTGOING) ||
-            (fromExisting?.status == FriendStatus.PENDING_OUTGOING &&
-                toExisting?.status == FriendStatus.PENDING_INCOMING)
-    if (isMutualPending) {
+            toExisting?.status == FriendStatus.PENDING_OUTGOING)
+
+    if (isAcceptingRequest) {
       fromFriends[fromIdx] = fromFriends[fromIdx].copy(status = FriendStatus.ACCEPTED)
-
       toFriends[toIdx] = toFriends[toIdx].copy(status = FriendStatus.ACCEPTED)
-
       return fromFriends to toFriends
     }
 
+    // If it's not a mutual acceptance, just ensure the standard pending states are set.
+    // Sender -> PENDING_OUTGOING
+    // Receiver -> PENDING_INCOMING
     ensurePendingEntry(
         friends = fromFriends, targetUid = toUid, newStatus = FriendStatus.PENDING_OUTGOING)
     ensurePendingEntry(
@@ -518,11 +564,6 @@ class UserRepositoryFirebase(
    */
   private fun parseStats(doc: DocumentSnapshot): UserStats {
     val statsMap = doc["stats"] as? Map<*, *> ?: return UserStats()
-
-    fun <T : Number> num(key: String, default: Double = 0.0): Double {
-      val value = statsMap[key] as? Number ?: return default
-      return value.toDouble()
-    }
 
     val totalTrips = (statsMap["totalTrips"] as? Number)?.toInt() ?: 0
     val totalTravelMinutes = (statsMap["totalTravelMinutes"] as? Number)?.toInt() ?: 0
