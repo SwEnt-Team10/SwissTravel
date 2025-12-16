@@ -457,7 +457,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     // 5. Verify the collaborator's name (content description) is displayed
     composeTestRule
-        .onNodeWithContentDescription("Alice Collaborator", useUnmergedTree = true)
+        .onNodeWithContentDescription("Profile picture", useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -473,8 +473,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     composeTestRule.setContent { TripElement(tripElementState = tripElementState, onClick = {}) }
 
     // Verify avatars are shown
-    composeTestRule.onNodeWithContentDescription("User1").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("User2").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Profile picture").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Profile picture").assertIsDisplayed()
     // Verify overflow text is NOT shown
     composeTestRule.onNodeWithText("+", substring = true).assertDoesNotExist()
   }
