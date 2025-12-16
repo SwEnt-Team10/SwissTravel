@@ -23,6 +23,7 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
+import com.github.swent.swisstravel.ui.activities.LikedActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
@@ -700,6 +701,13 @@ abstract class SwissTravelTest {
     onNodeWithTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN).assertIsDisplayed()
     onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON).assertIsDisplayed()
     onNodeWithTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON).assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkLikedActivitiesScreenIsDisplayed() {
+    onNodeWithTag(LikedActivitiesScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
+    onNodeWithTag(LikedActivitiesScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(LikedActivitiesScreenTestTags.UNLIKE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(LikedActivitiesScreenTestTags.SCHEDULE_BUTTON).assertIsDisplayed()
   }
 
   fun ComposeTestRule.selectPinnedTripsScreenIsDisplayed() {

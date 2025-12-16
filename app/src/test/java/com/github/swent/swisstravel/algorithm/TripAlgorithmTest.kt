@@ -10,21 +10,32 @@ import com.github.swent.swisstravel.model.trip.*
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
-import com.github.swent.swisstravel.ui.trips.TripElement
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import io.mockk.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
 import io.mockk.spyk
+import kotlin.collections.emptyList
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class TripAlgorithmTest {
@@ -49,6 +60,23 @@ class TripAlgorithmTest {
           scheduleParams = scheduleParams,
           progression = progression,
           rescheduleProgression = rescheduleProgression)
+
+  private val testDispatcher = StandardTestDispatcher()
+
+  @Before
+  fun setUp() {
+    Dispatchers.setMain(testDispatcher)
+
+    mockkObject(TripsRepositoryProvider)
+    val fakeRepo = mockk<TripsRepository>(relaxed = true)
+    every { TripsRepositoryProvider.repository } returns fakeRepo
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+    unmockkAll()
+  }
 
   @Test
   fun `computeTrip runs full pipeline`() = runTest {
@@ -269,6 +297,21 @@ class TripAlgorithmTest {
             arrivalDeparture = mockk(relaxed = true),
             destinations = emptyList(),
             preferences = emptyList())
+
+    // additional mocking for Firebase and UserRepositoryFirebase
+    mockkObject(TripsRepositoryProvider)
+    val fakeTripsRepo = mockk<TripsRepository>(relaxed = true)
+    every { TripsRepositoryProvider.repository } returns fakeTripsRepo
+
+    mockkStatic(FirebaseAuth::class)
+    mockkStatic(FirebaseFirestore::class)
+
+    every { FirebaseAuth.getInstance() } returns mockk(relaxed = true)
+    every { FirebaseFirestore.getInstance() } returns mockk(relaxed = true)
+
+    mockkConstructor(UserRepositoryFirebase::class)
+    coEvery { anyConstructed<UserRepositoryFirebase>().getUserByUid(any()) } returns
+        mockk(relaxed = true)
 
     // Act
     val algo =
