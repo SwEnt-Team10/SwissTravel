@@ -263,13 +263,13 @@ open class TripAlgorithm(
    * *********************************************************
    */
 
-    /**
-     * A list of pairs representing Swiss major cities and their corresponding coordinates.
-     * Each pair contains a [Location] object representing the city and a radius in km from the center.
-     *
-     * This list is parsed from the application resources (R.array.swiss_major_cities).
-     */
-    private val swissMajorCities: List<CityConfig> = parseCityConfigs(context)
+  /**
+   * A list of pairs representing Swiss major cities and their corresponding coordinates. Each pair
+   * contains a [Location] object representing the city and a radius in km from the center.
+   *
+   * This list is parsed from the application resources (R.array.swiss_major_cities).
+   */
+  private val swissMajorCities: List<CityConfig> = parseCityConfigs(context)
 
   private val allBasicPreferences =
       PreferenceCategories.environmentPreferences + PreferenceCategories.activityTypePreferences
@@ -1474,36 +1474,37 @@ open class TripAlgorithm(
    * ****
    */
 
-    /**
-     * Parses the "Swiss Major Cities" from the application resources.
-     *
-     * The resource array is expected to contain strings in the format "Name;Latitude;Longitude;Radius;MaxDays".
-     *
-     * @param context The Android context used to retrieve resources.
-     * @return A list of [CityConfig] objects parsed from the resource array.
-     */
-    private fun parseCityConfigs(context: Context): List<CityConfig> {
-        val cityArray = context.resources.getStringArray(R.array.swiss_major_cities)
-        return cityArray.mapNotNull { entry ->
-            val parts = entry.split(";")
-            if (parts.size >= 5) {
-                try {
-                    val name = parts[0].trim()
-                    val lat = parts[1].trim().toDouble()
-                    val lon = parts[2].trim().toDouble()
-                    val radius = parts[3].trim().toInt()
-                    val maxDays = parts[4].trim().toDouble()
-                    CityConfig(Location(Coordinate(lat, lon), name), radius, maxDays)
-                } catch (e: Exception) {
-                    Log.e("TripAlgorithm", "Failed to parse City Config location: $entry", e)
-                    null
-                }
-            } else {
-                Log.w("TripAlgorithm", "Invalid City Config entry format: $entry")
-                null
-            }
+  /**
+   * Parses the "Swiss Major Cities" from the application resources.
+   *
+   * The resource array is expected to contain strings in the format
+   * "Name;Latitude;Longitude;Radius;MaxDays".
+   *
+   * @param context The Android context used to retrieve resources.
+   * @return A list of [CityConfig] objects parsed from the resource array.
+   */
+  private fun parseCityConfigs(context: Context): List<CityConfig> {
+    val cityArray = context.resources.getStringArray(R.array.swiss_major_cities)
+    return cityArray.mapNotNull { entry ->
+      val parts = entry.split(";")
+      if (parts.size >= 5) {
+        try {
+          val name = parts[0].trim()
+          val lat = parts[1].trim().toDouble()
+          val lon = parts[2].trim().toDouble()
+          val radius = parts[3].trim().toInt()
+          val maxDays = parts[4].trim().toDouble()
+          CityConfig(Location(Coordinate(lat, lon), name), radius, maxDays)
+        } catch (e: Exception) {
+          Log.e("TripAlgorithm", "Failed to parse City Config location: $entry", e)
+          null
         }
+      } else {
+        Log.w("TripAlgorithm", "Invalid City Config entry format: $entry")
+        null
+      }
     }
+  }
 
   /**
    * Extension function to generate a random double in a closed range [start, endInclusive].
