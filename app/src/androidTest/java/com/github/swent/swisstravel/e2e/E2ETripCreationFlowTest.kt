@@ -25,6 +25,7 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.DeleteDialogTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
@@ -36,7 +37,6 @@ import com.github.swent.swisstravel.ui.tripcreation.TripPreferencesTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripSummaryTestTags
 import com.github.swent.swisstravel.ui.tripcreation.TripTravelersTestTags
 import com.github.swent.swisstravel.ui.trips.MyTripsScreenTestTags
-import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.github.swent.swisstravel.utils.E2E_WAIT_TIMEOUT
 import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator

@@ -1,4 +1,4 @@
-package com.github.swent.swisstravel.ui.trips
+package com.github.swent.swisstravel.ui.composable
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -32,6 +32,7 @@ import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
+import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
 /**
  * Contains helper methods for generating unique test tags used in [TripElement].

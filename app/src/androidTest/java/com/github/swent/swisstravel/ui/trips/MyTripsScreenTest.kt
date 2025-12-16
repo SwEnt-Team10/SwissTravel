@@ -11,6 +11,9 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.DeleteDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
+import com.github.swent.swisstravel.ui.composable.TripElement
+import com.github.swent.swisstravel.ui.composable.TripElementState
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.FakeUserRepository
