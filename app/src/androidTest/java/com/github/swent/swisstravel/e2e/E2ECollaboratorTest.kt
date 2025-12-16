@@ -12,6 +12,7 @@ import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -147,13 +148,12 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
     runBlocking {
       // Create Trip for Alice
-      // Fix: Use the actual authenticated UID to satisfy Firestore Rules (request.auth.uid ==
-      // ownerId)
+
       val currentAuthUid = FirebaseEmulator.auth.currentUser!!.uid
 
-      // Fix: Ensure the trip is UPCOMING so it appears in My Trips (endDate > now)
-      val now = com.google.firebase.Timestamp.now()
-      val end = com.google.firebase.Timestamp(now.seconds + 3600, 0)
+      // Ensure the trip is UPCOMING so it appears in My Trips (endDate > now)
+      val now = Timestamp.now()
+      val end = Timestamp(now.seconds + 3600, 0)
 
       val trip =
           createTestTrip(
@@ -182,7 +182,6 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.SHARE_BUTTON).performClick()
 
     // In the dialog, Bob should be visible as a friend.
-    // Fix: Use specific test tag for the friend element "friend{uid}"
     val bobFriendTag = "friend$bobUid"
     composeTestRule.waitForTag(bobFriendTag)
     // Add Bob
@@ -192,7 +191,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithText("OK").performClick()
 
     // Wait for Firestore update (Adding collaborator is async)
-    Thread.sleep(2000)
+    composeTestRule.waitForTag(DailyViewScreenTestTags.BACK_BUTTON)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).isDisplayed()
     composeTestRule.onNodeWithTag(testTag = NavigationTestTags.PROFILE_TAB).performClick()
@@ -218,7 +217,6 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     // 4. Verify View Access
     // Bob is a collaborator, so he should see the Trip details but NOT the Edit button (Owner only)
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).assertIsNotDisplayed()
 
     // 5. Bob logs out
@@ -269,7 +267,6 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag("tripalice_trip_1").performClick()
 
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
 
     // Bob goes back off and logs out
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
