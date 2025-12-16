@@ -15,6 +15,7 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
+import com.github.swent.swisstravel.ui.composable.PhotoGridTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreen
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.AddPhotosScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.photos.PhotosViewModel
@@ -83,11 +84,13 @@ class AddPhotosScreenTest : SwissTravelTest() {
       AddPhotosScreen(tripId = fakeTrip.uid, photosViewModel = fakeModel)
     }
     composeTestRule.addPhotosScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID).isDisplayed()
+    composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTO_GRID).isDisplayed()
 
     // We go through the map
     for (i in 0 until fakeTrip.uriLocation.size) {
-      composeTestRule.onNodeWithTag(AddPhotosScreenTestTags.getTestTagForUri(i)).isDisplayed()
+      composeTestRule
+          .onNodeWithTag(PhotoGridTestTags.getTestTagForPhoto(i), useUnmergedTree = true)
+          .isDisplayed()
     }
   }
 
@@ -127,7 +130,7 @@ class AddPhotosScreenTest : SwissTravelTest() {
 
     // Verify that the images has been added
     composeTestRule
-        .onNodeWithTag(AddPhotosScreenTestTags.VERTICAL_GRID)
+        .onNodeWithTag(AddPhotosScreenTestTags.ADD_PHOTO_GRID)
         .onChildren()
         .assertCountEquals(2)
   }
