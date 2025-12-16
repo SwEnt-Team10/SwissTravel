@@ -2,7 +2,6 @@ package com.github.swent.swisstravel.e2e
 
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -63,7 +62,7 @@ import org.junit.Test
  * 6) Navigate to My Trips which should be empty
  * 7) Click on the create trip button (bottom right)
  * 8) Fill the trip creation form
- * 9) Submit 9a) Return to my trips manually and add a trip since the trip is totally random
+ * 9) Submit
  * 10) Check that the trip is on My Trips
  * 11) Long click on the trip
  * 12) Favorite the trip
@@ -334,22 +333,18 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     composeTestRule
         .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
         .performScrollToNode(hasTestTag(TripSummaryTestTags.CREATE_TRIP_BUTTON))
-    // Assert that the button is enabled
-    composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).assertIsEnabled()
-
-    /* 9a) */
-    runBlocking { repository.addTrip(tripE2E) }
-    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
 
     /* 10) */
     // Back to my trips
-    composeTestRule.waitForTag(MyTripsScreenTestTags.CREATE_TRIP_BUTTON)
-
+    composeTestRule.waitUntil(
+        E2E_WAIT_TIMEOUT * 3) { // Algorithm can take a long time to generate the trip
+          composeTestRule
+              .onAllNodesWithTag(
+                  MyTripsScreenTestTags.CREATE_TRIP_BUTTON) // random element on my trips screen
+              .fetchSemanticsNodes()
+              .isNotEmpty()
+        }
     composeTestRule.checkMyTripsScreenIsDisplayed()
     val trips = runBlocking { repository.getAllTrips() }
     assertEquals(1, trips.size)
@@ -477,8 +472,6 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     val emptyTrips = runBlocking { repository.getAllTrips() }
     assertEquals(0, emptyTrips.size)
     composeTestRule.waitForIdle()
-    // Make sure that the trip had time to be deleted
-    Thread.sleep(E2E_WAIT_TIMEOUT / 2)
     composeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips()
   }
 

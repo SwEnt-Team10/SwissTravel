@@ -146,6 +146,16 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
     composeTestRule.waitForIdle()
 
+    val bobUid = FirebaseEmulator.auth.currentUser!!.uid
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      runBlocking {
+        // Fetch Alice's fresh data to see if she received the request
+        val updatedAlice = userRepo.getUserByUid(alice.uid)
+        // Check if Bob's UID exists in Alice's friend list (status will be PENDING)
+        updatedAlice?.friends?.any { it.uid == bobUid } == true
+      }
+    }
+
     // --- STEP 6: Bob logs out. ---
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForTag(ProfileScreenTestTags.SETTINGS_BUTTON)
