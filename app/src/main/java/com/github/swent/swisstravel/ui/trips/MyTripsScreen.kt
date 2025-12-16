@@ -53,7 +53,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
+import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
@@ -144,13 +144,15 @@ fun MyTripsScreen(
   var showDeleteConfirmation by remember { mutableStateOf(false) }
 
   if (showDeleteConfirmation) {
-    DeleteTripsDialog(
-        count = selectedTripCount,
+    DeleteDialog(
         onConfirm = {
           myTripsViewModel.deleteSelectedTrips()
           showDeleteConfirmation = false
         },
-        onCancel = { showDeleteConfirmation = false })
+        onCancel = { showDeleteConfirmation = false },
+        title =
+            pluralStringResource(
+                R.plurals.confirm_delete_title_trips, selectedTripCount, selectedTripCount))
   }
 
   Scaffold(
