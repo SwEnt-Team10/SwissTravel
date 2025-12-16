@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.tripcreation
 
+import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -132,6 +133,8 @@ fun FirstDestinationScreen(
                                         Location(coordinate = Coordinate(0.0, 0.0), name = "")))
                           },
                           getSuggestionToggledSelectedSize = {
+                            // Method to get the number of suggestion that are toggled without
+                            // passing the viewmodel
                             viewModel.getSuggestionToggledSelectedSize()
                           })
                     }
@@ -327,17 +330,12 @@ fun LazyListScope.SuggestionList(
                   if (isSelected) {
                     onSuggestionDeselected(location)
                   } else {
-                    // Check limit before selecting
-                    val currentCount = manualCount + getSuggestionToggledSelectedSize()
-                    if (currentCount < MAX_DESTINATIONS) {
-                      onSuggestionSelected(location)
-                    } else {
-                      Toast.makeText(
-                              context,
-                              context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
-                              Toast.LENGTH_SHORT)
-                          .show()
-                    }
+                    suggestionSelect(
+                        location,
+                        manualCount,
+                        getSuggestionToggledSelectedSize,
+                        onSuggestionSelected,
+                        context)
                   }
                 }
                 .padding(dimensionResource(R.dimen.small_padding))
@@ -355,17 +353,12 @@ fun LazyListScope.SuggestionList(
                 // 'checked' is the NEW state.
                 // true = user wants to check it. false = user wants to uncheck it.
                 if (checked) {
-                  val currentCount = manualCount + getSuggestionToggledSelectedSize()
-
-                  if (currentCount < MAX_DESTINATIONS) {
-                    onSuggestionSelected(location)
-                  } else {
-                    Toast.makeText(
-                            context,
-                            context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
-                            Toast.LENGTH_SHORT)
-                        .show()
-                  }
+                  suggestionSelect(
+                      location,
+                      manualCount,
+                      getSuggestionToggledSelectedSize,
+                      onSuggestionSelected,
+                      context)
                 } else {
                   // User is unchecking (removing), always allow
                   onSuggestionDeselected(location)
@@ -373,6 +366,26 @@ fun LazyListScope.SuggestionList(
               })
         }
     HorizontalDivider()
+  }
+}
+
+fun suggestionSelect(
+    location: Location,
+    manualCount: Int,
+    getSuggestionToggledSelectedSize: () -> Int,
+    onSuggestionSelected: (Location) -> Unit,
+    context: Context
+) {
+  // Check limit before selecting
+  val currentCount = manualCount + getSuggestionToggledSelectedSize()
+  if (currentCount < MAX_DESTINATIONS) {
+    onSuggestionSelected(location)
+  } else {
+    Toast.makeText(
+            context,
+            context.getString(R.string.max_destinations_toast, MAX_DESTINATIONS),
+            Toast.LENGTH_SHORT)
+        .show()
   }
 }
 

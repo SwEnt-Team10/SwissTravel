@@ -444,6 +444,7 @@ open class TripSettingsViewModel(
     }
   }
 
+  /** Getter for the size of the number of checked suggestions */
   fun getSuggestionToggledSelectedSize(): Int {
     return selectedSuggestions.value.size
   }
