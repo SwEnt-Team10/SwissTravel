@@ -26,7 +26,6 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        testInstrumentationRunnerArguments["clearPackageData"] = "true"
 
         val props = Properties()
         val lp = rootProject.file("local.properties")
@@ -94,7 +93,6 @@ android {
     }
 
     testOptions {
-        execution = "ANDROIDX_TEST_ORCHESTRATOR"
         unitTests {
             isIncludeAndroidResources = true
             isReturnDefaultValues = true
@@ -262,8 +260,7 @@ dependencies {
     androidTestImplementation(libs.kaspresso.compose.support)
     testImplementation(kotlin("test"))
     androidTestImplementation(kotlin("test"))
-    androidTestUtil(libs.androidx.test.orchestrator)}
-
+}
 tasks.withType<Test> {
     // Configure Jacoco for each tests
     configure<JacocoTaskExtension> {

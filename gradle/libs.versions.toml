@@ -169,7 +169,6 @@ mockk-agent = { module = "io.mockk:mockk-agent", version.ref = "mockkAgent" }
 mockk-android = { module = "io.mockk:mockk-android", version.ref = "mockkAndroid" }
 kaspresso-compose = { group = "com.kaspersky.android-components", name = "kaspresso-compose-support", version.ref = "kaspresso" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
-androidx-test-orchestrator = { module = "androidx.test:orchestrator", version.ref = "orchestrator" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
