@@ -29,6 +29,7 @@ import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.ErrorScreenTestTags
+import com.github.swent.swisstravel.ui.composable.PhotoGridTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
@@ -38,11 +39,7 @@ import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileSettingsScreenTestTags
-import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.ADD_PICTURE_BUTTON
-import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.LOADING_INDICATOR
-import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.MAIN_SCREEN
-import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.SAVE_BUTTON
-import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.VERTICAL_GRID
+import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags
 import com.github.swent.swisstravel.ui.profile.selectpinnedtrips.SelectPinnedTripsScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoScreenTestTags
@@ -235,16 +232,16 @@ abstract class SwissTravelTest {
 
   // Can be used to check if there is no trip displayed as well
   fun ComposeTestRule.checkMyTripsScreenIsDisplayedWithNoTrips() {
-    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
+    waitForTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)
     onNodeWithTag(SortedTripListTestTags.TITLE)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    waitForTag(SortMenuTestTags.SORT_DROPDOWN_MENU)
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
-    onNodeWithTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON).assertIsNotDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).assertIsDisplayed()
+    waitForNoTag(MyTripsScreenTestTags.EDIT_CURRENT_TRIP_BUTTON)
+    waitForTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG)
   }
 
   fun ComposeTestRule.checkMyTripsInSelectionMode() {
@@ -718,14 +715,29 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.selectPinnedPicturesScreenIsDisplayed() {
     // Verify Screen Content
-    onNodeWithTag(MAIN_SCREEN).assertIsDisplayed()
-    onNodeWithTag(VERTICAL_GRID).assertIsDisplayed()
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.MAIN_SCREEN).assertIsDisplayed()
 
-    // Verify buttons
-    onNodeWithTag(ADD_PICTURE_BUTTON).assertIsDisplayed()
-    onNodeWithTag(SAVE_BUTTON).assertIsDisplayed()
+    // Wait until the first image appears
+    waitUntil(UI_WAIT_TIMEOUT) {
+      onAllNodesWithTag(PhotoGridTestTags.getTestTagForPhoto(0)).fetchSemanticsNodes().isNotEmpty()
+    }
 
-    onNodeWithTag(LOADING_INDICATOR).assertDoesNotExist()
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.PHOTO_GRID).assertIsDisplayed()
+
+    // Check for the presence of the two seeded images using PhotoGrid tags
+    onNodeWithTag(PhotoGridTestTags.getTestTagForPhoto(0)).assertIsDisplayed()
+    onNodeWithTag(PhotoGridTestTags.getTestTagForPhoto(1)).assertIsDisplayed()
+
+    // Verify Default Mode Buttons
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.ADD_PICTURE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.SAVE_BUTTON).assertIsDisplayed()
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
+
+    // Verify Edit Mode Buttons are not displayed
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.REMOVE_BUTTON).assertDoesNotExist()
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.CANCEL_BUTTON).assertDoesNotExist()
+
+    onNodeWithTag(SelectPinnedPicturesScreenTestTags.LOADING_INDICATOR).assertDoesNotExist()
   }
 
   fun ComposeTestRule.clickOnBackButton() {
@@ -787,6 +799,10 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.waitForTag(tag: String, timeout: Long = E2E_WAIT_TIMEOUT) {
     waitUntil(timeout) { onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
+  }
+
+  fun ComposeTestRule.waitForNoTag(tag: String, timeout: Long = E2E_WAIT_TIMEOUT) {
+    waitUntil(timeout) { onAllNodesWithTag(tag).fetchSemanticsNodes().isEmpty() }
   }
 
   fun ComposeTestRule.waitForText(text: String, timeout: Long = E2E_WAIT_TIMEOUT) {
