@@ -160,7 +160,11 @@ jobs:
           force-avd-creation: true
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none -skin 1080x2400
           disable-animations: true
-          script: ./gradlew connectedCheck --parallel --build-cache
+          # The script to unlock the screen before running tests
+          script: |
+            adb shell input keyevent 82
+            adb shell wm dismiss-keyguard
+            ./gradlew connectedCheck --parallel --build-cache
 
       # Upload the test results to the artifacts
       - name: Upload Test Results
