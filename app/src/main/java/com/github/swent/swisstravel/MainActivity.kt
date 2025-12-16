@@ -369,7 +369,8 @@ private fun NavGraphBuilder.authNavGraph(
     composable(Screen.Auth.route) {
       SignInScreen(
           credentialManager = credentialManager,
-          onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
+          onSignedIn = { navigationActions.navigateTo(Screen.Profile) },
+          onPrevious = { navigationActions.navigateTo(Screen.Landing) })
     }
     composable(Screen.SignUp.route) {
       SignUpScreen(
