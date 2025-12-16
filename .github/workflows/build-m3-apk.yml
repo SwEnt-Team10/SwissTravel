@@ -53,16 +53,16 @@ jobs:
             echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
           fi
           
+          if [ -n "$GEOAPIFY_API_KEY" ]; then
+            echo "GEOAPIFY_API_KEY=$GEOAPIFY_API_KEY" >> ./local.properties
+          else
+             echo "::warning::GEOAPIFY_API_KEY secret is not set."
+          fi
+          
           if [ -n "$MAP_BOX_SECRET" ]; then
             echo "$MAP_BOX_SECRET" | base64 --decode > ./app/src/main/res/values/developer-config-mapbox.xml
           else
             echo "::warning::MAP_BOX_SECRET secret is not set. developer-config-mapbox.xml will not be created."
-          fi
-          
-          if [ -n "$OPEN_TRANSPORT_DATA_TOKEN" ]; then
-            echo "$OPEN_TRANSPORT_DATA_TOKEN" | base64 --decode > ./app/src/main/res/values/developer-config-open-transport.xml
-          else
-            echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set. developer-config-open-transport.xml will not be created."
           fi
 
       # Build the release APK
