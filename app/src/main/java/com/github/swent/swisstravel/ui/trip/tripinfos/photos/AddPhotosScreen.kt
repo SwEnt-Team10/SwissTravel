@@ -8,11 +8,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -28,13 +25,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.composable.ErrorScreen
+import com.github.swent.swisstravel.ui.composable.PhotoGrid
 
 /** Test tags for the add photos screen */
 object AddPhotosScreenTestTags {
@@ -43,14 +39,8 @@ object AddPhotosScreenTestTags {
   const val TOP_APP_BAR_TITLE = "topAppBarTitle"
   const val BOTTOM_BAR = "bottomBar"
   const val ADD_PHOTOS_BUTTON = "addPhotosButton"
-  const val VERTICAL_GRID = "verticalGrid"
+  const val ADD_PHOTO_GRID = "addPhotoGrid"
   const val EDIT_BUTTON = "editButton"
-  /**
-   * This function return a test tag for an indexed uri.
-   *
-   * @Param index the index of the uri
-   */
-  fun getTestTagForUri(index: Int): String = "UriIndex$index"
 }
 
 /**
@@ -141,20 +131,12 @@ fun AddPhotosScreen(
                       }
                 }
           }) { pd ->
-            // Display a grid with the images
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
-                modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.VERTICAL_GRID)) {
-                  // AI helped for the itemsIndexed
-                  val displayList = uiState.uriLocation.keys.toList()
-                  itemsIndexed(displayList) { index, uri ->
-                    AsyncImage(
-                        modifier =
-                            Modifier.testTag(AddPhotosScreenTestTags.getTestTagForUri(index)),
-                        model = uri,
-                        contentDescription = null)
-                  }
-                }
+            PhotoGrid(
+                items = uiState.uriLocation.keys.toList(),
+                modifier = Modifier.padding(pd).testTag(AddPhotosScreenTestTags.ADD_PHOTO_GRID),
+                onClick = null, // No click action in view mode
+                modelMapper = { it } // already a Uri
+                )
           }
     }
   }
@@ -170,7 +152,7 @@ private fun EditButton(onEdit: () -> Unit = {}) {
   IconButton(
       modifier = Modifier.testTag(AddPhotosScreenTestTags.EDIT_BUTTON), onClick = { onEdit() }) {
         Icon(
-            imageVector = Icons.Filled.Edit,
+            imageVector = Icons.Outlined.Edit,
             contentDescription = stringResource(R.string.edit_button_description),
             tint = MaterialTheme.colorScheme.onBackground)
       }

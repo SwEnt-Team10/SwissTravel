@@ -152,10 +152,14 @@
     <string name="confirm">Confirm</string>
     <string name="reroll">Reroll Trip</string>
 
-    <!-- Delete Trip Dialog -->
-    <plurals name="confirm_delete_title">
+    <!-- Delete Dialog -->
+    <plurals name="confirm_delete_title_trips">
         <item quantity="one" formatted="true">Are you sure you want to delete %d Trip?</item>
         <item quantity="other" formatted="true">Are you sure you want to delete %d Trips?</item>
+    </plurals>
+    <plurals name="confirm_delete_title_images">
+        <item quantity="one" formatted="true">Are you sure you want to delete %d image?</item>
+        <item quantity="other" formatted="true">Are you sure you want to delete %d images?</item>
     </plurals>
     <string name="confirm_delete_message">This action is irreversible!</string>
     <string name="cancel">Cancel</string>

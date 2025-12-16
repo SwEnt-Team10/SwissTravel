@@ -33,9 +33,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/**
- * Test class for Select Pinned Pictures View Model. Some of these were made with the help of AI.
- */
+/** Test class for Select Pinned Pictures View Model. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SelectPinnedPicturesViewModelTest {
 
@@ -54,7 +52,7 @@ class SelectPinnedPicturesViewModelTest {
     MockKAnnotations.init(this)
     Dispatchers.setMain(testDispatcher)
 
-    // Mock the singleton object ImageHelper to avoid Android dependencies (Base64/BitmapFactory)
+    // Mock the singleton object ImageHelper
     mockkObject(ImageHelper)
 
     // Default User setup
@@ -95,10 +93,38 @@ class SelectPinnedPicturesViewModelTest {
       }
 
   @Test
-  fun initHandlesErrorsGracefullyDuringLoading() =
+  fun initSkipsFailedImages() =
+      runTest(testDispatcher) {
+        // Given: User has 2 images, one fails to load
+        val uidSuccess = "success-img"
+        val uidFail = "fail-img"
+        val imageObj = Image(uid = uidSuccess, ownerId = "testUser", base64 = "base64")
+
+        every { mockUser.pinnedPicturesUids } returns listOf(uidSuccess, uidFail)
+
+        // Mock success
+        coEvery { mockImageRepository.getImage(uidSuccess) } returns imageObj
+        coEvery { ImageHelper.base64ToBitmap("base64") } returns mockBitmap
+
+        // Mock failure
+        coEvery { mockImageRepository.getImage(uidFail) } throws Exception("Download failed")
+
+        // When
+        viewModel = SelectPinnedPicturesViewModel(mockUserRepository, mockImageRepository)
+        advanceUntilIdle()
+
+        // Then
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertEquals("Should contain only the successfully loaded image", 1, state.images.size)
+        assertEquals(uidSuccess, state.images[0].uid)
+      }
+
+  @Test
+  fun initHandlesErrorsGracefullyDuringUserFetch() =
       runTest(testDispatcher) {
         // Given
-        every { mockUser.pinnedPicturesUids } throws Exception("Network error")
+        coEvery { mockUserRepository.getCurrentUser() } throws Exception("Network error")
 
         // When
         viewModel = SelectPinnedPicturesViewModel(mockUserRepository, mockImageRepository)
@@ -135,12 +161,10 @@ class SelectPinnedPicturesViewModelTest {
       }
 
   @Test
-  fun removeImageRemovesImageFromStateAndMarksExistingUidForDeletion() =
+  fun toggleSelectionUpdatesSelectedIndices() =
       runTest(testDispatcher) {
         // Given
         val existingUid = "existing-uid"
-        val existingImage = PinnedImage(uid = existingUid, bitmap = mockBitmap)
-        // We simulate a state where an image is already loaded
         every { mockUser.pinnedPicturesUids } returns listOf(existingUid)
         coEvery { mockImageRepository.getImage(existingUid) } returns
             Image(existingUid, "user", "b64")
@@ -149,31 +173,57 @@ class SelectPinnedPicturesViewModelTest {
         viewModel = SelectPinnedPicturesViewModel(mockUserRepository, mockImageRepository)
         advanceUntilIdle()
 
-        // Pre-check
-        assertEquals(1, viewModel.uiState.value.images.size)
-
-        // When
-        viewModel.removeImage(0)
+        // When: Select index 0
+        viewModel.toggleSelection(0)
 
         // Then
-        assertTrue(viewModel.uiState.value.images.isEmpty())
+        assertTrue(viewModel.uiState.value.selectedIndices.contains(0))
+
+        // When: Toggle index 0 again
+        viewModel.toggleSelection(0)
+
+        // Then
+        assertFalse(viewModel.uiState.value.selectedIndices.contains(0))
       }
 
   @Test
-  fun savePicturesUploadsNewImagesAndDeletesRemovedOnes() =
+  fun removeSelectedImagesRemovesFromStateAndCallsDeleteOnRepo() =
       runTest(testDispatcher) {
         // Given
-        // 1. One existing image that we will remove
-        val imageToRemoveUid = "to-delete"
-        every { mockUser.pinnedPicturesUids } returns listOf(imageToRemoveUid)
-        coEvery { mockImageRepository.getImage(imageToRemoveUid) } returns
-            Image(imageToRemoveUid, "user", "oldB64")
-        coEvery { ImageHelper.base64ToBitmap("oldB64") } returns mockBitmap
+        val existingUid = "existing-uid"
+        every { mockUser.pinnedPicturesUids } returns listOf(existingUid)
+        coEvery { mockImageRepository.getImage(existingUid) } returns
+            Image(existingUid, "user", "b64")
+        coEvery { ImageHelper.base64ToBitmap("b64") } returns mockBitmap
+        coEvery { mockImageRepository.deleteImage(existingUid) } returns Unit
 
         viewModel = SelectPinnedPicturesViewModel(mockUserRepository, mockImageRepository)
         advanceUntilIdle()
 
-        // 2. Add a new image
+        // Select the image
+        viewModel.toggleSelection(0)
+
+        // When
+        viewModel.removeSelectedImages()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue("Images list should be empty", viewModel.uiState.value.images.isEmpty())
+        assertTrue(
+            "Selection list should be empty", viewModel.uiState.value.selectedIndices.isEmpty())
+
+        // Verify delete was called immediately
+        coVerify { mockImageRepository.deleteImage(existingUid) }
+      }
+
+  @Test
+  fun savePicturesUploadsNewImagesUpdatesProfile() =
+      runTest(testDispatcher) {
+        // Given
+        viewModel = SelectPinnedPicturesViewModel(mockUserRepository, mockImageRepository)
+        advanceUntilIdle()
+
+        // Add a new image
         val newBase64 = "newBase64"
         coEvery { ImageHelper.uriCompressedToBase64(mockContext, mockUri) } returns newBase64
         coEvery { ImageHelper.base64ToBitmap(newBase64) } returns mockBitmap
@@ -181,14 +231,9 @@ class SelectPinnedPicturesViewModelTest {
         viewModel.addNewImages(mockContext, listOf(mockUri))
         advanceUntilIdle()
 
-        // 3. Remove the old image
-        // State now has: [ExistingImage, NewImage]. Remove index 0.
-        viewModel.removeImage(0)
-
         // Setup save mocks
         val newImageUid = "new-image-uid"
         coEvery { mockImageRepository.addImage(newBase64) } returns newImageUid
-        coEvery { mockImageRepository.deleteImage(imageToRemoveUid) } returns Unit
         coEvery {
           mockUserRepository.updateUser(any(), any(), any(), any(), any(), any(), any())
         } returns Unit
@@ -203,17 +248,14 @@ class SelectPinnedPicturesViewModelTest {
         // 1. Verify new image uploaded
         coVerify { mockImageRepository.addImage(newBase64) }
 
-        // 2. Verify old image deleted
-        coVerify { mockImageRepository.deleteImage(imageToRemoveUid) }
-
-        // 3. Verify user profile updated with only the new UID
+        // 2. Verify user profile updated with the new UID
         val uidsSlot = slot<List<String>>()
         coVerify {
           mockUserRepository.updateUser(uid = "testUser", pinnedPicturesUids = capture(uidsSlot))
         }
         assertEquals(listOf(newImageUid), uidsSlot.captured)
 
-        // 4. Verify callback
+        // 3. Verify callback
         verify { onSuccess() }
       }
 
@@ -235,21 +277,5 @@ class SelectPinnedPicturesViewModelTest {
         // Then
         assertTrue(viewModel.uiState.value.errorMsg!!.contains("Save failed"))
         assertFalse(viewModel.uiState.value.isLoading)
-      }
-
-  @Test
-  fun clearErrorMsgResetsErrorMessage() =
-      runTest(testDispatcher) {
-        // Given
-        every { mockUser.pinnedPicturesUids } throws Exception("Fail load")
-        viewModel = SelectPinnedPicturesViewModel(mockUserRepository, mockImageRepository)
-        advanceUntilIdle()
-        assertTrue(viewModel.uiState.value.errorMsg != null)
-
-        // When
-        viewModel.clearErrorMsg()
-
-        // Then
-        assertNull(viewModel.uiState.value.errorMsg)
       }
 }
