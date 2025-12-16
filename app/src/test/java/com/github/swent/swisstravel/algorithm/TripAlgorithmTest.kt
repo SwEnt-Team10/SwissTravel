@@ -62,28 +62,29 @@ class TripAlgorithmTest {
 
   private val testDispatcher = StandardTestDispatcher()
 
-    @Before
-    fun setup() {
-        // 1. Mock Dependencies
-        selectActivities = mockk(relaxed = true)
-        routeOptimizer = mockk(relaxed = true)
-        context = mockk(relaxed = true)
-        resources = mockk(relaxed = true)
+  @Before
+  fun setup() {
+    // 1. Mock Dependencies
+    selectActivities = mockk(relaxed = true)
+    routeOptimizer = mockk(relaxed = true)
+    context = mockk(relaxed = true)
+    resources = mockk(relaxed = true)
 
-        Dispatchers.setMain(testDispatcher)
+    Dispatchers.setMain(testDispatcher)
 
-        mockkObject(TripsRepositoryProvider)
-        val fakeRepo = mockk<TripsRepository>(relaxed = true)
-        every { TripsRepositoryProvider.repository } returns fakeRepo
+    mockkObject(TripsRepositoryProvider)
+    val fakeRepo = mockk<TripsRepository>(relaxed = true)
+    every { TripsRepositoryProvider.repository } returns fakeRepo
 
-        // 2. Mock Context and Resources (Used in init/companion)
-        every { context.resources } returns resources
+    // 2. Mock Context and Resources (Used in init/companion)
+    every { context.resources } returns resources
 
-        // Mock the grand tour array resource
-        every { resources.getStringArray(R.array.grand_tour) } returns arrayOf("GrandTourLoc;46.0;8.0")
+    // Mock the grand tour array resource
+    every { resources.getStringArray(R.array.grand_tour) } returns arrayOf("GrandTourLoc;46.0;8.0")
 
-        // [FIX] Mock the swiss major cities array so the algorithm has data to work with
-        every { resources.getStringArray(R.array.swiss_major_cities) } returns arrayOf(
+    // [FIX] Mock the swiss major cities array so the algorithm has data to work with
+    every { resources.getStringArray(R.array.swiss_major_cities) } returns
+        arrayOf(
             "Zürich;47.3769;8.5417;15;2.0",
             "Genève;46.2044;6.1432;12;2.0",
             "Basel;47.5596;7.5886;10;2.0",
@@ -98,19 +99,18 @@ class TripAlgorithmTest {
             "St. Gallen;47.4239;9.3744;6;1.0",
             "Montreux;46.4310;6.9110;4;0.5",
             "Neuchâtel;46.9896;6.9293;5;1.0",
-            "Chur;46.8490;9.5300;5;1.0"
-        )
+            "Chur;46.8490;9.5300;5;1.0")
 
-        // Mock string resources
-        every { context.getString(any(), any()) } returns "Mocked String"
-        every { context.getString(any()) } returns "Mocked String"
+    // Mock string resources
+    every { context.getString(any(), any()) } returns "Mocked String"
+    every { context.getString(any()) } returns "Mocked String"
 
-        // 3. Mock Static scheduleTrip function
-        mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
+    // 3. Mock Static scheduleTrip function
+    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
 
-        // 4. Instantiate Algorithm
-        algorithm = TripAlgorithm(selectActivities, routeOptimizer, context)
-    }
+    // 4. Instantiate Algorithm
+    algorithm = TripAlgorithm(selectActivities, routeOptimizer, context)
+  }
 
   @After
   fun tearDown() {
