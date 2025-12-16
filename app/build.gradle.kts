@@ -42,6 +42,15 @@ android {
         // Geoapify
         val geoapifyKey = props.getProperty("GEOAPIFY_API_KEY") ?: ""
         buildConfigField("String", "GEOAPIFY_API_KEY", "\"$geoapifyKey\"")
+
+        signingConfigs {
+            create("release") {
+                storeFile = file("release-key.jks")
+                storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+                keyAlias = System.getenv("KEY_ALIAS") ?: ""
+                keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            }
+        }
     }
 
     buildTypes {
@@ -51,6 +60,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+
+            signingConfig = signingConfigs.getByName("release")
         }
 
         debug {
