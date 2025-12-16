@@ -18,6 +18,21 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * End-to-end tests for the collaboration flow in SwissTravel.
+ *
+ * This test verifies the complete lifecycle of trip sharing, including:
+ * - User setup (Alice and Bob)
+ * - Friend request process
+ * - Trip creation and sharing by Owner (Alice)
+ * - Collaborator (Bob) accessing the shared trip
+ * - Owner modifying the trip and Collaborator seeing updates
+ * - Owner removing Collaborator
+ * - Collaborator losing access
+ *
+ * Parts of this code was written with the help of AI, but was mostly done by hand and reviewed
+ * manually.
+ */
 class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
@@ -63,6 +78,20 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     FirebaseEmulator.clearFirestoreEmulator()
   }
 
+  /**
+   * Verifies the complete collaboration flow between two users (Alice and Bob).
+   *
+   * Phases:
+   * 0. Bob Setup: Log in, create account.
+   * 1. Alice Setup & Friend Request: Log in, create account, add Bob. 1.5. Bob Accepts: Bob accepts
+   *    friend request.
+   * 2. Alice Creates & Shares: Alice creates a trip, shares it with Bob.
+   * 3. Bob Accesses: Bob logs in, sees the trip in 'My Trips', can view details (but not edit).
+   * 4. Alice Modifies: Alice edits trip name.
+   * 5. Bob Verifies: Bob sees the updated name.
+   * 6. Alice Removes: Alice removes Bob as collaborator.
+   * 7. Bob Check: Bob no longer sees the trip.
+   */
   @Test
   fun complete_collaboration_flow() {
     // Use Real Repository connected to Emulator
