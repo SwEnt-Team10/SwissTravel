@@ -788,20 +788,6 @@ abstract class SwissTravelTest {
     // Wait for main app to load
     waitForMainUi(isE2E)
   }
-  /**
-   * Navigates to the Profile screen and asserts that the displayed name matches expectations. This
-   * acts as a synchronization point to ensure the Auth state is consistent before proceeding.
-   */
-  fun ComposeTestRule.verifyLoggedInUser(expectedName: String) {
-    onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-
-    waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
-    onNodeWithText(expectedName).assertIsDisplayed()
-
-    // Navigate back to Home (Current Trip) to reset state for next steps
-    onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-  }
 
   fun ComposeTestRule.logout() {
     // Check if settings button exists (Profile Screen), if so click it
