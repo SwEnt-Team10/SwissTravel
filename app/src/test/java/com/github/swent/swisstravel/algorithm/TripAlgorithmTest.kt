@@ -17,12 +17,9 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
-import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
 import io.mockk.*
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -30,20 +27,19 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.mockkStatic
-import io.mockk.spyk
-import kotlin.collections.emptyList
 import java.time.LocalDateTime
 import java.time.ZoneOffset
+import kotlin.collections.emptyList
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
-import kotlinx.coroutines.test.setMain
 import org.junit.Test
 
 class TripAlgorithmTest {
@@ -63,9 +59,10 @@ class TripAlgorithmTest {
     val ldt = LocalDateTime.of(2024, 1, day, hour, 0)
     return Timestamp(ldt.toEpochSecond(ZoneOffset.UTC), 0)
   }
-    private val testDispatcher = StandardTestDispatcher()
 
-    @Before
+  private val testDispatcher = StandardTestDispatcher()
+
+  @Before
   fun setup() {
     // 1. Mock Dependencies
     selectActivities = mockk(relaxed = true)
@@ -73,11 +70,11 @@ class TripAlgorithmTest {
     context = mockk(relaxed = true)
     resources = mockk(relaxed = true)
 
-      Dispatchers.setMain(testDispatcher)
+    Dispatchers.setMain(testDispatcher)
 
-      mockkObject(TripsRepositoryProvider)
-      val fakeRepo = mockk<TripsRepository>(relaxed = true)
-      every { TripsRepositoryProvider.repository } returns fakeRepo
+    mockkObject(TripsRepositoryProvider)
+    val fakeRepo = mockk<TripsRepository>(relaxed = true)
+    every { TripsRepositoryProvider.repository } returns fakeRepo
 
     // 2. Mock Context and Resources (Used in init/companion)
     every { context.resources } returns resources
@@ -97,8 +94,8 @@ class TripAlgorithmTest {
 
   @After
   fun tearDown() {
-      Dispatchers.resetMain()
-      unmockkAll()
+    Dispatchers.resetMain()
+    unmockkAll()
   }
 
   @Test
