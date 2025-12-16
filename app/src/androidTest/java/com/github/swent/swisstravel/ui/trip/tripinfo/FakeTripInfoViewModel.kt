@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.trip.tripinfo
 
+import android.content.Context
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.TripElement
@@ -8,10 +9,15 @@ import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoUIState
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
+import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
+import com.github.swent.swisstravel.ui.tripcreation.TripDate
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.mapbox.geojson.Point
 import java.time.ZoneId
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 
 class FakeTripInfoViewModel : TripInfoViewModelContract {
 
@@ -30,7 +36,7 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
 
   override val uiState: StateFlow<TripInfoUIState> = _ui
 
-  override fun loadTripInfo(uid: String?) {
+  override fun loadTripInfo(uid: String?, forceReload: Boolean) {
     _ui.value = _ui.value.copy(uid = uid ?: "")
   }
 
@@ -114,10 +120,90 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     recomputeSchedule()
   }
 
-  override fun likeActivity(activity: Activity) {
+  override fun likeActivities(activities: List<Activity>) {
     val current = _ui.value
-    val newLiked = current.likedActivities.toMutableList().apply { add(activity) }
+    val newLiked = current.likedActivities.toMutableList().apply { addAll(activities) }
     _ui.value = current.copy(likedActivities = newLiked)
+  }
+
+  override fun unlikeSelectedActivities() {
+    _ui.update { state ->
+      state.copy(
+          likedActivities = state.likedActivities - state.selectedLikedActivities,
+          selectedLikedActivities = emptyList())
+    }
+  }
+
+  override fun selectLikedActivity(activity: Activity) {
+    _ui.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities + activity)
+    }
+  }
+
+  override fun deselectLikedActivity(activity: Activity) {
+    _ui.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities - activity)
+    }
+  }
+
+  override fun scheduleSelectedActivities(context: Context) {
+    _ui.update { state ->
+      state
+    } // does nothing for the moment since scheduling logic is not done yet
+  }
+
+  fun setActivitiesQueue(activitiesQueue: List<Activity>) {
+    _ui.update { state ->
+      state.copy(
+          activitiesQueue = activitiesQueue,
+          currentActivity = activitiesQueue.first(),
+          backActivity = activitiesQueue.getOrNull(1))
+    }
+  }
+
+  override fun swipeActivity(liked: Boolean, enableNewFetch: Boolean) {
+    if (_ui.value.activitiesQueue.isEmpty()) return
+    val current = _ui.value
+    val activity = current.activitiesQueue.first()
+    val newQueue = current.activitiesQueue.toMutableList()
+    newQueue.removeAt(0)
+    val newLikedActivities =
+        if (liked) current.likedActivities + activity else current.likedActivities
+    _ui.value =
+        current.copy(
+            activitiesQueue = newQueue,
+            likedActivities = newLikedActivities,
+            currentActivity = newQueue.firstOrNull(),
+            backActivity = newQueue.getOrNull(1))
+  }
+
+  override fun mapToTripSettings(): TripSettings {
+    val profile: TripProfile? = uiState.value.tripProfile
+    if (profile == null) return TripSettings(name = uiState.value.name)
+    else
+        return TripSettings(
+            name = uiState.value.name,
+            date =
+                TripDate(
+                    profile.startDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate(),
+                    profile.endDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()),
+            travelers = TripTravelers(adults = profile.adults, children = profile.children),
+            preferences = profile.preferences,
+            arrivalDeparture =
+                TripArrivalDeparture(
+                    arrivalLocation = profile.arrivalLocation,
+                    departureLocation = profile.departureLocation),
+            destinations = profile.preferredLocations
+            // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+            )
   }
 
   override fun addCollaborator(user: User) {

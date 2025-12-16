@@ -37,11 +37,13 @@ data class PinnedImage(
  * UI State for the selectPinnedPicturesScreen.
  *
  * @property images The list of Pinned Images.
+ * @property selectedIndices The indices of images selected in Edit Mode.
  * @property isLoading Whether the screen is currently loading.
  * @property errorMsg The error message, if any.
  */
 data class SelectPinnedPicturesUIState(
     val images: List<PinnedImage> = emptyList(),
+    val selectedIndices: List<Int> = emptyList(),
     val isLoading: Boolean = false,
     val errorMsg: String? = null
 )
@@ -61,8 +63,6 @@ class SelectPinnedPicturesViewModel(
   val uiState: StateFlow<SelectPinnedPicturesUIState> = _uiState.asStateFlow()
 
   private var currentUser: User? = null
-
-  private val _imagesToDelete = mutableListOf<String>()
 
   // Loads the user's pictures into the UI state
   init {
@@ -176,21 +176,8 @@ class SelectPinnedPicturesViewModel(
           }
         }
 
-        // Update profile first
+        // Update profile
         userRepository.updateUser(uid = user.uid, pinnedPicturesUids = finalUids)
-
-        // Delete marked images from Firestore
-        _imagesToDelete
-            .map { uid ->
-              async {
-                try {
-                  imageRepository.deleteImage(uid)
-                } catch (e: Exception) {
-                  Log.e("SelectPinnedPictures", "Failed to delete image: $uid", e)
-                }
-              }
-            }
-            .awaitAll()
 
         _uiState.update { it.copy(isLoading = false) }
         onSuccess()
@@ -200,26 +187,63 @@ class SelectPinnedPicturesViewModel(
     }
   }
 
-  /**
-   * Removes an image from the UI state.
-   *
-   * @param index The index of the image to remove.
-   */
-  fun removeImage(index: Int) {
-    val currentList = _uiState.value.images.toMutableList()
-    if (index !in currentList.indices) return
-    val imageToRemove = currentList[index]
-    // If it exists in the cloud, mark it for deletion later
-    if (imageToRemove.uid != null) {
-      _imagesToDelete.add(imageToRemove.uid)
-    }
-    // Remove from UI immediately
-    currentList.removeAt(index)
-    _uiState.update { it.copy(images = currentList) }
-  }
-
   /** Clears the current error message from the UI state. */
   fun clearErrorMsg() {
     _uiState.update { it.copy(errorMsg = null) }
+  }
+
+  /** Toggles the selection status of an image at [index]. */
+  fun toggleSelection(index: Int) {
+    _uiState.update { state ->
+      val currentSelected = state.selectedIndices.toMutableList()
+      if (currentSelected.contains(index)) {
+        currentSelected.remove(index)
+      } else {
+        currentSelected.add(index)
+      }
+      state.copy(selectedIndices = currentSelected)
+    }
+  }
+
+  /**
+   * Removes all currently selected images from the UI and deletes them from the database
+   * immediately.
+   */
+  fun removeSelectedImages() {
+    val state = _uiState.value
+    val selectedSet = state.selectedIndices.toSet()
+    val keptImages = mutableListOf<PinnedImage>()
+    val imagesToDelete = mutableListOf<PinnedImage>()
+
+    state.images.forEachIndexed { index, image ->
+      if (index in selectedSet) {
+        imagesToDelete.add(image)
+      } else {
+        keptImages.add(image)
+      }
+    }
+
+    viewModelScope.launch {
+      _uiState.update { it.copy(isLoading = true) }
+
+      // Delete marked images from Firestore in parallel
+      imagesToDelete
+          .map { image ->
+            async {
+              if (image.uid != null) {
+                try {
+                  imageRepository.deleteImage(image.uid)
+                } catch (e: Exception) {
+                  Log.e("SelectPinnedPictures", "Failed to delete image: ${image.uid}", e)
+                }
+              }
+            }
+          }
+          .awaitAll()
+
+      _uiState.update {
+        it.copy(images = keptImages, selectedIndices = emptyList(), isLoading = false)
+      }
+    }
   }
 }

@@ -93,7 +93,9 @@ fun SetCurrentTripScreen(
                       noIconTripElement = true,
                       emptyListString = emptyListString,
                       favoriteTripsUids = uiState.favoriteTripsUids,
-                  )
+                      collaboratorsLookup = { uid ->
+                        uiState.collaboratorsByTripId[uid] ?: emptyList()
+                      })
 
               val onClickAction: (Trip?) -> Unit = { trip ->
                 trip?.let {

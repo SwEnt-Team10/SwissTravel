@@ -1,23 +1,33 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.algorithm.TripAlgorithm
+import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
+import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
+import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
 import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
+import com.github.swent.swisstravel.ui.tripcreation.TripDate
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
+import com.github.swent.swisstravel.ui.tripcreation.TripTravelers
 import com.mapbox.geojson.Point
 import java.time.LocalDate
 import java.time.ZoneId
+import kotlin.collections.plus
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -42,7 +52,13 @@ data class TripInfoUIState(
     val errorMsg: String? = null,
     val fullscreen: Boolean = false,
     val selectedActivity: Activity? = null,
+    // fields for swipe and like
     val likedActivities: List<Activity> = emptyList(),
+    val activitiesQueue: List<Activity> = emptyList(),
+    val allFetchedForSwipe: List<Activity> = emptyList(),
+    val currentActivity: Activity? = null,
+    val backActivity: Activity? = null,
+    val selectedLikedActivities: List<Activity> = emptyList(),
     // New fields for DailyViewScreen MVVM refactor
     val schedule: List<TripElement> = emptyList(),
     val groupedSchedule: Map<LocalDate, List<TripElement>> = emptyMap(),
@@ -67,10 +83,21 @@ class TripInfoViewModel(
   private val _uiState = MutableStateFlow(TripInfoUIState())
   override val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
 
+  /**
+   * The trip corresponding to this ViewModel's UI state.
+   *
+   * Initialized in the loading trip info block (not init block) to make sure the uid is the right
+   * one.
+   */
+  private val trip: MutableStateFlow<Trip?> = MutableStateFlow(null)
+
+  private val activitiesFetcher = SelectActivities(tripInfoVM = this)
+
   private val favoriteDebounceMs = 800L
   private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
 
   init {
+    Log.d("TRIP_INFO_VM", "Initialized a tripInfoVM")
     // Debounce favorite changes to avoid spamming database
     viewModelScope.launch {
       _favoriteToggleFlow
@@ -99,18 +126,27 @@ class TripInfoViewModel(
    * Loads the trip information for the given trip ID
    *
    * @param uid the unique identifier of the trip
+   * @param forceReload whether to force a reload from the repository
    */
-  override fun loadTripInfo(uid: String?) {
+  override fun loadTripInfo(uid: String?, forceReload: Boolean) {
     if (uid.isNullOrBlank()) {
-      Log.e("TripInfoViewModel", "Trip ID is null or blank")
+      Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
       setErrorMsg("Trip ID is invalid")
       return
     }
+
+    // load the info only if the uid is different from the current one OR if forceReload is true
+    if (!forceReload && uid == _uiState.value.uid) {
+      Log.d("TRIP_INFO_VM", "loadTripInfo called with same uid = $uid, skipping reload")
+      return
+    }
+
     viewModelScope.launch {
       _uiState.update { it.copy(isLoading = true) }
       try {
         val current = _uiState.value
-        val trip = tripsRepository.getTrip(uid)
+        trip.update { trip -> tripsRepository.getTrip(uid) }
+        val trip = trip.value!!
         val isSameTrip = current.uid == trip.uid
         val currentUser = userRepository.getCurrentUser()
         val isFavorite = currentUser.favoriteTripsUids.contains(trip.uid)
@@ -126,7 +162,11 @@ class TripInfoViewModel(
                 activities = trip.activities,
                 tripProfile = trip.tripProfile,
                 isFavorite = isFavorite,
-                likedActivities = _uiState.value.likedActivities,
+                likedActivities = trip.likedActivities,
+                activitiesQueue = trip.activitiesQueue,
+                allFetchedForSwipe = trip.allFetchedForSwipe,
+                currentActivity = trip.activitiesQueue.firstOrNull(),
+                backActivity = trip.activitiesQueue.getOrNull(1),
                 // Preserve transient state if reloading the same trip
                 currentDayIndex = if (isSameTrip) current.currentDayIndex else 0,
                 selectedStep = if (isSameTrip) current.selectedStep else null,
@@ -136,9 +176,21 @@ class TripInfoViewModel(
                 currentUserIsOwner = trip.isOwner(currentUser.uid),
                 isLoading = false)
         computeSchedule()
-        Log.d("Activities", trip.activities.toString())
+
+        // fetch the activities queue if empty, only after loading the trip info, otherwise, it
+        // might fetch with a state that has not loaded yet (so with empty locations to input to the
+        // fetching)
+        Log.d("TRIP_INFO_VM", "Trip from database queue size ${trip.activitiesQueue.size}")
+        Log.d("TRIP_INFO_VM", "State from VM queue size ${_uiState.value.activitiesQueue.size}")
+        if (trip.activitiesQueue.isEmpty()) {
+          Log.d("TRIP_INFO_VM", "Fetching first activities for trip $uid")
+          fetchFirstActivities()
+        }
+
+        Log.d("TRIP_INFO_VM", "activities queue from trip = ${trip.activitiesQueue}")
+        Log.d("Activities", trip.activities.map { it.getName() }.toString())
       } catch (e: Exception) {
-        Log.e("TripInfoViewModel", "Error loading trip info", e)
+        Log.e("TRIP_INFO_VM", "Error loading trip info", e)
         setErrorMsg("Failed to load trip info: ${e.message}")
         _uiState.update { it.copy(isLoading = false) }
       }
@@ -333,12 +385,232 @@ class TripInfoViewModel(
     _uiState.value = _uiState.value.copy(mapLocations = locations.distinct())
   }
 
-  /** Adds the given activity to the list of liked activities in the UI state. */
-  override fun likeActivity(activity: Activity) {
-    _uiState.update { current ->
-      current.copy(likedActivities = (current.likedActivities + activity).distinct())
+  // ========== Functions for swipe and like activities ==========
+
+  /**
+   * Adds the given activities to the list of liked activities in :
+   * - the UI state (because the tripInfoUIState is used to display the liked activities and
+   *   schedule them)
+   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
+   *   comes back later, the values are the same)
+   *
+   * @param activities The activities to like.
+   */
+  override fun likeActivities(activities: List<Activity>) {
+    _uiState.update { state ->
+      state.copy(likedActivities = (state.likedActivities + activities).distinct())
+    }
+    // also update the trip in this class and on the repository
+    trip.update { trip ->
+      trip!!.copy(likedActivities = (trip.likedActivities + activities).distinct())
+    }
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
+  }
+
+  /**
+   * Removes the given activities from the list of liked activities in :
+   * - the UI state (because the tripInfoUIState is used to display the liked activities in the
+   *   LikedActivitiesScreen and schedule them)
+   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
+   *   comes back later, the values are the same)
+   */
+  override fun unlikeSelectedActivities() {
+    val selected = _uiState.value.selectedLikedActivities
+    _uiState.update { state ->
+      state.copy(
+          likedActivities = (state.likedActivities - selected).distinct(),
+          // clear selected activities after unliking them
+          selectedLikedActivities = emptyList())
+    }
+    // also update the trip in this class and on the repository
+    trip.update { trip ->
+      trip!!.copy(likedActivities = (trip.likedActivities - selected).distinct())
+    }
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
+  }
+
+  /**
+   * Updates the queue of activities and the set of all activities that have been fetched for
+   * swiping in :
+   * - the UI state (because it is used to keep track of all fetched activities in the
+   *   SwipeActivitiesScreen)
+   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
+   *   comes back later, the values are the same)
+   *
+   * Also, it refreshes the current activity and back activity
+   *
+   * @param newQueue The queue of activities that will be set.
+   * @param newFetched The list of activities that are newly fetched for swiping (they are added to
+   *   the existing set)
+   */
+  fun updateQueueAndAllFetched(newQueue: List<Activity>, newFetched: List<Activity>) {
+    val fullFetched = (_uiState.value.allFetchedForSwipe + newFetched).distinct()
+    _uiState.update {
+      it.copy(
+          activitiesQueue = newQueue,
+          allFetchedForSwipe = fullFetched,
+          currentActivity = newQueue.firstOrNull(),
+          backActivity = newQueue.getOrNull(1))
+    }
+
+    // update the trip locally
+    trip.update { it!!.copy(activitiesQueue = newQueue, allFetchedForSwipe = fullFetched) }
+
+    // update trip in database
+    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, trip.value!!) }
+  }
+
+  /**
+   * If you liked the activity, it will add the activity to the liked activities list of the trip.
+   *
+   * Otherwise, it is considered as a dislike
+   *
+   * @param liked a boolean indicating whether you liked the activity or not
+   */
+  override fun swipeActivity(liked: Boolean, enableNewFetch: Boolean) {
+    val current = _uiState.value.currentActivity ?: return
+    val newQueue = _uiState.value.activitiesQueue.toMutableList()
+
+    if (liked) likeActivities(listOf(current))
+
+    // remove the first activity from the queue
+    if (newQueue.isNotEmpty()) {
+      newQueue.removeAt(0)
+    }
+
+    updateQueueAndAllFetched(newQueue, emptyList())
+
+    // fetches new activity to put on the back of the queue, and adds it to all fetched
+    if (enableNewFetch) viewModelScope.launch { fetchSwipeActivity() }
+  }
+
+  /**
+   * - Fetches a new activity to swipe
+   * - Adds it to the end of the activities queue
+   * - Updates the set of all fetched swipe activities
+   */
+  private suspend fun fetchSwipeActivity() {
+    val state = _uiState.value
+
+    // fetch a new activity
+    val newActivity =
+        activitiesFetcher.fetchUniqueSwipe(
+            toExclude = (state.allFetchedForSwipe + state.activities).toSet())
+    if (newActivity == null) {
+      Log.e("TripInfoVM", "No new unique activity could be fetched.")
+      return
+    }
+
+    // add it to the new queue
+    val newQueue = _uiState.value.activitiesQueue.toMutableList()
+    // add the new activity to the end of the queue
+    newQueue.add(newActivity)
+
+    // update both the queue and all fetched activities
+    updateQueueAndAllFetched(newQueue, listOf(newActivity))
+  }
+
+  /**
+   * Fetches the initial activities to populate the swipe queue.
+   *
+   * By default, it fetches 5 activities.
+   */
+  fun fetchFirstActivities() {
+    viewModelScope.launch {
+      val state = _uiState.value
+      val initialActivities =
+          activitiesFetcher
+              .fetchSwipeActivities(
+                  toExclude = (state.allFetchedForSwipe + state.activities).toSet())
+              .toList()
+
+      Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
+
+      // update the tripInfo and the Trip on the repo
+      updateQueueAndAllFetched(newQueue = initialActivities, newFetched = initialActivities)
+
+      Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
     }
   }
+
+  /**
+   * Helper to map the tripInfoUIState to a TripSettings.
+   *
+   * If the tripProfile parameter from the uiState is null, it will return TripSettings with default
+   * parameters
+   */
+  override fun mapToTripSettings(): TripSettings {
+    val profile: TripProfile? = _uiState.value.tripProfile
+    if (profile == null) return TripSettings(name = _uiState.value.name)
+    else
+        return TripSettings(
+            name = _uiState.value.name,
+            date =
+                TripDate(
+                    profile.startDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate(),
+                    profile.endDate
+                        .toDate()
+                        .toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate()),
+            travelers = TripTravelers(adults = profile.adults, children = profile.children),
+            preferences = profile.preferences,
+            arrivalDeparture =
+                TripArrivalDeparture(
+                    arrivalLocation = profile.arrivalLocation,
+                    departureLocation = profile.departureLocation),
+            destinations = profile.preferredLocations
+            // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+            )
+  }
+
+  /**
+   * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  override fun selectLikedActivity(activity: Activity) {
+    _uiState.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities + activity)
+    }
+  }
+
+  /**
+   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule
+   * the activity or unlike it)
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  override fun deselectLikedActivity(activity: Activity) {
+    _uiState.update { state ->
+      state.copy(selectedLikedActivities = state.selectedLikedActivities - activity)
+    }
+  }
+
+  /**
+   * Schedules the selected liked activities.
+   *
+   * If there is no room for selected activities to be scheduled, it will respond with a toast
+   */
+  override fun scheduleSelectedActivities(context: Context) {
+    val tripAlgo =
+        TripAlgorithm.init(
+            tripSettings = this.mapToTripSettings(),
+            activityRepository = ActivityRepositoryMySwitzerland(),
+            context = context)
+    // TODO : finish scheduling code
+
+    // at the end, don't remove the selected activities from the liked activities in case the user
+    // un-schedules
+    // them but wants to re-schedule them afterwards (so that the user doesn't have to find them by
+    // swiping)
+  }
+
+  // ========== Functions for managing collaborators ==========
 
   /**
    * Loads the list of friends available to be added as collaborators and the list of current

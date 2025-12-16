@@ -228,7 +228,7 @@ fun DailyViewScreen(
         }
       },
       bottomBar = {
-        if (ui.currentUserIsOwner)
+        if (ui.currentUserIsOwner && !ui.fullscreen)
             DailyViewBottomBar(
                 onSwipeActivities = callbacks.onSwipeActivities,
                 onLikedActivities = callbacks.onLikedActivities)
@@ -522,7 +522,9 @@ private fun DailyViewTopAppBar(
             text = ui.name,
             modifier = Modifier.testTag(DailyViewScreenTestTags.TITLE),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis)
       },
       navigationIcon = {
         if (!isOnCurrentTripScreen) {
