@@ -96,7 +96,7 @@
     <string name="name_desc">Name Z-A</string>
     <string name="favorites_first">Favorites</string>
     <!-- My Trips -->
-    <string name="my_trips">My trips</string>
+    <string name="my_trips">My Trips</string>
     <string name="go_past_trips">Go to Past Trips</string>
     <string name="current_trip">Current Trip</string>
     <string name="no_current_trip">You have no current trip. Get planning!</string>
@@ -139,6 +139,9 @@
 
     <!-- Liked Activities -->
     <string name="no_liked_activities">No liked activities yet</string>
+    <string name="schedule_selected_liked_activities">Schedule</string>
+    <string name="no_activities_selected">No activities selected</string>
+
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>

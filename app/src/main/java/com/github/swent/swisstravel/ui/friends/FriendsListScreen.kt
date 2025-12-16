@@ -235,6 +235,7 @@ private fun LazyListScope.friendsListItems(
       FriendElement(
           userToDisplay = friend,
           actions = FriendElementActions(onClick = { onSelectFriend(friend.uid) }))
+      Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
     }
   }
 }

@@ -104,6 +104,10 @@ object DailyViewScreenTestTags {
   const val STEP_CARD = "dailyViewScreenStepCard"
   const val SWIPE_ACTIVITIES_BUTTON = "dailyViewScreenSwipeActivitiesButton"
   const val LIKED_ACTIVITIES_BUTTON = "dailyViewScreenLikedActivitiesButton"
+
+  const val SHARE_BUTTON = "dailyViewScreenShareButton"
+
+  fun getTestTagForRemoveCollaborator(uid: String): String = "removeCollaborator${uid}"
 }
 
 /**
@@ -230,7 +234,7 @@ fun DailyViewScreen(
         }
       },
       bottomBar = {
-        if (ui.currentUserIsOwner)
+        if (ui.currentUserIsOwner && !ui.fullscreen)
             DailyViewBottomBar(
                 onSwipeActivities = callbacks.onSwipeActivities,
                 onLikedActivities = callbacks.onLikedActivities)
@@ -412,12 +416,17 @@ private fun ShareTripDialog(
                               }
 
                           // Remove Button
-                          IconButton(onClick = { onRemoveCollaborator(collaborator) }) {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = stringResource(R.string.delete),
-                                tint = MaterialTheme.colorScheme.error)
-                          }
+                          IconButton(
+                              onClick = { onRemoveCollaborator(collaborator) },
+                              modifier =
+                                  Modifier.testTag(
+                                      DailyViewScreenTestTags.getTestTagForRemoveCollaborator(
+                                          collaborator.uid))) {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = stringResource(R.string.delete),
+                                    tint = MaterialTheme.colorScheme.error)
+                              }
                         }
                   }
                 }
@@ -527,7 +536,9 @@ private fun DailyViewTopAppBar(
             text = ui.name,
             modifier = Modifier.testTag(DailyViewScreenTestTags.TITLE),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+            color = MaterialTheme.colorScheme.onBackground,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis)
       },
       navigationIcon = {
         if (!isOnCurrentTripScreen) {
@@ -542,12 +553,14 @@ private fun DailyViewTopAppBar(
       },
       actions = {
         if (ui.currentUserIsOwner) {
-          IconButton(onClick = onShare) {
-            Icon(
-                imageVector = Icons.Filled.Share,
-                contentDescription = stringResource(R.string.share_trip),
-                tint = MaterialTheme.colorScheme.onBackground)
-          }
+          IconButton(
+              onClick = onShare,
+              modifier = Modifier.testTag(DailyViewScreenTestTags.SHARE_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Filled.Share,
+                    contentDescription = stringResource(R.string.share_trip),
+                    tint = MaterialTheme.colorScheme.onBackground)
+              }
           AddPhotosButton(onAddPhotos = { onAddPhotos() })
           IconButton(
               onClick = onToggleFavorite,

@@ -124,7 +124,10 @@ fun SelectPinnedTripsScreen(
                       isSelected = { trip -> trip in uiState.selectedTrips },
                       isSelectionMode = uiState.isSelectionMode,
                       emptyListString = emptyListString,
-                      favoriteTripsUids = uiState.favoriteTripsUids)
+                      favoriteTripsUids = uiState.favoriteTripsUids,
+                      collaboratorsLookup = { uid ->
+                        uiState.collaboratorsByTripId[uid] ?: emptyList()
+                      })
 
               val listEvents =
                   TripListEvents(
