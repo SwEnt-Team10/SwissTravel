@@ -5,8 +5,10 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
+import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.RouteSegment
 import com.github.swent.swisstravel.model.trip.Trip
@@ -56,6 +58,7 @@ data class TripInfoUIState(
     val likedActivities: List<Activity> = emptyList(),
     val activitiesQueue: List<Activity> = emptyList(),
     val allFetchedForSwipe: List<Activity> = emptyList(),
+    val allFetchedLocations: List<Location> = emptyList(),
     val currentActivity: Activity? = null,
     val backActivity: Activity? = null,
     val selectedLikedActivities: List<Activity> = emptyList(),
@@ -74,623 +77,651 @@ data class TripInfoUIState(
     val availableFriends: List<User> = emptyList(),
     val collaborators: List<User> = emptyList()
 )
+
+/**
+ * Configuration for a major city, used for adding city-based activities.
+ *
+ * @param location The geographical location of the city center.
+ * @param radius The radius in km to consider an activity as being in/near the city.
+ * @param maxDays The maximum number of days/cityActivities to schedule for this city.
+ */
+data class CityConfig(val location: Location, val radius: Int, val maxDays: Double)
+
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
 class TripInfoViewModel(
     private val tripsRepository: TripsRepository = TripsRepositoryProvider.repository,
     private val userRepository: UserRepository = UserRepositoryFirebase()
 ) : ViewModel(), TripInfoViewModelContract {
-  private val _uiState = MutableStateFlow(TripInfoUIState())
-  override val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(TripInfoUIState())
+    override val uiState: StateFlow<TripInfoUIState> = _uiState.asStateFlow()
 
-  /**
-   * The trip corresponding to this ViewModel's UI state.
-   *
-   * Initialized in the loading trip info block (not init block) to make sure the uid is the right
-   * one.
-   */
-  private val trip: MutableStateFlow<Trip?> = MutableStateFlow(null)
+    /**
+     * The trip corresponding to this ViewModel's UI state.
+     *
+     * Initialized in the loading trip info block (not init block) to make sure the uid is the right
+     * one.
+     */
+    private val trip: MutableStateFlow<Trip?> = MutableStateFlow(null)
 
-  private val activitiesFetcher = SelectActivities(tripInfoVM = this)
+    private val activitiesFetcher = SelectActivities()
 
-  private val favoriteDebounceMs = 800L
-  private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
+    private val favoriteDebounceMs = 800L
+    private val _favoriteToggleFlow = MutableStateFlow<Boolean?>(null)
 
-  init {
-    Log.d("TRIP_INFO_VM", "Initialized a tripInfoVM")
-    // Debounce favorite changes to avoid spamming database
-    viewModelScope.launch {
-      _favoriteToggleFlow
-          .debounce(favoriteDebounceMs) // wait 800ms after last toggle
-          .filterNotNull()
-          .distinctUntilChanged() // only persist when state truly changes
-          .collect { newFavorite -> persistFavoriteChange(newFavorite) }
-    }
-  }
+    private val _majorSwissCities = MutableStateFlow<List<CityConfig>>(emptyList())
+    val majorSwissCities = _majorSwissCities.asStateFlow()
 
-  /** Clears the error message in the UI state */
-  override fun clearErrorMsg() {
-    _uiState.value = _uiState.value.copy(errorMsg = null)
-  }
-
-  /**
-   * Sets the error message in the UI state
-   *
-   * @param errorMsg the error message to set
-   */
-  override fun setErrorMsg(errorMsg: String) {
-    _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
-  }
-
-  /**
-   * Loads the trip information for the given trip ID
-   *
-   * @param uid the unique identifier of the trip
-   * @param forceReload whether to force a reload from the repository
-   */
-  override fun loadTripInfo(uid: String?, forceReload: Boolean) {
-    if (uid.isNullOrBlank()) {
-      Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
-      setErrorMsg("Trip ID is invalid")
-      return
+    init {
+        Log.d("TRIP_INFO_VM", "Initialized a tripInfoVM")
+        // Debounce favorite changes to avoid spamming database
+        viewModelScope.launch {
+            _favoriteToggleFlow
+                .debounce(favoriteDebounceMs) // wait 800ms after last toggle
+                .filterNotNull()
+                .distinctUntilChanged() // only persist when state truly changes
+                .collect { newFavorite -> persistFavoriteChange(newFavorite) }
+        }
     }
 
-    // load the info only if the uid is different from the current one OR if forceReload is true
-    if (!forceReload && uid == _uiState.value.uid) {
-      Log.d("TRIP_INFO_VM", "loadTripInfo called with same uid = $uid, skipping reload")
-      return
+    /** Clears the error message in the UI state */
+    override fun clearErrorMsg() {
+        _uiState.value = _uiState.value.copy(errorMsg = null)
     }
 
-    viewModelScope.launch {
-      _uiState.update { it.copy(isLoading = true) }
-      try {
+    /**
+     * Sets the error message in the UI state
+     *
+     * @param errorMsg the error message to set
+     */
+    override fun setErrorMsg(errorMsg: String) {
+        _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
+    }
+
+    /**
+     * Loads the trip information for the given trip ID
+     *
+     * @param uid the unique identifier of the trip
+     * @param forceReload whether to force a reload from the repository
+     */
+    override fun loadTripInfo(uid: String?, forceReload: Boolean) {
+        if (uid.isNullOrBlank()) {
+            Log.e("TRIP_INFO_VM", "Trip ID is null or blank")
+            setErrorMsg("Trip ID is invalid")
+            return
+        }
+
+        // load the info only if the uid is different from the current one OR if forceReload is true
+        if (!forceReload && uid == _uiState.value.uid) {
+            Log.d("TRIP_INFO_VM", "loadTripInfo called with same uid = $uid, skipping reload")
+            return
+        }
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true) }
+            try {
+                val current = _uiState.value
+                trip.update { trip -> tripsRepository.getTrip(uid) }
+                val trip = trip.value!!
+                val isSameTrip = current.uid == trip.uid
+                val currentUser = userRepository.getCurrentUser()
+                val isFavorite = currentUser.favoriteTripsUids.contains(trip.uid)
+                val tripActivitiesQueue = trip.activitiesQueue.shuffled()
+
+                _uiState.value =
+                    TripInfoUIState(
+                        uid = trip.uid,
+                        name = trip.name,
+                        ownerId = trip.ownerId,
+                        locations = trip.locations,
+                        uriLocation = trip.uriLocation,
+                        routeSegments = trip.routeSegments,
+                        activities = trip.activities,
+                        tripProfile = trip.tripProfile,
+                        isFavorite = isFavorite,
+                        likedActivities = trip.likedActivities,
+                        activitiesQueue = tripActivitiesQueue,
+                        allFetchedForSwipe = trip.allFetchedForSwipe,
+                        allFetchedLocations = trip.allFetchedLocations,
+                        currentActivity = tripActivitiesQueue.firstOrNull(),
+                        backActivity = tripActivitiesQueue.getOrNull(1),
+                        // Preserve transient state if reloading the same trip
+                        currentDayIndex = if (isSameTrip) current.currentDayIndex else 0,
+                        selectedStep = if (isSameTrip) current.selectedStep else null,
+                        drawFromCurrentPosition =
+                            if (isSameTrip) current.drawFromCurrentPosition else false,
+                        currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
+                        currentUserIsOwner = trip.isOwner(currentUser.uid),
+                        isLoading = false)
+                computeSchedule()
+
+                Log.d("TRIP_INFO_VM", "activities queue from trip = ${trip.activitiesQueue}")
+                Log.d("Activities", trip.activities.map { it.getName() }.toString())
+            } catch (e: Exception) {
+                Log.e("TRIP_INFO_VM", "Error loading trip info", e)
+                setErrorMsg("Failed to load trip info: ${e.message}")
+                _uiState.update { it.copy(isLoading = false) }
+            }
+        }
+    }
+
+    /**
+     * Toggles the favorite status of the current trip.
+     *
+     * Updates the UI immediately and emits the new state to a debounced flow, which later persists
+     * the change to the repository. Prevents redundant or rapid writes to the database.
+     */
+    override fun toggleFavorite() {
         val current = _uiState.value
-        trip.update { trip -> tripsRepository.getTrip(uid) }
-        val trip = trip.value!!
-        val isSameTrip = current.uid == trip.uid
-        val currentUser = userRepository.getCurrentUser()
-        val isFavorite = currentUser.favoriteTripsUids.contains(trip.uid)
+        if (current.uid.isBlank()) return
 
-        _uiState.value =
-            TripInfoUIState(
-                uid = trip.uid,
-                name = trip.name,
-                ownerId = trip.ownerId,
-                locations = trip.locations,
-                uriLocation = trip.uriLocation,
-                routeSegments = trip.routeSegments,
-                activities = trip.activities,
-                tripProfile = trip.tripProfile,
-                isFavorite = isFavorite,
-                likedActivities = trip.likedActivities,
-                activitiesQueue = trip.activitiesQueue,
-                allFetchedForSwipe = trip.allFetchedForSwipe,
-                currentActivity = trip.activitiesQueue.firstOrNull(),
-                backActivity = trip.activitiesQueue.getOrNull(1),
-                // Preserve transient state if reloading the same trip
-                currentDayIndex = if (isSameTrip) current.currentDayIndex else 0,
-                selectedStep = if (isSameTrip) current.selectedStep else null,
-                drawFromCurrentPosition =
-                    if (isSameTrip) current.drawFromCurrentPosition else false,
-                currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
-                currentUserIsOwner = trip.isOwner(currentUser.uid),
-                isLoading = false)
-        computeSchedule()
+        val newFavorite = !current.isFavorite
 
-        // fetch the activities queue if empty, only after loading the trip info, otherwise, it
-        // might fetch with a state that has not loaded yet (so with empty locations to input to the
-        // fetching)
-        Log.d("TRIP_INFO_VM", "Trip from database queue size ${trip.activitiesQueue.size}")
-        Log.d("TRIP_INFO_VM", "State from VM queue size ${_uiState.value.activitiesQueue.size}")
-        if (trip.activitiesQueue.isEmpty()) {
-          Log.d("TRIP_INFO_VM", "Fetching first activities for trip $uid")
-          fetchFirstActivities()
+        // Update UI immediately
+        _uiState.value = current.copy(isFavorite = newFavorite)
+
+        // Emit to debounce flow (will persist after delay)
+        _favoriteToggleFlow.value = newFavorite
+    }
+
+    /**
+     * Persists the favorite change to the repository after debouncing.
+     *
+     * Skips redundant writes if the state is unchanged. Rolls back and sets an error message if
+     * persistence fails. *Debounce features were made with the help of AI.*
+     */
+    private suspend fun persistFavoriteChange(newFavorite: Boolean) {
+        val currentUiState = _uiState.value
+        try {
+            val trip = tripsRepository.getTrip(currentUiState.uid)
+            val currentUser = userRepository.getCurrentUser()
+
+            // Avoid redundant write if already correct
+            if (currentUser.favoriteTripsUids.contains(trip.uid) == newFavorite) return
+
+            if (newFavorite) {
+                userRepository.addFavoriteTrip(currentUser.uid, currentUiState.uid)
+            } else {
+                userRepository.removeFavoriteTrip(currentUser.uid, currentUiState.uid)
+            }
+
+            Log.d("TripInfoViewModel", "Favorite state updated: $newFavorite")
+        } catch (e: Exception) {
+            Log.e("TripInfoViewModel", "Failed to persist favorite", e)
+            setErrorMsg("Failed to update favorite: ${e.message}")
+            // Rollback to last known correct state
+            _uiState.value = currentUiState.copy(isFavorite = !newFavorite)
         }
-
-        Log.d("TRIP_INFO_VM", "activities queue from trip = ${trip.activitiesQueue}")
-        Log.d("Activities", trip.activities.map { it.getName() }.toString())
-      } catch (e: Exception) {
-        Log.e("TRIP_INFO_VM", "Error loading trip info", e)
-        setErrorMsg("Failed to load trip info: ${e.message}")
-        _uiState.update { it.copy(isLoading = false) }
-      }
     }
-  }
 
-  /**
-   * Toggles the favorite status of the current trip.
-   *
-   * Updates the UI immediately and emits the new state to a debounced flow, which later persists
-   * the change to the repository. Prevents redundant or rapid writes to the database.
-   */
-  override fun toggleFavorite() {
-    val current = _uiState.value
-    if (current.uid.isBlank()) return
-
-    val newFavorite = !current.isFavorite
-
-    // Update UI immediately
-    _uiState.value = current.copy(isFavorite = newFavorite)
-
-    // Emit to debounce flow (will persist after delay)
-    _favoriteToggleFlow.value = newFavorite
-  }
-
-  /**
-   * Persists the favorite change to the repository after debouncing.
-   *
-   * Skips redundant writes if the state is unchanged. Rolls back and sets an error message if
-   * persistence fails. *Debounce features were made with the help of AI.*
-   */
-  private suspend fun persistFavoriteChange(newFavorite: Boolean) {
-    val currentUiState = _uiState.value
-    try {
-      val trip = tripsRepository.getTrip(currentUiState.uid)
-      val currentUser = userRepository.getCurrentUser()
-
-      // Avoid redundant write if already correct
-      if (currentUser.favoriteTripsUids.contains(trip.uid) == newFavorite) return
-
-      if (newFavorite) {
-        userRepository.addFavoriteTrip(currentUser.uid, currentUiState.uid)
-      } else {
-        userRepository.removeFavoriteTrip(currentUser.uid, currentUiState.uid)
-      }
-
-      Log.d("TripInfoViewModel", "Favorite state updated: $newFavorite")
-    } catch (e: Exception) {
-      Log.e("TripInfoViewModel", "Failed to persist favorite", e)
-      setErrorMsg("Failed to update favorite: ${e.message}")
-      // Rollback to last known correct state
-      _uiState.value = currentUiState.copy(isFavorite = !newFavorite)
+    /**
+     * Toggles the fullscreen mode of the map.
+     *
+     * @param fullscreen whether to set fullscreen mode or not
+     */
+    override fun toggleFullscreen(fullscreen: Boolean) {
+        _uiState.value = _uiState.value.copy(fullscreen = fullscreen)
     }
-  }
 
-  /**
-   * Toggles the fullscreen mode of the map.
-   *
-   * @param fullscreen whether to set fullscreen mode or not
-   */
-  override fun toggleFullscreen(fullscreen: Boolean) {
-    _uiState.value = _uiState.value.copy(fullscreen = fullscreen)
-  }
-
-  override fun selectActivity(activity: Activity?) {
-    _uiState.value = _uiState.value.copy(selectedActivity = activity)
-  }
-
-  /**
-   * Sets the current day index for the daily view.
-   *
-   * @param index The new index.
-   */
-  override fun setCurrentDayIndex(index: Int) {
-    if (index < 0 || index >= _uiState.value.days.size) return
-    _uiState.value = _uiState.value.copy(currentDayIndex = index)
-    updateMapLocations()
-  }
-
-  /**
-   * Sets the selected step in the daily view.
-   *
-   * @param step The selected trip element.
-   */
-  override fun setSelectedStep(step: TripElement?) {
-    _uiState.value = _uiState.value.copy(selectedStep = step)
-    updateMapLocations()
-  }
-
-  /**
-   * Toggles whether to draw the route from the current user position.
-   *
-   * @param enabled True to enable, false to disable.
-   */
-  override fun setDrawFromCurrentPosition(enabled: Boolean) {
-    _uiState.value = _uiState.value.copy(drawFromCurrentPosition = enabled)
-    updateMapLocations()
-  }
-
-  /**
-   * Updates the current user GPS location.
-   *
-   * @param point The new GPS point.
-   */
-  override fun updateUserLocation(point: Point) {
-    _uiState.value = _uiState.value.copy(currentGpsPoint = point)
-    if (_uiState.value.drawFromCurrentPosition) {
-      updateMapLocations()
+    override fun selectActivity(activity: Activity?) {
+        _uiState.value = _uiState.value.copy(selectedActivity = activity)
     }
-  }
 
-  /** Computes the schedule and groups it by day. */
-  private fun computeSchedule() {
-    val current = _uiState.value
-    if (current.locations.isEmpty() || current.tripProfile == null) return
-
-    _uiState.value = current.copy(isComputingSchedule = true)
-
-    viewModelScope.launch {
-      val tripSegments = current.routeSegments.map { TripElement.TripSegment(it) }
-      val tripActivities = current.activities.map { TripElement.TripActivity(it) }
-
-      val newSchedule = (tripSegments + tripActivities).sortedBy { it.startDate }
-
-      if (newSchedule != current.schedule) {
-        val newGrouped =
-            newSchedule
-                .groupBy {
-                  it.startDate.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
-                }
-                .toSortedMap()
-        val newDays = newGrouped.keys.toList()
-        val newDaysCount = newDays.size
-
-        var newIndex = current.currentDayIndex
-        if (newIndex >= newDaysCount) {
-          newIndex = 0
-        }
-
-        _uiState.value =
-            _uiState.value.copy(
-                schedule = newSchedule,
-                groupedSchedule = newGrouped,
-                days = newDays,
-                currentDayIndex = newIndex,
-                isComputingSchedule = false)
+    /**
+     * Sets the current day index for the daily view.
+     *
+     * @param index The new index.
+     */
+    override fun setCurrentDayIndex(index: Int) {
+        if (index < 0 || index >= _uiState.value.days.size) return
+        _uiState.value = _uiState.value.copy(currentDayIndex = index)
         updateMapLocations()
-      } else {
-        _uiState.value = _uiState.value.copy(isComputingSchedule = false)
-      }
-    }
-  }
-
-  /** Updates the list of locations to be displayed on the map. */
-  private fun updateMapLocations() {
-    val current = _uiState.value
-    val currentDay = current.days.getOrNull(current.currentDayIndex)
-    val dailySteps =
-        if (currentDay != null) current.groupedSchedule[currentDay] ?: emptyList() else emptyList()
-
-    val locations = mutableListOf<Location>()
-
-    // Add current location if requested
-    if (current.drawFromCurrentPosition && current.currentGpsPoint != null) {
-      locations.add(
-          Location(
-              name = "Current Location",
-              coordinate =
-                  com.github.swent.swisstravel.model.trip.Coordinate(
-                      current.currentGpsPoint.latitude(), current.currentGpsPoint.longitude())))
     }
 
-    val stepsToMap =
-        if (current.selectedStep != null) {
-          listOf(current.selectedStep)
-        } else {
-          dailySteps
+    /**
+     * Sets the selected step in the daily view.
+     *
+     * @param step The selected trip element.
+     */
+    override fun setSelectedStep(step: TripElement?) {
+        _uiState.value = _uiState.value.copy(selectedStep = step)
+        updateMapLocations()
+    }
+
+    /**
+     * Toggles whether to draw the route from the current user position.
+     *
+     * @param enabled True to enable, false to disable.
+     */
+    override fun setDrawFromCurrentPosition(enabled: Boolean) {
+        _uiState.value = _uiState.value.copy(drawFromCurrentPosition = enabled)
+        updateMapLocations()
+    }
+
+    /**
+     * Updates the current user GPS location.
+     *
+     * @param point The new GPS point.
+     */
+    override fun updateUserLocation(point: Point) {
+        _uiState.value = _uiState.value.copy(currentGpsPoint = point)
+        if (_uiState.value.drawFromCurrentPosition) {
+            updateMapLocations()
+        }
+    }
+
+    /** Computes the schedule and groups it by day. */
+    private fun computeSchedule() {
+        val current = _uiState.value
+        if (current.locations.isEmpty() || current.tripProfile == null) return
+
+        _uiState.value = current.copy(isComputingSchedule = true)
+
+        viewModelScope.launch {
+            val tripSegments = current.routeSegments.map { TripElement.TripSegment(it) }
+            val tripActivities = current.activities.map { TripElement.TripActivity(it) }
+
+            val newSchedule = (tripSegments + tripActivities).sortedBy { it.startDate }
+
+            if (newSchedule != current.schedule) {
+                val newGrouped =
+                    newSchedule
+                        .groupBy {
+                            it.startDate.toDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
+                        }
+                        .toSortedMap()
+                val newDays = newGrouped.keys.toList()
+                val newDaysCount = newDays.size
+
+                var newIndex = current.currentDayIndex
+                if (newIndex >= newDaysCount) {
+                    newIndex = 0
+                }
+
+                _uiState.value =
+                    _uiState.value.copy(
+                        schedule = newSchedule,
+                        groupedSchedule = newGrouped,
+                        days = newDays,
+                        currentDayIndex = newIndex,
+                        isComputingSchedule = false)
+                updateMapLocations()
+            } else {
+                _uiState.value = _uiState.value.copy(isComputingSchedule = false)
+            }
+        }
+    }
+
+    /** Updates the list of locations to be displayed on the map. */
+    private fun updateMapLocations() {
+        val current = _uiState.value
+        val currentDay = current.days.getOrNull(current.currentDayIndex)
+        val dailySteps =
+            if (currentDay != null) current.groupedSchedule[currentDay] ?: emptyList() else emptyList()
+
+        val locations = mutableListOf<Location>()
+
+        // Add current location if requested
+        if (current.drawFromCurrentPosition && current.currentGpsPoint != null) {
+            locations.add(
+                Location(
+                    name = "Current Location",
+                    coordinate =
+                        com.github.swent.swisstravel.model.trip.Coordinate(
+                            current.currentGpsPoint.latitude(), current.currentGpsPoint.longitude())))
         }
 
-    stepsToMap.forEach { step ->
-      when (step) {
-        is TripElement.TripActivity -> {
-          // Do not add activity locations to the main map
+        val stepsToMap =
+            if (current.selectedStep != null) {
+                listOf(current.selectedStep)
+            } else {
+                dailySteps
+            }
+
+        stepsToMap.forEach { step ->
+            when (step) {
+                is TripElement.TripActivity -> {
+                    // Do not add activity locations to the main map
+                }
+                is TripElement.TripSegment -> {
+                    locations.add(step.route.from)
+                    locations.add(step.route.to)
+                }
+            }
         }
-        is TripElement.TripSegment -> {
-          locations.add(step.route.from)
-          locations.add(step.route.to)
+
+        _uiState.value = _uiState.value.copy(mapLocations = locations.distinct())
+    }
+
+    // ========== Functions for swipe and like activities ==========
+
+    /**
+     * Adds the given activities to the list of liked activities in :
+     * - the UI state (because the tripInfoUIState is used to display the liked activities and
+     * schedule them)
+     * - the Trip (its new values are kept on the database, so that, when the user quits the app and
+     * comes back later, the values are the same)
+     *
+     * @param activities The activities to like.
+     */
+    override fun likeActivities(activities: List<Activity>) {
+        _uiState.update { state ->
+            state.copy(likedActivities = (state.likedActivities + activities).distinct())
         }
-      }
+        // also update the trip in this class and on the repository
+        trip.update { trip ->
+            trip!!.copy(likedActivities = (trip.likedActivities + activities).distinct())
+        }
+        viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
     }
 
-    _uiState.value = _uiState.value.copy(mapLocations = locations.distinct())
-  }
-
-  // ========== Functions for swipe and like activities ==========
-
-  /**
-   * Adds the given activities to the list of liked activities in :
-   * - the UI state (because the tripInfoUIState is used to display the liked activities and
-   *   schedule them)
-   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
-   *   comes back later, the values are the same)
-   *
-   * @param activities The activities to like.
-   */
-  override fun likeActivities(activities: List<Activity>) {
-    _uiState.update { state ->
-      state.copy(likedActivities = (state.likedActivities + activities).distinct())
-    }
-    // also update the trip in this class and on the repository
-    trip.update { trip ->
-      trip!!.copy(likedActivities = (trip.likedActivities + activities).distinct())
-    }
-    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
-  }
-
-  /**
-   * Removes the given activities from the list of liked activities in :
-   * - the UI state (because the tripInfoUIState is used to display the liked activities in the
-   *   LikedActivitiesScreen and schedule them)
-   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
-   *   comes back later, the values are the same)
-   */
-  override fun unlikeSelectedActivities() {
-    val selected = _uiState.value.selectedLikedActivities
-    _uiState.update { state ->
-      state.copy(
-          likedActivities = (state.likedActivities - selected).distinct(),
-          // clear selected activities after unliking them
-          selectedLikedActivities = emptyList())
-    }
-    // also update the trip in this class and on the repository
-    trip.update { trip ->
-      trip!!.copy(likedActivities = (trip.likedActivities - selected).distinct())
-    }
-    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
-  }
-
-  /**
-   * Updates the queue of activities and the set of all activities that have been fetched for
-   * swiping in :
-   * - the UI state (because it is used to keep track of all fetched activities in the
-   *   SwipeActivitiesScreen)
-   * - the Trip (its new values are kept on the database, so that, when the user quits the app and
-   *   comes back later, the values are the same)
-   *
-   * Also, it refreshes the current activity and back activity
-   *
-   * @param newQueue The queue of activities that will be set.
-   * @param newFetched The list of activities that are newly fetched for swiping (they are added to
-   *   the existing set)
-   */
-  fun updateQueueAndAllFetched(newQueue: List<Activity>, newFetched: List<Activity>) {
-    val fullFetched = (_uiState.value.allFetchedForSwipe + newFetched).distinct()
-    _uiState.update {
-      it.copy(
-          activitiesQueue = newQueue,
-          allFetchedForSwipe = fullFetched,
-          currentActivity = newQueue.firstOrNull(),
-          backActivity = newQueue.getOrNull(1))
+    /**
+     * Removes the given activities from the list of liked activities in :
+     * - the UI state (because the tripInfoUIState is used to display the liked activities in the
+     * LikedActivitiesScreen and schedule them)
+     * - the Trip (its new values are kept on the database, so that, when the user quits the app and
+     * comes back later, the values are the same)
+     */
+    override fun unlikeSelectedActivities() {
+        val selected = _uiState.value.selectedLikedActivities
+        _uiState.update { state ->
+            state.copy(
+                likedActivities = (state.likedActivities - selected).distinct(),
+                // clear selected activities after unliking them
+                selectedLikedActivities = emptyList())
+        }
+        // also update the trip in this class and on the repository
+        trip.update { trip ->
+            trip!!.copy(likedActivities = (trip.likedActivities - selected).distinct())
+        }
+        viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, updatedTrip = trip.value!!) }
     }
 
-    // update the trip locally
-    trip.update { it!!.copy(activitiesQueue = newQueue, allFetchedForSwipe = fullFetched) }
-
-    // update trip in database
-    viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, trip.value!!) }
-  }
-
-  /**
-   * If you liked the activity, it will add the activity to the liked activities list of the trip.
-   *
-   * Otherwise, it is considered as a dislike
-   *
-   * @param liked a boolean indicating whether you liked the activity or not
-   */
-  override fun swipeActivity(liked: Boolean, enableNewFetch: Boolean) {
-    val current = _uiState.value.currentActivity ?: return
-    val newQueue = _uiState.value.activitiesQueue.toMutableList()
-
-    if (liked) likeActivities(listOf(current))
-
-    // remove the first activity from the queue
-    if (newQueue.isNotEmpty()) {
-      newQueue.removeAt(0)
-    }
-
-    updateQueueAndAllFetched(newQueue, emptyList())
-
-    // fetches new activity to put on the back of the queue, and adds it to all fetched
-    if (enableNewFetch) viewModelScope.launch { fetchSwipeActivity() }
-  }
-
-  /**
-   * - Fetches a new activity to swipe
-   * - Adds it to the end of the activities queue
-   * - Updates the set of all fetched swipe activities
-   */
-  private suspend fun fetchSwipeActivity() {
-    val state = _uiState.value
-
-    // fetch a new activity
-    val newActivity =
-        activitiesFetcher.fetchUniqueSwipe(
-            toExclude = (state.allFetchedForSwipe + state.activities).toSet())
-    if (newActivity == null) {
-      Log.e("TripInfoVM", "No new unique activity could be fetched.")
-      return
-    }
-
-    // add it to the new queue
-    val newQueue = _uiState.value.activitiesQueue.toMutableList()
-    // add the new activity to the end of the queue
-    newQueue.add(newActivity)
-
-    // update both the queue and all fetched activities
-    updateQueueAndAllFetched(newQueue, listOf(newActivity))
-  }
-
-  /**
-   * Fetches the initial activities to populate the swipe queue.
-   *
-   * By default, it fetches 5 activities.
-   */
-  fun fetchFirstActivities() {
-    viewModelScope.launch {
-      val state = _uiState.value
-      val initialActivities =
-          activitiesFetcher
-              .fetchSwipeActivities(
-                  toExclude = (state.allFetchedForSwipe + state.activities).toSet())
-              .toList()
-
-      Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
-
-      // update the tripInfo and the Trip on the repo
-      updateQueueAndAllFetched(newQueue = initialActivities, newFetched = initialActivities)
-
-      Log.d("TRIP_INFO_VM", "current activity = ${_uiState.value.currentActivity}")
-    }
-  }
-
-  /**
-   * Helper to map the tripInfoUIState to a TripSettings.
-   *
-   * If the tripProfile parameter from the uiState is null, it will return TripSettings with default
-   * parameters
-   */
-  override fun mapToTripSettings(): TripSettings {
-    val profile: TripProfile? = _uiState.value.tripProfile
-    if (profile == null) return TripSettings(name = _uiState.value.name)
-    else
-        return TripSettings(
-            name = _uiState.value.name,
-            date =
-                TripDate(
-                    profile.startDate
-                        .toDate()
-                        .toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate(),
-                    profile.endDate
-                        .toDate()
-                        .toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()),
-            travelers = TripTravelers(adults = profile.adults, children = profile.children),
-            preferences = profile.preferences,
-            arrivalDeparture =
-                TripArrivalDeparture(
-                    arrivalLocation = profile.arrivalLocation,
-                    departureLocation = profile.departureLocation),
-            destinations = profile.preferredLocations
-            // InvalidNameMsg should stay null since the tripInfo should already have a valid name
-            )
-  }
-
-  /**
-   * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
-   *
-   * @param activity The activity to add to the list of selected liked activities
-   */
-  override fun selectLikedActivity(activity: Activity) {
-    _uiState.update { state ->
-      state.copy(selectedLikedActivities = state.selectedLikedActivities + activity)
-    }
-  }
-
-  /**
-   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule
-   * the activity or unlike it)
-   *
-   * @param activity The activity to add to the list of selected liked activities
-   */
-  override fun deselectLikedActivity(activity: Activity) {
-    _uiState.update { state ->
-      state.copy(selectedLikedActivities = state.selectedLikedActivities - activity)
-    }
-  }
-
-  /**
-   * Schedules the selected liked activities.
-   *
-   * If there is no room for selected activities to be scheduled, it will respond with a toast
-   */
-  override fun scheduleSelectedActivities(context: Context) {
-    val tripAlgo =
-        TripAlgorithm.init(
-            tripSettings = this.mapToTripSettings(),
-            activityRepository = ActivityRepositoryMySwitzerland(),
-            context = context)
-    // TODO : finish scheduling code
-
-    // at the end, don't remove the selected activities from the liked activities in case the user
-    // un-schedules
-    // them but wants to re-schedule them afterwards (so that the user doesn't have to find them by
-    // swiping)
-  }
-
-  // ========== Functions for managing collaborators ==========
-
-  /**
-   * Loads the list of friends available to be added as collaborators and the list of current
-   * collaborators for the trip.
-   *
-   * Fetches the current user's friends (accepted status only) and filters out those who are already
-   * collaborators. Also fetches the full User objects for the current trip's collaborators.
-   */
-  override fun loadCollaboratorData() {
-    viewModelScope.launch {
-      try {
-        val currentUser = userRepository.getCurrentUser()
-        val currentTrip = _uiState.value
-
-        // 1. Load Friends (Accepted only)
-        val friendUids =
-            currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }.map { it.uid }
-
-        val friends = friendUids.mapNotNull { uid -> userRepository.getUserByUid(uid) }
-
-        // 2. Load Collaborators for the trip
-        val freshTrip = tripsRepository.getTrip(currentTrip.uid)
-        val collaborators =
-            freshTrip.collaboratorsId.mapNotNull { uid -> userRepository.getUserByUid(uid) }
-
+    /**
+     * Updates the queue of activities, the set of all activities that have been fetched for
+     * swiping, the list of fetched locations, and the cached activities in:
+     * - the UI state (because it is used to keep track of all fetched activities in the
+     * SwipeActivitiesScreen)
+     * - the Trip (its new values are kept on the database, so that, when the user quits the app and
+     * comes back later, the values are the same)
+     *
+     * Also, it refreshes the current activity and back activity
+     *
+     * @param newQueue The queue of activities that will be set.
+     * @param newFetched The list of activities that are newly fetched for swiping (they are added to
+     * the existing set of allFetchedForSwipe)
+     * @param newFetchedLocations The updated list of locations where we have already fetched activities
+     * @param newCachedActivities The updated list of cached activities
+     */
+    fun updateQueueAndAllFetched(
+        newQueue: List<Activity>,
+        newFetched: List<Activity>,
+        newFetchedLocations: List<Location>,
+        newCachedActivities: List<Activity>
+    ) {
+        val fullFetched = (_uiState.value.allFetchedForSwipe + newFetched).distinct()
         _uiState.update {
-          it.copy(
-              availableFriends =
-                  friends.filter { friend -> friend.uid !in freshTrip.collaboratorsId },
-              collaborators = collaborators)
+            it.copy(
+                activitiesQueue = newQueue,
+                allFetchedForSwipe = fullFetched,
+                allFetchedLocations = newFetchedLocations,
+                currentActivity = newQueue.firstOrNull(),
+                backActivity = newQueue.getOrNull(1))
         }
-      } catch (e: Exception) {
-        Log.e("TripInfoViewModel", "Error loading collaborators", e)
-      }
+
+        // update the trip locally
+        trip.update {
+            it!!.copy(
+                activitiesQueue = newQueue,
+                allFetchedForSwipe = fullFetched,
+                allFetchedLocations = newFetchedLocations,
+                cachedActivities = newCachedActivities
+            )
+        }
+
+        // update trip in database
+        viewModelScope.launch { tripsRepository.editTrip(trip.value!!.uid, trip.value!!) }
     }
-  }
 
-  /**
-   * Adds a user as a collaborator to the current trip.
-   *
-   * Updates the trip in the repository by appending the user's UID to the collaborators list and
-   * reloads the local collaborator data.
-   *
-   * @param user The user to add as a collaborator.
-   */
-  override fun addCollaborator(user: User) {
-    val currentTripId = _uiState.value.uid
-    if (currentTripId.isBlank()) return
+    /**
+     * If you liked the activity, it will add the activity to the liked activities list of the trip.
+     *
+     * Otherwise, it is considered as a dislike
+     *
+     * @param liked a boolean indicating whether you liked the activity or not
+     */
+    override fun swipeActivity(liked: Boolean) {
+        val current = _uiState.value.currentActivity ?: return
+        val newQueue = _uiState.value.activitiesQueue.toMutableList()
 
-    viewModelScope.launch {
-      try {
-        tripsRepository.shareTripWithUsers(currentTripId, listOf(user.uid))
-        // Reload local state
-        loadCollaboratorData()
-      } catch (e: Exception) {
-        setErrorMsg("Failed to add collaborator: ${e.message}")
-      }
+        if (liked) likeActivities(listOf(current))
+
+        // remove the first activity from the queue
+        if (newQueue.isNotEmpty()) {
+            newQueue.removeAt(0)
+        }
+
+        // Add the activity that was just swiped (whether liked or disliked) to the allFetchedForSwipe list
+        // so it is excluded next time.
+        // Note: We use emptyList() for newFetchedLocations and existing cachedActivities because this update
+        // only concerns moving the item from Queue -> History.
+        // The Queue refill happens in fetchSwipeActivities below.
+        updateQueueAndAllFetched(
+            newQueue = newQueue,
+            newFetched = listOf(current),
+            newFetchedLocations = _uiState.value.allFetchedLocations,
+            newCachedActivities = trip.value?.cachedActivities ?: emptyList()
+        )
+
+        // Try to fetch new activities (refill queue)
+        // The activitiesFetcher logic will decide if it needs to fetch from API or just use cache/return
+        viewModelScope.launch { fetchSwipeActivity() }
     }
-  }
 
-  /**
-   * Removes a user from the current trip's collaborators.
-   *
-   * Updates the trip in the repository by removing the user's UID from the collaborators list and
-   * reloads the local collaborator data.
-   *
-   * @param user The user to remove.
-   */
-  override fun removeCollaborator(user: User) {
-    val currentTripId = _uiState.value.uid
-    if (currentTripId.isBlank()) return
+    /**
+     * - Fetches a new activity to swipe using the mass-dump cache logic
+     * - Adds it to the end of the activities queue
+     * - Updates the set of all fetched swipe activities
+     */
+    override suspend fun fetchSwipeActivity() {
+        val currentTrip = trip.value ?: return
+        val cities = majorSwissCities.value
 
-    viewModelScope.launch {
-      try {
-        tripsRepository.removeCollaborator(currentTripId, user.uid)
+        val updatedTrip = activitiesFetcher.fetchSwipeActivities(currentTrip, cities)
 
-        loadCollaboratorData()
-      } catch (e: Exception) {
-        setErrorMsg("Failed to remove collaborator: ${e.message}")
-      }
+        // Update the VM state with the new queue, fetched locations, and cache from the updated trip
+        // Note: We pass emptyList() for newFetched because fetchSwipeActivities has already put new activities in the queue
+        // and we only add them to allFetchedForSwipe when they are actually swiped (in swipeActivity)
+        updateQueueAndAllFetched(
+            newQueue = updatedTrip.activitiesQueue,
+            newFetched = emptyList(),
+            newFetchedLocations = updatedTrip.allFetchedLocations,
+            newCachedActivities = updatedTrip.cachedActivities
+        )
     }
-  }
+
+    /**
+     * Helper to map the tripInfoUIState to a TripSettings.
+     *
+     * If the tripProfile parameter from the uiState is null, it will return TripSettings with default
+     * parameters
+     */
+    override fun mapToTripSettings(): TripSettings {
+        val profile: TripProfile? = _uiState.value.tripProfile
+        if (profile == null) return TripSettings(name = _uiState.value.name)
+        else
+            return TripSettings(
+                name = _uiState.value.name,
+                date =
+                    TripDate(
+                        profile.startDate
+                            .toDate()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate(),
+                        profile.endDate
+                            .toDate()
+                            .toInstant()
+                            .atZone(ZoneId.systemDefault())
+                            .toLocalDate()),
+                travelers = TripTravelers(adults = profile.adults, children = profile.children),
+                preferences = profile.preferences,
+                arrivalDeparture =
+                    TripArrivalDeparture(
+                        arrivalLocation = profile.arrivalLocation,
+                        departureLocation = profile.departureLocation),
+                destinations = profile.preferredLocations
+                // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+            )
+    }
+
+    /**
+     * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
+     *
+     * @param activity The activity to add to the list of selected liked activities
+     */
+    override fun selectLikedActivity(activity: Activity) {
+        _uiState.update { state ->
+            state.copy(selectedLikedActivities = state.selectedLikedActivities + activity)
+        }
+    }
+
+    /**
+     * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule
+     * the activity or unlike it)
+     *
+     * @param activity The activity to add to the list of selected liked activities
+     */
+    override fun deselectLikedActivity(activity: Activity) {
+        _uiState.update { state ->
+            state.copy(selectedLikedActivities = state.selectedLikedActivities - activity)
+        }
+    }
+
+    /**
+     * Schedules the selected liked activities.
+     *
+     * If there is no room for selected activities to be scheduled, it will respond with a toast
+     */
+    override fun scheduleSelectedActivities(context: Context) {
+        val tripAlgo =
+            TripAlgorithm.init(
+                tripSettings = this.mapToTripSettings(),
+                activityRepository = ActivityRepositoryMySwitzerland(),
+                context = context)
+        // TODO : finish scheduling code
+
+        // at the end, don't remove the selected activities from the liked activities in case the user
+        // un-schedules
+        // them but wants to re-schedule them afterwards (so that the user doesn't have to find them by
+        // swiping)
+    }
+
+    // ========== Functions for managing collaborators ==========
+
+    /**
+     * Loads the list of friends available to be added as collaborators and the list of current
+     * collaborators for the trip.
+     *
+     * Fetches the current user's friends (accepted status only) and filters out those who are already
+     * collaborators. Also fetches the full User objects for the current trip's collaborators.
+     */
+    override fun loadCollaboratorData() {
+        viewModelScope.launch {
+            try {
+                val currentUser = userRepository.getCurrentUser()
+                val currentTrip = _uiState.value
+
+                // 1. Load Friends (Accepted only)
+                val friendUids =
+                    currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }.map { it.uid }
+
+                val friends = friendUids.mapNotNull { uid -> userRepository.getUserByUid(uid) }
+
+                // 2. Load Collaborators for the trip
+                val freshTrip = tripsRepository.getTrip(currentTrip.uid)
+                val collaborators =
+                    freshTrip.collaboratorsId.mapNotNull { uid -> userRepository.getUserByUid(uid) }
+
+                _uiState.update {
+                    it.copy(
+                        availableFriends =
+                            friends.filter { friend -> friend.uid !in freshTrip.collaboratorsId },
+                        collaborators = collaborators)
+                }
+            } catch (e: Exception) {
+                Log.e("TripInfoViewModel", "Error loading collaborators", e)
+            }
+        }
+    }
+
+    /**
+     * Adds a user as a collaborator to the current trip.
+     *
+     * Updates the trip in the repository by appending the user's UID to the collaborators list and
+     * reloads the local collaborator data.
+     *
+     * @param user The user to add as a collaborator.
+     */
+    override fun addCollaborator(user: User) {
+        val currentTripId = _uiState.value.uid
+        if (currentTripId.isBlank()) return
+
+        viewModelScope.launch {
+            try {
+                tripsRepository.shareTripWithUsers(currentTripId, listOf(user.uid))
+                // Reload local state
+                loadCollaboratorData()
+            } catch (e: Exception) {
+                setErrorMsg("Failed to add collaborator: ${e.message}")
+            }
+        }
+    }
+
+    /**
+     * Removes a user from the current trip's collaborators.
+     *
+     * Updates the trip in the repository by removing the user's UID from the collaborators list and
+     * reloads the local collaborator data.
+     *
+     * @param user The user to remove.
+     */
+    override fun removeCollaborator(user: User) {
+        val currentTripId = _uiState.value.uid
+        if (currentTripId.isBlank()) return
+
+        viewModelScope.launch {
+            try {
+                tripsRepository.removeCollaborator(currentTripId, user.uid)
+
+                loadCollaboratorData()
+            } catch (e: Exception) {
+                setErrorMsg("Failed to remove collaborator: ${e.message}")
+            }
+        }
+    }
+
+    override fun getMajorSwissCities(context: Context) {
+        val cityArray = context.resources.getStringArray(R.array.swiss_major_cities)
+        val majorSwissCitiesList = cityArray.mapNotNull { entry ->
+            val parts = entry.split(";")
+            if (parts.size >= 5) {
+                try {
+                    val name = parts[0].trim()
+                    val lat = parts[1].trim().toDouble()
+                    val lon = parts[2].trim().toDouble()
+                    val radius = parts[3].trim().toInt()
+                    val maxDays = parts[4].trim().toDouble()
+                    CityConfig(Location(Coordinate(lat, lon), name), radius, maxDays)
+                } catch (e: Exception) {
+                    Log.e("TripAlgorithm", "Failed to parse City Config location: $entry", e)
+                    null
+                }
+            } else {
+                Log.w("TripAlgorithm", "Invalid City Config entry format: $entry")
+                null
+            }
+        }
+        _majorSwissCities.value = majorSwissCitiesList
+    }
 }

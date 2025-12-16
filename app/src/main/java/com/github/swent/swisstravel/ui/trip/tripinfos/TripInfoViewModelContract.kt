@@ -93,7 +93,7 @@ interface TripInfoViewModelContract {
    * @param liked a boolean indicating whether you liked the activity or not
    * @param enableNewFetch whether to fetch a new activity after the swipe or not
    */
-  fun swipeActivity(liked: Boolean, enableNewFetch: Boolean = true)
+  fun swipeActivity(liked: Boolean)
 
   /**
    * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
@@ -141,4 +141,13 @@ interface TripInfoViewModelContract {
    * @param user The user to remove.
    */
   fun removeCollaborator(user: User)
+
+  /**
+   * Loads the list of major Swiss cities from resources.
+   *
+   * @param context The Android context used to access resources.
+   */
+  fun getMajorSwissCities(context: Context)
+
+  suspend fun fetchSwipeActivity()
 }

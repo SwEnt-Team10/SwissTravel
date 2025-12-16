@@ -22,7 +22,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 const val DESCRIPTION_FALLBACK = "No description"
-const val NUMBER_ACTIVITIES_TO_FETCH = 40
+const val NUMBER_ACTIVITIES_TO_FETCH = 45
 
 // This code was done with AI
 /**

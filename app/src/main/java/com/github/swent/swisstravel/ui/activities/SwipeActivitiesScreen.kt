@@ -19,6 +19,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -27,12 +28,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
@@ -58,6 +61,14 @@ fun SwipeActivitiesScreen(
     onTripInfo: () -> Unit = {},
     tripInfoVM: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
+    // Get the current context
+    val context = LocalContext.current
+
+    // Call the function once when this screen enters the composition
+    LaunchedEffect(Unit) {
+        tripInfoVM.getMajorSwissCities(context)
+        tripInfoVM.fetchSwipeActivity()
+    }
   val state by tripInfoVM.uiState.collectAsState()
   Scaffold(
       topBar = {

@@ -171,6 +171,11 @@ class TripsRepositoryFirestore(
             (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
           } ?: emptyList()
 
+        val allFetchedLocations =
+            (document["allFetchedLocations"] as? List<*>)?.mapNotNull { locationMap ->
+                (locationMap as? Map<*, *>)?.let { mapToLocation(it) }
+            } ?: emptyList()
+
       Trip(
           uid = uid,
           name = name,
@@ -186,7 +191,8 @@ class TripsRepositoryFirestore(
           cachedActivities = cachedActivities,
           likedActivities = likedActivities,
           activitiesQueue = activitiesQueue,
-          allFetchedForSwipe = allFetchedForSwipe)
+          allFetchedForSwipe = allFetchedForSwipe,
+          allFetchedLocations = allFetchedLocations)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null
@@ -344,6 +350,7 @@ class TripsRepositoryFirestore(
         "likedActivities" to trip.likedActivities,
         "activitiesQueue" to trip.activitiesQueue,
         "allFetchedForSwipe" to trip.allFetchedForSwipe,
+        "allFetchedLocations" to trip.allFetchedLocations,
         "cachedActivities" to trip.cachedActivities)
   }
   /**
