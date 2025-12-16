@@ -1,8 +1,10 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos
 
+import android.content.Context
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.mapbox.geojson.Point
 import kotlinx.coroutines.flow.StateFlow
 
@@ -13,8 +15,9 @@ interface TripInfoViewModelContract {
    * Loads trip information for the given UID.
    *
    * @param uid The unique identifier of the trip to load.
+   * @param forceReload If true, forces a fetch even if the UID matches the current state.
    */
-  fun loadTripInfo(uid: String?)
+  fun loadTripInfo(uid: String?, forceReload: Boolean = false)
   /** Toggles the favorite status of the trip. */
   fun toggleFavorite()
   /** Clears any error message in the UI state. */
@@ -64,11 +67,51 @@ interface TripInfoViewModelContract {
   fun updateUserLocation(point: Point)
 
   /**
-   * Likes the given activity, adding it to the list of liked activities.
+   * Likes the given activities, adding them to the list of liked activities.
    *
-   * @param activity The activity to like.
+   * @param activities The activities to like.
    */
-  fun likeActivity(activity: Activity)
+  fun likeActivities(activities: List<Activity>)
+
+  /** Unlikes the selected activities, removing them from the list of liked activities. */
+  fun unlikeSelectedActivities()
+
+  /**
+   * Schedules the selected liked activities.
+   *
+   * If there is no room for selected activities to be scheduled, it will respond with a toast
+   *
+   * @param context The context of the application to use for scheduling.
+   */
+  fun scheduleSelectedActivities(context: Context)
+
+  /**
+   * If you liked the activity, it will add the activity to the liked activities list of the trip.
+   *
+   * Otherwise, it is considered as a dislike
+   *
+   * @param liked a boolean indicating whether you liked the activity or not
+   * @param enableNewFetch whether to fetch a new activity after the swipe or not
+   */
+  fun swipeActivity(liked: Boolean, enableNewFetch: Boolean = true)
+
+  /**
+   * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  fun selectLikedActivity(activity: Activity)
+
+  /**
+   * Deselects an activity (in the LikedActivitiesScreen) (used if the user doesn't want to schedule
+   * the activity or unlike it)
+   *
+   * @param activity The activity to add to the list of selected liked activities
+   */
+  fun deselectLikedActivity(activity: Activity)
+
+  /** Helper to map the tripInfoUIState to a TripSettings. */
+  fun mapToTripSettings(): TripSettings
 
   /**
    * Adds a user as a collaborator to the current trip.

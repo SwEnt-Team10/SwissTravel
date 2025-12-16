@@ -28,7 +28,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
 
 class TripCreationViewModelTest {
 
@@ -37,6 +36,7 @@ class TripCreationViewModelTest {
   private lateinit var fakeUserRepo: FakeUserRepository
   private lateinit var fakeActivityRepo: FakeActivityRepository
   private lateinit var viewModel: TripSettingsViewModel
+  private lateinit var mockAlgorithm: TripAlgorithm
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Before
@@ -45,11 +45,17 @@ class TripCreationViewModelTest {
     fakeRepo = FakeTripsRepository()
     fakeUserRepo = FakeUserRepository()
     fakeActivityRepo = FakeActivityRepository()
+
+    // Mock the algorithm to avoid Android Resource crashes in 'init'
+    mockAlgorithm = mockk(relaxed = true)
+    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
+
     viewModel =
         TripSettingsViewModel(
             tripsRepository = fakeRepo,
             userRepository = fakeUserRepo,
-            activityRepository = fakeActivityRepo)
+            activityRepository = fakeActivityRepo,
+            algorithmFactory = algorithmFactory)
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -60,23 +66,11 @@ class TripCreationViewModelTest {
 
   @Test
   fun `randomTrip should pick locations and save the trip`() = runTest {
-    // Mocks
-    val mockAlgorithm = mockk<TripAlgorithm>()
+    // Mocks for Context/Resources (needed for RandomTripGenerator logic inside ViewModel,
+    // potentially)
     val mockContext = mockk<Context>()
     val mockResources = mockk<Resources>()
 
-    // A factory that returns our mock algorithm
-    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
-
-    val viewModel =
-        TripSettingsViewModel(
-            tripsRepository = fakeRepo,
-            userRepository = fakeUserRepo,
-            activityRepository = fakeActivityRepo,
-            algorithmFactory = algorithmFactory,
-        )
-
-    // Mocking the resource loading
     val cities =
         arrayOf(
             "Zurich;47.3769;8.5417",
@@ -87,12 +81,13 @@ class TripCreationViewModelTest {
     every { mockResources.getStringArray(R.array.grand_tour) } returns cities
 
     // Mock the algorithm response
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any(), any()) } returns emptyList()
 
     // Setup initial state
-    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4))
-    viewModel.setRandomTrip(true)
-    viewModel.updateArrivalLocation(Location(Coordinate(46.315833, 6.193056), "Coppet", ""))
+    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4)) // 4-day trip
+    viewModel.setRandomTrip(true) // Simulate being in random mode
+    viewModel.updateArrivalLocation(
+        Location(Coordinate(46.315833, 6.193056), "Coppet", "")) // Arrival location in Coppet
 
     // Use a seed for predictable "randomness"
     viewModel.randomTrip(mockContext, seed = 123)
@@ -131,7 +126,10 @@ class TripCreationViewModelTest {
 
     // Act
     viewModel.onNextFromDateScreen()
-    assertEquals(ValidationEvent.EndDateIsBeforeStartDateError, viewModel.validationEvents.first())
+
+    // Assert
+    val event = viewModel.validationEvents.first()
+    assertEquals(ValidationEvent.EndDateIsBeforeStartDateError, event)
   }
 
   @Test
@@ -143,7 +141,10 @@ class TripCreationViewModelTest {
 
     // Act
     viewModel.onNextFromDateScreen()
-    assertEquals(ValidationEvent.Proceed, viewModel.validationEvents.first())
+
+    // Assert
+    val event = viewModel.validationEvents.first()
+    assertEquals(ValidationEvent.Proceed, event)
   }
 
   @Test
@@ -169,7 +170,9 @@ class TripCreationViewModelTest {
             Preference.SPORTS)
 
     viewModel.updatePreferences(preferences)
-    assertEquals(preferences, viewModel.tripSettings.value.preferences)
+
+    val newPreferences = viewModel.tripSettings.value.preferences
+    assertEquals(preferences, newPreferences)
   }
 
   @Test
@@ -177,16 +180,13 @@ class TripCreationViewModelTest {
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
 
     // Act
-    val fakeContext: Context = mock()
+    val fakeContext: Context = mockk()
     viewModel.saveTrip(fakeContext)
 
     // Assert
-    when (val event = viewModel.validationEvents.first()) {
-      is ValidationEvent.SaveError -> {
-        assertEquals("Arrival location must not be null", event.message)
-      }
-      else -> throw AssertionError("Expected SaveError but got $event")
-    }
+    val event = viewModel.validationEvents.first()
+    assertTrue(event is ValidationEvent.SaveError)
+    assertEquals("Arrival location must not be null", event.message)
   }
 
   @Test
@@ -195,37 +195,20 @@ class TripCreationViewModelTest {
     viewModel.updateArrivalLocation(Location(Coordinate(1.0, 1.0), "loc1"))
 
     // Act
-    val fakeContext: Context = mock()
+    val fakeContext: Context = mockk()
     viewModel.saveTrip(fakeContext)
 
     // Assert
-    when (val event = viewModel.validationEvents.first()) {
-      is ValidationEvent.SaveError -> {
-        assertEquals("Departure location must not be null", event.message)
-      }
-      else -> throw AssertionError("Expected SaveError but got $event")
-    }
+    val event = viewModel.validationEvents.first()
+    assertTrue(event is ValidationEvent.SaveError)
+    assertEquals("Departure location must not be null", (event).message)
   }
 
-  // Refactored using AI
   @Test
   fun saveTripShouldAddTripAndEmitSaveSuccess() = runTest {
-    val mockAlgorithm = mockk<TripAlgorithm>()
-    val fakeContext: Context = mockk()
+    val fakeContext: Context = mockk(relaxed = true)
 
-    // A factory that returns our mock algorithm
-    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
-
-    val viewModel =
-        TripSettingsViewModel(
-            tripsRepository = fakeRepo,
-            userRepository = fakeUserRepo,
-            activityRepository = fakeActivityRepo,
-            algorithmFactory = algorithmFactory,
-        )
-
-    // Algorithm returns empty schedule → no activities or route segments
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -235,34 +218,24 @@ class TripCreationViewModelTest {
 
     viewModel.saveTrip(fakeContext)
 
-    assertEquals(ValidationEvent.SaveSuccess, viewModel.validationEvents.first())
+    val event = viewModel.validationEvents.first()
+    assertEquals(ValidationEvent.SaveSuccess, event)
+
     val added = fakeRepo.addedTrip
     assertNotNull(added)
     assertEquals(2, added.tripProfile.adults)
     assertEquals(1, added.tripProfile.children)
   }
 
-  // Refactored using AI
   @Test
   fun saveTripShouldEmitSaveErrorWhenRepositoryThrows() = runTest {
-    val mockAlgorithm = mockk<TripAlgorithm>()
-    val fakeContext: Context = mockk()
+    val fakeContext: Context = mockk(relaxed = true)
 
     // The fake repo will throw when saving
     fakeRepo.shouldThrow = true
 
-    val algorithmFactory: (Context, TripSettings) -> TripAlgorithm = { _, _ -> mockAlgorithm }
-
-    val viewModel =
-        TripSettingsViewModel(
-            tripsRepository = fakeRepo,
-            userRepository = fakeUserRepo,
-            activityRepository = fakeActivityRepo,
-            algorithmFactory = algorithmFactory,
-        )
-
     // Algorithm still returns empty schedule
-    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any()) } returns emptyList()
+    coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any(), any()) } returns emptyList()
 
     viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 2))
     viewModel.updateTravelers(2, 1)
@@ -281,9 +254,11 @@ class TripCreationViewModelTest {
 
   @Test
   fun updateNameWithDifferentString() = runTest {
-    viewModel.updateName("")
+    val emptyString = ""
+    viewModel.updateName(emptyString)
     assertEquals(viewModel.tripSettings.value.invalidNameMsg, R.string.name_empty)
-    viewModel.updateName("Test Trip")
+    val fakeName = "Test Trip"
+    viewModel.updateName(fakeName)
     assertNull(viewModel.tripSettings.value.invalidNameMsg)
   }
 }

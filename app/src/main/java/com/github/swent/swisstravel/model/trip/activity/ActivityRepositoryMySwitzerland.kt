@@ -11,8 +11,6 @@ import com.google.firebase.Timestamp
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.collections.emptyList
-import kotlin.math.ceil
-import kotlin.math.max
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -24,11 +22,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 const val DESCRIPTION_FALLBACK = "No description"
-// Frequency to which activities are shuffled to introduce randomness
-const val ACTIVITY_SHUFFLE = 0.5f
-// How many activities we should pull from the API to make activity selection more random
-const val EXTRA_RANDOM_ACTIVITIES = 0.75f
+const val NUMBER_ACTIVITIES_TO_FETCH = 40
 
+// This code was done with AI
 /**
  * Implementation of a repository for activities. Uses the Swiss Tourism API.
  *
@@ -255,7 +251,7 @@ class ActivityRepositoryMySwitzerland(
   }
 
   /**
-   * Fetches valid activities with pagination until the desired limit is reached.
+   * Fetches valid activities.
    *
    * @param baseUrl The base URL to fetch activities from.
    * @param limit The limit of the number of valid activities to return.
@@ -263,7 +259,7 @@ class ActivityRepositoryMySwitzerland(
    * @param cachedActivities The list of activities to cache.
    * @return A list of valid activities up to the specified limit.
    */
-  private suspend fun fetchValidActivitiesPaginated(
+  private suspend fun fetchValidActivities(
       baseUrl: HttpUrl,
       limit: Int,
       activityBlackList: List<String> = emptyList(),
@@ -272,10 +268,11 @@ class ActivityRepositoryMySwitzerland(
 
     val validResults = mutableListOf<Activity>()
 
-    val numberToFetch = max(10, ceil(limit * 1.5).toInt())
-
     val url =
-        baseUrl.newBuilder().setQueryParameter("hitsPerPage", numberToFetch.toString()).build()
+        baseUrl
+            .newBuilder()
+            .setQueryParameter("hitsPerPage", NUMBER_ACTIVITIES_TO_FETCH.toString())
+            .build()
 
     val pageActivities = fetchActivitiesFromUrl(url)
 
@@ -284,28 +281,29 @@ class ActivityRepositoryMySwitzerland(
           it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
         }
 
+    val unValid =
+        pageActivities.filter {
+          !it.isValid(blacklistedActivityNames = blacklistedActivityNames + activityBlackList)
+        }
+
+    // remove all the activities that were unvalid from the cache in case there were some in it
+    cachedActivities.removeAll(unValid)
+
     validResults.addAll(filtered)
     validResults.shuffle()
 
     val returnedActivities = validResults.take(limit)
-    cachedActivities.addAll(validResults.drop(limit))
+    val candidatesForCache = validResults.drop(limit)
+    for (candidate in candidatesForCache) {
+      // Check if this activity is already in the cache (matching location)
+      val isDuplicate =
+          cachedActivities.any { cached -> cached.location.sameLocation(candidate.location) }
 
-    return returnedActivities
-  }
-
-  /**
-   * This is public for testing purposes only and is not dangerous to have in public. Determine the
-   * number of activities to pull from the API, adding randomness.
-   *
-   * @param limit The base limit of activities to pull.
-   * @return The adjusted number of activities to pull.
-   */
-  fun getActivityNumberToPull(limit: Int, random: Boolean): Int {
-    return if (random) {
-      ceil(limit + (limit * EXTRA_RANDOM_ACTIVITIES)).toInt()
-    } else {
-      limit
+      if (!isDuplicate) {
+        cachedActivities.add(candidate)
+      }
     }
+    return returnedActivities
   }
 
   /**
@@ -323,7 +321,7 @@ class ActivityRepositoryMySwitzerland(
       activityBlackList: List<String>,
       cachedActivities: MutableList<Activity>
   ): List<Activity> {
-    return fetchValidActivitiesPaginated(
+    return fetchValidActivities(
         baseHttpUrl, limit, activityBlackList, cachedActivities = cachedActivities)
   }
 
@@ -351,7 +349,7 @@ class ActivityRepositoryMySwitzerland(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchValidActivitiesPaginated(
+    return fetchValidActivities(
         baseUrl, limit, activityBlackList, cachedActivities = cachedActivities)
   }
 
@@ -370,7 +368,7 @@ class ActivityRepositoryMySwitzerland(
       activityBlackList: List<String>,
       cachedActivities: MutableList<Activity>
   ): List<Activity> {
-    return fetchValidActivitiesPaginated(
+    return fetchValidActivities(
         computeUrlWithPreferences(preferences, limit),
         limit,
         activityBlackList,
@@ -414,7 +412,7 @@ class ActivityRepositoryMySwitzerland(
                 "geo.dist", "${coordinate.latitude},${coordinate.longitude},$radiusMeters")
             .build()
 
-    return fetchValidActivitiesPaginated(
+    return fetchValidActivities(
         baseUrl, limit, activityBlackList, cachedActivities = cachedActivities)
   }
 

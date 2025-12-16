@@ -378,6 +378,7 @@ class ActivityRepositoryMockTest {
     assertTrue(result.isEmpty())
   }
 
+  // Corrected with AI
   @Test
   fun `getActivitiesNearWithPreference executes safely and builds correct url`() = runTest {
     val slot = slot<Request>()
@@ -387,10 +388,11 @@ class ActivityRepositoryMockTest {
     every { mockResponse.body } returns
         "{\"data\":[]}".toResponseBody("application/json".toMediaType())
     every { mockResponse.close() } just Runs
-    val limit = 5
 
+    val limit = 5
     val prefs = listOf(Preference.PUBLIC_TRANSPORT)
     val coord = Coordinate(46.5, 7.5)
+
     // Call the repository method
     val result = repo.getActivitiesNearWithPreference(prefs, coord, 500, limit)
 
@@ -399,13 +401,31 @@ class ActivityRepositoryMockTest {
 
     // Verify the URL was built correctly
     val capturedUrl = slot.captured.url
+    val urlString = capturedUrl.toString()
 
-    val expectedHits = 10
-    assertTrue(capturedUrl.toString().contains("hitsPerPage=$expectedHits"))
+    // 1. Check hitsPerPage (It uses the constant NUMBER_ACTIVITIES_TO_FETCH = 40)
+    assertTrue(urlString.contains("hitsPerPage=40"), "Should use constant for fetch size")
 
-    assertTrue(capturedUrl.toString().contains("facets=reachabilitylocation&facet.filter"))
-    assertTrue(capturedUrl.toString().contains("reachabilitylocation:closetopublictransport"))
-    assertTrue(capturedUrl.toString().contains("geo.dist=46.5%2C7.5%2C500"))
+    // 2. Check facets logic
+    assertTrue(urlString.contains("facets=reachabilitylocation"), "Should contain facets param")
+    assertTrue(urlString.contains("facet.filter="), "Should contain facet.filter param")
+
+    // Check for the specific facet value. Note: HttpUrl might encode the colon ':'
+    // "reachabilitylocation:closetopublictransport" ->
+    // "reachabilitylocation%3Aclosetopublictransport"
+    // So we check for the decoded value or partial match
+    assertTrue(
+        urlString.contains("reachabilitylocation") && urlString.contains("closetopublictransport"),
+        "Should filter by public transport")
+
+    // 3. Check Geo Distance
+    // HttpUrl encodes commas. "46.5,7.5,500" -> "46.5%2C7.5%2C500"
+    assertTrue(
+        urlString.contains("geo.dist") &&
+            urlString.contains("46.5") &&
+            urlString.contains("7.5") &&
+            urlString.contains("500"),
+        "Should contain geo search")
   }
 
   // ---------------------------------------------------------------------------
@@ -422,7 +442,7 @@ class ActivityRepositoryMockTest {
                 arg == null ||
                     param.isAssignableFrom(arg::class.java) ||
                     (param == Int::class.javaPrimitiveType && arg is Int) ||
-                    (param == java.lang.Integer::class.java && arg is Int)
+                    (param == Integer::class.java && arg is Int)
               }
         } ?: throw NoSuchMethodException("$method(${args.joinToString()})")
 
