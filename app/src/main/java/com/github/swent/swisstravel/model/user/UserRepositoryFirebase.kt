@@ -13,6 +13,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withTimeout
 
 class UserRepositoryFirebase(
     private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
@@ -29,40 +30,66 @@ class UserRepositoryFirebase(
    * the user's information is not found in Firestore, a new user is created.
    */
   override suspend fun getCurrentUser(): User {
-    val firebaseUser =
-        auth.currentUser
-            ?: // If not signed in, return a guest user
-            return User(
-                uid = "guest",
-                name = "Guest",
-                biography = "",
-                email = "Not signed in",
-                profilePicUrl = "",
-                preferences = emptyList(),
-                friends = emptyList(),
-                stats = UserStats(),
-                pinnedTripsUids = emptyList(),
-                pinnedPicturesUids = emptyList(),
-                favoriteTripsUids = emptyList())
-
+    val firebaseUser = auth.currentUser ?: return createGuestUser()
     val uid = firebaseUser.uid
+
     return try {
-      val doc = db.collection("users").document(uid)[Source.SERVER].await()
-      if (doc.exists()) createUserFromDoc(doc, uid) else createAndStoreNewUser(firebaseUser, uid)
+      withTimeout(3000L) {
+        val doc = db.collection("users").document(uid)[Source.SERVER].await()
+        if (doc.exists()) {
+          createUserFromDoc(doc, uid)
+        } else {
+          createAndStoreNewUser(firebaseUser, uid)
+        }
+      }
     } catch (_: Exception) {
+      // If timeout hits (TimeoutCancellationException) or network fails
       try {
+        // Fallback to CACHE immediately
         val cachedDoc = db.collection("users").document(uid)[Source.CACHE].await()
         if (cachedDoc.exists()) {
           createUserFromDoc(cachedDoc, uid)
         } else {
-          Log.e("UserRepositoryFirebase", "User data not found in cache and server unreachable.")
-          error("User data not found in cache and server unreachable.")
+          Log.w("UserRepository", "Offline: No cache found.")
+          createOfflineFallback(firebaseUser, uid)
         }
-      } catch (_: Exception) {
-        Log.e("UserRepositoryFirebase", "User data not found in cache and server unreachable.")
-        error("User data not found in cache and server unreachable.")
+      } catch (e: Exception) {
+        // Double fail (No Server, No Cache) -> Return Offline Placeholder
+        createOfflineFallback(firebaseUser, uid)
       }
     }
+  }
+
+  // Helper for the guest user to keep the main function clean
+  private fun createGuestUser(): User {
+    return User(
+        uid = "guest",
+        name = "Guest",
+        biography = "",
+        email = "Not signed in",
+        profilePicUrl = "",
+        preferences = emptyList(),
+        friends = emptyList(),
+        stats = UserStats(),
+        pinnedTripsUids = emptyList(),
+        pinnedPicturesUids = emptyList(),
+        favoriteTripsUids = emptyList())
+  }
+
+  // Helper to create a safe fallback user so the app doesn't crash
+  private fun createOfflineFallback(firebaseUser: FirebaseUser, uid: String): User {
+    return User(
+        uid = uid,
+        name = firebaseUser.displayName ?: "Offline User",
+        biography = "Offline mode - data unavailable",
+        email = firebaseUser.email ?: "",
+        profilePicUrl = firebaseUser.photoUrl?.toString() ?: "",
+        preferences = emptyList(),
+        friends = emptyList(),
+        stats = UserStats(),
+        pinnedTripsUids = emptyList(),
+        pinnedPicturesUids = emptyList(),
+        favoriteTripsUids = emptyList())
   }
 
   /**
