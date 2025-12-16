@@ -39,7 +39,9 @@ class FriendElementTest {
 
     composeRule.setContent {
       FriendElement(
-          userToDisplay = user, onClick = {}, isPendingRequest = false, shouldAccept = false)
+          userToDisplay = user,
+          actions = FriendElementActions(onClick = {}),
+          state = FriendElementState(isPendingRequest = false, shouldAccept = false))
     }
 
     // Arrow is visible
@@ -62,11 +64,12 @@ class FriendElementTest {
     composeRule.setContent {
       FriendElement(
           userToDisplay = user,
-          onClick = {},
-          isPendingRequest = true,
-          shouldAccept = true,
-          onAccept = { acceptCalled = true },
-          onDecline = { declineCalled = true })
+          actions =
+              FriendElementActions(
+                  onClick = {},
+                  onAccept = { acceptCalled = true },
+                  onDecline = { declineCalled = true }),
+          state = FriendElementState(isPendingRequest = true, shouldAccept = true))
     }
 
     // Arrow should not be visible
@@ -93,9 +96,8 @@ class FriendElementTest {
     composeRule.setContent {
       FriendElement(
           userToDisplay = user,
-          onClick = { clicked = true },
-          isPendingRequest = false,
-          shouldAccept = false)
+          actions = FriendElementActions(onClick = { clicked = true }),
+          state = FriendElementState(isPendingRequest = false, shouldAccept = false))
     }
 
     // Card has correct test tag
@@ -108,5 +110,24 @@ class FriendElementTest {
     // Clicking the card triggers onClick
     composeRule.onNodeWithTag(cardTag).performClick()
     assertEquals(true, clicked)
+  }
+
+  @Test
+  fun friendElement_showsAddIconWhenIsAddMode() {
+    val user = sampleUser()
+
+    composeRule.setContent {
+      FriendElement(
+          userToDisplay = user,
+          actions = FriendElementActions(onClick = {}),
+          // UPDATED: Testing new isAddMode flag
+          state = FriendElementState(isAddMode = true))
+    }
+
+    // Add icon is visible
+    composeRule.onNodeWithTag(FriendElementTestTags.ADD_ICON, useUnmergedTree = true).assertExists()
+
+    // Arrow should NOT be visible
+    composeRule.onNodeWithTag(FriendElementTestTags.ARROW_ICON).assertDoesNotExist()
   }
 }
