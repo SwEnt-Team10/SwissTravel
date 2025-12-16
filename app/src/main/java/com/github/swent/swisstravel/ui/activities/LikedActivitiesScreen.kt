@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
+import com.github.swent.swisstravel.ui.tripcreation.LoadingScreen
 
 object LikedActivitiesScreenTestTags {
   const val SCREEN_TITLE = "liked_activities_screen_title"
@@ -52,10 +54,22 @@ fun LikedActivitiesScreen(
     onBack: () -> Unit = {},
     tripInfoVM: TripInfoViewModelContract,
     onUnlike: () -> Unit = {},
-    onSchedule: () -> Unit = {}
+    onSchedule: () -> Unit = {},
+    onNext: () -> Unit = {}
 ) {
   val state by tripInfoVM.uiState.collectAsState()
   val likedActivities = state.likedActivities
+
+    LaunchedEffect(state.isScheduling) {
+        if (!state.isScheduling && state.savingProgress == 1f) {
+            onNext()
+        }
+    }
+
+    if (state.isScheduling) {
+        LoadingScreen(progress = state.savingProgress)
+        return
+    }
 
   Scaffold(
       topBar = {

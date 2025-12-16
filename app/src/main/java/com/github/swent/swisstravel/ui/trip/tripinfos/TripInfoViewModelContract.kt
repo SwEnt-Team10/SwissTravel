@@ -83,7 +83,7 @@ interface TripInfoViewModelContract {
    *
    * @param context The context of the application to use for scheduling.
    */
-  fun scheduleSelectedActivities(context: Context)
+  suspend fun scheduleSelectedActivities(context: Context)
 
   /**
    * If you liked the activity, it will add the activity to the liked activities list of the trip.
