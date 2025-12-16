@@ -162,8 +162,21 @@ jobs:
           disable-animations: true
           # The script to unlock the screen before running tests
           script: |
-            adb shell input keyevent 82
+            # 1. Wake up the device and dismiss the keyguard (lock screen)
             adb shell wm dismiss-keyguard
+            adb shell input keyevent 82
+            
+            # 2. Press HOME (3) to go to the launcher, clearing any stuck app states
+            adb shell input keyevent 3
+            
+            # 3. Press BACK (4) multiple times to close any system dialogs (like "System UI not responding")
+            adb shell input keyevent 4
+            adb shell input keyevent 4
+            
+            # 4. Wait a few seconds for the system to settle
+            sleep 5
+            
+            # 5. Run the tests
             ./gradlew connectedCheck --parallel --build-cache
 
       # Upload the test results to the artifacts
