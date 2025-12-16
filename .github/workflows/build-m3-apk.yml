@@ -39,7 +39,7 @@ jobs:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
           MAP_BOX_SECRET: ${{ secrets.MAP_BOX_SECRET }}
-          OPEN_TRANSPORT_DATA_TOKEN: ${{ secrets.OPEN_TRANSPORT_DATA_TOKEN }}
+          GEOAPIFY_API_KEY: ${{ secrets.GEOAPIFY_API_KEY }}
         run: |
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
