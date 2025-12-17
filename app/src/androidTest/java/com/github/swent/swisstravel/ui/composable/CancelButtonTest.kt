@@ -8,30 +8,21 @@ import org.junit.Rule
 import org.junit.Test
 
 class CancelButtonTest {
-    @get:Rule val composeTestRule = createComposeRule()
-    @Test
-    fun cancelButtonIsDisplayed() {
-        composeTestRule.setContent {
-            CancelButton(
-                onCancel = {},
-                contentDescription = "testButton"
-            )
-        }
-        composeTestRule.onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).isDisplayed()
-    }
+  @get:Rule val composeTestRule = createComposeRule()
 
-    @Test
-    fun cancelButtonTriggerWhenClick() {
-        var isClicked = false
-        composeTestRule.setContent {
-            CancelButton(
-                onCancel = {
-                    isClicked = true
-                },
-                contentDescription = "testButton"
-            )
-        }
-        composeTestRule.onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).performClick()
-        assert(isClicked)
+  @Test
+  fun cancelButtonIsDisplayed() {
+    composeTestRule.setContent { CancelButton(onCancel = {}, contentDescription = "testButton") }
+    composeTestRule.onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).isDisplayed()
+  }
+
+  @Test
+  fun cancelButtonTriggerWhenClick() {
+    var isClicked = false
+    composeTestRule.setContent {
+      CancelButton(onCancel = { isClicked = true }, contentDescription = "testButton")
     }
+    composeTestRule.onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).performClick()
+    assert(isClicked)
+  }
 }

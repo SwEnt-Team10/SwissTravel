@@ -180,6 +180,7 @@ private fun FriendsTopAppBar(
       },
       actions = {
         if (isSearching) {
+
           IconButton(onClick = onCloseSearch) {
             Icon(
                 imageVector = Icons.Default.Close,

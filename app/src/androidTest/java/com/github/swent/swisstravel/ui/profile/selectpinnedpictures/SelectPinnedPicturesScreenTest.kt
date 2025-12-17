@@ -7,10 +7,10 @@ import com.github.swent.swisstravel.model.image.Image
 import com.github.swent.swisstravel.model.image.ImageRepositoryFirebase
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.ui.composable.CancelButtonTestTag
 import com.github.swent.swisstravel.ui.composable.DeleteDialogTestTags
 import com.github.swent.swisstravel.ui.composable.PhotoGridTestTags
 import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.ADD_PICTURE_BUTTON
-import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.CANCEL_BUTTON
 import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.EDIT_BUTTON
 import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.LOADING_INDICATOR
 import com.github.swent.swisstravel.ui.profile.selectpinnedpictures.SelectPinnedPicturesScreenTestTags.MAIN_SCREEN
@@ -133,7 +133,6 @@ class SelectPinnedPicturesScreenTest {
 
     // Verify Edit Mode Buttons are not displayed
     composeTestRule.onNodeWithTag(REMOVE_BUTTON).assertDoesNotExist()
-    composeTestRule.onNodeWithTag(CANCEL_BUTTON).assertDoesNotExist()
 
     composeTestRule.onNodeWithTag(LOADING_INDICATOR).assertDoesNotExist()
   }
@@ -154,7 +153,6 @@ class SelectPinnedPicturesScreenTest {
     composeTestRule.onNodeWithTag(EDIT_BUTTON).performClick()
 
     // Check UI Changes
-    composeTestRule.onNodeWithTag(CANCEL_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(REMOVE_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(REMOVE_BUTTON).assertIsNotEnabled() // No selection yet
 
@@ -163,7 +161,7 @@ class SelectPinnedPicturesScreenTest {
     composeTestRule.onNodeWithTag(EDIT_BUTTON).assertDoesNotExist()
 
     // Exit Edit Mode
-    composeTestRule.onNodeWithTag(CANCEL_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).performClick()
 
     // Verify Reversion
     composeTestRule.onNodeWithTag(EDIT_BUTTON).assertIsDisplayed()

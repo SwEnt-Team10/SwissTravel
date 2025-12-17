@@ -7,11 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,6 +23,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.composable.CancelButton
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
@@ -39,7 +36,6 @@ import com.github.swent.swisstravel.ui.navigation.Screen
 object SetCurrentTripScreenTestTags {
   const val TOP_BAR = "SetCurrentTripScreenTopBar"
   const val TOP_BAR_TITLE = "SetCurrentTripScreenTopBarTitle"
-  const val TOP_BAR_CLOSE_BUTTON = "SetCurrentTripScreenTopBarCloseButton"
 }
 
 /**
@@ -138,14 +134,7 @@ fun TopBarSetCurrentTrip(
             modifier = Modifier.testTag(SetCurrentTripScreenTestTags.TOP_BAR_TITLE))
       },
       navigationIcon = {
-        IconButton(
-            onClick = onClose,
-            modifier = Modifier.testTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON)) {
-              Icon(
-                  imageVector = Icons.Filled.Close,
-                  contentDescription = stringResource(R.string.close),
-                  tint = MaterialTheme.colorScheme.onBackground)
-            }
+        CancelButton(onCancel = onClose, contentDescription = stringResource(R.string.close))
       },
       actions = {
         SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = selectedSortType)
