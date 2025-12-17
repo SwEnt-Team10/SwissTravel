@@ -84,13 +84,14 @@ class UserRepositoryMockTest {
     // Act
     repo.updateUser(
         uid = "uid123",
-        name = null,
-        biography = null,
-        profilePicUrl = "http://pic",
-        preferences = listOf(Preference.SCENIC_VIEWS, Preference.WHEELCHAIR_ACCESSIBLE),
-        pinnedTripsUids = listOf("t1", "t2"),
-        pinnedPicturesUids = null // not updated
-        )
+        UserUpdate(
+            name = null,
+            biography = null,
+            profilePicUrl = "http://pic",
+            preferences = listOf(Preference.SCENIC_VIEWS, Preference.WHEELCHAIR_ACCESSIBLE),
+            pinnedTripsUids = listOf("t1", "t2"),
+            pinnedPicturesUids = null // not updated
+            ))
 
     // Assert: update() must have been called
     assertNotNull(captured)
@@ -103,7 +104,8 @@ class UserRepositoryMockTest {
         )
     // Assert each key/value
     assertEquals("http://pic", map["profilePicUrl"])
-    assertEquals(listOf("SCENIC_VIEWS", "WHEELCHAIR_ACCESSIBLE"), map["preferences"])
+    assertEquals(
+        listOf(Preference.SCENIC_VIEWS, Preference.WHEELCHAIR_ACCESSIBLE), map["preferences"])
     assertEquals(listOf("t1", "t2"), map["pinnedTripsUids"])
     assertFalse(map.containsKey("pinnedImagesUris"))
     // TODO fix URIs cause it doesn't work in the test for some reason

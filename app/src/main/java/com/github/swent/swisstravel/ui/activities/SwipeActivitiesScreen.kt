@@ -14,6 +14,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -22,6 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -40,6 +42,8 @@ object SwipeActivitiesScreenTestTags {
   const val DISLIKE_BUTTON = "swipe_activities_screen_dislike_button"
 }
 
+private const val ANIMATION_MS = 900
+
 /**
  * Screen to find activities by swiping like/dislike.
  *
@@ -53,6 +57,14 @@ fun SwipeActivitiesScreen(
     onTripInfo: () -> Unit = {},
     tripInfoVM: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
+  // Get the current context
+  val context = LocalContext.current
+
+  // Call the function once when this screen enters the composition
+  LaunchedEffect(Unit) {
+    tripInfoVM.getMajorSwissCities(context)
+    tripInfoVM.fetchSwipeActivity()
+  }
   val state by tripInfoVM.uiState.collectAsState()
   Scaffold(
       topBar = {
@@ -150,7 +162,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0f
               },
           // duration of the animation
-          animationSpec = tween(300))
+          animationSpec = tween(ANIMATION_MS))
 
   // Parameter for horizontal movement
   val offsetX =
@@ -164,7 +176,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0.dp
               },
           // duration of the animation
-          animationSpec = tween(300),
+          animationSpec = tween(ANIMATION_MS),
           finishedListener = {
             if (swipeState.value != SwipeState.Idle) {
               onSwiped(swipeState.value == SwipeState.Like)
@@ -186,11 +198,13 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
             verticalAlignment = Alignment.CenterVertically) {
               Button(
                   onClick = { swipeState.value = SwipeState.Dislike },
+                  enabled = swipeState.value == SwipeState.Idle,
                   modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) {
                     Text(stringResource(R.string.dislike_button))
                   }
               Button(
                   onClick = { swipeState.value = SwipeState.Like },
+                  enabled = swipeState.value == SwipeState.Idle,
                   modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)) {
                     Text(stringResource(R.string.like_button))
                   }

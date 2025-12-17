@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -53,7 +54,8 @@ class ProfileSettingsViewModelTest {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Before
   fun setup() {
@@ -185,7 +187,8 @@ class ProfileSettingsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
     coEvery { userRepository.getCurrentUser() } returns guestUser
 
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
@@ -284,7 +287,7 @@ class ProfileSettingsViewModelTest {
   @Test
   fun saveName_updatesUiStateAndCallsRepository() = runTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
-    coEvery { userRepository.updateUser(any(), any(), any()) } just Runs
+    coEvery { userRepository.updateUser(any(), any()) } just Runs
 
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -294,13 +297,13 @@ class ProfileSettingsViewModelTest {
 
     Assert.assertEquals("New Name", viewModel.uiState.value.name)
     Assert.assertFalse(viewModel.uiState.value.isEditingName)
-    coVerify { userRepository.updateUser(fakeUser.uid, name = "New Name") }
+    coVerify { userRepository.updateUser(fakeUser.uid, UserUpdate(name = "New Name")) }
   }
 
   @Test
   fun saveName_setsErrorMsgOnFailure() = runTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
-    coEvery { userRepository.updateUser(any(), any(), any()) } throws Exception("Name error")
+    coEvery { userRepository.updateUser(any(), any()) } throws Exception("Name error")
 
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -314,7 +317,7 @@ class ProfileSettingsViewModelTest {
   @Test
   fun saveBio_updatesUiStateAndCallsRepository() = runTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
-    coEvery { userRepository.updateUser(any(), any(), any()) } just Runs
+    coEvery { userRepository.updateUser(any(), any()) } just Runs
 
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -324,13 +327,13 @@ class ProfileSettingsViewModelTest {
 
     Assert.assertEquals("New Bio", viewModel.uiState.value.biography)
     Assert.assertFalse(viewModel.uiState.value.isEditingBio)
-    coVerify { userRepository.updateUser(fakeUser.uid, biography = "New Bio") }
+    coVerify { userRepository.updateUser(fakeUser.uid, UserUpdate(biography = "New Bio")) }
   }
 
   @Test
   fun saveBio_setsErrorMsgOnFailure() = runTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
-    coEvery { userRepository.updateUser(any(), any(), any()) } throws Exception("Bio error")
+    coEvery { userRepository.updateUser(any(), any()) } throws Exception("Bio error")
 
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -370,7 +373,9 @@ class ProfileSettingsViewModelTest {
     // Use coEvery for suspend function
     coEvery { ImageHelper.uriCompressedToBase64(context, uri) } returns base64
     coEvery { imageRepository.addImage(base64) } returns newUid
-    coEvery { userRepository.updateUser(uid = fakeUser.uid, profilePicUrl = newUid) } just Runs
+    coEvery {
+      userRepository.updateUser(uid = fakeUser.uid, UserUpdate(profilePicUrl = newUid))
+    } just Runs
 
     viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -383,7 +388,7 @@ class ProfileSettingsViewModelTest {
     Assert.assertNull(viewModel.uiState.value.pendingProfilePicUri)
     Assert.assertFalse(viewModel.uiState.value.isLoading)
 
-    coVerify { userRepository.updateUser(uid = fakeUser.uid, profilePicUrl = newUid) }
+    coVerify { userRepository.updateUser(uid = fakeUser.uid, UserUpdate(profilePicUrl = newUid)) }
     unmockkObject(ImageHelper)
   }
 

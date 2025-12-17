@@ -74,6 +74,8 @@ fun LoadingScreen(
                     .testTag(LoadingTestTags.LOADING_TEXT))
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
         LinearProgressIndicator(
-            progress = { progress }, modifier = Modifier.testTag(LoadingTestTags.PROGRESS_BAR))
+            progress = { progress },
+            drawStopIndicator = {},
+            modifier = Modifier.testTag(LoadingTestTags.PROGRESS_BAR))
       }
 }

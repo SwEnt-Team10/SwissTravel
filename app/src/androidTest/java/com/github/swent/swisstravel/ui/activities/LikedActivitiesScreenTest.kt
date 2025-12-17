@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.activities
 
 import android.Manifest
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -13,6 +14,7 @@ import com.github.swent.swisstravel.ui.trip.tripinfo.FakeTripInfoViewModel
 import com.github.swent.swisstravel.ui.tripcreation.TripCreationTests
 import com.github.swent.swisstravel.utils.SwissTravelTest
 import kotlin.test.Test
+import kotlinx.coroutines.launch
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -39,10 +41,12 @@ class LikedActivitiesScreenTest : SwissTravelTest() {
     val context = InstrumentationRegistry.getInstrumentation().targetContext
     vm.setActivities(listOf(fakeActivity))
     composeTestRule.setContent {
+      val scope = rememberCoroutineScope()
+
       LikedActivitiesScreen(
           tripInfoVM = vm,
           onUnlike = { vm.unlikeSelectedActivities() },
-          onSchedule = { vm.scheduleSelectedActivities(context) })
+          onSchedule = { scope.launch { vm.scheduleSelectedActivities(context) } })
     }
   }
 

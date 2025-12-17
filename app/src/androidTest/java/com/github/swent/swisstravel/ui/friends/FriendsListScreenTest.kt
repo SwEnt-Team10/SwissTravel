@@ -10,6 +10,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
@@ -32,7 +33,8 @@ class FriendsListScreenTest {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   private fun fakeViewModel(
       friends: List<User>,
@@ -156,7 +158,8 @@ class FakeUserRepoForUI(
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
   }
 
   override suspend fun getCurrentUser(): User = currentUser
@@ -178,16 +181,8 @@ class FakeUserRepoForUI(
 
   override suspend fun removeFriend(uid: String, friendUid: String) {}
 
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
-  ) {
-    // no-op in test
+  override suspend fun updateUser(uid: String, updates: UserUpdate) {
+    // no op in test
   }
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {

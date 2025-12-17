@@ -12,6 +12,7 @@ import com.github.swent.swisstravel.model.image.ImageRepositoryFirebase
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -177,7 +178,7 @@ class SelectPinnedPicturesViewModel(
         }
 
         // Update profile
-        userRepository.updateUser(uid = user.uid, pinnedPicturesUids = finalUids)
+        userRepository.updateUser(uid = user.uid, UserUpdate(pinnedPicturesUids = finalUids))
 
         _uiState.update { it.copy(isLoading = false) }
         onSuccess()

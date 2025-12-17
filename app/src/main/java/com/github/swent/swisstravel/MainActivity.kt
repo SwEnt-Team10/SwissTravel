@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +82,7 @@ import com.github.swent.swisstravel.ui.trips.PastTripsScreen
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
 /**
@@ -468,7 +470,7 @@ private fun NavGraphBuilder.myTripsNavGraph(
       SetCurrentTripScreen(
           viewModel = myTripsViewModel,
           title = context.getString(R.string.set_current_trip),
-          isSelected = { trip -> trip.isCurrentTrip },
+          isSelected = { trip -> trip.uid == myTripsViewModel.uiState.value.currentTrip?.uid },
           onClose = { navigationActions.goBack() },
           navigationActions = navigationActions)
     }
@@ -581,6 +583,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       val vm = viewModel<TripInfoViewModel>(parentEntry)
       val errorText = stringResource(R.string.no_activities_selected)
+      val scope = rememberCoroutineScope()
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
           tripInfoVM = vm,
@@ -588,14 +591,17 @@ private fun NavGraphBuilder.tripInfoNavGraph(
             if (vm.uiState.value.selectedLikedActivities.isEmpty()) {
               Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
             } else {
-              Toast.makeText(context, "Not Implemented Yet", Toast.LENGTH_SHORT).show()
-              // TODO : use likedActivitiesVM.scheduleSelectedActivities(context)
+              scope.launch { vm.scheduleSelectedActivities(context) }
             }
           },
           onUnlike = {
             if (vm.uiState.value.selectedLikedActivities.isEmpty()) {
               Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
             } else vm.unlikeSelectedActivities()
+          },
+          onNext = {
+            vm.resetSchedulingState()
+            navController.popBackStack()
           })
     }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->

@@ -67,22 +67,9 @@ interface UserRepository {
    * Updates basic user fields in Firestore.
    *
    * @param uid The UID of the user.
-   * @param name Optional new name.
-   * @param biography Optional new biography.
-   * @param profilePicUrl Optional new profile picture URL.
-   * @param preferences Optional list of updated preferences.
-   * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
-   * @param pinnedPicturesUids Optional updated list of pinned picture UIDs.
+   * @param updates The fields to update.
    */
-  suspend fun updateUser(
-      uid: String,
-      name: String? = null,
-      biography: String? = null,
-      profilePicUrl: String? = null,
-      preferences: List<Preference>? = null,
-      pinnedTripsUids: List<String>? = null,
-      pinnedPicturesUids: List<String>? = null
-  )
+  suspend fun updateUser(uid: String, updates: UserUpdate)
 
   /**
    * Adds a trip to the user's favorite list.

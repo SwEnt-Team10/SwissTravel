@@ -29,16 +29,24 @@ class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
   private data class TestFlags(var screenClosed: Boolean = false)
 
   /** Launches the screen with a fake repository and returns the ViewModel. */
-  private fun launchScreen(vararg trips: Trip, flags: TestFlags = TestFlags()): MyTripsViewModel {
+  private fun launchScreen(
+      vararg trips: Trip,
+      currentTripUid: String = "",
+      flags: TestFlags = TestFlags()
+  ): MyTripsViewModel {
     val fakeRepo = FakeTripsRepository(trips.toMutableList())
+    val fakeUserRepo = FakeUserRepository()
     val viewModel =
         MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
+
+    val user = createTestUser(uid = "current", currentTrip = currentTripUid)
+    fakeUserRepo.addUser(user)
 
     composeTestRule.setContent {
       SetCurrentTripScreen(
           viewModel = viewModel,
           onClose = { flags.screenClosed = true },
-          isSelected = { it.isCurrentTrip })
+          isSelected = { it.uid == viewModel.uiState.value.currentTrip?.uid })
     }
     return viewModel
   }
@@ -66,9 +74,6 @@ class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
     val uiState = viewModel.uiState.value
 
     assertEquals(trip2.uid, uiState.currentTrip?.uid, "Trip 2 should now be current.")
-    assertEquals(uiState.currentTrip?.isCurrentTrip, true, "Current trip flag should be true.")
-    assertTrue(
-        uiState.tripsList.none { it.isCurrentTrip }, "No other trip should be marked current.")
   }
 
   @Test
@@ -99,7 +104,7 @@ class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
     viewModel.refreshUIState()
     val uiState = viewModel.uiState.value
 
+    assertEquals("2", uiState.currentTrip?.uid)
     assertEquals("2", uiState.currentTrip?.uid, "Trip 2 should now be current.")
-    assertTrue(uiState.tripsList.none { it.isCurrentTrip && it.uid != "2" })
   }
 }

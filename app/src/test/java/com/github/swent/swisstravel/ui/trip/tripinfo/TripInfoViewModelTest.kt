@@ -26,6 +26,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+// Some tests were made using AI
 @ExperimentalCoroutinesApi
 class TripInfoViewModelTest {
   @get:Rule val mainDispatcherRule = MainDispatcherRule()
@@ -49,7 +50,7 @@ class TripInfoViewModelTest {
       Activity(
           startDate = now,
           endDate = now,
-          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
+          location = Location(Coordinate(0.0, 0.0), "A"),
           description = "Desc1",
           imageUrls = emptyList(),
           estimatedTime = 60)
@@ -57,7 +58,7 @@ class TripInfoViewModelTest {
       Activity(
           startDate = now,
           endDate = now,
-          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+          location = Location(Coordinate(1.0, 1.0), "B"),
           description = "Desc2",
           imageUrls = emptyList(),
           estimatedTime = 45)
@@ -381,20 +382,24 @@ class TripInfoViewModelTest {
     viewModel.loadTripInfo(tripWithActivities.uid)
     advanceUntilIdle()
 
+    // Check which one is first after shuffle
+    val firstActivity = viewModel.uiState.value.currentActivity!!
+    val secondActivity = if (firstActivity == activity1) activity2 else activity1
+
     // like the first activity
-    viewModel.swipeActivity(liked = true, enableNewFetch = false)
+    viewModel.swipeActivity(liked = true)
     advanceUntilIdle()
 
     // first activity should be in likedActivities
     assertEquals(1, viewModel.uiState.value.likedActivities.size)
-    assertEquals(activity1, viewModel.uiState.value.likedActivities[0])
+    assertEquals(firstActivity, viewModel.uiState.value.likedActivities[0])
 
     // activitiesQueue should have one less activity
     assertEquals(1, viewModel.uiState.value.activitiesQueue.size)
-    assertEquals(activity2, viewModel.uiState.value.activitiesQueue[0])
+    assertEquals(secondActivity, viewModel.uiState.value.activitiesQueue[0])
 
     // dislike the next activity
-    viewModel.swipeActivity(liked = false, enableNewFetch = false)
+    viewModel.swipeActivity(liked = false)
     advanceUntilIdle()
 
     // likedActivities should remain the same
@@ -521,5 +526,123 @@ class TripInfoViewModelTest {
     viewModel.deselectLikedActivity(activity1)
     assertEquals(1, viewModel.uiState.value.selectedLikedActivities.size)
     assertEquals(activity2, viewModel.uiState.value.selectedLikedActivities[0])
+  }
+
+  @Test
+  fun `computeSchedule sorts elements, groups by date and updates UI state`() = runTest {
+    // Arrange: Create Trip Elements across 2 days
+    val day1Start = Timestamp(now.seconds, 0)
+    val day1End = Timestamp(now.seconds + 3600, 0)
+    val segment =
+        RouteSegment(
+            Location(Coordinate(0.0, 0.0), "Start"),
+            Location(Coordinate(1.0, 1.0), "End"),
+            60,
+            TransportMode.WALKING,
+            day1Start,
+            day1End)
+
+    val day2Start = Timestamp(now.seconds + 86400, 0)
+    val activity =
+        Activity(
+            day2Start, day2Start, Location(Coordinate(2.0, 2.0), "Act"), "Desc", emptyList(), 30)
+
+    val trip =
+        dummyTrip.copy(
+            uid = "scheduleTrip",
+            locations = listOf(segment.from, segment.to, activity.location),
+            routeSegments = listOf(segment),
+            activities = listOf(activity),
+            tripProfile =
+                TripProfile(
+                    startDate = day1Start,
+                    endDate = day2Start,
+                    preferredLocations = emptyList(),
+                    preferences = emptyList()))
+
+    coEvery { tripsRepository.getTrip("scheduleTrip") } returns trip
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip("scheduleTrip", any()) } just Runs
+
+    // Act
+    viewModel.loadTripInfo("scheduleTrip")
+    advanceUntilIdle()
+
+    // Assert
+    val state = viewModel.uiState.value
+    assertEquals(2, state.schedule.size)
+    assertTrue("First element is segment", state.schedule[0] is TripElement.TripSegment)
+    assertTrue("Second element is activity", state.schedule[1] is TripElement.TripActivity)
+    assertEquals(2, state.groupedSchedule.size)
+    assertEquals(2, state.days.size)
+    assertEquals(2, state.mapLocations.size)
+  }
+
+  @Test
+  fun `computeSchedule maintains index if valid, resets to 0 if out of bounds`() = runTest {
+    // Arrange: Trip with 2 Days
+    val day1 = now
+    val day2 = Timestamp(now.seconds + 86400, 0)
+    val segment1 =
+        RouteSegment(
+            Location(Coordinate(0.0, 0.0), "A"),
+            Location(Coordinate(0.0, 0.0), "B"),
+            10,
+            TransportMode.CAR,
+            day1,
+            day1)
+    val segment2 =
+        RouteSegment(
+            Location(Coordinate(0.0, 0.0), "C"),
+            Location(Coordinate(0.0, 0.0), "D"),
+            10,
+            TransportMode.CAR,
+            day2,
+            day2)
+
+    val tripTwoDays =
+        dummyTrip.copy(
+            uid = "resizeTrip",
+            locations = listOf(Location(Coordinate(0.0, 0.0), "A")),
+            routeSegments = listOf(segment1, segment2),
+            activities = emptyList(),
+            tripProfile = TripProfile(day1, day2, emptyList(), emptyList()))
+
+    coEvery { tripsRepository.getTrip("resizeTrip") } returns tripTwoDays
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    coEvery { tripsRepository.editTrip("resizeTrip", any()) } just Runs
+
+    viewModel.loadTripInfo("resizeTrip")
+    advanceUntilIdle()
+
+    viewModel.setCurrentDayIndex(1)
+    assertEquals(1, viewModel.uiState.value.currentDayIndex)
+
+    val tripOneDay = tripTwoDays.copy(routeSegments = listOf(segment1))
+    coEvery { tripsRepository.getTrip("resizeTrip") } returns tripOneDay
+
+    viewModel.loadTripInfo("resizeTrip", forceReload = true)
+    advanceUntilIdle()
+
+    assertEquals(0, viewModel.uiState.value.currentDayIndex)
+    assertEquals(1, viewModel.uiState.value.days.size)
+  }
+
+  @Test
+  fun `computeSchedule does nothing if locations are empty`() = runTest {
+    val emptyLocTrip =
+        dummyTrip.copy(
+            uid = "emptyLoc",
+            locations = emptyList(),
+            tripProfile = TripProfile(now, now, emptyList(), emptyList()))
+
+    coEvery { tripsRepository.getTrip("emptyLoc") } returns emptyLocTrip
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+
+    viewModel.loadTripInfo("emptyLoc")
+    advanceUntilIdle()
+
+    assertTrue(viewModel.uiState.value.schedule.isEmpty())
+    assertTrue(viewModel.uiState.value.groupedSchedule.isEmpty())
   }
 }

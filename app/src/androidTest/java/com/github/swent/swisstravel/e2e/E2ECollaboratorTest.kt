@@ -5,6 +5,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
@@ -110,10 +111,10 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
       // Ensure Bob exists in Firestore
       val bobUser = userRepo.getUserByNameOrEmail(bobEmail).first()
       bobUid = bobUser.uid
-      userRepo.updateUser(bobUser.uid, name = bobName)
-    }
+      userRepo.updateUser(bobUser.uid, UserUpdate(name = bobName))
 
-    composeTestRule.logout()
+      composeTestRule.logout()
+    }
 
     // =================================================================================
     // PHASE 1: ALICE SETUP & FRIEND REQUEST
@@ -124,7 +125,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
       // Ensure Alice exists in Firestore
       val aliceUser = userRepo.getUserByNameOrEmail(aliceEmail).first()
       aliceUid = aliceUser.uid
-      userRepo.updateUser(aliceUser.uid, name = aliceName)
+      userRepo.updateUser(aliceUser.uid, UserUpdate(name = aliceName))
 
       // Send friend request to Bob
       userRepo.sendFriendRequest(aliceUid, bobUid)

@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.github.swent.swisstravel.ui.trips.TripsViewModel
 import com.github.swent.swisstravel.ui.trips.buildCollaboratorsByTrip
 import kotlinx.coroutines.launch
@@ -101,7 +102,8 @@ class SelectPinnedTripsViewModel(
       }
       try {
         userRepository.updateUser(
-            uid = user.uid, pinnedTripsUids = _uiState.value.selectedTrips.map { it.uid })
+            uid = user.uid,
+            UserUpdate(pinnedTripsUids = _uiState.value.selectedTrips.map { it.uid }))
         _saveSuccess.value = true
       } catch (e: Exception) {
         setErrorMsg("Error updating selected Trips.")

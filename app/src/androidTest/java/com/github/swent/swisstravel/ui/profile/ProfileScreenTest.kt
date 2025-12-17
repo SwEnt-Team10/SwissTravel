@@ -268,7 +268,8 @@ class ProfileScreenTest : SwissTravelTest() {
               stats = sampleStats,
               pinnedTripsUids = emptyList(),
               pinnedPicturesUids = emptyList(),
-              favoriteTripsUids = emptyList())
+              favoriteTripsUids = emptyList(),
+              currentTrip = "")
       userRepo.addUser(currentUser)
 
       val viewModel =
@@ -308,7 +309,8 @@ class ProfileScreenTest : SwissTravelTest() {
               stats = sampleStats,
               pinnedTripsUids = listOf("trip1", "trip2"), // trips to display
               pinnedPicturesUids = emptyList(),
-              favoriteTripsUids = emptyList())
+              favoriteTripsUids = emptyList(),
+              currentTrip = "")
       userRepo.addUser(currentUser)
 
       val viewModel =

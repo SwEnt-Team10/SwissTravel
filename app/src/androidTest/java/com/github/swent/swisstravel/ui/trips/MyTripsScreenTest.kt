@@ -30,17 +30,23 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   private val now = Timestamp.now()
   val context: Context = InstrumentationRegistry.getInstrumentation().targetContext
 
-  private val currentTrip = trip1.copy(isCurrentTrip = true)
+  private val currentTrip = trip1
 
   private val upcomingTrip = trip2
 
   /** Helper to launch screen with trips and optional collaborator data. */
-  private fun launchScreen(trips: List<Trip>, users: List<User> = emptyList()): MyTripsViewModel {
+  private fun launchScreen(
+      trips: List<Trip>,
+      users: List<User> = emptyList(),
+      currentTripUid: String = ""
+  ): MyTripsViewModel {
     val fakeTripRepo = FakeTripsRepository(trips.toMutableList())
     val fakeUserRepo = FakeUserRepository()
     users.forEach { fakeUserRepo.addUser(it) }
 
-    // IMPORTANT: Pass BOTH repositories to avoid default Firebase init
+    val currentUser = createTestUser(uid = "current", currentTrip = currentTripUid)
+    // Pass BOTH repositories to avoid default Firebase init
+    fakeUserRepo.addUser(currentUser)
     val viewModel = MyTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeTripRepo)
 
     composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
@@ -50,9 +56,13 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
   @Test
   fun displaysCurrentAndUpcomingTrips_usingRealViewModel() {
     val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip, upcomingTrip))
+    val fakeUserRepo = FakeUserRepository()
+
     val viewModel =
         MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
 
+    val user = createTestUser(uid = "current", currentTrip = currentTrip.uid)
+    fakeUserRepo.addUser(user)
     composeTestRule.setContent { MyTripsScreen(myTripsViewModel = viewModel) }
 
     // Check current trip
@@ -437,7 +447,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     // 2. Create a trip linked to this collaborator
     val sharedTrip =
