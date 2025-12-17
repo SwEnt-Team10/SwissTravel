@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -187,6 +188,8 @@ fun ProfileScreen(
               } else {
                 ProfileScreenContent(
                     uiState = uiState,
+                    isOnline = isOnline,
+                    context = context,
                     onSelectTrip = onSelectTrip,
                     onEditPinnedTrips = onEditPinnedTrips,
                     onEditPinnedPictures = onEditPinnedPictures,
@@ -258,6 +261,8 @@ fun ProfileScreenTopBar(
  * The content of the profile screen.
  *
  * @param uiState The state of the screen.
+ * @param isOnline Whether the user is online.
+ * @param context The context.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
  * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
@@ -266,6 +271,8 @@ fun ProfileScreenTopBar(
 @Composable
 fun ProfileScreenContent(
     uiState: ProfileUIState,
+    isOnline: Boolean,
+    context: Context,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
     onEditPinnedPictures: () -> Unit = {},
@@ -325,7 +332,11 @@ fun ProfileScreenContent(
 
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
-          PinnedTrips(isOwnProfile = uiState.isOwnProfile, onEditPinnedTrips = onEditPinnedTrips)
+          PinnedTrips(
+              isOwnProfile = uiState.isOwnProfile,
+              onEditPinnedTrips = onEditPinnedTrips,
+              context = context,
+              isOnline = isOnline)
         }
 
         val tripListState =
@@ -354,7 +365,9 @@ fun ProfileScreenContent(
               pinnedBitmaps = uiState.pinnedBitmaps,
               isOwnProfile = uiState.isOwnProfile,
               onEditPinnedPictures = onEditPinnedPictures,
-              isLoadingImages = uiState.isLoadingImages)
+              isLoadingImages = uiState.isLoadingImages,
+              context = context,
+              isOnline = isOnline)
         }
         item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer))) }
       }
@@ -792,11 +805,15 @@ private fun AchievementTierRow(
  *
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
+ * @param context The context.
+ * @param isOnline Whether the user is online.
  */
 @Composable
 private fun PinnedTrips(
     isOwnProfile: Boolean,
     onEditPinnedTrips: () -> Unit,
+    context: Context = LocalContext.current,
+    isOnline: Boolean
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE),
@@ -804,16 +821,19 @@ private fun PinnedTrips(
       verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.pinned_trips),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface)
 
         if (isOwnProfile) {
           IconButton(
-              onClick = onEditPinnedTrips,
+              onClick = { handleOfflineClick(context, isOnline, onEditPinnedTrips) },
               modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON)) {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.edit_pinned_trips))
+                    contentDescription = stringResource(R.string.edit_pinned_trips),
+                    tint =
+                        if (isOnline) MaterialTheme.colorScheme.onBackground
+                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
               }
         }
       }
@@ -825,13 +845,18 @@ private fun PinnedTrips(
  * @param pinnedBitmaps The list of pinned pictures as bitmaps.
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
+ * @param isLoadingImages Whether the images are still loading.
+ * @param context The context.
+ * @param isOnline Whether the user is online.
  */
 @Composable
 private fun PinnedPictures(
     pinnedBitmaps: List<Bitmap>,
     isOwnProfile: Boolean,
     onEditPinnedPictures: () -> Unit,
-    isLoadingImages: Boolean
+    isLoadingImages: Boolean,
+    context: Context,
+    isOnline: Boolean
 ) {
   Column {
     Row(
@@ -845,11 +870,14 @@ private fun PinnedPictures(
 
           if (isOwnProfile) {
             IconButton(
-                onClick = onEditPinnedPictures,
+                onClick = { handleOfflineClick(context, isOnline, onEditPinnedPictures) },
                 modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
                   Icon(
                       imageVector = Icons.Outlined.Edit,
-                      contentDescription = stringResource(R.string.edit_pinned_pictures))
+                      contentDescription = stringResource(R.string.edit_pinned_pictures),
+                      tint =
+                          if (isOnline) MaterialTheme.colorScheme.onBackground
+                          else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
                 }
           }
         }
@@ -919,4 +947,20 @@ fun UnfriendDialog(friendName: String, onConfirm: () -> Unit, onCancel: () -> Un
             }
       },
       containerColor = MaterialTheme.colorScheme.onPrimary)
+}
+
+/**
+ * Handle an offline click.
+ *
+ * @param context The context.
+ * @param isOnline Whether the user is online.
+ * @param action The action to perform
+ */
+private fun handleOfflineClick(context: Context, isOnline: Boolean, action: () -> Unit) {
+  if (isOnline) {
+    action()
+  } else {
+    Toast.makeText(context, context.getString(R.string.requires_internet), Toast.LENGTH_SHORT)
+        .show()
+  }
 }
