@@ -20,7 +20,6 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
-import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.github.swent.swisstravel.ui.trips.TripSortType
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import kotlin.test.assertEquals
