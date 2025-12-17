@@ -60,16 +60,16 @@ fun LikedActivitiesScreen(
   val state by tripInfoVM.uiState.collectAsState()
   val likedActivities = state.likedActivities
 
-    LaunchedEffect(state.isScheduling) {
-        if (!state.isScheduling && state.savingProgress == 1f) {
-            onNext()
-        }
+  LaunchedEffect(state.isScheduling) {
+    if (!state.isScheduling && state.savingProgress == 1f) {
+      onNext()
     }
+  }
 
-    if (state.isScheduling) {
-        LoadingScreen(progress = state.savingProgress)
-        return
-    }
+  if (state.isScheduling) {
+    LoadingScreen(progress = state.savingProgress)
+    return
+  }
 
   Scaffold(
       topBar = {

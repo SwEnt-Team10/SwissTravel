@@ -582,7 +582,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       val vm = viewModel<TripInfoViewModel>(parentEntry)
       val errorText = stringResource(R.string.no_activities_selected)
-        val scope = rememberCoroutineScope()
+      val scope = rememberCoroutineScope()
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
           tripInfoVM = vm,
@@ -590,9 +590,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
             if (vm.uiState.value.selectedLikedActivities.isEmpty()) {
               Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
             } else {
-                scope.launch {
-                    vm.scheduleSelectedActivities(context)
-                }
+              scope.launch { vm.scheduleSelectedActivities(context) }
             }
           },
           onUnlike = {
@@ -601,8 +599,8 @@ private fun NavGraphBuilder.tripInfoNavGraph(
             } else vm.unlikeSelectedActivities()
           },
           onNext = {
-              vm.resetSchedulingState()
-              navController.popBackStack()
+            vm.resetSchedulingState()
+            navController.popBackStack()
           })
     }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->

@@ -1,6 +1,5 @@
 package com.github.swent.swisstravel.algorithm.selectactivities
 
-import android.util.Log
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
@@ -53,8 +52,8 @@ private const val QUEUE_SIZE_BEFORE_FETCH = 3
  * @param activityRepository The repository to fetch activities from.
  */
 class SelectActivities(
-  private var tripSettings: TripSettings = TripSettings(),
-  private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
+    private var tripSettings: TripSettings = TripSettings(),
+    private val activityRepository: ActivityRepository = ActivityRepositoryMySwitzerland()
 ) {
 
   /**
@@ -82,13 +81,13 @@ class SelectActivities(
    * @param cachedActivities A mutable list to store activities that were fetched but not returned.
    * @param activityBlackList A list with all the activities that are blackListed
    * @param onProgress A callback function to report the progress of the selection process (from 0.0
-   * to 1.0).
+   *   to 1.0).
    * @return A list of [Activity] based on the user preferences and points of interest
    */
   suspend fun addActivities(
-    cachedActivities: MutableList<Activity> = mutableListOf(),
-    activityBlackList: List<String> = emptyList(),
-    onProgress: (Float) -> Unit
+      cachedActivities: MutableList<Activity> = mutableListOf(),
+      activityBlackList: List<String> = emptyList(),
+      onProgress: (Float) -> Unit
   ): List<Activity> {
     // Group destinations into search zones with dynamic radii
     val searchZones = groupNearbyLocations(buildDestinationList())
@@ -104,14 +103,14 @@ class SelectActivities(
 
     // add 1 day since the last day is excluded
     val days =
-      ChronoUnit.DAYS.between(
-        tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
+        ChronoUnit.DAYS.between(
+            tripSettings.date.startDate, tripSettings.date.endDate!!.plusDays(1))
     val totalNbActivities = (NB_ACTIVITIES_PER_DAY) * days.toDouble()
     val totalSteps = searchZones.size
 
     // Avoid division by zero if no zones (though unlikely with a valid trip)
     val numberOfActivityToFetchPerStep =
-      if (totalSteps > 0) ceil(totalNbActivities / totalSteps).toInt() else 0
+        if (totalSteps > 0) ceil(totalNbActivities / totalSteps).toInt() else 0
     var completedSteps = 0
 
     val allFetchedActivities = mutableListOf<Activity>()
@@ -120,13 +119,13 @@ class SelectActivities(
     if (userPreferences.isNotEmpty()) {
       for (zone in searchZones) {
         val fetched =
-          activityRepository.getActivitiesNearWithPreference(
-            userPreferences,
-            zone.location.coordinate,
-            zone.radius, // Use dynamic radius
-            numberOfActivityToFetchPerStep,
-            activityBlackList,
-            cachedActivities)
+            activityRepository.getActivitiesNearWithPreference(
+                userPreferences,
+                zone.location.coordinate,
+                zone.radius, // Use dynamic radius
+                numberOfActivityToFetchPerStep,
+                activityBlackList,
+                cachedActivities)
         allFetchedActivities.addAll(fetched)
         completedSteps++
         onProgress(completedSteps.toFloat() / max(1, totalSteps))
@@ -154,24 +153,24 @@ class SelectActivities(
    * @return A single [Activity] found near the specified location or null.
    */
   suspend fun getActivitiesNearWithPreferences(
-    coords: Coordinate,
-    radius: Int = NEAR,
-    limit: Int,
-    activityBlackList: List<String> = emptyList(),
-    cachedActivities: MutableList<Activity> = mutableListOf()
+      coords: Coordinate,
+      radius: Int = NEAR,
+      limit: Int,
+      activityBlackList: List<String> = emptyList(),
+      cachedActivities: MutableList<Activity> = mutableListOf()
   ): List<Activity> {
     val userPreferences = tripSettings.preferences.toMutableList()
     removeUnsupportedPreferences(userPreferences)
     var fetched: List<Activity>?
     if (userPreferences.isNotEmpty()) {
       fetched =
-        activityRepository.getActivitiesNearWithPreference(
-          userPreferences, coords, radius, limit, activityBlackList, cachedActivities)
+          activityRepository.getActivitiesNearWithPreference(
+              userPreferences, coords, radius, limit, activityBlackList, cachedActivities)
       delay(API_CALL_DELAY_MS)
     } else {
       fetched =
-        activityRepository.getActivitiesNear(
-          coords, radius, limit, activityBlackList, cachedActivities)
+          activityRepository.getActivitiesNear(
+              coords, radius, limit, activityBlackList, cachedActivities)
     }
     return fetched
   }
@@ -203,7 +202,8 @@ class SelectActivities(
    *
    * @param trip The current trip.
    * @param majorCities The list of major Swiss cities configuration.
-   * @return The updated trip with the new queue and potentially updated allFetchedLocations/cachedActivities.
+   * @return The updated trip with the new queue and potentially updated
+   *   allFetchedLocations/cachedActivities.
    */
   suspend fun fetchSwipeActivities(trip: Trip, majorCities: List<CityConfig>): Trip {
     val currentQueue = trip.activitiesQueue.toMutableList()
@@ -217,8 +217,10 @@ class SelectActivities(
     // ============================================================================================
 
     // We check against exclusion list to avoid duplicates
-    val exclusionListForCache = (trip.activities + trip.likedActivities + trip.allFetchedForSwipe + currentQueue)
-      .map { it.getName() }.toSet()
+    val exclusionListForCache =
+        (trip.activities + trip.likedActivities + trip.allFetchedForSwipe + currentQueue)
+            .map { it.getName() }
+            .toSet()
 
     // Find all activities in cache that are not already known
     val validFromCache = cachedActivities.filter { !exclusionListForCache.contains(it.getName()) }
@@ -232,23 +234,33 @@ class SelectActivities(
     // If queue is populated, STOP. We have content to show.
     if (currentQueue.isNotEmpty() && currentQueue.size > QUEUE_SIZE_BEFORE_FETCH) {
       return trip.copy(
-        activitiesQueue = currentQueue,
-        cachedActivities = cachedActivities // Empty now
-      )
+          activitiesQueue = currentQueue, cachedActivities = cachedActivities // Empty now
+          )
     }
 
     // ============================================================================================
     // 2. CHECK LIMITS BEFORE API CALL
     // ============================================================================================
 
-    val startDate = trip.tripProfile.startDate.toDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
-    val endDate = trip.tripProfile.endDate.toDate().toInstant().atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+    val startDate =
+        trip.tripProfile.startDate
+            .toDate()
+            .toInstant()
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
+    val endDate =
+        trip.tripProfile.endDate
+            .toDate()
+            .toInstant()
+            .atZone(java.time.ZoneId.systemDefault())
+            .toLocalDate()
     val duration = ChronoUnit.DAYS.between(startDate, endDate) + 1 // +1 because inclusive
 
     // Calculate the limit based on duration: min(ceil(days / 2), 7)
     val cityLimit = min(ceil(duration / 2.0), NUMBER_OF_CITIES_MAX.toDouble()).toInt()
 
-    val canFetchMore = fetchedLocations.size < cityLimit &&
+    val canFetchMore =
+        fetchedLocations.size < cityLimit &&
             likedActivities.size < NUMBER_OF_LIKED_MAX &&
             allFetched.size < NUMBER_OF_FETCH_MAX
 
@@ -268,34 +280,45 @@ class SelectActivities(
     val newActivities = mutableListOf<Activity>()
     val tripDestinations = trip.locations
 
-    // Define blacklist for API call (includes what we just added to queue, though queue is likely empty here)
-    val exclusionList = (trip.activities + trip.cachedActivities + trip.allFetchedForSwipe + likedActivities + currentQueue)
-      .map { it.getName() }.toSet()
+    // Define blacklist for API call (includes what we just added to queue, though queue is likely
+    // empty here)
+    val exclusionList =
+        (trip.activities +
+                trip.cachedActivities +
+                trip.allFetchedForSwipe +
+                likedActivities +
+                currentQueue)
+            .map { it.getName() }
+            .toSet()
 
     // Filter out cities we have already fully explored/fetched from
-    val availableCities = majorCities.filter { cityConfig ->
-      fetchedLocations.none { it.name == cityConfig.location.name }
-    }
+    val availableCities =
+        majorCities.filter { cityConfig ->
+          fetchedLocations.none { it.name == cityConfig.location.name }
+        }
 
     if (availableCities.isNotEmpty()) {
       // Find the closest available major city to any of the trip's destinations
-      val closestCityConfig = availableCities.minByOrNull { city ->
-        tripDestinations.minOfOrNull { dest ->
-          dest.coordinate.haversineDistanceTo(city.location.coordinate)
-        } ?: Double.MAX_VALUE
-      }
+      val closestCityConfig =
+          availableCities.minByOrNull { city ->
+            tripDestinations.minOfOrNull { dest ->
+              dest.coordinate.haversineDistanceTo(city.location.coordinate)
+            } ?: Double.MAX_VALUE
+          }
 
       if (closestCityConfig != null) {
         // Fetch from this specific city.
         // We pass 'cachedActivities' but we also consume the return value immediately.
-        val cityActivities = activityRepository.getActivitiesNearWithPreference(
-          prefs,
-          closestCityConfig.location.coordinate,
-          NEAR,
-          NUMBER_ACTIVITIES_TO_FETCH, // Fetch a full batch (40)
-          exclusionList.toList(),
-          cachedActivities // Mutable cache used for overflow (though we dump it all below anyway)
-        )
+        val cityActivities =
+            activityRepository.getActivitiesNearWithPreference(
+                prefs,
+                closestCityConfig.location.coordinate,
+                NEAR,
+                NUMBER_ACTIVITIES_TO_FETCH, // Fetch a full batch (40)
+                exclusionList.toList(),
+                cachedActivities // Mutable cache used for overflow (though we dump it all below
+                                 // anyway)
+                )
 
         // Filter unique ones for the current batch
         val uniqueFetched = cityActivities.filter { !exclusionList.contains(it.getName()) }
@@ -313,16 +336,21 @@ class SelectActivities(
     // Add everything we just fetched to the queue
     currentQueue.addAll(newActivities)
 
-    // Add anything that might have slipped into cache via the Repo call (unlikely if limit=40, but safe to check) and wasn't in the returned list
-    val extraFromCache = cachedActivities.filter { !exclusionList.contains(it.getName()) && newActivities.none { new -> new.getName() == it.getName() } }
+    // Add anything that might have slipped into cache via the Repo call (unlikely if limit=40, but
+    // safe to check) and wasn't in the returned list
+    val extraFromCache =
+        cachedActivities.filter {
+          !exclusionList.contains(it.getName()) &&
+              newActivities.none { new -> new.getName() == it.getName() }
+        }
     currentQueue.addAll(extraFromCache)
     cachedActivities.clear()
 
     return trip.copy(
-      activitiesQueue = currentQueue,
-      allFetchedLocations = fetchedLocations,
-      cachedActivities = cachedActivities // Empty
-    )
+        activitiesQueue = currentQueue,
+        allFetchedLocations = fetchedLocations,
+        cachedActivities = cachedActivities // Empty
+        )
   }
 
   /**
@@ -383,9 +411,9 @@ class SelectActivities(
       // Find the location that has the most neighbors within GROUPING_RADIUS_KM
       for (seed in unvisited) {
         val neighbors =
-          unvisited.filter {
-            it.coordinate.haversineDistanceTo(seed.coordinate) <= GROUPING_RADIUS_KM
-          }
+            unvisited.filter {
+              it.coordinate.haversineDistanceTo(seed.coordinate) <= GROUPING_RADIUS_KM
+            }
 
         if (neighbors.size > bestClusterPoints.size) {
           bestClusterPoints = neighbors
@@ -417,7 +445,7 @@ class SelectActivities(
    * @return The consolidated list of [Cluster] objects.
    */
   private fun mergeOverlappingClusters(
-    initialClusters: MutableList<Cluster>
+      initialClusters: MutableList<Cluster>
   ): MutableList<Cluster> {
     val clusters = initialClusters
     var merged = true
@@ -472,7 +500,7 @@ class SelectActivities(
 
       // Calculate radius: Distance to the furthest point + buffer
       val maxDistKm =
-        cluster.points.maxOfOrNull { it.coordinate.haversineDistanceTo(center) } ?: 0.0
+          cluster.points.maxOfOrNull { it.coordinate.haversineDistanceTo(center) } ?: 0.0
 
       val computedRadius = ((maxDistKm * 1000) + NEAR).toInt()
       val finalRadius = max(NEAR, computedRadius)
@@ -481,7 +509,7 @@ class SelectActivities(
       val representativeName = cluster.points.firstOrNull()?.name ?: "Area"
 
       SearchZone(
-        Location(center, representativeName, cluster.points.firstOrNull()?.imageUrl), finalRadius)
+          Location(center, representativeName, cluster.points.firstOrNull()?.imageUrl), finalRadius)
     }
   }
 
@@ -494,11 +522,25 @@ class SelectActivities(
     tripSettings = tripSettings.copy(preferences = newPreferences)
   }
 
-  private fun addAllPreferences(preferences: MutableList<Preference>, forceAllPrefs: Boolean = false) {
+    /**
+     * Ensures that the preferences list contains at least one preference from each major category
+     * (Activity Type and Environment).
+     *
+     * If a category is missing (e.g., no specific environment selected), it implies that "any"
+     * is acceptable, so all preferences of that category are added to the list.
+     *
+     * @param preferences The mutable list of preferences to validate and update.
+     * @param forceAllPrefs If true, adds all preferences from both categories regardless of
+     * current selections. Defaults to false.
+     */
+  private fun addAllPreferences(
+      preferences: MutableList<Preference>,
+      forceAllPrefs: Boolean = false
+  ) {
     val activityTypeCount =
-      preferences.count { it.category() == PreferenceCategories.Category.ACTIVITY_TYPE }
+        preferences.count { it.category() == PreferenceCategories.Category.ACTIVITY_TYPE }
     val environmentCount =
-      preferences.count { it.category() == PreferenceCategories.Category.ENVIRONMENT }
+        preferences.count { it.category() == PreferenceCategories.Category.ENVIRONMENT }
 
     // If no environment => any is good
     // If no activity type => any is good

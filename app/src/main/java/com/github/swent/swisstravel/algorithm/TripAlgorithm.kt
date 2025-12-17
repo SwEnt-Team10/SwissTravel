@@ -355,7 +355,8 @@ open class TripAlgorithm(
     try {
       // PHASE 1: Geography & Route (Selection + TSP + Intermediate Stops)
       val optimizedRoute =
-          computeInitialRoute(tripSettings, enhancedTripProfile, activities, activityBlacklist, onProgress)
+          computeInitialRoute(
+              tripSettings, enhancedTripProfile, activities, activityBlacklist, onProgress)
 
       // PHASE 2: Scheduling (Time management & filling gaps)
       var currentProgressBase =
@@ -387,7 +388,7 @@ open class TripAlgorithm(
             activityBlacklist,
             activities,
             protectedActivities,
-            Pair(currentProgressBase,currentProgressBase + loopFillingBudget),
+            Pair(currentProgressBase, currentProgressBase + loopFillingBudget),
             onProgress = onProgress)
       } else if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) <
           0) {
@@ -425,8 +426,7 @@ open class TripAlgorithm(
               enhancedTripProfile = enhancedTripProfile,
               originalOptimizedRoute = finalRoute,
               activities = activities,
-              trueProtectedActivities = protectedActivities
-        )
+              trueProtectedActivities = protectedActivities)
 
       onProgress(1.0f)
       return schedule
@@ -475,7 +475,8 @@ open class TripAlgorithm(
     // 1. Select Activities
     val selectedActivities =
         try {
-          activitySelector.addActivities(activities.cachedActivities, activityBlacklist) { progress ->
+          activitySelector.addActivities(activities.cachedActivities, activityBlacklist) { progress
+            ->
             onProgress(computeProgression.selectActivities * progress)
           }
         } catch (e: Exception) {
@@ -483,7 +484,7 @@ open class TripAlgorithm(
         }
     onProgress(computeProgression.selectActivities)
 
-      activities.allActivities.addAll(selectedActivities)
+    activities.allActivities.addAll(selectedActivities)
 
     val fullDestinationList = buildList {
       add(startLocation)
@@ -593,7 +594,8 @@ open class TripAlgorithm(
       if (numStops <= 0) return@forEachIndexed
 
       // Generate activities for this segment
-      val newActivities = generateActivitiesBetween(startSeg, endSeg, numStops, activityBlacklist, activities)
+      val newActivities =
+          generateActivitiesBetween(startSeg, endSeg, numStops, activityBlacklist, activities)
 
       // Store in the map under its start segment
       intermediateActivitiesBySegment.getOrPut(startSeg) { mutableListOf() }.addAll(newActivities)
@@ -888,121 +890,121 @@ open class TripAlgorithm(
     return finalSchedule
   }
 
-    /**
-     * Selects a subset of activities to remove to satisfy a time deficit.
-     *
-     * It uses a hierarchy of removal pools:
-     * 1. **Allowed Pool**: Standard activities not in single-activity clusters and not protected.
-     * 2. **Soft Protected**: Activities in clusters of size 1 or Intermediate activities.
-     * 3. **True Protected**: Activities explicitly marked as protected by the caller.
-     *
-     * At each tier, it attempts to find the "Best Overshoot" (smallest activity >= deficit)
-     * or "Best Undershoot" (largest activity < deficit).
-     *
-     * @param candidateList The list of activities eligible for removal.
-     * @param preferredLocations The user's preferred locations (used as cluster centers).
-     * @param intermediateActivities Activities that should be protected from removal (Soft protection).
-     * @param deficitSeconds The amount of time (in seconds) that needs to be freed up.
-     * @param trueProtectedActivities Activities that are strictly protected (Hard protection).
-     * @return The list of activities selected for removal.
-     */
-    private fun selectActivitiesToRemove(
-        candidateList: MutableList<Activity>,
-        preferredLocations: List<Location>,
-        intermediateActivities: List<Activity>,
-        deficitSeconds: Long,
-        trueProtectedActivities: List<Activity>
-    ): List<Activity> {
-        // Shuffle for randomness in selection (mostly for the standard pool)
-        candidateList.shuffle(Random.Default)
+  /**
+   * Selects a subset of activities to remove to satisfy a time deficit.
+   *
+   * It uses a hierarchy of removal pools:
+   * 1. **Allowed Pool**: Standard activities not in single-activity clusters and not protected.
+   * 2. **Soft Protected**: Activities in clusters of size 1 or Intermediate activities.
+   * 3. **True Protected**: Activities explicitly marked as protected by the caller.
+   *
+   * At each tier, it attempts to find the "Best Overshoot" (smallest activity >= deficit) or "Best
+   * Undershoot" (largest activity < deficit).
+   *
+   * @param candidateList The list of activities eligible for removal.
+   * @param preferredLocations The user's preferred locations (used as cluster centers).
+   * @param intermediateActivities Activities that should be protected from removal (Soft
+   *   protection).
+   * @param deficitSeconds The amount of time (in seconds) that needs to be freed up.
+   * @param trueProtectedActivities Activities that are strictly protected (Hard protection).
+   * @return The list of activities selected for removal.
+   */
+  private fun selectActivitiesToRemove(
+      candidateList: MutableList<Activity>,
+      preferredLocations: List<Location>,
+      intermediateActivities: List<Activity>,
+      deficitSeconds: Long,
+      trueProtectedActivities: List<Activity>
+  ): List<Activity> {
+    // Shuffle for randomness in selection (mostly for the standard pool)
+    candidateList.shuffle(Random.Default)
 
-        // --- 1. Identify "Soft" Protected Activities (Clustering) ---
-        // Helper class for clustering
-        data class Cluster(val center: Location, val acts: MutableList<Activity>)
+    // --- 1. Identify "Soft" Protected Activities (Clustering) ---
+    // Helper class for clustering
+    data class Cluster(val center: Location, val acts: MutableList<Activity>)
 
-        // Build map: preferredLocation -> closest activities
-        val clusters =
-            preferredLocations.map { prefLoc -> Cluster(center = prefLoc, acts = mutableListOf()) }
+    // Build map: preferredLocation -> closest activities
+    val clusters =
+        preferredLocations.map { prefLoc -> Cluster(center = prefLoc, acts = mutableListOf()) }
 
-        // Assign each candidate activity to the nearest preferred location
-        for (act in candidateList) {
-            val loc = act.location
-            val nearestCluster =
-                clusters.minByOrNull { cluster ->
-                    loc.coordinate.haversineDistanceTo(cluster.center.coordinate)
-                }!!
-            nearestCluster.acts.add(act)
-        }
-
-        // Identify clusters that have only ONE activity -> “Soft Protected”
-        val softProtectedSet =
-            clusters.filter { it.acts.size <= 1 }.flatMap { it.acts }.toMutableSet()
-
-        // Also soft protect intermediate activities
-        if (intermediateActivities.isNotEmpty()) {
-            softProtectedSet.addAll(intermediateActivities)
-        }
-
-        // --- 2. Setup Sets for fast lookup ---
-        val trueProtectedSet = trueProtectedActivities.toSet()
-        val toRemove = mutableListOf<Activity>()
-        var remainingDeficit = deficitSeconds
-        val pool = candidateList.toMutableList()
-
-        // --- 3. Selection Loop ---
-        while (remainingDeficit > 0 && pool.isNotEmpty()) {
-
-            // Helper to find best candidate in a specific sub-list
-            fun findBestCandidate(subPool: List<Activity>): Activity? {
-                if (subPool.isEmpty()) return null
-
-                // A) Find exact overshoots (activities larger than the remaining deficit)
-                // We want the smallest one that covers the deficit (minimal waste)
-                val bestOvershoot =
-                    subPool
-                        .filter { it.estimatedTime.toLong() >= remainingDeficit }
-                        .minByOrNull { it.estimatedTime.toLong() - remainingDeficit }
-
-                // B) Find undershoots (largest activity smaller than deficit)
-                // We want the largest one to make the biggest dent in the deficit
-                val bestUndershoot =
-                    subPool
-                        .filter { it.estimatedTime.toLong() < remainingDeficit }
-                        .maxByOrNull { it.estimatedTime.toLong() }
-
-                return bestOvershoot ?: bestUndershoot
-            }
-
-            // --- TIER 1: Standard Activities ---
-            // Not in soft protected, Not in true protected
-            val standardPool = pool.filter { it !in softProtectedSet && it !in trueProtectedSet }
-            var chosen = findBestCandidate(standardPool)
-
-            // --- TIER 2: Soft Protected Activities ---
-            // In soft protected, but Not in true protected
-            if (chosen == null) {
-                val softProtectedPool = pool.filter { it in softProtectedSet && it !in trueProtectedSet }
-                chosen = findBestCandidate(softProtectedPool)
-            }
-
-            // --- TIER 3: True Protected Activities ---
-            // In true protected set
-            if (chosen == null) {
-                val trueProtectedPool = pool.filter { it in trueProtectedSet }
-                chosen = findBestCandidate(trueProtectedPool)
-            }
-
-            // If we still haven't found anything, we can't remove anything else.
-            if (chosen == null) break
-
-            // --- 4. Execute Removal ---
-            toRemove.add(chosen)
-            remainingDeficit -= chosen.estimatedTime.toLong()
-            pool.remove(chosen)
-        }
-
-        return toRemove
+    // Assign each candidate activity to the nearest preferred location
+    for (act in candidateList) {
+      val loc = act.location
+      val nearestCluster =
+          clusters.minByOrNull { cluster ->
+            loc.coordinate.haversineDistanceTo(cluster.center.coordinate)
+          }!!
+      nearestCluster.acts.add(act)
     }
+
+    // Identify clusters that have only ONE activity -> “Soft Protected”
+    val softProtectedSet = clusters.filter { it.acts.size <= 1 }.flatMap { it.acts }.toMutableSet()
+
+    // Also soft protect intermediate activities
+    if (intermediateActivities.isNotEmpty()) {
+      softProtectedSet.addAll(intermediateActivities)
+    }
+
+    // --- 2. Setup Sets for fast lookup ---
+    val trueProtectedSet = trueProtectedActivities.toSet()
+    val toRemove = mutableListOf<Activity>()
+    var remainingDeficit = deficitSeconds
+    val pool = candidateList.toMutableList()
+
+    // --- 3. Selection Loop ---
+    while (remainingDeficit > 0 && pool.isNotEmpty()) {
+
+      // Helper to find best candidate in a specific sub-list
+      fun findBestCandidate(subPool: List<Activity>): Activity? {
+        if (subPool.isEmpty()) return null
+
+        // A) Find exact overshoots (activities larger than the remaining deficit)
+        // We want the smallest one that covers the deficit (minimal waste)
+        val bestOvershoot =
+            subPool
+                .filter { it.estimatedTime.toLong() >= remainingDeficit }
+                .minByOrNull { it.estimatedTime.toLong() - remainingDeficit }
+
+        // B) Find undershoots (largest activity smaller than deficit)
+        // We want the largest one to make the biggest dent in the deficit
+        val bestUndershoot =
+            subPool
+                .filter { it.estimatedTime.toLong() < remainingDeficit }
+                .maxByOrNull { it.estimatedTime.toLong() }
+
+        return bestOvershoot ?: bestUndershoot
+      }
+
+      // --- TIER 1: Standard Activities ---
+      // Not in soft protected, Not in true protected
+      val standardPool = pool.filter { it !in softProtectedSet && it !in trueProtectedSet }
+      var chosen = findBestCandidate(standardPool)
+
+      // --- TIER 2: Soft Protected Activities ---
+      // In soft protected, but Not in true protected
+      if (chosen == null) {
+        val softProtectedPool = pool.filter { it in softProtectedSet && it !in trueProtectedSet }
+        chosen = findBestCandidate(softProtectedPool)
+      }
+
+      // --- TIER 3: True Protected Activities ---
+      // In true protected set
+      if (chosen == null) {
+        val trueProtectedPool = pool.filter { it in trueProtectedSet }
+        chosen = findBestCandidate(trueProtectedPool)
+      }
+
+      // If we still haven't found anything, we can't remove anything else.
+      if (chosen == null) break
+
+      // --- 4. Execute Removal ---
+      toRemove.add(chosen)
+      remainingDeficit -= chosen.estimatedTime.toLong()
+      pool.remove(chosen)
+    }
+
+    return toRemove
+  }
 
   /**
    * ********************************************************
@@ -1041,60 +1043,64 @@ open class TripAlgorithm(
       progressRange: Pair<Float, Float> = 0f to 0f, // Combined parameter
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
-      // Destructure the pair for easier use
-      val (progressStart, progressEnd) = progressRange
+    // Destructure the pair for easier use
+    val (progressStart, progressEnd) = progressRange
 
-      var index = 0
-      val maxIndex =
-          min(
-              MAX_INDEX,
-              dateDifference(originalSchedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
-                  .toInt())
-      var finalSchedule = originalSchedule
-      val endDate = enhancedTripProfile.tripProfile.endDate
+    var index = 0
+    val maxIndex =
+        min(
+            MAX_INDEX,
+            dateDifference(originalSchedule.last().endDate, enhancedTripProfile.tripProfile.endDate)
+                .toInt())
+    var finalSchedule = originalSchedule
+    val endDate = enhancedTripProfile.tripProfile.endDate
 
-      // Calculate progress step per iteration
-      val totalRange = progressEnd - progressStart
-      // Use MAX_INDEX as denominator because that's the upper bound of loops
-      val progressStep = if (maxIndex > 0) totalRange / maxIndex else 0f
+    // Calculate progress step per iteration
+    val totalRange = progressEnd - progressStart
+    // Use MAX_INDEX as denominator because that's the upper bound of loops
+    val progressStep = if (maxIndex > 0) totalRange / maxIndex else 0f
 
-      while (index < maxIndex) {
-          val iterationStart = progressStart + (index * progressStep)
-          val iterationEnd = iterationStart + progressStep
+    while (index < maxIndex) {
+      val iterationStart = progressStart + (index * progressStep)
+      val iterationEnd = iterationStart + progressStep
 
-          // Ensure tryAddingCachedActivities is updated to accept trueProtectedActivities
-          finalSchedule = tryAddingCachedActivities(enhancedTripProfile, activities, finalSchedule, trueProtectedActivities)
+      // Ensure tryAddingCachedActivities is updated to accept trueProtectedActivities
+      finalSchedule =
+          tryAddingCachedActivities(
+              enhancedTripProfile, activities, finalSchedule, trueProtectedActivities)
 
-          if (sameDate(endDate, finalSchedule.last().endDate)) {
-              break
-          }
-
-          if (index == 2) {
-              finalSchedule =
-                  tryFetchingActivitiesForExistingCities(enhancedTripProfile, activityBlacklist, activities, finalSchedule)
-              if (sameDate(endDate, finalSchedule.last().endDate)) {
-                  break
-              }
-          }
-
-          finalSchedule = tryAddingCityActivities(enhancedTripProfile, activities, finalSchedule)
-
-          if (sameDate(endDate, finalSchedule.last().endDate)) {
-              break
-          }
-
-          finalSchedule = tryAddingCity(enhancedTripProfile, activityBlacklist, activities, finalSchedule)
-
-          if (sameDate(endDate, finalSchedule.last().endDate)) {
-              break
-          }
-
-          index++
-          // Report completed step
-          onProgress(iterationEnd)
+      if (sameDate(endDate, finalSchedule.last().endDate)) {
+        break
       }
 
-      return finalSchedule
+      if (index == 2) {
+        finalSchedule =
+            tryFetchingActivitiesForExistingCities(
+                enhancedTripProfile, activityBlacklist, activities, finalSchedule)
+        if (sameDate(endDate, finalSchedule.last().endDate)) {
+          break
+        }
+      }
+
+      finalSchedule = tryAddingCityActivities(enhancedTripProfile, activities, finalSchedule)
+
+      if (sameDate(endDate, finalSchedule.last().endDate)) {
+        break
+      }
+
+      finalSchedule =
+          tryAddingCity(enhancedTripProfile, activityBlacklist, activities, finalSchedule)
+
+      if (sameDate(endDate, finalSchedule.last().endDate)) {
+        break
+      }
+
+      index++
+      // Report completed step
+      onProgress(iterationEnd)
+    }
+
+    return finalSchedule
   }
 
   /**
@@ -1923,7 +1929,8 @@ open class TripAlgorithm(
             activities.allActivities,
             if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
 
-    val schedule = scheduleRemove(enhancedTripProfile, orderedRoute, activities, trueProtectedActivities)
+    val schedule =
+        scheduleRemove(enhancedTripProfile, orderedRoute, activities, trueProtectedActivities)
     return schedule
   }
 

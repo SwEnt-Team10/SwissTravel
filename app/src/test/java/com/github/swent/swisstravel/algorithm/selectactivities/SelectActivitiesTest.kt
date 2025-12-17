@@ -98,7 +98,7 @@ class SelectActivitiesTest {
 
     val selectActivities =
         SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+            tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities { progressUpdates.add(it) }
@@ -133,7 +133,6 @@ class SelectActivitiesTest {
         val selectActivities =
             SelectActivities(
                 tripSettings,
-                tripInfoVM = mockTripInfoVM,
                 activityRepository = mockActivityRepository)
 
         // When
@@ -163,7 +162,7 @@ class SelectActivitiesTest {
 
     val selectActivities =
         SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+            tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities { progressUpdates.add(it) }
@@ -183,7 +182,7 @@ class SelectActivitiesTest {
             destinations = emptyList(), arrivalDeparture = TripArrivalDeparture(null, null))
     val selectActivities =
         SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+            tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities {}
@@ -203,7 +202,7 @@ class SelectActivitiesTest {
 
     val selectActivities =
         SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+            tripSettings, activityRepository = mockActivityRepository)
 
     // When
     selectActivities.addActivities { progressUpdates.add(it) }
@@ -238,7 +237,7 @@ class SelectActivitiesTest {
 
     val selectActivities =
         SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+            tripSettings, activityRepository = mockActivityRepository)
 
     // When
     val result = selectActivities.addActivities {}
@@ -259,7 +258,6 @@ class SelectActivitiesTest {
         val selectActivities =
             SelectActivities(
                 tripSettings,
-                tripInfoVM = mockTripInfoVM,
                 activityRepository = mockActivityRepository)
 
         // Mock: must call getActivitiesNearWithPreference with mandatory + optional
@@ -299,7 +297,6 @@ class SelectActivitiesTest {
         val selectActivities =
             SelectActivities(
                 tripSettings,
-                tripInfoVM = mockTripInfoVM,
                 activityRepository = mockActivityRepository)
 
         // Mock: must call getActivitiesNearWithPreference with mandatory + optional
@@ -332,7 +329,7 @@ class SelectActivitiesTest {
 
     val selectActivities =
         SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
+            tripSettings, activityRepository = mockActivityRepository)
 
     // Mock: should call getActivitiesNear()
     coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), 1) } returns
@@ -366,7 +363,7 @@ class SelectActivitiesTest {
           match { it.containsAll(defaultPrefs) }, any(), any(), any(), any(), any())
     } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
 
-    val selectActivities = SelectActivities(tripSettings, mockTripInfoVM, mockActivityRepository)
+    val selectActivities = SelectActivities(tripSettings, mockActivityRepository)
 
     val result = selectActivities.addActivities { progressUpdates.add(it) }
 
@@ -378,77 +375,5 @@ class SelectActivitiesTest {
       mockActivityRepository.getActivitiesNearWithPreference(
           any(), any(), any(), any(), any(), any())
     }
-  }
-
-  @Test
-  fun `fetchUniqueSwipe returns activity`() = runTest {
-
-    // mock TripInfoUIState
-    val fakeState = TripInfoUIState(locations = listOf(lausanne))
-    val uiStateFlow = MutableStateFlow(fakeState)
-    val mockTripInfoVM = mockk<TripInfoViewModel>()
-    every { mockTripInfoVM.uiState } returns uiStateFlow
-
-    // initiate and mock activity selector
-    val selectActivities =
-        SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
-    coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), any()) } returns
-        listOf(activityLausanne, activity1, activity2)
-
-    val result = selectActivities.fetchUniqueSwipe(emptySet())
-
-    assertEquals(activityLausanne, result)
-  }
-
-  @Test
-  fun `fetchUniqueSwipe skips already seen activities`() = runTest {
-
-    // mock TripInfoUIState
-    val fakeState = TripInfoUIState(locations = listOf(lausanne))
-    val uiStateFlow = MutableStateFlow(fakeState)
-    val mockTripInfoVM = mockk<TripInfoViewModel>()
-    every { mockTripInfoVM.uiState } returns uiStateFlow
-
-    // initiate and mock activity selector
-    val selectActivities =
-        SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
-    coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), any()) } returns
-        listOf(activity1, activity2, activityLausanne)
-
-    val result = selectActivities.fetchUniqueSwipe(setOf(activity1, activity2))
-
-    assertEquals(activityLausanne, result)
-  }
-
-  @Test
-  fun `fetchFromLocations with prefs calls getActivitiesNearWithPreference`() = runTest {
-
-    // mock TripInfoUIState with preferences
-    val fakeState =
-        TripInfoUIState(
-            locations = listOf(lausanne),
-            tripProfile =
-                TripProfile(
-                    startDate = now, endDate = now, preferences = listOf(Preference.MUSEUMS)))
-    val uiStateFlow = MutableStateFlow(fakeState)
-    val mockTripInfoVM = mockk<TripInfoViewModel>()
-    every { mockTripInfoVM.uiState } returns uiStateFlow
-
-    // initiate and mock activity selector
-    val selectActivities =
-        SelectActivities(
-            tripSettings, tripInfoVM = mockTripInfoVM, activityRepository = mockActivityRepository)
-    coEvery {
-      mockActivityRepository.getActivitiesNearWithPreference(any(), any(), any(), any())
-    } returns listOf(activity1)
-
-    val result =
-        selectActivities.fetchFromLocations(
-            locations = listOf(lausanne), fetchLimit = 1, prefs = listOf(Preference.MUSEUMS))
-
-    assertEquals(1, result.size)
-    assertEquals(activity1, result[0])
   }
 }

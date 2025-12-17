@@ -378,8 +378,7 @@ class TripInfoViewModel(
                     name = "Current Location",
                     coordinate =
                         Coordinate(
-                            current.currentGpsPoint.latitude(), current.currentGpsPoint.longitude())
-                ))
+                            current.currentGpsPoint.latitude(), current.currentGpsPoint.longitude())))
         }
 
         val stepsToMap =
@@ -449,8 +448,8 @@ class TripInfoViewModel(
     }
 
     /**
-     * Updates the queue of activities, the set of all activities that have been fetched for
-     * swiping, the list of fetched locations, and the cached activities in:
+     * Updates the queue of activities, the set of all activities that have been fetched for swiping,
+     * the list of fetched locations, and the cached activities in:
      * - the UI state (because it is used to keep track of all fetched activities in the
      * SwipeActivitiesScreen)
      * - the Trip (its new values are kept on the database, so that, when the user quits the app and
@@ -461,7 +460,8 @@ class TripInfoViewModel(
      * @param newQueue The queue of activities that will be set.
      * @param newFetched The list of activities that are newly fetched for swiping (they are added to
      * the existing set of allFetchedForSwipe)
-     * @param newFetchedLocations The updated list of locations where we have already fetched activities
+     * @param newFetchedLocations The updated list of locations where we have already fetched
+     * activities
      * @param newCachedActivities The updated list of cached activities
      */
     fun updateQueueAndAllFetched(
@@ -486,8 +486,7 @@ class TripInfoViewModel(
                 activitiesQueue = newQueue,
                 allFetchedForSwipe = fullFetched,
                 allFetchedLocations = newFetchedLocations,
-                cachedActivities = newCachedActivities
-            )
+                cachedActivities = newCachedActivities)
         }
 
         // update trip in database
@@ -512,20 +511,22 @@ class TripInfoViewModel(
             newQueue.removeAt(0)
         }
 
-        // Add the activity that was just swiped (whether liked or disliked) to the allFetchedForSwipe list
+        // Add the activity that was just swiped (whether liked or disliked) to the allFetchedForSwipe
+        // list
         // so it is excluded next time.
-        // Note: We use emptyList() for newFetchedLocations and existing cachedActivities because this update
+        // Note: We use emptyList() for newFetchedLocations and existing cachedActivities because this
+        // update
         // only concerns moving the item from Queue -> History.
         // The Queue refill happens in fetchSwipeActivities below.
         updateQueueAndAllFetched(
             newQueue = newQueue,
             newFetched = listOf(current),
             newFetchedLocations = _uiState.value.allFetchedLocations,
-            newCachedActivities = trip.value?.cachedActivities ?: emptyList()
-        )
+            newCachedActivities = trip.value?.cachedActivities ?: emptyList())
 
         // Try to fetch new activities (refill queue)
-        // The activitiesFetcher logic will decide if it needs to fetch from API or just use cache/return
+        // The activitiesFetcher logic will decide if it needs to fetch from API or just use
+        // cache/return
         viewModelScope.launch { fetchSwipeActivity() }
     }
 
@@ -541,14 +542,14 @@ class TripInfoViewModel(
         val updatedTrip = activitiesFetcher.fetchSwipeActivities(currentTrip, cities)
 
         // Update the VM state with the new queue, fetched locations, and cache from the updated trip
-        // Note: We pass emptyList() for newFetched because fetchSwipeActivities has already put new activities in the queue
+        // Note: We pass emptyList() for newFetched because fetchSwipeActivities has already put new
+        // activities in the queue
         // and we only add them to allFetchedForSwipe when they are actually swiped (in swipeActivity)
         updateQueueAndAllFetched(
             newQueue = updatedTrip.activitiesQueue,
             newFetched = emptyList(),
             newFetchedLocations = updatedTrip.allFetchedLocations,
-            newCachedActivities = updatedTrip.cachedActivities
-        )
+            newCachedActivities = updatedTrip.cachedActivities)
     }
 
     /**
@@ -610,9 +611,17 @@ class TripInfoViewModel(
     }
 
     /**
-     * Schedules the selected liked activities.
+     * Schedules the selected liked activities into the trip.
      *
-     * If there is no room for selected activities to be scheduled, it will respond with a toast
+     * This process involves:
+     * 1. Merging the current activities queue into the cached activities to ensure no potential
+     * activities are lost during rescheduling.
+     * 2. Constructing a blacklist of activities to avoid (fetched, queued, cached) but excluding
+     * those explicitly selected by the user.
+     * 3. Running the TripAlgorithm to compute a new schedule.
+     * 4. Updating the trip state with the new schedule, locations, and cleared queue.
+     *
+     * @param context The Android context required for initializing the algorithm.
      */
     override suspend fun scheduleSelectedActivities(context: Context) {
         _uiState.update { it.copy(isScheduling = true, savingProgress = 0f) }
@@ -624,18 +633,24 @@ class TripInfoViewModel(
                 context = context)
 
         val cachedActivities =
-            (_uiState.value.cachedActivities + _uiState.value.activitiesQueue).distinct().toMutableList()
+            (_uiState.value.cachedActivities + _uiState.value.activitiesQueue)
+                .distinct()
+                .toMutableList()
 
         val tripProfile = _uiState.value.tripProfile
-        val blackList = (_uiState.value.allFetchedForSwipe + _uiState.value.activitiesQueue + _uiState.value.cachedActivities)
-            .filter { activity ->
-                // Keep activity in blacklist ONLY if it is NOT in the selected list
-                _uiState.value.selectedLikedActivities.none { selected ->
-                    selected.getName() == activity.getName() && selected.location.sameLocation(activity.location)
+        val blackList =
+            (_uiState.value.allFetchedForSwipe +
+                    _uiState.value.activitiesQueue +
+                    _uiState.value.cachedActivities)
+                .filter { activity ->
+                    // Keep activity in blacklist ONLY if it is NOT in the selected list
+                    _uiState.value.selectedLikedActivities.none { selected ->
+                        selected.getName() == activity.getName() &&
+                                selected.location.sameLocation(activity.location)
+                    }
                 }
-            }
-            .map { it.getName() }
-            .toSet()
+                .map { it.getName() }
+                .toSet()
 
         val schedule =
             algorithm.computeTrip(
@@ -765,51 +780,58 @@ class TripInfoViewModel(
 
     override fun getMajorSwissCities(context: Context) {
         val cityArray = context.resources.getStringArray(R.array.swiss_major_cities)
-        val majorSwissCitiesList = cityArray.mapNotNull { entry ->
-            val parts = entry.split(";")
-            if (parts.size >= 5) {
-                try {
-                    val name = parts[0].trim()
-                    val lat = parts[1].trim().toDouble()
-                    val lon = parts[2].trim().toDouble()
-                    val radius = parts[3].trim().toInt()
-                    val maxDays = parts[4].trim().toDouble()
-                    CityConfig(Location(Coordinate(lat, lon), name), radius, maxDays)
-                } catch (e: Exception) {
-                    Log.e("TripAlgorithm", "Failed to parse City Config location: $entry", e)
+        val majorSwissCitiesList =
+            cityArray.mapNotNull { entry ->
+                val parts = entry.split(";")
+                if (parts.size >= 5) {
+                    try {
+                        val name = parts[0].trim()
+                        val lat = parts[1].trim().toDouble()
+                        val lon = parts[2].trim().toDouble()
+                        val radius = parts[3].trim().toInt()
+                        val maxDays = parts[4].trim().toDouble()
+                        CityConfig(Location(Coordinate(lat, lon), name), radius, maxDays)
+                    } catch (e: Exception) {
+                        Log.e("TripAlgorithm", "Failed to parse City Config location: $entry", e)
+                        null
+                    }
+                } else {
+                    Log.w("TripAlgorithm", "Invalid City Config entry format: $entry")
                     null
                 }
-            } else {
-                Log.w("TripAlgorithm", "Invalid City Config entry format: $entry")
-                null
             }
-        }
         _majorSwissCities.value = majorSwissCitiesList
     }
 
     private fun getTripFromState(): Trip {
-        val newTrip = Trip(
-            uid = _uiState.value.uid,
-            name = _uiState.value.name,
-            ownerId = _uiState.value.ownerId,
-            locations = _uiState.value.locations,
-            routeSegments = _uiState.value.routeSegments,
-            activities = _uiState.value.activities,
-            tripProfile = _uiState.value.tripProfile!!,
-            isCurrentTrip = _uiState.value.isCurrentTrip,
-            collaboratorsId = _uiState.value.collaborators.map { it.uid },
-            isRandom = _uiState.value.isRandom,
-            uriLocation = _uiState.value.uriLocation,
-            cachedActivities = _uiState.value.cachedActivities,
-            likedActivities = _uiState.value.likedActivities,
-            activitiesQueue = _uiState.value.activitiesQueue,
-            allFetchedForSwipe = _uiState.value.allFetchedForSwipe,
-            allFetchedLocations = _uiState.value.allFetchedLocations
-        )
+        val newTrip =
+            Trip(
+                uid = _uiState.value.uid,
+                name = _uiState.value.name,
+                ownerId = _uiState.value.ownerId,
+                locations = _uiState.value.locations,
+                routeSegments = _uiState.value.routeSegments,
+                activities = _uiState.value.activities,
+                tripProfile = _uiState.value.tripProfile!!,
+                isCurrentTrip = _uiState.value.isCurrentTrip,
+                collaboratorsId = _uiState.value.collaborators.map { it.uid },
+                isRandom = _uiState.value.isRandom,
+                uriLocation = _uiState.value.uriLocation,
+                cachedActivities = _uiState.value.cachedActivities,
+                likedActivities = _uiState.value.likedActivities,
+                activitiesQueue = _uiState.value.activitiesQueue,
+                allFetchedForSwipe = _uiState.value.allFetchedForSwipe,
+                allFetchedLocations = _uiState.value.allFetchedLocations)
         trip.value = newTrip
         return newTrip
     }
 
+    /**
+     * Resets the saving progress state to 0.0f.
+     *
+     * This is typically called after a successful save navigation to prevent immediate
+     * re-triggering of success observers when returning to the screen.
+     */
     override fun resetSchedulingState() {
         _uiState.update { it.copy(savingProgress = 0f) }
     }

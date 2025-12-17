@@ -171,10 +171,10 @@ class TripsRepositoryFirestore(
             (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
           } ?: emptyList()
 
-        val allFetchedLocations =
-            (document["allFetchedLocations"] as? List<*>)?.mapNotNull { locationMap ->
-                (locationMap as? Map<*, *>)?.let { mapToLocation(it) }
-            } ?: emptyList()
+      val allFetchedLocations =
+          (document["allFetchedLocations"] as? List<*>)?.mapNotNull { locationMap ->
+            (locationMap as? Map<*, *>)?.let { mapToLocation(it) }
+          } ?: emptyList()
 
       Trip(
           uid = uid,

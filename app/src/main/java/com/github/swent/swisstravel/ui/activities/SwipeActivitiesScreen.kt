@@ -35,7 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
-import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
@@ -61,14 +60,14 @@ fun SwipeActivitiesScreen(
     onTripInfo: () -> Unit = {},
     tripInfoVM: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
-    // Get the current context
-    val context = LocalContext.current
+  // Get the current context
+  val context = LocalContext.current
 
-    // Call the function once when this screen enters the composition
-    LaunchedEffect(Unit) {
-        tripInfoVM.getMajorSwissCities(context)
-        tripInfoVM.fetchSwipeActivity()
-    }
+  // Call the function once when this screen enters the composition
+  LaunchedEffect(Unit) {
+    tripInfoVM.getMajorSwissCities(context)
+    tripInfoVM.fetchSwipeActivity()
+  }
   val state by tripInfoVM.uiState.collectAsState()
   Scaffold(
       topBar = {

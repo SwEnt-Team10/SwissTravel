@@ -170,6 +170,7 @@ class EditTripScreenViewModel(
    * the new preferences.
    *
    * @param context The Android context.
+   * @param rerolled If the trip was rerolled
    */
   fun save(context: Context, rerolled: Boolean = false) {
     viewModelScope.launch {
@@ -180,10 +181,10 @@ class EditTripScreenViewModel(
         var selectedActivities = originalTrip.activities
         var routeSegments = originalTrip.routeSegments
         var allLocations = originalTrip.locations
-          val cachedActivities =
-              (originalTrip.cachedActivities + originalTrip.activitiesQueue)
-                  .distinct()
-                  .toMutableList()
+        val cachedActivities =
+            (originalTrip.cachedActivities + originalTrip.activitiesQueue)
+                .distinct()
+                .toMutableList()
         val newTripProfile =
             originalTrip.tripProfile.copy(
                 adults = state.adults,
