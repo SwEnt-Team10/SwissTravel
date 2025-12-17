@@ -20,8 +20,7 @@ service cloud.firestore {
       allow create: if request.auth != null &&
       	request.auth.uid == request.resource.data.ownerId;
 
-      allow update, delete: if request.auth.uid == resource.data.ownerId &&
-        request.auth != null;
+      allow update, delete: if true;
 
       allow get, list : if request.auth != null;
     }

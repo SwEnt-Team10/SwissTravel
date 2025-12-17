@@ -232,7 +232,9 @@ private fun LazyListScope.friendsListItems(
     }
   } else {
     items(items = friends, key = { it.uid }) { friend ->
-      FriendElement(userToDisplay = friend, onClick = { onSelectFriend(friend.uid) })
+      FriendElement(
+          userToDisplay = friend,
+          actions = FriendElementActions(onClick = { onSelectFriend(friend.uid) }))
       Spacer(modifier = Modifier.height(dimensionResource(R.dimen.tiny_spacer)))
     }
   }
@@ -339,21 +341,24 @@ private fun PendingFriendRequestsSection(
                   pendingFriends.forEach { friend ->
                     FriendElement(
                         userToDisplay = friend,
-                        onClick = {},
-                        isPendingRequest = true,
-                        shouldAccept = true,
-                        onAccept = {
-                          Toast.makeText(context, "Friend request accepted!", Toast.LENGTH_SHORT)
-                              .show()
-                          onAccept(friend.uid)
-                          expanded = false
-                        },
-                        onDecline = {
-                          Toast.makeText(context, "Friend request declined!", Toast.LENGTH_SHORT)
-                              .show()
-                          onDecline(friend.uid)
-                          expanded = false
-                        })
+                        actions =
+                            FriendElementActions(
+                                onClick = {},
+                                onAccept = {
+                                  Toast.makeText(
+                                          context, "Friend request accepted!", Toast.LENGTH_SHORT)
+                                      .show()
+                                  onAccept(friend.uid)
+                                  expanded = false
+                                },
+                                onDecline = {
+                                  Toast.makeText(
+                                          context, "Friend request declined!", Toast.LENGTH_SHORT)
+                                      .show()
+                                  onDecline(friend.uid)
+                                  expanded = false
+                                }),
+                        state = FriendElementState(isPendingRequest = true, shouldAccept = true))
                   }
                 }
           }
