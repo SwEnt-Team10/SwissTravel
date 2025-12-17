@@ -25,8 +25,6 @@ object ToastMessages {
   const val PHOTO_SAVED = "Photo saved"
   const val ERROR_SAVING_PHOTOS = "Could not save the photos"
   const val ERROR_SAVING_PHOTO = "Could not save the photo"
-  const val LOAD_PHOTOS_SUCCESS = "Successfully loaded the photos"
-  const val LOAD_PHOTO_SUCCESS = "Successfully loaded the photo"
   const val REMOVE_PHOTOS_SUCCESS = "Photos removed"
   const val REMOVE_PHOTO_SUCCESS = "Photo removed"
   const val REMOVE_PHOTOS_FAIL = "Could not remove the photos"
@@ -93,18 +91,9 @@ class PhotosViewModel(
         val trip = tripsRepository.getTrip(tripId)
         if (trip.uriLocation.size > 1) {
 
-          _uiState.value =
-              _uiState.value.copy(
-                  uriLocation = trip.uriLocation,
-                  isLoading = false,
-                  toastMessage = ToastMessages.LOAD_PHOTOS_SUCCESS,
-              )
+          _uiState.value = _uiState.value.copy(uriLocation = trip.uriLocation, isLoading = false)
         } else {
-          _uiState.value =
-              _uiState.value.copy(
-                  uriLocation = trip.uriLocation,
-                  isLoading = false,
-                  toastMessage = ToastMessages.LOAD_PHOTO_SUCCESS)
+          _uiState.value = _uiState.value.copy(uriLocation = trip.uriLocation, isLoading = false)
         }
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorLoading = true)
