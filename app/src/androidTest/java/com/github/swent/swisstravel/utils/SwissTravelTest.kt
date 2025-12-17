@@ -221,11 +221,11 @@ abstract class SwissTravelTest {
   // TODO : Declare ComposeTestRules here
 
   fun ComposeTestRule.checkMyTripsScreenIsDisplayed() {
-    onNodeWithTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON).assertIsDisplayed()
+    waitForTag(MyTripsScreenTestTags.PAST_TRIPS_BUTTON)
     onNodeWithTag(SortedTripListTestTags.TITLE, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextContains("Upcoming Trips", substring = false, ignoreCase = true)
-    onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
+    waitForTag(SortMenuTestTags.SORT_DROPDOWN_MENU)
     onNodeWithTag(MyTripsScreenTestTags.CURRENT_TRIP_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Current Trip", substring = false, ignoreCase = true)
@@ -634,7 +634,7 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkProfileSettingsScreenIsDisplayed() {
     // Static bits
-    onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_PIC).assertIsDisplayed()
+    onNodeWithTag(ProfileSettingsScreenTestTags.EDIT_PROFILE_PIC).assertIsDisplayed()
     onNodeWithTag(ProfileSettingsScreenTestTags.PROFILE_INFO).assertIsDisplayed()
     onNodeWithTag(ProfileSettingsScreenTestTags.PERSONAL_INFO).assertIsDisplayed()
     onNodeWithTag(ProfileSettingsScreenTestTags.EMAIL).assertIsDisplayed()

@@ -61,7 +61,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.TransportMode
 import com.github.swent.swisstravel.model.user.Achievement
@@ -71,6 +70,7 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
+import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.composable.tripListItems
@@ -372,9 +372,8 @@ fun ProfileHeader(photoUrl: String, name: String) {
       modifier =
           Modifier.fillMaxWidth().padding(vertical = dimensionResource(R.dimen.small_spacer)),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        AsyncImage(
-            model = photoUrl.ifBlank { R.drawable.default_profile_pic },
-            contentDescription = stringResource(R.string.profile_pic_desc),
+        ProfileImage(
+            urlOrUid = photoUrl,
             modifier =
                 Modifier.size(dimensionResource(R.dimen.profile_logo_size))
                     .clip(CircleShape)
