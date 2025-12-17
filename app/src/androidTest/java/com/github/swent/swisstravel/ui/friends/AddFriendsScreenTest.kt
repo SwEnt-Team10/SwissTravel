@@ -39,7 +39,8 @@ class AddFriendScreenTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     var searchResults: List<User> = emptyList()
     // The pool of all users available to "search" or "get by uid"
@@ -80,7 +81,8 @@ class AddFriendScreenTest {
         profilePicUrl: String?,
         preferences: List<Preference>?,
         pinnedTripsUids: List<String>?,
-        pinnedPicturesUids: List<String>?
+        pinnedPicturesUids: List<String>?,
+        currentTrip: String?
     ) {
       // no op in test
     }
@@ -106,7 +108,8 @@ class AddFriendScreenTest {
           stats = UserStats(),
           emptyList(),
           emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Test
   fun typingSearch_showsResults_andClickSendsFriendRequestAndCallsBack() {

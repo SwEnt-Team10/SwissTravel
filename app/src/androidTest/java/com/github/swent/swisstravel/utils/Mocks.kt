@@ -63,7 +63,8 @@ class FakeUserRepository : UserRepository {
             UserStats(),
             emptyList(),
             emptyList(),
-            emptyList())
+            emptyList(),
+            currentTrip = "")
     users[currentUser.uid] = currentUser
   }
 
@@ -94,8 +95,27 @@ class FakeUserRepository : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
-  ) {}
+      pinnedPicturesUids: List<String>?,
+      currentTrip: String?
+  ) {
+    // 1. Get the existing user
+    val existingUser = users[uid] ?: return
+
+    // 2. Create a copy with the updated fields (if they are not null)
+    val updatedUser =
+        existingUser.copy(
+            name = name ?: existingUser.name,
+            biography = biography ?: existingUser.biography,
+            profilePicUrl = profilePicUrl ?: existingUser.profilePicUrl,
+            preferences = preferences ?: existingUser.preferences,
+            pinnedTripsUids = pinnedTripsUids ?: existingUser.pinnedTripsUids,
+            pinnedPicturesUids = pinnedPicturesUids ?: existingUser.pinnedPicturesUids,
+            // Crucial for your test: update currentTrip if provided
+            currentTrip = currentTrip ?: existingUser.currentTrip)
+
+    // 3. Save it back to the map
+    users[uid] = updatedUser
+  }
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
     users[uid] = users[uid]!!.copy(favoriteTripsUids = users[uid]!!.favoriteTripsUids + tripUid)

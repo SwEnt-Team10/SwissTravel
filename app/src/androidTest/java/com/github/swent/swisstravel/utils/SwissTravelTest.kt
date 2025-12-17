@@ -138,7 +138,8 @@ abstract class SwissTravelTest {
       stats: UserStats = UserStats(),
       pinnedTripsUids: List<String> = emptyList(),
       pinnedPicturesUids: List<String> = emptyList(),
-      favTripsUids: List<String> = emptyList()
+      favTripsUids: List<String> = emptyList(),
+      currentTrip: String = ""
   ): User {
     return User(
         uid = uid,
@@ -151,7 +152,8 @@ abstract class SwissTravelTest {
         stats = stats,
         pinnedTripsUids = pinnedTripsUids,
         pinnedPicturesUids = pinnedPicturesUids,
-        favoriteTripsUids = favTripsUids)
+        favoriteTripsUids = favTripsUids,
+        currentTrip = currentTrip)
   }
 
   fun createTestTrip(
@@ -169,8 +171,6 @@ abstract class SwissTravelTest {
       children: Int = 0,
       departureLocation: Location? = null,
       arrivalLocation: Location? = null,
-      isFavorite: Boolean = false,
-      isCurrentTrip: Boolean = false,
       uriLocation: Map<android.net.Uri, Location> = emptyMap(),
       collaboratorsId: List<String> = emptyList(),
       isRandom: Boolean = false
@@ -193,7 +193,6 @@ abstract class SwissTravelTest {
         routeSegments = routeSegments,
         activities = activities,
         tripProfile = profile,
-        isCurrentTrip = isCurrentTrip,
         uriLocation = uriLocation,
         collaboratorsId = collaboratorsId,
         isRandom = isRandom)

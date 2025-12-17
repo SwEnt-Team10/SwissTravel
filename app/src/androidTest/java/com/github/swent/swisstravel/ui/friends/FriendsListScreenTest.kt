@@ -32,7 +32,8 @@ class FriendsListScreenTest {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   private fun fakeViewModel(
       friends: List<User>,
@@ -156,7 +157,8 @@ class FakeUserRepoForUI(
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
   }
 
   override suspend fun getCurrentUser(): User = currentUser
@@ -185,7 +187,8 @@ class FakeUserRepoForUI(
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
+      pinnedPicturesUids: List<String>?,
+      currentTrip: String?
   ) {
     // no-op in test
   }
