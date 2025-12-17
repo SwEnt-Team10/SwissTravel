@@ -25,6 +25,7 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
@@ -116,6 +117,34 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
       tripsRepo.addTrip(trip)
       // 3. Pin the trip to Bob's profile
       userRepo.updateUser(uid = bobUser.uid, pinnedTripsUids = listOf(trip.uid))
+
+      // We inject a pending friend request from a dummy user "Charlie".
+      // When the Friends screen loads, we wait for this request to appear.
+      // This guarantees that friendsViewModel.refreshFriends() has finished
+      // and currentUserUid is correctly set before we try to use it.
+      val charlieData =
+          hashMapOf(
+              "uid" to "charlie_uid",
+              "name" to "Charlie",
+              "email" to "charlie@example.com",
+              "friends" to listOf<Any>())
+      FirebaseEmulator.firestore
+          .collection("users")
+          .document("charlie_uid")
+          .set(charlieData)
+          .await()
+
+      val bobRef = FirebaseEmulator.firestore.collection("users").document(bobUser.uid)
+      FirebaseEmulator.firestore
+          .runTransaction { transaction ->
+            val snapshot = transaction.get(bobRef)
+            @Suppress("UNCHECKED_CAST")
+            val friends =
+                snapshot.get("friends") as? MutableList<Map<String, String>> ?: mutableListOf()
+            friends.add(mapOf("uid" to "charlie_uid", "status" to "PENDING_INCOMING"))
+            transaction.update(bobRef, "friends", friends)
+          }
+          .await()
     }
 
     // --- STEP 5: Bob sends a friend request to Alice. ---
