@@ -89,7 +89,7 @@ interface TripInfoViewModelContract {
    *
    * @param context The Android context required for initializing the algorithm.
    */
-  suspend fun scheduleSelectedActivities(context: Context)
+  fun scheduleSelectedActivities(context: Context)
 
   /**
    * If you liked the activity, it will add the activity to the liked activities list of the trip.
@@ -159,7 +159,7 @@ interface TripInfoViewModelContract {
    * - Adds it to the end of the activities queue
    * - Updates the set of all fetched swipe activities
    */
-  suspend fun fetchSwipeActivity()
+  fun fetchSwipeActivity()
 
   /**
    * Resets the saving progress state to 0.0f.
