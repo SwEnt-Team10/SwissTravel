@@ -53,7 +53,7 @@ class UserRepositoryFirebase(
           Log.w("UserRepository", "Offline: No cache found.")
           createOfflineFallback(firebaseUser, uid)
         }
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         // Double fail (No Server, No Cache) -> Return Offline Placeholder
         createOfflineFallback(firebaseUser, uid)
       }
@@ -73,7 +73,8 @@ class UserRepositoryFirebase(
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
         pinnedPicturesUids = emptyList(),
-        favoriteTripsUids = emptyList())
+        favoriteTripsUids = emptyList(),
+        currentTrip = "")
   }
 
   // Helper to create a safe fallback user so the app doesn't crash
@@ -89,7 +90,8 @@ class UserRepositoryFirebase(
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
         pinnedPicturesUids = emptyList(),
-        favoriteTripsUids = emptyList())
+        favoriteTripsUids = emptyList(),
+        currentTrip = "")
   }
 
   /**
@@ -464,6 +466,7 @@ class UserRepositoryFirebase(
         (doc["pinnedPicturesUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val favoriteTripsUids =
         (doc["favoriteTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val currentTripUid = (doc["currentTrip"] as? String) ?: ""
 
     return User(
         uid = uid,
@@ -476,7 +479,8 @@ class UserRepositoryFirebase(
         stats = stats,
         pinnedTripsUids = pinnedTripsUids,
         pinnedPicturesUids = pinnedPicturesUids,
-        favoriteTripsUids = favoriteTripsUids)
+        favoriteTripsUids = favoriteTripsUids,
+        currentTrip = currentTripUid)
   }
 
   /**
@@ -499,7 +503,8 @@ class UserRepositoryFirebase(
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser
