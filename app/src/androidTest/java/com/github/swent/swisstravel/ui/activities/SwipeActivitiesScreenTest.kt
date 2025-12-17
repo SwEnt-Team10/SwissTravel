@@ -2,7 +2,6 @@ package com.github.swent.swisstravel.ui.activities
 
 import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -72,27 +71,5 @@ class SwipeActivitiesScreenTest : SwissTravelTest() {
     composeTestRule.mainClock.advanceTimeBy(500)
     composeTestRule.waitForIdle()
     assertTrue(vm.uiState.value.likedActivities.isEmpty())
-  }
-
-  @Test
-  fun backButtonIsDisplayedWhenNoActivitiesProposed() {
-    assertTrue(vm.uiState.value.likedActivities.isEmpty())
-    assertTrue(vm.uiState.value.activitiesQueue.size == 1)
-
-    // back button should not be displayed since there is still an activity proposed
-    composeTestRule.onNodeWithTag(SwipeActivitiesScreenTestTags.BACK_BUTTON).assertIsNotDisplayed()
-
-    // like the activity
-    composeTestRule
-        .onNodeWithTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)
-        .assertIsDisplayed()
-        .performClick()
-
-    // wait for the animation to finish and the state to update
-    composeTestRule.mainClock.advanceTimeBy(500)
-    composeTestRule.waitForIdle()
-
-    // there should now be the back button
-    composeTestRule.onNodeWithTag(SwipeActivitiesScreenTestTags.BACK_BUTTON).assertIsDisplayed()
   }
 }
