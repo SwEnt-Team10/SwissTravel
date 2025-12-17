@@ -52,7 +52,6 @@ data class TripInfoUIState(
     val activities: List<Activity> = emptyList(),
     val tripProfile: TripProfile? = null,
     val isFavorite: Boolean = false,
-    val isCurrentTrip: Boolean = false,
     val isRandom: Boolean = false,
     val errorMsg: String? = null,
     val fullscreen: Boolean = false,

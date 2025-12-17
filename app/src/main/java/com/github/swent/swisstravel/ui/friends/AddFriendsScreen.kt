@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -21,6 +19,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.composable.BackButton
 
 object AddFriendsScreenTestTags {
   const val ADD_FRIEND_SEARCH_FIELD = "addFriendSearchField"
@@ -100,11 +99,7 @@ private fun AddFriendTopAppBar(
             trailingIcon = true)
       },
       navigationIcon = {
-        IconButton(onClick = onBack) {
-          Icon(
-              Icons.AutoMirrored.Filled.ArrowBack,
-              contentDescription = stringResource(R.string.go_back))
-        }
+        BackButton(onBack = { onBack() }, contentDescription = stringResource(R.string.go_back))
       })
 }
 
