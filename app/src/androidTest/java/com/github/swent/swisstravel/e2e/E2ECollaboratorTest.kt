@@ -101,7 +101,6 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
     val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore)
 
-
     // =================================================================================
     // PHASE 0: BOB SETUP (Create Account)
     // =================================================================================
