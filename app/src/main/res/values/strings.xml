@@ -64,7 +64,10 @@
     <string name="destination_limited">Destination limit attained</string>
     <string name="first_destinations_title">Select any location you already know you want to visit</string>
     <string name="dropdown_menu_choose">Choose your location on the dropdown menu</string>
-    <string name="max_destinations_toast">Max %1$d destinations</string>
+    <plurals name="max_destinations_toast">
+        <item quantity="one">Max %1$d destination</item>
+        <item quantity="other">Max %1$d destinations</item>
+    </plurals>
 
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
@@ -127,7 +130,9 @@
     <string name="previous_step">Previous step</string>
     <string name="next_step">Next step</string>
     <string name="swipe_activities">Swipe activities</string>
+    <string name="swipe_activities_back">Back</string>
     <string name="liked_activities">Liked Activities</string>
+    <string name="liked_activities_back">Back</string>
     <string name="trip_id_missing">Trip ID is missing</string>
     <string name="add_photo">Add photos</string>
     <string name="share_trip">Share Trip</string>
@@ -275,6 +280,7 @@
     <string name="estimated_time">Estimated time: %1$s</string>
     <string name="no_image_fallback">No images available for this activity.</string>
     <string name="activity_tip">Tip: Check weather &amp; opening hours before going.</string>
+    <string name="activity_info_back">Back</string>
 
     <!-- Friends List -->
     <string name="friends_list">Friends</string>

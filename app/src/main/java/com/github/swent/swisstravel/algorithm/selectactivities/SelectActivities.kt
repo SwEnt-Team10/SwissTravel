@@ -242,9 +242,7 @@ class SelectActivities(
 
     // remove duplicated from the queue
     val uniqueQueue =
-        currentQueue
-            .distinctBy { activity -> activity.getName() to activity.location }
-            .toMutableList()
+        currentQueue.distinctBy { activity -> activity.getName() to activity.location }
 
     currentQueue.clear()
     currentQueue.addAll(uniqueQueue)
@@ -406,7 +404,7 @@ class SelectActivities(
     val initialClusters = createInitialClusters(locations)
 
     // --- Pass 2: Merge Overlapping Clusters ---
-    val mergedClusters = mergeOverlappingClusters(initialClusters)
+    val mergedClusters = mergeOverlappingClusters(initialClusters).toList()
 
     // --- Pass 3: Convert to SearchZones with Dynamic Radius ---
     return convertToSearchZones(mergedClusters)
@@ -561,13 +559,12 @@ class SelectActivities(
       forceAllPrefs: Boolean = false,
       tripProfile: TripProfile? = null
   ) {
-    if (tripProfile != null) {
-      if (tripProfile.children > 0) {
-        preferences.add(Preference.CHILDREN_FRIENDLY)
-      } else if (tripProfile.adults == 1) {
-        preferences.add(Preference.INDIVIDUAL)
-      } else if (tripProfile.adults >= 3) {
-        preferences.add(Preference.GROUP)
+    tripProfile?.let { profile ->
+      when {
+        profile.children > 0 -> preferences.add(Preference.CHILDREN_FRIENDLY)
+        profile.adults == 1 -> preferences.add(Preference.INDIVIDUAL)
+        profile.adults >= 3 -> preferences.add(Preference.GROUP)
+        else -> Unit
       }
     }
     val activityTypeCount =
@@ -575,15 +572,21 @@ class SelectActivities(
     val environmentCount =
         preferences.count { it.category() == PreferenceCategories.Category.ENVIRONMENT }
 
-    // If no environment => any is good
-    // If no activity type => any is good
-    if (forceAllPrefs || (activityTypeCount == 0 && environmentCount == 0)) {
-      preferences.addAll(PreferenceCategories.activityTypePreferences)
-      preferences.addAll(PreferenceCategories.environmentPreferences)
-    } else if (activityTypeCount == 0) {
-      preferences.addAll(PreferenceCategories.activityTypePreferences)
-    } else if (environmentCount == 0) {
-      preferences.addAll(PreferenceCategories.environmentPreferences)
+    when {
+      // If forced OR both counts are zero, add everything
+      forceAllPrefs || (activityTypeCount == 0 && environmentCount == 0) -> {
+        preferences.addAll(PreferenceCategories.activityTypePreferences)
+        preferences.addAll(PreferenceCategories.environmentPreferences)
+      }
+      // If only activity types are missing
+      activityTypeCount == 0 -> {
+        preferences.addAll(PreferenceCategories.activityTypePreferences)
+      }
+      // If only environment types are missing
+      environmentCount == 0 -> {
+        preferences.addAll(PreferenceCategories.environmentPreferences)
+      }
+      else -> Unit
     }
   }
 }

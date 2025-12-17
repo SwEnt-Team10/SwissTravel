@@ -80,7 +80,7 @@ abstract class TripsViewModel(
   val uiState: StateFlow<TripsUIState> = _uiState.asStateFlow()
 
   /** Subclasses define how all trips from the repository are fetched. */
-  abstract suspend fun getAllTrips()
+  abstract fun getAllTrips()
 
   /** Refreshes the list of trips by re-fetching them from the repository. */
   fun refreshUIState() {
