@@ -24,6 +24,7 @@ import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+import com.google.firebase.auth.GoogleAuthProvider
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import org.junit.After
@@ -56,6 +57,11 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
   private val bobName = "Bob Builder"
   private val bobEmail = "bob.builder@example.com"
 
+  // We define Charlie here so we can access his ID later
+  private val charlieName = "Charlie"
+  private val charlieEmail = "charlie@example.com"
+  private lateinit var charlieUid: String
+
   @Before
   override fun setUp() {
     super.setUp()
@@ -64,9 +70,27 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
     val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email = aliceEmail)
     val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
+    val charlieToken =
+        FakeJwtGenerator.createFakeGoogleIdToken(name = charlieName, email = charlieEmail)
 
     // Sequence: Alice (init), Bob (setup), Alice (accept & view)
     val fakeCredentialManager = FakeCredentialManager.sequence(aliceToken, bobToken, aliceToken)
+
+    // Pre-create Charlie in Firestore properly by signing in as him
+    runBlocking {
+      val credential = GoogleAuthProvider.getCredential(charlieToken, null)
+      FirebaseEmulator.auth.signInWithCredential(credential).await()
+      charlieUid = FirebaseEmulator.auth.currentUser!!.uid
+
+      val charlieData =
+          hashMapOf(
+              "uid" to charlieUid,
+              "name" to charlieName,
+              "email" to charlieEmail,
+              "friends" to listOf<Any>())
+      FirebaseEmulator.firestore.collection("users").document(charlieUid).set(charlieData).await()
+      FirebaseEmulator.auth.signOut()
+    }
 
     // Start app
     composeTestRule.setContent { SwissTravelApp(credentialManager = fakeCredentialManager) }
@@ -92,6 +116,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     // --- STEP 3: Bob logs in. ---
     composeTestRule.loginWithGoogle(true)
 
+    // Wait for Bob's profile to be fully loaded (Auth ready)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
@@ -102,8 +127,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
           .getOrDefault(false)
     }
 
-    // --- STEP 4: Add Bob's dummy trip and pins it to his profile. ---
-    // We do this while Bob is logged in so we have permission
+    // --- STEP 4: Add Bob's dummy trip and inject Pending Friend Request ---
     runBlocking {
       val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
       val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
@@ -125,25 +149,12 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
               adults = 1,
               children = 0)
       tripsRepo.addTrip(trip)
-      // 3. Pin the trip to Bob's profile
+
+      // 3. Pin the trip
       userRepo.updateUser(uid = bobUser.uid, pinnedTripsUids = listOf(trip.uid))
 
-      // We inject a pending friend request from a dummy user "Charlie".
-      // When the Friends screen loads, we wait for this request to appear.
-      // This guarantees that friendsViewModel.refreshFriends() has finished
-      // and currentUserUid is correctly set before we try to use it.
-      val charlieData =
-          hashMapOf(
-              "uid" to "charlie_uid",
-              "name" to "Charlie",
-              "email" to "charlie@example.com",
-              "friends" to listOf<Any>())
-      FirebaseEmulator.firestore
-          .collection("users")
-          .document("charlie_uid")
-          .set(charlieData)
-          .await()
-
+      // 4. Inject "Charlie" as a pending friend request into Bob's list.
+      // We are logged in as Bob, so we can update Bob's document.
       val bobRef = FirebaseEmulator.firestore.collection("users").document(bobUser.uid)
       FirebaseEmulator.firestore
           .runTransaction { transaction ->
@@ -151,7 +162,8 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
             @Suppress("UNCHECKED_CAST")
             val friends =
                 snapshot.get("friends") as? MutableList<Map<String, String>> ?: mutableListOf()
-            friends.add(mapOf("uid" to "charlie_uid", "status" to "PENDING_INCOMING"))
+            // Add pending request from Charlie (created in setUp)
+            friends.add(mapOf("uid" to charlieUid, "status" to "PENDING_INCOMING"))
             transaction.update(bobRef, "friends", friends)
           }
           .await()
@@ -159,6 +171,16 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
     // --- STEP 5: Bob sends a friend request to Alice. ---
     composeTestRule.onNodeWithTag(NavigationTestTags.FRIENDS_TAB).performClick()
+
+    // WAIT for the pending request header (from Charlie) to appear.
+    // This ensures FriendsViewModel has finished refreshing and currentUserUid is set.
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      composeTestRule
+          .onAllNodesWithTag(FriendsScreenTestTags.PENDING_SECTION_HEADER)
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+
     composeTestRule.waitForTag(FriendsScreenTestTags.ADD_FRIEND_BUTTON)
 
     // Click Add Friend
