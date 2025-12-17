@@ -494,8 +494,17 @@ fun AchievementsDisplay(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      items(achievements) { achievement ->
-        AchievementMedal(achievement, onClick = { selected = achievement })
+      if (achievements.isEmpty()) {
+        item {
+          Text(
+              text = stringResource(R.string.no_achievements),
+              style = MaterialTheme.typography.bodyMedium,
+              textAlign = TextAlign.Center)
+        }
+      } else {
+        items(achievements) { achievement ->
+          AchievementMedal(achievement, onClick = { selected = achievement })
+        }
       }
     }
   }
@@ -791,7 +800,8 @@ private fun PinnedTrips(
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE),
-      horizontalArrangement = Arrangement.SpaceBetween) {
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.pinned_trips),
             style = MaterialTheme.typography.titleLarge,
@@ -848,7 +858,10 @@ private fun PinnedPictures(
       val text =
           if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
           else stringResource(R.string.no_pinned_pictures)
-      Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
+      Text(
+          text = text,
+          modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES),
+          textAlign = TextAlign.Center)
     } else {
       if (isLoadingImages) {
         CircularProgressIndicator()
