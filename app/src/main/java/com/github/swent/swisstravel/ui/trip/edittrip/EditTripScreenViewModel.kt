@@ -180,7 +180,10 @@ class EditTripScreenViewModel(
         var selectedActivities = originalTrip.activities
         var routeSegments = originalTrip.routeSegments
         var allLocations = originalTrip.locations
-        val cachedActivities = originalTrip.cachedActivities.toMutableList()
+          val cachedActivities =
+              (originalTrip.cachedActivities + originalTrip.activitiesQueue)
+                  .distinct()
+                  .toMutableList()
         val newTripProfile =
             originalTrip.tripProfile.copy(
                 adults = state.adults,
@@ -260,7 +263,8 @@ class EditTripScreenViewModel(
                 activities = selectedActivities,
                 routeSegments = routeSegments,
                 locations = allLocations,
-                cachedActivities = cachedActivities)
+                cachedActivities = cachedActivities,
+                activitiesQueue = emptyList())
 
         tripRepository.editTrip(state.tripId, updatedTrip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

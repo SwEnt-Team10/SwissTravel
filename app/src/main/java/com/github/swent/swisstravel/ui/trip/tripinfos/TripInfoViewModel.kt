@@ -623,9 +623,11 @@ class TripInfoViewModel(
                 activityRepository = ActivityRepositoryMySwitzerland(),
                 context = context)
 
-        val cachedActivities = _uiState.value.cachedActivities.toMutableList()
+        val cachedActivities =
+            (_uiState.value.cachedActivities + _uiState.value.activitiesQueue).distinct().toMutableList()
+
         val tripProfile = _uiState.value.tripProfile
-        val blackList = (_uiState.value.allFetchedForSwipe + _uiState.value.cachedActivities)
+        val blackList = (_uiState.value.allFetchedForSwipe + _uiState.value.activitiesQueue + _uiState.value.cachedActivities)
             .filter { activity ->
                 // Keep activity in blacklist ONLY if it is NOT in the selected list
                 _uiState.value.selectedLikedActivities.none { selected ->
@@ -634,6 +636,7 @@ class TripInfoViewModel(
             }
             .map { it.getName() }
             .toSet()
+
         val schedule =
             algorithm.computeTrip(
                 tripSettings = tripSettings,
@@ -658,15 +661,16 @@ class TripInfoViewModel(
                     selectedActivities.sortedBy { it.startDate }.map { it.location })
                 .distinctBy { "${it.name}-${it.coordinate.latitude}-${it.coordinate.longitude}" }
 
-            _uiState.update {
-                it.copy(
-                    activities = selectedActivities,
-                    routeSegments = routeSegments,
-                    locations = allLocations,
-                    cachedActivities = cachedActivities,
-                    selectedLikedActivities = emptyList()
-                )
-            }
+        _uiState.update {
+            it.copy(
+                activities = selectedActivities,
+                routeSegments = routeSegments,
+                locations = allLocations,
+                cachedActivities = cachedActivities, // This list was modified by the algorithm
+                selectedLikedActivities = emptyList(),
+                activitiesQueue = emptyList() // Clear the queue since we dumped it into cache
+            )
+        }
 
         val updatedTrip = getTripFromState()
 

@@ -171,7 +171,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0f
               },
           // duration of the animation
-          animationSpec = tween(300))
+          animationSpec = tween(750))
 
   // Parameter for horizontal movement
   val offsetX =
@@ -185,7 +185,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0.dp
               },
           // duration of the animation
-          animationSpec = tween(300),
+          animationSpec = tween(750),
           finishedListener = {
             if (swipeState.value != SwipeState.Idle) {
               onSwiped(swipeState.value == SwipeState.Like)
@@ -207,11 +207,13 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
             verticalAlignment = Alignment.CenterVertically) {
               Button(
                   onClick = { swipeState.value = SwipeState.Dislike },
+                  enabled = swipeState.value == SwipeState.Idle,
                   modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) {
                     Text(stringResource(R.string.dislike_button))
                   }
               Button(
                   onClick = { swipeState.value = SwipeState.Like },
+                  enabled = swipeState.value == SwipeState.Idle,
                   modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)) {
                     Text(stringResource(R.string.like_button))
                   }
