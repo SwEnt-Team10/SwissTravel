@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Attractions
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Route
@@ -62,6 +61,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.google.firebase.Timestamp
@@ -72,7 +72,6 @@ import java.time.format.DateTimeFormatter
 /** Test tags for TripInfoScreen composable */
 object TripInfoScreenTestTags {
   const val TITLE = "tripInfoScreenTitle"
-  const val BACK_BUTTON = "tripInfoScreenBackButton"
   const val FAVORITE_BUTTON = "tripInfoScreenFavoriteButton"
   const val EDIT_BUTTON = "tripInfoScreenEditButton"
   const val LAZY_COLUMN = "tripInfoScreenLazyColumn"
@@ -386,13 +385,8 @@ private fun TripInfoTopAppBar(
       },
       navigationIcon = {
         if (!isOnCurrentTripScreen) {
-          IconButton(
-              onClick = onBack, modifier = Modifier.testTag(TripInfoScreenTestTags.BACK_BUTTON)) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back_to_my_trips),
-                    tint = MaterialTheme.colorScheme.onBackground)
-              }
+          BackButton(
+              onBack = { onBack }, contentDescription = stringResource(R.string.back_to_my_trips))
         }
       },
       actions = {
