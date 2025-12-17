@@ -9,10 +9,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 
+/** The test tag for the cancel button. */
 object CancelButtonTestTag {
   const val CANCEL_BUTTON = "cancelButton"
 }
 
+/**
+ * A composable that represent a cancel button (a button that looks like a cross).
+ *
+ * @param onCancel the function to call when you click on the button
+ * @param contentDescription the description to add to the button
+ */
 @Composable
 fun CancelButton(onCancel: () -> Unit = {}, contentDescription: String) {
   IconButton(
