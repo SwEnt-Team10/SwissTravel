@@ -281,6 +281,7 @@ open class TripAlgorithm(
    */
   private val swissMajorCities: List<CityConfig> = parseCityConfigs(context)
 
+  /** List of all the basic preferences */
   private val allBasicPreferences =
       PreferenceCategories.environmentPreferences + PreferenceCategories.activityTypePreferences
 
