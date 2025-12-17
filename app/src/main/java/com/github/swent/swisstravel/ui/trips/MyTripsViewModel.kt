@@ -32,7 +32,7 @@ class MyTripsViewModel(
 
   /** Initializes the ViewModel by loading all trips. */
   init {
-    viewModelScope.launch { getAllTrips() }
+    getAllTrips()
   }
 
   /**
@@ -41,28 +41,30 @@ class MyTripsViewModel(
    * Categorizes trips into current and upcoming ones based on their profile dates, and applies the
    * active sorting type to upcoming trips.
    */
-  override suspend fun getAllTrips() {
-    _uiState.value = _uiState.value.copy(isLoading = true)
-    try {
-      val currentUser = userRepository.getCurrentUser()
-      val favoriteTrips = currentUser.favoriteTripsUids.toSet()
-      val trips = tripsRepository.getAllTrips()
-      val currentTrip = trips.find { it.isCurrent(currentUser.currentTrip) }
-      val upcomingTrips = trips.filter { it.isUpcoming(currentUser.currentTrip) }
-      val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType, favoriteTrips)
-      val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
+  override fun getAllTrips() {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true)
+      try {
+        val currentUser = userRepository.getCurrentUser()
+        val favoriteTrips = currentUser.favoriteTripsUids.toSet()
+        val trips = tripsRepository.getAllTrips()
+        val currentTrip = trips.find { it.isCurrent(currentUser.currentTrip) }
+        val upcomingTrips = trips.filter { it.isUpcoming(currentUser.currentTrip) }
+        val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType, favoriteTrips)
+        val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
-      _uiState.value =
-          _uiState.value.copy(
-              currentTrip = currentTrip,
-              tripsList = sortedTrips,
-              collaboratorsByTripId = collaboratorsByTrip,
-              isLoading = false,
-              favoriteTripsUids = favoriteTrips)
-    } catch (e: Exception) {
-      Log.e("MyTripsViewModel", "Error fetching trips", e)
-      setErrorMsg("Failed to load trips.")
-      _uiState.value = _uiState.value.copy(isLoading = false)
+        _uiState.value =
+            _uiState.value.copy(
+                currentTrip = currentTrip,
+                tripsList = sortedTrips,
+                collaboratorsByTripId = collaboratorsByTrip,
+                isLoading = false,
+                favoriteTripsUids = favoriteTrips)
+      } catch (e: Exception) {
+        Log.e("MyTripsViewModel", "Error fetching trips", e)
+        setErrorMsg("Failed to load trips.")
+        _uiState.value = _uiState.value.copy(isLoading = false)
+      }
     }
   }
 
