@@ -18,6 +18,8 @@ import androidx.test.espresso.matcher.ViewMatchers.isAssignableFrom
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.SwissTravelApp
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.composable.DateSelectorTestTags
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
@@ -37,6 +39,7 @@ import com.github.swent.swisstravel.utils.FakeCredentialManager
 import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
+import com.google.firebase.Timestamp
 import java.time.LocalDate
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
@@ -70,6 +73,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
         FakeJwtGenerator.createFakeGoogleIdToken(name = "Alice", email = "alice@example.com")
     val bob = FakeJwtGenerator.createFakeGoogleIdToken(name = "Bob", email = "bob@example.com")
     val creds = FakeCredentialManager.sequence(alice, bob)
+    val tripsRepo = createInitializedRepository()
 
     composeTestRule.setContent { SwissTravelApp(credentialManager = creds) }
 
@@ -94,7 +98,16 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
 
     // 5) Go back to current trip and create another trip with non-today date
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    createTrip(selectNonToday = true)
+    val nonTodayTrip =
+        createTestTrip(
+            uid = "nonToday",
+            name = "Awesome trip",
+            departureLocation = Location(Coordinate(46.2095, 46.2095), "Café de Paris"),
+            arrivalLocation = Location(Coordinate(46.5191, 6.5668), "EPFL"),
+            ownerId = FirebaseEmulator.auth.currentUser!!.uid,
+            startDate = Timestamp(Timestamp.now().seconds + 1000 * 24 * 5 * 3600, 0),
+            endDate = Timestamp(Timestamp.now().seconds + 1000 * 24 * 6 * 3600, 0))
+    runBlocking { tripsRepo.addTrip(nonTodayTrip) }
 
     // 6) Verify second trip is displayed in My Trips
     composeTestRule.waitForMainUi()
