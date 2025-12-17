@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.content.Context
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -236,65 +237,92 @@ fun ProfileSettingsScreen(
             CircularProgressIndicator()
           }
         } else {
-          ProfileSettingsContent(
-              uiState = uiState,
-              profileSettingsViewModel = profileSettingsViewModel,
-              modifier = Modifier.padding(pd),
-              onEditProfilePic = {
-                photoPickerLauncher.launch(
-                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-              },
-              navigationActions = navigationActions)
+          val profileSettingsContentState =
+              ProfileSettingsContentState(
+                  uiState = uiState,
+                  profileSettingsViewModel = profileSettingsViewModel,
+                  modifier = Modifier.padding(pd),
+                  onEditProfilePic = {
+                    handleOfflineClick(
+                        context = context,
+                        isOnline = isOnline,
+                        action = {
+                          photoPickerLauncher.launch(
+                              PickVisualMediaRequest(
+                                  ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        })
+                  },
+                  navigationActions = navigationActions,
+                  context = context,
+                  isOnline = isOnline)
+          ProfileSettingsContent(profileSettingsContentState)
         }
       }
 }
 
 /**
- * The content of the profile screen.
+ * The state of the profile settings screen.
  *
  * @param uiState The state of the screen.
  * @param profileSettingsViewModel The view model for this screen.
  * @param modifier The modifier for the content.
  * @param authRepository The repository for authentication.
  * @param navigationActions The navigation actions for this screen.
+ * @param context The context.
+ * @param isOnline Whether the user is online.
+ */
+data class ProfileSettingsContentState(
+    val uiState: ProfileSettingsUIState,
+    val profileSettingsViewModel: ProfileSettingsViewModel,
+    val modifier: Modifier,
+    val onEditProfilePic: () -> Unit,
+    val authRepository: AuthRepository = AuthRepositoryFirebase(),
+    val navigationActions: NavigationActions? = null,
+    val context: Context,
+    val isOnline: Boolean
+)
+
+/**
+ * The content of the profile screen.
+ *
+ * @param state The state of the screen.
  */
 @Composable
-private fun ProfileSettingsContent(
-    uiState: ProfileSettingsUIState,
-    profileSettingsViewModel: ProfileSettingsViewModel,
-    modifier: Modifier,
-    onEditProfilePic: () -> Unit,
-    authRepository: AuthRepository = AuthRepositoryFirebase(),
-    navigationActions: NavigationActions? = null
-) {
+private fun ProfileSettingsContent(state: ProfileSettingsContentState) {
   val scrollState = rememberScrollState()
-  val isSignedIn = profileSettingsViewModel.userIsSignedIn()
+  val isSignedIn = state.profileSettingsViewModel.userIsSignedIn()
 
   Column(
       modifier =
-          modifier
+          state.modifier
               .fillMaxSize()
               .padding(dimensionResource(R.dimen.mid_padding))
               .verticalScroll(scrollState)
               .testTag(ProfileSettingsScreenTestTags.CONTENT),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        ProfileSettingsHeader(profilePicUrl = uiState.profilePicUrl, onEditClick = onEditProfilePic)
+        ProfileSettingsHeader(
+            profilePicUrl = state.uiState.profilePicUrl, onEditClick = state.onEditProfilePic)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
-        ProfileInfoSection(uiState = uiState, viewModel = profileSettingsViewModel)
+        ProfileInfoSection(
+            uiState = state.uiState,
+            viewModel = state.profileSettingsViewModel,
+            context = state.context,
+            isOnline = state.isOnline)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
-        PersonalInfoSection(email = uiState.email)
+        PersonalInfoSection(email = state.uiState.email)
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
 
         PreferencesSection(
-            selected = uiState.selectedPreferences,
+            selected = state.uiState.selectedPreferences,
             onToggle = { pref ->
-              val sel = uiState.selectedPreferences
-              profileSettingsViewModel.savePreferences(if (pref in sel) sel - pref else sel + pref)
+              val sel = state.uiState.selectedPreferences
+              state.profileSettingsViewModel.savePreferences(
+                  if (pref in sel) sel - pref else sel + pref)
             })
 
         Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer)))
@@ -302,8 +330,8 @@ private fun ProfileSettingsContent(
         AuthButton(
             isSignedIn = isSignedIn,
             onClick = {
-              if (isSignedIn) authRepository.signOut()
-              navigationActions?.navigateTo(Screen.Landing, true)
+              if (isSignedIn) state.authRepository.signOut()
+              state.navigationActions?.navigateTo(Screen.Landing, true)
             })
       }
 }
@@ -340,11 +368,15 @@ private fun ProfileSettingsHeader(profilePicUrl: String, onEditClick: () -> Unit
  *
  * @param uiState The state of the screen.
  * @param viewModel The view model for this screen.
+ * @param context The context.
+ * @param isOnline Whether the user is online.
  */
 @Composable
 private fun ProfileInfoSection(
     uiState: ProfileSettingsUIState,
-    viewModel: ProfileSettingsViewModel
+    viewModel: ProfileSettingsViewModel,
+    context: Context,
+    isOnline: Boolean
 ) {
   InfoSection(
       title = stringResource(R.string.profile_info),
@@ -353,7 +385,7 @@ private fun ProfileInfoSection(
             label = stringResource(R.string.name),
             text = uiState.name,
             isEditing = uiState.isEditingName,
-            onStartEdit = { viewModel.startEditingName() },
+            onStartEdit = { handleOfflineClick(context, isOnline, viewModel::startEditingName) },
             onSave = { viewModel.saveName(it) },
             onCancel = { viewModel.cancelEditingName() },
             testTagPrefix = "NAME")
@@ -362,7 +394,7 @@ private fun ProfileInfoSection(
             label = stringResource(R.string.biography),
             text = uiState.biography,
             isEditing = uiState.isEditingBio,
-            onStartEdit = { viewModel.startEditingBio() },
+            onStartEdit = { handleOfflineClick(context, isOnline, viewModel::startEditingBio) },
             onSave = { viewModel.saveBio(it) },
             onCancel = { viewModel.cancelEditingBio() },
             testTagPrefix = "BIOGRAPHY")
@@ -650,5 +682,21 @@ private fun DisplayTextOrPlaceholder(text: String, testTagPrefix: String) {
         text = text,
         style = MaterialTheme.typography.bodyLarge,
         modifier = Modifier.testTag(ProfileSettingsScreenTestTags.text(testTagPrefix)))
+  }
+}
+
+/**
+ * Handle an offline click.
+ *
+ * @param context The context.
+ * @param isOnline Whether the user is online.
+ * @param action The action to perform
+ */
+private fun handleOfflineClick(context: Context, isOnline: Boolean, action: () -> Unit) {
+  if (isOnline) {
+    action()
+  } else {
+    Toast.makeText(context, context.getString(R.string.requires_internet), Toast.LENGTH_SHORT)
+        .show()
   }
 }
