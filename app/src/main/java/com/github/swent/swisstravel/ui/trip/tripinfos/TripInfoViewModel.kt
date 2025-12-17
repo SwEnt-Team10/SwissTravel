@@ -187,8 +187,7 @@ class TripInfoViewModel(
                 // Preserve transient state if reloading the same trip
                 currentDayIndex = if (isSameTrip) current.currentDayIndex else 0,
                 selectedStep = if (isSameTrip) current.selectedStep else null,
-                drawFromCurrentPosition =
-                    if (isSameTrip) current.drawFromCurrentPosition else false,
+                drawFromCurrentPosition = isSameTrip && current.drawFromCurrentPosition,
                 currentGpsPoint = if (isSameTrip) current.currentGpsPoint else null,
                 currentUserIsOwner = trip.isOwner(currentUser.uid),
                 isLoading = false,
@@ -526,21 +525,21 @@ class TripInfoViewModel(
    * - Adds it to the end of the activities queue
    * - Updates the set of all fetched swipe activities
    */
-  override suspend fun fetchSwipeActivity() {
-    val currentTrip = trip.value ?: return
-    val cities = majorSwissCities.value
+  override fun fetchSwipeActivity() {
+    viewModelScope.launch {
+      val currentTrip = trip.value ?: return@launch
+      val cities = majorSwissCities.value
 
-    val updatedTrip = activitiesFetcher.fetchSwipeActivities(currentTrip, cities)
+      // This is the suspending call, now safe inside the launch block
+      val updatedTrip = activitiesFetcher.fetchSwipeActivities(currentTrip, cities)
 
-    // Update the VM state with the new queue, fetched locations, and cache from the updated trip
-    // Note: We pass emptyList() for newFetched because fetchSwipeActivities has already put new
-    // activities in the queue
-    // and we only add them to allFetchedForSwipe when they are actually swiped (in swipeActivity)
-    updateQueueAndAllFetched(
-        newQueue = updatedTrip.activitiesQueue,
-        newFetched = emptyList(),
-        newFetchedLocations = updatedTrip.allFetchedLocations,
-        newCachedActivities = updatedTrip.cachedActivities)
+      // Update the VM state
+      updateQueueAndAllFetched(
+          newQueue = updatedTrip.activitiesQueue,
+          newFetched = emptyList(),
+          newFetchedLocations = updatedTrip.allFetchedLocations,
+          newCachedActivities = updatedTrip.cachedActivities)
+    }
   }
 
   /**
@@ -551,31 +550,33 @@ class TripInfoViewModel(
    */
   override fun mapToTripSettings(): TripSettings {
     val profile: TripProfile? = _uiState.value.tripProfile
-    if (profile == null) return TripSettings(name = _uiState.value.name)
-    else
-        return TripSettings(
-            name = _uiState.value.name,
-            date =
-                TripDate(
-                    profile.startDate
-                        .toDate()
-                        .toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate(),
-                    profile.endDate
-                        .toDate()
-                        .toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate()),
-            travelers = TripTravelers(adults = profile.adults, children = profile.children),
-            preferences = profile.preferences,
-            arrivalDeparture =
-                TripArrivalDeparture(
-                    arrivalLocation = profile.arrivalLocation,
-                    departureLocation = profile.departureLocation),
-            destinations = profile.preferredLocations
-            // InvalidNameMsg should stay null since the tripInfo should already have a valid name
-            )
+    return if (profile == null) {
+      TripSettings(name = _uiState.value.name)
+    } else {
+      TripSettings(
+          name = _uiState.value.name,
+          date =
+              TripDate(
+                  profile.startDate
+                      .toDate()
+                      .toInstant()
+                      .atZone(ZoneId.systemDefault())
+                      .toLocalDate(),
+                  profile.endDate
+                      .toDate()
+                      .toInstant()
+                      .atZone(ZoneId.systemDefault())
+                      .toLocalDate()),
+          travelers = TripTravelers(adults = profile.adults, children = profile.children),
+          preferences = profile.preferences,
+          arrivalDeparture =
+              TripArrivalDeparture(
+                  arrivalLocation = profile.arrivalLocation,
+                  departureLocation = profile.departureLocation),
+          destinations = profile.preferredLocations
+          // InvalidNameMsg should stay null since the tripInfo should already have a valid name
+          )
+    }
   }
 
   /**
@@ -606,89 +607,105 @@ class TripInfoViewModel(
    *
    * If there is no room for selected activities to be scheduled, it will respond with a toast
    */
-  override suspend fun scheduleSelectedActivities(context: Context) {
-    _uiState.update { it.copy(isScheduling = true, savingProgress = 0f) }
-    val tripSettings = this.mapToTripSettings()
-    val algorithm =
-        TripAlgorithm.init(
-            tripSettings = tripSettings,
-            activityRepository = ActivityRepositoryMySwitzerland(),
-            context = context)
+  override fun scheduleSelectedActivities(context: Context) {
+    viewModelScope.launch {
+      _uiState.update { it.copy(isScheduling = true, savingProgress = 0f) }
 
-    val activitiesNotInFetched =
-        _uiState.value.activities.filter { activity ->
-          _uiState.value.allFetchedForSwipe.none { fetched ->
-            fetched.getName() == activity.getName() &&
-                fetched.location.sameLocation(activity.location)
-          }
-        }
+      try {
+        val tripSettings = mapToTripSettings()
+        val algorithm =
+            TripAlgorithm.init(
+                tripSettings = tripSettings,
+                activityRepository = ActivityRepositoryMySwitzerland(),
+                context = context)
 
-    val cachedActivities =
-        (_uiState.value.cachedActivities + _uiState.value.activitiesQueue + activitiesNotInFetched)
-            .distinct()
-            .toMutableList()
+        // Prepare lists for the algorithm
+        val currentActivities = _uiState.value.activities
+        val fetchedForSwipe = _uiState.value.allFetchedForSwipe
 
-    val tripProfile = _uiState.value.tripProfile
-    val blackList =
-        (_uiState.value.allFetchedForSwipe +
-                _uiState.value.activitiesQueue +
-                _uiState.value.cachedActivities)
-            .filter { activity ->
-              // Keep activity in blacklist ONLY if it is NOT in the selected list
-              _uiState.value.selectedLikedActivities.none { selected ->
-                selected.getName() == activity.getName() &&
-                    selected.location.sameLocation(activity.location)
+        val activitiesNotInFetched =
+            currentActivities.filter { activity ->
+              fetchedForSwipe.none { fetched ->
+                fetched.getName() == activity.getName() &&
+                    fetched.location.sameLocation(activity.location)
               }
             }
-            .map { it.getName() }
-            .toSet()
 
-    val selectionParameters =
-        TripAlgorithm.ActivitySelectionParameters(
-            activityBlacklist = blackList.toList(),
-            protectedActivities = _uiState.value.selectedLikedActivities,
-            cachedActivities = cachedActivities,
-            allFetchedLocations = _uiState.value.allFetchedLocations)
-    val schedule =
-        algorithm.computeTrip(
-            tripSettings = tripSettings,
-            tripProfile = tripProfile!!,
-            isRandomTrip = _uiState.value.isRandom,
-            selectionParams = selectionParameters) { progress ->
-              _uiState.update { it.copy(savingProgress = progress) }
-            }
+        val cachedActivities =
+            (_uiState.value.cachedActivities +
+                    _uiState.value.activitiesQueue +
+                    activitiesNotInFetched)
+                .distinct()
+                .toMutableList()
 
-    // Extract activities and route segments
-    val selectedActivities =
-        schedule.filterIsInstance<TripElement.TripActivity>().map { it.activity }
+        val tripProfile = _uiState.value.tripProfile
+        val blackList =
+            (_uiState.value.allFetchedForSwipe +
+                    _uiState.value.activitiesQueue +
+                    _uiState.value.cachedActivities)
+                .filter { activity ->
+                  // Keep activity in blacklist ONLY if it is NOT in the selected list
+                  _uiState.value.selectedLikedActivities.none { selected ->
+                    selected.getName() == activity.getName() &&
+                        selected.location.sameLocation(activity.location)
+                  }
+                }
+                .map { it.getName() }
+                .toSet()
 
-    val routeSegments = schedule.filterIsInstance<TripElement.TripSegment>().map { it.route }
+        val selectionParameters =
+            TripAlgorithm.ActivitySelectionParameters(
+                activityBlacklist = blackList.toList(),
+                protectedActivities = _uiState.value.selectedLikedActivities,
+                cachedActivities = cachedActivities,
+                allFetchedLocations = _uiState.value.allFetchedLocations)
 
-    // Merge all locations from route segments and activities
-    // Done using AI
-    val allLocations =
-        (routeSegments.sortedBy { it.startDate }.flatMap { listOf(it.from, it.to) } +
-                selectedActivities.sortedBy { it.startDate }.map { it.location })
-            .distinctBy { "${it.name}-${it.coordinate.latitude}-${it.coordinate.longitude}" }
+        val schedule =
+            algorithm.computeTrip(
+                tripSettings = tripSettings,
+                tripProfile = tripProfile!!,
+                isRandomTrip = _uiState.value.isRandom,
+                selectionParams = selectionParameters) { progress ->
+                  _uiState.update { it.copy(savingProgress = progress) }
+                }
 
-    _uiState.update {
-      it.copy(
-          activities = selectedActivities,
-          routeSegments = routeSegments,
-          locations = allLocations,
-          cachedActivities = cachedActivities, // This list was modified by the algorithm
-          selectedLikedActivities = emptyList(),
-          activitiesQueue = emptyList() // Clear the queue since we dumped it into cache
-          )
+        // Extract activities and route segments
+        val selectedActivities =
+            schedule.filterIsInstance<TripElement.TripActivity>().map { it.activity }
+
+        val routeSegments = schedule.filterIsInstance<TripElement.TripSegment>().map { it.route }
+
+        // Merge all locations from route segments and activities
+        // Done using AI
+        val allLocations =
+            (routeSegments.sortedBy { it.startDate }.flatMap { listOf(it.from, it.to) } +
+                    selectedActivities.sortedBy { it.startDate }.map { it.location })
+                .distinctBy { "${it.name}-${it.coordinate.latitude}-${it.coordinate.longitude}" }
+
+        _uiState.update {
+          it.copy(
+              activities = selectedActivities,
+              routeSegments = routeSegments,
+              locations = allLocations,
+              cachedActivities = cachedActivities, // This list was modified by the algorithm
+              selectedLikedActivities = emptyList(),
+              activitiesQueue = emptyList() // Clear the queue since we dumped it into cache
+              )
+        }
+
+        val updatedTrip = getTripFromState()
+
+        tripsRepository.editTrip(_uiState.value.uid, updatedTrip)
+        computeSchedule()
+
+        _uiState.update { it.copy(isScheduling = false, savingProgress = 1f) }
+      } catch (e: Exception) {
+        Log.e("TripInfoViewModel", "Error scheduling activities", e)
+        setErrorMsg("Scheduling failed: ${e.message}")
+        _uiState.update { it.copy(isScheduling = false) }
+      }
     }
-
-    val updatedTrip = getTripFromState()
-
-    tripsRepository.editTrip(_uiState.value.uid, updatedTrip)
-    computeSchedule()
-    _uiState.update { it.copy(isScheduling = false, savingProgress = 1f) }
   }
-
   // ========== Functions for managing collaborators ==========
 
   /**

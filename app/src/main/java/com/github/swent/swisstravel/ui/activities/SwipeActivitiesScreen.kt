@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -194,9 +193,15 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
           })
 
   // Apply rotation and offset to the card
-  Box(modifier = Modifier.offset(x = offsetX.value).graphicsLayer { rotationZ = rotation.value }) {
-    ActivityInfos(activity = activity, onBack = { onTripInfo() })
-  }
+  Box(
+      modifier =
+          Modifier.graphicsLayer {
+            // offset and rotation
+            translationX = offsetX.value.toPx()
+            rotationZ = rotation.value
+          }) {
+        ActivityInfos(activity = activity, onBack = { onTripInfo() })
+      }
 
   // Like and dislike actions
   Box(

@@ -37,6 +37,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -139,46 +140,23 @@ fun FirstDestinationScreen(
                           })
                     }
 
-                    // Key using the unique ID so removal doesn't mess up ViewModel association
-                    itemsIndexed(destinations, key = { _, item -> item.id }) { index, wrapper ->
-                      val destinationVm = destinationViewModelFactory(wrapper.id)
-                      DestinationItem(
-                          index = index,
-                          destinationVm = destinationVm,
-                          onLocationSelected = { selectedLocation ->
-                            val idx = destinations.indexOfFirst { it.id == wrapper.id }
-                            if (idx != -1) {
-                              destinations[idx] = wrapper.copy(location = selectedLocation)
-                            }
-                          },
-                          onRemove = {
-                            val idx = destinations.indexOfFirst { it.id == wrapper.id }
-                            if (idx != -1) {
-                              destinations.removeAt(idx)
-                            }
-                          })
-                    }
+                    // Extracted manual destinations list
+                    DestinationInputFieldList(
+                        destinations = destinations,
+                        destinationViewModelFactory = destinationViewModelFactory)
 
-                    item {
-                      SuggestionsHeader(
-                          isExpanded = isExpanded, onToggleExpand = { isExpanded = !isExpanded })
-                    }
-
-                    if (isExpanded) {
-                      SuggestionList(
-                          selectedSuggestions = selectedSuggestions,
-                          suggestions = suggestions,
-                          onSuggestionSelected = { location ->
-                            viewModel.toggleSuggestion(location)
-                          },
-                          onSuggestionDeselected = { location ->
-                            viewModel.toggleSuggestion(location)
-                          },
-                          getSuggestionToggledSelectedSize = {
-                            viewModel.getSuggestionToggledSelectedSize()
-                          },
-                          manualCount = destinations.size)
-                    }
+                    // Extracted expandable suggestions section
+                    ExpandableSuggestionsSection(
+                        isExpanded = isExpanded,
+                        onToggleExpand = { isExpanded = !isExpanded },
+                        selectedSuggestions = selectedSuggestions,
+                        suggestions = suggestions,
+                        onSuggestionSelected = { viewModel.toggleSuggestion(it) },
+                        onSuggestionDeselected = { viewModel.toggleSuggestion(it) },
+                        getSuggestionToggledSelectedSize = {
+                          viewModel.getSuggestionToggledSelectedSize()
+                        },
+                        manualCount = destinations.size)
 
                     item {
                       NextButton(
@@ -193,6 +171,55 @@ fun FirstDestinationScreen(
                   }
             }
       }
+}
+
+/** Extension function to display the list of manual destination input fields. */
+private fun LazyListScope.DestinationInputFieldList(
+    destinations: SnapshotStateList<DestinationWrapper>,
+    destinationViewModelFactory: @Composable (String) -> AddressTextFieldViewModelContract
+) {
+  itemsIndexed(destinations, key = { _, item -> item.id }) { index, wrapper ->
+    val destinationVm = destinationViewModelFactory(wrapper.id)
+    DestinationItem(
+        index = index,
+        destinationVm = destinationVm,
+        onLocationSelected = { selectedLocation ->
+          val idx = destinations.indexOfFirst { it.id == wrapper.id }
+          if (idx != -1) {
+            destinations[idx] = wrapper.copy(location = selectedLocation)
+          }
+        },
+        onRemove = {
+          val idx = destinations.indexOfFirst { it.id == wrapper.id }
+          if (idx != -1) {
+            destinations.removeAt(idx)
+          }
+        })
+  }
+}
+
+/** Extension function to display the suggestions header and the collapsible list. */
+fun LazyListScope.ExpandableSuggestionsSection(
+    isExpanded: Boolean,
+    onToggleExpand: () -> Unit,
+    selectedSuggestions: List<Location>,
+    suggestions: List<Location>,
+    onSuggestionSelected: (Location) -> Unit,
+    onSuggestionDeselected: (Location) -> Unit,
+    getSuggestionToggledSelectedSize: () -> Int,
+    manualCount: Int
+) {
+  item { SuggestionsHeader(isExpanded = isExpanded, onToggleExpand = onToggleExpand) }
+
+  if (isExpanded) {
+    SuggestionList(
+        selectedSuggestions = selectedSuggestions,
+        suggestions = suggestions,
+        onSuggestionSelected = onSuggestionSelected,
+        onSuggestionDeselected = onSuggestionDeselected,
+        getSuggestionToggledSelectedSize = getSuggestionToggledSelectedSize,
+        manualCount = manualCount)
+  }
 }
 
 @Composable
