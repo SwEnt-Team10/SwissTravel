@@ -51,6 +51,8 @@
     <string name="start_date">Start date</string>
     <string name="end_date">End date</string>
     <string name="end_date_error">End date must be on or after start date.</string>
+    <string name="end_date_past">End date after today.</string>
+    <string name="trip_dates_disclaimer">Disclaimer: A trip of more than 2 weeks can take a lot of time to compute and we cannot guarantee that it will end on the correct date</string>
 
     <!-- Arrival and Departure -->
     <string name="arrivalDeparture">Where are your starting and ending destinations?</string>
@@ -62,6 +64,7 @@
     <string name="destination_limited">Destination limit attained</string>
     <string name="first_destinations_title">Select any location you already know you want to visit</string>
     <string name="dropdown_menu_choose">Choose your location on the dropdown menu</string>
+    <string name="max_destinations_toast">Max %1$d destinations</string>
 
     <!-- Current trip -->
     <string name="create_trip">Create a trip</string>
