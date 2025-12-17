@@ -317,7 +317,7 @@ class SelectActivities(
                 NUMBER_ACTIVITIES_TO_FETCH, // Fetch a full batch (40)
                 exclusionList.toList(),
                 cachedActivities // Mutable cache used for overflow (though we dump it all below
-                                 // anyway)
+                // anyway)
                 )
 
         // Filter unique ones for the current batch
@@ -522,17 +522,17 @@ class SelectActivities(
     tripSettings = tripSettings.copy(preferences = newPreferences)
   }
 
-    /**
-     * Ensures that the preferences list contains at least one preference from each major category
-     * (Activity Type and Environment).
-     *
-     * If a category is missing (e.g., no specific environment selected), it implies that "any"
-     * is acceptable, so all preferences of that category are added to the list.
-     *
-     * @param preferences The mutable list of preferences to validate and update.
-     * @param forceAllPrefs If true, adds all preferences from both categories regardless of
-     * current selections. Defaults to false.
-     */
+  /**
+   * Ensures that the preferences list contains at least one preference from each major category
+   * (Activity Type and Environment).
+   *
+   * If a category is missing (e.g., no specific environment selected), it implies that "any" is
+   * acceptable, so all preferences of that category are added to the list.
+   *
+   * @param preferences The mutable list of preferences to validate and update.
+   * @param forceAllPrefs If true, adds all preferences from both categories regardless of current
+   *   selections. Defaults to false.
+   */
   private fun addAllPreferences(
       preferences: MutableList<Preference>,
       forceAllPrefs: Boolean = false

@@ -146,22 +146,21 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     }
   }
 
-  override fun scheduleSelectedActivities(context: Context) {
-    _ui.update { state ->
-      state
-    } // does nothing for the moment since scheduling logic is not done yet
+  override suspend fun scheduleSelectedActivities(context: Context) {
+    // Simulate a successful scheduling operation
+    _ui.update { state -> state.copy(savingProgress = 1.0f) }
   }
 
   fun setActivitiesQueue(activitiesQueue: List<Activity>) {
     _ui.update { state ->
       state.copy(
           activitiesQueue = activitiesQueue,
-          currentActivity = activitiesQueue.first(),
+          currentActivity = activitiesQueue.firstOrNull(),
           backActivity = activitiesQueue.getOrNull(1))
     }
   }
 
-  override fun swipeActivity(liked: Boolean, enableNewFetch: Boolean) {
+  override fun swipeActivity(liked: Boolean) {
     if (_ui.value.activitiesQueue.isEmpty()) return
     val current = _ui.value
     val activity = current.activitiesQueue.first()
@@ -223,6 +222,18 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     // Remove the user from the collaborators list
     val currentCollaborators = _ui.value.collaborators.filter { it.uid != user.uid }
     _ui.value = _ui.value.copy(collaborators = currentCollaborators)
+  }
+
+  override fun getMajorSwissCities(context: Context) {
+    // No-op for fake
+  }
+
+  override suspend fun fetchSwipeActivity() {
+    // No-op for fake
+  }
+
+  override fun resetSchedulingState() {
+    _ui.update { it.copy(savingProgress = 0f) }
   }
 
   // Helper to set friends for testing the dialog

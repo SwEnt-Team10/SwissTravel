@@ -377,25 +377,25 @@ class TripInfoViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { tripsRepository.editTrip(any(), any()) } just Runs
 
-      // load trip
-      viewModel.loadTripInfo(tripWithActivities.uid)
-      advanceUntilIdle()
+    // load trip
+    viewModel.loadTripInfo(tripWithActivities.uid)
+    advanceUntilIdle()
 
-      // Check which one is first after shuffle
-      val firstActivity = viewModel.uiState.value.currentActivity!!
-      val secondActivity = if (firstActivity == activity1) activity2 else activity1
+    // Check which one is first after shuffle
+    val firstActivity = viewModel.uiState.value.currentActivity!!
+    val secondActivity = if (firstActivity == activity1) activity2 else activity1
 
-      // like the first activity
-      viewModel.swipeActivity(liked = true)
-      advanceUntilIdle()
+    // like the first activity
+    viewModel.swipeActivity(liked = true)
+    advanceUntilIdle()
 
-      // first activity should be in likedActivities
-      assertEquals(1, viewModel.uiState.value.likedActivities.size)
-      assertEquals(firstActivity, viewModel.uiState.value.likedActivities[0])
+    // first activity should be in likedActivities
+    assertEquals(1, viewModel.uiState.value.likedActivities.size)
+    assertEquals(firstActivity, viewModel.uiState.value.likedActivities[0])
 
-      // activitiesQueue should have one less activity
-      assertEquals(1, viewModel.uiState.value.activitiesQueue.size)
-      assertEquals(secondActivity, viewModel.uiState.value.activitiesQueue[0])
+    // activitiesQueue should have one less activity
+    assertEquals(1, viewModel.uiState.value.activitiesQueue.size)
+    assertEquals(secondActivity, viewModel.uiState.value.activitiesQueue[0])
 
     // dislike the next activity
     viewModel.swipeActivity(liked = false)

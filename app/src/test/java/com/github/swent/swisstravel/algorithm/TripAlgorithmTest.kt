@@ -598,7 +598,9 @@ class TripAlgorithmTest {
             TripElement.TripSegment(routeSegment3))
 
     // Act
-    val result = algorithm.tryAddingCachedActivities(enhancedProfile, activities, initialSchedule, emptyList())
+    val result =
+        algorithm.tryAddingCachedActivities(
+            enhancedProfile, activities, initialSchedule, emptyList())
 
     // Assert
     assertTrue(

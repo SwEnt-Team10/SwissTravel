@@ -81,9 +81,9 @@ interface TripInfoViewModelContract {
    *
    * This process involves:
    * 1. Merging the current activities queue into the cached activities to ensure no potential
-   * activities are lost during rescheduling.
-   * 2. Constructing a blacklist of activities to avoid (fetched, queued, cached) but excluding those
-   * explicitly selected by the user.
+   *    activities are lost during rescheduling.
+   * 2. Constructing a blacklist of activities to avoid (fetched, queued, cached) but excluding
+   *    those explicitly selected by the user.
    * 3. Running the TripAlgorithm to compute a new schedule.
    * 4. Updating the trip state with the new schedule, locations, and cleared queue.
    *
@@ -156,7 +156,6 @@ interface TripInfoViewModelContract {
 
   /**
    * Fetches a new activity to swipe using the mass-dump cache logic.
-   *
    * - Adds it to the end of the activities queue
    * - Updates the set of all fetched swipe activities
    */
