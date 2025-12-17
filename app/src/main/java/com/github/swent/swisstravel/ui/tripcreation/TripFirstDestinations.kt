@@ -410,11 +410,11 @@ fun suggestionSelect(
   } else {
     Toast.makeText(
             context,
-        context.resources.getQuantityString( // Done with AI
-            R.plurals.max_destinations_toast, // Resource ID
-            MAX_DESTINATIONS,                 // 1st: Quantity (Decides "one" vs "other")
-            MAX_DESTINATIONS                  // 2nd: Format Arg (Replaces %1$d)
-        ),
+            context.resources.getQuantityString( // Done with AI
+                R.plurals.max_destinations_toast, // Resource ID
+                MAX_DESTINATIONS, // 1st: Quantity (Decides "one" vs "other")
+                MAX_DESTINATIONS // 2nd: Format Arg (Replaces %1$d)
+                ),
             Toast.LENGTH_SHORT)
         .show()
   }
