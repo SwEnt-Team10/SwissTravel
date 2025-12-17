@@ -13,8 +13,8 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
-import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.google.firebase.Timestamp
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.runBlocking

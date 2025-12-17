@@ -16,7 +16,6 @@ import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.PreferenceCategories.category
 import com.github.swent.swisstravel.model.user.PreferenceCategories.getPreferences
 import com.github.swent.swisstravel.ui.composable.PreferenceSelectorTestTags
-import com.github.swent.swisstravel.ui.profile.FakeUserRepository
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import java.time.LocalDate
 import kotlin.test.assertEquals

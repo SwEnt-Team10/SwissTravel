@@ -104,9 +104,9 @@
     <string name="current_trip">Current Trip</string>
     <string name="no_current_trip">You have no current trip. Get planning!</string>
     <string name="upcoming_trips">Upcoming Trips</string>
-    <string name="no_upcoming_trips">You have no upcoming trips. Get planning!</string>
     <string name="add">Add</string>
     <string name="select_current_trip">Select the Current Trip</string>
+    <string name="no_upcoming_trips">You don\'t have any upcoming trips. Time to create one !</string>
     <!-- Set Current Trip -->
     <string name="set_current_trip">Set Current Trip</string>
     <string name="current_trip_saved">Current trip saved successfully!</string>
@@ -472,6 +472,9 @@
     <string name="edit_button_description">Edit Mode</string>
     <string name="back_edit_photos">Back to daily view screen</string>
     <string name="image_picker">image/*</string>
+    <string name="preview_profile_pic_title">New Profile Picture Preview</string>
+    <string name="preview_profile_pic_confirm">Save new Profile Picture</string>
+    <string name="edit_profile_pic">Edit Profile Picture</string>
 
     <!-- ============= ALGORITHM ============= -->
     <string name="city_visit_name">Visit %1$s</string>
