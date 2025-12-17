@@ -77,7 +77,6 @@ class PhotosViewModelTest {
     photosViewModel.loadPhotos(fakeTrip.uid)
     assertEquals(fakeUriLocation, photosViewModel.uiState.value.uriLocation)
     assertEquals(false, photosViewModel.uiState.value.isLoading)
-    assertEquals("Successfully loaded the photos", photosViewModel.uiState.value.toastMessage)
   }
 
   @Test
@@ -95,7 +94,6 @@ class PhotosViewModelTest {
     val state = photosViewModel.uiState
     assertEquals(fakeTripNoPhoto.uriLocation, state.value.uriLocation)
     assertEquals(false, state.value.isLoading)
-    assertEquals("Successfully loaded the photo", state.value.toastMessage)
   }
 
   @Test

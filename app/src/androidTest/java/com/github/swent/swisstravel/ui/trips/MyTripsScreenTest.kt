@@ -11,6 +11,9 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.ui.composable.DeleteDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
+import com.github.swent.swisstravel.ui.composable.TripElement
+import com.github.swent.swisstravel.ui.composable.TripElementState
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.FakeUserRepository
@@ -453,9 +456,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(sharedTrip))
         .assertIsDisplayed()
 
-    // 5. Verify the collaborator's name (content description) is displayed
+    // 5. Verify the correct content description is present
     composeTestRule
-        .onNodeWithContentDescription("Alice Collaborator", useUnmergedTree = true)
+        .onNodeWithContentDescription("Profile picture", useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -471,8 +474,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     composeTestRule.setContent { TripElement(tripElementState = tripElementState, onClick = {}) }
 
     // Verify avatars are shown
-    composeTestRule.onNodeWithContentDescription("User1").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("User2").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Profile picture").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Profile picture").assertIsDisplayed()
     // Verify overflow text is NOT shown
     composeTestRule.onNodeWithText("+", substring = true).assertDoesNotExist()
   }

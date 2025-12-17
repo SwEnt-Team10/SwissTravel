@@ -9,7 +9,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.trips.TripElementTestTags
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
 import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.SwissTravelTest
