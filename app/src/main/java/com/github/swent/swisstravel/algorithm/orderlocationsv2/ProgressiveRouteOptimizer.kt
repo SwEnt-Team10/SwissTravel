@@ -175,7 +175,7 @@ class ProgressiveRouteOptimizer(
     return if (unvisited.size == 1 && unvisited.contains(end)) listOf(end)
     else
         unvisited
-            .filter { !sameLocation(it, end) }
+            .filter { it != end }
             .sortedBy { current.haversineDistanceTo(it) }
             .take(k.coerceAtMost(unvisited.size))
   }
