@@ -47,6 +47,8 @@ object SwipeActivitiesScreenTestTags {
   const val BACK_BUTTON = "back_to_daily_view_button"
 }
 
+private const val ANIMATION_MS = 900
+
 /**
  * Screen to find activities by swiping like/dislike.
  *
@@ -170,7 +172,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0f
               },
           // duration of the animation
-          animationSpec = tween(750))
+          animationSpec = tween(ANIMATION_MS))
 
   // Parameter for horizontal movement
   val offsetX =
@@ -184,7 +186,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0.dp
               },
           // duration of the animation
-          animationSpec = tween(750),
+          animationSpec = tween(ANIMATION_MS),
           finishedListener = {
             if (swipeState.value != SwipeState.Idle) {
               onSwiped(swipeState.value == SwipeState.Like)

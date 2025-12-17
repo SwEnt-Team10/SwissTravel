@@ -3,14 +3,15 @@ package com.github.swent.swisstravel.algorithm.selectactivities
 import com.github.swent.swisstravel.model.trip.Coordinate
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
+import com.github.swent.swisstravel.model.trip.activity.CityConfig
 import com.github.swent.swisstravel.model.trip.activity.NUMBER_ACTIVITIES_TO_FETCH
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.PreferenceCategories.category
-import com.github.swent.swisstravel.ui.trip.tripinfos.CityConfig
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import java.time.temporal.ChronoUnit
 import kotlin.math.ceil
@@ -27,6 +28,9 @@ private const val API_CALL_DELAY_MS = 1000L
 
 /** Distance to consider as near a point (default radius). */
 private const val NEAR = 15000
+
+/** Distance to consider for fetching new activities to put in the swipe activities */
+private const val FETCHING_RADIUS_FOR_SWIPE = 25000
 
 /** Number of activities done in one day */
 private const val NB_ACTIVITIES_PER_DAY = 3
@@ -211,6 +215,7 @@ class SelectActivities(
     val cachedActivities = trip.cachedActivities.toMutableList()
     val likedActivities = trip.likedActivities
     val allFetched = trip.allFetchedForSwipe
+    val activities = trip.activities
 
     // ============================================================================================
     // 1. CACHE STRATEGY: DUMP EVERYTHING
@@ -222,11 +227,27 @@ class SelectActivities(
             .map { it.getName() }
             .toSet()
 
+    val exclusionListForActivities =
+        (trip.likedActivities + trip.allFetchedForSwipe + currentQueue).map { it.getName() }.toSet()
+
     // Find all activities in cache that are not already known
     val validFromCache = cachedActivities.filter { !exclusionListForCache.contains(it.getName()) }
+    val validFromActivities =
+        activities.filter { !exclusionListForActivities.contains(it.getName()) }
 
     // Add them all to the queue
     currentQueue.addAll(validFromCache)
+    // Also add the ones that were already in the trip and that have never been in the queue
+    currentQueue.addAll(validFromActivities)
+
+    // remove duplicated from the queue
+    val uniqueQueue =
+        currentQueue
+            .distinctBy { activity -> activity.getName() to activity.location }
+            .toMutableList()
+
+    currentQueue.clear()
+    currentQueue.addAll(uniqueQueue)
 
     // Clear the cache because we've consumed it into the queue
     cachedActivities.clear()
@@ -257,7 +278,7 @@ class SelectActivities(
     val duration = ChronoUnit.DAYS.between(startDate, endDate) + 1 // +1 because inclusive
 
     // Calculate the limit based on duration: min(ceil(days / 2), 7)
-    val cityLimit = min(ceil(duration / 2.0), NUMBER_OF_CITIES_MAX.toDouble()).toInt()
+    val cityLimit = min(ceil(duration / 2.0) + 1, NUMBER_OF_CITIES_MAX.toDouble()).toInt()
 
     val canFetchMore =
         fetchedLocations.size < cityLimit &&
@@ -275,7 +296,7 @@ class SelectActivities(
 
     val prefs = trip.tripProfile.preferences.toMutableList()
     removeUnsupportedPreferences(prefs)
-    addAllPreferences(prefs, true)
+    addAllPreferences(prefs, true, trip.tripProfile)
 
     val newActivities = mutableListOf<Activity>()
     val tripDestinations = trip.locations
@@ -313,7 +334,8 @@ class SelectActivities(
             activityRepository.getActivitiesNearWithPreference(
                 prefs,
                 closestCityConfig.location.coordinate,
-                NEAR,
+                FETCHING_RADIUS_FOR_SWIPE, // Fetch further than normal since the user has to choose
+                // it will give them more options
                 NUMBER_ACTIVITIES_TO_FETCH, // Fetch a full batch (40)
                 exclusionList.toList(),
                 cachedActivities // Mutable cache used for overflow (though we dump it all below
@@ -532,11 +554,22 @@ class SelectActivities(
    * @param preferences The mutable list of preferences to validate and update.
    * @param forceAllPrefs If true, adds all preferences from both categories regardless of current
    *   selections. Defaults to false.
+   * @param tripProfile The tripProfile of the trip
    */
   private fun addAllPreferences(
       preferences: MutableList<Preference>,
-      forceAllPrefs: Boolean = false
+      forceAllPrefs: Boolean = false,
+      tripProfile: TripProfile? = null
   ) {
+    if (tripProfile != null) {
+      if (tripProfile.children > 0) {
+        preferences.add(Preference.CHILDREN_FRIENDLY)
+      } else if (tripProfile.adults == 1) {
+        preferences.add(Preference.INDIVIDUAL)
+      } else if (tripProfile.adults >= 3) {
+        preferences.add(Preference.GROUP)
+      }
+    }
     val activityTypeCount =
         preferences.count { it.category() == PreferenceCategories.Category.ACTIVITY_TYPE }
     val environmentCount =

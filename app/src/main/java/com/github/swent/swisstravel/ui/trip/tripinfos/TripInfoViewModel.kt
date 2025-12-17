@@ -5,7 +5,6 @@ import android.net.Uri
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.TripAlgorithm
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
 import com.github.swent.swisstravel.model.trip.Coordinate
@@ -18,6 +17,8 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepositoryMySwitzerland
+import com.github.swent.swisstravel.model.trip.activity.CityConfig
+import com.github.swent.swisstravel.model.trip.activity.MajorSwissCities
 import com.github.swent.swisstravel.model.user.FriendStatus
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
@@ -82,15 +83,6 @@ data class TripInfoUIState(
     val savingProgress: Float = 0.0f,
     val isScheduling: Boolean = false
 )
-
-/**
- * Configuration for a major city, used for adding city-based activities.
- *
- * @param location The geographical location of the city center.
- * @param radius The radius in km to consider an activity as being in/near the city.
- * @param maxDays The maximum number of days/cityActivities to schedule for this city.
- */
-data class CityConfig(val location: Location, val radius: Int, val maxDays: Double)
 
 /** ViewModel for the TripInfo screen */
 @OptIn(FlowPreview::class)
@@ -166,7 +158,7 @@ class TripInfoViewModel(
       _uiState.update { it.copy(isLoading = true) }
       try {
         val current = _uiState.value
-        trip.update { trip -> tripsRepository.getTrip(uid) }
+        trip.update { _ -> tripsRepository.getTrip(uid) }
         val trip = trip.value!!
         val isSameTrip = current.uid == trip.uid
         val currentUser = userRepository.getCurrentUser()
@@ -611,17 +603,9 @@ class TripInfoViewModel(
   }
 
   /**
-   * Schedules the selected liked activities into the trip.
+   * Schedules the selected liked activities.
    *
-   * This process involves:
-   * 1. Merging the current activities queue into the cached activities to ensure no potential
-   *    activities are lost during rescheduling.
-   * 2. Constructing a blacklist of activities to avoid (fetched, queued, cached) but excluding
-   *    those explicitly selected by the user.
-   * 3. Running the TripAlgorithm to compute a new schedule.
-   * 4. Updating the trip state with the new schedule, locations, and cleared queue.
-   *
-   * @param context The Android context required for initializing the algorithm.
+   * If there is no room for selected activities to be scheduled, it will respond with a toast
    */
   override suspend fun scheduleSelectedActivities(context: Context) {
     _uiState.update { it.copy(isScheduling = true, savingProgress = 0f) }
@@ -632,8 +616,16 @@ class TripInfoViewModel(
             activityRepository = ActivityRepositoryMySwitzerland(),
             context = context)
 
+    val activitiesNotInFetched =
+        _uiState.value.activities.filter { activity ->
+          _uiState.value.allFetchedForSwipe.none { fetched ->
+            fetched.getName() == activity.getName() &&
+                fetched.location.sameLocation(activity.location)
+          }
+        }
+
     val cachedActivities =
-        (_uiState.value.cachedActivities + _uiState.value.activitiesQueue)
+        (_uiState.value.cachedActivities + _uiState.value.activitiesQueue + activitiesNotInFetched)
             .distinct()
             .toMutableList()
 
@@ -652,14 +644,18 @@ class TripInfoViewModel(
             .map { it.getName() }
             .toSet()
 
+      val selectionParameters = TripAlgorithm.ActivitySelectionParameters(
+          activityBlacklist = blackList.toList(),
+          protectedActivities = _uiState.value.selectedLikedActivities,
+          cachedActivities = cachedActivities,
+          allFetchedLocations = _uiState.value.allFetchedLocations
+      )
     val schedule =
         algorithm.computeTrip(
             tripSettings = tripSettings,
             tripProfile = tripProfile!!,
             isRandomTrip = _uiState.value.isRandom,
-            activityBlacklist = blackList.toList(),
-            protectedActivities = _uiState.value.selectedLikedActivities,
-            cachedActivities = cachedActivities) { progress ->
+            selectionParams = selectionParameters) { progress ->
               _uiState.update { it.copy(savingProgress = progress) }
             }
 
@@ -778,31 +774,27 @@ class TripInfoViewModel(
     }
   }
 
+  /**
+   * Parses the list of major Swiss cities from the application resources and updates the state.
+   *
+   * This method reads the string array `R.array.swiss_major_cities`, parses each entry into a
+   * [CityConfig] object (containing location, radius, and max days), and updates the
+   * [_majorSwissCities] flow.
+   *
+   * @param context The context used to access application resources.
+   */
   override fun getMajorSwissCities(context: Context) {
-    val cityArray = context.resources.getStringArray(R.array.swiss_major_cities)
-    val majorSwissCitiesList =
-        cityArray.mapNotNull { entry ->
-          val parts = entry.split(";")
-          if (parts.size >= 5) {
-            try {
-              val name = parts[0].trim()
-              val lat = parts[1].trim().toDouble()
-              val lon = parts[2].trim().toDouble()
-              val radius = parts[3].trim().toInt()
-              val maxDays = parts[4].trim().toDouble()
-              CityConfig(Location(Coordinate(lat, lon), name), radius, maxDays)
-            } catch (e: Exception) {
-              Log.e("TripAlgorithm", "Failed to parse City Config location: $entry", e)
-              null
-            }
-          } else {
-            Log.w("TripAlgorithm", "Invalid City Config entry format: $entry")
-            null
-          }
-        }
-    _majorSwissCities.value = majorSwissCitiesList
+    _majorSwissCities.value = MajorSwissCities().getMajorSwissCities(context)
   }
 
+  /**
+   * Helper function to construct a [Trip] object from the current [TripInfoUIState].
+   *
+   * This ensures consistency between the UI state and the domain model. It also updates the local
+   * [trip] flow with the newly created object.
+   *
+   * @return The [Trip] object reflecting the current values in the UI state.
+   */
   private fun getTripFromState(): Trip {
     val newTrip =
         Trip(
