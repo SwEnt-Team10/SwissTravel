@@ -146,7 +146,7 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     }
   }
 
-  override suspend fun scheduleSelectedActivities(context: Context) {
+  override fun scheduleSelectedActivities(context: Context) {
     // Simulate a successful scheduling operation
     _ui.update { state -> state.copy(savingProgress = 1.0f) }
   }
@@ -228,7 +228,7 @@ class FakeTripInfoViewModel : TripInfoViewModelContract {
     // No-op for fake
   }
 
-  override suspend fun fetchSwipeActivity() {
+  override fun fetchSwipeActivity() {
     // No-op for fake
   }
 
