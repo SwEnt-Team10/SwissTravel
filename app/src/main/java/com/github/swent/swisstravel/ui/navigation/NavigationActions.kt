@@ -175,12 +175,6 @@ class NavigationActions(
     navController.navigate(Screen.ActivityInfo.route(tripId))
   }
 
-  fun goBackToTripInfo(tripId: String): Boolean { // TODO this is unused ?
-    // trip_info/<real-uid>, not the pattern
-    val route = Screen.DailyView(tripId).route // "daily_view/$tripId"
-    return navController.popBackStack(route = route, inclusive = false)
-  }
-
   @Composable
   fun tripInfoViewModel(navController: NavHostController): TripInfoViewModel {
     val currentEntry by navController.currentBackStackEntryAsState()

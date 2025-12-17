@@ -44,7 +44,6 @@ fun DateSelectorRow(label: String, dateText: String, onClick: () -> Unit) {
                 .height(dimensionResource(R.dimen.date_button_height))
                 .testTag(DateSelectorTestTags.DATE),
         shape = RoundedCornerShape(dimensionResource(R.dimen.date_button_radius)),
-        border = ButtonDefaults.outlinedButtonBorder,
         colors =
             ButtonDefaults.outlinedButtonColors(
                 containerColor = MaterialTheme.colorScheme.surface,
