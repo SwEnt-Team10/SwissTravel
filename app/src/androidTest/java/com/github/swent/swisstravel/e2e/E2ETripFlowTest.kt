@@ -181,9 +181,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
     composeTestRule.logout()
   }
 
-    /**
-     * Helper function to create a trip
-     */
+  /** Helper function to create a trip */
   private fun createTrip(selectNonToday: Boolean) {
     composeTestRule.onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).performClick()
     Thread.sleep(1000)
