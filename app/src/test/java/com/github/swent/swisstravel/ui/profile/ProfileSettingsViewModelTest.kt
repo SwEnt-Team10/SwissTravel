@@ -1,5 +1,9 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.content.Context
+import android.net.Uri
+import com.github.swent.swisstravel.model.image.ImageHelper
+import com.github.swent.swisstravel.model.image.ImageRepository
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
@@ -10,6 +14,8 @@ import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkObject
+import io.mockk.unmockkObject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -32,6 +38,7 @@ class ProfileSettingsViewModelTest {
   private val testDispatcher = StandardTestDispatcher()
   private lateinit var userRepository: UserRepository
   private lateinit var tripsRepository: TripsRepository
+  private lateinit var imageRepository: ImageRepository
   private lateinit var viewModel: ProfileSettingsViewModel
 
   private val fakeUser =
@@ -53,6 +60,7 @@ class ProfileSettingsViewModelTest {
     Dispatchers.setMain(testDispatcher)
     userRepository = mockk()
     tripsRepository = mockk(relaxed = true)
+    imageRepository = mockk()
 
     coEvery { userRepository.updateUserStats(any(), any()) } just Runs
   }
@@ -66,7 +74,7 @@ class ProfileSettingsViewModelTest {
   fun initLoadsUserDataSuccessfully() = runTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
@@ -81,17 +89,18 @@ class ProfileSettingsViewModelTest {
   fun initSetsErrorMessageOnFailure() = runTest {
     coEvery { userRepository.getCurrentUser() } throws Exception("Network error")
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    Assert.assertTrue(state.errorMsg!!.contains("Network error"))
+    // ViewModel now sets a generic message "Error fetching user data."
+    Assert.assertEquals("Error fetching user data.", state.errorMsg)
   }
 
   @Test
   fun autoFillUpdatesUiStateCorrectly() = runTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
 
     viewModel.autoFill(fakeUser)
 
@@ -103,7 +112,7 @@ class ProfileSettingsViewModelTest {
   @Test
   fun clearErrorMsgSetsErrorMsgToNull() = runTest {
     coEvery { userRepository.getCurrentUser() } throws Exception("Oops")
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     Assert.assertNotNull(viewModel.uiState.value.errorMsg)
@@ -117,7 +126,7 @@ class ProfileSettingsViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.updateUserPreferences(fakeUser.uid, updatedPrefs) } just Runs
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
     viewModel.savePreferences(updatedPrefs)
     testDispatcher.scheduler.advanceUntilIdle()
@@ -134,13 +143,14 @@ class ProfileSettingsViewModelTest {
     coEvery { userRepository.updateUserPreferences(any(), any()) } throws
         Exception("Firestore error")
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
     viewModel.savePreferences(updatedPrefs)
     testDispatcher.scheduler.advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    Assert.assertTrue(state.errorMsg!!.contains("Firestore error"))
+    // ViewModel sets generic "Error saving preferences."
+    Assert.assertEquals("Error saving preferences.", state.errorMsg)
   }
 
   @Test
@@ -148,7 +158,7 @@ class ProfileSettingsViewModelTest {
     // Arrange — repository throws so currentUser remains null
     coEvery { userRepository.getCurrentUser() } throws Exception("No user")
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity — try saving preferences with no user
@@ -178,7 +188,7 @@ class ProfileSettingsViewModelTest {
             favoriteTripsUids = emptyList())
     coEvery { userRepository.getCurrentUser() } returns guestUser
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     // TripActivity
@@ -195,7 +205,7 @@ class ProfileSettingsViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.updateUserStats(any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     coVerify(exactly = 0) { userRepository.updateUserStats(any(), any()) }
@@ -204,7 +214,7 @@ class ProfileSettingsViewModelTest {
   @Test
   fun refreshStats_doesNothingWhenOffline() = runTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.refreshStats(isOnline = false)
@@ -219,7 +229,7 @@ class ProfileSettingsViewModelTest {
     coEvery { tripsRepository.getAllTrips() } returns emptyList()
     coEvery { userRepository.updateUserStats(any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.refreshStats(isOnline = true)
@@ -233,7 +243,7 @@ class ProfileSettingsViewModelTest {
     val partialUser = fakeUser.copy(name = "", email = "")
     coEvery { userRepository.getCurrentUser() } returns fakeUser
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     viewModel.autoFill(partialUser)
 
     val state = viewModel.uiState.value
@@ -243,14 +253,14 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun startEditingName_setsIsEditingNameTrue() = runTest {
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     viewModel.startEditingName()
     Assert.assertTrue(viewModel.uiState.value.isEditingName)
   }
 
   @Test
   fun cancelEditingName_setsIsEditingNameFalse() = runTest {
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     viewModel.startEditingName()
     viewModel.cancelEditingName()
     Assert.assertFalse(viewModel.uiState.value.isEditingName)
@@ -258,14 +268,14 @@ class ProfileSettingsViewModelTest {
 
   @Test
   fun startEditingBio_setsIsEditingBioTrue() = runTest {
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     viewModel.startEditingBio()
     Assert.assertTrue(viewModel.uiState.value.isEditingBio)
   }
 
   @Test
   fun cancelEditingBio_setsIsEditingBioFalse() = runTest {
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     viewModel.startEditingBio()
     viewModel.cancelEditingBio()
     Assert.assertFalse(viewModel.uiState.value.isEditingBio)
@@ -276,7 +286,7 @@ class ProfileSettingsViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.updateUser(any(), any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveName("New Name")
@@ -292,13 +302,13 @@ class ProfileSettingsViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.updateUser(any(), any(), any()) } throws Exception("Name error")
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveName("New Name")
     testDispatcher.scheduler.advanceUntilIdle()
 
-    Assert.assertTrue(viewModel.uiState.value.errorMsg!!.contains("Name error"))
+    Assert.assertEquals("Error updating name.", viewModel.uiState.value.errorMsg)
   }
 
   @Test
@@ -306,7 +316,7 @@ class ProfileSettingsViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.updateUser(any(), any(), any()) } just Runs
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveBio("New Bio")
@@ -322,12 +332,99 @@ class ProfileSettingsViewModelTest {
     coEvery { userRepository.getCurrentUser() } returns fakeUser
     coEvery { userRepository.updateUser(any(), any(), any()) } throws Exception("Bio error")
 
-    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository)
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
     testDispatcher.scheduler.advanceUntilIdle()
 
     viewModel.saveBio("New Bio")
     testDispatcher.scheduler.advanceUntilIdle()
 
-    Assert.assertTrue(viewModel.uiState.value.errorMsg!!.contains("Bio error"))
+    Assert.assertEquals("Error updating biography.", viewModel.uiState.value.errorMsg)
+  }
+
+  @Test
+  fun onProfilePicSelected_updatesPendingUri() = runTest {
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
+    val uri = mockk<Uri>()
+    viewModel.onProfilePicSelected(uri)
+    Assert.assertEquals(uri, viewModel.uiState.value.pendingProfilePicUri)
+  }
+
+  @Test
+  fun cancelProfilePicChange_clearsPendingUri() = runTest {
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
+    val uri = mockk<Uri>()
+    viewModel.onProfilePicSelected(uri)
+    viewModel.cancelProfilePicChange()
+    Assert.assertNull(viewModel.uiState.value.pendingProfilePicUri)
+  }
+
+  @Test
+  fun confirmProfilePicChange_success() = runTest {
+    mockkObject(ImageHelper)
+    val context = mockk<Context>()
+    val uri = mockk<Uri>()
+    val base64 = "base64string"
+    val newUid = "newImageUid"
+
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    // Use coEvery for suspend function
+    coEvery { ImageHelper.uriCompressedToBase64(context, uri) } returns base64
+    coEvery { imageRepository.addImage(base64) } returns newUid
+    coEvery { userRepository.updateUser(uid = fakeUser.uid, profilePicUrl = newUid) } just Runs
+
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.onProfilePicSelected(uri)
+    viewModel.confirmProfilePicChange(context)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    Assert.assertEquals(newUid, viewModel.uiState.value.profilePicUrl)
+    Assert.assertNull(viewModel.uiState.value.pendingProfilePicUri)
+    Assert.assertFalse(viewModel.uiState.value.isLoading)
+
+    coVerify { userRepository.updateUser(uid = fakeUser.uid, profilePicUrl = newUid) }
+    unmockkObject(ImageHelper)
+  }
+
+  @Test
+  fun confirmProfilePicChange_failure() = runTest {
+    mockkObject(ImageHelper)
+    val context = mockk<Context>()
+    val uri = mockk<Uri>()
+
+    coEvery { userRepository.getCurrentUser() } returns fakeUser
+    // Use coEvery for suspend function
+    coEvery { ImageHelper.uriCompressedToBase64(context, uri) } throws
+        Exception("Compression failed")
+
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    viewModel.onProfilePicSelected(uri)
+    viewModel.confirmProfilePicChange(context)
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // ViewModel sets generic "Error updating picture."
+    Assert.assertEquals("Error updating picture.", viewModel.uiState.value.errorMsg)
+    Assert.assertFalse(viewModel.uiState.value.isLoading)
+
+    unmockkObject(ImageHelper)
+  }
+
+  @Test
+  fun confirmProfilePicChange_doesNothing_whenNoUriSelected() = runTest {
+    // Ensure state is clean
+    viewModel = ProfileSettingsViewModel(userRepository, tripsRepository, imageRepository)
+
+    // Call confirm without calling onProfilePicSelected first
+    viewModel.confirmProfilePicChange(mockk())
+
+    testDispatcher.scheduler.advanceUntilIdle()
+
+    // Verify loading never started
+    Assert.assertFalse(viewModel.uiState.value.isLoading)
+    // Verify repository was never called
+    coVerify(exactly = 0) { imageRepository.addImage(any()) }
   }
 }
