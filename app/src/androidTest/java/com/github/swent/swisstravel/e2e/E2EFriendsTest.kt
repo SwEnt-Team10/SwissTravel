@@ -59,7 +59,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
   // We define Charlie here so we can access his ID later
   private val charlieName = "Charlie"
-  private val charlieEmail = "charlie@example.com"
+  private val charlieEmail = "charlie.test@example.com"
   private lateinit var charlieUid: String
 
   @Before
@@ -171,6 +171,11 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
     // --- STEP 5: Bob sends a friend request to Alice. ---
     composeTestRule.onNodeWithTag(NavigationTestTags.FRIENDS_TAB).performClick()
+
+    composeTestRule.waitForTag(FriendsScreenTestTags.FRIENDS_LIST)
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_LIST).performTouchInput {
+      swipeDown()
+    }
 
     // WAIT for the pending request header (from Charlie) to appear.
     // This ensures FriendsViewModel has finished refreshing and currentUserUid is set.
