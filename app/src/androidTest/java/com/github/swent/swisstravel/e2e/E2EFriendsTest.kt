@@ -92,6 +92,16 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     // --- STEP 3: Bob logs in. ---
     composeTestRule.loginWithGoogle(true)
 
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
+    composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
+      runCatching {
+            composeTestRule.onNodeWithText(bobName).assertIsDisplayed()
+            true
+          }
+          .getOrDefault(false)
+    }
+
     // --- STEP 4: Add Bob's dummy trip and pins it to his profile. ---
     // We do this while Bob is logged in so we have permission
     runBlocking {
