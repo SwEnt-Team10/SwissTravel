@@ -99,7 +99,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
   fun complete_collaboration_flow() {
     // Use Real Repository connected to Emulator
     val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
-    val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore)
+    val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
 
     // =================================================================================
     // PHASE 0: BOB SETUP (Create Account)
