@@ -1,6 +1,7 @@
 package com.github.swent.swisstravel.ui.profile.selectpinnedpictures
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -67,6 +68,9 @@ fun SelectPinnedPicturesScreen(
           selectPinnedPicturesViewModel.addNewImages(context, uris)
         }
       }
+
+  // Handle system back button
+  BackHandler { if (isEditMode) isEditMode = false else onBack() }
 
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
