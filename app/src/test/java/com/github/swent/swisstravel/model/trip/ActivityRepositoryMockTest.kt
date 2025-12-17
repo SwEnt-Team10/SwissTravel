@@ -403,7 +403,7 @@ class ActivityRepositoryMockTest {
     val capturedUrl = slot.captured.url
     val urlString = capturedUrl.toString()
 
-    // 1. Check hitsPerPage (It uses the constant NUMBER_ACTIVITIES_TO_FETCH = 40)
+    // 1. Check hitsPerPage (It uses the constant NUMBER_ACTIVITIES_TO_FETCH = 45)
     assertTrue(urlString.contains("hitsPerPage=45"), "Should use constant for fetch size")
 
     // 2. Check facets logic

@@ -26,6 +26,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+// Some tests were made using AI
 @ExperimentalCoroutinesApi
 class TripInfoViewModelTest {
   @get:Rule val mainDispatcherRule = MainDispatcherRule()
@@ -49,7 +50,7 @@ class TripInfoViewModelTest {
       Activity(
           startDate = now,
           endDate = now,
-          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(0.0, 0.0), "A"),
+          location = Location(Coordinate(0.0, 0.0), "A"),
           description = "Desc1",
           imageUrls = emptyList(),
           estimatedTime = 60)
@@ -57,7 +58,7 @@ class TripInfoViewModelTest {
       Activity(
           startDate = now,
           endDate = now,
-          location = Location(com.github.swent.swisstravel.model.trip.Coordinate(1.0, 1.0), "B"),
+          location = Location(Coordinate(1.0, 1.0), "B"),
           description = "Desc2",
           imageUrls = emptyList(),
           estimatedTime = 45)
