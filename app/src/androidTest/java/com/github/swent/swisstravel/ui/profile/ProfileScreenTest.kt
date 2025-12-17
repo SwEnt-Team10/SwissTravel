@@ -1,5 +1,7 @@
 package com.github.swent.swisstravel.ui.profile
 
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -331,5 +333,60 @@ class ProfileScreenTest : SwissTravelTest() {
           .onNodeWithTag(TripElementTestTags.getTestTagForTrip(tripTwo))
           .assertIsDisplayed()
     }
+  }
+
+  /**
+   * Tests that when offline, clicking edit buttons does NOT trigger the action (and would show a
+   * Toast in a real app).
+   */
+  @Test
+  fun offline_editButtonsDoNotTriggerAction() {
+    var tripEditClicked = false
+    var pictureEditClicked = false
+
+    composeTestRule.setContent {
+      ProfileScreenContent(
+          uiState = ProfileUIState(isOwnProfile = true),
+          isOnline = false, // Simulate offline
+          context = LocalContext.current,
+          onSelectTrip = {},
+          onEditPinnedTrips = { tripEditClicked = true },
+          onEditPinnedPictures = { pictureEditClicked = true },
+          modifier = Modifier)
+    }
+
+    // Click Trip Edit
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).performClick()
+    assert(!tripEditClicked) { "Trip edit action should not be triggered when offline" }
+
+    // Click Picture Edit
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON).performClick()
+    assert(!pictureEditClicked) { "Picture edit action should not be triggered when offline" }
+  }
+
+  /** Tests that when online, clicking edit buttons DOES trigger the action. */
+  @Test
+  fun online_editButtonsTriggerAction() {
+    var tripEditClicked = false
+    var pictureEditClicked = false
+
+    composeTestRule.setContent {
+      ProfileScreenContent(
+          uiState = ProfileUIState(isOwnProfile = true),
+          isOnline = true, // Simulate online
+          context = LocalContext.current,
+          onSelectTrip = {},
+          onEditPinnedTrips = { tripEditClicked = true },
+          onEditPinnedPictures = { pictureEditClicked = true },
+          modifier = Modifier)
+    }
+
+    // Click Trip Edit
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).performClick()
+    assert(tripEditClicked) { "Trip edit action should be triggered when online" }
+
+    // Click Picture Edit
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON).performClick()
+    assert(pictureEditClicked) { "Picture edit action should be triggered when online" }
   }
 }

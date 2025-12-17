@@ -199,8 +199,10 @@ class SelectPinnedTripsViewModelTest {
     coEvery { tripsRepository.getAllTrips() } returns listOf(tripA, tripB, tripC)
 
     viewModel.getAllTrips()
-    val state = viewModel.uiState.value
 
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
     assertEquals(3, state.tripsList.size)
     assertTrue(state.selectedTrips.contains(tripC))
   }

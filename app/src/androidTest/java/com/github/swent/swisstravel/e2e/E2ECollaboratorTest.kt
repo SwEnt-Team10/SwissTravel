@@ -15,7 +15,6 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
-import java.time.LocalDateTime.now
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
