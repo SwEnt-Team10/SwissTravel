@@ -3,6 +3,7 @@ package com.github.swent.swisstravel.e2e
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.SwissTravelApp
+import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
@@ -52,7 +53,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
-
+    FirebaseEmulator.clearFirestoreEmulator()
     // 1. Setup Tokens
     val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(aliceName, aliceEmail)
     val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(bobName, bobEmail)
@@ -98,7 +99,8 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
   fun complete_collaboration_flow() {
     // Use Real Repository connected to Emulator
     val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
-    val tripsRepo = createInitializedRepository()
+    val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore)
+
 
     // =================================================================================
     // PHASE 0: BOB SETUP (Create Account)
