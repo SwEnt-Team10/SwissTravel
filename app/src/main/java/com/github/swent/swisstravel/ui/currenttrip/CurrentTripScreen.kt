@@ -83,6 +83,11 @@ fun CurrentTripScreen(
                       onSwipeActivities = { navigationActions?.navigateTo(Screen.SwipeActivities) },
                       onLikedActivities = {
                         navigationActions?.navigateTo(Screen.LikedActivities)
+                      },
+                      onActivityClick = { tripActivity ->
+                        tripInfoViewModel.selectActivity(tripActivity.activity)
+                        navigationActions?.navigateToActivityInfo(
+                            currentTrip.uid, tripActivity.activity.getName())
                       }))
         }
   } else {

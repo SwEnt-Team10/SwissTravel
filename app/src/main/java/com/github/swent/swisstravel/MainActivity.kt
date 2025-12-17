@@ -538,7 +538,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   onEditTrip = { navigationActions.navigateToEditTrip(uid) },
                   onActivityClick = { tripActivity ->
                     vm.selectActivity(tripActivity.activity)
-                    navigationActions.navigateToActivityInfo(uid)
+                    navigationActions.navigateToActivityInfo(uid, tripActivity.activity.getName())
                   },
                   onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
                   onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
@@ -547,7 +547,13 @@ private fun NavGraphBuilder.tripInfoNavGraph(
 
     composable(
         route = Screen.ActivityInfo.route,
-        arguments = listOf(navArgument("uid") { type = NavType.StringType })) { backStackEntry ->
+        arguments =
+            listOf(
+                navArgument("uid") { type = NavType.StringType },
+                navArgument("activityName") {
+                  type = NavType.StringType
+                  nullable = true
+                })) { backStackEntry ->
           ActivityInfoRoute(
               context = context,
               navController = navController,
@@ -651,13 +657,35 @@ private fun ActivityInfoRoute(
   val vm = navigationActions.tripInfoViewModel(navController)
   val ui by vm.uiState.collectAsState()
   val activity = ui.selectedActivity
+  val activityName = backStackEntry.arguments?.getString("activityName")
 
   var hasChecked by remember { mutableStateOf(false) }
 
-  LaunchedEffect(activity) {
+  LaunchedEffect(tripId, activityName) {
     if (!hasChecked) {
+      if (ui.uid != tripId) {
+        vm.loadTripInfo(tripId)
+      }
       hasChecked = true
-      if (activity == null) {
+    }
+  }
+
+  // Effect to select activity by name if it's null
+  LaunchedEffect(ui.activities, activityName) {
+    if (ui.selectedActivity == null && activityName != null && ui.activities.isNotEmpty()) {
+      val foundActivity = ui.activities.find { it.getName() == activityName }
+      if (foundActivity != null) {
+        vm.selectActivity(foundActivity)
+      } else {
+        Toast.makeText(context, "Activity not found", Toast.LENGTH_SHORT).show()
+        navigationActions.goBack()
+      }
+    }
+  }
+
+  LaunchedEffect(activity) {
+    if (hasChecked && ui.uid == tripId) {
+      if (activity == null && (activityName == null || ui.activities.isNotEmpty())) {
         Toast.makeText(context, "Activity not found", Toast.LENGTH_SHORT).show()
         navigationActions.goBack()
       }
