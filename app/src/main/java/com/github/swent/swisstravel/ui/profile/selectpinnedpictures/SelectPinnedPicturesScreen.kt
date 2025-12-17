@@ -69,7 +69,7 @@ fun SelectPinnedPicturesScreen(
         }
       }
 
-  // Handle back press while in selection mode
+  // Handle system back button
   BackHandler { if (isEditMode) isEditMode = false else onBack() }
 
   val launchPicker: (PickVisualMediaRequest) -> Unit =
