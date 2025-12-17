@@ -1,7 +1,13 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.content.Context
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.github.swent.swisstravel.model.image.ImageHelper
+import com.github.swent.swisstravel.model.image.ImageRepository
+import com.github.swent.swisstravel.model.image.ImageRepositoryFirebase
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
@@ -22,7 +28,9 @@ import kotlinx.coroutines.launch
  * A data class representing the state of the profile settings screen.
  *
  * @property isLoading Whether the screen is currently loading.
- * @property profilePicUrl The URL of the user's profile picture.
+ * @property profilePicUrl The URL or UID of the user's profile picture.
+ * @property pendingProfilePicUri A temporary URI for the image selected from the gallery (for
+ *   preview).
  * @property name The user's name.
  * @property isEditingName Whether the user is currently editing their name.
  * @property biography The user's biography.
@@ -34,6 +42,7 @@ import kotlinx.coroutines.launch
 data class ProfileSettingsUIState(
     val isLoading: Boolean = true,
     val profilePicUrl: String = "",
+    val pendingProfilePicUri: Uri? = null,
     val name: String = "",
     val isEditingName: Boolean = false,
     val biography: String = "",
@@ -48,10 +57,12 @@ data class ProfileSettingsUIState(
  *
  * @param userRepository The repository for users.
  * @param tripsRepository The repository for trips.
+ * @param imageRepository The repository for images.
  */
 class ProfileSettingsViewModel(
     private val userRepository: UserRepository = UserRepositoryFirebase(),
     private val tripsRepository: TripsRepository = TripsRepositoryFirestore(),
+    private val imageRepository: ImageRepository = ImageRepositoryFirebase()
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileSettingsUIState())
@@ -65,7 +76,8 @@ class ProfileSettingsViewModel(
         currentUser = user
         autoFill(user)
       } catch (e: Exception) {
-        _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data: ${e.message}")
+        _uiState.value = uiState.value.copy(errorMsg = "Error fetching user data.")
+        Log.e("ProfileSettingsViewModel", "Error fetching user data.", e)
       } finally {
         _uiState.update { it.copy(isLoading = false) }
       }
@@ -102,7 +114,8 @@ class ProfileSettingsViewModel(
       val stats = StatsCalculator.computeStats(pastTrips)
       userRepository.updateUserStats(user.uid, stats)
     } catch (e: Exception) {
-      _uiState.update { it.copy(errorMsg = it.errorMsg ?: "Error updating stats: ${e.message}") }
+      _uiState.update { it.copy(errorMsg = it.errorMsg ?: "Error updating stats.") }
+      Log.e("ProfileSettingsViewModel", "Error updating stats.", e)
     }
   }
 
@@ -147,7 +160,8 @@ class ProfileSettingsViewModel(
       try {
         userRepository.updateUserPreferences(user.uid, sanitized)
       } catch (e: Exception) {
-        _uiState.value = uiState.value.copy(errorMsg = "Error saving preferences: ${e.message}")
+        _uiState.value = uiState.value.copy(errorMsg = "Error saving preferences.")
+        Log.e("ProfileSettingsViewModel", "Error saving preferences.", e)
       }
     }
   }
@@ -174,7 +188,8 @@ class ProfileSettingsViewModel(
         userRepository.updateUser(uid = user.uid, name = newName)
         _uiState.update { it.copy(name = newName, isEditingName = false) }
       } catch (e: Exception) {
-        _uiState.update { it.copy(errorMsg = "Error updating name: ${e.message}") }
+        _uiState.update { it.copy(errorMsg = "Error updating name.") }
+        Log.e("ProfileSettingsViewModel", "Error updating name.", e)
       }
     }
   }
@@ -191,7 +206,8 @@ class ProfileSettingsViewModel(
         userRepository.updateUser(uid = user.uid, biography = newBio)
         _uiState.update { it.copy(biography = newBio, isEditingBio = false) }
       } catch (e: Exception) {
-        _uiState.update { it.copy(errorMsg = "Error updating biography: ${e.message}") }
+        _uiState.update { it.copy(errorMsg = "Error updating biography.") }
+        Log.e("ProfileSettingsViewModel", "Error updating biography.", e)
       }
     }
   }
@@ -213,5 +229,54 @@ class ProfileSettingsViewModel(
    */
   fun userIsSignedIn(): Boolean {
     return currentUser != null
+  }
+
+  /**
+   * Called when the user selects a picture from the gallery. Sets the pending URI to show the
+   * preview dialog.
+   *
+   * @param uri The URI of the selected image.
+   */
+  fun onProfilePicSelected(uri: Uri) {
+    _uiState.update { it.copy(pendingProfilePicUri = uri) }
+  }
+
+  /** Cancels the pending profile picture change. */
+  fun cancelProfilePicChange() {
+    _uiState.update { it.copy(pendingProfilePicUri = null) }
+  }
+
+  /**
+   * Confirms the profile picture change. Compresses the image, uploads it to the repository, and
+   * updates the user profile.
+   *
+   * @param context The context used for image compression.
+   */
+  fun confirmProfilePicChange(context: Context) {
+    val uri = uiState.value.pendingProfilePicUri ?: return
+
+    viewModelScope.launch {
+      val user = currentUser ?: return@launch
+      // Set loading state and clear the pending URI to dismiss the dialog
+      _uiState.update { it.copy(isLoading = true, pendingProfilePicUri = null) }
+
+      try {
+        val base64 =
+            ImageHelper.uriCompressedToBase64(context, uri)
+                ?: throw Exception("Failed to process image")
+
+        // Upload to ImageRepository
+        val newImageUid = imageRepository.addImage(base64)
+
+        // Update User Profile with the new UID
+        userRepository.updateUser(uid = user.uid, profilePicUrl = newImageUid)
+
+        // Update UI state with the new UID
+        _uiState.update { it.copy(profilePicUrl = newImageUid, isLoading = false) }
+      } catch (e: Exception) {
+        _uiState.update { it.copy(isLoading = false, errorMsg = "Error updating picture.") }
+        Log.e("ProfileSettingsViewModel", "Error updating picture.", e)
+      }
+    }
   }
 }

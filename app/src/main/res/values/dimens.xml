@@ -37,6 +37,7 @@
     <dimen name="pinned_pictures_spacing">12dp</dimen>
     <dimen name="pinned_pictures_height">120dp</dimen>
     <dimen name="pinned_pictures_corner">16dp</dimen>
+    <dimen name="profile_edit_button">32dp</dimen>
 
     <!-- Profile Achievements -->
     <dimen name="profile_achievement_min_width">72dp</dimen>
@@ -55,6 +56,9 @@
 
     <!-- Arrival Departure Screen -->
     <dimen name="arrival_departure_padding">24dp</dimen>
+
+    <!-- First Destinations Screen -->
+    <dimen name="trip_destination_cross_offset">-2dp</dimen>
 
     <!-- Trip Preferences -->
     <dimen name="trip_preference_spacing">24dp</dimen>
