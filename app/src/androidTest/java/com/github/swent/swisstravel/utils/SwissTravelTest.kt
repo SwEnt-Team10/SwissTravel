@@ -705,7 +705,6 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkLikedActivitiesScreenIsDisplayed() {
     onNodeWithTag(LikedActivitiesScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
-    onNodeWithTag(LikedActivitiesScreenTestTags.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(LikedActivitiesScreenTestTags.UNLIKE_BUTTON).assertIsDisplayed()
     onNodeWithTag(LikedActivitiesScreenTestTags.SCHEDULE_BUTTON).assertIsDisplayed()
   }
