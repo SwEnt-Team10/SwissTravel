@@ -22,6 +22,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 const val DESCRIPTION_FALLBACK = "No description"
+// Max number of activities to get from the API
 const val NUMBER_ACTIVITIES_TO_FETCH = 45
 
 // This code was done with AI
