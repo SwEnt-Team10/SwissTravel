@@ -8,14 +8,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -37,6 +31,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.ui.composable.ActivityInfos
+import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
 
@@ -44,7 +39,6 @@ object SwipeActivitiesScreenTestTags {
   const val SWIPE_ACTIVITIES_SCREEN = "swipe_activities_screen"
   const val LIKE_BUTTON = "swipe_activities_screen_like_button"
   const val DISLIKE_BUTTON = "swipe_activities_screen_dislike_button"
-  const val BACK_BUTTON = "back_to_daily_view_button"
 }
 
 private const val ANIMATION_MS = 900
@@ -74,14 +68,9 @@ fun SwipeActivitiesScreen(
   Scaffold(
       topBar = {
         if (state.currentActivity == null) {
-          IconButton(
-              onClick = onTripInfo,
-              modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.BACK_BUTTON)) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = "Back",
-                    tint = MaterialTheme.colorScheme.onBackground)
-              }
+          BackButton(
+              onBack = { onTripInfo() },
+              contentDescription = stringResource(R.string.swipe_activities_back))
         }
       }) { pd ->
         Box(
@@ -194,9 +183,15 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
           })
 
   // Apply rotation and offset to the card
-  Box(modifier = Modifier.offset(x = offsetX.value).graphicsLayer { rotationZ = rotation.value }) {
-    ActivityInfos(activity = activity, onBack = { onTripInfo() })
-  }
+  Box(
+      modifier =
+          Modifier.graphicsLayer {
+            // offset and rotation
+            translationX = offsetX.value.toPx()
+            rotationZ = rotation.value
+          }) {
+        ActivityInfos(activity = activity, onBack = { onTripInfo() })
+      }
 
   // Like and dislike actions
   Box(

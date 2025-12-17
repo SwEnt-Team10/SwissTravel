@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserUpdate
+import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
@@ -193,8 +194,8 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithText("OK").performClick()
 
     // Wait for Firestore update (Adding collaborator is async)
-    composeTestRule.waitForTag(DailyViewScreenTestTags.BACK_BUTTON)
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.waitForTag(BackButtonTestTag.BACK_BUTTON)
+    composeTestRule.clickOnBackButton()
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).isDisplayed()
     composeTestRule.onNodeWithTag(testTag = NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
@@ -220,7 +221,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
 
     // 5. Bob logs out
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
@@ -246,8 +247,8 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
     // Alice saves her modifications
     composeTestRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).performClick()
-    composeTestRule.waitForTag(DailyViewScreenTestTags.BACK_BUTTON)
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.waitForTag(BackButtonTestTag.BACK_BUTTON)
+    composeTestRule.clickOnBackButton()
 
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -269,7 +270,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
 
     // Bob goes back off and logs out
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
@@ -294,7 +295,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(removeBobTag).performClick()
 
     // Alice logs back out
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()

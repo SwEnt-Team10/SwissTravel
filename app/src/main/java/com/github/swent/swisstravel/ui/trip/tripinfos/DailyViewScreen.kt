@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
@@ -70,6 +69,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.friends.FriendElement
 import com.github.swent.swisstravel.ui.friends.FriendElementActions
@@ -85,7 +85,6 @@ import java.time.format.DateTimeFormatter
 /** Object containing test tags for UI testing of the DailyViewScreen. */
 object DailyViewScreenTestTags {
   const val TITLE = "dailyViewScreenTitle"
-  const val BACK_BUTTON = "dailyViewScreenBackButton"
   const val FAVORITE_BUTTON = "dailyViewScreenFavoriteButton"
   const val EDIT_BUTTON = "dailyViewScreenEditButton"
   const val LAZY_COLUMN = "dailyViewScreenLazyColumn"
@@ -474,13 +473,8 @@ private fun DailyViewTopAppBar(
       },
       navigationIcon = {
         if (!isOnCurrentTripScreen) {
-          IconButton(
-              onClick = onBack, modifier = Modifier.testTag(DailyViewScreenTestTags.BACK_BUTTON)) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back_to_my_trips),
-                    tint = MaterialTheme.colorScheme.onBackground)
-              }
+          BackButton(
+              onBack = { onBack() }, contentDescription = stringResource(R.string.back_to_my_trips))
         }
       },
       actions = {

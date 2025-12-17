@@ -28,30 +28,32 @@ class PastTripsViewModel(
 
   /** Initializes the ViewModel by loading all trips. */
   init {
-    viewModelScope.launch { getAllTrips() }
+    getAllTrips()
   }
 
-  override suspend fun getAllTrips() {
-    _uiState.value = _uiState.value.copy(isLoading = true)
-    try {
-      val currentUser = userRepository.getCurrentUser()
-      val favoriteTrips = currentUser.favoriteTripsUids.toSet()
+  override fun getAllTrips() {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true)
+      try {
+        val currentUser = userRepository.getCurrentUser()
+        val favoriteTrips = currentUser.favoriteTripsUids.toSet()
 
-      val trips = tripsRepository.getAllTrips()
-      val pastTrips = trips.filter { it.isPast() }
-      val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType, favoriteTrips)
-      val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
+        val trips = tripsRepository.getAllTrips()
+        val pastTrips = trips.filter { it.isPast() }
+        val sortedTrips = sortTrips(pastTrips, _uiState.value.sortType, favoriteTrips)
+        val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
-      _uiState.value =
-          _uiState.value.copy(
-              tripsList = sortedTrips,
-              collaboratorsByTripId = collaboratorsByTrip,
-              favoriteTripsUids = favoriteTrips,
-              isLoading = false)
-    } catch (e: Exception) {
-      Log.e("PastTripsViewModel", "Error fetching trips", e)
-      setErrorMsg("Failed to load trips.")
-      _uiState.value = _uiState.value.copy(isLoading = false)
+        _uiState.value =
+            _uiState.value.copy(
+                tripsList = sortedTrips,
+                collaboratorsByTripId = collaboratorsByTrip,
+                favoriteTripsUids = favoriteTrips,
+                isLoading = false)
+      } catch (e: Exception) {
+        Log.e("PastTripsViewModel", "Error fetching trips", e)
+        setErrorMsg("Failed to load trips.")
+        _uiState.value = _uiState.value.copy(isLoading = false)
+      }
     }
   }
 }

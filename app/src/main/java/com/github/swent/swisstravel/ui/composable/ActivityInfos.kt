@@ -7,7 +7,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -38,7 +37,6 @@ import kotlin.collections.emptyList
 
 object ActivityInfosTestTag {
   const val TOP_BAR = "topBar"
-  const val BACK_BUTTON = "backButton"
   const val TITLE = "title"
   const val DESCRIPTION = "description"
   const val ESTIMATED_TIME = "estimatedTime"
@@ -71,13 +69,9 @@ fun ActivityInfos(
             },
             modifier = Modifier.testTag(ActivityInfosTestTag.TOP_BAR),
             navigationIcon = {
-              IconButton(
-                  onClick = onBack, modifier = Modifier.testTag(ActivityInfosTestTag.BACK_BUTTON)) {
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                        contentDescription = "Back",
-                        tint = MaterialTheme.colorScheme.onBackground)
-                  }
+              BackButton(
+                  onBack = { onBack() },
+                  contentDescription = stringResource(R.string.activity_info_back))
             })
       }) { pd ->
         val scrollState = rememberScrollState()

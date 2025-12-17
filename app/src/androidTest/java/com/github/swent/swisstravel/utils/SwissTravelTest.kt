@@ -437,7 +437,7 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkTripInfoScreenIsDisplayed() {
     onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed()
-    onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(BackButtonTestTag.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
     onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
 
@@ -467,7 +467,7 @@ abstract class SwissTravelTest {
     // --- Top App Bar ---
     onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed().assertTextEquals(trip.name)
 
-    onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(BackButtonTestTag.BACK_BUTTON).assertIsDisplayed()
 
     onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
 
@@ -704,7 +704,6 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkLikedActivitiesScreenIsDisplayed() {
     onNodeWithTag(LikedActivitiesScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
-    onNodeWithTag(LikedActivitiesScreenTestTags.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(LikedActivitiesScreenTestTags.UNLIKE_BUTTON).assertIsDisplayed()
     onNodeWithTag(LikedActivitiesScreenTestTags.SCHEDULE_BUTTON).assertIsDisplayed()
   }
