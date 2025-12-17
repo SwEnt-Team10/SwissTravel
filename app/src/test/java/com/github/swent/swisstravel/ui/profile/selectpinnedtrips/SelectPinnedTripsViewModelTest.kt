@@ -40,7 +40,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val tripB =
@@ -57,7 +56,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val tripC =
@@ -74,7 +72,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val tripD =
@@ -91,7 +88,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
@@ -107,7 +103,8 @@ class SelectPinnedTripsViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Before
   fun setup() {

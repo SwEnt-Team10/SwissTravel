@@ -52,7 +52,8 @@ private class FakeUserRepository : UserRepository {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   val usersByUid: MutableMap<String, User> = mutableMapOf()
 
@@ -119,7 +120,8 @@ private class FakeUserRepository : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
+      pinnedPicturesUids: List<String>?,
+      currentTrip: String?
   ) {
     // no-op in test
   }
@@ -158,7 +160,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     val friendPending =
         User(
@@ -172,7 +175,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     fakeRepo.usersByUid[friendAccepted.uid] = friendAccepted
     fakeRepo.usersByUid[friendPending.uid] = friendPending
@@ -303,7 +307,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     fakeRepo.usersByUid[otherUser.uid] = otherUser
     fakeRepo.searchResults = listOf(fakeRepo.currentUser, otherUser)
@@ -336,7 +341,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
     fakeRepo.usersByUid[target.uid] = target
 
     // Act
@@ -382,7 +388,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
     fakeRepo.usersByUid[pendingUid] = pendingUser
 
     viewModel.refreshFriends()

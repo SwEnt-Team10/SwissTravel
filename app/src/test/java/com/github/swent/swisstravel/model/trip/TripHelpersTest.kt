@@ -43,12 +43,11 @@ class TripHelpersTest {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = tripProfile,
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
-    assertTrue(trip.isUpcoming())
-    assertFalse(trip.isCurrent())
+    assertTrue(trip.isUpcoming(""))
+    assertFalse(trip.isCurrent(""))
     assertFalse(trip.isPast())
   }
 
@@ -71,12 +70,11 @@ class TripHelpersTest {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = tripProfile,
-            isCurrentTrip = true,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
-    assertTrue(trip.isCurrent())
-    assertFalse(trip.isUpcoming())
+    assertTrue(trip.isCurrent("testUid"))
+    assertFalse(trip.isUpcoming("testUid"))
     assertFalse(trip.isPast())
   }
 
@@ -99,13 +97,12 @@ class TripHelpersTest {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = tripProfile,
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
     assertTrue(trip.isPast())
-    assertFalse(trip.isCurrent())
-    assertFalse(trip.isUpcoming())
+    assertFalse(trip.isCurrent(""))
+    assertFalse(trip.isUpcoming(""))
   }
 
   @Test
@@ -124,7 +121,6 @@ class TripHelpersTest {
                     endDate = tsFromInstant(Instant.now()),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = listOf("collab-1", "collab-2"))
 
@@ -149,7 +145,6 @@ class TripHelpersTest {
                     endDate = tsFromInstant(Instant.now()),
                     preferredLocations = emptyList(),
                     preferences = emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = listOf("collab-1", "collab-2"))
 

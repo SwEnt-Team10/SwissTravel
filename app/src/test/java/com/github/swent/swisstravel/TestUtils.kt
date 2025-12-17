@@ -38,8 +38,6 @@ fun createTestTrip(
     children: Int = 0,
     departureLocation: Location? = null,
     arrivalLocation: Location? = null,
-    isFavorite: Boolean = false,
-    isCurrentTrip: Boolean = false,
     uriLocation: Map<Uri, Location> = emptyMap(),
     collaboratorsId: List<String> = emptyList(),
     isRandom: Boolean = false
@@ -62,7 +60,6 @@ fun createTestTrip(
       routeSegments = routeSegments,
       activities = activities,
       tripProfile = profile,
-      isCurrentTrip = isCurrentTrip,
       uriLocation = uriLocation,
       collaboratorsId = collaboratorsId,
       isRandom = isRandom)
@@ -80,7 +77,8 @@ fun createTestUser(
     stats: UserStats = UserStats(),
     pinnedTripsUids: List<String> = emptyList(),
     pinnedPicturesUids: List<String> = emptyList(),
-    favoriteTripsUids: List<String> = emptyList()
+    favoriteTripsUids: List<String> = emptyList(),
+    currentTripUid: String = ""
 ): User {
   return User(
       uid = uid,
@@ -93,7 +91,8 @@ fun createTestUser(
       stats = stats,
       pinnedTripsUids = pinnedTripsUids,
       pinnedPicturesUids = pinnedPicturesUids,
-      favoriteTripsUids = favoriteTripsUids)
+      favoriteTripsUids = favoriteTripsUids,
+      currentTrip = currentTripUid)
 }
 
 /**
@@ -167,7 +166,8 @@ class FakeUserRepository : UserRepository {
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
+      pinnedPicturesUids: List<String>?,
+      currentTrip: String?,
   ) {}
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {}

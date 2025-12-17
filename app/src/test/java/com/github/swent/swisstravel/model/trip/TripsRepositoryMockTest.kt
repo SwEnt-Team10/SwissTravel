@@ -379,7 +379,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
@@ -417,7 +416,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
@@ -443,7 +441,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
@@ -466,7 +463,6 @@ class TripsRepositoryFirestorePublicTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList(),
             isRandom = false)
