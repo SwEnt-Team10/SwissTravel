@@ -859,61 +859,106 @@ private fun PinnedPictures(
     isOnline: Boolean
 ) {
   Column {
-    Row(
-        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
-          Text(
-              text = stringResource(R.string.pinned_pictures),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.onBackground)
+    PinnedPicturesHeader(
+        isOwnProfile = isOwnProfile,
+        isOnline = isOnline,
+        onEditClick = { handleOfflineClick(context, isOnline, onEditPinnedPictures) })
 
-          if (isOwnProfile) {
-            IconButton(
-                onClick = { handleOfflineClick(context, isOnline, onEditPinnedPictures) },
-                modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.Edit,
-                      contentDescription = stringResource(R.string.edit_pinned_pictures),
-                      tint =
-                          if (isOnline) MaterialTheme.colorScheme.onBackground
-                          else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
-                }
-          }
-        }
-
-    if (pinnedBitmaps.isEmpty()) {
-      val text =
-          if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
-          else stringResource(R.string.no_pinned_pictures)
-      Text(
-          text = text,
-          modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES),
-          textAlign = TextAlign.Center)
-    } else {
-      if (isLoadingImages) {
-        CircularProgressIndicator()
-      } else {
-        LazyRow(
-            modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
-            horizontalArrangement =
-                Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
-            contentPadding =
-                PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
-              items(pinnedBitmaps) { bitmap ->
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = null,
-                    modifier =
-                        Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
-                            .clip(
-                                RoundedCornerShape(
-                                    dimensionResource(R.dimen.pinned_pictures_corner))))
-              }
-            }
-      }
-    }
+    PinnedPicturesContent(
+        pinnedBitmaps = pinnedBitmaps,
+        isLoadingImages = isLoadingImages,
+        isOwnProfile = isOwnProfile)
   }
+}
+
+/**
+ * The pinned pictures section header of the profile screen.
+ *
+ * @param isOwnProfile Whether the user is their own profile.
+ * @param onEditClick The callback to navigate to the edit pinned pictures screen.
+ * @param isOnline Whether the user is online.
+ */
+@Composable
+private fun PinnedPicturesHeader(
+    isOwnProfile: Boolean,
+    isOnline: Boolean,
+    onEditClick: () -> Unit
+) {
+  Row(
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.pinned_pictures),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground)
+
+        if (isOwnProfile) {
+          IconButton(
+              onClick = onEditClick,
+              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.edit_pinned_pictures),
+                    tint =
+                        if (isOnline) MaterialTheme.colorScheme.onBackground
+                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+              }
+        }
+      }
+}
+
+/**
+ * The pinned pictures content of the profile screen.
+ *
+ * @param pinnedBitmaps The list of pinned pictures as bitmaps.
+ * @param isLoadingImages Whether the images are still loading.
+ * @param isOwnProfile Whether the user is their own profile.
+ */
+@Composable
+private fun PinnedPicturesContent(
+    pinnedBitmaps: List<Bitmap>,
+    isLoadingImages: Boolean,
+    isOwnProfile: Boolean
+) {
+  if (pinnedBitmaps.isEmpty()) {
+    val text =
+        if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
+        else stringResource(R.string.no_pinned_pictures)
+
+    Text(
+        text = text,
+        modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES),
+        textAlign = TextAlign.Center)
+  } else if (isLoadingImages) {
+    CircularProgressIndicator()
+  } else {
+    PinnedPicturesList(pinnedBitmaps = pinnedBitmaps)
+  }
+}
+
+/**
+ * The pinned pictures list of the profile screen.
+ *
+ * @param pinnedBitmaps The list of pinned pictures as bitmaps.
+ */
+@Composable
+private fun PinnedPicturesList(pinnedBitmaps: List<Bitmap>) {
+  LazyRow(
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
+      horizontalArrangement =
+          Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
+      contentPadding =
+          PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
+        items(pinnedBitmaps) { bitmap ->
+          Image(
+              bitmap = bitmap.asImageBitmap(),
+              contentDescription = null,
+              modifier =
+                  Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
+                      .clip(RoundedCornerShape(dimensionResource(R.dimen.pinned_pictures_corner))))
+        }
+      }
 }
 
 /**

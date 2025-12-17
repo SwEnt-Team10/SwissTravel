@@ -64,19 +64,21 @@ class SelectPinnedTripsViewModel(
   }
 
   /** Refreshes the list of trips by fetching them from the repository. */
-  override suspend fun getAllTrips() {
-    try {
-      val trips = tripsRepository.getAllTrips()
-      val favoriteTrips = userRepository.getCurrentUser().favoriteTripsUids.toSet()
-      val sortedTrips = sortTrips(trips, _uiState.value.sortType, favoriteTrips)
-      _uiState.value =
-          _uiState.value.copy(
-              tripsList = sortedTrips,
-              selectedTrips = _uiState.value.selectedTrips,
-              favoriteTripsUids = favoriteTrips)
-    } catch (e: Exception) {
-      Log.e("SelectPinnedTripsViewModel", "Error fetching trips", e)
-      setErrorMsg("Failed to load trips.")
+  override fun getAllTrips() {
+    viewModelScope.launch {
+      try {
+        val trips = tripsRepository.getAllTrips()
+        val favoriteTrips = userRepository.getCurrentUser().favoriteTripsUids.toSet()
+        val sortedTrips = sortTrips(trips, _uiState.value.sortType, favoriteTrips)
+        _uiState.value =
+            _uiState.value.copy(
+                tripsList = sortedTrips,
+                selectedTrips = _uiState.value.selectedTrips,
+                favoriteTripsUids = favoriteTrips)
+      } catch (e: Exception) {
+        Log.e("SelectPinnedTripsViewModel", "Error fetching trips", e)
+        setErrorMsg("Failed to load trips.")
+      }
     }
   }
 
