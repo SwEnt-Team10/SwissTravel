@@ -127,7 +127,9 @@
     <string name="previous_step">Previous step</string>
     <string name="next_step">Next step</string>
     <string name="swipe_activities">Swipe activities</string>
+    <string name="swipe_activities_back">Back</string>
     <string name="liked_activities">Liked Activities</string>
+    <string name="liked_activities_back">Back</string>
     <string name="trip_id_missing">Trip ID is missing</string>
     <string name="add_photo">Add photos</string>
     <string name="share_trip">Share Trip</string>
@@ -275,6 +277,7 @@
     <string name="estimated_time">Estimated time: %1$s</string>
     <string name="no_image_fallback">No images available for this activity.</string>
     <string name="activity_tip">Tip: Check weather &amp; opening hours before going.</string>
+    <string name="activity_info_back">Back</string>
 
     <!-- Friends List -->
     <string name="friends_list">Friends</string>
