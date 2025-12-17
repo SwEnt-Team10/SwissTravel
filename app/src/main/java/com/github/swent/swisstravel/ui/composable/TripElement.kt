@@ -29,7 +29,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.zIndex
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
