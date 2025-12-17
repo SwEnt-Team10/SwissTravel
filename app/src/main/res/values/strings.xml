@@ -472,6 +472,9 @@
     <string name="edit_button_description">Edit Mode</string>
     <string name="back_edit_photos">Back to daily view screen</string>
     <string name="image_picker">image/*</string>
+    <string name="preview_profile_pic_title">New Profile Picture Preview</string>
+    <string name="preview_profile_pic_confirm">Save new Profile Picture</string>
+    <string name="edit_profile_pic">Edit Profile Picture</string>
 
     <!-- ============= ALGORITHM ============= -->
     <string name="city_visit_name">Visit %1$s</string>

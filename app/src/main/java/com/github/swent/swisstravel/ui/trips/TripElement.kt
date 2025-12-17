@@ -17,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -28,9 +27,9 @@ import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.zIndex
-import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 
 /**
@@ -164,10 +163,8 @@ private fun CollaboratorsPreview(collaborators: List<TripsViewModel.Collaborator
               dimensionResource(R.dimen.trip_element_collaborators_overlap)) // Overlap effect
       ) {
         collaborators.take(3).forEachIndexed { index, user ->
-          AsyncImage(
-              model = user.avatarUrl.ifBlank { R.drawable.default_profile_pic },
-              contentDescription = user.displayName,
-              contentScale = ContentScale.Crop,
+          ProfileImage(
+              urlOrUid = user.avatarUrl,
               modifier =
                   Modifier.size(dimensionResource(R.dimen.trip_element_collaborators_avatar_size))
                       .clip(CircleShape)
