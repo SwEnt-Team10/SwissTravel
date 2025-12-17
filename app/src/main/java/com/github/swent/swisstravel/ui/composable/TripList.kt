@@ -10,8 +10,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.ui.trips.TripElement
-import com.github.swent.swisstravel.ui.trips.TripElementState
 import com.github.swent.swisstravel.ui.trips.TripsViewModel
 
 /** Test tags for the [tripListItems]. */

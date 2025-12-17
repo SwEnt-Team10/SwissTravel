@@ -60,6 +60,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
+    FirebaseEmulator.clearFirestoreEmulator()
 
     val aliceToken = FakeJwtGenerator.createFakeGoogleIdToken(name = aliceName, email = aliceEmail)
     val bobToken = FakeJwtGenerator.createFakeGoogleIdToken(name = bobName, email = bobEmail)
@@ -79,8 +80,16 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
   @Test
   fun user_can_send_and_accept_friend_request_and_view_pinned_trips() {
+
+    val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
+    val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
+
     // --- STEP 1: Alice logs in (account creation). ---
     composeTestRule.loginWithGoogle(true)
+    runBlocking {
+      val aliceUser = userRepo.getUserByNameOrEmail(aliceEmail).first()
+      userRepo.updateUser(aliceUser.uid, aliceName)
+    }
 
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForTag(ProfileScreenTestTags.DISPLAY_NAME)
@@ -94,8 +103,6 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     // --- STEP 4: Add Bob's dummy trip and pins it to his profile. ---
     // We do this while Bob is logged in so we have permission
     runBlocking {
-      val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
-      val tripsRepo = TripsRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.auth)
 
       // 1. Get Bob's User object
       val bobUser = userRepo.getUserByNameOrEmail(bobEmail).first()
@@ -129,7 +136,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     // Search for Alice
     composeTestRule
         .onNodeWithTag(AddFriendsScreenTestTags.ADD_FRIEND_SEARCH_FIELD)
-        .performTextInput(aliceName)
+        .performTextInput("Alice")
 
     // Wait for results
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
@@ -140,8 +147,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     }
 
     // Click on Alice in the list
-    val userRepo = UserRepositoryFirebase(FirebaseEmulator.auth, FirebaseEmulator.firestore)
-    val alice = runBlocking { userRepo.getUserByNameOrEmail(aliceName).first() }
+    val alice = runBlocking { userRepo.getUserByNameOrEmail(aliceEmail).first() }
     composeTestRule.onNodeWithTag(FriendElementTestTags.getTestTagForFriend(alice)).performClick()
 
     composeTestRule.waitForIdle()
@@ -184,7 +190,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
 
     val bobTag =
         FriendElementTestTags.getTestTagForFriend(
-            runBlocking { userRepo.getUserByNameOrEmail(bobName).first() })
+            runBlocking { userRepo.getUserByNameOrEmail(bobEmail).first() })
     composeTestRule.waitForTag(bobTag)
 
     // --- STEP 9: Alice clicks on Bob in the friends list. ---
