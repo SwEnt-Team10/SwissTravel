@@ -65,9 +65,8 @@ sealed class Screen(
     }
   }
 
-  object ActivityInfo : Screen("activityInfo/{uid}?activityName={activityName}", name = "Activity Infos") {
-    fun route(uid: String, activityName: String? = null) =
-        "activityInfo/$uid" + if (activityName != null) "?activityName=$activityName" else ""
+  object ActivityInfo : Screen("activityInfo/{uid}", name = "Activity Infos") {
+    fun route(uid: String) = "activityInfo/$uid"
   }
 
   object TripSettingsArrivalDeparture :
@@ -172,8 +171,8 @@ class NavigationActions(
     }
   }
 
-  fun navigateToActivityInfo(tripId: String, activityName: String? = null) {
-    navController.navigate(Screen.ActivityInfo.route(tripId, activityName))
+  fun navigateToActivityInfo(tripId: String) {
+    navController.navigate(Screen.ActivityInfo.route(tripId))
   }
 
   @Composable

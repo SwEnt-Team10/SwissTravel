@@ -54,6 +54,7 @@ object CurrentTripScreenTestTags {
 fun CurrentTripScreen(
     navigationActions: NavigationActions? = null,
     isLoggedIn: Boolean = false,
+    tripInfoViewModel: TripInfoViewModel = viewModel(),
     myTripsViewModel: MyTripsViewModel = viewModel(),
 ) {
 
@@ -66,7 +67,6 @@ fun CurrentTripScreen(
       Toast.makeText(context, R.string.log_in_to_display, Toast.LENGTH_LONG).show()
     }
   }
-  val tripInfoViewModel: TripInfoViewModel = viewModel()
   val tripInfoState = tripInfoViewModel.uiState.collectAsState()
 
   if (currentTrip != null) {
@@ -81,13 +81,10 @@ fun CurrentTripScreen(
                   DailyViewScreenCallbacks(
                       onEditTrip = { navigationActions?.navigateToEditTrip(currentTrip.uid) },
                       onSwipeActivities = { navigationActions?.navigateTo(Screen.SwipeActivities) },
-                      onLikedActivities = {
-                        navigationActions?.navigateTo(Screen.LikedActivities)
-                      },
+                      onLikedActivities = { navigationActions?.navigateTo(Screen.LikedActivities) },
                       onActivityClick = { tripActivity ->
                         tripInfoViewModel.selectActivity(tripActivity.activity)
-                        navigationActions?.navigateToActivityInfo(
-                            currentTrip.uid, tripActivity.activity.getName())
+                        navigationActions?.navigateToActivityInfo(currentTrip.uid)
                       }))
         }
   } else {

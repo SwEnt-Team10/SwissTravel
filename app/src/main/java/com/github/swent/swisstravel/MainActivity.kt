@@ -213,6 +213,7 @@ fun SwissTravelApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val myTripsViewModel: MyTripsViewModel = viewModel()
+  val tripInfoViewModel: TripInfoViewModel = viewModel()
   val myTripsUiState by myTripsViewModel.uiState.collectAsState()
 
   val currentUser = rememberCurrentUser().value
@@ -251,7 +252,8 @@ fun SwissTravelApp(
       context = context,
       credentialManager = credentialManager,
       navData = navData,
-      bottomBarShow = bottomBarShow)
+      bottomBarShow = bottomBarShow,
+      tripInfoViewModel = tripInfoViewModel)
 }
 
 /**
@@ -267,7 +269,8 @@ private fun SwissTravelScaffold(
     context: Context,
     credentialManager: CredentialManager,
     navData: NavData,
-    bottomBarShow: BottomBarShow
+    bottomBarShow: BottomBarShow,
+    tripInfoViewModel: TripInfoViewModel
 ) {
   /* System back button handler */
   BackHandler {
@@ -312,7 +315,8 @@ private fun SwissTravelScaffold(
             credentialManager = credentialManager,
             startDestination = navData.startDestination,
             modifier = Modifier.padding(innerPadding),
-            myTripsViewModel = bottomBarShow.myTripsViewModel)
+            myTripsViewModel = bottomBarShow.myTripsViewModel,
+            tripInfoViewModel = tripInfoViewModel)
       }
 }
 
@@ -335,15 +339,16 @@ private fun SwissTravelNavHost(
     credentialManager: CredentialManager,
     startDestination: String,
     modifier: Modifier = Modifier,
-    myTripsViewModel: MyTripsViewModel
+    myTripsViewModel: MyTripsViewModel,
+    tripInfoViewModel: TripInfoViewModel
 ) {
   NavHost(navController = navController, startDestination = startDestination, modifier = modifier) {
     authNavGraph(navigationActions, credentialManager)
     profileNavGraph(navigationActions)
-    currentTripNavGraph(navigationActions)
+    currentTripNavGraph(navigationActions, tripInfoViewModel)
     myTripsNavGraph(context, navigationActions, myTripsViewModel)
     pastTripsNavGraph(navigationActions)
-    tripInfoNavGraph(context, navController, navigationActions)
+    tripInfoNavGraph(context, navController, navigationActions, tripInfoViewModel)
     tripSettingsNavGraph(navController, navigationActions)
     friendsListNavGraph(context, navController, navigationActions)
   }
@@ -429,7 +434,10 @@ private fun NavGraphBuilder.profileNavGraph(navigationActions: NavigationActions
  *
  * @param navigationActions The NavigationActions used for navigation.
  */
-private fun NavGraphBuilder.currentTripNavGraph(navigationActions: NavigationActions) {
+private fun NavGraphBuilder.currentTripNavGraph(
+    navigationActions: NavigationActions,
+    tripInfoViewModel: TripInfoViewModel
+) {
   navigation(
       startDestination = Screen.CurrentTrip.route,
       route = Screen.CurrentTrip.name,
@@ -437,7 +445,8 @@ private fun NavGraphBuilder.currentTripNavGraph(navigationActions: NavigationAct
     composable(Screen.CurrentTrip.route) {
       CurrentTripScreen(
           navigationActions = navigationActions,
-          isLoggedIn = FirebaseAuth.getInstance().currentUser != null)
+          isLoggedIn = FirebaseAuth.getInstance().currentUser != null,
+          tripInfoViewModel = tripInfoViewModel)
     }
   }
 }
@@ -503,7 +512,8 @@ private fun NavGraphBuilder.pastTripsNavGraph(navigationActions: NavigationActio
 private fun NavGraphBuilder.tripInfoNavGraph(
     context: Context,
     navController: NavHostController,
-    navigationActions: NavigationActions
+    navigationActions: NavigationActions,
+    vm: TripInfoViewModel
 ) {
   navigation(
       startDestination = Screen.DailyView.route,
@@ -517,11 +527,6 @@ private fun NavGraphBuilder.tripInfoNavGraph(
         navigationActions.navigateTo(Screen.MyTrips)
         return@composable
       }
-
-      // conserve the ViewModel tied to the TripInfo navigation graph
-      val parentEntry =
-          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
-      val vm = viewModel<TripInfoViewModel>(parentEntry)
 
       val refresh: Boolean? = navBackStackEntry.savedStateHandle["refresh_trip"]
       if (refresh == true) {
@@ -538,7 +543,7 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   onEditTrip = { navigationActions.navigateToEditTrip(uid) },
                   onActivityClick = { tripActivity ->
                     vm.selectActivity(tripActivity.activity)
-                    navigationActions.navigateToActivityInfo(uid, tripActivity.activity.getName())
+                    navigationActions.navigateToActivityInfo(uid)
                   },
                   onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
                   onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
@@ -547,18 +552,12 @@ private fun NavGraphBuilder.tripInfoNavGraph(
 
     composable(
         route = Screen.ActivityInfo.route,
-        arguments =
-            listOf(
-                navArgument("uid") { type = NavType.StringType },
-                navArgument("activityName") {
-                  type = NavType.StringType
-                  nullable = true
-                })) { backStackEntry ->
+        arguments = listOf(navArgument("uid") { type = NavType.StringType })) { backStackEntry ->
           ActivityInfoRoute(
               context = context,
-              navController = navController,
               navigationActions = navigationActions,
-              backStackEntry = backStackEntry)
+              backStackEntry = backStackEntry,
+              vm = vm)
         }
 
     composable(
@@ -635,17 +634,12 @@ private fun NavGraphBuilder.tripInfoNavGraph(
   }
 }
 
-/**
- * Sets up the activity info route for the Swiss Travel App.
- *
- * @param context The context of the current state of the application.
- */
 @Composable
 private fun ActivityInfoRoute(
     context: Context,
-    navController: NavHostController,
     navigationActions: NavigationActions,
-    backStackEntry: androidx.navigation.NavBackStackEntry
+    backStackEntry: androidx.navigation.NavBackStackEntry,
+    vm: TripInfoViewModel
 ) {
   val tripId = backStackEntry.arguments?.getString("uid")
   if (tripId == null) {
@@ -654,14 +648,12 @@ private fun ActivityInfoRoute(
     return
   }
 
-  val vm = navigationActions.tripInfoViewModel(navController)
   val ui by vm.uiState.collectAsState()
   val activity = ui.selectedActivity
-  val activityName = backStackEntry.arguments?.getString("activityName")
 
   var hasChecked by remember { mutableStateOf(false) }
 
-  LaunchedEffect(tripId, activityName) {
+  LaunchedEffect(tripId) {
     if (!hasChecked) {
       if (ui.uid != tripId) {
         vm.loadTripInfo(tripId)
@@ -670,22 +662,9 @@ private fun ActivityInfoRoute(
     }
   }
 
-  // Effect to select activity by name if it's null
-  LaunchedEffect(ui.activities, activityName) {
-    if (ui.selectedActivity == null && activityName != null && ui.activities.isNotEmpty()) {
-      val foundActivity = ui.activities.find { it.getName() == activityName }
-      if (foundActivity != null) {
-        vm.selectActivity(foundActivity)
-      } else {
-        Toast.makeText(context, "Activity not found", Toast.LENGTH_SHORT).show()
-        navigationActions.goBack()
-      }
-    }
-  }
-
   LaunchedEffect(activity) {
     if (hasChecked && ui.uid == tripId) {
-      if (activity == null && (activityName == null || ui.activities.isNotEmpty())) {
+      if (activity == null) {
         Toast.makeText(context, "Activity not found", Toast.LENGTH_SHORT).show()
         navigationActions.goBack()
       }
