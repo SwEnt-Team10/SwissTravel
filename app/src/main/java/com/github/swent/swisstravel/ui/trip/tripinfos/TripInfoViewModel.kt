@@ -625,10 +625,22 @@ class TripInfoViewModel(
 
         val cachedActivities = _uiState.value.cachedActivities.toMutableList()
         val tripProfile = _uiState.value.tripProfile
+        val blackList = (_uiState.value.allFetchedForSwipe + _uiState.value.cachedActivities)
+            .filter { activity ->
+                // Keep activity in blacklist ONLY if it is NOT in the selected list
+                _uiState.value.selectedLikedActivities.none { selected ->
+                    selected.getName() == activity.getName() && selected.location.sameLocation(activity.location)
+                }
+            }
+            .map { it.getName() }
+            .toSet()
         val schedule =
             algorithm.computeTrip(
                 tripSettings = tripSettings,
                 tripProfile = tripProfile!!,
+                isRandomTrip = _uiState.value.isRandom,
+                activityBlacklist = blackList.toList(),
+                protectedActivities = _uiState.value.selectedLikedActivities,
                 cachedActivities = cachedActivities) { progress ->
                 _uiState.update { it.copy(savingProgress = progress) }
             }
@@ -656,25 +668,7 @@ class TripInfoViewModel(
                 )
             }
 
-        val updatedTrip =
-            Trip(
-                uid = _uiState.value.uid,
-                name = _uiState.value.name,
-                ownerId = _uiState.value.ownerId,
-                locations = _uiState.value.locations,
-                routeSegments = _uiState.value.routeSegments,
-                activities = _uiState.value.activities,
-                tripProfile = _uiState.value.tripProfile!!,
-                isCurrentTrip = _uiState.value.isCurrentTrip,
-                collaboratorsId = _uiState.value.collaborators.map { it.uid },
-                isRandom = _uiState.value.isRandom,
-                uriLocation = _uiState.value.uriLocation,
-                cachedActivities = _uiState.value.cachedActivities,
-                likedActivities = _uiState.value.likedActivities,
-                activitiesQueue = _uiState.value.activitiesQueue,
-                allFetchedForSwipe = _uiState.value.allFetchedForSwipe,
-                allFetchedLocations = _uiState.value.allFetchedLocations
-            )
+        val updatedTrip = getTripFromState()
 
         tripsRepository.editTrip(_uiState.value.uid, updatedTrip)
         computeSchedule()
@@ -787,5 +781,28 @@ class TripInfoViewModel(
             }
         }
         _majorSwissCities.value = majorSwissCitiesList
+    }
+
+    private fun getTripFromState(): Trip {
+        val newTrip = Trip(
+            uid = _uiState.value.uid,
+            name = _uiState.value.name,
+            ownerId = _uiState.value.ownerId,
+            locations = _uiState.value.locations,
+            routeSegments = _uiState.value.routeSegments,
+            activities = _uiState.value.activities,
+            tripProfile = _uiState.value.tripProfile!!,
+            isCurrentTrip = _uiState.value.isCurrentTrip,
+            collaboratorsId = _uiState.value.collaborators.map { it.uid },
+            isRandom = _uiState.value.isRandom,
+            uriLocation = _uiState.value.uriLocation,
+            cachedActivities = _uiState.value.cachedActivities,
+            likedActivities = _uiState.value.likedActivities,
+            activitiesQueue = _uiState.value.activitiesQueue,
+            allFetchedForSwipe = _uiState.value.allFetchedForSwipe,
+            allFetchedLocations = _uiState.value.allFetchedLocations
+        )
+        trip.value = newTrip
+        return newTrip
     }
 }
