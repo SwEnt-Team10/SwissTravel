@@ -117,13 +117,20 @@ open class TripAlgorithm(
 
       // If no environment => any is good
       // If no activity type => any is good
-      if (activityTypeCount == 0 && environmentCount == 0) {
-        currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
-        currentPrefs.addAll(PreferenceCategories.environmentPreferences)
-      } else if (activityTypeCount == 0) {
-        currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
-      } else if (environmentCount == 0) {
-        currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+      when {
+        activityTypeCount == 0 && environmentCount == 0 -> {
+          currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
+          currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+        }
+        activityTypeCount == 0 -> {
+          currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
+        }
+        environmentCount == 0 -> {
+          currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+        }
+        else -> {
+          // Both counts are > 0, so no default preferences need to be added.
+        }
       }
 
       settingsToUse = settingsToUse.copy(preferences = currentPrefs)
@@ -153,26 +160,25 @@ open class TripAlgorithm(
         children: Int,
         currentPrefs: MutableList<Preference>
     ) {
-      // 1. One or more children => Add CHILDREN_FRIENDLY
-      if (children >= 1) {
-        if (!currentPrefs.contains(Preference.CHILDREN_FRIENDLY)) {
-          currentPrefs.add(Preference.CHILDREN_FRIENDLY)
+      when {
+        children >= 1 -> {
+          if (!currentPrefs.contains(Preference.CHILDREN_FRIENDLY)) {
+            currentPrefs.add(Preference.CHILDREN_FRIENDLY)
+          }
         }
-      } else {
-        // No children cases:
-        // 2. Only one adult => Add INDIVIDUAL
-        if (adults == 1) {
+        adults == 1 -> {
           if (!currentPrefs.contains(Preference.INDIVIDUAL)) {
             currentPrefs.add(Preference.INDIVIDUAL)
           }
         }
-        // 3. A lot of adults (>= 3) => Add GROUP
-        // We use >= 3 to treat 2 adults as a neutral case (could be couple or friends),
-        // whereas 3+ is definitely a group.
-        else if (adults >= 3) {
+        adults >= 3 -> {
           if (!currentPrefs.contains(Preference.GROUP)) {
             currentPrefs.add(Preference.GROUP)
           }
+        }
+        else -> {
+          // Neutral case (e.g., 2 adults)
+          // No preferences added
         }
       }
     }
@@ -649,7 +655,8 @@ open class TripAlgorithm(
     val addedIndexes = mutableListOf<Int>()
     // Add elements to the lists of our original OrderedRoute at the correct place
     var index = 0
-    for ((startSeg, activitiesList) in intermediateActivitiesBySegment) {
+    for ((startSeg, mutableActivities) in intermediateActivitiesBySegment) {
+      val activitiesList: List<Activity> = mutableActivities.toList()
       index++
       if (index >= MAX_INBETWEEN_ACTIVITIES_SEGMENTS) break
       // Get the start segment index in the optimized route
