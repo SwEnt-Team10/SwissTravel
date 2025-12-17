@@ -68,7 +68,6 @@ class StatsCalculatorTest {
             routeSegments = trip1Segments,
             activities = emptyList(),
             tripProfile = trip1Profile,
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
@@ -97,7 +96,6 @@ class StatsCalculatorTest {
             routeSegments = trip2Segments,
             activities = emptyList(),
             tripProfile = trip2Profile,
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 

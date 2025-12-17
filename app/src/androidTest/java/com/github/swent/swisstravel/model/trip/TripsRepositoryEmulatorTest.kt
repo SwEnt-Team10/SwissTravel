@@ -46,7 +46,6 @@ class TripsRepositoryEmulatorTest : FirestoreSwissTravelTest() {
             name = "Instrumented Test Trip",
             ownerId = uid,
             locations = listOf(loc),
-            isFavorite = true,
             arrivalLocation = loc,
             departureLocation = loc)
     // Act

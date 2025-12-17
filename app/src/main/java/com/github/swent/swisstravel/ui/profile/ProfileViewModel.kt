@@ -18,6 +18,7 @@ import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.github.swent.swisstravel.model.user.computeAchievements
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -184,7 +185,7 @@ class ProfileViewModel(
 
     if (invalidPinnedUids.isNotEmpty()) {
       val updatedUids = user.pinnedTripsUids - invalidPinnedUids.toSet()
-      userRepository.updateUser(uid = user.uid, pinnedTripsUids = updatedUids)
+      userRepository.updateUser(uid = user.uid, UserUpdate(pinnedTripsUids = updatedUids))
     }
 
     return pinnedTrips
@@ -289,7 +290,7 @@ class ProfileViewModel(
     viewModelScope.launch {
       try {
         val updatedUids = currentUids - invalidUids.toSet()
-        userRepository.updateUser(uid = userId, pinnedPicturesUids = updatedUids)
+        userRepository.updateUser(uid = userId, UserUpdate(pinnedPicturesUids = updatedUids))
       } catch (e: Exception) {
         Log.e("ProfileViewModel", "Failed to update user profile", e)
       }

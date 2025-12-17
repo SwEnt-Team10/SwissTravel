@@ -31,7 +31,8 @@ class FriendElementTest {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Test
   fun friendElement_showsArrowWhenNotPendingOrNotShouldAccept() {

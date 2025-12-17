@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -52,7 +53,8 @@ private class FakeUserRepository : UserRepository {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   val usersByUid: MutableMap<String, User> = mutableMapOf()
 
@@ -112,17 +114,7 @@ private class FakeUserRepository : UserRepository {
     currentUser = currentUser.copy(friends = currentUser.friends.filterNot { it.uid == friendUid })
   }
 
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
-  ) {
-    // no-op in test
-  }
+  override suspend fun updateUser(uid: String, updates: UserUpdate) {}
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
     // no-op in test
@@ -158,7 +150,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     val friendPending =
         User(
@@ -172,7 +165,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     fakeRepo.usersByUid[friendAccepted.uid] = friendAccepted
     fakeRepo.usersByUid[friendPending.uid] = friendPending
@@ -303,7 +297,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     fakeRepo.usersByUid[otherUser.uid] = otherUser
     fakeRepo.searchResults = listOf(fakeRepo.currentUser, otherUser)
@@ -336,7 +331,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
     fakeRepo.usersByUid[target.uid] = target
 
     // Act
@@ -382,7 +378,8 @@ class FriendsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
     fakeRepo.usersByUid[pendingUid] = pendingUser
 
     viewModel.refreshFriends()

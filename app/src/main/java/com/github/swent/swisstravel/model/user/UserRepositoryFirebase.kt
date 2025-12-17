@@ -53,7 +53,7 @@ class UserRepositoryFirebase(
           Log.w("UserRepository", "Offline: No cache found.")
           createOfflineFallback(firebaseUser, uid)
         }
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         // Double fail (No Server, No Cache) -> Return Offline Placeholder
         createOfflineFallback(firebaseUser, uid)
       }
@@ -73,7 +73,8 @@ class UserRepositoryFirebase(
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
         pinnedPicturesUids = emptyList(),
-        favoriteTripsUids = emptyList())
+        favoriteTripsUids = emptyList(),
+        currentTrip = "")
   }
 
   // Helper to create a safe fallback user so the app doesn't crash
@@ -89,7 +90,8 @@ class UserRepositoryFirebase(
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
         pinnedPicturesUids = emptyList(),
-        favoriteTripsUids = emptyList())
+        favoriteTripsUids = emptyList(),
+        currentTrip = "")
   }
 
   /**
@@ -380,42 +382,22 @@ class UserRepositoryFirebase(
    * Updates basic user fields in Firestore.
    *
    * @param uid The UID of the user.
-   * @param name Optional new name.
-   * @param biography Optional new biography.
-   * @param profilePicUrl Optional new profile picture URL.
-   * @param preferences Optional list of updated preferences.
-   * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
-   * @param pinnedPicturesUids Optional updated list of pinned picture UIDs.
+   * @param updates The fields to update.
    */
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
-  ) {
+  override suspend fun updateUser(uid: String, updates: UserUpdate) {
     if (uid == "guest") return
 
-    val updates = mutableMapOf<String, Any?>()
-
-    if (name != null) updates["name"] = name
-    if (biography != null) updates["biography"] = biography
-    if (profilePicUrl != null) updates["profilePicUrl"] = profilePicUrl
-    if (preferences != null) updates["preferences"] = preferences.map { it.name }
-    if (pinnedTripsUids != null) updates["pinnedTripsUids"] = pinnedTripsUids
-    if (pinnedPicturesUids != null) updates["pinnedPicturesUids"] = pinnedPicturesUids
+    val data = updates.toMap()
 
     // If nothing to update, skip Firestore
-    if (updates.isEmpty()) return
+    if (data.isEmpty()) return
 
     val docRef = db.collection("users").document(uid)
     val snapshot = docRef.get().await()
 
     check(snapshot.exists()) { "User document does not exist for uid: $uid" }
 
-    docRef.update(updates).await()
+    docRef.update(data).await()
   }
 
   /**
@@ -464,6 +446,7 @@ class UserRepositoryFirebase(
         (doc["pinnedPicturesUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val favoriteTripsUids =
         (doc["favoriteTripsUids"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val currentTripUid = (doc["currentTrip"] as? String) ?: ""
 
     return User(
         uid = uid,
@@ -476,7 +459,8 @@ class UserRepositoryFirebase(
         stats = stats,
         pinnedTripsUids = pinnedTripsUids,
         pinnedPicturesUids = pinnedPicturesUids,
-        favoriteTripsUids = favoriteTripsUids)
+        favoriteTripsUids = favoriteTripsUids,
+        currentTrip = currentTripUid)
   }
 
   /**
@@ -499,7 +483,8 @@ class UserRepositoryFirebase(
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     db.collection("users").document(uid).set(newUser).await()
     return newUser

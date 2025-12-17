@@ -14,6 +14,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.github.swent.swisstravel.ui.geocoding.FakeAddressTextFieldViewModel
 import com.github.swent.swisstravel.ui.geocoding.LocationTextTestTags
 import com.github.swent.swisstravel.utils.FakeTripsRepository
@@ -37,7 +38,8 @@ class FakeUserRepository : UserRepository {
         stats = UserStats(),
         pinnedTripsUids = emptyList(),
         pinnedPicturesUids = emptyList(),
-        favoriteTripsUids = emptyList())
+        favoriteTripsUids = emptyList(),
+        currentTrip = "")
   }
 
   override suspend fun getUserByUid(uid: String): User? {
@@ -66,16 +68,8 @@ class FakeUserRepository : UserRepository {
     // no-op in tests
   }
 
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
-  ) {
-    // no-op in tests
+  override suspend fun updateUser(uid: String, updates: UserUpdate) {
+    // no op in test
   }
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
@@ -90,62 +84,6 @@ class FakeUserRepository : UserRepository {
     // no-op in tests
   }
 }
-
-val emptyUserRepo =
-    object : UserRepository {
-      override suspend fun getCurrentUser(): User {
-        return User(
-            uid = "0",
-            name = "",
-            biography = "",
-            email = "",
-            profilePicUrl = "",
-            preferences = emptyList(),
-            friends = emptyList(),
-            stats = UserStats(),
-            pinnedTripsUids = emptyList(),
-            pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
-      }
-
-      override suspend fun getUserByUid(uid: String): User? {
-        // no op for tests
-        return null
-      }
-
-      override suspend fun getUserByNameOrEmail(query: String): List<User> {
-        // no op for tests
-        return emptyList()
-      }
-
-      override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
-
-      override suspend fun updateUserStats(uid: String, stats: UserStats) {
-        /** no-op for tests* */
-      }
-
-      override suspend fun sendFriendRequest(fromUid: String, toUid: String) {
-        /** no-op for tests* */
-      }
-
-      override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
-
-      override suspend fun removeFriend(uid: String, friendUid: String) {}
-
-      override suspend fun updateUser(
-          uid: String,
-          name: String?,
-          biography: String?,
-          profilePicUrl: String?,
-          preferences: List<Preference>?,
-          pinnedTripsUids: List<String>?,
-          pinnedPicturesUids: List<String>?
-      ) {}
-
-      override suspend fun addFavoriteTrip(uid: String, tripUid: String) {}
-
-      override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {}
-    }
 
 class ArrivalDepartureTest {
   @get:Rule val composeTestRule = createComposeRule()

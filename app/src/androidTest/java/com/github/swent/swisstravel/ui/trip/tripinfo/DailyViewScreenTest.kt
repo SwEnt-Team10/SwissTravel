@@ -422,7 +422,8 @@ class DailyViewScreenTest {
             UserStats(),
             emptyList(),
             emptyList(),
-            emptyList())
+            emptyList(),
+            currentTrip = "")
 
     val vm =
         FakeTripInfoViewModel().apply {
@@ -478,7 +479,8 @@ class DailyViewScreenTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     // 2. Init VM with this collaborator
     val vm =

@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -52,7 +53,8 @@ class ProfileViewModelTest {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Before
   fun setup() {
@@ -190,8 +192,8 @@ class ProfileViewModelTest {
     coEvery { tripsRepository.getTrip(validTripUid) } returns mockk(relaxed = true)
     coEvery { tripsRepository.getTrip(deletedTripUid) } throws Exception("Trip not found")
 
-    coEvery { userRepository.updateUser(uid = fakeUser.uid, pinnedTripsUids = any()) } just Runs
-    // When: initializing the ViewModel
+    coEvery { userRepository.updateUser(uid = fakeUser.uid, updates = any()) } just
+        Runs // When: initializing the ViewModel
     viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
     testDispatcher.scheduler.advanceUntilIdle()
 
@@ -247,7 +249,7 @@ class ProfileViewModelTest {
     coEvery { ImageHelper.base64ToBitmap(validBase64) } returns mockBitmap
 
     // Mock User Update (should be called to cleanup the invalid ID)
-    coEvery { userRepository.updateUser(uid = any(), pinnedPicturesUids = any()) } just Runs
+    coEvery { userRepository.updateUser(uid = fakeUser.uid, updates = any()) } just Runs
 
     // When: ViewModel is initialized
     viewModel = ProfileViewModel(userRepository, tripsRepository, imageRepository, fakeUser.uid)
@@ -262,7 +264,7 @@ class ProfileViewModelTest {
     coVerify {
       userRepository.updateUser(
           uid = fakeUser.uid,
-          pinnedPicturesUids = listOf(validUid) // 'invalidUid' should be removed
+          UserUpdate(pinnedPicturesUids = listOf(validUid)) // 'invalidUid' should be removed
           )
     }
   }

@@ -46,7 +46,8 @@ class PastTripsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     // Mock getCurrentUser for all tests that initialize the VM (which calls getAllTrips)
     coEvery { userRepository.getCurrentUser() } returns dummyUser
@@ -69,14 +70,14 @@ class PastTripsViewModelTest {
             name = "Past Trip 1",
             startDate = Timestamp(now.seconds - 7200, 0),
             endDate = Timestamp(now.seconds - 3600, 0),
-            isCurrentTrip = true)
+        )
     val pastTrip2 =
         createTestTrip(
             uid = "2",
             name = "Past Trip 2",
             startDate = Timestamp(now.seconds - 10800, 0),
             endDate = Timestamp(now.seconds - 7200, 0),
-            isCurrentTrip = false)
+        )
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(pastTrip1, pastTrip2)
     createViewModel()
@@ -176,7 +177,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
@@ -238,7 +238,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
@@ -272,7 +271,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 1000, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList()),
         Trip(
@@ -287,7 +285,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 2000, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList()),
         Trip(
@@ -302,7 +299,6 @@ class PastTripsViewModelTest {
                 endDate = Timestamp(now.seconds - 1500, 0),
                 preferredLocations = emptyList(),
                 preferences = emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList()))
   }
@@ -399,7 +395,7 @@ class PastTripsViewModelTest {
 
   @Test
   fun toggleFavoriteForSelectedTripsTogglesFavoritesCorrectly() = runTest {
-    val trip = createTestTrip("1", isFavorite = false)
+    val trip = createTestTrip("1")
     coEvery { tripsRepository.getAllTrips() } returns listOf(trip)
     coEvery { tripsRepository.editTrip(any(), any()) } returns Unit
 
@@ -426,7 +422,6 @@ class PastTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 
