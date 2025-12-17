@@ -77,23 +77,28 @@ interface TripInfoViewModelContract {
   fun unlikeSelectedActivities()
 
   /**
-   * Schedules the selected liked activities.
+   * Schedules the selected liked activities into the trip.
    *
-   * If there is no room for selected activities to be scheduled, it will respond with a toast
+   * This process involves:
+   * 1. Merging the current activities queue into the cached activities to ensure no potential
+   *    activities are lost during rescheduling.
+   * 2. Constructing a blacklist of activities to avoid (fetched, queued, cached) but excluding
+   *    those explicitly selected by the user.
+   * 3. Running the TripAlgorithm to compute a new schedule.
+   * 4. Updating the trip state with the new schedule, locations, and cleared queue.
    *
-   * @param context The context of the application to use for scheduling.
+   * @param context The Android context required for initializing the algorithm.
    */
-  fun scheduleSelectedActivities(context: Context)
+  suspend fun scheduleSelectedActivities(context: Context)
 
   /**
    * If you liked the activity, it will add the activity to the liked activities list of the trip.
    *
-   * Otherwise, it is considered as a dislike
+   * Otherwise, it is considered as a dislike.
    *
-   * @param liked a boolean indicating whether you liked the activity or not
-   * @param enableNewFetch whether to fetch a new activity after the swipe or not
+   * @param liked a boolean indicating whether you liked the activity or not.
    */
-  fun swipeActivity(liked: Boolean, enableNewFetch: Boolean = true)
+  fun swipeActivity(liked: Boolean)
 
   /**
    * Selects an activity (in the LikedActivitiesScreen) to later unlike it or schedule it
@@ -141,4 +146,26 @@ interface TripInfoViewModelContract {
    * @param user The user to remove.
    */
   fun removeCollaborator(user: User)
+
+  /**
+   * Loads the list of major Swiss cities from resources.
+   *
+   * @param context The Android context used to access resources.
+   */
+  fun getMajorSwissCities(context: Context)
+
+  /**
+   * Fetches a new activity to swipe using the mass-dump cache logic.
+   * - Adds it to the end of the activities queue
+   * - Updates the set of all fetched swipe activities
+   */
+  suspend fun fetchSwipeActivity()
+
+  /**
+   * Resets the saving progress state to 0.0f.
+   *
+   * This is typically called after a successful save navigation to prevent immediate re-triggering
+   * of success observers when returning to the screen.
+   */
+  fun resetSchedulingState()
 }

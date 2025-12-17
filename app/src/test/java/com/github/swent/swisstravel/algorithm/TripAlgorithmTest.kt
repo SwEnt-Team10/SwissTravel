@@ -209,8 +209,10 @@ class TripAlgorithmTest {
           }
         }
 
+    val selectionParameters =
+        TripAlgorithm.ActivitySelectionParameters(cachedActivities = mutableListOf())
     // Act
-    val result = algorithm.computeTrip(settings, profile, cachedActivities = mutableListOf())
+    val result = algorithm.computeTrip(settings, profile, selectionParams = selectionParameters)
 
     // Assert
     // Should have added the cached activity
@@ -509,7 +511,7 @@ class TripAlgorithmTest {
         route
 
     // Act
-    val result = algorithm.scheduleRemove(enhancedProfile, route, activities)
+    val result = algorithm.scheduleRemove(enhancedProfile, route, activities, emptyList())
 
     // Assert
     coVerify(atLeast = 1) {
@@ -598,7 +600,9 @@ class TripAlgorithmTest {
             TripElement.TripSegment(routeSegment3))
 
     // Act
-    val result = algorithm.tryAddingCachedActivities(enhancedProfile, activities, initialSchedule)
+    val result =
+        algorithm.tryAddingCachedActivities(
+            enhancedProfile, activities, initialSchedule, emptyList())
 
     // Assert
     assertTrue(

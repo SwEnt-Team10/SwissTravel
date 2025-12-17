@@ -53,7 +53,8 @@ data class Trip(
     // fields for swipe and like activities
     val likedActivities: List<Activity> = emptyList(),
     val activitiesQueue: List<Activity> = emptyList(),
-    val allFetchedForSwipe: List<Activity> = emptyList()
+    val allFetchedForSwipe: List<Activity> = emptyList(),
+    val allFetchedLocations: List<Location> = emptyList()
 ) {
   /**
    * Checks if the user is the owner of the trip.

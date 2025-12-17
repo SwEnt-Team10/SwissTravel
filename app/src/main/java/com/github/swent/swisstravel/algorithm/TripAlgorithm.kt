@@ -17,6 +17,8 @@ import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
+import com.github.swent.swisstravel.model.trip.activity.CityConfig
+import com.github.swent.swisstravel.model.trip.activity.MajorSwissCities
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.model.user.PreferenceCategories.category
@@ -168,15 +170,6 @@ open class TripAlgorithm(
    */
 
   /**
-   * Configuration for a major city, used for adding city-based activities.
-   *
-   * @param location The geographical location of the city center.
-   * @param radius The radius in km to consider an activity as being in/near the city.
-   * @param maxDays The maximum number of days/cityActivities to schedule for this city.
-   */
-  private data class CityConfig(val location: Location, val radius: Int, val maxDays: Double)
-
-  /**
    * This data class is used to store a tripProfile and a copy of its preferredLocations while also
    * being able to add new locations without modifying the tripProfile. This is useful when we are
    * adding new cities in the trip during the algorithm's execution.
@@ -205,6 +198,23 @@ open class TripAlgorithm(
       val grandTourActivities: MutableList<Activity>,
       val allActivities: MutableList<Activity>,
       val cachedActivities: MutableList<Activity>
+  )
+
+  /**
+   * Data class to group parameters related to activity selection and filtering.
+   *
+   * @property cachedActivities Mutable list of cached activities that can be used to fill time.
+   * @property protectedActivities List of activities that should not be removed during
+   *   optimization.
+   * @property activityBlacklist List of activity names to exclude from fetching/selection.
+   * @property allFetchedLocations List of locations for which activities have already been fetched
+   *   (to avoid redundancy).
+   */
+  data class ActivitySelectionParameters(
+      val cachedActivities: MutableList<Activity> = mutableListOf(),
+      val protectedActivities: List<Activity> = emptyList(),
+      val activityBlacklist: List<String> = emptyList(),
+      val allFetchedLocations: List<Location> = emptyList()
   )
 
   /**
@@ -271,6 +281,7 @@ open class TripAlgorithm(
    */
   private val swissMajorCities: List<CityConfig> = parseCityConfigs(context)
 
+  /** List of all the basic preferences */
   private val allBasicPreferences =
       PreferenceCategories.environmentPreferences + PreferenceCategories.activityTypePreferences
 
@@ -326,7 +337,7 @@ open class TripAlgorithm(
       tripSettings: TripSettings,
       tripProfile: TripProfile,
       isRandomTrip: Boolean = false,
-      cachedActivities: MutableList<Activity> = mutableListOf(),
+      selectionParams: ActivitySelectionParameters = ActivitySelectionParameters(),
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
     val enhancedTripProfile =
@@ -347,13 +358,19 @@ open class TripAlgorithm(
         Activities(
             intermediateActivities = mutableListOf(),
             grandTourActivities = grandTourActivities,
-            allActivities = grandTourActivities.toMutableList(),
-            cachedActivities = cachedActivities)
+            allActivities =
+                (grandTourActivities + selectionParams.protectedActivities).toMutableList(),
+            cachedActivities = selectionParams.cachedActivities)
 
     try {
       // PHASE 1: Geography & Route (Selection + TSP + Intermediate Stops)
       val optimizedRoute =
-          computeInitialRoute(tripSettings, enhancedTripProfile, activities, onProgress)
+          computeInitialRoute(
+              tripSettings,
+              enhancedTripProfile,
+              activities,
+              selectionParams.activityBlacklist,
+              onProgress)
 
       // PHASE 2: Scheduling (Time management & filling gaps)
       var currentProgressBase =
@@ -366,7 +383,8 @@ open class TripAlgorithm(
           scheduleRemove(
               enhancedTripProfile = enhancedTripProfile,
               originalOptimizedRoute = optimizedRoute,
-              activities = activities)
+              activities = activities,
+              trueProtectedActivities = selectionParams.protectedActivities)
 
       currentProgressBase += computeProgression.scheduleTrip
 
@@ -381,9 +399,9 @@ open class TripAlgorithm(
         completeSchedule(
             schedule,
             enhancedTripProfile,
+            selectionParams,
             activities,
-            progressStart = currentProgressBase,
-            progressEnd = currentProgressBase + loopFillingBudget,
+            Pair(currentProgressBase, currentProgressBase + loopFillingBudget),
             onProgress = onProgress)
       } else if (dateDifference(schedule.last().endDate, enhancedTripProfile.tripProfile.endDate) <
           0) {
@@ -391,7 +409,8 @@ open class TripAlgorithm(
         scheduleRemove(
             enhancedTripProfile = enhancedTripProfile,
             originalOptimizedRoute = optimizedRoute,
-            activities = activities)
+            activities = activities,
+            trueProtectedActivities = selectionParams.protectedActivities)
       }
 
       currentProgressBase += loopFillingBudget
@@ -419,7 +438,8 @@ open class TripAlgorithm(
           scheduleRemove(
               enhancedTripProfile = enhancedTripProfile,
               originalOptimizedRoute = finalRoute,
-              activities = activities)
+              activities = activities,
+              trueProtectedActivities = selectionParams.protectedActivities)
 
       onProgress(1.0f)
       return schedule
@@ -443,6 +463,8 @@ open class TripAlgorithm(
    * @param enhancedTripProfile The enhanced profile used to determine transport modes.
    * @param activities The mutable activities state; selected activities and intermediate stops are
    *   added here.
+   * @param activityBlacklist A list of activity names to exclude from selection and intermediate
+   *   stops.
    * @param onProgress A callback to report progress updates (covering selection, optimization, and
    *   intermediate fetching).
    * @return The initial [OrderedRoute] containing the sequence of locations and segment durations.
@@ -453,6 +475,7 @@ open class TripAlgorithm(
       tripSettings: TripSettings,
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
+      activityBlacklist: List<String>,
       onProgress: (Float) -> Unit
   ): OrderedRoute {
     val startLocation =
@@ -467,7 +490,8 @@ open class TripAlgorithm(
     // 1. Select Activities
     val selectedActivities =
         try {
-          activitySelector.addActivities(activities.cachedActivities) { progress ->
+          activitySelector.addActivities(activities.cachedActivities, activityBlacklist) { progress
+            ->
             onProgress(computeProgression.selectActivities * progress)
           }
         } catch (e: Exception) {
@@ -475,23 +499,24 @@ open class TripAlgorithm(
         }
     onProgress(computeProgression.selectActivities)
 
+    activities.allActivities.addAll(selectedActivities)
+
     val fullDestinationList = buildList {
       add(startLocation)
-      addAll(selectedActivities.map { it.location })
+      addAll(activities.allActivities.map { it.location })
       add(endLocation)
     }
-    activities.allActivities.addAll(selectedActivities)
 
     // 2. Optimize Route
     var optimizedRoute =
         if (endLocation.haversineDistanceTo(startLocation) >= 1 ||
-            selectedActivities.isNotEmpty()) {
+            activities.allActivities.isNotEmpty()) {
           try {
             routeOptimizer.optimize(
                 start = startLocation,
                 end = endLocation,
                 allLocations = fullDestinationList,
-                activities = selectedActivities,
+                activities = activities.allActivities.toList(),
                 mode =
                     if (tripSettings.preferences.contains(Preference.PUBLIC_TRANSPORT)) {
                       TransportMode.TRAIN
@@ -516,6 +541,7 @@ open class TripAlgorithm(
           addInBetweenActivities(
               optimizedRoute = optimizedRoute,
               activities = activities,
+              activityBlacklist = activityBlacklist,
               mode =
                   if (enhancedTripProfile.tripProfile.preferences.contains(
                       Preference.PUBLIC_TRANSPORT))
@@ -547,6 +573,8 @@ open class TripAlgorithm(
    * @param optimizedRoute The initial optimized route containing main locations.
    * @param mode The transport mode for route optimization (CAR or TRAIN).
    * @param distancePerStop The approximate distance in KM for which to insert a stop.
+   * @param activityBlacklist A list of activity names to exclude when generating intermediate
+   *   stops.
    * @param activities The [Activities] data class to which new intermediate activities will be
    *   added.
    * @param onProgress A callback function to report progress (from 0.0 to 1.0).
@@ -556,6 +584,7 @@ open class TripAlgorithm(
       optimizedRoute: OrderedRoute,
       mode: TransportMode = TransportMode.CAR,
       distancePerStop: Double = DISTANCE_PER_STOP_KM,
+      activityBlacklist: List<String>,
       activities: Activities,
       onProgress: (Float) -> Unit = {}
   ): OrderedRoute {
@@ -582,7 +611,8 @@ open class TripAlgorithm(
       if (numStops <= 0) return@forEachIndexed
 
       // Generate activities for this segment
-      val newActivities = generateActivitiesBetween(startSeg, endSeg, numStops, activities)
+      val newActivities =
+          generateActivitiesBetween(startSeg, endSeg, numStops, activityBlacklist, activities)
 
       // Store in the map under its start segment
       intermediateActivitiesBySegment.getOrPut(startSeg) { mutableListOf() }.addAll(newActivities)
@@ -652,6 +682,7 @@ open class TripAlgorithm(
    * @param start Starting [Location].
    * @param end Ending [Location].
    * @param count Number of activities to generate.
+   * @param activityBlackList A list of activity names to exclude from the results.
    * @param activities The [Activities] data class to check against for existing/cached activities.
    * @return List of new [Activity] objects found between start and end.
    */
@@ -659,6 +690,7 @@ open class TripAlgorithm(
       start: Location,
       end: Location,
       count: Int,
+      activityBlackList: List<String>,
       activities: Activities
   ): List<Activity> {
     if (count <= 0) return emptyList()
@@ -684,7 +716,7 @@ open class TripAlgorithm(
               coords = coord,
               radius = RADIUS_NEW_ACTIVITY_M,
               1,
-              activities.allActivities.map { it.getName() },
+              activities.allActivities.map { it.getName() } + activityBlackList,
               cachedActivities = activities.cachedActivities)
 
       if (activity.isNotEmpty()) {
@@ -732,7 +764,8 @@ open class TripAlgorithm(
   open suspend fun scheduleRemove(
       enhancedTripProfile: EnhancedTripProfile,
       originalOptimizedRoute: OrderedRoute,
-      activities: Activities
+      activities: Activities,
+      trueProtectedActivities: List<Activity>
   ): List<TripElement> {
     // Filter out intermediate activities from the activity list to avoid removing them
     val normalActivities =
@@ -823,7 +856,8 @@ open class TripAlgorithm(
             candidateList = candidateList,
             preferredLocations = enhancedTripProfile.newPreferredLocations,
             intermediateActivities = activities.intermediateActivities,
-            deficitSeconds = deficitSeconds)
+            deficitSeconds = deficitSeconds,
+            trueProtectedActivities = trueProtectedActivities)
 
     if (toRemove.isEmpty()) {
       return firstSchedule
@@ -877,25 +911,33 @@ open class TripAlgorithm(
   /**
    * Selects a subset of activities to remove to satisfy a time deficit.
    *
-   * It uses a clustering strategy to identify which preferred location an activity belongs to,
-   * protects locations with only one activity (to avoid empty stops), and then greedily removes
-   * activities that match the required time deficit.
+   * It uses a hierarchy of removal pools:
+   * 1. **Allowed Pool**: Standard activities not in single-activity clusters and not protected.
+   * 2. **Soft Protected**: Activities in clusters of size 1 or Intermediate activities.
+   * 3. **True Protected**: Activities explicitly marked as protected by the caller.
+   *
+   * At each tier, it attempts to find the "Best Overshoot" (smallest activity >= deficit) or "Best
+   * Undershoot" (largest activity < deficit).
    *
    * @param candidateList The list of activities eligible for removal.
    * @param preferredLocations The user's preferred locations (used as cluster centers).
-   * @param intermediateActivities Activities that should be protected from removal.
+   * @param intermediateActivities Activities that should be protected from removal (Soft
+   *   protection).
    * @param deficitSeconds The amount of time (in seconds) that needs to be freed up.
+   * @param trueProtectedActivities Activities that are strictly protected (Hard protection).
    * @return The list of activities selected for removal.
    */
   private fun selectActivitiesToRemove(
       candidateList: MutableList<Activity>,
       preferredLocations: List<Location>,
       intermediateActivities: List<Activity>,
-      deficitSeconds: Long
+      deficitSeconds: Long,
+      trueProtectedActivities: List<Activity>
   ): List<Activity> {
-    // Shuffle for randomness in selection
+    // Shuffle for randomness in selection (mostly for the standard pool)
     candidateList.shuffle(Random.Default)
 
+    // --- 1. Identify "Soft" Protected Activities (Clustering) ---
     // Helper class for clustering
     data class Cluster(val center: Location, val acts: MutableList<Activity>)
 
@@ -913,46 +955,70 @@ open class TripAlgorithm(
       nearestCluster.acts.add(act)
     }
 
-    // Identify clusters that have only ONE activity → “protected”
-    val protectedActivities =
-        clusters.filter { it.acts.size <= 1 }.flatMap { it.acts }.toMutableSet()
+    // Identify clusters that have only ONE activity -> “Soft Protected”
+    val softProtectedSet = clusters.filter { it.acts.size <= 1 }.flatMap { it.acts }.toMutableSet()
 
-    // Also protect intermediate activities
+    // Also soft protect intermediate activities
     if (intermediateActivities.isNotEmpty()) {
-      protectedActivities.addAll(intermediateActivities)
+      softProtectedSet.addAll(intermediateActivities)
     }
 
+    // --- 2. Setup Sets for fast lookup ---
+    val trueProtectedSet = trueProtectedActivities.toSet()
     val toRemove = mutableListOf<Activity>()
     var remainingDeficit = deficitSeconds
     val pool = candidateList.toMutableList()
 
+    // --- 3. Selection Loop ---
     while (remainingDeficit > 0 && pool.isNotEmpty()) {
 
-      // Respect protected clusters unless impossible (fallback to full pool)
-      val allowedPool = pool.filter { it !in protectedActivities }.ifEmpty { pool }
+      // Helper to find best candidate in a specific sub-list
+      fun findBestCandidate(subPool: List<Activity>): Activity? {
+        if (subPool.isEmpty()) return null
 
-      // 1) Find exact overshoots (activities larger than the remaining deficit)
-      val overshoots = allowedPool.filter { it.estimatedTime.toLong() >= remainingDeficit }
-      val bestOvershoot = overshoots.minByOrNull { it.estimatedTime.toLong() - remainingDeficit }
+        // A) Find exact overshoots (activities larger than the remaining deficit)
+        // We want the smallest one that covers the deficit (minimal waste)
+        val bestOvershoot =
+            subPool
+                .filter { it.estimatedTime.toLong() >= remainingDeficit }
+                .minByOrNull { it.estimatedTime.toLong() - remainingDeficit }
 
-      // 2) Find undershoots (largest activity smaller than deficit)
-      val bestUndershoot =
-          allowedPool
-              .filter { it.estimatedTime.toLong() < remainingDeficit }
-              .maxByOrNull { it.estimatedTime.toLong() }
+        // B) Find undershoots (largest activity smaller than deficit)
+        // We want the largest one to make the biggest dent in the deficit
+        val bestUndershoot =
+            subPool
+                .filter { it.estimatedTime.toLong() < remainingDeficit }
+                .maxByOrNull { it.estimatedTime.toLong() }
 
-      val chosen = bestOvershoot ?: bestUndershoot ?: break
+        return bestOvershoot ?: bestUndershoot
+      }
 
+      // --- TIER 1: Standard Activities ---
+      // Not in soft protected, Not in true protected
+      val standardPool = pool.filter { it !in softProtectedSet && it !in trueProtectedSet }
+      var chosen = findBestCandidate(standardPool)
+
+      // --- TIER 2: Soft Protected Activities ---
+      // In soft protected, but Not in true protected
+      if (chosen == null) {
+        val softProtectedPool = pool.filter { it in softProtectedSet && it !in trueProtectedSet }
+        chosen = findBestCandidate(softProtectedPool)
+      }
+
+      // --- TIER 3: True Protected Activities ---
+      // In true protected set
+      if (chosen == null) {
+        val trueProtectedPool = pool.filter { it in trueProtectedSet }
+        chosen = findBestCandidate(trueProtectedPool)
+      }
+
+      // If we still haven't found anything, we can't remove anything else.
+      if (chosen == null) break
+
+      // --- 4. Execute Removal ---
       toRemove.add(chosen)
       remainingDeficit -= chosen.estimatedTime.toLong()
-
-      if (chosen in pool) {
-        pool.remove(chosen)
-      }
-      // If a protected activity had to be removed (fallback case), remove protection status
-      if (chosen in protectedActivities) {
-        protectedActivities.remove(chosen)
-      }
+      pool.remove(chosen)
     }
 
     return toRemove
@@ -981,20 +1047,24 @@ open class TripAlgorithm(
    *
    * @param originalSchedule The schedule generated by the last `scheduleRemove` call.
    * @param enhancedTripProfile The enhanced trip profile.
+   * @param selectionParams Parameters controlling activity selection, including the blacklist,
+   *   protected activities, and already fetched locations.
    * @param activities The mutable [Activities] state object.
-   * @param progressStart The absolute progress value where this phase starts.
-   * @param progressEnd The absolute progress value where this phase ends.
+   * @param progressRange A Pair containing (start, end) float values for progress reporting.
    * @param onProgress Callback to update progress within [progressStart, progressEnd].
    * @return The final list of [TripElement] representing the completed schedule.
    */
   private suspend fun completeSchedule(
       originalSchedule: List<TripElement>,
       enhancedTripProfile: EnhancedTripProfile,
+      selectionParams: ActivitySelectionParameters,
       activities: Activities,
-      progressStart: Float = 0f,
-      progressEnd: Float = 0f,
+      progressRange: Pair<Float, Float> = 0f to 0f,
       onProgress: (Float) -> Unit = {}
   ): List<TripElement> {
+    // Destructure the pair for easier use
+    val (progressStart, progressEnd) = progressRange
+
     var index = 0
     val maxIndex =
         min(
@@ -1005,15 +1075,18 @@ open class TripAlgorithm(
     val endDate = enhancedTripProfile.tripProfile.endDate
 
     // Calculate progress step per iteration
-    val progressRange = progressEnd - progressStart
+    val totalRange = progressEnd - progressStart
     // Use MAX_INDEX as denominator because that's the upper bound of loops
-    val progressStep = if (maxIndex > 0) progressRange / maxIndex else 0f
+    val progressStep = if (maxIndex > 0) totalRange / maxIndex else 0f
 
     while (index < maxIndex) {
       val iterationStart = progressStart + (index * progressStep)
       val iterationEnd = iterationStart + progressStep
 
-      finalSchedule = tryAddingCachedActivities(enhancedTripProfile, activities, finalSchedule)
+      // Ensure tryAddingCachedActivities is updated to accept trueProtectedActivities
+      finalSchedule =
+          tryAddingCachedActivities(
+              enhancedTripProfile, activities, finalSchedule, selectionParams.protectedActivities)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
@@ -1021,19 +1094,28 @@ open class TripAlgorithm(
 
       if (index == 2) {
         finalSchedule =
-            tryFetchingActivitiesForExistingCities(enhancedTripProfile, activities, finalSchedule)
+            tryFetchingActivitiesForExistingCities(
+                enhancedTripProfile, selectionParams.activityBlacklist, activities, finalSchedule)
         if (sameDate(endDate, finalSchedule.last().endDate)) {
           break
         }
       }
 
-      finalSchedule = tryAddingCityActivities(enhancedTripProfile, activities, finalSchedule)
+      finalSchedule =
+          tryAddingCityActivities(
+              enhancedTripProfile, activities, selectionParams.activityBlacklist, finalSchedule)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
       }
 
-      finalSchedule = tryAddingCity(enhancedTripProfile, activities, finalSchedule)
+      finalSchedule =
+          tryAddingCity(
+              enhancedTripProfile,
+              selectionParams.activityBlacklist,
+              activities,
+              finalSchedule,
+              selectionParams.allFetchedLocations)
 
       if (sameDate(endDate, finalSchedule.last().endDate)) {
         break
@@ -1064,6 +1146,7 @@ open class TripAlgorithm(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
       originalSchedule: List<TripElement>,
+      trueProtectedActivities: List<Activity>
   ): List<TripElement> {
     var added = true
     var index = 0
@@ -1089,7 +1172,7 @@ open class TripAlgorithm(
       if (totalTimeNeededHours > 0) {
         added = addCachedActivity(enhancedTripProfile, activities, totalTimeNeededHours)
       }
-      schedule = optimizeAndSchedule(enhancedTripProfile, activities)
+      schedule = optimizeAndSchedule(enhancedTripProfile, activities, trueProtectedActivities)
       index++
     }
     return schedule
@@ -1101,12 +1184,15 @@ open class TripAlgorithm(
    *
    * @param enhancedTripProfile The enhanced trip profile.
    * @param activities The mutable [Activities] state object.
+   * @param activityBlacklist A list of activity names to exclude (e.g., previously disliked city
+   *   visits).
    * @param originalSchedule The current trip schedule.
    * @return The updated list of [TripElement] after attempting to add and reschedule.
    */
   private suspend fun tryAddingCityActivities(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
+      activityBlacklist: List<String>,
       originalSchedule: List<TripElement>,
   ): List<TripElement> {
     var added = true
@@ -1133,7 +1219,9 @@ open class TripAlgorithm(
           }) * SECOND_IN_HOUR
 
       if (totalTimeNeededHours > 0) {
-        added = addCityActivity(enhancedTripProfile, activities, totalTimeNeededHours)
+        added =
+            addCityActivity(
+                enhancedTripProfile, activities, activityBlacklist, totalTimeNeededHours)
         if (added) {
           schedule = optimizeOnly(enhancedTripProfile, activities)
           index++
@@ -1150,18 +1238,23 @@ open class TripAlgorithm(
    * location) along with a batch of associated activities to the trip.
    *
    * @param enhancedTripProfile The enhanced trip profile.
+   * @param activityBlacklist A list of activity names to exclude from the new city's selection.
    * @param activities The mutable [Activities] state object.
    * @param originalSchedule The current trip schedule.
+   * @param allFetchedLocations List of locations for which activities have already been fetched,
+   *   used to prevent selecting a city that has already been processed.
    * @return The updated list of [TripElement] after attempting to add the new city and reschedule.
    */
   private suspend fun tryAddingCity(
       enhancedTripProfile: EnhancedTripProfile,
+      activityBlacklist: List<String>,
       activities: Activities,
       originalSchedule: List<TripElement>,
+      allFetchedLocations: List<Location>,
   ): List<TripElement> {
     var schedule = originalSchedule
 
-    val added = addCity(enhancedTripProfile, activities)
+    val added = addCity(enhancedTripProfile, activityBlacklist, activities, allFetchedLocations)
 
     if (added) {
       schedule = optimizeOnly(enhancedTripProfile, activities)
@@ -1176,12 +1269,14 @@ open class TripAlgorithm(
    * This step is only run once during the `completeSchedule` process (at index 2).
    *
    * @param enhancedTripProfile The enhanced trip profile.
+   * @param activityBlacklist A list of activity names to exclude from the results.
    * @param activities The mutable [Activities] state object.
    * @param originalSchedule The current trip schedule.
    * @return The updated list of [TripElement] after fetching and rescheduling.
    */
   private suspend fun tryFetchingActivitiesForExistingCities(
       enhancedTripProfile: EnhancedTripProfile,
+      activityBlacklist: List<String>,
       activities: Activities,
       originalSchedule: List<TripElement>,
   ): List<TripElement> {
@@ -1209,7 +1304,7 @@ open class TripAlgorithm(
               coords = associatedCity.location.coordinate,
               radius = RADIUS_NEW_ACTIVITY_M,
               limit = NUMBER_OF_ACTIVITY_NEW_CITY,
-              activityBlackList = currentActivityNames,
+              activityBlackList = currentActivityNames + activityBlacklist,
               cachedActivities = activities.cachedActivities)
 
       if (newActivities.isNotEmpty()) {
@@ -1349,16 +1444,18 @@ open class TripAlgorithm(
    * Adds a generic "city visit" activity to a preferred location that is near a major Swiss city.
    *
    * The function ensures that the number of "city visit" activities for a given city location does
-   * not exceed the city's configured `maxDays`.
+   * not exceed the city's configured `maxDays` and that the activity is not blacklisted.
    *
    * @param enhancedTripProfile The enhanced trip profile.
    * @param activities The mutable [Activities] state object.
+   * @param activityBlacklist A list of activity names to exclude.
    * @param activityTime The desired estimated time for the activity (in seconds).
    * @return `true` if a new city activity was added, `false` otherwise.
    */
   private fun addCityActivity(
       enhancedTripProfile: EnhancedTripProfile,
       activities: Activities,
+      activityBlacklist: List<String>,
       activityTime: Long
   ): Boolean {
     // Shuffle user preferred locations for randomness
@@ -1390,7 +1487,7 @@ open class TripAlgorithm(
         val existingCount =
             activities.allActivities.count { it.location.sameLocation(newActivity.location) }
 
-        if (existingCount == 0) {
+        if (existingCount == 0 && activityBlacklist.none { it == newActivity.getName() }) {
           activities.allActivities.add(newActivity)
           return true
         }
@@ -1423,20 +1520,24 @@ open class TripAlgorithm(
    *
    * @param enhancedTripProfile The enhanced trip profile, where the new city location will be added
    *   to `newPreferredLocations`.
+   * @param activityBlacklist A list of activity names to exclude from the fetched results.
    * @param activities The mutable [Activities] state object, where new activities will be added.
+   * @param allFetchedLocations List of locations that have already been fully processed/fetched.
    * @return `true` if the new city and its activities were successfully added, `false` otherwise.
    */
   private suspend fun addCity(
       enhancedTripProfile: EnhancedTripProfile,
+      activityBlacklist: List<String>,
       activities: Activities,
+      allFetchedLocations: List<Location>,
   ): Boolean {
-    val validCity = findValidCity(enhancedTripProfile)
+    val validCity = findValidCity(enhancedTripProfile, allFetchedLocations) ?: return false
 
     val addedActivities =
         activitySelector.getActivitiesNearWithPreferences(
             coords = validCity.location.coordinate,
             limit = NUMBER_OF_ACTIVITY_NEW_CITY,
-            activityBlackList = activities.allActivities.map { it.getName() },
+            activityBlackList = activities.allActivities.map { it.getName() } + activityBlacklist,
             cachedActivities = activities.cachedActivities)
     if (addedActivities.isNotEmpty() && addedActivities.size >= NUMBER_OF_ACTIVITY_NEW_CITY) {
       activities.allActivities.addAll(addedActivities)
@@ -1449,7 +1550,7 @@ open class TripAlgorithm(
           activitySelector.getActivitiesNearWithPreferences(
               coords = validCity.location.coordinate,
               limit = NUMBER_OF_ACTIVITY_NEW_CITY - addedActivities.size,
-              activityBlackList = activities.allActivities.map { it.getName() },
+              activityBlackList = activities.allActivities.map { it.getName() } + activityBlacklist,
               cachedActivities = activities.cachedActivities)
       // Put the old preferences back
       activitySelector.updatePreferences(enhancedTripProfile.tripProfile.preferences)
@@ -1484,26 +1585,7 @@ open class TripAlgorithm(
    * @return A list of [CityConfig] objects parsed from the resource array.
    */
   private fun parseCityConfigs(context: Context): List<CityConfig> {
-    val cityArray = context.resources.getStringArray(R.array.swiss_major_cities)
-    return cityArray.mapNotNull { entry ->
-      val parts = entry.split(";")
-      if (parts.size >= 5) {
-        try {
-          val name = parts[0].trim()
-          val lat = parts[1].trim().toDouble()
-          val lon = parts[2].trim().toDouble()
-          val radius = parts[3].trim().toInt()
-          val maxDays = parts[4].trim().toDouble()
-          CityConfig(Location(Coordinate(lat, lon), name), radius, maxDays)
-        } catch (e: Exception) {
-          Log.e("TripAlgorithm", "Failed to parse City Config location: $entry", e)
-          null
-        }
-      } else {
-        Log.w("TripAlgorithm", "Invalid City Config entry format: $entry")
-        null
-      }
-    }
+    return MajorSwissCities().getMajorSwissCities(context)
   }
 
   /**
@@ -1575,14 +1657,24 @@ open class TripAlgorithm(
    *   locations.
    * @return The best [CityConfig] candidate to add.
    */
-  private fun findValidCity(enhancedTripProfile: EnhancedTripProfile): CityConfig {
+  private fun findValidCity(
+      enhancedTripProfile: EnhancedTripProfile,
+      allFetchedLocations: List<Location>
+  ): CityConfig? {
     // 1. Filter out cities that are already visited/near preferred locations
     val candidates =
         swissMajorCities.filter { cityConfig ->
-          enhancedTripProfile.newPreferredLocations.none { location ->
-            location.coordinate.haversineDistanceTo(cityConfig.location.coordinate) <=
-                cityConfig.radius
-          }
+          val isNearPreferred =
+              enhancedTripProfile.newPreferredLocations.any { location ->
+                location.coordinate.haversineDistanceTo(cityConfig.location.coordinate) <=
+                    cityConfig.radius
+              }
+          val isNearFetched =
+              allFetchedLocations.any { location ->
+                location.coordinate.haversineDistanceTo(cityConfig.location.coordinate) <=
+                    cityConfig.radius
+              }
+          !isNearPreferred && !isNearFetched
         }
 
     // 2. Calculate the minimum distance from each candidate to the current trip
@@ -1627,7 +1719,7 @@ open class TripAlgorithm(
             }
             .map { it.first }
 
-    val validCity = validCities.first()
+    val validCity = validCities.firstOrNull()
     return validCity
   }
 
@@ -1856,7 +1948,8 @@ open class TripAlgorithm(
    */
   private suspend fun optimizeAndSchedule(
       enhancedTripProfile: EnhancedTripProfile,
-      activities: Activities
+      activities: Activities,
+      trueProtectedActivities: List<Activity>
   ): List<TripElement> {
     val publicTransportMode =
         enhancedTripProfile.tripProfile.preferences.contains(Preference.PUBLIC_TRANSPORT)
@@ -1868,7 +1961,8 @@ open class TripAlgorithm(
             activities.allActivities,
             if (publicTransportMode) TransportMode.TRAIN else TransportMode.CAR) {}
 
-    val schedule = scheduleRemove(enhancedTripProfile, orderedRoute, activities)
+    val schedule =
+        scheduleRemove(enhancedTripProfile, orderedRoute, activities, trueProtectedActivities)
     return schedule
   }
 
