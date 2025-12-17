@@ -4,6 +4,8 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
+import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
 import com.github.swent.swisstravel.model.user.UserUpdate
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
@@ -15,7 +17,7 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
-import java.time.LocalDateTime.now
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -108,13 +110,14 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.loginWithGoogle(isE2E = true) // Login as Bob
 
     runBlocking {
-      // Ensure Bob exists in Firestore
-      val bobUser = userRepo.getUserByNameOrEmail(bobEmail).first()
+      // FIX: Wait for Firestore document creation
+      val bobUser = waitForUserCreation(userRepo, bobEmail)
       bobUid = bobUser.uid
       userRepo.updateUser(bobUser.uid, UserUpdate(name = bobName))
 
       composeTestRule.logout()
     }
+    Thread.sleep(1000)
 
     // =================================================================================
     // PHASE 1: ALICE SETUP & FRIEND REQUEST
@@ -122,8 +125,8 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.loginWithGoogle(isE2E = true) // Login as Alice
 
     runBlocking {
-      // Ensure Alice exists in Firestore
-      val aliceUser = userRepo.getUserByNameOrEmail(aliceEmail).first()
+      // FIX: Wait for Firestore document creation
+      val aliceUser = waitForUserCreation(userRepo, aliceEmail)
       aliceUid = aliceUser.uid
       userRepo.updateUser(aliceUser.uid, UserUpdate(name = aliceName))
 
@@ -132,6 +135,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     }
 
     composeTestRule.logout()
+    Thread.sleep(1000)
 
     // =================================================================================
     // PHASE 1.5: BOB ACCEPTS FRIEND REQUEST
@@ -141,6 +145,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     runBlocking { userRepo.acceptFriendRequest(bobUid, aliceUid) }
 
     composeTestRule.logout()
+    Thread.sleep(1000)
 
     // =================================================================================
     // PHASE 2: ALICE CREATES TRIP & SHARES
@@ -171,6 +176,9 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
       tripsRepo.addTrip(trip)
     }
 
+    // Allow DB propagation
+    Thread.sleep(1000)
+
     // 1. Force Refresh: Go to Profile then My Trips
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.waitForTag(ProfileScreenTestTags.PROFILE_PIC)
@@ -196,9 +204,11 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     // Wait for Firestore update (Adding collaborator is async)
     composeTestRule.waitForTag(DailyViewScreenTestTags.BACK_BUTTON)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).isDisplayed()
+
+    composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(testTag = NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
+    Thread.sleep(1000)
 
     // =================================================================================
     // PHASE 3: BOB ACCESSES TRIP
@@ -209,6 +219,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
     // 1. Go to My Trips
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    Thread.sleep(1500) // Wait for fetch
 
     // 2. Verify Alice's Trip is visible
     composeTestRule.waitForText(tripName)
@@ -225,6 +236,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
+    Thread.sleep(1000)
 
     // ========================================================================================
     // PHASE 4 : Alice logs back in and modifies the trip
@@ -232,13 +244,17 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
     // Alice logs back in and goes to the shared trip
     composeTestRule.loginWithGoogle(true)
+    composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    Thread.sleep(1000)
+
     composeTestRule.waitForText(tripName)
     composeTestRule.onNodeWithText(tripName).performClick()
 
     // Alice modifies the content of the trip
     composeTestRule.waitForTag(DailyViewScreenTestTags.EDIT_BUTTON)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.EDIT_BUTTON).performClick()
+
     composeTestRule.waitForTag(EditTripScreenTestTags.TRIP_NAME)
     tripName = "Alice changed her adventure"
     composeTestRule.onNodeWithTag(EditTripScreenTestTags.TRIP_NAME).performTextClearance()
@@ -247,12 +263,15 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
     // Alice saves her modifications
     composeTestRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).performClick()
+    Thread.sleep(1000) // Wait for save
+
     composeTestRule.waitForTag(DailyViewScreenTestTags.BACK_BUTTON)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
 
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
+    Thread.sleep(1000)
 
     // =========================================================================================
     // PHASE 5. Bob logs back in and verifies that the trip changed
@@ -261,8 +280,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.loginWithGoogle(true)
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
-
-    // We can assume that if the trip name can change, all other components can change
+    Thread.sleep(1500)
 
     composeTestRule.waitForText(tripName)
     composeTestRule.onNodeWithText(tripName).performClick()
@@ -274,6 +292,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
+    Thread.sleep(1000)
 
     // =========================================================================================
     // PHASE 6. Alice logs back and remove Bob from the shared trip
@@ -281,11 +300,13 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
     // Alice logs back in and goes to my trips
     composeTestRule.loginWithGoogle(true)
+    composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
 
     // She selects her shared trip and goes to the shared tab
     composeTestRule.waitForText(tripName)
     composeTestRule.onNodeWithText(tripName).performClick()
+
     composeTestRule.waitForTag(DailyViewScreenTestTags.SHARE_BUTTON)
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.SHARE_BUTTON).performClick()
 
@@ -299,6 +320,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
+    Thread.sleep(1000)
 
     // =========================================================================================
     // Phase 7. Bob logs back in and cannot access the shared trip anymore
@@ -307,6 +329,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     // Bob logs back in and goes to my trips
     composeTestRule.loginWithGoogle(true)
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
+    Thread.sleep(1500)
 
     // Bob refreshes the screen
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -314,5 +337,20 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB).performClick()
     // The shared trip should not be there
     composeTestRule.onNodeWithText(tripName).assertIsNotDisplayed()
+  }
+
+  /** Helper function to retry user fetching until Firestore creates the document. */
+  private suspend fun waitForUserCreation(repo: UserRepository, email: String): User {
+    var attempts = 0
+    while (attempts < 10) {
+      val users = repo.getUserByNameOrEmail(email)
+      if (users.isNotEmpty()) {
+        return users.first()
+      }
+      delay(500) // Wait 500ms before retrying
+      attempts++
+    }
+    throw java.util.NoSuchElementException(
+        "User with email $email was not found in Firestore after 5 seconds")
   }
 }
