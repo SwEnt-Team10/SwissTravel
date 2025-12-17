@@ -186,13 +186,13 @@ fun PastTripsScreen(
 /**
  * Wrapper for all UI actions to reduce argument count.
  *
- * @param onBack Callback invoked when the back button is pressed.
- * @param selectedTripCount Number of selected trips.
- * @param onClickDropDownMenu Callback to open the sort menu.
- * @param onCancelSelection Callback to exit selection mode.
- * @param onFavoriteSelected Callback to toggle favorite status of selected trips.
- * @param onDeleteSelected Callback to trigger delete confirmation.
- * @param onSelectAll Callback to select all trips.
+ * @property onBack Callback invoked when the back button is pressed.
+ * @property selectedTripCount Number of selected trips.
+ * @property onClickDropDownMenu Callback to open the sort menu.
+ * @property onCancelSelection Callback to exit selection mode.
+ * @property onFavoriteSelected Callback to toggle favorite status of selected trips.
+ * @property onDeleteSelected Callback to trigger delete confirmation.
+ * @property onSelectAll Callback to select all trips.
  */
 data class PastTripsTopAppBarActions(
     val onBack: () -> Unit,

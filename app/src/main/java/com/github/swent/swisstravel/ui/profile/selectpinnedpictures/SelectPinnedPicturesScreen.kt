@@ -73,11 +73,14 @@ fun SelectPinnedPicturesScreen(
   val context = LocalContext.current
   val uiState by selectPinnedPicturesViewModel.uiState.collectAsState()
 
+  // Local state to toggle between "View/Add" mode and "Edit/Remove" mode
   var isEditMode by remember { mutableStateOf(false) }
   var showDeleteDialog by remember { mutableStateOf(false) }
 
+  // AI helped for the picker
   val pickerLauncher =
       rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
+        // Context needed cause the ViewModel needs it to resolve URIs to Bytes
         if (uris.isNotEmpty()) {
           selectPinnedPicturesViewModel.addNewImages(context, uris)
         }
