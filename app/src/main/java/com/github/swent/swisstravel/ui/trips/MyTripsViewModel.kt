@@ -46,8 +46,8 @@ class MyTripsViewModel(
       val currentUser = userRepository.getCurrentUser()
       val favoriteTrips = currentUser.favoriteTripsUids.toSet()
       val trips = tripsRepository.getAllTrips()
-      val currentTrip = trips.find { it.isCurrent() }
-      val upcomingTrips = trips.filter { it.isUpcoming() }
+      val currentTrip = trips.find { it.isCurrent(currentUser.currentTrip) }
+      val upcomingTrips = trips.filter { it.isUpcoming(currentUser.currentTrip) }
       val sortedTrips = sortTrips(upcomingTrips, _uiState.value.sortType, favoriteTrips)
       val collaboratorsByTrip = buildCollaboratorsByTrip(trips, userRepository)
 
@@ -73,21 +73,11 @@ class MyTripsViewModel(
   fun changeCurrentTrip(trip: Trip) {
     viewModelScope.launch {
       try {
-        // Get all trips to find the current one (if any)
-        val trips = tripsRepository.getAllTrips()
-        val previousCurrentTrip = trips.find { it.isCurrent() }
+        val currentUser = userRepository.getCurrentUser()
         // If the selected trip is already the current one, do nothing
-        if (previousCurrentTrip == trip) return@launch
+        if (currentUser.currentTrip == trip.uid) return@launch
 
-        // If there was a current trip, unset it
-        previousCurrentTrip?.let { current ->
-          val updatedOldTrip = current.copy(isCurrentTrip = false)
-          tripsRepository.editTrip(current.uid, updatedOldTrip)
-        }
-
-        // Set the selected trip as the new current one
-        val updatedNewTrip = trip.copy(isCurrentTrip = true)
-        tripsRepository.editTrip(trip.uid, updatedNewTrip)
+        userRepository.updateUser(uid = currentUser.uid, currentTrip = trip.uid)
 
         refreshUIState()
       } catch (e: Exception) {

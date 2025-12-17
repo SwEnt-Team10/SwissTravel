@@ -73,6 +73,7 @@ interface UserRepository {
    * @param preferences Optional list of updated preferences.
    * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
    * @param pinnedPicturesUids Optional updated list of pinned picture UIDs.
+   * @param currentTrip Optional UID of the new current trip.
    */
   suspend fun updateUser(
       uid: String,
@@ -81,7 +82,8 @@ interface UserRepository {
       profilePicUrl: String? = null,
       preferences: List<Preference>? = null,
       pinnedTripsUids: List<String>? = null,
-      pinnedPicturesUids: List<String>? = null
+      pinnedPicturesUids: List<String>? = null,
+      currentTrip: String? = null
   )
 
   /**

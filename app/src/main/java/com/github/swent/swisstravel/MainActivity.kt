@@ -467,7 +467,7 @@ private fun NavGraphBuilder.myTripsNavGraph(
       SetCurrentTripScreen(
           viewModel = myTripsViewModel,
           title = context.getString(R.string.set_current_trip),
-          isSelected = { trip -> trip.isCurrentTrip },
+          isSelected = { trip -> trip.uid == myTripsViewModel.uiState.value.currentTrip?.uid },
           onClose = { navigationActions.goBack() },
           navigationActions = navigationActions)
     }

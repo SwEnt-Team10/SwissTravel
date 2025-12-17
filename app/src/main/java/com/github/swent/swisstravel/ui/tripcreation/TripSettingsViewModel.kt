@@ -323,7 +323,6 @@ open class TripSettingsViewModel(
                 routeSegments = routeSegments,
                 activities = selectedActivities,
                 tripProfile = tripProfile,
-                isCurrentTrip = false,
                 collaboratorsId = emptyList(),
                 isRandom = _isRandomTrip.value,
                 cachedActivities = cachedActivities)

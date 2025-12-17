@@ -388,6 +388,7 @@ class UserRepositoryFirebase(
    * @param preferences Optional list of updated preferences.
    * @param pinnedTripsUids Optional updated list of pinned trip UIDs.
    * @param pinnedPicturesUids Optional updated list of pinned picture UIDs.
+   * @param currentTrip Optional UID of the new current trip.
    */
   override suspend fun updateUser(
       uid: String,
@@ -396,7 +397,8 @@ class UserRepositoryFirebase(
       profilePicUrl: String?,
       preferences: List<Preference>?,
       pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
+      pinnedPicturesUids: List<String>?,
+      currentTrip: String?,
   ) {
     if (uid == "guest") return
 
@@ -408,6 +410,7 @@ class UserRepositoryFirebase(
     if (preferences != null) updates["preferences"] = preferences.map { it.name }
     if (pinnedTripsUids != null) updates["pinnedTripsUids"] = pinnedTripsUids
     if (pinnedPicturesUids != null) updates["pinnedPicturesUids"] = pinnedPicturesUids
+    if (currentTrip != null) updates["currentTrip"] = currentTrip
 
     // If nothing to update, skip Firestore
     if (updates.isEmpty()) return
