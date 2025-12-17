@@ -1,29 +1,27 @@
 package com.github.swent.swisstravel.ui.profile.selectpinnedpictures
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.integerResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.composable.DeleteDialog
+import com.github.swent.swisstravel.ui.composable.PhotoGrid
 
 object SelectPinnedPicturesScreenTestTags {
   const val MAIN_SCREEN = "mainScreen"
@@ -33,12 +31,11 @@ object SelectPinnedPicturesScreenTestTags {
   const val BOTTOM_BAR = "bottomBar"
   const val SAVE_BUTTON = "saveButton"
   const val ADD_PICTURE_BUTTON = "addPictureButton"
-  const val VERTICAL_GRID = "verticalGrid"
   const val LOADING_INDICATOR = "loadingIndicator"
-
-  fun getTestTagForImage(index: Int): String = "ImageIndex$index"
-
-  fun getTestTagForDelete(index: Int): String = "DeleteIndex$index"
+  const val EDIT_BUTTON = "editButton"
+  const val REMOVE_BUTTON = "removeButton"
+  const val CANCEL_BUTTON = "cancelButton"
+  const val PHOTO_GRID = "photoGrid"
 }
 
 /**
@@ -57,6 +54,11 @@ fun SelectPinnedPicturesScreen(
 ) {
   val context = LocalContext.current
   val uiState by selectPinnedPicturesViewModel.uiState.collectAsState()
+  val selectedImageCount = uiState.selectedIndices.size
+
+  // Local state to toggle between "View/Add" mode and "Edit/Remove" mode
+  var isEditMode by remember { mutableStateOf(false) }
+  var showDeleteDialog by remember { mutableStateOf(false) }
 
   // AI helped for the picker
   val pickerLauncher =
@@ -66,6 +68,9 @@ fun SelectPinnedPicturesScreen(
           selectPinnedPicturesViewModel.addNewImages(context, uris)
         }
       }
+
+  // Handle system back button
+  BackHandler { if (isEditMode) isEditMode = false else onBack() }
 
   val launchPicker: (PickVisualMediaRequest) -> Unit =
       launchPickerOverride ?: { request -> pickerLauncher.launch(request) }
@@ -80,6 +85,19 @@ fun SelectPinnedPicturesScreen(
         }
   }
 
+  if (showDeleteDialog) {
+    DeleteDialog(
+        onConfirm = {
+          selectPinnedPicturesViewModel.removeSelectedImages()
+          isEditMode = false
+          showDeleteDialog = false
+        },
+        onCancel = { showDeleteDialog = false },
+        title =
+            pluralStringResource(
+                R.plurals.confirm_delete_title_images, selectedImageCount, selectedImageCount))
+  }
+
   Scaffold(
       modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.MAIN_SCREEN),
       topBar = {
@@ -88,17 +106,44 @@ fun SelectPinnedPicturesScreen(
             title = {
               Text(
                   modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.TOP_APP_BAR_TITLE),
-                  text = stringResource(R.string.select_pinned_pictures_title),
+                  text =
+                      stringResource(
+                          if (isEditMode) R.string.edit_top_bar_title
+                          else R.string.select_pinned_pictures_title),
                   style = MaterialTheme.typography.titleLarge)
             },
             navigationIcon = {
-              IconButton(
-                  onClick = onBack,
-                  modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.BACK_BUTTON)) {
-                    Icon(
-                        Icons.Default.Close,
-                        contentDescription = stringResource(R.string.back_to_profile))
-                  }
+              if (isEditMode) {
+                // Cancel Button
+                IconButton(
+                    onClick = { isEditMode = false },
+                    modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.CANCEL_BUTTON)) {
+                      Icon(
+                          Icons.Default.Close,
+                          contentDescription = stringResource(R.string.cancel_edit))
+                    }
+              } else {
+                // Back Button
+                IconButton(
+                    onClick = onBack,
+                    modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.BACK_BUTTON)) {
+                      Icon(
+                          Icons.Default.Close,
+                          contentDescription = stringResource(R.string.back_to_profile))
+                    }
+              }
+            },
+            actions = {
+              // Edit Button
+              if (!isEditMode && uiState.images.isNotEmpty()) {
+                IconButton(
+                    onClick = { isEditMode = true },
+                    modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.EDIT_BUTTON)) {
+                      Icon(
+                          Icons.Outlined.Edit,
+                          contentDescription = stringResource(R.string.edit_button_description))
+                    }
+              }
             })
       },
       bottomBar = {
@@ -106,27 +151,38 @@ fun SelectPinnedPicturesScreen(
             modifier =
                 Modifier.fillMaxWidth().testTag(SelectPinnedPicturesScreenTestTags.BOTTOM_BAR),
             horizontalArrangement = Arrangement.Center) {
-              Button(
-                  modifier =
-                      Modifier.testTag(SelectPinnedPicturesScreenTestTags.ADD_PICTURE_BUTTON),
-                  onClick = {
-                    launchPicker(
-                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                  },
-                  enabled = !uiState.isLoading) {
-                    Text(text = stringResource(R.string.add_photos_button))
-                  }
+              if (isEditMode) {
+                // Delete button
+                Button(
+                    modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.REMOVE_BUTTON),
+                    onClick = { showDeleteDialog = true },
+                    enabled = uiState.selectedIndices.isNotEmpty()) {
+                      Text(text = stringResource(R.string.remove_button))
+                    }
+              } else {
+                // Add button
+                Button(
+                    modifier =
+                        Modifier.testTag(SelectPinnedPicturesScreenTestTags.ADD_PICTURE_BUTTON),
+                    onClick = {
+                      launchPicker(
+                          PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    enabled = !uiState.isLoading) {
+                      Text(text = stringResource(R.string.add_photos_button))
+                    }
 
-              Spacer(modifier = Modifier.width(dimensionResource(R.dimen.small_spacer)))
-
-              Button(
-                  modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.SAVE_BUTTON),
-                  onClick = {
-                    selectPinnedPicturesViewModel.savePictures(onSuccess = { onBack() })
-                  },
-                  enabled = !uiState.isLoading) {
-                    Text(text = stringResource(R.string.save))
-                  }
+                Spacer(modifier = Modifier.width(dimensionResource(R.dimen.small_spacer)))
+                // Save button
+                Button(
+                    modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.SAVE_BUTTON),
+                    onClick = {
+                      selectPinnedPicturesViewModel.savePictures(onSuccess = { onBack() })
+                    },
+                    enabled = !uiState.isLoading) {
+                      Text(text = stringResource(R.string.save))
+                    }
+              }
             }
       }) { pd ->
         Box(modifier = Modifier.padding(pd).fillMaxSize()) {
@@ -136,38 +192,17 @@ fun SelectPinnedPicturesScreen(
                     Modifier.align(Alignment.Center)
                         .testTag(SelectPinnedPicturesScreenTestTags.LOADING_INDICATOR))
           } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
+            PhotoGrid(
+                items = uiState.images,
                 modifier =
-                    Modifier.fillMaxSize()
-                        .testTag(SelectPinnedPicturesScreenTestTags.VERTICAL_GRID),
-            ) {
-              itemsIndexed(uiState.images) { index, pinnedImage ->
-                Box {
-                  Image(
-                      modifier =
-                          Modifier.aspectRatio(1f)
-                              .testTag(
-                                  SelectPinnedPicturesScreenTestTags.getTestTagForImage(index)),
-                      bitmap = pinnedImage.bitmap.asImageBitmap(),
-                      contentDescription = null,
-                      contentScale = ContentScale.Crop)
-
-                  // Delete Button Overlay
-                  IconButton(
-                      onClick = { selectPinnedPicturesViewModel.removeImage(index) },
-                      modifier =
-                          Modifier.align(Alignment.TopEnd)
-                              .testTag(
-                                  SelectPinnedPicturesScreenTestTags.getTestTagForDelete(index))) {
-                        Icon(
-                            imageVector = Icons.Default.Close,
-                            contentDescription = stringResource(R.string.delete),
-                            tint = MaterialTheme.colorScheme.error)
-                      }
-                }
-              }
-            }
+                    Modifier.fillMaxSize().testTag(SelectPinnedPicturesScreenTestTags.PHOTO_GRID),
+                onClick =
+                    if (isEditMode)
+                        { index -> selectPinnedPicturesViewModel.toggleSelection(index) }
+                    else null,
+                isSelected =
+                    if (isEditMode) { index -> uiState.selectedIndices.contains(index) } else null,
+                modelMapper = { it.bitmap })
           }
 
           // Loading Overlay when saving/compressing

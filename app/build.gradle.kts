@@ -272,7 +272,6 @@ dependencies {
     testImplementation(kotlin("test"))
     androidTestImplementation(kotlin("test"))
 }
-
 tasks.withType<Test> {
     // Configure Jacoco for each tests
     configure<JacocoTaskExtension> {

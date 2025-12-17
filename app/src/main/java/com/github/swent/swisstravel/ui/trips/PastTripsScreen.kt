@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +40,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
+import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
@@ -109,13 +110,15 @@ fun PastTripsScreen(
   var showDeleteConfirmation by remember { mutableStateOf(false) }
 
   if (showDeleteConfirmation) {
-    DeleteTripsDialog(
-        count = selectedTripCount,
+    DeleteDialog(
         onConfirm = {
           pastTripsViewModel.deleteSelectedTrips()
           showDeleteConfirmation = false
         },
-        onCancel = { showDeleteConfirmation = false })
+        onCancel = { showDeleteConfirmation = false },
+        title =
+            pluralStringResource(
+                R.plurals.confirm_delete_title_trips, selectedTripCount, selectedTripCount))
   }
 
   Scaffold(
@@ -131,46 +134,50 @@ fun PastTripsScreen(
             onSelectAll = { pastTripsViewModel.selectAllTrips() })
       },
       content = { padding ->
-        LazyColumn(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(padding)
-                    .padding(
-                        start = dimensionResource(R.dimen.past_trips_padding_start_end),
-                        end = dimensionResource(R.dimen.past_trips_padding_start_end),
-                        bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))
-                    .testTag(TripListTestTags.TRIP_LIST)) {
-              val listState =
-                  TripListState(
-                      trips = uiState.tripsList,
-                      isSelected = { trip -> trip in uiState.selectedTrips },
-                      isSelectionMode = uiState.isSelectionMode,
-                      emptyListString = emptyListString,
-                      collaboratorsLookup = { uid ->
-                        uiState.collaboratorsByTripId[uid] ?: emptyList()
-                      },
-                      favoriteTripsUids = uiState.favoriteTripsUids)
+        PullToRefreshBox(
+            isRefreshing = uiState.isLoading,
+            onRefresh = { pastTripsViewModel.refreshUIState() },
+            modifier = Modifier.padding(padding)) {
+              LazyColumn(
+                  modifier =
+                      Modifier.fillMaxSize()
+                          .padding(
+                              start = dimensionResource(R.dimen.past_trips_padding_start_end),
+                              end = dimensionResource(R.dimen.past_trips_padding_start_end),
+                              bottom = dimensionResource(R.dimen.past_trips_padding_top_bottom))
+                          .testTag(TripListTestTags.TRIP_LIST)) {
+                    val listState =
+                        TripListState(
+                            trips = uiState.tripsList,
+                            isSelected = { trip -> trip in uiState.selectedTrips },
+                            isSelectionMode = uiState.isSelectionMode,
+                            emptyListString = emptyListString,
+                            collaboratorsLookup = { uid ->
+                              uiState.collaboratorsByTripId[uid] ?: emptyList()
+                            },
+                            favoriteTripsUids = uiState.favoriteTripsUids)
 
-              // Construct Events
-              val listEvents =
-                  TripListEvents(
-                      onClickTripElement = {
-                        it?.let { trip ->
-                          if (uiState.isSelectionMode) {
-                            pastTripsViewModel.toggleTripSelection(it)
-                          } else {
-                            onSelectTrip(trip.uid)
-                          }
-                        }
-                      },
-                      onLongPress = {
-                        it?.let { _ ->
-                          pastTripsViewModel.toggleSelectionMode(true)
-                          pastTripsViewModel.toggleTripSelection(it)
-                        }
-                      })
+                    // Construct Events
+                    val listEvents =
+                        TripListEvents(
+                            onClickTripElement = {
+                              it?.let { trip ->
+                                if (uiState.isSelectionMode) {
+                                  pastTripsViewModel.toggleTripSelection(it)
+                                } else {
+                                  onSelectTrip(trip.uid)
+                                }
+                              }
+                            },
+                            onLongPress = {
+                              it?.let { _ ->
+                                pastTripsViewModel.toggleSelectionMode(true)
+                                pastTripsViewModel.toggleTripSelection(it)
+                              }
+                            })
 
-              tripListItems(listState = listState, listEvents = listEvents)
+                    tripListItems(listState = listState, listEvents = listEvents)
+                  }
             }
       })
 }

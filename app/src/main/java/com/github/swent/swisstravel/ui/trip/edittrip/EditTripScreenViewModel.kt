@@ -170,6 +170,7 @@ class EditTripScreenViewModel(
    * the new preferences.
    *
    * @param context The Android context.
+   * @param rerolled If the trip was rerolled
    */
   fun save(context: Context, rerolled: Boolean = false) {
     viewModelScope.launch {
@@ -180,6 +181,10 @@ class EditTripScreenViewModel(
         var selectedActivities = originalTrip.activities
         var routeSegments = originalTrip.routeSegments
         var allLocations = originalTrip.locations
+        val cachedActivities =
+            (originalTrip.cachedActivities + originalTrip.activitiesQueue)
+                .distinct()
+                .toMutableList()
         val newTripProfile =
             originalTrip.tripProfile.copy(
                 adults = state.adults,
@@ -191,6 +196,27 @@ class EditTripScreenViewModel(
         if (sanitizedPrefs !=
             PreferenceRules.enforceMutualExclusivity(originalTrip.tripProfile.preferences) ||
             rerolled) {
+          // helped by AI
+          val oldPrefs = originalTrip.tripProfile.preferences.toSet()
+          val newPrefs = sanitizedPrefs.toSet()
+
+          // Condition 1: Old preferences must be a subset of new preferences
+          // (meaning we only ADDED preferences, not removed any)
+          val isSubset = newPrefs.containsAll(oldPrefs)
+
+          // Condition 2: The preferences added must NOT be mandatory
+          val addedPrefs = newPrefs - oldPrefs
+          val mandatoryPrefs = setOf(Preference.WHEELCHAIR_ACCESSIBLE, Preference.PUBLIC_TRANSPORT)
+          val addedMandatory = addedPrefs.any { it in mandatoryPrefs }
+
+          // If conditions are NOT met, we must clear the cache.
+          // Otherwise, we keep `cachedActivities` as is (populated from originalTrip).
+          // This is because we use OR on optional preferences meaning that we can find the
+          // activities
+          // in the cache with a new optional activity
+          if (!isSubset || addedMandatory) {
+            cachedActivities.clear()
+          }
           // Create a temporary TripSettings object to pass to SelectActivities
           val tempTripSettings =
               TripSettings(
@@ -209,9 +235,13 @@ class EditTripScreenViewModel(
 
           // Run the algorithm
           val algorithm = algorithmFactory(context, tempTripSettings, activityRepository)
+          val selectionParameters =
+              TripAlgorithm.ActivitySelectionParameters(cachedActivities = cachedActivities)
           val schedule =
               algorithm.computeTrip(
-                  tripSettings = tempTripSettings, tripProfile = newTripProfile) { progress ->
+                  tripSettings = tempTripSettings,
+                  tripProfile = newTripProfile,
+                  selectionParams = selectionParameters) { progress ->
                     _uiState.update { it.copy(savingProgress = progress) }
                   }
 
@@ -235,7 +265,9 @@ class EditTripScreenViewModel(
                 tripProfile = newTripProfile,
                 activities = selectedActivities,
                 routeSegments = routeSegments,
-                locations = allLocations)
+                locations = allLocations,
+                cachedActivities = cachedActivities,
+                activitiesQueue = emptyList())
 
         tripRepository.editTrip(state.tripId, updatedTrip)
         _validationEventChannel.send(ValidationEvent.SaveSuccess)

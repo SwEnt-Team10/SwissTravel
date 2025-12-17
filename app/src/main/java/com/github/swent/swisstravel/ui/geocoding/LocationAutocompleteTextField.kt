@@ -10,6 +10,8 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuBoxScope
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -130,9 +132,10 @@ private fun LocationAutocompleteInputField(
   OutlinedTextField(
       value = text,
       onValueChange = onTextChanged,
-      modifier = modifier,
+      modifier = modifier.fillMaxWidth(),
       label = { Text(label) },
-      singleLine = true,
+      singleLine = false,
+      maxLines = 3,
       isError = isError,
       supportingText = {
         if (isError) {
@@ -152,8 +155,9 @@ private fun LocationAutocompleteInputField(
  * @param onDismiss Callback to be invoked when the dropdown menu is dismissed.
  * @param onLocationClicked Callback to be invoked when a location is clicked.
  */
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun LocationSuggestionsMenu(
+private fun ExposedDropdownMenuBoxScope.LocationSuggestionsMenu(
     expanded: Boolean,
     suggestions: List<Location>,
     showImages: Boolean,
@@ -164,34 +168,34 @@ private fun LocationSuggestionsMenu(
   DropdownMenu(
       expanded = expanded,
       onDismissRequest = onDismiss,
-      properties = PopupProperties(focusable = false),
-  ) {
-    suggestions.forEachIndexed { index, location ->
-      DropdownMenuItem(
-          text = {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-              if (showImages && wikiRepo != null) {
-                LocationImage(location = location, wikiRepo = wikiRepo)
-              }
-              Text(
-                  text = location.name,
-                  modifier = Modifier.weight(1f),
-              )
-            }
-          },
-          onClick = { onLocationClicked(location) },
-          modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION),
-      )
+      modifier = Modifier.exposedDropdownSize(matchTextFieldWidth = true),
+      properties = PopupProperties(focusable = false)) {
+        suggestions.forEachIndexed { index, location ->
+          DropdownMenuItem(
+              text = {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                  if (showImages && wikiRepo != null) {
+                    LocationImage(location = location, wikiRepo = wikiRepo)
+                  }
+                  Text(
+                      text = location.name,
+                      modifier = Modifier.weight(1f),
+                  )
+                }
+              },
+              onClick = { onLocationClicked(location) },
+              contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
+              modifier = Modifier.testTag(LocationTextTestTags.LOCATION_SUGGESTION))
 
-      if (index < suggestions.lastIndex) {
-        HorizontalDivider(
-            modifier = Modifier.fillMaxWidth(),
-            thickness = 1.dp,
-            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
-        )
+          if (index < suggestions.lastIndex) {
+            HorizontalDivider(
+                modifier = Modifier.fillMaxWidth(),
+                thickness = 1.dp,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
+            )
+          }
+        }
       }
-    }
-  }
 }
 
 /**

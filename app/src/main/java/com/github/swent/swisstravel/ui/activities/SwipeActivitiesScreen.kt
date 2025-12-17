@@ -19,13 +19,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -44,6 +47,8 @@ object SwipeActivitiesScreenTestTags {
   const val BACK_BUTTON = "back_to_daily_view_button"
 }
 
+private const val ANIMATION_MS = 900
+
 /**
  * Screen to find activities by swiping like/dislike.
  *
@@ -55,12 +60,20 @@ object SwipeActivitiesScreenTestTags {
 @Composable
 fun SwipeActivitiesScreen(
     onTripInfo: () -> Unit = {},
-    tripInfoViewModel: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
+    tripInfoVM: TripInfoViewModelContract = viewModel<TripInfoViewModel>(),
 ) {
-  val viewModel = remember { SwipeActivitiesViewModel(tripInfoViewModel) }
+  // Get the current context
+  val context = LocalContext.current
+
+  // Call the function once when this screen enters the composition
+  LaunchedEffect(Unit) {
+    tripInfoVM.getMajorSwissCities(context)
+    tripInfoVM.fetchSwipeActivity()
+  }
+  val state by tripInfoVM.uiState.collectAsState()
   Scaffold(
       topBar = {
-        if (viewModel.uiState.collectAsState().value.currentActivity == null) {
+        if (state.currentActivity == null) {
           IconButton(
               onClick = onTripInfo,
               modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.BACK_BUTTON)) {
@@ -75,7 +88,7 @@ fun SwipeActivitiesScreen(
             modifier =
                 Modifier.padding(pd)
                     .testTag(SwipeActivitiesScreenTestTags.SWIPE_ACTIVITIES_SCREEN)) {
-              SwipeActivitiesStack(viewModel, onTripInfo)
+              SwipeActivitiesStack(tripInfoVM, onTripInfo)
             }
       }
 }
@@ -85,12 +98,14 @@ fun SwipeActivitiesScreen(
  * optimization reasons (having a card composable for each activity is not useful and would cost
  * more)
  *
+ * Done with the help of Gemini 3 Pro
+ *
  * @param viewModel The ViewModel to use.
  * @param onTripInfo Callback to be called when navigating back to trip info.
  */
 @Composable
-fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> Unit) {
-  val state = viewModel.uiState.collectAsState().value
+fun SwipeActivitiesStack(tripInfoVM: TripInfoViewModelContract, onTripInfo: () -> Unit) {
+  val state = tripInfoVM.uiState.collectAsState().value
   val current = state.currentActivity
   val next = state.backActivity
 
@@ -106,13 +121,13 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
         key(activity.getName()) {
           SwipeableCard(
               activity = activity,
-              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onSwiped = { liked -> tripInfoVM.swipeActivity(liked) },
               onTripInfo)
         }
       }
     }
 
-    // Front card (current)
+    // Current card displayed on the screen
     current.let { activity ->
       if (activity == null) {
         Text(
@@ -122,7 +137,7 @@ fun SwipeActivitiesStack(viewModel: SwipeActivitiesViewModel, onTripInfo: () -> 
         key(activity.getName()) {
           SwipeableCard(
               activity = activity,
-              onSwiped = { liked -> viewModel.swipeActivity(liked) },
+              onSwiped = { liked -> tripInfoVM.swipeActivity(liked) },
               onTripInfo = onTripInfo)
         }
       }
@@ -157,7 +172,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0f
               },
           // duration of the animation
-          animationSpec = tween(300))
+          animationSpec = tween(ANIMATION_MS))
 
   // Parameter for horizontal movement
   val offsetX =
@@ -171,7 +186,7 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
                 else -> 0.dp
               },
           // duration of the animation
-          animationSpec = tween(300),
+          animationSpec = tween(ANIMATION_MS),
           finishedListener = {
             if (swipeState.value != SwipeState.Idle) {
               onSwiped(swipeState.value == SwipeState.Like)
@@ -193,11 +208,13 @@ fun SwipeableCard(activity: Activity, onSwiped: (liked: Boolean) -> Unit, onTrip
             verticalAlignment = Alignment.CenterVertically) {
               Button(
                   onClick = { swipeState.value = SwipeState.Dislike },
+                  enabled = swipeState.value == SwipeState.Idle,
                   modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.DISLIKE_BUTTON)) {
                     Text(stringResource(R.string.dislike_button))
                   }
               Button(
                   onClick = { swipeState.value = SwipeState.Like },
+                  enabled = swipeState.value == SwipeState.Idle,
                   modifier = Modifier.testTag(SwipeActivitiesScreenTestTags.LIKE_BUTTON)) {
                     Text(stringResource(R.string.like_button))
                   }

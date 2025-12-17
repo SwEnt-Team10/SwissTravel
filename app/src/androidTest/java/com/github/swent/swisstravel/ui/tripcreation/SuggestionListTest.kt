@@ -26,9 +26,7 @@ class SuggestionListTest : SwissTravelTest() {
   @Test
   fun suggestionList_isDisplayed_afterExpansion() {
     val viewModel =
-        TripSettingsViewModel(
-            tripsRepository = repository,
-            userRepository = com.github.swent.swisstravel.ui.profile.FakeUserRepository())
+        TripSettingsViewModel(tripsRepository = repository, userRepository = FakeUserRepository())
     composeTestRule.setContent { FirstDestinationScreen(viewModel = viewModel) }
 
     // Click on "Suggestions" to expand
@@ -40,9 +38,7 @@ class SuggestionListTest : SwissTravelTest() {
   @Test
   fun suggestionList_selectionUpdatesCheckbox() {
     val viewModel =
-        TripSettingsViewModel(
-            tripsRepository = repository,
-            userRepository = com.github.swent.swisstravel.ui.profile.FakeUserRepository())
+        TripSettingsViewModel(tripsRepository = repository, userRepository = FakeUserRepository())
     composeTestRule.setContent { FirstDestinationScreen(viewModel = viewModel) }
 
     // Expand suggestions

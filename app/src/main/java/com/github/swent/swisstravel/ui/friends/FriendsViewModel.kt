@@ -20,6 +20,7 @@ data class FriendsListScreenUIState(
     val isSearching: Boolean = false,
     val searchResults: List<User> = emptyList(),
     val currentUserUid: String = "",
+    val sentRequests: List<User> = emptyList()
 )
 
 class FriendsViewModel(private val userRepository: UserRepository = UserRepositoryFirebase()) :
@@ -51,16 +52,19 @@ class FriendsViewModel(private val userRepository: UserRepository = UserReposito
 
       val acceptedFriends = currentUser.friends.filter { it.status == FriendStatus.ACCEPTED }
       val pendingEntries = currentUser.friends.filter { it.status == FriendStatus.PENDING_INCOMING }
+      val sentEntries = currentUser.friends.filter { it.status == FriendStatus.PENDING_OUTGOING }
 
       val friends = acceptedFriends.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
       val pendingUsers =
           pendingEntries.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
+      val sentUsers = sentEntries.mapNotNull { friend -> userRepository.getUserByUid(friend.uid) }
 
       _uiState.value =
           uiState.value.copy(
               friends = friends,
               pendingFriends = pendingUsers,
               isLoading = false,
+              sentRequests = sentUsers,
               currentUserUid = currentUser.uid)
     } catch (e: Exception) {
       _uiState.value =

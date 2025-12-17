@@ -78,6 +78,10 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.id } returns "trip1"
     every { doc.getString("name") } returns "TripName"
     every { doc.getString("ownerId") } returns "owner1"
+    every { doc.get("likedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activitiesQueue") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedForSwipe") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedLocations") } returns emptyList<Map<String, Any>>()
 
     // Locations, Activities, RouteSegments, TripProfile
     val locationMap =
@@ -141,6 +145,10 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.id } returns "badTrip"
     every { doc.getString("name") } returns null // triggers documentToTrip null
     every { doc.getString("ownerId") } returns "owner1"
+    every { doc.get("likedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activitiesQueue") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedForSwipe") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedLocations") } returns emptyList<Map<String, Any>>()
 
     assertFailsWith<Exception> { repo.getTrip("badTrip") }
   }
@@ -152,6 +160,10 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.id } returns "tripImgUrls"
     every { doc.getString("name") } returns "TripImageUrls"
     every { doc.getString("ownerId") } returns "owner1"
+    every { doc.get("likedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activitiesQueue") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedForSwipe") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedLocations") } returns emptyList<Map<String, Any>>()
 
     val locationMap =
         mapOf("name" to "Somewhere", "coordinate" to mapOf("latitude" to 1.0, "longitude" to 2.0))
@@ -199,6 +211,10 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.id } returns "tripWithBadActivities"
     every { doc.getString("name") } returns "TripWithBadActivities"
     every { doc.getString("ownerId") } returns "owner1"
+    every { doc.get("likedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activitiesQueue") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedForSwipe") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedLocations") } returns emptyList<Map<String, Any>>()
 
     // One valid activity, one invalid (missing location)
     val validActivityMap =
@@ -274,6 +290,10 @@ class TripsRepositoryFirestorePublicTest {
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.getBoolean("random") } returns false
     every { doc.get("cachedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("likedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activitiesQueue") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedForSwipe") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedLocations") } returns emptyList<Map<String, Any>>()
 
     val trip = repo.getTrip("tripEmpty")
     assertEquals(0, trip.locations.size)
@@ -332,6 +352,10 @@ class TripsRepositoryFirestorePublicTest {
     // IMPORTANT: use the same key as in documentToTrip
     every { doc.getBoolean("currentTrip") } returns false
     every { doc.getBoolean("random") } returns false
+    every { doc.get("likedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activitiesQueue") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedForSwipe") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedLocations") } returns emptyList<Map<String, Any>>()
 
     // Act
     val trips = repo.getAllTrips()
@@ -517,6 +541,10 @@ class TripsRepositoryFirestorePublicTest {
             "arrivalLocation" to locationMap,
             "departureLocation" to locationMap)
     every { doc.getBoolean("currentTrip") } returns false
+    every { doc.get("likedActivities") } returns emptyList<Map<String, Any>>()
+    every { doc.get("activitiesQueue") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedForSwipe") } returns emptyList<Map<String, Any>>()
+    every { doc.get("allFetchedLocations") } returns emptyList<Map<String, Any>>()
 
     // Act
     val trips = repo.getAllTrips()

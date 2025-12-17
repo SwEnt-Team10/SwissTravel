@@ -21,6 +21,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -81,6 +82,7 @@ import com.github.swent.swisstravel.ui.trips.PastTripsScreen
 import com.github.swent.swisstravel.ui.trips.SetCurrentTripScreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
 /**
@@ -369,7 +371,8 @@ private fun NavGraphBuilder.authNavGraph(
     composable(Screen.Auth.route) {
       SignInScreen(
           credentialManager = credentialManager,
-          onSignedIn = { navigationActions.navigateTo(Screen.Profile) })
+          onSignedIn = { navigationActions.navigateTo(Screen.Profile) },
+          onPrevious = { navigationActions.navigateTo(Screen.Landing) })
     }
     composable(Screen.SignUp.route) {
       SignUpScreen(
@@ -515,7 +518,16 @@ private fun NavGraphBuilder.tripInfoNavGraph(
         return@composable
       }
 
-      val vm = navigationActions.tripInfoViewModel(navController)
+      // conserve the ViewModel tied to the TripInfo navigation graph
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      val vm = viewModel<TripInfoViewModel>(parentEntry)
+
+      val refresh = navBackStackEntry.savedStateHandle.get<Boolean>("refresh_trip")
+      if (refresh == true) {
+        navBackStackEntry.savedStateHandle["refresh_trip"] = false // Reset flag
+        vm.loadTripInfo(uid, forceReload = true)
+      }
 
       DailyViewScreen(
           uid = uid,
@@ -527,7 +539,9 @@ private fun NavGraphBuilder.tripInfoNavGraph(
                   onActivityClick = { tripActivity ->
                     vm.selectActivity(tripActivity.activity)
                     navigationActions.navigateToActivityInfo(uid)
-                  }),
+                  },
+                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
+                  onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
           onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
     }
 
@@ -549,7 +563,10 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           EditTripScreen(
               tripId = tripId,
               onBack = { navController.popBackStack() },
-              onSaved = { navController.popBackStack() },
+              onSaved = {
+                navController.previousBackStackEntry?.savedStateHandle?.set("refresh_trip", true)
+                navController.popBackStack()
+              },
               onDelete = { navigationActions.navigateTo(Screen.MyTrips) })
         }
 
@@ -558,16 +575,34 @@ private fun NavGraphBuilder.tripInfoNavGraph(
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
       SwipeActivitiesScreen(
           onTripInfo = { navController.popBackStack() },
-          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry),
-      )
+          tripInfoVM = viewModel<TripInfoViewModel>(parentEntry))
     }
 
     composable(Screen.LikedActivities.route) { navBackStackEntry ->
       val parentEntry =
           remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      val vm = viewModel<TripInfoViewModel>(parentEntry)
+      val errorText = stringResource(R.string.no_activities_selected)
+      val scope = rememberCoroutineScope()
       LikedActivitiesScreen(
           onBack = { navController.popBackStack() },
-          tripInfoViewModel = viewModel<TripInfoViewModel>(parentEntry))
+          tripInfoVM = vm,
+          onSchedule = {
+            if (vm.uiState.value.selectedLikedActivities.isEmpty()) {
+              Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
+            } else {
+              scope.launch { vm.scheduleSelectedActivities(context) }
+            }
+          },
+          onUnlike = {
+            if (vm.uiState.value.selectedLikedActivities.isEmpty()) {
+              Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
+            } else vm.unlikeSelectedActivities()
+          },
+          onNext = {
+            vm.resetSchedulingState()
+            navController.popBackStack()
+          })
     }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))

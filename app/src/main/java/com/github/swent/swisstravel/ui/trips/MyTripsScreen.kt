@@ -53,8 +53,10 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.ui.composable.DeleteTripsDialog
+import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
+import com.github.swent.swisstravel.ui.composable.TripElement
+import com.github.swent.swisstravel.ui.composable.TripElementState
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
@@ -82,7 +84,6 @@ object MyTripsScreenTestTags {
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
 
-private const val NO_UPCOMPING_TRIPS = "You don't have any upcoming trips. Time to create one !"
 /**
  * Displays the "My Trips" screen, which shows the user's current and upcoming trips.
  *
@@ -114,6 +115,7 @@ fun MyTripsScreen(
   val uiState by myTripsViewModel.uiState.collectAsState()
   val selectedTripCount = uiState.selectedTrips.size
   val upcomingTripsTitle = stringResource(R.string.upcoming_trips)
+  val noUpcomingTrips = stringResource(R.string.no_upcoming_trips)
 
   // Handle back press while in selection mode
   BackHandler(enabled = uiState.isSelectionMode) { myTripsViewModel.toggleSelectionMode(false) }
@@ -144,13 +146,15 @@ fun MyTripsScreen(
   var showDeleteConfirmation by remember { mutableStateOf(false) }
 
   if (showDeleteConfirmation) {
-    DeleteTripsDialog(
-        count = selectedTripCount,
+    DeleteDialog(
         onConfirm = {
           myTripsViewModel.deleteSelectedTrips()
           showDeleteConfirmation = false
         },
-        onCancel = { showDeleteConfirmation = false })
+        onCancel = { showDeleteConfirmation = false },
+        title =
+            pluralStringResource(
+                R.plurals.confirm_delete_title_trips, selectedTripCount, selectedTripCount))
   }
 
   Scaffold(
@@ -202,7 +206,7 @@ fun MyTripsScreen(
                         TripListState(
                             trips = uiState.tripsList,
                             isSelectionMode = uiState.isSelectionMode,
-                            emptyListString = NO_UPCOMPING_TRIPS,
+                            emptyListString = noUpcomingTrips,
                             isSelected = { trip -> trip in uiState.selectedTrips },
                             collaboratorsLookup = { uid ->
                               uiState.collaboratorsByTripId[uid] ?: emptyList()

@@ -3,7 +3,8 @@ package com.github.swent.swisstravel.ui.trips
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.model.trip.*
-import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
+import com.github.swent.swisstravel.ui.composable.DeleteDialogTestTags
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.FakeUserRepository
@@ -108,10 +109,8 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     composeTestRule.onNodeWithTag(PastTripsScreenTestTags.DELETE_SELECTED_BUTTON).performClick()
 
-    composeTestRule
-        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
-        .assertIsDisplayed()
-    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CONFIRM_DELETE_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CANCEL_DELETE_BUTTON).performClick()
 
     assertTrue(viewModel.uiState.value.selectedTrips.contains(pastTrip1))
   }

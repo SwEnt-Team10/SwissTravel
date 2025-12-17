@@ -1,19 +1,11 @@
 package com.github.swent.swisstravel.ui.trip.tripinfos.photos
 
 import android.widget.Toast
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -27,17 +19,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.integerResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.ErrorScreen
+import com.github.swent.swisstravel.ui.composable.PhotoGrid
 
 /** Test tags for the edit screen photos */
 object EditPhotosScreenTestTags {
@@ -47,7 +41,7 @@ object EditPhotosScreenTestTags {
   const val EDIT_CANCEL_BUTTON = "editCancelButton"
   const val EDIT_BOTTOM_BAR = "editBottomBar"
   const val EDIT_REMOVE_BUTTON = "editRemoveButton"
-  const val EDIT_VERTICAL_GRID = "editVerticalGrid"
+  const val EDIT_PHOTO_GRID = "editPhotoGrid"
 }
 
 /**
@@ -68,6 +62,10 @@ fun EditPhotosScreen(
   // Start by loading the photos from the repository
   LaunchedEffect(tripId) { photosViewModel.loadPhotos(tripId) }
   val uiState by photosViewModel.uiState.collectAsState()
+  val selectedImageCount = uiState.uriSelected.size
+
+  // State for the confirmation dialog
+  var showDeleteDialog by remember { mutableStateOf(false) }
 
   // AI gives this part
   LaunchedEffect(uiState.toastMessage) {
@@ -75,6 +73,18 @@ fun EditPhotosScreen(
       Toast.makeText(context, uiState.toastMessage, Toast.LENGTH_SHORT).show()
       photosViewModel.clearToastMessage()
     }
+  }
+
+  if (showDeleteDialog) {
+    DeleteDialog(
+        onConfirm = {
+          photosViewModel.removePhotos(tripId)
+          showDeleteDialog = false
+        },
+        onCancel = { showDeleteDialog = false },
+        title =
+            pluralStringResource(
+                R.plurals.confirm_delete_title_images, selectedImageCount, selectedImageCount))
   }
 
   // AI gave the structure with the when
@@ -89,53 +99,23 @@ fun EditPhotosScreen(
             onRetry = { photosViewModel.loadPhotos(tripId) },
             onBack = { onCancel() })
   }
+
   Scaffold(
       modifier = Modifier.testTag(EditPhotosScreenTestTags.EDIT_SCAFFOLD),
       topBar = { EditTopBar(onCancel = { onCancel() }) },
-      bottomBar = {
-        EditBottomBar(
-            onRemove = {
-              // Remove from the state
-              photosViewModel.removePhotos(tripId)
-            },
-            uiState = uiState)
-      }) { pd ->
-        // Done with AI
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(integerResource(R.integer.images_on_grid)),
-            modifier = Modifier.padding(pd).testTag(EditPhotosScreenTestTags.EDIT_VERTICAL_GRID)) {
-              val displayList = uiState.uriLocation.keys.toList()
-              itemsIndexed(displayList) { index, uri ->
-                Box(modifier = Modifier.clickable { photosViewModel.selectToRemove(index) }) {
-                  AsyncImage(
-                      model = uri,
-                      contentDescription = null,
-                  )
-                  // the veil added when a photo is selected
-                  if (uiState.uriSelected.contains(index)) {
-                    Box(
-                        modifier =
-                            Modifier.matchParentSize()
-                                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.4f)))
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier =
-                            Modifier.matchParentSize()
-                                .padding(dimensionResource(R.dimen.check_pading))
-                                .wrapContentSize(Alignment.Center))
-                  }
-                }
-              }
-            }
+      bottomBar = { EditBottomBar(onRemove = { showDeleteDialog = true }, uiState = uiState) }) { pd
+        ->
+
+        // Replaced LazyVerticalGrid with Shared PhotoGrid
+        PhotoGrid(
+            items = uiState.uriLocation.keys.toList(),
+            modifier = Modifier.padding(pd).testTag(EditPhotosScreenTestTags.EDIT_PHOTO_GRID),
+            onClick = { index -> photosViewModel.selectToRemove(index) },
+            isSelected = { index -> uiState.uriSelected.contains(index) },
+            modelMapper = { it })
       }
 }
-/**
- * The top app bar of the edit mode. It contains only a button to quit the mode.
- *
- * @param onCancel the function to call when you want to quit the mode
- */
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun EditTopBar(onCancel: () -> Unit = {}) {

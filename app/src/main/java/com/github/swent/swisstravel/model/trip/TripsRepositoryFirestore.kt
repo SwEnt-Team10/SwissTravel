@@ -156,6 +156,26 @@ class TripsRepositoryFirestore(
             (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
           } ?: emptyList()
 
+      val likedActivities =
+          (document["likedActivities"] as? List<*>)?.mapNotNull { activityMap ->
+            (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
+          } ?: emptyList()
+
+      val activitiesQueue =
+          (document["activitiesQueue"] as? List<*>)?.mapNotNull { activityMap ->
+            (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
+          } ?: emptyList()
+
+      val allFetchedForSwipe =
+          (document["allFetchedForSwipe"] as? List<*>)?.mapNotNull { activityMap ->
+            (activityMap as? Map<*, *>)?.let { mapToActivity(it) }
+          } ?: emptyList()
+
+      val allFetchedLocations =
+          (document["allFetchedLocations"] as? List<*>)?.mapNotNull { locationMap ->
+            (locationMap as? Map<*, *>)?.let { mapToLocation(it) }
+          } ?: emptyList()
+
       Trip(
           uid = uid,
           name = name,
@@ -168,7 +188,11 @@ class TripsRepositoryFirestore(
           isCurrentTrip = isCurrentTrip,
           collaboratorsId = listCollaboratorsId,
           isRandom = isRandom,
-          cachedActivities = cachedActivities)
+          cachedActivities = cachedActivities,
+          likedActivities = likedActivities,
+          activitiesQueue = activitiesQueue,
+          allFetchedForSwipe = allFetchedForSwipe,
+          allFetchedLocations = allFetchedLocations)
     } catch (e: Exception) {
       Log.e("TripsRepositoryFirestore", "Error converting document to Trip", e)
       null
@@ -310,6 +334,7 @@ class TripsRepositoryFirestore(
    * @param trip the trip you want to convert
    */
   private fun tripToDocument(trip: Trip): Map<String, Any?> {
+    Log.d("TripsRepositoryFirestore", "Converting trip to document: $trip")
     return mapOf(
         "uid" to trip.uid,
         "name" to trip.name,
@@ -321,7 +346,12 @@ class TripsRepositoryFirestore(
         "currentTrip" to trip.isCurrentTrip,
         "collaboratorsId" to trip.collaboratorsId,
         "random" to trip.isRandom,
-        "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() })
+        "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() },
+        "likedActivities" to trip.likedActivities,
+        "activitiesQueue" to trip.activitiesQueue,
+        "allFetchedForSwipe" to trip.allFetchedForSwipe,
+        "allFetchedLocations" to trip.allFetchedLocations,
+        "cachedActivities" to trip.cachedActivities)
   }
   /**
    * Converts a Firestore map into a Map<Uri, Location>.

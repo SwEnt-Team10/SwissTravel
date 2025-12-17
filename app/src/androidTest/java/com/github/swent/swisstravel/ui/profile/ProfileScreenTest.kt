@@ -6,58 +6,17 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.github.swent.swisstravel.model.trip.Trip
-import com.github.swent.swisstravel.model.trip.TripProfile
-import com.github.swent.swisstravel.model.trip.TripRepositoryLocal
 import com.github.swent.swisstravel.model.trip.TripsRepository
-import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
-import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.trips.TripElementTestTags
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
+import com.github.swent.swisstravel.utils.FakeTripsRepository
+import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.SwissTravelTest
-import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
-
-/** Minimal user repository for tests */
-private class TestUserRepository(private val user: User) : UserRepository {
-  override suspend fun getCurrentUser() = user
-
-  override suspend fun getUserByUid(uid: String) = user
-
-  override suspend fun getUserByNameOrEmail(query: String) = emptyList<User>()
-
-  override suspend fun updateUserPreferences(uid: String, preferences: List<Preference>) {}
-
-  override suspend fun sendFriendRequest(fromUid: String, toUid: String) {}
-
-  override suspend fun acceptFriendRequest(currentUid: String, fromUid: String) {}
-
-  override suspend fun removeFriend(uid: String, friendUid: String) {}
-
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?
-  ) {}
-
-  override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
-    // No-op
-  }
-
-  override suspend fun removeFavoriteTrip(uid: String, tripUid: String) {
-    // No-op
-  }
-
-  override suspend fun updateUserStats(uid: String, stats: UserStats) {}
-}
 
 /**
  * Tests for the ProfileScreen composable.
@@ -68,45 +27,15 @@ private class TestUserRepository(private val user: User) : UserRepository {
 class ProfileScreenTest : SwissTravelTest() {
 
   override fun createInitializedRepository(): TripsRepository {
-    return TripRepositoryLocal()
+    return FakeTripsRepository()
   }
 
-  private val tripOne =
-      Trip(
-          uid = "trip1",
-          name = "Trip One",
-          ownerId = "currentUser",
-          locations = emptyList(),
-          routeSegments = emptyList(),
-          activities = emptyList(),
-          tripProfile =
-              TripProfile(
-                  startDate = Timestamp(0, 0),
-                  endDate = Timestamp(0, 0),
-                  preferredLocations = emptyList(),
-                  preferences = emptyList()),
-          isCurrentTrip = false,
-          uriLocation = emptyMap(),
-          collaboratorsId = emptyList())
-  private val tripTwo =
-      Trip(
-          uid = "trip2",
-          name = "Trip Two",
-          ownerId = "currentUser",
-          locations = emptyList(),
-          routeSegments = emptyList(),
-          activities = emptyList(),
-          tripProfile =
-              TripProfile(
-                  startDate = Timestamp(0, 0),
-                  endDate = Timestamp(0, 0),
-                  preferredLocations = emptyList(),
-                  preferences = emptyList()),
-          isCurrentTrip = false,
-          uriLocation = emptyMap(),
-          collaboratorsId = emptyList())
+  // Trips for testing pinned trips
+  private val tripOne = createTestTrip(uid = "trip1", name = "Trip One", ownerId = "current")
+  private val tripTwo = createTestTrip(uid = "trip2", name = "Trip Two", ownerId = "current")
 
-  private val fakeTripRepo = TripRepositoryLocal()
+  // Replaced TripRepositoryLocal with FakeTripsRepository
+  private val fakeTripRepo = FakeTripsRepository()
 
   init {
     runBlocking {
@@ -129,25 +58,21 @@ class ProfileScreenTest : SwissTravelTest() {
   @Test
   fun ownProfile_displaysAllKeyUIElements() {
     runBlocking {
+      // FakeUserRepository initializes with a user holding UID "current".
       val testUser =
-          User(
-              uid = "getolover1",
+          createTestUser(
+              uid = "current",
               name = "Satoru Gojo",
-              biography = "nah id win",
-              email = "blbl@example.com",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList(),
-              favoriteTripsUids = emptyList())
+              bio = "nah id win",
+              mail = "blbl@example.com",
+              stats = sampleStats)
+
+      val userRepo = FakeUserRepository()
+      userRepo.addUser(testUser)
 
       val viewModel =
           ProfileViewModel(
-              userRepository = TestUserRepository(testUser),
-              tripsRepository = fakeTripRepo,
-              requestedUid = "getolover1")
+              userRepository = userRepo, tripsRepository = fakeTripRepo, requestedUid = "current")
 
       composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
@@ -181,23 +106,18 @@ class ProfileScreenTest : SwissTravelTest() {
   @Test
   fun otherProfile_displaysUnfriendButton_andCanCancelDialog() {
     runBlocking {
-      val currentUser =
-          User(
-              uid = "getolover1",
-              name = "Current User",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList(),
-              favoriteTripsUids = emptyList())
+      // Current user is automatically "current" in FakeUserRepository.
+      val userRepo = FakeUserRepository()
+
+      // Add the other user we are visiting
+      val otherUser =
+          createTestUser(uid = "gojolover999", name = "Other User", mail = "", stats = sampleStats)
+
+      userRepo.addUser(otherUser)
 
       val viewModel =
           ProfileViewModel(
-              userRepository = TestUserRepository(currentUser),
+              userRepository = userRepo,
               tripsRepository = fakeTripRepo,
               requestedUid = "gojolover999")
 
@@ -221,23 +141,17 @@ class ProfileScreenTest : SwissTravelTest() {
   @Test
   fun otherProfile_canRemoveFriend() {
     runBlocking {
-      val currentUser =
-          User(
-              uid = "getolover1",
-              name = "Satoru Gojo",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList(),
-              favoriteTripsUids = emptyList())
+      val userRepo = FakeUserRepository()
+
+      // Add the friend user
+      val friendUser =
+          createTestUser(uid = "gojolover999", name = "Friend User", mail = "", stats = sampleStats)
+
+      userRepo.addUser(friendUser)
 
       val viewModel =
           ProfileViewModel(
-              userRepository = TestUserRepository(currentUser),
+              userRepository = userRepo,
               tripsRepository = fakeTripRepo,
               requestedUid = "gojolover999")
 
@@ -268,25 +182,17 @@ class ProfileScreenTest : SwissTravelTest() {
   @Test
   fun otherProfile_openUnfriendDialog_thenCancel_doesNotRemoveFriend() {
     runBlocking {
-      val currentUser =
-          User(
-              uid = "currentUser",
-              name = "Current User",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList(),
-              favoriteTripsUids = emptyList())
+      val userRepo = FakeUserRepository()
+
+      // Add friend
+      val friendUser =
+          createTestUser(uid = "friend123", name = "Friend", mail = "", stats = sampleStats)
+
+      userRepo.addUser(friendUser)
 
       val viewModel =
           ProfileViewModel(
-              userRepository = TestUserRepository(currentUser),
-              tripsRepository = fakeTripRepo,
-              requestedUid = "friend123")
+              userRepository = userRepo, tripsRepository = fakeTripRepo, requestedUid = "friend123")
 
       composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
@@ -315,25 +221,16 @@ class ProfileScreenTest : SwissTravelTest() {
   @Test
   fun otherUserProfile_showsRemoveFriendAndNoEditOrSettingsButton() {
     runBlocking {
-      val currentUser =
-          User(
-              uid = "currentUser",
-              name = "Current User",
-              biography = "",
-              email = "",
-              profilePicUrl = "",
-              preferences = emptyList(),
-              friends = emptyList(),
-              stats = sampleStats,
-              pinnedTripsUids = emptyList(),
-              pinnedPicturesUids = emptyList(),
-              favoriteTripsUids = emptyList())
+      val userRepo = FakeUserRepository()
+
+      val otherUser =
+          createTestUser(uid = "friend123", name = "Other User", mail = "", stats = sampleStats)
+
+      userRepo.addUser(otherUser)
 
       val viewModel =
           ProfileViewModel(
-              userRepository = TestUserRepository(currentUser),
-              tripsRepository = fakeTripRepo,
-              requestedUid = "friend123")
+              userRepository = userRepo, tripsRepository = fakeTripRepo, requestedUid = "friend123")
 
       composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
@@ -356,9 +253,12 @@ class ProfileScreenTest : SwissTravelTest() {
   @Test
   fun ownProfile_showsEditAndSettings_buttonsAndNoRemoveFriend() {
     runBlocking {
+      val userRepo = FakeUserRepository()
+
+      // Update the "current" user to have the specific bio needed for this test
       val currentUser =
           User(
-              uid = "currentUser",
+              uid = "current",
               name = "Current User",
               biography = "This is my bio",
               email = "current@example.com",
@@ -369,20 +269,18 @@ class ProfileScreenTest : SwissTravelTest() {
               pinnedTripsUids = emptyList(),
               pinnedPicturesUids = emptyList(),
               favoriteTripsUids = emptyList())
+      userRepo.addUser(currentUser)
 
       val viewModel =
           ProfileViewModel(
-              userRepository = TestUserRepository(currentUser),
-              tripsRepository = fakeTripRepo,
-              requestedUid = "currentUser")
+              userRepository = userRepo, tripsRepository = fakeTripRepo, requestedUid = "current")
 
       composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 
       // Settings button should be displayed
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).assertIsDisplayed()
 
-      // Edit buttons for pinned trips/images should be visible (even if features not implemented
-      // yet)
+      // Edit buttons for pinned trips/images should be visible
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON).assertExists()
       composeTestRule
           .onNodeWithTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)
@@ -396,9 +294,11 @@ class ProfileScreenTest : SwissTravelTest() {
   @Test
   fun profileScreen_displaysPinnedTrips() {
     runBlocking {
+      val userRepo = FakeUserRepository()
+
       val currentUser =
           User(
-              uid = "currentUser",
+              uid = "current",
               name = "Current User",
               biography = "",
               email = "",
@@ -409,12 +309,11 @@ class ProfileScreenTest : SwissTravelTest() {
               pinnedTripsUids = listOf("trip1", "trip2"), // trips to display
               pinnedPicturesUids = emptyList(),
               favoriteTripsUids = emptyList())
+      userRepo.addUser(currentUser)
 
       val viewModel =
           ProfileViewModel(
-              userRepository = TestUserRepository(currentUser),
-              tripsRepository = fakeTripRepo,
-              requestedUid = "currentUser")
+              userRepository = userRepo, tripsRepository = fakeTripRepo, requestedUid = "current")
 
       composeTestRule.setContent { ProfileScreen(profileViewModel = viewModel) }
 

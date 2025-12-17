@@ -97,4 +97,38 @@
         <item>Aarburg;47.319145000000034;7.898097000000014</item>
         <item>Weisshorn-Gruppe;46.20636000000001;7.867153000000009</item>
     </string-array>
+
+    <!--- Name, latitude, longitude, radius of the city, number of days to visit -->
+    <string-array name="swiss_major_cities">
+        <item>Zürich;47.3769;8.5417;15;2.0</item>
+        <item>Genève;46.2044;6.1432;12;2.0</item>
+        <item>Basel;47.5596;7.5886;10;2.0</item>
+        <item>Lausanne;46.5197;6.6323;8;1.0</item>
+        <item>Bern;46.9480;7.4474;10;2.0</item>
+        <item>Winterthur;47.4988;8.7241;6;1.0</item>
+        <item>Luzern;47.0502;8.3093;7;2.0</item>
+        <item>St. Gallen;47.4239;9.3744;6;1.0</item>
+        <item>Lugano;46.0048;8.9511;7;2.0</item>
+        <item>Biel/Bienne;47.1379;7.2464;5;0.5</item>
+        <item>Thun;46.7578;7.6206;5;0.5</item>
+        <item>Bellinzona;46.1959;9.0220;5;0.5</item>
+        <item>Köniz;46.8133;7.4189;5;0.5</item>
+        <item>Fribourg;46.8065;7.1513;5;1.0</item>
+        <item>Schaffhausen;47.6970;8.6383;4;0.5</item>
+        <item>Chur;46.8490;9.5300;5;1.0</item>
+        <item>Uster;47.3490;8.7186;4;0.5</item>
+        <item>Sion;46.2335;7.3573;5;0.5</item>
+        <item>Vevey;46.4300;6.9100;3;0.5</item>
+        <item>Montreux;46.4310;6.9110;4;0.5</item>
+        <item>Locarno;46.1697;8.7971;5;0.5</item>
+        <item>La Chaux-de-Fonds;47.0980;6.8319;4;0.5</item>
+        <item>Gruyères;46.5828;7.0827;3;0.5</item>
+        <item>Stein am Rhein;47.6596;8.8789;3;0.5</item>
+        <item>Murten;46.9189;7.1189;3;0.5</item>
+        <item>Spiez;46.6861;7.6694;4;0.5</item>
+        <item>Interlaken;46.6833;7.8500;4;0.5</item>
+        <item>Lauterbrunnen;46.5944;7.9014;3;0.5</item>
+        <item>Appenzell;47.3308;9.4005;3;0.5</item>
+        <item>Morcote;45.9328;8.9328;3;0.5</item>
+    </string-array>
 </resources>

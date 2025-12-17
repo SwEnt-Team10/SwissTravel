@@ -9,8 +9,11 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
-import com.github.swent.swisstravel.ui.composable.DeleteTripDialogTestTags
+import com.github.swent.swisstravel.ui.composable.DeleteDialogTestTags
 import com.github.swent.swisstravel.ui.composable.SortMenuTestTags
+import com.github.swent.swisstravel.ui.composable.TripElement
+import com.github.swent.swisstravel.ui.composable.TripElementState
+import com.github.swent.swisstravel.ui.composable.TripElementTestTags
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.FakeUserRepository
@@ -251,13 +254,11 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).performClick()
 
     // AlertDialog should appear
-    composeTestRule
-        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
-        .assertIsDisplayed()
-    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CONFIRM_DELETE_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CANCEL_DELETE_BUTTON).assertIsDisplayed()
 
     // Cancel deletion
-    composeTestRule.onNodeWithTag(DeleteTripDialogTestTags.CANCEL_DELETE_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(DeleteDialogTestTags.CANCEL_DELETE_BUTTON).performClick()
 
     // Selection should remain
     assertTrue(viewModel.uiState.value.selectedTrips.contains(trip1))
@@ -277,7 +278,7 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
 
     // Confirm deletion
     composeTestRule
-        .onNodeWithTag(DeleteTripDialogTestTags.CONFIRM_DELETE_BUTTON)
+        .onNodeWithTag(DeleteDialogTestTags.CONFIRM_DELETE_BUTTON)
         .performClick() // This triggers deleteSelectedTrips()
 
     // Verify selection cleared
@@ -455,9 +456,9 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         .onNodeWithTag(MyTripsScreenTestTags.getTestTagForTrip(sharedTrip))
         .assertIsDisplayed()
 
-    // 5. Verify the collaborator's name (content description) is displayed
+    // 5. Verify the correct content description is present
     composeTestRule
-        .onNodeWithContentDescription("Alice Collaborator", useUnmergedTree = true)
+        .onNodeWithContentDescription("Profile picture", useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -473,8 +474,8 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
     composeTestRule.setContent { TripElement(tripElementState = tripElementState, onClick = {}) }
 
     // Verify avatars are shown
-    composeTestRule.onNodeWithContentDescription("User1").assertIsDisplayed()
-    composeTestRule.onNodeWithContentDescription("User2").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Profile picture").assertIsDisplayed()
+    composeTestRule.onNodeWithContentDescription("Profile picture").assertIsDisplayed()
     // Verify overflow text is NOT shown
     composeTestRule.onNodeWithText("+", substring = true).assertDoesNotExist()
   }
