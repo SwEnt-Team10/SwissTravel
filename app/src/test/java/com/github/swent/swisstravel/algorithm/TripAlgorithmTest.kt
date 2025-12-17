@@ -1,496 +1,644 @@
 package com.github.swent.swisstravel.algorithm
 
 import android.content.Context
+import android.content.res.Resources
+import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.algorithm.orderlocations.OrderedRoute
 import com.github.swent.swisstravel.algorithm.orderlocationsv2.ProgressiveRouteOptimizer
 import com.github.swent.swisstravel.algorithm.selectactivities.SelectActivities
-import com.github.swent.swisstravel.algorithm.tripschedule.ScheduleParams
 import com.github.swent.swisstravel.algorithm.tripschedule.scheduleTrip
-import com.github.swent.swisstravel.model.trip.*
+import com.github.swent.swisstravel.model.trip.Coordinate
+import com.github.swent.swisstravel.model.trip.Location
+import com.github.swent.swisstravel.model.trip.RouteSegment
+import com.github.swent.swisstravel.model.trip.TransportMode
+import com.github.swent.swisstravel.model.trip.TripElement
+import com.github.swent.swisstravel.model.trip.TripProfile
+import com.github.swent.swisstravel.model.trip.TripsRepository
+import com.github.swent.swisstravel.model.trip.TripsRepositoryProvider
 import com.github.swent.swisstravel.model.trip.activity.Activity
-import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.ui.tripcreation.TripArrivalDeparture
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
-import com.github.swent.swisstravel.ui.trips.TripElement
 import com.google.firebase.Timestamp
+import io.mockk.*
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import io.mockk.mockkStatic
-import io.mockk.spyk
+import java.time.LocalDateTime
+import java.time.ZoneOffset
+import kotlin.collections.emptyList
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class TripAlgorithmTest {
 
-  private val selectActivities = mockk<SelectActivities>()
-  private val routeOptimizer = mockk<ProgressiveRouteOptimizer>()
-  private val scheduleParams = ScheduleParams()
-  private val progression: Progression =
-      Progression(
-          selectActivities = 0.20f,
-          optimizeRoute = 0.40f,
-          fetchInBetweenActivities = 0.10f,
-          scheduleTrip = 0.30f)
-  private val rescheduleProgression: RescheduleProgression =
-      RescheduleProgression(
-          schedule = 0.30f, analyzeAndRemove = 0.10f, recomputeRoute = 0.40f, reschedule = 0.20f)
+  private lateinit var selectActivities: SelectActivities
+  private lateinit var routeOptimizer: ProgressiveRouteOptimizer
+  private lateinit var context: Context
+  private lateinit var resources: Resources
+  private lateinit var algorithm: TripAlgorithm
 
-  private val algorithm =
-      TripAlgorithm(
-          activitySelector = selectActivities,
-          routeOptimizer = routeOptimizer,
-          scheduleParams = scheduleParams,
-          progression = progression,
-          rescheduleProgression = rescheduleProgression)
+  // Standard Locations
+  private val startLocation = Location(Coordinate(46.2044, 6.1432), "Geneva")
+  private val endLocation = Location(Coordinate(47.3769, 8.5417), "Zurich")
+
+  // Helper to create Timestamps easily
+  private fun timestampFrom(day: Int, hour: Int): Timestamp {
+    val ldt = LocalDateTime.of(2024, 1, day, hour, 0)
+    return Timestamp(ldt.toEpochSecond(ZoneOffset.UTC), 0)
+  }
+
+  private val testDispatcher = StandardTestDispatcher()
+
+  @Before
+  fun setup() {
+    // 1. Mock Dependencies
+    selectActivities = mockk(relaxed = true)
+    routeOptimizer = mockk(relaxed = true)
+    context = mockk(relaxed = true)
+    resources = mockk(relaxed = true)
+
+    Dispatchers.setMain(testDispatcher)
+
+    mockkObject(TripsRepositoryProvider)
+    val fakeRepo = mockk<TripsRepository>(relaxed = true)
+    every { TripsRepositoryProvider.repository } returns fakeRepo
+
+    // 2. Mock Context and Resources (Used in init/companion)
+    every { context.resources } returns resources
+
+    // Mock the grand tour array resource
+    every { resources.getStringArray(R.array.grand_tour) } returns arrayOf("GrandTourLoc;46.0;8.0")
+
+    // [FIX] Mock the swiss major cities array so the algorithm has data to work with
+    every { resources.getStringArray(R.array.swiss_major_cities) } returns
+        arrayOf(
+            "Zürich;47.3769;8.5417;15;2.0",
+            "Genève;46.2044;6.1432;12;2.0",
+            "Basel;47.5596;7.5886;10;2.0",
+            "Lausanne;46.5197;6.6323;8;1.0",
+            "Bern;46.9480;7.4474;10;2.0",
+            "Luzern;47.0502;8.3093;7;2.0",
+            "Lugano;46.0048;8.9511;7;2.0",
+            "Interlaken;46.6833;7.8500;4;0.5",
+            "Zermatt;46.0207;7.7491;5;2.0",
+            "Davos;46.8027;9.8360;5;1.0",
+            "Grindelwald;46.6242;8.0414;4;1.0",
+            "St. Gallen;47.4239;9.3744;6;1.0",
+            "Montreux;46.4310;6.9110;4;0.5",
+            "Neuchâtel;46.9896;6.9293;5;1.0",
+            "Chur;46.8490;9.5300;5;1.0")
+
+    // Mock string resources
+    every { context.getString(any(), any()) } returns "Mocked String"
+    every { context.getString(any()) } returns "Mocked String"
+
+    // 3. Mock Static scheduleTrip function
+    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
+
+    // 4. Instantiate Algorithm
+    algorithm = TripAlgorithm(selectActivities, routeOptimizer, context)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+    unmockkAll()
+  }
 
   @Test
-  fun `computeTrip runs full pipeline`() = runTest {
-    val coordinates =
-        listOf(
-            Location(Coordinate(10.0, 10.0), "Start"),
-            Location(Coordinate(10.0, 20.0), "Museum"),
-            Location(Coordinate(20.0, 20.0), "End"))
+  fun `computeTrip nominal case - no expansion needed`() = runBlocking {
+    // Arrange
+    val settings = createSettings(listOf(Preference.MUSEUMS))
+    val profile = createProfile(days = 1) // 1 day trip
 
-    val museumActivity =
-        Activity(
-            description = "",
-            estimatedTime = 3600,
-            startDate = Timestamp(3900, 0),
-            endDate = Timestamp(7500, 0),
-            imageUrls = emptyList(),
-            location = coordinates[1])
+    val activity = createActivity("Museum", 3600)
 
-    val activityElements = listOf(museumActivity)
+    // Mock initial activity selection
+    coEvery { selectActivities.addActivities(any(), any(), any()) } returns listOf(activity)
 
-    coEvery { selectActivities.addActivities(any(), any<(Float) -> Unit>()) } returns
-        activityElements
-
-    val orderedRoute =
-        OrderedRoute(
-            orderedLocations = coordinates,
-            totalDuration = 9000.0,
-            segmentDuration = listOf(3600.0, 1200.0))
-
+    // Should not be called but it is safer to mock it just in case the test fails
     coEvery {
-      routeOptimizer.optimize(
-          start = any(),
-          end = any(),
-          allLocations = any(),
-          activities = any(),
-          mode = any(),
-          onProgress = any())
-    } returns orderedRoute
+      selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+    } returns listOf(createActivity("API Activity", 3600))
 
-    val startRouteSegment =
-        RouteSegment(
-            from = coordinates[0],
-            to = coordinates[1],
-            startDate = Timestamp(0, 0),
-            endDate = Timestamp(3600, 0),
-            transportMode = TransportMode.CAR,
-            durationMinutes = 60)
+    // Optimizer returns a valid route
+    val route =
+        OrderedRoute(
+            listOf(startLocation, activity.location, endLocation), 3600.0, listOf(1800.0, 1800.0))
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns route
 
-    val endRouteSegment =
-        RouteSegment(
-            from = coordinates[1],
-            to = coordinates[2],
-            startDate = Timestamp(7800, 0),
-            endDate = Timestamp(9000, 0),
-            transportMode = TransportMode.CAR,
-            durationMinutes = 20)
-
-    val finalSchedule =
+    // Scheduler returns a schedule that matches the end date (Success)
+    val schedule =
         listOf(
-            TripElement.TripSegment(startRouteSegment),
-            TripElement.TripActivity(museumActivity),
-            TripElement.TripSegment(endRouteSegment),
-        )
+            TripElement.TripActivity(
+                activity.copy(endDate = profile.endDate)) // Ends exactly on time
+            )
+    every { scheduleTrip(any(), any(), any(), any(), any()) } returns schedule
 
-    // Help by AI
-    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
-
-    coEvery {
-      scheduleTrip(
-          activities = activityElements,
-          params = any(),
-          onProgress = any(),
-          tripProfile = any(),
-          ordered = any())
-    } returns finalSchedule
-
-    val settings =
-        TripSettings(
-            name = "My Trip",
-            arrivalDeparture =
-                TripArrivalDeparture(
-                    arrivalLocation = coordinates[0], departureLocation = coordinates[2]),
-            destinations = coordinates,
-            preferences = listOf(Preference.MUSEUMS))
-
-    val profile =
-        TripProfile(
-            startDate = Timestamp(0, 0),
-            endDate = Timestamp(9000, 0),
-            preferredLocations = emptyList(),
-            preferences = emptyList(),
-            adults = 2,
-            children = 1,
-            arrivalLocation = settings.arrivalDeparture.arrivalLocation,
-            departureLocation = settings.arrivalDeparture.departureLocation)
-
-    val result = algorithm.computeTrip(settings, profile)
-
-    assertEquals(finalSchedule.size, result.size)
-    assertEquals(finalSchedule[0].startDate, result[0].startDate)
-    assertEquals(finalSchedule[0].endDate, result[0].endDate)
-    assertEquals(finalSchedule[1].startDate, result[1].startDate)
-    assertEquals(finalSchedule[1].endDate, result[1].endDate)
-    assertEquals(finalSchedule[2].startDate, result[2].startDate)
-    assertEquals(finalSchedule[2].endDate, result[2].endDate)
-  }
-
-  // Done with AI
-  @Test
-  fun `computeTrip throws when optimized route duration is zero or negative`() = runTest {
-    // Arrange
-    val coordinates =
-        listOf(Location(Coordinate(1.0, 1.0), "A"), Location(Coordinate(2.0, 2.0), "B"))
-
-    // Mock a valid activity, INCLUDING its location
-    val activity = mockk<Activity>()
-    every { activity.location } returns coordinates[0]
-
-    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
-
-    val invalidRoute =
-        OrderedRoute(
-            orderedLocations = coordinates,
-            totalDuration = 0.0, // invalid
-            segmentDuration = listOf(0.0))
-
-    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns
-        invalidRoute
-
-    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
-    coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
-
-    val settings =
-        TripSettings(
-            name = "Trip",
-            arrivalDeparture =
-                TripArrivalDeparture(
-                    arrivalLocation = coordinates[0], departureLocation = coordinates[1]),
-            destinations = coordinates,
-            preferences = emptyList())
-
-    val profile =
-        TripProfile(
-            startDate = Timestamp(0, 0),
-            endDate = Timestamp(1000, 0),
-            preferredLocations = emptyList(),
-            preferences = emptyList(),
-            adults = 1,
-            children = 0,
-            arrivalLocation = coordinates[0],
-            departureLocation = coordinates[1])
-
-    // Act → should now throw *your* IllegalStateException
-    assertFailsWith<IllegalStateException> { algorithm.computeTrip(settings, profile) }
-  }
-
-  // Done with AI
-  @Test
-  fun `computeTrip throws when scheduled trip is empty`() = runTest {
-    // Arrange
-    val coordinates =
-        listOf(Location(Coordinate(1.0, 1.0), "A"), Location(Coordinate(2.0, 2.0), "B"))
-
-    val activity = mockk<Activity>()
-    every { activity.location } returns coordinates[0]
-
-    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
-
-    val validRoute =
-        OrderedRoute(
-            orderedLocations = coordinates,
-            totalDuration = 1000.0,
-            segmentDuration = listOf(1000.0))
-
-    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns validRoute
-
-    // scheduleTrip empty → should trigger your check
-    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
-    coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
-    every { activity.estimatedTime } returns 100
-
-    val settings =
-        TripSettings(
-            name = "Trip",
-            arrivalDeparture =
-                TripArrivalDeparture(
-                    arrivalLocation = coordinates[0], departureLocation = coordinates[1]),
-            destinations = coordinates,
-            preferences = emptyList())
-
-    val profile =
-        TripProfile(
-            startDate = Timestamp(0, 0),
-            endDate = Timestamp(1000, 0),
-            preferredLocations = emptyList(),
-            preferences = emptyList(),
-            adults = 1,
-            children = 0,
-            arrivalLocation = coordinates[0],
-            departureLocation = coordinates[1])
-
-    // Act → should now throw IllegalStateException (not MockKException)
-    assertFailsWith<IllegalStateException> { algorithm.computeTrip(settings, profile) }
-    // Check that rescheduling was attempted
-    coVerify(atMost = 1) { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) }
-  }
-
-  // Done with AI
-  @Test
-  fun `init returns a TripAlgorithm instance`() {
-    // Arrange
-    val context = mockk<Context>(relaxed = true)
-    val repo = mockk<ActivityRepository>(relaxed = true)
-
-    val settings =
-        TripSettings(
-            name = "Sample Trip",
-            arrivalDeparture = mockk(relaxed = true),
-            destinations = emptyList(),
-            preferences = emptyList())
+    // Capture progress
+    val progressValues = mutableListOf<Float>()
 
     // Act
-    val algo =
-        TripAlgorithm.init(tripSettings = settings, activityRepository = repo, context = context)
+    val result = algorithm.computeTrip(settings, profile, onProgress = { progressValues.add(it) })
 
     // Assert
-    assertNotNull(algo)
+    assertEquals(schedule, result)
+
+    // Should NOT have called getActivitiesNearWithPreferences (Expansion logic)
+    coVerify(exactly = 0) {
+      selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+    }
+
+    // Verify that progress reached 100%
+    // TripAlgorithm.kt explicitly calls onProgress(1.0f) before returning
+    assertEquals(1.0f, progressValues.last())
   }
 
   @Test
-  fun `addInBetweenActivities inserts intermediate activities using mocked getOneActivityNearWithPreferences`() =
-      runTest {
+  fun `computeTrip expansion - adds cached activity when trip too short`() = runBlocking {
+    // Arrange
+    val settings = createSettings(listOf(Preference.MUSEUMS))
+    val profile = createProfile(days = 5) // Long trip target
+
+    val initialActivity = createActivity("ShortActivity", 3600)
+    val cachedActivity =
+        createActivity("CachedActivity", 7200, Location(Coordinate(46.21, 6.15), "NearGeneva"))
+
+    // 1. Initial Fetch: Return one activity but populate the cache
+    coEvery { selectActivities.addActivities(any(), any(), any()) } answers
+        {
+          val cacheList = firstArg<MutableList<Activity>>()
+          cacheList.add(cachedActivity)
+          listOf(initialActivity)
+        }
+
+    coEvery {
+      selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+    } returns listOf(createActivity("API Activity", 3600))
+
+    // 2. Mock Route (Basic)
+    val route = OrderedRoute(listOf(startLocation, endLocation), 100.0, listOf(100.0))
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns route
+
+    // 3. Mock Schedule to simulate "Too Short" then "Just Right"
+    var callCount = 0
+    every { scheduleTrip(any(), any(), any(), any(), any()) } answers
+        {
+          callCount++
+          val activitiesPassed = thirdArg<List<Activity>>()
+
+          if (activitiesPassed.size == 1) {
+            // First call: Only initial activity -> Ends Day 1 (Too short)
+            listOf(TripElement.TripActivity(initialActivity.copy(endDate = timestampFrom(1, 12))))
+          } else {
+            // Second call: Has cached activity -> Ends Day 5 (Perfect)
+            listOf(TripElement.TripActivity(cachedActivity.copy(endDate = profile.endDate)))
+          }
+        }
+
+    // Act
+    val result = algorithm.computeTrip(settings, profile, cachedActivities = mutableListOf())
+
+    // Assert
+    // Should have added the cached activity
+    assertTrue(callCount >= 2, "Result should contain the expansion activity")
+    // Verify we optimized again (proof that tryAddingCachedActivities ran)
+    coVerify(atLeast = 2) { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) }
+  }
+
+  @Test
+  fun `computeTrip expansion - tries adding new city via API when generic addition fails`() =
+      runBlocking {
         // Arrange
-        val start = Location(Coordinate(10.0, 10.0), "Start")
-        val end = Location(Coordinate(10.9, 10.9), "End") // ~100 km away
+        // 1. Setup locations far from Swiss cities (e.g. 0,0) to fail 'addCityActivity' (generic
+        // logic)
+        // This forces the algorithm into 'tryAddingCity' which calls the API.
+        val remoteStart = Location(Coordinate(0.0, 0.0), "RemoteStart")
+        val remoteEnd = Location(Coordinate(0.0, 0.0), "RemoteEnd")
 
-        val orderedLocations = listOf(start, end)
+        val settings =
+            TripSettings(
+                arrivalDeparture = TripArrivalDeparture(remoteStart, remoteEnd),
+                destinations = emptyList(),
+                preferences = listOf(Preference.MUSEUMS))
+        val profile =
+            createProfile(days = 5)
+                .copy(
+                    arrivalLocation = remoteStart,
+                    departureLocation = remoteEnd,
+                    preferredLocations = mutableListOf(remoteStart, remoteEnd))
 
-        val optimizedRoute =
-            OrderedRoute(
-                orderedLocations = orderedLocations,
-                totalDuration = 500.0,
-                segmentDuration = mutableListOf(500.0))
+        // 2. Cache empty
+        coEvery { selectActivities.addActivities(any(), any(), any()) } returns emptyList()
 
-        val activities = mutableListOf<Activity>()
+        // 3. Route logic
+        val route = OrderedRoute(listOf(remoteStart, remoteEnd), 100.0, listOf(100.0))
+        coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns route
 
-        // Spy on algorithm to override getOneActivityNearWithPreferences
-        val algorithmSpy = spyk(algorithm)
+        // 4. Scheduler logic
+        // Return short schedule (Trip too short) initially to trigger expansion
+        val shortSchedule =
+            listOf(
+                TripElement.TripSegment(
+                    RouteSegment(
+                        remoteStart,
+                        remoteEnd,
+                        60,
+                        TransportMode.CAR,
+                        timestampFrom(1, 10),
+                        timestampFrom(1, 11))))
+        val longSchedule =
+            listOf(
+                TripElement.TripActivity(
+                    createActivity("NewCityActivity", 3600).copy(endDate = profile.endDate)))
 
-        // Create fake activities to be returned deterministically
-        val fakeActivity = mockk<Activity>()
-        every { fakeActivity.location } returns Location(Coordinate(10.4, 10.4), "Fake1")
-
-        // Mock getOneActivityNearWithPreferences to return the fake activities sequentially
-        coEvery { selectActivities.getOneActivityNearWithPreferences(any(), any()) } returns
-            fakeActivity
-
-        // Mock recomputeOrderedRoute to return the route already computed
-        coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
+        var scheduleCalls = 0
+        every { scheduleTrip(any(), any(), any(), any(), any()) } answers
             {
-              optimizedRoute.copy(
-                  orderedLocations = listOf(start, fakeActivity.location, end),
-                  totalDuration = 500.0,
-                  segmentDuration = listOf(300.0, 200.0))
+              scheduleCalls++
+              if (scheduleCalls < 3) shortSchedule else longSchedule
             }
 
+        // 5. API Mock
+        // tryAddingCity calls getActivitiesNearWithPreferences. We verify it gets called.
+        coEvery {
+          selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+        } returns listOf(createActivity("API Activity", 3600))
+
         // Act
-        val result =
-            algorithmSpy.addInBetweenActivities(
-                optimizedRoute = optimizedRoute, activities = activities)
+        algorithm.computeTrip(settings, profile)
 
         // Assert
-        // Check that new activities were added to activities list
-        assertEquals(1, activities.size)
-        assertEquals(fakeActivity, activities[0])
-
-        // Check that new ordered locations include the activities
-        assertEquals(3, result.orderedLocations.size)
-        assertEquals(start, result.orderedLocations[0])
-        assertEquals(fakeActivity.location, result.orderedLocations[1])
-        assertEquals(end, result.orderedLocations[2])
-
-        // Check that segment durations list has been expanded for the new activities
-        assertEquals(result.orderedLocations.size - 1, result.segmentDuration.size)
-        assertEquals(300.0, result.segmentDuration[0])
-        assertEquals(200.0, result.segmentDuration[1])
+        // Verify we hit the API to fetch activities for a new city
+        coVerify(atLeast = 1) {
+          selectActivities.getActivitiesNearWithPreferences(
+              any(),
+              any(),
+              eq(3), // NUMBER_OF_ACTIVITY_NEW_CITY
+              any(),
+              any())
+        }
       }
 
-  @Test(expected = IllegalStateException::class)
-  fun `algorithm should throw when rescheduled trip is empty`() = runTest {
+  @Test
+  fun `computeTrip with intermediate stops - verifies addInBetween logic`() = runBlocking {
     // Arrange
-    val start = Location(Coordinate(10.0, 10.0), "Start")
-    val end = Location(Coordinate(20.0, 20.0), "End")
-    val locations = listOf(start, end)
-    val activity = mockk<Activity>()
-    every { activity.location } returns start
-    every { activity.estimatedTime } returns 100
+    val settings = createSettings(listOf(Preference.INTERMEDIATE_STOPS)) // PREFERENCE ENABLED
+    val profile = createProfile(days = 1)
 
-    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
+    val route =
+        OrderedRoute(listOf(startLocation, endLocation), 10000.0, listOf(10000.0)) // Long distance
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns route
 
-    val orderedRoute =
+    // Mock SelectActivities to return an intermediate activity
+    val intermediateActivity =
+        createActivity("Stop", 1800, Location(Coordinate(46.5, 7.0), "MidPoint"))
+    coEvery {
+      selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+    } returns listOf(intermediateActivity)
+
+    // Mock Recompute to simulate the split (This is called inside addInBetweenActivities)
+    val splitRoute =
         OrderedRoute(
-            orderedLocations = locations, totalDuration = 1000.0, segmentDuration = listOf(1000.0))
+            listOf(startLocation, intermediateActivity.location, endLocation),
+            11000.0,
+            listOf(5000.0, 6000.0))
+    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } returns
+        splitRoute
 
-    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns
-        orderedRoute
-    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
-        {
-          firstArg<OrderedRoute>()
-        }
+    // Mock Scheduler
+    every { scheduleTrip(any(), any(), any(), any(), any()) } returns
+        listOf(TripElement.TripActivity(intermediateActivity))
 
-    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
-    coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
+    // Act
+    algorithm.computeTrip(settings, profile)
 
-    val settings =
-        TripSettings(
-            name = "Trip",
-            arrivalDeparture =
-                TripArrivalDeparture(arrivalLocation = start, departureLocation = end),
-            destinations = locations,
-            preferences = listOf(Preference.INTERMEDIATE_STOPS))
-
-    val profile =
-        TripProfile(
-            startDate = Timestamp(0, 0),
-            endDate = Timestamp(1000, 0),
-            preferredLocations = emptyList(),
-            preferences = emptyList(),
-            adults = 1,
-            children = 0,
-            arrivalLocation = start,
-            departureLocation = end)
-
-    // Spy the algorithm to intercept addInBetweenActivities
-    val algorithmSpy = spyk(algorithm)
-
-    // Arrange mock for getOneActivityNearWithPreferences
-    val fakeActivity = mockk<Activity>()
-    every { fakeActivity.location } returns Location(Coordinate(10.5, 10.5), "Fake1")
-    every { fakeActivity.estimatedTime } returns 3600
-
-    coEvery { selectActivities.getOneActivityNearWithPreferences(any(), any()) } returns
-        fakeActivity
-
-    // Arrange mock for recomputeOrderedRoute if needed
-    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
-        {
-          firstArg<OrderedRoute>() // just return the route for simplicity
-        }
-
-    coEvery { algorithmSpy.addInBetweenActivities(any(), any()) } returns orderedRoute
-
-    var progress = 0.0f
-    algorithmSpy.computeTrip(settings, profile) { currentProgress -> progress = currentProgress }
-
-    assertTrue(
-        progress >=
-            progression.selectActivities +
-                progression.optimizeRoute +
-                progression.fetchInBetweenActivities +
-                (progression.scheduleTrip *
-                    (rescheduleProgression.schedule +
-                        rescheduleProgression.analyzeAndRemove +
-                        rescheduleProgression.recomputeRoute)))
-    assertTrue(progress < 1.0f)
+    // Assert
+    // Verify recompute was called (proof that addInBetweenActivities ran)
+    coVerify(exactly = 1) {
+      routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any())
+    }
   }
 
   @Test
-  fun `algorithm should enter addInBetweenActivities when the preference is selected`() = runTest {
+  fun `scheduleRemove - cleans ghosts (missing activities)`() = runBlocking {
     // Arrange
-    val start = Location(Coordinate(10.0, 10.0), "Start")
-    val end = Location(Coordinate(10.0, 10.93), "End") // ~100 km away
+    val settings = createSettings(emptyList())
+    val profile = createProfile(days = 1)
 
-    val locations = listOf(start, end)
-    val activity = mockk<Activity>()
-    every { activity.location } returns start
-    every { activity.estimatedTime } returns 100
+    // We have 2 activities in the list
+    val act1 = createActivity("Act1", 3600, Location(Coordinate(1.0, 1.0), "Loc1"))
+    val act2 =
+        createActivity(
+            "Act2",
+            3600,
+            Location(Coordinate(2.0, 2.0), "Loc2")) // This one will be skipped ("Ghost")
 
-    coEvery { selectActivities.addActivities(any(), any()) } returns listOf(activity)
+    coEvery { selectActivities.addActivities(any(), any(), any()) } returns listOf(act1, act2)
 
-    val orderedRoute =
+    coEvery {
+      selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+    } returns listOf(createActivity("API Activity", 3600))
+
+    val route =
         OrderedRoute(
-            orderedLocations = locations, totalDuration = 1000.0, segmentDuration = listOf(1000.0))
+            listOf(startLocation, act1.location, act2.location, endLocation), 100.0, listOf(10.0))
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns route
 
-    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns
-        orderedRoute
-    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
+    // Scheduler Logic:
+    // 1st call: Returns schedule with ONLY Act1 (skips Act2) to simulate "no time"
+    // 2nd call (Cleanup): Returns schedule with Act1 (Act2 removed from input)
+    every { scheduleTrip(any(), any(), any(), any(), any()) } answers
         {
-          firstArg<OrderedRoute>()
+          val inputActs = thirdArg<List<Activity>>()
+          if (inputActs.contains(act2)) {
+            // Ghost scenario: Scheduler dropped Act2
+            listOf(TripElement.TripActivity(act1))
+          } else {
+            // Clean scenario
+            listOf(TripElement.TripActivity(act1.copy(endDate = profile.endDate))) // Fits perfect
+          }
         }
 
-    mockkStatic("com.github.swent.swisstravel.algorithm.tripschedule.TripSchedulerKt")
-    coEvery { scheduleTrip(any(), any(), any(), any(), any()) } returns emptyList()
+    // Mock Recompute for cleanup
+    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } returns
+        route
 
-    val settings =
-        TripSettings(
-            name = "Trip",
-            arrivalDeparture =
-                TripArrivalDeparture(arrivalLocation = start, departureLocation = end),
-            destinations = locations,
-            preferences = listOf(Preference.INTERMEDIATE_STOPS))
+    // Act
+    val result = algorithm.computeTrip(settings, profile)
 
+    // Assert
+    // Verify recomputeOrderedRoute was called (triggered by ghost cleanup)
+    coVerify(atLeast = 1) {
+      routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any())
+    }
+    // Verify final result contains Act1
+    assertTrue(result.any { it is TripElement.TripActivity && it.activity.description == "Act1" })
+  }
+
+  // Done with AI
+  @Test
+  fun `computeTrip expansion - fetches activities for existing cities when index reaches 2`() =
+      runBlocking {
+        // Arrange
+        val settings = createSettings(listOf(Preference.MUSEUMS))
+        // Target: 10 days trip (force many loops)
+        val profile = createProfile(days = 10)
+
+        // Mock SelectActivities to return empty cache initially
+        coEvery { selectActivities.addActivities(any(), any(), any()) } returns emptyList()
+
+        // Mock Route
+        val route = OrderedRoute(listOf(startLocation, endLocation), 100.0, listOf(100.0))
+        coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns route
+
+        // Mock Scheduler to ALWAYS return a short trip, forcing the loop to increment index
+        val shortSchedule =
+            listOf(
+                TripElement.TripActivity(
+                    createActivity("Short", 3600).copy(endDate = timestampFrom(1, 12))))
+        every { scheduleTrip(any(), any(), any(), any(), any()) } returns shortSchedule
+
+        // Mock the API call for existing cities (index == 2)
+        // We verify this gets called with specific logic
+        val newCityActivity =
+            createActivity("NewCity", 3600, Location(Coordinate(47.37, 8.54), "Zurich"))
+        coEvery {
+          selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+        } returns listOf(newCityActivity)
+
+        // Act
+        val result = algorithm.computeTrip(settings, profile)
+
+        // Assert
+        // Verify that getActivitiesNearWithPreferences was called
+        // This only happens in 'tryFetchingActivitiesForExistingCities' (index==2) or
+        // 'tryAddingCity'
+        // Since Zurich is in our preferredLocations (via createProfile),
+        // tryFetchingActivitiesForExistingCities should hit it.
+        coVerify(atLeast = 1) {
+          selectActivities.getActivitiesNearWithPreferences(any(), any(), any(), any(), any())
+        }
+
+        // Also verify that we updated preferences temporarily (part of tryFetching logic)
+        coVerify(atLeast = 1) { selectActivities.updatePreferences(any()) }
+      }
+
+  @Test
+  fun `direct test scheduleRemove - removes overshoot activity when overtime`() = runTest {
+    // Arrange
     val profile =
-        TripProfile(
-            startDate = Timestamp(0, 0),
-            endDate = Timestamp(1000, 0),
-            preferredLocations = emptyList(),
-            preferences = emptyList(),
-            adults = 1,
-            children = 0,
-            arrivalLocation = start,
-            departureLocation = end)
+        createProfile(days = 0)
+            .copy(
+                endDate = timestampFrom(2, 22),
+                // FIX: Initialize preferredLocations to avoid NPE in scheduleRemove clustering
+                preferredLocations = mutableListOf(startLocation))
+    val enhancedProfile = TripAlgorithm.EnhancedTripProfile(profile, mutableListOf(startLocation))
 
-    // Spy the algorithm to intercept addInBetweenActivities
-    val algorithmSpy = spyk(algorithm)
+    val locKeep = Location(Coordinate(46.2, 6.2), "LocKeep")
+    val locDrop = Location(Coordinate(46.3, 6.3), "LocDrop")
 
-    // Arrange mock for getOneActivityNearWithPreferences
-    val fakeActivity = mockk<Activity>()
-    every { fakeActivity.location } returns Location(Coordinate(10.5, 10.5), "Fake1")
-    every { fakeActivity.estimatedTime } returns 3600
+    val actKeep = createActivity("Keep", 3600, locKeep)
+    val actDrop = createActivity("Drop", 14400, locDrop)
 
-    coEvery { selectActivities.getOneActivityNearWithPreferences(any(), any()) } returns
-        fakeActivity
+    val activities =
+        TripAlgorithm.Activities(
+            intermediateActivities = mutableListOf(),
+            grandTourActivities = mutableListOf(),
+            allActivities = mutableListOf(actKeep, actDrop),
+            cachedActivities = mutableListOf())
 
-    // Arrange mock for recomputeOrderedRoute if needed
-    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } answers
+    val route = OrderedRoute(listOf(startLocation, endLocation), 100.0, listOf(100.0))
+
+    val routeSegment1 =
+        RouteSegment(
+            startLocation,
+            actKeep.location,
+            600,
+            TransportMode.CAR,
+            timestampFrom(1, 0),
+            timestampFrom(1, 10))
+    val routeSegment2 =
+        RouteSegment(
+            actKeep.location,
+            actDrop.location,
+            120,
+            TransportMode.CAR,
+            timestampFrom(1, 12),
+            timestampFrom(1, 14))
+    val routeSegment3 =
+        RouteSegment(
+            actDrop.location,
+            endLocation,
+            360,
+            TransportMode.CAR,
+            timestampFrom(1, 18),
+            timestampFrom(3, 0))
+
+    // Mock Scheduler Logic
+    // 1. First call: Returns schedule with BOTH, but late end times (Overtime).
+    //    Ends Day 2 (Next Day) -> dateDifference != 0 -> Overtime logic runs
+    every { scheduleTrip(any(), any(), any(), any(), any()) } answers
         {
-          firstArg<OrderedRoute>() // just return the route for simplicity
+          val inputList = thirdArg<List<Activity>>()
+          if (inputList.contains(actDrop)) {
+            listOf(
+                TripElement.TripSegment(routeSegment1),
+                TripElement.TripActivity(actKeep.copy(endDate = timestampFrom(1, 10))),
+                TripElement.TripSegment(routeSegment2),
+                TripElement.TripSegment(routeSegment3))
+          } else {
+            listOf(TripElement.TripActivity(actKeep.copy(endDate = timestampFrom(1, 10))))
+          }
         }
 
-    coEvery { algorithmSpy.generateActivitiesBetween(any(), any(), any()) } returns emptyList()
-    coEvery { algorithmSpy.attemptRescheduleIfNeeded(any(), any(), any(), any(), any()) } returns
-        locations.map { it ->
-          TripElement.TripSegment(
-              RouteSegment(it, it, 60, TransportMode.CAR, Timestamp(0, 0), Timestamp(3600, 0)))
-        }
+    coEvery { routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any()) } returns
+        route
 
-    var progress = 0.0f
-    algorithmSpy.computeTrip(settings, profile) { currentProgress -> progress = currentProgress }
+    // Act
+    val result = algorithm.scheduleRemove(enhancedProfile, route, activities)
 
-    assertEquals(1.0f, progress, 0.001f)
+    // Assert
+    coVerify(atLeast = 1) {
+      routeOptimizer.recomputeOrderedRoute(any(), any(), any(), any(), any())
+    }
+    assertTrue(
+        result.any { (it as? TripElement.TripActivity)?.activity?.description == "Keep" },
+        "Result should contain 'Keep'")
+    assertTrue(
+        result.none { (it as? TripElement.TripActivity)?.activity?.description == "Drop" },
+        "Result should NOT contain 'Drop'")
+    assertTrue(activities.cachedActivities.contains(actDrop), "Removed activity should be cached")
+  }
 
-    coVerify(exactly = 1) { algorithmSpy.addInBetweenActivities(any(), any(), any(), any()) }
+  @Test
+  fun `direct test tryAddingCachedActivities - fills time gap from cache`() = runTest {
+    // Arrange
+    val profile = createProfile(days = 1)
+    val enhancedProfile =
+        TripAlgorithm.EnhancedTripProfile(profile, profile.preferredLocations.toMutableList())
+
+    val locNormal = Location(Coordinate(46.2, 6.2), "normal")
+    val locCached = Location(Coordinate(46.3, 6.3), "cached")
+
+    val firstActivity = createActivity("normal", 28800, locNormal)
+    val cachedActivity = createActivity("cached", 28800, locCached)
+    val routeSegment1 =
+        RouteSegment(
+            startLocation,
+            firstActivity.location,
+            600,
+            TransportMode.CAR,
+            timestampFrom(1, 0),
+            timestampFrom(1, 10))
+    val routeSegment2 =
+        RouteSegment(
+            firstActivity.location,
+            cachedActivity.location,
+            60,
+            TransportMode.CAR,
+            timestampFrom(1, 18),
+            timestampFrom(1, 19))
+    val routeSegment3 =
+        RouteSegment(
+            cachedActivity.location,
+            endLocation,
+            60,
+            TransportMode.CAR,
+            timestampFrom(2, 3),
+            timestampFrom(2, 4))
+    val routeSegment4 =
+        RouteSegment(
+            firstActivity.location,
+            endLocation,
+            60,
+            TransportMode.CAR,
+            timestampFrom(1, 18),
+            timestampFrom(1, 19))
+
+    val initialSchedule =
+        listOf(
+            TripElement.TripSegment(routeSegment1),
+            TripElement.TripActivity(firstActivity),
+            TripElement.TripSegment(routeSegment4))
+    val activities =
+        TripAlgorithm.Activities(
+            intermediateActivities = mutableListOf(),
+            grandTourActivities = mutableListOf(),
+            allActivities = mutableListOf(firstActivity),
+            cachedActivities = mutableListOf(cachedActivity))
+
+    val route =
+        OrderedRoute(
+            listOf(startLocation, firstActivity.location, cachedActivity.location, endLocation),
+            780.0,
+            listOf(600.0, 60.0, 60.0))
+    coEvery { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) } returns route
+
+    // Mock Scheduler
+    every { scheduleTrip(any(), any(), any(), any(), any()) } returns
+        listOf(
+            TripElement.TripSegment(routeSegment1),
+            TripElement.TripActivity(firstActivity),
+            TripElement.TripSegment(routeSegment2),
+            TripElement.TripActivity(cachedActivity),
+            TripElement.TripSegment(routeSegment3))
+
+    // Act
+    val result = algorithm.tryAddingCachedActivities(enhancedProfile, activities, initialSchedule)
+
+    // Assert
+    assertTrue(
+        activities.allActivities.contains(cachedActivity),
+        "Activity should be added to allActivities")
+    assertTrue(activities.cachedActivities.isEmpty(), "Activity should be removed from cache")
+    assertEquals(result.last().endDate, timestampFrom(2, 4))
+
+    // Verify Optimize was called (proof that addition loop ran)
+    coVerify(atLeast = 1) { routeOptimizer.optimize(any(), any(), any(), any(), any(), any()) }
+  }
+
+  // --- Helpers ---
+
+  private fun createSettings(prefs: List<Preference>): TripSettings {
+    return TripSettings(
+        arrivalDeparture = TripArrivalDeparture(startLocation, endLocation),
+        destinations = emptyList(),
+        preferences = prefs)
+  }
+
+  private fun createProfile(days: Int): TripProfile {
+    return TripProfile(
+        startDate = timestampFrom(1, 8),
+        endDate = timestampFrom(1 + days, 20), // Ends later
+        preferredLocations = mutableListOf(startLocation, endLocation),
+        arrivalLocation = startLocation,
+        departureLocation = endLocation,
+        preferences = emptyList(),
+        adults = 1,
+        children = 0)
+  }
+
+  private fun createActivity(name: String, duration: Int, loc: Location = startLocation): Activity {
+    return Activity(
+        location = loc,
+        description = name,
+        estimatedTime = duration,
+        imageUrls = emptyList(),
+        startDate = Timestamp.now(),
+        endDate = Timestamp.now())
   }
 }

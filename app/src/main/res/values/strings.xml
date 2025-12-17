@@ -142,6 +142,9 @@
 
     <!-- Liked Activities -->
     <string name="no_liked_activities">No liked activities yet</string>
+    <string name="schedule_selected_liked_activities">Schedule</string>
+    <string name="no_activities_selected">No activities selected</string>
+
 
     <!-- Edit Trip -->
     <string name="edit_trip">Edit Trip</string>
@@ -470,4 +473,8 @@
     <string name="back_edit_photos">Back to daily view screen</string>
     <string name="image_picker">image/*</string>
 
-</resources>
+    <!-- ============= ALGORITHM ============= -->
+    <string name="city_visit_name">Visit %1$s</string>
+    <string name="city_activity_description">Take time to explore the city’s historic quarters, modern districts, shops, and scenic viewpoints while soaking in its local culture.</string>
+    <string name="grand_tour_activity_name">Grand Tour: %1$s</string>
+    <string name="grand_tour_activity_description">Discover the beauty of %1$s, a signature stop on the Grand Tour of Switzerland. Take a moment to enjoy the breathtaking views and unique local charm that make this location an essential part of your Swiss journey.\n\n(The Grand Tour of Switzerland is a 1,600 km scenic route that connects the country\'s most famous highlights.)</string></resources>

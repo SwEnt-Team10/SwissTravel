@@ -82,7 +82,7 @@ object MyTripsScreenTestTags {
   fun getTestTagForTrip(trip: Trip): String = "trip${trip.uid}"
 }
 
-private const val NO_UPCOMPING_TRIPS = "You don't have any upcoming trips. Time to create one !"
+private const val NO_UPCOMING_TRIPS = "You don't have any upcoming trips. Time to create one !"
 /**
  * Displays the "My Trips" screen, which shows the user's current and upcoming trips.
  *
@@ -204,7 +204,7 @@ fun MyTripsScreen(
                         TripListState(
                             trips = uiState.tripsList,
                             isSelectionMode = uiState.isSelectionMode,
-                            emptyListString = NO_UPCOMPING_TRIPS,
+                            emptyListString = NO_UPCOMING_TRIPS,
                             isSelected = { trip -> trip in uiState.selectedTrips },
                             collaboratorsLookup = { uid ->
                               uiState.collaboratorsByTripId[uid] ?: emptyList()

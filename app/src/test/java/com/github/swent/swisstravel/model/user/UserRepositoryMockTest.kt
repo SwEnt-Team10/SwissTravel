@@ -42,7 +42,7 @@ class UserRepositoryMockTest {
     every { db.collection("users").document("uid123") } returns docRef
 
     // Simulate DEFAULT source returning a non-existing doc
-    every { docRef.get(Source.DEFAULT) } returns Tasks.forResult(snapshot)
+    every { docRef.get(Source.SERVER) } returns Tasks.forResult(snapshot)
     every { snapshot.exists() } returns false
 
     every { docRef.set(any<User>()) } returns Tasks.forResult(null)
