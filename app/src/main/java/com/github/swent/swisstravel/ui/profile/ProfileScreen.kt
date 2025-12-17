@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.Settings
@@ -70,6 +69,7 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
+import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
@@ -220,14 +220,9 @@ fun ProfileScreenTopBar(
       },
       navigationIcon = {
         if (!uiState.isLoading && !uiState.isOwnProfile) {
-          IconButton(
-              onClick = onBack,
-          ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.back_to_friends_list),
-                tint = MaterialTheme.colorScheme.onBackground)
-          }
+          BackButton(
+              onBack = { onBack() },
+              contentDescription = stringResource(R.string.back_to_friends_list))
         }
       },
       actions = {

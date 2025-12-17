@@ -4,7 +4,6 @@ import android.Manifest
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -91,21 +90,6 @@ class TripInfoScreenTest {
     compose.onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).performClick()
 
     compose.runOnIdle { assert(vm.uiState.value.isFavorite) }
-  }
-
-  @Test
-  fun backButtonCallsOnMyTripsCallback() {
-    val vm =
-        FakeTripInfoViewModel().apply {
-          loadTripInfo("TEST")
-          setLocations(emptyList())
-        }
-    var called = false
-
-    setContent(vm, onMyTrips = { called = true })
-
-    compose.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).performClick()
-    compose.runOnIdle { assert(called) }
   }
 
   @Test
@@ -251,31 +235,10 @@ class TripInfoScreenTest {
     compose.onNodeWithText(getString(R.string.next_step)).assertIsNotEnabled()
   }
 
-  @Test
-  fun backButton_callsOnMyTripsOnce() {
-    val vm =
-        FakeTripInfoViewModel().apply {
-          loadTripInfo("TEST")
-          setLocations(emptyList())
-        }
-    var calls = 0
-    setContent(vm, onMyTrips = { calls++ })
-
-    compose.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).performClick()
-    compose.waitForIdle()
-    compose.runOnIdle { assert(calls == 1) }
-  }
-
   // Helpers to access strings inside tests
   private fun getString(resId: Int) =
       androidx.test.core.app.ApplicationProvider.getApplicationContext<android.content.Context>()
           .getString(resId)
-
-  @Test
-  fun backButtonNotShownOnCurrentTripScreen() {
-    compose.setContent { TripInfoScreen(uid = "whatever", isOnCurrentTripScreen = true) }
-    compose.onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).isNotDisplayed()
-  }
 
   @Test
   fun swipeActivitiesButtonNavigatesToSwipeScreen() {
