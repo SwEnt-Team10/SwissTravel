@@ -13,6 +13,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.github.swent.swisstravel.ui.composable.TripListTestTags
 import com.github.swent.swisstravel.ui.trips.TripElementTestTags
 import com.google.firebase.Timestamp
@@ -135,19 +136,10 @@ class SelectPinnedTripsScreenTest {
 
         override suspend fun removeFriend(uid: String, friendUid: String) {}
 
-        override suspend fun updateUser(
-            uid: String,
-            name: String?,
-            biography: String?,
-            profilePicUrl: String?,
-            preferences: List<Preference>?,
-            pinnedTripsUids: List<String>?,
-            pinnedPicturesUids: List<String>?,
-            currentTrip: String?
-        ) {
+        override suspend fun updateUser(uid: String, updates: UserUpdate) {
           user =
               user.copy(
-                  pinnedTripsUids = pinnedTripsUids ?: user.pinnedTripsUids,
+                  pinnedTripsUids = updates.pinnedTripsUids ?: user.pinnedTripsUids,
               )
         }
 

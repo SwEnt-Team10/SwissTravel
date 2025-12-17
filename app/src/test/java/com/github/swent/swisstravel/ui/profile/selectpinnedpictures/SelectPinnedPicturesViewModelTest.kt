@@ -8,6 +8,7 @@ import com.github.swent.swisstravel.model.image.ImageHelper
 import com.github.swent.swisstravel.model.image.ImageRepository
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
+import com.github.swent.swisstravel.model.user.UserUpdate
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -234,9 +235,7 @@ class SelectPinnedPicturesViewModelTest {
         // Setup save mocks
         val newImageUid = "new-image-uid"
         coEvery { mockImageRepository.addImage(newBase64) } returns newImageUid
-        coEvery {
-          mockUserRepository.updateUser(any(), any(), any(), any(), any(), any(), any())
-        } returns Unit
+        coEvery { mockUserRepository.updateUser(any(), any()) } returns Unit
 
         val onSuccess = mockk<() -> Unit>(relaxed = true)
 
@@ -249,11 +248,13 @@ class SelectPinnedPicturesViewModelTest {
         coVerify { mockImageRepository.addImage(newBase64) }
 
         // 2. Verify user profile updated with the new UID
-        val uidsSlot = slot<List<String>>()
+        val updateSlot = slot<UserUpdate>()
         coVerify {
-          mockUserRepository.updateUser(uid = "testUser", pinnedPicturesUids = capture(uidsSlot))
+          mockUserRepository.updateUser(
+              uid = "testUser", updates = capture(updateSlot) // Capture the whole object
+              )
         }
-        assertEquals(listOf(newImageUid), uidsSlot.captured)
+        assertEquals(listOf(newImageUid), updateSlot.captured.pinnedPicturesUids)
 
         // 3. Verify callback
         verify { onSuccess() }
@@ -266,9 +267,7 @@ class SelectPinnedPicturesViewModelTest {
         viewModel = SelectPinnedPicturesViewModel(mockUserRepository, mockImageRepository)
         advanceUntilIdle()
 
-        coEvery {
-          mockUserRepository.updateUser(any(), any(), any(), any(), any(), any(), any())
-        } throws Exception("Save failed")
+        coEvery { mockUserRepository.updateUser(any(), any()) } throws Exception("Save failed")
 
         // When
         viewModel.savePictures {}

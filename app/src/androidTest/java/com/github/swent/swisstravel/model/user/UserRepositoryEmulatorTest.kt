@@ -481,12 +481,13 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
 
     repositoryUser.updateUser(
         uid = uid,
-        name = newName,
-        biography = newBiography,
-        profilePicUrl = newProfilePicUrl,
-        preferences = newPreferences,
-        pinnedTripsUids = newPinnedTripsUids,
-        pinnedPicturesUids = newPinnedImagesUids)
+        UserUpdate(
+            name = newName,
+            biography = newBiography,
+            profilePicUrl = newProfilePicUrl,
+            preferences = newPreferences,
+            pinnedTripsUids = newPinnedTripsUids,
+            pinnedPicturesUids = newPinnedImagesUids))
 
     // Assert: read back the document
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -518,12 +519,13 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     val newBiography = "Updated biography only"
     repositoryUser.updateUser(
         uid = uid,
-        name = newName,
-        biography = newBiography,
-        profilePicUrl = null,
-        preferences = null,
-        pinnedTripsUids = null,
-        pinnedPicturesUids = null)
+        UserUpdate(
+            name = newName,
+            biography = newBiography,
+            profilePicUrl = null,
+            preferences = null,
+            pinnedTripsUids = null,
+            pinnedPicturesUids = null))
 
     // Assert
     val doc = FirebaseEmulator.firestore.collection("users").document(uid).get().await()
@@ -549,12 +551,13 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     // Act — this should not throw AND should not create/update anything
     repositoryUser.updateUser(
         uid = guestUid,
-        name = "Should Not Update",
-        biography = "Guest update",
-        profilePicUrl = "http://example.com/guest.png",
-        preferences = listOf(Preference.SCENIC_VIEWS),
-        pinnedTripsUids = listOf("tripX"),
-        pinnedPicturesUids = listOf("imageUid"))
+        UserUpdate(
+            name = "Should Not Update",
+            biography = "Guest update",
+            profilePicUrl = "http://example.com/guest.png",
+            preferences = listOf(Preference.SCENIC_VIEWS),
+            pinnedTripsUids = listOf("tripX"),
+            pinnedPicturesUids = listOf("imageUid")))
 
     // Assert: the document must still NOT exist after the update
     val after = FirebaseEmulator.firestore.collection("users").document(guestUid).get().await()
@@ -569,12 +572,13 @@ class UserRepositoryEmulatorTest : InMemorySwissTravelTest() {
     // Act: attempt update — should throw
     repositoryUser.updateUser(
         uid = missingUid,
-        name = "Name",
-        biography = "Bio",
-        profilePicUrl = null,
-        preferences = null,
-        pinnedTripsUids = null,
-        pinnedPicturesUids = null)
+        UserUpdate(
+            name = "Name",
+            biography = "Bio",
+            profilePicUrl = null,
+            preferences = null,
+            pinnedTripsUids = null,
+            pinnedPicturesUids = null))
   }
 
   @Test

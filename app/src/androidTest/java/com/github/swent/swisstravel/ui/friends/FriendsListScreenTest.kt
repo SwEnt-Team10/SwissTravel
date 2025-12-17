@@ -10,6 +10,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
@@ -180,17 +181,8 @@ class FakeUserRepoForUI(
 
   override suspend fun removeFriend(uid: String, friendUid: String) {}
 
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?,
-      currentTrip: String?
-  ) {
-    // no-op in test
+  override suspend fun updateUser(uid: String, updates: UserUpdate) {
+    // no op in test
   }
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {

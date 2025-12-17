@@ -9,6 +9,7 @@ import com.github.swent.swisstravel.model.trip.isCurrent
 import com.github.swent.swisstravel.model.trip.isUpcoming
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlinx.coroutines.launch
 
 /**
@@ -77,7 +78,7 @@ class MyTripsViewModel(
         // If the selected trip is already the current one, do nothing
         if (currentUser.currentTrip == trip.uid) return@launch
 
-        userRepository.updateUser(uid = currentUser.uid, currentTrip = trip.uid)
+        userRepository.updateUser(uid = currentUser.uid, UserUpdate(currentTrip = trip.uid))
 
         refreshUIState()
       } catch (e: Exception) {

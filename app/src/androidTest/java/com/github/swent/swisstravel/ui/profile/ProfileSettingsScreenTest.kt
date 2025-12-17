@@ -50,7 +50,8 @@ class ProfileSettingsScreenTest : FirestoreSwissTravelTest() {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Before
   override fun setUp() {

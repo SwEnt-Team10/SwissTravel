@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -113,18 +114,7 @@ private class FakeUserRepository : UserRepository {
     currentUser = currentUser.copy(friends = currentUser.friends.filterNot { it.uid == friendUid })
   }
 
-  override suspend fun updateUser(
-      uid: String,
-      name: String?,
-      biography: String?,
-      profilePicUrl: String?,
-      preferences: List<Preference>?,
-      pinnedTripsUids: List<String>?,
-      pinnedPicturesUids: List<String>?,
-      currentTrip: String?
-  ) {
-    // no-op in test
-  }
+  override suspend fun updateUser(uid: String, updates: UserUpdate) {}
 
   override suspend fun addFavoriteTrip(uid: String, tripUid: String) {
     // no-op in test

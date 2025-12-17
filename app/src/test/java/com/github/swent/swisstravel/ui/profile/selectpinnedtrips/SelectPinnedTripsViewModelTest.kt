@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.google.firebase.Timestamp
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -177,7 +178,9 @@ class SelectPinnedTripsViewModelTest {
     viewModel.onSaveSelectedTrips()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { userRepository.updateUser(uid = user.uid, pinnedTripsUids = listOf("A", "B", "C")) }
+    coVerify {
+      userRepository.updateUser(uid = user.uid, UserUpdate(pinnedTripsUids = listOf("A", "B", "C")))
+    }
   }
 
   @Test

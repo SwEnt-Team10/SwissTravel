@@ -18,6 +18,7 @@ import com.github.swent.swisstravel.model.user.StatsCalculator
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -185,7 +186,7 @@ class ProfileSettingsViewModel(
     viewModelScope.launch {
       val user = currentUser ?: return@launch
       try {
-        userRepository.updateUser(uid = user.uid, name = newName)
+        userRepository.updateUser(uid = user.uid, UserUpdate(name = newName))
         _uiState.update { it.copy(name = newName, isEditingName = false) }
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error updating name.") }
@@ -203,7 +204,7 @@ class ProfileSettingsViewModel(
     viewModelScope.launch {
       val user = currentUser ?: return@launch
       try {
-        userRepository.updateUser(uid = user.uid, biography = newBio)
+        userRepository.updateUser(uid = user.uid, UserUpdate(biography = newBio))
         _uiState.update { it.copy(biography = newBio, isEditingBio = false) }
       } catch (e: Exception) {
         _uiState.update { it.copy(errorMsg = "Error updating biography.") }
@@ -269,7 +270,7 @@ class ProfileSettingsViewModel(
         val newImageUid = imageRepository.addImage(base64)
 
         // Update User Profile with the new UID
-        userRepository.updateUser(uid = user.uid, profilePicUrl = newImageUid)
+        userRepository.updateUser(uid = user.uid, UserUpdate(profilePicUrl = newImageUid))
 
         // Update UI state with the new UID
         _uiState.update { it.copy(profilePicUrl = newImageUid, isLoading = false) }
