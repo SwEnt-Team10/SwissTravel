@@ -84,7 +84,7 @@ class TripCreationViewModelTest {
     coEvery { mockAlgorithm.computeTrip(any(), any(), any(), any(), any()) } returns emptyList()
 
     // Setup initial state
-    viewModel.updateDates(LocalDate.of(2025, 1, 1), LocalDate.of(2025, 1, 4)) // 4-day trip
+    viewModel.updateDates(LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 4)) // 4-day trip
     viewModel.setRandomTrip(true) // Simulate being in random mode
     viewModel.updateArrivalLocation(
         Location(Coordinate(46.315833, 6.193056), "Coppet", "")) // Arrival location in Coppet
@@ -135,6 +135,21 @@ class TripCreationViewModelTest {
   @Test
   fun onNextFromDateScreenShouldEmitProceedWhenDatesAreValid() = runTest {
     // Arrange
+    val startDate = LocalDate.of(2050, 1, 1)
+    val endDate = LocalDate.of(2050, 1, 2)
+    viewModel.updateDates(startDate, endDate)
+
+    // Act
+    viewModel.onNextFromDateScreen()
+
+    // Assert
+    val event = viewModel.validationEvents.first()
+    assertEquals(ValidationEvent.Proceed, event)
+  }
+
+  @Test
+  fun onNextFromDateScreenShouldEmitEndDateIsBeforeTodayWhenDatesAreInValid() = runTest {
+    // Arrange
     val startDate = LocalDate.of(2025, 1, 1)
     val endDate = LocalDate.of(2025, 1, 2)
     viewModel.updateDates(startDate, endDate)
@@ -144,7 +159,7 @@ class TripCreationViewModelTest {
 
     // Assert
     val event = viewModel.validationEvents.first()
-    assertEquals(ValidationEvent.Proceed, event)
+    assertEquals(ValidationEvent.EndDateIsBeforeToday, event)
   }
 
   @Test

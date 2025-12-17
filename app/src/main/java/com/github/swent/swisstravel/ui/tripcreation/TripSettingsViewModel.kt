@@ -70,6 +70,8 @@ sealed interface ValidationEvent {
   data class SaveError(val message: String) : ValidationEvent
 
   object EndDateIsBeforeStartDateError : ValidationEvent
+
+  object EndDateIsBeforeToday : ValidationEvent
 }
 
 /**
@@ -350,6 +352,8 @@ open class TripSettingsViewModel(
       if (currentSettings.date.startDate != null &&
           currentSettings.date.endDate?.isBefore(currentSettings.date.startDate) == true) {
         _validationEventChannel.send(ValidationEvent.EndDateIsBeforeStartDateError)
+      } else if (currentSettings.date.endDate?.isBefore(LocalDate.now()) == true) {
+        _validationEventChannel.send(ValidationEvent.EndDateIsBeforeToday)
       } else {
         _validationEventChannel.send(ValidationEvent.Proceed)
       }
@@ -452,5 +456,10 @@ open class TripSettingsViewModel(
         current + location
       }
     }
+  }
+
+  /** Getter for the size of the number of checked suggestions */
+  fun getSuggestionToggledSelectedSize(): Int {
+    return selectedSuggestions.value.size
   }
 }

@@ -19,14 +19,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import coil.compose.AsyncImage
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.composable.ProfileImage
 
 object FriendElementTestTags {
   fun getTestTagForFriend(user: User): String = "friend${user.uid}"
@@ -130,14 +129,12 @@ private fun FriendCircle(
           Modifier.size(dimensionResource(R.dimen.trip_top_circle_size))
               .background(MaterialTheme.colorScheme.secondary, CircleShape),
       contentAlignment = Alignment.Center) {
-        AsyncImage(
-            model = imageUrl ?: R.drawable.default_profile_pic,
-            contentDescription = null,
+        ProfileImage(
+            urlOrUid = imageUrl,
             modifier =
                 Modifier.fillMaxSize()
                     .background(MaterialTheme.colorScheme.secondary, CircleShape)
-                    .clip(CircleShape),
-            contentScale = ContentScale.Crop)
+                    .clip(CircleShape))
       }
 }
 
