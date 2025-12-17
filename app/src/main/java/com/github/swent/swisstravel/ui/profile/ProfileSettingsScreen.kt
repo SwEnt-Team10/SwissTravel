@@ -288,7 +288,7 @@ data class ProfileSettingsContentState(
  * @param state The state of the screen.
  */
 @Composable
-private fun ProfileSettingsContent(state: ProfileSettingsContentState) {
+fun ProfileSettingsContent(state: ProfileSettingsContentState) {
   val scrollState = rememberScrollState()
   val isSignedIn = state.profileSettingsViewModel.userIsSignedIn()
 

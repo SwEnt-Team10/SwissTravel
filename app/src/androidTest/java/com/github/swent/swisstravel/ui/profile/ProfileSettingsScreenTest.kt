@@ -496,4 +496,61 @@ class ProfileSettingsScreenTest : FirestoreSwissTravelTest() {
       "User should be signed out after clicking logout"
     }
   }
+
+  @Test
+  fun offline_editName_doesNotEnterEditMode() {
+    val vm = ProfileSettingsViewModel(userRepo, tripsRepo, imageRepo)
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+    // Create a state simulating offline
+    val state =
+        ProfileSettingsContentState(
+            uiState = ProfileSettingsUIState(name = "Original Name"),
+            profileSettingsViewModel = vm,
+            modifier = Modifier,
+            onEditProfilePic = {},
+            context = context,
+            isOnline = false)
+
+    composeTestRule.setContent { ProfileSettingsContent(state) }
+
+    // Attempt to click edit on Name
+    composeTestRule.onNodeWithTag(ProfileSettingsScreenTestTags.editButton("NAME")).performClick()
+
+    // Assert: The text field should NOT appear because we are offline
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("NAME"))
+        .assertDoesNotExist()
+
+    // Assert: The original text should still be there
+    composeTestRule.onNodeWithText("Original Name").assertIsDisplayed()
+  }
+
+  @Test
+  fun offline_editBio_doesNotEnterEditMode() {
+    val vm = ProfileSettingsViewModel(userRepo, tripsRepo, imageRepo)
+    val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+    // Create a state simulating offline
+    val state =
+        ProfileSettingsContentState(
+            uiState = ProfileSettingsUIState(biography = "Original Bio"),
+            profileSettingsViewModel = vm,
+            modifier = Modifier,
+            onEditProfilePic = {},
+            context = context,
+            isOnline = false)
+
+    composeTestRule.setContent { ProfileSettingsContent(state) }
+
+    // Attempt to click edit on Bio
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.editButton("BIOGRAPHY"))
+        .performClick()
+
+    // Assert: The text field should NOT appear because we are offline
+    composeTestRule
+        .onNodeWithTag(ProfileSettingsScreenTestTags.textField("BIOGRAPHY"))
+        .assertDoesNotExist()
+  }
 }
