@@ -1,3 +1,4 @@
+//
 package com.github.swent.swisstravel.ui.friends
 
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -9,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
@@ -31,35 +33,44 @@ object FriendElementTestTags {
   const val ARROW_ICON = "friendArrowIcon"
   const val ACCEPT_BUTTON = "friendAcceptButton"
   const val DECLINE_BUTTON = "friendDeclineButton"
+  const val ADD_ICON = "friendAddIcon"
 }
+
+/** Data class to hold the state flags for FriendElement. */
+data class FriendElementState(
+    val isPendingRequest: Boolean = false,
+    val shouldAccept: Boolean = false,
+    val isAddMode: Boolean = false
+)
+
+/** Data class to hold the actions/callbacks for FriendElement. */
+data class FriendElementActions(
+    val onClick: () -> Unit = {},
+    val onAccept: () -> Unit = {},
+    val onDecline: () -> Unit = {}
+)
 
 /**
  * A single friend element.
  *
  * @param userToDisplay The user to display.
- * @param onClick The function to call when the element is clicked.
  * @param modifier The modifier to apply to the element.
- * @param isPendingRequest Whether the request is pending.
- * @param shouldAccept Whether the request should be accepted.
- * @param onAccept The function to call when the request is accepted.
- * @param onDecline The function to call when the request is declined.
+ * @param state The state flags (pending, accept, addMode).
+ * @param actions The callbacks (click, accept, decline).
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FriendElement(
     userToDisplay: User,
-    onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    isPendingRequest: Boolean = false,
-    shouldAccept: Boolean = false,
-    onAccept: () -> Unit = {},
-    onDecline: () -> Unit = {},
+    state: FriendElementState = FriendElementState(),
+    actions: FriendElementActions = FriendElementActions()
 ) {
   Card(
       modifier =
           modifier
               .testTag(FriendElementTestTags.getTestTagForFriend(userToDisplay))
-              .combinedClickable(onClick = onClick)
+              .combinedClickable(onClick = actions.onClick)
               .fillMaxWidth()
               .height(dimensionResource(R.dimen.trip_element_height))
               .border(
@@ -75,7 +86,7 @@ fun FriendElement(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically) {
               FriendNameSection(userToDisplay = userToDisplay, modifier = Modifier.weight(1f))
-              FriendArrowSection(isPendingRequest, shouldAccept, onAccept, onDecline)
+              FriendArrowSection(state, actions)
             }
       }
 }
@@ -128,20 +139,18 @@ private fun FriendCircle(
 }
 
 /**
- * A composable containing the icons to accept or decline a friend request or the arrow its already
- * your friend.
- *
- * @param isPendingRequest Whether the request is pending.
- * @param shouldAccept Whether the request should be accepted.
+ * A composable containing the icons to accept or decline a friend request, the arrow if its already
+ * your friend, or a plus icon if we are adding a friend.
  */
 @Composable
-fun FriendArrowSection(
-    isPendingRequest: Boolean,
-    shouldAccept: Boolean,
-    onAccept: () -> Unit = {},
-    onDecline: () -> Unit = {},
-) {
-  if (!isPendingRequest || !shouldAccept) {
+fun FriendArrowSection(state: FriendElementState, actions: FriendElementActions) {
+  if (state.isAddMode) {
+    Icon(
+        imageVector = Icons.Default.Add,
+        contentDescription = stringResource(R.string.add_friend),
+        tint = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.testTag(FriendElementTestTags.ADD_ICON))
+  } else if (!state.isPendingRequest || !state.shouldAccept) {
     Icon(
         imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
         contentDescription = null,
@@ -150,7 +159,8 @@ fun FriendArrowSection(
   } else {
     Row {
       IconButton(
-          onClick = onAccept, modifier = Modifier.testTag(FriendElementTestTags.ACCEPT_BUTTON)) {
+          onClick = actions.onAccept,
+          modifier = Modifier.testTag(FriendElementTestTags.ACCEPT_BUTTON)) {
             Icon(
                 imageVector = Icons.Default.Check,
                 contentDescription = stringResource(R.string.accept_friend),
@@ -159,7 +169,8 @@ fun FriendArrowSection(
 
       Spacer(modifier = Modifier.width(dimensionResource(R.dimen.friends_spacer)))
       IconButton(
-          onClick = onDecline, modifier = Modifier.testTag(FriendElementTestTags.DECLINE_BUTTON)) {
+          onClick = actions.onDecline,
+          modifier = Modifier.testTag(FriendElementTestTags.DECLINE_BUTTON)) {
             Icon(
                 imageVector = Icons.Default.Close,
                 contentDescription = stringResource(R.string.deny_friend),

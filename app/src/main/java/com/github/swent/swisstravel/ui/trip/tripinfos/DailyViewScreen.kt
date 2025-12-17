@@ -72,6 +72,8 @@ import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.friends.FriendElement
+import com.github.swent.swisstravel.ui.friends.FriendElementActions
+import com.github.swent.swisstravel.ui.friends.FriendElementState
 import com.github.swent.swisstravel.ui.map.MapScreen
 import com.github.swent.swisstravel.ui.theme.favoriteIcon
 import com.github.swent.swisstravel.utils.NetworkUtils.isOnline
@@ -451,7 +453,10 @@ private fun ShareTripDialog(
                     Arrangement.spacedBy(
                         dimensionResource(R.dimen.trip_element_collaborators_padding))) {
                   items(availableFriends) { friend ->
-                    FriendElement(userToDisplay = friend, onClick = { onAddCollaborator(friend) })
+                    FriendElement(
+                        userToDisplay = friend,
+                        state = FriendElementState(isAddMode = true),
+                        actions = FriendElementActions({ onAddCollaborator(friend) }))
                   }
                 }
           }

@@ -65,6 +65,8 @@ fun AddFriendScreen(
                         bottom = dimensionResource(R.dimen.my_trip_padding_top_bottom))) {
               AddFriendResultsSection(
                   users = uiState.searchResults,
+                  existingFriendsUids = uiState.friends.map { it.uid }.toSet(),
+                  sentRequestsUids = uiState.sentRequests.map { it.uid }.toSet(),
                   onClickUser = { user ->
                     friendsViewModel.sendFriendRequest(toUid = user.uid)
                     onBack()
@@ -110,11 +112,15 @@ private fun AddFriendTopAppBar(
  * Displays the results of the search.
  *
  * @param users The list of users to display.
+ * @param existingFriendsUids The set of UIDs of the current user's friends.
+ * @param sentRequestsUids The set of UIDs of the current user's sent friend requests.
  * @param onClickUser Callback for when a user is clicked.
  */
 @Composable
 private fun AddFriendResultsSection(
     users: List<User>,
+    existingFriendsUids: Set<String>,
+    sentRequestsUids: Set<String>,
     onClickUser: (User) -> Unit,
 ) {
   val context = LocalContext.current
@@ -131,14 +137,42 @@ private fun AddFriendResultsSection(
             Surface(
                 modifier =
                     Modifier.testTag(AddFriendsScreenTestTags.addFriendResultItemTag(user.uid))) {
+
+                  // Determine status for this specific user
+                  val isAlreadyFriend = user.uid in existingFriendsUids
+                  val isRequestSent = user.uid in sentRequestsUids
+
                   FriendElement(
                       userToDisplay = user,
-                      onClick = {
-                        onClickUser(user)
-                        Toast.makeText(
-                                context, "Friend request sent to ${user.name}", Toast.LENGTH_SHORT)
-                            .show()
-                      })
+                      state = FriendElementState(isAddMode = true),
+                      actions =
+                          FriendElementActions(
+                              onClick = {
+                                when {
+                                  isAlreadyFriend -> {
+                                    Toast.makeText(
+                                            context,
+                                            "You are already friends with ${user.name}!",
+                                            Toast.LENGTH_SHORT)
+                                        .show()
+                                  }
+                                  isRequestSent -> {
+                                    Toast.makeText(
+                                            context,
+                                            "Friend request already sent to ${user.name}.",
+                                            Toast.LENGTH_SHORT)
+                                        .show()
+                                  }
+                                  else -> {
+                                    onClickUser(user)
+                                    Toast.makeText(
+                                            context,
+                                            "Friend request sent to ${user.name}",
+                                            Toast.LENGTH_SHORT)
+                                        .show()
+                                  }
+                                }
+                              }))
                 }
           }
         }

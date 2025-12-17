@@ -98,7 +98,6 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
 
     // 5) Go back to current trip and create another trip with non-today date
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
-    // createTrip(selectNonToday = true)
     val nonTodayTrip =
         createTestTrip(
             uid = "nonToday",
@@ -106,9 +105,8 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
             departureLocation = Location(Coordinate(46.2095, 46.2095), "Café de Paris"),
             arrivalLocation = Location(Coordinate(46.5191, 6.5668), "EPFL"),
             ownerId = FirebaseEmulator.auth.currentUser!!.uid,
-            startDate =
-                Timestamp(java.util.Date(System.currentTimeMillis() + 1000 * 24 * 5 * 3600)),
-            endDate = Timestamp(java.util.Date(System.currentTimeMillis() + 1000 * 24 * 6 * 3600)))
+            startDate = Timestamp(Timestamp.now().seconds + 1000 * 24 * 5 * 3600, 0),
+            endDate = Timestamp(Timestamp.now().seconds + 1000 * 24 * 6 * 3600, 0))
     runBlocking { tripsRepo.addTrip(nonTodayTrip) }
 
     // 6) Verify second trip is displayed in My Trips

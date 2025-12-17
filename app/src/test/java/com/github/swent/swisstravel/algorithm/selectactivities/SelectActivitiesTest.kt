@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.trip.TripProfile
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.trip.activity.ActivityRepository
 import com.github.swent.swisstravel.model.user.Preference
+import com.github.swent.swisstravel.model.user.PreferenceCategories
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoUIState
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModel
 import com.github.swent.swisstravel.ui.trip.tripinfos.TripInfoViewModelContract
@@ -14,6 +15,7 @@ import com.github.swent.swisstravel.ui.tripcreation.TripDate
 import com.github.swent.swisstravel.ui.tripcreation.TripSettings
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
@@ -89,10 +91,10 @@ class SelectActivitiesTest {
     val expectedActivities = listOf(activityLausanne, activityGeneva, activityZurich)
     val progressUpdates = mutableListOf<Float>()
 
-    coEvery { mockActivityRepository.getActivitiesNear(any(), any(), any()) } returns
-        listOf(activityLausanne) andThen
-        listOf(activityGeneva) andThen
-        listOf(activityZurich)
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), any(), any(), any(), any(), any())
+    } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
 
     val selectActivities =
         SelectActivities(
@@ -192,10 +194,12 @@ class SelectActivitiesTest {
 
   @Test
   fun `onProgress is called and finishes with 1f`() = runBlocking {
-    // Given
     val progressUpdates = mutableListOf<Float>()
-    coEvery { mockActivityRepository.getActivitiesNear(any(), any(), any()) } returns
-        listOf(activityLausanne)
+
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), any(), any(), any(), any(), any())
+    } returns listOf(activityLausanne)
 
     val selectActivities =
         SelectActivities(
@@ -218,12 +222,19 @@ class SelectActivitiesTest {
   fun `addActivities works with an empty preference list`() = runBlocking {
     // Given
     tripSettings = tripSettings.copy(preferences = emptyList())
-    coEvery { mockActivityRepository.getActivitiesNear(geneva.coordinate, any(), any()) } returns
-        listOf(activityGeneva)
-    coEvery { mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), any()) } returns
-        listOf(activityLausanne)
-    coEvery { mockActivityRepository.getActivitiesNear(zurich.coordinate, any(), any()) } returns
-        listOf(activityZurich)
+
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), geneva.coordinate, any(), any(), any(), any())
+    } returns listOf(activityGeneva)
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), lausanne.coordinate, any(), any(), any(), any())
+    } returns listOf(activityLausanne)
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), zurich.coordinate, any(), any(), any(), any())
+    } returns listOf(activityZurich)
 
     val selectActivities =
         SelectActivities(
@@ -238,7 +249,7 @@ class SelectActivitiesTest {
   }
 
   @Test
-  fun `getOneActivityNearWithPreferences returns activity using preference-based fetch`() =
+  fun `getActivitiesNearWithPreferences returns activity using preference-based fetch`() =
       runBlocking {
         val mandatory = listOf(Preference.WHEELCHAIR_ACCESSIBLE)
         val optional = listOf(Preference.MUSEUMS)
@@ -261,25 +272,24 @@ class SelectActivitiesTest {
         } returns listOf(activityLausanne)
 
         // When
-        val result = selectActivities.getOneActivityNearWithPreferences(lausanne.coordinate)
+        val result =
+            selectActivities.getActivitiesNearWithPreferences(lausanne.coordinate, limit = 1)
 
         // Then
-        assertEquals(activityLausanne, result)
+        assertTrue(activityLausanne.location.sameLocation(result.first().location))
 
         // Ensure getActivitiesNear() was NOT called
-        io.mockk.coVerify(exactly = 0) {
-          mockActivityRepository.getActivitiesNear(any(), any(), any())
-        }
+        coVerify(exactly = 0) { mockActivityRepository.getActivitiesNear(any(), any(), any()) }
 
         // Ensure preference-based call WAS made
-        io.mockk.coVerify(exactly = 1) {
+        coVerify(exactly = 1) {
           mockActivityRepository.getActivitiesNearWithPreference(
               any(), lausanne.coordinate, any(), 1)
         }
       }
 
   @Test
-  fun `getOneActivityNearWithPreferences returns activity using mandatory preference-based fetch`() =
+  fun `getActivitiesNearWithPreferences returns activity using mandatory preference-based fetch`() =
       runBlocking {
         val mandatory = listOf(Preference.WHEELCHAIR_ACCESSIBLE)
 
@@ -299,25 +309,24 @@ class SelectActivitiesTest {
         } returns listOf(activityLausanne)
 
         // When
-        val result = selectActivities.getOneActivityNearWithPreferences(lausanne.coordinate)
+        val result =
+            selectActivities.getActivitiesNearWithPreferences(lausanne.coordinate, limit = 1)
 
         // Then
-        assertEquals(activityLausanne, result)
+        assertTrue(activityLausanne.location.sameLocation(result.first().location))
 
         // Ensure getActivitiesNear() was NOT called
-        io.mockk.coVerify(exactly = 0) {
-          mockActivityRepository.getActivitiesNear(any(), any(), any())
-        }
+        coVerify(exactly = 0) { mockActivityRepository.getActivitiesNear(any(), any(), any()) }
 
         // Ensure preference-based call WAS made
-        io.mockk.coVerify(exactly = 1) {
+        coVerify(exactly = 1) {
           mockActivityRepository.getActivitiesNearWithPreference(
               any(), lausanne.coordinate, any(), 1)
         }
       }
 
   @Test
-  fun `getOneActivityNearWithPreferences returns activity when no preferences`() = runBlocking {
+  fun `getActivitiesNearWithPreferences returns activity when no preferences`() = runBlocking {
     // Given no preferences
     tripSettings = tripSettings.copy(preferences = emptyList())
 
@@ -330,19 +339,44 @@ class SelectActivitiesTest {
         listOf(activityLausanne)
 
     // When
-    val result = selectActivities.getOneActivityNearWithPreferences(lausanne.coordinate)
+    val result = selectActivities.getActivitiesNearWithPreferences(lausanne.coordinate, limit = 1)
 
     // Then
-    assertEquals(activityLausanne, result)
+    assertTrue(activityLausanne.location.sameLocation(result.first().location))
 
     // Ensure preference call NOT used
-    io.mockk.coVerify(exactly = 0) {
+    coVerify(exactly = 0) {
       mockActivityRepository.getActivitiesNearWithPreference(any(), any(), any(), any())
     }
 
     // Ensure normal near call WAS used
-    io.mockk.coVerify(exactly = 1) {
+    coVerify(exactly = 1) {
       mockActivityRepository.getActivitiesNear(lausanne.coordinate, any(), 1)
+    }
+  }
+
+  @Test
+  fun `addActivities injects default preferences when none are provided`() = runBlocking {
+    val expectedActivities = listOf(activityLausanne, activityGeneva, activityZurich)
+    val progressUpdates = mutableListOf<Float>()
+    val defaultPrefs = PreferenceCategories.activityTypePreferences
+
+    coEvery {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          match { it.containsAll(defaultPrefs) }, any(), any(), any(), any(), any())
+    } returns listOf(activityLausanne) andThen listOf(activityGeneva) andThen listOf(activityZurich)
+
+    val selectActivities = SelectActivities(tripSettings, mockTripInfoVM, mockActivityRepository)
+
+    val result = selectActivities.addActivities { progressUpdates.add(it) }
+
+    assertEquals(3, result.size)
+    assertTrue(result.containsAll(expectedActivities))
+    assertTrue(progressUpdates.last() == 1.0f)
+
+    coVerify(atLeast = 1) {
+      mockActivityRepository.getActivitiesNearWithPreference(
+          any(), any(), any(), any(), any(), any())
     }
   }
 
