@@ -339,7 +339,18 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithText(tripName).assertIsNotDisplayed()
   }
 
-  /** Helper function to retry user fetching until Firestore creates the document. */
+  /**
+   * Helper function to retry user fetching until the Firestore document is created.
+   *
+   * Authentication creation and Firestore document creation are asynchronous operations that may
+   * not complete simultaneously. This function polls the repository for a user with the given [email]
+   * up to 10 times with a 500ms delay between attempts, preventing race conditions in E2E tests.
+   *
+   * @param repo The [UserRepository] to query for the user.
+   * @param email The email address of the user to search for.
+   * @return The found [User] object.
+   * @throws java.util.NoSuchElementException If the user is not found after 5 seconds (10 attempts).
+   */
   private suspend fun waitForUserCreation(repo: UserRepository, email: String): User {
     var attempts = 0
     while (attempts < 10) {
