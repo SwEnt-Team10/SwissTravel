@@ -89,12 +89,7 @@ class PhotosViewModel(
     viewModelScope.launch {
       try {
         val trip = tripsRepository.getTrip(tripId)
-        if (trip.uriLocation.size > 1) {
-
-          _uiState.value = _uiState.value.copy(uriLocation = trip.uriLocation, isLoading = false)
-        } else {
-          _uiState.value = _uiState.value.copy(uriLocation = trip.uriLocation, isLoading = false)
-        }
+        _uiState.value = _uiState.value.copy(uriLocation = trip.uriLocation, isLoading = false)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorLoading = true)
       }
