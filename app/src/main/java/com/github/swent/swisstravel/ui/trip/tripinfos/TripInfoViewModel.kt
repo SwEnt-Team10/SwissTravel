@@ -644,12 +644,12 @@ class TripInfoViewModel(
             .map { it.getName() }
             .toSet()
 
-      val selectionParameters = TripAlgorithm.ActivitySelectionParameters(
-          activityBlacklist = blackList.toList(),
-          protectedActivities = _uiState.value.selectedLikedActivities,
-          cachedActivities = cachedActivities,
-          allFetchedLocations = _uiState.value.allFetchedLocations
-      )
+    val selectionParameters =
+        TripAlgorithm.ActivitySelectionParameters(
+            activityBlacklist = blackList.toList(),
+            protectedActivities = _uiState.value.selectedLikedActivities,
+            cachedActivities = cachedActivities,
+            allFetchedLocations = _uiState.value.allFetchedLocations)
     val schedule =
         algorithm.computeTrip(
             tripSettings = tripSettings,

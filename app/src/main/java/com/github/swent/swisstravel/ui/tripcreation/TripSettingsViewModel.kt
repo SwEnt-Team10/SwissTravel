@@ -290,7 +290,8 @@ open class TripSettingsViewModel(
         // Run the algorithm
         val algorithm = algorithmFactory(context, tripSettings.value)
         val cachedActivities = mutableListOf<Activity>()
-          val selectionParameters = TripAlgorithm.ActivitySelectionParameters(cachedActivities = cachedActivities)
+        val selectionParameters =
+            TripAlgorithm.ActivitySelectionParameters(cachedActivities = cachedActivities)
         val schedule =
             algorithm.computeTrip(
                 tripSettings = tripSettings.value,

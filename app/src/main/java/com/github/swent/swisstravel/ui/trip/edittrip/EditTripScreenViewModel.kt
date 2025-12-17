@@ -235,8 +235,8 @@ class EditTripScreenViewModel(
 
           // Run the algorithm
           val algorithm = algorithmFactory(context, tempTripSettings, activityRepository)
-            val selectionParameters =
-                TripAlgorithm.ActivitySelectionParameters(cachedActivities = cachedActivities)
+          val selectionParameters =
+              TripAlgorithm.ActivitySelectionParameters(cachedActivities = cachedActivities)
           val schedule =
               algorithm.computeTrip(
                   tripSettings = tempTripSettings,

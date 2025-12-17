@@ -34,7 +34,10 @@ const val NUMBER_ACTIVITIES_TO_FETCH = 45
 class ActivityRepositoryMySwitzerland(
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) : ActivityRepository {
-  private val blacklistedActivityNames = setOf("Fishing with Balthazar", )
+  private val blacklistedActivityNames =
+      setOf(
+          "Fishing with Balthazar",
+      )
   private val API_KEY = BuildConfig.MYSWITZERLAND_API_KEY
   private val baseHttpUrl: HttpUrl =
       urlBuilder("https://opendata.myswitzerland.io/v1/attractions/", top = true)

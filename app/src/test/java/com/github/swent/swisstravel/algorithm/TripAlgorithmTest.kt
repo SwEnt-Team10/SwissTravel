@@ -209,8 +209,10 @@ class TripAlgorithmTest {
           }
         }
 
+    val selectionParameters =
+        TripAlgorithm.ActivitySelectionParameters(cachedActivities = mutableListOf())
     // Act
-    val result = algorithm.computeTrip(settings, profile, cachedActivities = mutableListOf())
+    val result = algorithm.computeTrip(settings, profile, selectionParams = selectionParameters)
 
     // Assert
     // Should have added the cached activity
