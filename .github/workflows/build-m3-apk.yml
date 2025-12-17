@@ -40,6 +40,7 @@ jobs:
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
           MAP_BOX_SECRET: ${{ secrets.MAP_BOX_SECRET }}
           GEOAPIFY_API_KEY: ${{ secrets.GEOAPIFY_API_KEY }}
+          OPEN_TRANSPORT_DATA_TOKEN: ${{ secrets.OPEN_TRANSPORT_DATA_TOKEN }}
         run: |
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
@@ -57,6 +58,12 @@ jobs:
             echo "GEOAPIFY_API_KEY=$GEOAPIFY_API_KEY" >> ./local.properties
           else
              echo "::warning::GEOAPIFY_API_KEY secret is not set."
+          fi
+          
+          if [ -n "$OPEN_TRANSPORT_DATA_TOKEN" ]; then
+            echo "OPEN_TRANSPORT_DATA_TOKEN=$OPEN_TRANSPORT_DATA_TOKEN" >> ./local.properties
+          else
+             echo "::warning::OPEN_TRANSPORT_DATA_TOKEN secret is not set."
           fi
           
           if [ -n "$MAP_BOX_SECRET" ]; then
