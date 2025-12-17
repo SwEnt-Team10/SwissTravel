@@ -48,6 +48,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -376,27 +377,30 @@ private fun CurrentTripSection(
       color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
-
-  currentTrip?.let {
-    val tripElementState =
-        TripElementState(
-            trip = it,
-            isSelected = it in selectedTrips,
-            isSelectionMode = isSelectionMode,
-            isFavorite = it.uid in uiState.favoriteTripsUids,
-            collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
-    TripElement(
-        tripElementState = tripElementState,
-        onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
-        onLongPress = {
-          // Enter selection mode
-          myTripsViewModel.toggleSelectionMode(true)
-          onToggleSelection(it)
-        })
+  Row(modifier = Modifier.fillMaxWidth()) {
+    currentTrip?.let {
+      val tripElementState =
+          TripElementState(
+              trip = it,
+              isSelected = it in selectedTrips,
+              isSelectionMode = isSelectionMode,
+              isFavorite = it.uid in uiState.favoriteTripsUids,
+              collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
+      TripElement(
+          tripElementState = tripElementState,
+          onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
+          onLongPress = {
+            // Enter selection mode
+            myTripsViewModel.toggleSelectionMode(true)
+            onToggleSelection(it)
+          })
+    }
+        ?: Text(
+            text = stringResource(R.string.no_current_trip),
+            modifier =
+                Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).fillMaxWidth(),
+            textAlign = TextAlign.Center)
   }
-      ?: Text(
-          text = stringResource(R.string.no_current_trip),
-          modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG))
 }
 
 /**

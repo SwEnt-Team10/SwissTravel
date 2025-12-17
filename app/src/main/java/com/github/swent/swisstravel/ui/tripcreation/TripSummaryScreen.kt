@@ -47,6 +47,8 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
@@ -359,33 +361,43 @@ private fun ArrivalDepartureSummary(arrival: String, departure: String) {
       verticalArrangement =
           Arrangement.spacedBy(dimensionResource(R.dimen.trip_summary_group_spacing))) {
         // Arrival (Start)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          Text(
-              text = stringResource(R.string.arrival),
-              style = MaterialTheme.typography.bodyMedium,
-              color = MaterialTheme.colorScheme.secondary,
-              modifier = Modifier.testTag(TripSummaryTestTags.ARRIVAL_LABEL))
-          Text(
-              text = arrival,
-              style = MaterialTheme.typography.bodyLarge,
-              fontWeight = FontWeight.Bold,
-              modifier = Modifier.testTag("${TripSummaryTestTags.ARRIVAL_LABEL}_value"))
-        }
+        ArrivalDepartureRow(
+            label = stringResource(R.string.arrival),
+            value = arrival,
+            labelTag = TripSummaryTestTags.ARRIVAL_LABEL)
 
         // Departure (End)
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-          Text(
-              text = stringResource(R.string.departure),
-              style = MaterialTheme.typography.bodyMedium,
-              color = MaterialTheme.colorScheme.secondary,
-              modifier = Modifier.testTag(TripSummaryTestTags.DEPARTURE_LABEL))
-          Text(
-              text = departure,
-              style = MaterialTheme.typography.bodyLarge,
-              fontWeight = FontWeight.Bold,
-              modifier = Modifier.testTag("${TripSummaryTestTags.DEPARTURE_LABEL}_value"))
-        }
+        ArrivalDepartureRow(
+            label = stringResource(R.string.departure),
+            value = departure,
+            labelTag = TripSummaryTestTags.DEPARTURE_LABEL)
       }
+}
+
+/**
+ * Composable to display a row for arrival or departure.
+ *
+ * @param label The label for the row.
+ * @param value The value for the row.
+ * @param labelTag The test tag for the label.
+ */
+@Composable
+private fun ArrivalDepartureRow(label: String, value: String, labelTag: String) {
+  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+    Text(
+        text = label,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.secondary,
+        modifier = Modifier.testTag(labelTag))
+    Text(
+        text = value,
+        style = MaterialTheme.typography.bodyLarge,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.weight(1f).testTag("${labelTag}_value"),
+        textAlign = TextAlign.End,
+        maxLines = 3,
+        overflow = TextOverflow.Ellipsis)
+  }
 }
 
 /**
