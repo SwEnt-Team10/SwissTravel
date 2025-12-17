@@ -150,4 +150,5 @@ interface TripInfoViewModelContract {
   fun getMajorSwissCities(context: Context)
 
   suspend fun fetchSwipeActivity()
+  fun resetSchedulingState()
 }

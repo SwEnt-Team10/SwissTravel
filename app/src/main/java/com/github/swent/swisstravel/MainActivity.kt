@@ -600,7 +600,10 @@ private fun NavGraphBuilder.tripInfoNavGraph(
               Toast.makeText(context, errorText, Toast.LENGTH_SHORT).show()
             } else vm.unlikeSelectedActivities()
           },
-          onNext = { navController.popBackStack() })
+          onNext = {
+              vm.resetSchedulingState()
+              navController.popBackStack()
+          })
     }
     composable(Screen.AddPhotos.route) { navBackStackEntry ->
       val tripId = navBackStackEntry.arguments?.getString(stringResource(R.string.trip_id_route))

@@ -805,4 +805,8 @@ class TripInfoViewModel(
         trip.value = newTrip
         return newTrip
     }
+
+    override fun resetSchedulingState() {
+        _uiState.update { it.copy(savingProgress = 0f) }
+    }
 }
