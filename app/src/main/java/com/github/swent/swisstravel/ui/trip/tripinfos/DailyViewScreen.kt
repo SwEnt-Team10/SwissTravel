@@ -232,7 +232,7 @@ fun DailyViewScreen(
         }
       },
       bottomBar = {
-        if (ui.currentUserIsOwner && !ui.fullscreen)
+        if (ui.currentUserIsOwner && !ui.fullscreen && !isOnCurrentTripScreen)
             DailyViewBottomBar(
                 onSwipeActivities = callbacks.onSwipeActivities,
                 onLikedActivities = callbacks.onLikedActivities)
