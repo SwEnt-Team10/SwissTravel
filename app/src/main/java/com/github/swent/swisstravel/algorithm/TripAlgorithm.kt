@@ -107,28 +107,7 @@ open class TripAlgorithm(
       val adults = settingsToUse.travelers.adults
       val children = settingsToUse.travelers.children
 
-      // 1. One or more children => Add CHILDREN_FRIENDLY
-      if (children >= 1) {
-        if (!currentPrefs.contains(Preference.CHILDREN_FRIENDLY)) {
-          currentPrefs.add(Preference.CHILDREN_FRIENDLY)
-        }
-      } else {
-        // No children cases:
-        // 2. Only one adult => Add INDIVIDUAL
-        if (adults == 1) {
-          if (!currentPrefs.contains(Preference.INDIVIDUAL)) {
-            currentPrefs.add(Preference.INDIVIDUAL)
-          }
-        }
-        // 3. A lot of adults (>= 3) => Add GROUP
-        // We use >= 3 to treat 2 adults as a neutral case (could be couple or friends),
-        // whereas 3+ is definitely a group.
-        else if (adults >= 3) {
-          if (!currentPrefs.contains(Preference.GROUP)) {
-            currentPrefs.add(Preference.GROUP)
-          }
-        }
-      }
+      manageTravelersPreferences(adults, children, currentPrefs)
 
       // Check how many "Activity Type" and "Environment" preferences are selected
       val activityTypeCount =
@@ -138,13 +117,20 @@ open class TripAlgorithm(
 
       // If no environment => any is good
       // If no activity type => any is good
-      if (activityTypeCount == 0 && environmentCount == 0) {
-        currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
-        currentPrefs.addAll(PreferenceCategories.environmentPreferences)
-      } else if (activityTypeCount == 0) {
-        currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
-      } else if (environmentCount == 0) {
-        currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+      when {
+        activityTypeCount == 0 && environmentCount == 0 -> {
+          currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
+          currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+        }
+        activityTypeCount == 0 -> {
+          currentPrefs.addAll(PreferenceCategories.activityTypePreferences)
+        }
+        environmentCount == 0 -> {
+          currentPrefs.addAll(PreferenceCategories.environmentPreferences)
+        }
+        else -> {
+          // Both counts are > 0, so no default preferences need to be added.
+        }
       }
 
       settingsToUse = settingsToUse.copy(preferences = currentPrefs)
@@ -160,6 +146,41 @@ open class TripAlgorithm(
               cacheManager = cacheManager, matrixHybrid = durationMatrix, penaltyConfig = penalty)
 
       return TripAlgorithm(activitySelector, optimizer, context)
+    }
+
+    /**
+     * Manages traveler-related preferences based on the number of adults and children.
+     *
+     * @param adults the number of adult travelers.
+     * @param children the number of child travelers.
+     * @param currentPrefs the mutable list of current preferences to be updated.
+     */
+    fun manageTravelersPreferences(
+        adults: Int,
+        children: Int,
+        currentPrefs: MutableList<Preference>
+    ) {
+      when {
+        children >= 1 -> {
+          if (!currentPrefs.contains(Preference.CHILDREN_FRIENDLY)) {
+            currentPrefs.add(Preference.CHILDREN_FRIENDLY)
+          }
+        }
+        adults == 1 -> {
+          if (!currentPrefs.contains(Preference.INDIVIDUAL)) {
+            currentPrefs.add(Preference.INDIVIDUAL)
+          }
+        }
+        adults >= 3 -> {
+          if (!currentPrefs.contains(Preference.GROUP)) {
+            currentPrefs.add(Preference.GROUP)
+          }
+        }
+        else -> {
+          // Neutral case (e.g., 2 adults)
+          // No preferences added
+        }
+      }
     }
   }
 
@@ -634,7 +655,8 @@ open class TripAlgorithm(
     val addedIndexes = mutableListOf<Int>()
     // Add elements to the lists of our original OrderedRoute at the correct place
     var index = 0
-    for ((startSeg, activitiesList) in intermediateActivitiesBySegment) {
+    for ((startSeg, mutableActivities) in intermediateActivitiesBySegment) {
+      val activitiesList: List<Activity> = mutableActivities.toList()
       index++
       if (index >= MAX_INBETWEEN_ACTIVITIES_SEGMENTS) break
       // Get the start segment index in the optimized route
@@ -1381,7 +1403,6 @@ open class TripAlgorithm(
    * @return A list of [Activity] objects that fits best within the time limit.
    */
   private fun solveTimeKnapsack(candidates: List<Activity>, limitMinutes: Int): List<Activity> {
-    val n = candidates.size
     val w = limitMinutes
 
     // DP table: dp[j] stores the maximum minutes filled for a capacity of j
@@ -1392,25 +1413,7 @@ open class TripAlgorithm(
     dp[0] = 0
 
     // 1. Fill the DP table
-    for (i in 0 until n) {
-      val activity = candidates[i]
-      val weight = activity.estimatedTime / MINUTES_IN_HOUR
-
-      // Skip activities effectively 0 minutes to prevent infinite loops
-      if (weight <= 0) continue
-
-      for (j in w downTo weight) {
-        if (dp[j - weight] != -1) {
-          val newTime = dp[j - weight] + weight
-
-          // Since value == weight (we just want to fill time), we maximize the time used
-          if (newTime > dp[j]) {
-            dp[j] = newTime
-            parent[j] = i
-          }
-        }
-      }
-    }
+    fillTable(candidates, dp, parent, limitMinutes)
 
     // 2. Find the best reachable total time
     var bestTimeIndex = -1
@@ -1438,6 +1441,37 @@ open class TripAlgorithm(
     }
 
     return selectedActivities
+  }
+
+  /**
+   * Fills the DP table for the knapsack problem.
+   *
+   * @param candidates List of candidate activities.
+   * @param dp DP array to fill.
+   * @param parent Parent array to track selections.
+   * @param limitMinutes Maximum weight (time in minutes).
+   */
+  fun fillTable(candidates: List<Activity>, dp: IntArray, parent: IntArray, limitMinutes: Int) {
+    val n = candidates.size
+    for (i in 0 until n) {
+      val activity = candidates[i]
+      val weight = activity.estimatedTime / MINUTES_IN_HOUR
+
+      // Skip activities effectively 0 minutes to prevent infinite loops
+      if (weight <= 0) continue
+
+      for (j in limitMinutes downTo weight) {
+        if (dp[j - weight] != -1) {
+          val newTime = dp[j - weight] + weight
+
+          // Since value == weight (we just want to fill time), we maximize the time used
+          if (newTime > dp[j]) {
+            dp[j] = newTime
+            parent[j] = i
+          }
+        }
+      }
+    }
   }
 
   /**
