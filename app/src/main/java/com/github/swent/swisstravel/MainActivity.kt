@@ -528,7 +528,12 @@ private fun NavGraphBuilder.tripInfoNavGraph(
         return@composable
       }
 
-      val refresh: Boolean? = navBackStackEntry.savedStateHandle["refresh_trip"]
+      // conserve the ViewModel tied to the TripInfo navigation graph
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      val vm = viewModel<TripInfoViewModel>(parentEntry)
+
+      val refresh = navBackStackEntry.savedStateHandle.get<Boolean>("refresh_trip")
       if (refresh == true) {
         navBackStackEntry.savedStateHandle["refresh_trip"] = false // Reset flag
         vm.loadTripInfo(uid, forceReload = true)
