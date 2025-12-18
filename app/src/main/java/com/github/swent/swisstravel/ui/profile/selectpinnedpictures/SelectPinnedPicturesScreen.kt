@@ -20,6 +20,7 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
+import com.github.swent.swisstravel.ui.composable.CancelButton
 import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.PhotoGrid
 
@@ -34,7 +35,6 @@ object SelectPinnedPicturesScreenTestTags {
   const val LOADING_INDICATOR = "loadingIndicator"
   const val EDIT_BUTTON = "editButton"
   const val REMOVE_BUTTON = "removeButton"
-  const val CANCEL_BUTTON = "cancelButton"
   const val PHOTO_GRID = "photoGrid"
 }
 
@@ -211,11 +211,8 @@ private fun PinnedPicturesTopBar(
       },
       navigationIcon = {
         if (isEditMode) {
-          IconButton(
-              onClick = onCancelEdit,
-              modifier = Modifier.testTag(SelectPinnedPicturesScreenTestTags.CANCEL_BUTTON)) {
-                Icon(Icons.Default.Close, contentDescription = stringResource(R.string.cancel_edit))
-              }
+          CancelButton(
+              onCancel = onCancelEdit, contentDescription = stringResource(R.string.cancel_edit))
         } else {
           IconButton(
               onClick = onBack,

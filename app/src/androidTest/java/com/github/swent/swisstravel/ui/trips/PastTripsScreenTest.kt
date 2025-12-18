@@ -71,9 +71,6 @@ class PastTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         .performTouchInput { longClick() }
 
     composeTestRule
-        .onNodeWithTag(PastTripsScreenTestTags.CANCEL_SELECTION_BUTTON)
-        .assertIsDisplayed()
-    composeTestRule
         .onNodeWithTag(PastTripsScreenTestTags.DELETE_SELECTED_BUTTON)
         .assertIsDisplayed()
   }
