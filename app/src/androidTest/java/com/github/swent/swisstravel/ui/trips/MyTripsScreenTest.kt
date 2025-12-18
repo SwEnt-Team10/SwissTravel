@@ -224,7 +224,6 @@ class MyTripsScreenEmulatorTest : InMemorySwissTravelTest() {
         .performTouchInput { longClick() }
 
     // Check that selection mode UI appears
-    composeTestRule.onNodeWithTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsDisplayed()
   }
 

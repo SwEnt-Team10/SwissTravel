@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
@@ -40,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.composable.CancelButton
 import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripListEvents
@@ -58,7 +58,6 @@ object PastTripsScreenTestTags {
   const val FAVORITE_SELECTED_BUTTON = "favoriteSelected"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
-  const val CANCEL_SELECTION_BUTTON = "cancelSelection"
   const val MORE_OPTIONS_BUTTON = "moreOptions"
 
   /** Returns a unique test tag for the given [trip] element. */
@@ -235,13 +234,9 @@ private fun PastTripsTopAppBar(
       },
       navigationIcon = {
         if (uiState.isSelectionMode) {
-          IconButton(
-              onClick = actions.onCancelSelection,
-              modifier = Modifier.testTag(PastTripsScreenTestTags.CANCEL_SELECTION_BUTTON)) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = stringResource(R.string.cancel_selection))
-              }
+          CancelButton(
+              onCancel = actions.onCancelSelection,
+              contentDescription = stringResource(R.string.cancel_selection))
         } else {
           IconButton(
               onClick = actions.onBack,

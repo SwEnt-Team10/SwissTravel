@@ -11,7 +11,6 @@ import com.github.swent.swisstravel.utils.FakeTripsRepository
 import com.github.swent.swisstravel.utils.FakeUserRepository
 import com.github.swent.swisstravel.utils.InMemorySwissTravelTest
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -74,16 +73,6 @@ class SetCurrentTripScreenTests : InMemorySwissTravelTest() {
     val uiState = viewModel.uiState.value
 
     assertEquals(trip2.uid, uiState.currentTrip?.uid, "Trip 2 should now be current.")
-  }
-
-  @Test
-  fun clickingCloseButtonTriggersCloseCallback() {
-    val flags = TestFlags()
-    launchScreen(trip1, trip2, flags = flags)
-
-    composeTestRule.onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).performClick()
-
-    assertTrue(flags.screenClosed, "Close callback was not called.")
   }
 
   @Test

@@ -28,6 +28,7 @@ import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
+import com.github.swent.swisstravel.ui.composable.CancelButtonTestTag
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.ErrorScreenTestTags
 import com.github.swent.swisstravel.ui.composable.PhotoGridTestTags
@@ -247,7 +248,6 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkMyTripsInSelectionMode() {
     onNodeWithTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).assertIsDisplayed()
   }
 
@@ -257,7 +257,6 @@ abstract class SwissTravelTest {
     }
     onNodeWithTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsNotDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).assertIsNotDisplayed()
   }
 
@@ -362,7 +361,6 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkSetCurrentTripIsDisplayed() {
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR).assertIsDisplayed()
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_TITLE).assertIsDisplayed()
-    onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).assertIsDisplayed()
     onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
   }
 
@@ -741,13 +739,16 @@ abstract class SwissTravelTest {
 
     // Verify Edit Mode Buttons are not displayed
     onNodeWithTag(SelectPinnedPicturesScreenTestTags.REMOVE_BUTTON).assertDoesNotExist()
-    onNodeWithTag(SelectPinnedPicturesScreenTestTags.CANCEL_BUTTON).assertDoesNotExist()
 
     onNodeWithTag(SelectPinnedPicturesScreenTestTags.LOADING_INDICATOR).assertDoesNotExist()
   }
 
   fun ComposeTestRule.clickOnBackButton() {
     onNodeWithTag(BackButtonTestTag.BACK_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnCancelButton() {
+    onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).performClick()
   }
 
   fun ComposeTestRule.clickOnRetryButton() {

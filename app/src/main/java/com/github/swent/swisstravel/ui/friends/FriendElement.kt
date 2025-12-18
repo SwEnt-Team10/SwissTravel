@@ -12,7 +12,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -25,6 +24,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.composable.CancelButton
 import com.github.swent.swisstravel.ui.composable.ProfileImage
 
 object FriendElementTestTags {
@@ -32,7 +32,6 @@ object FriendElementTestTags {
 
   const val ARROW_ICON = "friendArrowIcon"
   const val ACCEPT_BUTTON = "friendAcceptButton"
-  const val DECLINE_BUTTON = "friendDeclineButton"
   const val ADD_ICON = "friendAddIcon"
 }
 
@@ -168,14 +167,8 @@ fun FriendArrowSection(state: FriendElementState, actions: FriendElementActions)
           }
 
       Spacer(modifier = Modifier.width(dimensionResource(R.dimen.friends_spacer)))
-      IconButton(
-          onClick = actions.onDecline,
-          modifier = Modifier.testTag(FriendElementTestTags.DECLINE_BUTTON)) {
-            Icon(
-                imageVector = Icons.Default.Close,
-                contentDescription = stringResource(R.string.deny_friend),
-                tint = MaterialTheme.colorScheme.error)
-          }
+      CancelButton(
+          onCancel = actions.onDecline, contentDescription = stringResource(R.string.deny_friend))
     }
   }
 }
