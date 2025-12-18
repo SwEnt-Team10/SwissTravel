@@ -519,41 +519,41 @@ private fun NavGraphBuilder.tripInfoNavGraph(
       startDestination = Screen.DailyView.route,
       route = Screen.TripInfo.name,
   ) {
-      composable(Screen.DailyView.route) { navBackStackEntry ->
-          val uid = navBackStackEntry.arguments?.getString("uid")
-          if (uid == null) {
-              Toast.makeText(context, context.getString(R.string.trip_id_missing), Toast.LENGTH_SHORT)
-                  .show()
-              navigationActions.navigateTo(Screen.MyTrips)
-              return@composable
-          }
-
-          // conserve the ViewModel tied to the TripInfo navigation graph
-          val parentEntry =
-              remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
-          val vm = viewModel<TripInfoViewModel>(parentEntry)
-
-          val refresh = navBackStackEntry.savedStateHandle.get<Boolean>("refresh_trip")
-          if (refresh == true) {
-              navBackStackEntry.savedStateHandle["refresh_trip"] = false // Reset flag
-              vm.loadTripInfo(uid, forceReload = true)
-          }
-
-          DailyViewScreen(
-              uid = uid,
-              tripInfoViewModel = vm,
-              callbacks =
-                  DailyViewScreenCallbacks(
-                      onMyTrips = { navigationActions.goBack() },
-                      onEditTrip = { navigationActions.navigateToEditTrip(uid) },
-                      onActivityClick = { tripActivity ->
-                          vm.selectActivity(tripActivity.activity)
-                          navigationActions.navigateToActivityInfo(uid)
-                      },
-                      onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
-                      onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
-              onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
+    composable(Screen.DailyView.route) { navBackStackEntry ->
+      val uid = navBackStackEntry.arguments?.getString("uid")
+      if (uid == null) {
+        Toast.makeText(context, context.getString(R.string.trip_id_missing), Toast.LENGTH_SHORT)
+            .show()
+        navigationActions.navigateTo(Screen.MyTrips)
+        return@composable
       }
+
+      // conserve the ViewModel tied to the TripInfo navigation graph
+      val parentEntry =
+          remember(navBackStackEntry) { navController.getBackStackEntry(Screen.TripInfo.name) }
+      val vm = viewModel<TripInfoViewModel>(parentEntry)
+
+      val refresh = navBackStackEntry.savedStateHandle.get<Boolean>("refresh_trip")
+      if (refresh == true) {
+        navBackStackEntry.savedStateHandle["refresh_trip"] = false // Reset flag
+        vm.loadTripInfo(uid, forceReload = true)
+      }
+
+      DailyViewScreen(
+          uid = uid,
+          tripInfoViewModel = vm,
+          callbacks =
+              DailyViewScreenCallbacks(
+                  onMyTrips = { navigationActions.goBack() },
+                  onEditTrip = { navigationActions.navigateToEditTrip(uid) },
+                  onActivityClick = { tripActivity ->
+                    vm.selectActivity(tripActivity.activity)
+                    navigationActions.navigateToActivityInfo(uid)
+                  },
+                  onSwipeActivities = { navigationActions.navigateTo(Screen.SwipeActivities) },
+                  onLikedActivities = { navigationActions.navigateTo(Screen.LikedActivities) }),
+          onAddPhotos = { navigationActions.navigateTo(Screen.AddPhotos(uid)) })
+    }
 
     composable(
         route = Screen.ActivityInfo.route,
