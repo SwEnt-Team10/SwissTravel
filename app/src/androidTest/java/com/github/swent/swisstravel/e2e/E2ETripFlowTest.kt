@@ -83,6 +83,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
 
     // 2) Go to current trip
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
+    Thread.sleep(1000) // Wait for tab switch animation
 
     composeTestRule.onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).assertIsDisplayed()
 
@@ -95,9 +96,11 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
         .assertIsDisplayed()
         .performClick()
+    Thread.sleep(1000) // Wait for MyTrips list to fetch
 
     // 5) Go back to current trip and create another trip with non-today date
     composeTestRule.onNodeWithTag(NavigationTestTags.CURRENT_TRIP_TAB).performClick()
+    Thread.sleep(1000)
     val nonTodayTrip =
         createTestTrip(
             uid = "nonToday",
@@ -115,12 +118,14 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
         .assertIsDisplayed()
         .performClick()
+    Thread.sleep(1500) // Wait for Firestore fetch on slow CI
 
     val tripsAlice = runBlocking { repository.getAllTrips() }
     assertEquals(2, tripsAlice.size)
 
     // 7) Go to profile and modify a preference
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    Thread.sleep(1000)
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.SETTINGS_BUTTON).performClick()
     composeTestRule.waitForTag(ProfileSettingsScreenTestTags.EMAIL)
     composeTestRule
@@ -147,6 +152,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
     // 8) Log out
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_BAR_BUTTON).performClick()
     composeTestRule.logout()
+    Thread.sleep(1000) // Allow logout cleanup
 
     // 9) Log in with another account
     composeTestRule.loginWithGoogle(true)
@@ -158,6 +164,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
         .assertIsDisplayed()
         .performClick()
+    Thread.sleep(1000)
     // Expect empty messages to be displayed for a fresh account
     composeTestRule
         .onNodeWithTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG, useUnmergedTree = true)
@@ -173,6 +180,8 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(NavigationTestTags.MY_TRIPS_TAB, useUnmergedTree = true)
         .assertIsDisplayed()
         .performClick()
+    Thread.sleep(2000) // Wait for fetch
+
     val tripsBob = runBlocking { repository.getAllTrips() }
     assertEquals(1, tripsBob.size)
 
@@ -184,7 +193,7 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
   /** Helper function to create a trip */
   private fun createTrip(selectNonToday: Boolean) {
     composeTestRule.onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON).performClick()
-    Thread.sleep(1000)
+    Thread.sleep(1500) // Wait for screen transition
     // TripDateScreen: optionally change start date to non-today
     if (selectNonToday) {
       val dateButtons = composeTestRule.onAllNodesWithTag(DateSelectorTestTags.DATE)
@@ -200,9 +209,11 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
 
     composeTestRule.onNodeWithTag(TripDateTestTags.NEXT).performClick()
     composeTestRule.waitForIdle()
+    Thread.sleep(500)
 
     composeTestRule.onNodeWithTag(TripTravelersTestTags.NEXT).performClick()
     composeTestRule.waitForIdle()
+    Thread.sleep(500)
 
     composeTestRule
         .onNodeWithTag(TripPreferencesTestTags.TRIP_PREFERENCE_CONTENT)
@@ -214,16 +225,19 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
     composeTestRule
         .onNodeWithTag(ArrivalDepartureTestTags.ARRIVAL_TEXTFIELD, useUnmergedTree = true)
         .performTextInput("epfl")
+    Thread.sleep(1000) // Wait for Autocomplete Suggestions Network Request
     composeTestRule.performClickOnLocationSuggestion()
 
     composeTestRule
         .onNodeWithTag(ArrivalDepartureTestTags.DEPARTURE_TEXTFIELD, useUnmergedTree = true)
         .performTextInput("cafe de paris")
+    Thread.sleep(1000) // Wait for Autocomplete Suggestions Network Request
     composeTestRule.performClickOnLocationSuggestion()
 
     composeTestRule.onNodeWithTag(ArrivalDepartureTestTags.NEXT_BUTTON).performClick()
 
     composeTestRule.onNodeWithTag(TripFirstDestinationsTestTags.NEXT_BUTTON).performClick()
+    Thread.sleep(1000)
 
     // Trip Summary
     composeTestRule.waitUntil(E2E_WAIT_TIMEOUT) {
@@ -244,6 +258,8 @@ class E2ETripFlowTest : FirestoreSwissTravelTest() {
         .onNodeWithTag(TripSummaryTestTags.TRIP_SUMMARY_SCREEN)
         .performScrollToNode(hasTestTag(TripSummaryTestTags.CREATE_TRIP_BUTTON))
     composeTestRule.onNodeWithTag(TripSummaryTestTags.CREATE_TRIP_BUTTON).performClick()
+
     composeTestRule.waitForIdle()
+    Thread.sleep(2000)
   }
 }

@@ -14,6 +14,7 @@ import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Rule
@@ -39,7 +40,8 @@ class AddFriendScreenTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     var searchResults: List<User> = emptyList()
     // The pool of all users available to "search" or "get by uid"
@@ -73,15 +75,7 @@ class AddFriendScreenTest {
 
     override suspend fun removeFriend(uid: String, friendUid: String) {}
 
-    override suspend fun updateUser(
-        uid: String,
-        name: String?,
-        biography: String?,
-        profilePicUrl: String?,
-        preferences: List<Preference>?,
-        pinnedTripsUids: List<String>?,
-        pinnedPicturesUids: List<String>?
-    ) {
+    override suspend fun updateUser(uid: String, updates: UserUpdate) {
       // no op in test
     }
 
@@ -106,7 +100,8 @@ class AddFriendScreenTest {
           stats = UserStats(),
           emptyList(),
           emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Test
   fun typingSearch_showsResults_andClickSendsFriendRequestAndCallsBack() {

@@ -42,16 +42,23 @@ class CurrentTripScreenTest : SwissTravelTest() {
             name = "currentTrip",
             ownerId = "ownerX",
             startDate = Timestamp(Timestamp.now().seconds + 7200, 0),
-            endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
-            isCurrentTrip = true)
+            endDate = Timestamp(Timestamp.now().seconds + 10800, 0))
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(currentTrip))
-      val viewModel =
-          MyTripsViewModel(userRepository = FakeUserRepository(), tripsRepository = fakeRepo)
+      val fakeUserRepo = FakeUserRepository()
+
+      val testUser = createTestUser(uid = "current", currentTrip = currentTrip.uid)
+      fakeUserRepo.addUser(testUser)
+
+      val viewModel = MyTripsViewModel(userRepository = fakeUserRepo, tripsRepository = fakeRepo)
+
+      viewModel.refreshUIState()
+
       CurrentTripScreen(isLoggedIn = true, myTripsViewModel = viewModel)
     }
 
+    // Now the VM should find the trip matching the user's selection
     composeTestRule.onNodeWithTag(DailyViewScreenTestTags.TITLE).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(CurrentTripScreenTestTags.CREATE_TRIP_BUTTON)
@@ -72,7 +79,7 @@ class CurrentTripScreenTest : SwissTravelTest() {
             ownerId = "ownerX",
             startDate = Timestamp(Timestamp.now().seconds + 7200, 0),
             endDate = Timestamp(Timestamp.now().seconds + 10800, 0),
-            isCurrentTrip = false)
+        )
 
     composeTestRule.setContent {
       val fakeRepo = FakeTripsRepository(mutableListOf(notCurrentTrip))

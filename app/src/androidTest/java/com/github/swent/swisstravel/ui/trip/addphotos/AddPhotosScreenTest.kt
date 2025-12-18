@@ -47,7 +47,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
-            isCurrentTrip = true,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
@@ -73,7 +72,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(startDate = Timestamp.now(), endDate = Timestamp.now()),
-            isCurrentTrip = true,
             uriLocation = mapOf(uri1 to dummyLocation, uri2 to dummyLocation),
             collaboratorsId = emptyList())
 
@@ -106,7 +104,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
-            isCurrentTrip = true,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)
@@ -148,7 +145,6 @@ class AddPhotosScreenTest : SwissTravelTest() {
             routeSegments = emptyList(),
             activities = emptyList(),
             tripProfile = TripProfile(Timestamp.now(), Timestamp.now()),
-            isCurrentTrip = true,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
     TripsRepositoryProvider.repository.addTrip(fakeTrip)

@@ -6,6 +6,7 @@ import com.github.swent.swisstravel.model.trip.TripsRepository
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserRepository
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.google.firebase.Timestamp
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -40,7 +41,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val tripB =
@@ -57,7 +57,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val tripC =
@@ -74,7 +73,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
   private val tripD =
@@ -91,7 +89,6 @@ class SelectPinnedTripsViewModelTest {
                   endDate = Timestamp(0, 0),
                   preferredLocations = emptyList(),
                   preferences = emptyList()),
-          isCurrentTrip = false,
           uriLocation = emptyMap(),
           collaboratorsId = emptyList())
 
@@ -107,7 +104,8 @@ class SelectPinnedTripsViewModelTest {
           friends = emptyList(),
           stats = UserStats(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Before
   fun setup() {
@@ -180,7 +178,9 @@ class SelectPinnedTripsViewModelTest {
     viewModel.onSaveSelectedTrips()
     testDispatcher.scheduler.advanceUntilIdle()
 
-    coVerify { userRepository.updateUser(uid = user.uid, pinnedTripsUids = listOf("A", "B", "C")) }
+    coVerify {
+      userRepository.updateUser(uid = user.uid, UserUpdate(pinnedTripsUids = listOf("A", "B", "C")))
+    }
   }
 
   @Test
@@ -199,8 +199,10 @@ class SelectPinnedTripsViewModelTest {
     coEvery { tripsRepository.getAllTrips() } returns listOf(tripA, tripB, tripC)
 
     viewModel.getAllTrips()
-    val state = viewModel.uiState.value
 
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
     assertEquals(3, state.tripsList.size)
     assertTrue(state.selectedTrips.contains(tripC))
   }

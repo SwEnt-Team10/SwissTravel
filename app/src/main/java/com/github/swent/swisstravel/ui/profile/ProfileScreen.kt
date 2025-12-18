@@ -1,5 +1,6 @@
 package com.github.swent.swisstravel.ui.profile
 
+import android.content.Context
 import android.graphics.Bitmap
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -23,7 +24,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.PersonRemove
 import androidx.compose.material.icons.outlined.Settings
@@ -70,6 +70,7 @@ import com.github.swent.swisstravel.model.user.UserStats
 import com.github.swent.swisstravel.model.user.displayStringRes
 import com.github.swent.swisstravel.model.user.tiers
 import com.github.swent.swisstravel.model.user.toData
+import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.composable.TripListEvents
 import com.github.swent.swisstravel.ui.composable.TripListState
@@ -187,6 +188,8 @@ fun ProfileScreen(
               } else {
                 ProfileScreenContent(
                     uiState = uiState,
+                    isOnline = isOnline,
+                    context = context,
                     onSelectTrip = onSelectTrip,
                     onEditPinnedTrips = onEditPinnedTrips,
                     onEditPinnedPictures = onEditPinnedPictures,
@@ -220,14 +223,9 @@ fun ProfileScreenTopBar(
       },
       navigationIcon = {
         if (!uiState.isLoading && !uiState.isOwnProfile) {
-          IconButton(
-              onClick = onBack,
-          ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                contentDescription = stringResource(R.string.back_to_friends_list),
-                tint = MaterialTheme.colorScheme.onBackground)
-          }
+          BackButton(
+              onBack = { onBack() },
+              contentDescription = stringResource(R.string.back_to_friends_list))
         }
       },
       actions = {
@@ -258,6 +256,8 @@ fun ProfileScreenTopBar(
  * The content of the profile screen.
  *
  * @param uiState The state of the screen.
+ * @param isOnline Whether the user is online.
+ * @param context The context.
  * @param onSelectTrip The callback to select a trip.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
  * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
@@ -266,6 +266,8 @@ fun ProfileScreenTopBar(
 @Composable
 fun ProfileScreenContent(
     uiState: ProfileUIState,
+    isOnline: Boolean,
+    context: Context,
     onSelectTrip: (String) -> Unit,
     onEditPinnedTrips: () -> Unit = {},
     onEditPinnedPictures: () -> Unit = {},
@@ -325,7 +327,11 @@ fun ProfileScreenContent(
 
           Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_spacer)))
 
-          PinnedTrips(isOwnProfile = uiState.isOwnProfile, onEditPinnedTrips = onEditPinnedTrips)
+          PinnedTrips(
+              isOwnProfile = uiState.isOwnProfile,
+              onEditPinnedTrips = onEditPinnedTrips,
+              context = context,
+              isOnline = isOnline)
         }
 
         val tripListState =
@@ -354,7 +360,9 @@ fun ProfileScreenContent(
               pinnedBitmaps = uiState.pinnedBitmaps,
               isOwnProfile = uiState.isOwnProfile,
               onEditPinnedPictures = onEditPinnedPictures,
-              isLoadingImages = uiState.isLoadingImages)
+              isLoadingImages = uiState.isLoadingImages,
+              context = context,
+              isOnline = isOnline)
         }
         item { Spacer(modifier = Modifier.height(dimensionResource(R.dimen.mid_spacer))) }
       }
@@ -494,8 +502,17 @@ fun AchievementsDisplay(
         horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      items(achievements) { achievement ->
-        AchievementMedal(achievement, onClick = { selected = achievement })
+      if (achievements.isEmpty()) {
+        item {
+          Text(
+              text = stringResource(R.string.no_achievements),
+              style = MaterialTheme.typography.bodyMedium,
+              textAlign = TextAlign.Center)
+        }
+      } else {
+        items(achievements) { achievement ->
+          AchievementMedal(achievement, onClick = { selected = achievement })
+        }
       }
     }
   }
@@ -783,27 +800,35 @@ private fun AchievementTierRow(
  *
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedTrips The callback to navigate to the edit pinned trips screen.
+ * @param context The context.
+ * @param isOnline Whether the user is online.
  */
 @Composable
 private fun PinnedTrips(
     isOwnProfile: Boolean,
     onEditPinnedTrips: () -> Unit,
+    context: Context = LocalContext.current,
+    isOnline: Boolean
 ) {
   Row(
       modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_TRIPS_TITLE),
-      horizontalArrangement = Arrangement.SpaceBetween) {
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
         Text(
             text = stringResource(R.string.pinned_trips),
-            style = MaterialTheme.typography.titleLarge,
+            style = MaterialTheme.typography.headlineSmall,
             color = MaterialTheme.colorScheme.onSurface)
 
         if (isOwnProfile) {
           IconButton(
-              onClick = onEditPinnedTrips,
+              onClick = { handleOfflineClick(context, isOnline, onEditPinnedTrips) },
               modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_TRIPS_EDIT_BUTTON)) {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
-                    contentDescription = stringResource(R.string.edit_pinned_trips))
+                    contentDescription = stringResource(R.string.edit_pinned_trips),
+                    tint =
+                        if (isOnline) MaterialTheme.colorScheme.onBackground
+                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
               }
         }
       }
@@ -815,64 +840,120 @@ private fun PinnedTrips(
  * @param pinnedBitmaps The list of pinned pictures as bitmaps.
  * @param isOwnProfile Whether the user is their own profile.
  * @param onEditPinnedPictures The callback to navigate to the edit pinned pictures screen.
+ * @param isLoadingImages Whether the images are still loading.
+ * @param context The context.
+ * @param isOnline Whether the user is online.
  */
 @Composable
 private fun PinnedPictures(
     pinnedBitmaps: List<Bitmap>,
     isOwnProfile: Boolean,
     onEditPinnedPictures: () -> Unit,
-    isLoadingImages: Boolean
+    isLoadingImages: Boolean,
+    context: Context,
+    isOnline: Boolean
 ) {
   Column {
-    Row(
-        modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
-          Text(
-              text = stringResource(R.string.pinned_pictures),
-              style = MaterialTheme.typography.headlineSmall,
-              color = MaterialTheme.colorScheme.onBackground)
+    PinnedPicturesHeader(
+        isOwnProfile = isOwnProfile,
+        isOnline = isOnline,
+        onEditClick = { handleOfflineClick(context, isOnline, onEditPinnedPictures) })
 
-          if (isOwnProfile) {
-            IconButton(
-                onClick = onEditPinnedPictures,
-                modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Outlined.Edit,
-                      contentDescription = stringResource(R.string.edit_pinned_pictures))
-                }
-          }
-        }
-
-    if (pinnedBitmaps.isEmpty()) {
-      val text =
-          if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
-          else stringResource(R.string.no_pinned_pictures)
-      Text(text = text, modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES))
-    } else {
-      if (isLoadingImages) {
-        CircularProgressIndicator()
-      } else {
-        LazyRow(
-            modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
-            horizontalArrangement =
-                Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
-            contentPadding =
-                PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
-              items(pinnedBitmaps) { bitmap ->
-                Image(
-                    bitmap = bitmap.asImageBitmap(),
-                    contentDescription = null,
-                    modifier =
-                        Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
-                            .clip(
-                                RoundedCornerShape(
-                                    dimensionResource(R.dimen.pinned_pictures_corner))))
-              }
-            }
-      }
-    }
+    PinnedPicturesContent(
+        pinnedBitmaps = pinnedBitmaps,
+        isLoadingImages = isLoadingImages,
+        isOwnProfile = isOwnProfile)
   }
+}
+
+/**
+ * The pinned pictures section header of the profile screen.
+ *
+ * @param isOwnProfile Whether the user is their own profile.
+ * @param onEditClick The callback to navigate to the edit pinned pictures screen.
+ * @param isOnline Whether the user is online.
+ */
+@Composable
+private fun PinnedPicturesHeader(
+    isOwnProfile: Boolean,
+    isOnline: Boolean,
+    onEditClick: () -> Unit
+) {
+  Row(
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_TITLE),
+      horizontalArrangement = Arrangement.SpaceBetween,
+      verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            text = stringResource(R.string.pinned_pictures),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onBackground)
+
+        if (isOwnProfile) {
+          IconButton(
+              onClick = onEditClick,
+              modifier = Modifier.testTag(ProfileScreenTestTags.PINNED_PICTURES_EDIT_BUTTON)) {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = stringResource(R.string.edit_pinned_pictures),
+                    tint =
+                        if (isOnline) MaterialTheme.colorScheme.onBackground
+                        else MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f))
+              }
+        }
+      }
+}
+
+/**
+ * The pinned pictures content of the profile screen.
+ *
+ * @param pinnedBitmaps The list of pinned pictures as bitmaps.
+ * @param isLoadingImages Whether the images are still loading.
+ * @param isOwnProfile Whether the user is their own profile.
+ */
+@Composable
+private fun PinnedPicturesContent(
+    pinnedBitmaps: List<Bitmap>,
+    isLoadingImages: Boolean,
+    isOwnProfile: Boolean
+) {
+  if (pinnedBitmaps.isEmpty()) {
+    val text =
+        if (isOwnProfile) stringResource(R.string.edit_no_pinned_pictures)
+        else stringResource(R.string.no_pinned_pictures)
+
+    Text(
+        text = text,
+        modifier = Modifier.testTag(ProfileScreenTestTags.EMPTY_PINNED_PICTURES),
+        textAlign = TextAlign.Center)
+  } else if (isLoadingImages) {
+    CircularProgressIndicator()
+  } else {
+    PinnedPicturesList(pinnedBitmaps = pinnedBitmaps)
+  }
+}
+
+/**
+ * The pinned pictures list of the profile screen.
+ *
+ * @param pinnedBitmaps The list of pinned pictures as bitmaps.
+ */
+@Composable
+private fun PinnedPicturesList(pinnedBitmaps: List<Bitmap>) {
+  LazyRow(
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PINNED_PICTURES_LIST),
+      horizontalArrangement =
+          Arrangement.spacedBy(dimensionResource(R.dimen.pinned_pictures_spacing)),
+      contentPadding =
+          PaddingValues(horizontal = dimensionResource(R.dimen.pinned_pictures_padding))) {
+        items(pinnedBitmaps) { bitmap ->
+          Image(
+              bitmap = bitmap.asImageBitmap(),
+              contentDescription = null,
+              modifier =
+                  Modifier.height(dimensionResource(R.dimen.pinned_pictures_height))
+                      .clip(RoundedCornerShape(dimensionResource(R.dimen.pinned_pictures_corner))))
+        }
+      }
 }
 
 /**
@@ -906,4 +987,20 @@ fun UnfriendDialog(friendName: String, onConfirm: () -> Unit, onCancel: () -> Un
             }
       },
       containerColor = MaterialTheme.colorScheme.onPrimary)
+}
+
+/**
+ * Handle an offline click.
+ *
+ * @param context The context.
+ * @param isOnline Whether the user is online.
+ * @param action The action to perform
+ */
+private fun handleOfflineClick(context: Context, isOnline: Boolean, action: () -> Unit) {
+  if (isOnline) {
+    action()
+  } else {
+    Toast.makeText(context, context.getString(R.string.requires_internet), Toast.LENGTH_SHORT)
+        .show()
+  }
 }

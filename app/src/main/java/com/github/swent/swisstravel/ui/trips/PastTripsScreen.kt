@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
@@ -40,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.composable.CancelButton
 import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.SortMenu
 import com.github.swent.swisstravel.ui.composable.TripListEvents
@@ -58,7 +58,6 @@ object PastTripsScreenTestTags {
   const val FAVORITE_SELECTED_BUTTON = "favoriteSelected"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
-  const val CANCEL_SELECTION_BUTTON = "cancelSelection"
   const val MORE_OPTIONS_BUTTON = "moreOptions"
 
   /** Returns a unique test tag for the given [trip] element. */
@@ -123,15 +122,16 @@ fun PastTripsScreen(
 
   Scaffold(
       topBar = {
-        PastTripsTopAppBar(
-            uiState = uiState,
-            onBack = onBack,
-            selectedTripCount = selectedTripCount,
-            onClickDropDownMenu = { pastTripsViewModel.updateSortType(it) },
-            onCancelSelection = { pastTripsViewModel.toggleSelectionMode(false) },
-            onFavoriteSelected = { pastTripsViewModel.toggleFavoriteForSelectedTrips() },
-            onDeleteSelected = { showDeleteConfirmation = true },
-            onSelectAll = { pastTripsViewModel.selectAllTrips() })
+        val pastTripsTopAppBarActions =
+            PastTripsTopAppBarActions(
+                onBack = onBack,
+                selectedTripCount = selectedTripCount,
+                onClickDropDownMenu = { pastTripsViewModel.updateSortType(it) },
+                onCancelSelection = { pastTripsViewModel.toggleSelectionMode(false) },
+                onFavoriteSelected = { pastTripsViewModel.toggleFavoriteForSelectedTrips() },
+                onDeleteSelected = { showDeleteConfirmation = true },
+                onSelectAll = { pastTripsViewModel.selectAllTrips() })
+        PastTripsTopAppBar(uiState = uiState, actions = pastTripsTopAppBarActions)
       },
       content = { padding ->
         PullToRefreshBox(
@@ -183,30 +183,39 @@ fun PastTripsScreen(
 }
 
 /**
+ * Wrapper for all UI actions to reduce argument count.
+ *
+ * @property onBack Callback invoked when the back button is pressed.
+ * @property selectedTripCount Number of selected trips.
+ * @property onClickDropDownMenu Callback to open the sort menu.
+ * @property onCancelSelection Callback to exit selection mode.
+ * @property onFavoriteSelected Callback to toggle favorite status of selected trips.
+ * @property onDeleteSelected Callback to trigger delete confirmation.
+ * @property onSelectAll Callback to select all trips.
+ */
+data class PastTripsTopAppBarActions(
+    val onBack: () -> Unit,
+    val selectedTripCount: Int,
+    val onClickDropDownMenu: (TripSortType) -> Unit = {},
+    val onCancelSelection: () -> Unit,
+    val onFavoriteSelected: () -> Unit,
+    val onDeleteSelected: () -> Unit,
+    val onSelectAll: () -> Unit
+)
+
+/**
  * Top bar for the Past Trips screen.
  * - Displays either title or selection mode info.
  * - Provides actions for navigate back, delete, favorite, or select all.
  *
  * @param uiState Current UI state for trip data.
- * @param onBack Callback invoked when the back button is pressed.
- * @param selectedTripCount Number of selected trips.
- * @param onClickDropDownMenu Callback to open the sort menu.
- * @param onCancelSelection Callback to exit selection mode.
- * @param onFavoriteSelected Callback to toggle favorite status of selected trips.
- * @param onDeleteSelected Callback to trigger delete confirmation.
- * @param onSelectAll Callback to select all trips.
+ * @param actions Wrapper for all UI actions to reduce argument count.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PastTripsTopAppBar(
     uiState: TripsViewModel.TripsUIState,
-    onBack: () -> Unit,
-    selectedTripCount: Int,
-    onClickDropDownMenu: (TripSortType) -> Unit = {},
-    onCancelSelection: () -> Unit,
-    onFavoriteSelected: () -> Unit,
-    onDeleteSelected: () -> Unit,
-    onSelectAll: () -> Unit,
+    actions: PastTripsTopAppBarActions
 ) {
   val allSelectedFavorites =
       uiState.selectedTrips.isNotEmpty() &&
@@ -215,7 +224,8 @@ private fun PastTripsTopAppBar(
       title = {
         val title =
             if (uiState.isSelectionMode)
-                pluralStringResource(R.plurals.n_selected, selectedTripCount, selectedTripCount)
+                pluralStringResource(
+                    R.plurals.n_selected, actions.selectedTripCount, actions.selectedTripCount)
             else stringResource(R.string.past_trips)
         Text(
             title,
@@ -224,16 +234,13 @@ private fun PastTripsTopAppBar(
       },
       navigationIcon = {
         if (uiState.isSelectionMode) {
-          IconButton(
-              onClick = onCancelSelection,
-              modifier = Modifier.testTag(PastTripsScreenTestTags.CANCEL_SELECTION_BUTTON)) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = stringResource(R.string.cancel_selection))
-              }
+          CancelButton(
+              onCancel = actions.onCancelSelection,
+              contentDescription = stringResource(R.string.cancel_selection))
         } else {
           IconButton(
-              onClick = onBack, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_BUTTON)) {
+              onClick = actions.onBack,
+              modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_BUTTON)) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                     contentDescription = stringResource(R.string.back_to_my_trips),
@@ -245,7 +252,7 @@ private fun PastTripsTopAppBar(
         if (uiState.isSelectionMode) {
           var expanded by remember { mutableStateOf(false) }
           IconButton(
-              onClick = onFavoriteSelected,
+              onClick = actions.onFavoriteSelected,
               modifier = Modifier.testTag(PastTripsScreenTestTags.FAVORITE_SELECTED_BUTTON)) {
                 Icon(
                     imageVector =
@@ -253,7 +260,7 @@ private fun PastTripsTopAppBar(
                     contentDescription = stringResource(R.string.favorite_selected))
               }
           IconButton(
-              onClick = onDeleteSelected,
+              onClick = actions.onDeleteSelected,
               modifier = Modifier.testTag(PastTripsScreenTestTags.DELETE_SELECTED_BUTTON)) {
                 Icon(
                     Icons.Default.DeleteOutline,
@@ -274,12 +281,14 @@ private fun PastTripsTopAppBar(
                     text = { Text(stringResource(R.string.select_all)) },
                     onClick = {
                       expanded = false
-                      onSelectAll()
+                      actions.onSelectAll()
                     },
                     modifier = Modifier.testTag(PastTripsScreenTestTags.SELECT_ALL_BUTTON))
               }
         } else {
-          SortMenu(onClickDropDownMenu = onClickDropDownMenu, selectedSortType = uiState.sortType)
+          SortMenu(
+              onClickDropDownMenu = actions.onClickDropDownMenu,
+              selectedSortType = uiState.sortType)
         }
       },
       colors =

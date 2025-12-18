@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.github.swent.swisstravel.model.user.User
 import com.github.swent.swisstravel.model.user.UserStats
+import com.github.swent.swisstravel.ui.composable.CancelButtonTestTag
 import kotlin.test.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -31,7 +32,8 @@ class FriendElementTest {
           stats = UserStats(),
           pinnedTripsUids = emptyList(),
           pinnedPicturesUids = emptyList(),
-          favoriteTripsUids = emptyList())
+          favoriteTripsUids = emptyList(),
+          currentTrip = "")
 
   @Test
   fun friendElement_showsArrowWhenNotPendingOrNotShouldAccept() {
@@ -51,7 +53,6 @@ class FriendElementTest {
 
     // Accept / decline buttons are not shown
     composeRule.onNodeWithTag(FriendElementTestTags.ACCEPT_BUTTON).assertDoesNotExist()
-    composeRule.onNodeWithTag(FriendElementTestTags.DECLINE_BUTTON).assertDoesNotExist()
   }
 
   @Test
@@ -77,14 +78,13 @@ class FriendElementTest {
 
     // Accept / decline buttons are visible
     composeRule.onNodeWithTag(FriendElementTestTags.ACCEPT_BUTTON).assertIsDisplayed()
-    composeRule.onNodeWithTag(FriendElementTestTags.DECLINE_BUTTON).assertIsDisplayed()
 
     // Click accept
     composeRule.onNodeWithTag(FriendElementTestTags.ACCEPT_BUTTON).performClick()
     assertEquals(true, acceptCalled)
 
     // Click decline
-    composeRule.onNodeWithTag(FriendElementTestTags.DECLINE_BUTTON).performClick()
+    composeRule.onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).performClick()
     assertEquals(true, declineCalled)
   }
 

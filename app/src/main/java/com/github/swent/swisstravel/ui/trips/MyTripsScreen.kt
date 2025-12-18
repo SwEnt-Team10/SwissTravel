@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.MoreVert
@@ -48,11 +47,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Trip
+import com.github.swent.swisstravel.ui.composable.CancelButton
 import com.github.swent.swisstravel.ui.composable.DeleteDialog
 import com.github.swent.swisstravel.ui.composable.SortedTripListTestTags
 import com.github.swent.swisstravel.ui.composable.TripElement
@@ -76,7 +77,6 @@ object MyTripsScreenTestTags {
   const val FAVORITE_SELECTED_BUTTON = "favoriteSelected"
   const val DELETE_SELECTED_BUTTON = "deleteSelected"
   const val SELECT_ALL_BUTTON = "selectAll"
-  const val CANCEL_SELECTION_BUTTON = "cancelSelection"
   const val MORE_OPTIONS_BUTTON = "moreOptions"
   const val EDIT_CURRENT_TRIP_BUTTON = "editCurrentTrip"
 
@@ -282,13 +282,9 @@ private fun MyTripsTopAppBar(
       },
       navigationIcon = {
         if (uiState.isSelectionMode) {
-          IconButton(
-              onClick = onCancelSelection,
-              modifier = Modifier.testTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON)) {
-                Icon(
-                    Icons.Default.Close,
-                    contentDescription = stringResource(R.string.cancel_selection))
-              }
+          CancelButton(
+              onCancel = { onCancelSelection() },
+              contentDescription = stringResource(R.string.cancel_selection))
         }
       },
       actions = {
@@ -376,27 +372,30 @@ private fun CurrentTripSection(
       color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
 
   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.small_spacer)))
-
-  currentTrip?.let {
-    val tripElementState =
-        TripElementState(
-            trip = it,
-            isSelected = it in selectedTrips,
-            isSelectionMode = isSelectionMode,
-            isFavorite = it.uid in uiState.favoriteTripsUids,
-            collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
-    TripElement(
-        tripElementState = tripElementState,
-        onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
-        onLongPress = {
-          // Enter selection mode
-          myTripsViewModel.toggleSelectionMode(true)
-          onToggleSelection(it)
-        })
+  Row(modifier = Modifier.fillMaxWidth()) {
+    currentTrip?.let {
+      val tripElementState =
+          TripElementState(
+              trip = it,
+              isSelected = it in selectedTrips,
+              isSelectionMode = isSelectionMode,
+              isFavorite = it.uid in uiState.favoriteTripsUids,
+              collaborators = uiState.collaboratorsByTripId[it.uid] ?: emptyList())
+      TripElement(
+          tripElementState = tripElementState,
+          onClick = { if (isSelectionMode) onToggleSelection(it) else onSelectTrip(it.uid) },
+          onLongPress = {
+            // Enter selection mode
+            myTripsViewModel.toggleSelectionMode(true)
+            onToggleSelection(it)
+          })
+    }
+        ?: Text(
+            text = stringResource(R.string.no_current_trip),
+            modifier =
+                Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG).fillMaxWidth(),
+            textAlign = TextAlign.Center)
   }
-      ?: Text(
-          text = stringResource(R.string.no_current_trip),
-          modifier = Modifier.testTag(MyTripsScreenTestTags.EMPTY_CURRENT_TRIP_MSG))
 }
 
 /**

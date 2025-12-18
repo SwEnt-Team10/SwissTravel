@@ -2,6 +2,7 @@ package com.github.swent.swisstravel.model.trip
 
 import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import com.github.swent.swisstravel.model.trip.activity.Activity
 import com.github.swent.swisstravel.model.user.Preference
 import com.google.firebase.Timestamp
@@ -145,7 +146,6 @@ class TripsRepositoryFirestore(
       val tripProfile =
           (document["tripProfile"] as? Map<*, *>)?.let { mapToTripProfile(it) } ?: return null
 
-      val isCurrentTrip = document.getBoolean("currentTrip") ?: false
       val collaboratorsId = document["collaboratorsId"] as? List<*> ?: emptyList<String>()
       val listCollaboratorsId = collaboratorsId.mapNotNull { (it as? String) }
 
@@ -185,7 +185,6 @@ class TripsRepositoryFirestore(
           routeSegments = routeSegments,
           activities = activities,
           tripProfile = tripProfile,
-          isCurrentTrip = isCurrentTrip,
           collaboratorsId = listCollaboratorsId,
           isRandom = isRandom,
           cachedActivities = cachedActivities,
@@ -343,7 +342,6 @@ class TripsRepositoryFirestore(
         "routeSegments" to trip.routeSegments,
         "activities" to trip.activities,
         "tripProfile" to trip.tripProfile,
-        "currentTrip" to trip.isCurrentTrip,
         "collaboratorsId" to trip.collaboratorsId,
         "random" to trip.isRandom,
         "uriLocation" to trip.uriLocation.mapKeys { it.key.toString() },
@@ -370,7 +368,7 @@ class TripsRepositoryFirestore(
             val location = mapToLocation(locMap)
             // If location parsing succeeds, parse the URI and return the pair
             if (location != null) {
-              Uri.parse(uriStr) to location
+              uriStr.toUri() to location
             } else null
           } else null
         }

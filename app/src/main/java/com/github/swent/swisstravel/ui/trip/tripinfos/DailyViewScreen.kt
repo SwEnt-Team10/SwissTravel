@@ -22,7 +22,6 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Attractions
@@ -70,6 +69,7 @@ import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.trip.Location
 import com.github.swent.swisstravel.model.trip.TripElement
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.ui.composable.BackButton
 import com.github.swent.swisstravel.ui.composable.ProfileImage
 import com.github.swent.swisstravel.ui.friends.FriendElement
 import com.github.swent.swisstravel.ui.friends.FriendElementActions
@@ -85,7 +85,6 @@ import java.time.format.DateTimeFormatter
 /** Object containing test tags for UI testing of the DailyViewScreen. */
 object DailyViewScreenTestTags {
   const val TITLE = "dailyViewScreenTitle"
-  const val BACK_BUTTON = "dailyViewScreenBackButton"
   const val FAVORITE_BUTTON = "dailyViewScreenFavoriteButton"
   const val EDIT_BUTTON = "dailyViewScreenEditButton"
   const val LAZY_COLUMN = "dailyViewScreenLazyColumn"
@@ -240,77 +239,15 @@ fun DailyViewScreen(
       }) { pd ->
         Box(Modifier.fillMaxSize().padding(pd)) {
           if (ui.locations.isEmpty()) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-              Column(
-                  horizontalAlignment = Alignment.CenterHorizontally,
-                  verticalArrangement = Arrangement.Center) {
-                    if (isOnline(context)) {
-                      Text(
-                          text = stringResource(R.string.no_locations_available),
-                          modifier =
-                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
-                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
-                    } else {
-                      CircularProgressIndicator(
-                          modifier = Modifier.testTag(DailyViewScreenTestTags.LOADING))
-                      Spacer(
-                          modifier =
-                              Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
-                      Text(
-                          text = stringResource(R.string.loading_from_cache),
-                          modifier =
-                              Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
-                                  .testTag(DailyViewScreenTestTags.NO_LOCATIONS)
-                                  .align(Alignment.CenterHorizontally))
-                    }
-                  }
-            }
+            NoLocationsView(isOnline = isOnline(context))
           } else {
-            Column(Modifier.fillMaxSize()) {
-              // Day Navigator
-              DayNavigator(
-                  currentDayIndex = ui.currentDayIndex,
-                  days = ui.days,
-                  onDayChange = { tripInfoViewModel.setCurrentDayIndex(it) })
-
-              if (!ui.fullscreen) {
-                // Map Card
-                DailyMapCard(
-                    mapState = mapState,
-                    onToggleFullscreen = { tripInfoViewModel.toggleFullscreen(true) },
-                    onToggleNavMode = {
-                      tripInfoViewModel.setDrawFromCurrentPosition(!ui.drawFromCurrentPosition)
-                    },
-                    onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
-                    isComputing = ui.isComputingSchedule,
-                    hasSteps = dailySteps.isNotEmpty(),
-                    mapContent = actualMapContent)
-              }
-
-              // Daily Steps List
-              LazyColumn(
-                  modifier = Modifier.fillMaxSize().testTag(DailyViewScreenTestTags.LAZY_COLUMN),
-                  contentPadding =
-                      PaddingValues(
-                          bottom =
-                              dimensionResource(R.dimen.daily_view_daily_step_bottom_padding))) {
-                    itemsIndexed(dailySteps) { idx, el ->
-                      DailyStepCard(
-                          stepNumber = idx + 1,
-                          element = el,
-                          isSelected = ui.selectedStep == el,
-                          onMapClick = {
-                            tripInfoViewModel.setSelectedStep(
-                                if (ui.selectedStep == el) null else el)
-                          },
-                          onDetailsClick = {
-                            if (el is TripElement.TripActivity) {
-                              callbacks.onActivityClick(el)
-                            }
-                          })
-                    }
-                  }
-            }
+            DailyViewContent(
+                ui = ui,
+                dailySteps = dailySteps,
+                mapState = mapState,
+                tripInfoViewModel = tripInfoViewModel,
+                callbacks = callbacks,
+                actualMapContent = actualMapContent)
           }
 
           // Fullscreen map overlay
@@ -536,13 +473,8 @@ private fun DailyViewTopAppBar(
       },
       navigationIcon = {
         if (!isOnCurrentTripScreen) {
-          IconButton(
-              onClick = onBack, modifier = Modifier.testTag(DailyViewScreenTestTags.BACK_BUTTON)) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.back_to_my_trips),
-                    tint = MaterialTheme.colorScheme.onBackground)
-              }
+          BackButton(
+              onBack = { onBack() }, contentDescription = stringResource(R.string.back_to_my_trips))
         }
       },
       actions = {
@@ -694,7 +626,6 @@ private fun DailyMapCard(
  * A card representing a single step in the daily itinerary, which can be a travel segment or an
  * activity.
  *
- * @param stepNumber The sequential number of the step in the day.
  * @param element The [TripElement] data for this step.
  * @param isSelected A boolean indicating if this card is currently selected, which changes its
  *   appearance.
@@ -703,7 +634,6 @@ private fun DailyMapCard(
  */
 @Composable
 private fun DailyStepCard(
-    stepNumber: Int,
     element: TripElement,
     isSelected: Boolean,
     onMapClick: () -> Unit,
@@ -744,64 +674,11 @@ private fun DailyStepCard(
                   Modifier.padding(dimensionResource(R.dimen.daily_view_date_padding))
                       .fillMaxWidth(),
               verticalAlignment = Alignment.CenterVertically) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier =
-                        Modifier.padding(
-                            end = dimensionResource(R.dimen.daily_view_date_end_padding))) {
-                      Text(
-                          text = startTime,
-                          style = MaterialTheme.typography.bodyMedium,
-                          fontWeight = FontWeight.Bold)
-                      Text(
-                          text = "|",
-                          style = MaterialTheme.typography.bodySmall,
-                          modifier =
-                              Modifier.padding(
-                                  vertical =
-                                      dimensionResource(R.dimen.daily_view_date_separator_padding)))
-                      Text(
-                          text = endTime,
-                          style = MaterialTheme.typography.bodyMedium,
-                          color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                StepTimeColumn(startTime = startTime, endTime = endTime)
 
-                Column(modifier = Modifier.weight(1f)) {
-                  Text(
-                      text =
-                          when (element) {
-                            is TripElement.TripActivity -> element.activity.location.name
-                            is TripElement.TripSegment -> "Travel to ${element.route.to.name}"
-                          },
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.Bold)
+                StepDescription(element = element, modifier = Modifier.weight(1f))
 
-                  if (element is TripElement.TripSegment) {
-                    Text(
-                        text =
-                            stringResource(R.string.about_minutes, element.route.durationMinutes),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                  }
-                }
-
-                if (element is TripElement.TripSegment) {
-                  // Map Button only for Segments
-                  IconButton(onClick = onMapClick) {
-                    Icon(
-                        imageVector = Icons.Filled.Route,
-                        contentDescription = "Show on Map",
-                        tint =
-                            if (isSelected) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.onSurface)
-                  }
-                } else {
-                  // Details icon for Activity
-                  Icon(
-                      imageVector = Icons.Filled.Attractions,
-                      contentDescription = null,
-                      tint = MaterialTheme.colorScheme.primary)
-                }
+                StepActionIcon(element = element, isSelected = isSelected, onMapClick = onMapClick)
               }
         }
       }
@@ -833,5 +710,186 @@ private fun FullScreenMap(
               imageVector = Icons.Filled.ZoomInMap,
               contentDescription = stringResource(R.string.back_to_my_trips))
         }
+  }
+}
+
+/**
+ * A composable that displays a message when there are no locations in the trip.
+ *
+ * @param isOnline A boolean indicating if the device is online.
+ * @param modifier The modifier to be applied to the layout.
+ */
+@Composable
+private fun NoLocationsView(isOnline: Boolean, modifier: Modifier = Modifier) {
+  Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center) {
+          if (isOnline) {
+            Text(
+                text = stringResource(R.string.no_locations_available),
+                modifier =
+                    Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                        .testTag(DailyViewScreenTestTags.NO_LOCATIONS))
+          } else {
+            CircularProgressIndicator(modifier = Modifier.testTag(DailyViewScreenTestTags.LOADING))
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.medium_large_spacer)))
+            Text(
+                text = stringResource(R.string.loading_from_cache),
+                modifier =
+                    Modifier.padding(dimensionResource(R.dimen.daily_view_padding))
+                        .testTag(DailyViewScreenTestTags.NO_LOCATIONS)
+                        .align(Alignment.CenterHorizontally))
+          }
+        }
+  }
+}
+
+/**
+ * A composable that acts as the container of the screen, displaying the daily itinerary of the
+ * trip.
+ *
+ * @param ui The current UI state of the trip info.
+ * @param dailySteps A list of [TripElement] representing the daily itinerary steps.
+ * @param mapState The state of the map to display.
+ * @param tripInfoViewModel The ViewModel for trip information.
+ * @param callbacks Callbacks for user interactions.
+ * @param actualMapContent The content of the map to be displayed.
+ * @param modifier The modifier to be applied to the layout.
+ */
+@Composable
+private fun DailyViewContent(
+    ui: TripInfoUIState,
+    dailySteps: List<TripElement>,
+    mapState: MapState,
+    tripInfoViewModel: TripInfoViewModelContract,
+    callbacks: DailyViewScreenCallbacks,
+    actualMapContent: @Composable (List<Location>, Boolean, (Point) -> Unit) -> Unit,
+    modifier: Modifier = Modifier
+) {
+  Column(modifier = modifier.fillMaxSize()) {
+    // Day Navigator
+    DayNavigator(
+        currentDayIndex = ui.currentDayIndex,
+        days = ui.days,
+        onDayChange = { tripInfoViewModel.setCurrentDayIndex(it) })
+
+    if (!ui.fullscreen) {
+      // Map Card
+      DailyMapCard(
+          mapState = mapState,
+          onToggleFullscreen = { tripInfoViewModel.toggleFullscreen(true) },
+          onToggleNavMode = {
+            tripInfoViewModel.setDrawFromCurrentPosition(!ui.drawFromCurrentPosition)
+          },
+          onUserLocationUpdate = { tripInfoViewModel.updateUserLocation(it) },
+          isComputing = ui.isComputingSchedule,
+          hasSteps = dailySteps.isNotEmpty(),
+          mapContent = actualMapContent)
+    }
+
+    // Daily Steps List
+    LazyColumn(
+        modifier = Modifier.fillMaxSize().testTag(DailyViewScreenTestTags.LAZY_COLUMN),
+        contentPadding =
+            PaddingValues(
+                bottom = dimensionResource(R.dimen.daily_view_daily_step_bottom_padding))) {
+          itemsIndexed(dailySteps) { idx, el ->
+            DailyStepCard(
+                element = el,
+                isSelected = ui.selectedStep == el,
+                onMapClick = {
+                  tripInfoViewModel.setSelectedStep(if (ui.selectedStep == el) null else el)
+                },
+                onDetailsClick = {
+                  if (el is TripElement.TripActivity) {
+                    callbacks.onActivityClick(el)
+                  }
+                })
+          }
+        }
+  }
+}
+
+/**
+ * A composable that displays the start and end time of a trip step.
+ *
+ * @param startTime The start time string.
+ * @param endTime The end time string.
+ */
+@Composable
+private fun StepTimeColumn(startTime: String, endTime: String) {
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.padding(end = dimensionResource(R.dimen.daily_view_date_end_padding))) {
+        Text(
+            text = startTime,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.Bold)
+        Text(
+            text = "|",
+            style = MaterialTheme.typography.bodySmall,
+            modifier =
+                Modifier.padding(
+                    vertical = dimensionResource(R.dimen.daily_view_date_separator_padding)))
+        Text(
+            text = endTime,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+      }
+}
+
+/**
+ * A composable that displays the description of a trip step.
+ *
+ * @param element The [TripElement] to display.
+ * @param modifier The modifier to apply to the column.
+ */
+@Composable
+private fun StepDescription(element: TripElement, modifier: Modifier = Modifier) {
+  Column(modifier = modifier) {
+    Text(
+        text =
+            when (element) {
+              is TripElement.TripActivity -> element.activity.location.name
+              is TripElement.TripSegment -> "Travel to ${element.route.to.name}"
+            },
+        style = MaterialTheme.typography.titleMedium,
+        fontWeight = FontWeight.Bold)
+
+    if (element is TripElement.TripSegment) {
+      Text(
+          text = stringResource(R.string.about_minutes, element.route.durationMinutes),
+          style = MaterialTheme.typography.bodySmall,
+          color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+  }
+}
+
+/**
+ * A composable that displays the action icon for a trip step.
+ *
+ * @param element The [TripElement] to display.
+ * @param isSelected Whether the step is selected.
+ * @param onMapClick The callback to execute when the map icon is clicked.
+ */
+@Composable
+private fun StepActionIcon(element: TripElement, isSelected: Boolean, onMapClick: () -> Unit) {
+  if (element is TripElement.TripSegment) {
+    // Map Button only for Segments
+    IconButton(onClick = onMapClick) {
+      Icon(
+          imageVector = Icons.Filled.Route,
+          contentDescription = "Show on Map",
+          tint =
+              if (isSelected) MaterialTheme.colorScheme.primary
+              else MaterialTheme.colorScheme.onSurface)
+    }
+  } else {
+    // Details icon for Activity
+    Icon(
+        imageVector = Icons.Filled.Attractions,
+        contentDescription = null,
+        tint = MaterialTheme.colorScheme.primary)
   }
 }

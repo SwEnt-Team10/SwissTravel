@@ -5,6 +5,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserUpdate
+import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
 import com.github.swent.swisstravel.ui.navigation.NavigationTestTags
 import com.github.swent.swisstravel.ui.profile.ProfileScreenTestTags
 import com.github.swent.swisstravel.ui.trip.edittrip.EditTripScreenTestTags
@@ -14,7 +16,6 @@ import com.github.swent.swisstravel.utils.FakeJwtGenerator
 import com.github.swent.swisstravel.utils.FirebaseEmulator
 import com.github.swent.swisstravel.utils.FirestoreSwissTravelTest
 import com.google.firebase.Timestamp
-import java.time.LocalDateTime.now
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -110,10 +111,10 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
       // Ensure Bob exists in Firestore
       val bobUser = userRepo.getUserByNameOrEmail(bobEmail).first()
       bobUid = bobUser.uid
-      userRepo.updateUser(bobUser.uid, name = bobName)
-    }
+      userRepo.updateUser(bobUser.uid, UserUpdate(name = bobName))
 
-    composeTestRule.logout()
+      composeTestRule.logout()
+    }
 
     // =================================================================================
     // PHASE 1: ALICE SETUP & FRIEND REQUEST
@@ -124,7 +125,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
       // Ensure Alice exists in Firestore
       val aliceUser = userRepo.getUserByNameOrEmail(aliceEmail).first()
       aliceUid = aliceUser.uid
-      userRepo.updateUser(aliceUser.uid, name = aliceName)
+      userRepo.updateUser(aliceUser.uid, UserUpdate(name = aliceName))
 
       // Send friend request to Bob
       userRepo.sendFriendRequest(aliceUid, bobUid)
@@ -193,8 +194,8 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithText("OK").performClick()
 
     // Wait for Firestore update (Adding collaborator is async)
-    composeTestRule.waitForTag(DailyViewScreenTestTags.BACK_BUTTON)
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.waitForTag(BackButtonTestTag.BACK_BUTTON)
+    composeTestRule.clickOnBackButton()
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).isDisplayed()
     composeTestRule.onNodeWithTag(testTag = NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
@@ -220,7 +221,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
 
     // 5. Bob logs out
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
@@ -246,8 +247,8 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
 
     // Alice saves her modifications
     composeTestRule.onNodeWithTag(EditTripScreenTestTags.CONFIRM_TOP_BAR).performClick()
-    composeTestRule.waitForTag(DailyViewScreenTestTags.BACK_BUTTON)
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.waitForTag(BackButtonTestTag.BACK_BUTTON)
+    composeTestRule.clickOnBackButton()
 
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -269,7 +270,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.waitForTag(DailyViewScreenTestTags.TITLE)
 
     // Bob goes back off and logs out
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()
@@ -294,7 +295,7 @@ class E2ECollaboratorsTest : FirestoreSwissTravelTest() {
     composeTestRule.onNodeWithTag(removeBobTag).performClick()
 
     // Alice logs back out
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
     composeTestRule.waitForTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.logout()

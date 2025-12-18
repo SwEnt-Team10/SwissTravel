@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.github.swent.swisstravel.R
 import com.github.swent.swisstravel.model.user.User
+import com.github.swent.swisstravel.utils.NetworkUtils
 
 object FriendsScreenTestTags {
   const val FRIENDS_LIST = "friendsList"
@@ -66,6 +67,7 @@ fun FriendsListScreen(
 ) {
   val context = LocalContext.current
   val uiState by friendsViewModel.uiState.collectAsState()
+  val isOnline = NetworkUtils.isOnline(context)
 
   var isSearching by rememberSaveable { mutableStateOf(false) }
   var searchQuery by rememberSaveable { mutableStateOf("") }
@@ -99,8 +101,16 @@ fun FriendsListScreen(
       },
       floatingActionButton = {
         FloatingActionButton(
-            onClick = onAddFriend,
-            containerColor = MaterialTheme.colorScheme.primary,
+            onClick = {
+              if (isOnline) {
+                onAddFriend()
+              } else {
+                Toast.makeText(
+                        context, context.getString(R.string.requires_internet), Toast.LENGTH_SHORT)
+                    .show()
+              }
+            },
+            containerColor = if (isOnline) MaterialTheme.colorScheme.primary else Color.LightGray,
             contentColor = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.testTag(FriendsScreenTestTags.ADD_FRIEND_BUTTON)) {
               Icon(
@@ -180,6 +190,7 @@ private fun FriendsTopAppBar(
       },
       actions = {
         if (isSearching) {
+
           IconButton(onClick = onCloseSearch) {
             Icon(
                 imageVector = Icons.Default.Close,

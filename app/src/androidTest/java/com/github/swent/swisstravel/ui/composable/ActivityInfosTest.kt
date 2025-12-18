@@ -27,7 +27,7 @@ class ActivityInfosTest {
   @get:Rule val composeRule = createComposeRule()
 
   @Test
-  fun title_and_backButton_are_displayed() {
+  fun title_is_displayed() {
     val activity = fakeActivity(name = "Notre-Dame Cathedral")
 
     composeRule.setContent {
@@ -43,8 +43,6 @@ class ActivityInfosTest {
         .onNodeWithTag(ActivityInfosTestTag.TITLE)
         .assertIsDisplayed()
         .assert(hasText("Notre-Dame Cathedral"))
-
-    composeRule.onNodeWithTag(ActivityInfosTestTag.BACK_BUTTON).assertIsDisplayed()
   }
 
   @Test

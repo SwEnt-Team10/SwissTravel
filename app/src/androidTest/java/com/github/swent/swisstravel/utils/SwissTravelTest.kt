@@ -28,6 +28,7 @@ import com.github.swent.swisstravel.ui.activities.SwipeActivitiesScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.LandingScreenTestTags
 import com.github.swent.swisstravel.ui.authentication.SignInScreenTestTags
 import com.github.swent.swisstravel.ui.composable.BackButtonTestTag
+import com.github.swent.swisstravel.ui.composable.CancelButtonTestTag
 import com.github.swent.swisstravel.ui.composable.CounterTestTags
 import com.github.swent.swisstravel.ui.composable.ErrorScreenTestTags
 import com.github.swent.swisstravel.ui.composable.PhotoGridTestTags
@@ -138,7 +139,8 @@ abstract class SwissTravelTest {
       stats: UserStats = UserStats(),
       pinnedTripsUids: List<String> = emptyList(),
       pinnedPicturesUids: List<String> = emptyList(),
-      favTripsUids: List<String> = emptyList()
+      favTripsUids: List<String> = emptyList(),
+      currentTrip: String = ""
   ): User {
     return User(
         uid = uid,
@@ -151,7 +153,8 @@ abstract class SwissTravelTest {
         stats = stats,
         pinnedTripsUids = pinnedTripsUids,
         pinnedPicturesUids = pinnedPicturesUids,
-        favoriteTripsUids = favTripsUids)
+        favoriteTripsUids = favTripsUids,
+        currentTrip = currentTrip)
   }
 
   fun createTestTrip(
@@ -169,8 +172,6 @@ abstract class SwissTravelTest {
       children: Int = 0,
       departureLocation: Location? = null,
       arrivalLocation: Location? = null,
-      isFavorite: Boolean = false,
-      isCurrentTrip: Boolean = false,
       uriLocation: Map<android.net.Uri, Location> = emptyMap(),
       collaboratorsId: List<String> = emptyList(),
       isRandom: Boolean = false
@@ -193,7 +194,6 @@ abstract class SwissTravelTest {
         routeSegments = routeSegments,
         activities = activities,
         tripProfile = profile,
-        isCurrentTrip = isCurrentTrip,
         uriLocation = uriLocation,
         collaboratorsId = collaboratorsId,
         isRandom = isRandom)
@@ -248,7 +248,6 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkMyTripsInSelectionMode() {
     onNodeWithTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON).assertIsDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).assertIsDisplayed()
   }
 
@@ -258,7 +257,6 @@ abstract class SwissTravelTest {
     }
     onNodeWithTag(MyTripsScreenTestTags.MORE_OPTIONS_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.DELETE_SELECTED_BUTTON).assertIsNotDisplayed()
-    onNodeWithTag(MyTripsScreenTestTags.CANCEL_SELECTION_BUTTON).assertIsNotDisplayed()
     onNodeWithTag(MyTripsScreenTestTags.FAVORITE_SELECTED_BUTTON).assertIsNotDisplayed()
   }
 
@@ -363,7 +361,6 @@ abstract class SwissTravelTest {
   fun ComposeTestRule.checkSetCurrentTripIsDisplayed() {
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR).assertIsDisplayed()
     onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_TITLE).assertIsDisplayed()
-    onNodeWithTag(SetCurrentTripScreenTestTags.TOP_BAR_CLOSE_BUTTON).assertIsDisplayed()
     onNodeWithTag(SortMenuTestTags.SORT_DROPDOWN_MENU).assertIsDisplayed()
   }
 
@@ -438,7 +435,7 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkTripInfoScreenIsDisplayed() {
     onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed()
-    onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(BackButtonTestTag.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(TripInfoScreenTestTags.FAVORITE_BUTTON).assertIsDisplayed()
     onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
 
@@ -468,7 +465,7 @@ abstract class SwissTravelTest {
     // --- Top App Bar ---
     onNodeWithTag(TripInfoScreenTestTags.TITLE).assertIsDisplayed().assertTextEquals(trip.name)
 
-    onNodeWithTag(TripInfoScreenTestTags.BACK_BUTTON).assertIsDisplayed()
+    onNodeWithTag(BackButtonTestTag.BACK_BUTTON).assertIsDisplayed()
 
     onNodeWithTag(TripInfoScreenTestTags.EDIT_BUTTON).assertIsDisplayed()
 
@@ -705,7 +702,6 @@ abstract class SwissTravelTest {
 
   fun ComposeTestRule.checkLikedActivitiesScreenIsDisplayed() {
     onNodeWithTag(LikedActivitiesScreenTestTags.SCREEN_TITLE).assertIsDisplayed()
-    onNodeWithTag(LikedActivitiesScreenTestTags.BACK_BUTTON).assertIsDisplayed()
     onNodeWithTag(LikedActivitiesScreenTestTags.UNLIKE_BUTTON).assertIsDisplayed()
     onNodeWithTag(LikedActivitiesScreenTestTags.SCHEDULE_BUTTON).assertIsDisplayed()
   }
@@ -743,13 +739,16 @@ abstract class SwissTravelTest {
 
     // Verify Edit Mode Buttons are not displayed
     onNodeWithTag(SelectPinnedPicturesScreenTestTags.REMOVE_BUTTON).assertDoesNotExist()
-    onNodeWithTag(SelectPinnedPicturesScreenTestTags.CANCEL_BUTTON).assertDoesNotExist()
 
     onNodeWithTag(SelectPinnedPicturesScreenTestTags.LOADING_INDICATOR).assertDoesNotExist()
   }
 
   fun ComposeTestRule.clickOnBackButton() {
     onNodeWithTag(BackButtonTestTag.BACK_BUTTON).performClick()
+  }
+
+  fun ComposeTestRule.clickOnCancelButton() {
+    onNodeWithTag(CancelButtonTestTag.CANCEL_BUTTON).performClick()
   }
 
   fun ComposeTestRule.clickOnRetryButton() {

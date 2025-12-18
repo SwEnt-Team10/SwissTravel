@@ -178,16 +178,6 @@ class DailyViewScreenTest {
   }
 
   @Test
-  fun backButton_callsCallback() {
-    val vm = FakeTripInfoViewModel().apply { loadTripInfo("TEST") }
-    var backCalled = false
-    setContent(vm, onMyTrips = { backCalled = true })
-
-    compose.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
-    assert(backCalled)
-  }
-
-  @Test
   fun dayNavigator_updatesViewModel() {
     val now = Timestamp.now()
     val tomorrow = Timestamp(now.seconds + 86400, 0)
@@ -422,7 +412,8 @@ class DailyViewScreenTest {
             UserStats(),
             emptyList(),
             emptyList(),
-            emptyList())
+            emptyList(),
+            currentTrip = "")
 
     val vm =
         FakeTripInfoViewModel().apply {
@@ -478,7 +469,8 @@ class DailyViewScreenTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
 
     // 2. Init VM with this collaborator
     val vm =

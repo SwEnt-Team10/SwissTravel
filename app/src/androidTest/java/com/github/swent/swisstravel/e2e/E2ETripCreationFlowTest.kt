@@ -414,7 +414,7 @@ class E2ETripCreationFlowTest : FirestoreSwissTravelTest() {
     assertEquals(newName, tripE2E.name)
 
     // Back to the trip info screen
-    composeTestRule.onNodeWithTag(DailyViewScreenTestTags.BACK_BUTTON).performClick()
+    composeTestRule.clickOnBackButton()
 
     /* 18) */
     // Back to my trips

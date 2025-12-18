@@ -49,7 +49,8 @@ class MyTripsViewModelTest {
             stats = UserStats(),
             pinnedTripsUids = emptyList(),
             pinnedPicturesUids = emptyList(),
-            favoriteTripsUids = emptyList())
+            favoriteTripsUids = emptyList(),
+            currentTrip = "")
     coEvery { userRepository.getCurrentUser() } returns dummyUser
     coEvery { userRepository.getUserByUid(any()) } returns null
   }
@@ -69,7 +70,7 @@ class MyTripsViewModelTest {
             name = "Current Trip",
             startDate = Timestamp(now.seconds - 3600, 0),
             endDate = Timestamp(now.seconds + 3600, 0),
-            isCurrentTrip = true)
+        )
 
     // Upcoming trip: start > now
     val upcomingTrip =
@@ -78,8 +79,11 @@ class MyTripsViewModelTest {
             name = "Upcoming Trip",
             startDate = Timestamp(now.seconds + 7200, 0),
             endDate = Timestamp(now.seconds + 10800, 0),
-            isCurrentTrip = false)
+        )
 
+    val testUser = createTestUser(uid = "testUser", currentTripUid = "1")
+
+    coEvery { userRepository.getCurrentUser() } returns testUser
     coEvery { tripsRepository.getAllTrips() } returns listOf(currentTrip, upcomingTrip)
     viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = tripsRepository)
     advanceUntilIdle()
@@ -99,7 +103,10 @@ class MyTripsViewModelTest {
             name = "Current Trip",
             startDate = Timestamp(now.seconds - 3600, 0),
             endDate = Timestamp(now.seconds + 3600, 0),
-            isCurrentTrip = true)
+        )
+
+    val testUser = createTestUser(uid = "testUser", currentTripUid = "1")
+    coEvery { userRepository.getCurrentUser() } returns testUser
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(currentTrip)
     viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = tripsRepository)
@@ -120,7 +127,7 @@ class MyTripsViewModelTest {
             name = "Upcoming Trip",
             startDate = Timestamp(now.seconds + 3600, 0),
             endDate = Timestamp(now.seconds + 7200, 0),
-            isCurrentTrip = false)
+        )
 
     coEvery { tripsRepository.getAllTrips() } returns listOf(upcomingTrip)
     viewModel = MyTripsViewModel(userRepository = userRepository, tripsRepository = tripsRepository)
@@ -348,7 +355,6 @@ class MyTripsViewModelTest {
             emptyList(),
             emptyList(),
             TripProfile(Timestamp.now(), Timestamp.now(), emptyList(), emptyList()),
-            isCurrentTrip = false,
             uriLocation = emptyMap(),
             collaboratorsId = emptyList())
 

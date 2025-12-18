@@ -13,6 +13,7 @@ import com.github.swent.swisstravel.SwissTravelApp
 import com.github.swent.swisstravel.model.trip.TripsRepositoryFirestore
 import com.github.swent.swisstravel.model.user.Preference
 import com.github.swent.swisstravel.model.user.UserRepositoryFirebase
+import com.github.swent.swisstravel.model.user.UserUpdate
 import com.github.swent.swisstravel.ui.friends.AddFriendsScreenTestTags
 import com.github.swent.swisstravel.ui.friends.FriendElementTestTags
 import com.github.swent.swisstravel.ui.friends.FriendsScreenTestTags
@@ -88,7 +89,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
     composeTestRule.loginWithGoogle(true)
     runBlocking {
       val aliceUser = userRepo.getUserByNameOrEmail(aliceEmail).first()
-      userRepo.updateUser(aliceUser.uid, aliceName)
+      userRepo.updateUser(aliceUser.uid, UserUpdate(name = aliceName))
     }
 
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -122,7 +123,7 @@ class E2EFriendsTest : FirestoreSwissTravelTest() {
               children = 0)
       tripsRepo.addTrip(trip)
       // 3. Pin the trip to Bob's profile
-      userRepo.updateUser(uid = bobUser.uid, pinnedTripsUids = listOf(trip.uid))
+      userRepo.updateUser(uid = bobUser.uid, UserUpdate(pinnedTripsUids = listOf(trip.uid)))
     }
 
     // --- STEP 5: Bob sends a friend request to Alice. ---
